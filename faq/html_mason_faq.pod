@@ -320,17 +320,14 @@ HTML::Mason::Commands package.
 
 The only problem is that Mason by default parses components with strict mode
 on, so you'll get a warning about the global (and Mason considers all such
-warnings fatal).
+warnings fatal). To get around this you need to declare the global in a
+"use vars" statement inside the HTML::Mason::Commands package:
 
-If you have a set of globals that you know in advance you'll want to use,
-this is easy to remedy.  E.g. say you want to put all the globals in a
-global hash called %GLOBALS.  Pass the parameter:
+    package HTML::Mason::Commands;
+    use vars qw(...);
 
-	preamble => 'use vars qw(%GLOBALS);'
-
-when you create the Parser object.  This piece of code will get inserted at
-the top of every generated component subroutine, thus suppressing the
-warning.  This is exactly how HTML::Mason deals with the global $r.
+or use the Parser allow_globals parameter.  See the section on globals in
+the Administrator's Manual.
 
 Alternatively you can turn off strict entirely by passing:
 
