@@ -20,7 +20,7 @@ use HTML::Mason::MethodMaker
 			 comp_id
 			 inherit_path
 			 inherit_start_path
-			 interp
+                         interp
 			 object_size
 			 compiler_id ) ],
 
@@ -37,7 +37,6 @@ my %valid_params =
      dynamic_subs_init  => {type => CODEREF, default => sub {}},
      flags              => {type => HASHREF, default => {}},
      comp_id            => {type => SCALAR,  optional => 1},
-     interp             => {isa => 'HTML::Mason::Interp', optional => 1},
      methods            => {type => HASHREF, default => {}},
      mfu_count          => {type => SCALAR,  default => 0},
      object_size        => {type => SCALAR,  default => 0},
@@ -82,21 +81,39 @@ sub assign_runtime_properties {
     my ($self, $interp, $info) = @_;
     $self->{interp} = $interp;
     $self->{comp_id} = $info->comp_id if defined $info->comp_id;
+    $self->{path} = $info->comp_path;
 
     foreach my $c (values(%{$self->{subcomps}})) {
 	$c->assign_runtime_properties($interp, $info);
     }
+}
+
+sub request {
+    my $self = shift;
+
+    if (@_) {
+	$self->{request} = shift;
+	$self->_determine_inheritance;
+    }
+
+    return $self->{request};
+}
+
+sub _determine_inheritance {
+    my $self = shift;
+
+    my $interp = $self->interp;
 
     # Assign inheritance properties
     if (exists($self->{flags}->{inherit})) {
 	if (defined($self->{flags}->{inherit})) {
-	    $self->{inherit_path} = absolute_comp_path($self->{flags}->{inherit},$self->dir_path);
+	    $self->{inherit_path} = absolute_comp_path($self->{flags}->{inherit}, $self->dir_path);
 	}
-    } elsif (defined($interp->autohandler_name)) {
+    } elsif ($self->{request}->use_autohandlers && defined $interp->autohandler_name) {
 	if ($interp->allow_recursive_autohandlers) {
 	    if ($self->name eq $interp->autohandler_name) {
 		unless ($self->dir_path eq '/') {
-		    $self->{inherit_start_path} = dirname($self->dir_path);
+		    ($self->{inherit_start_path}) = $self->dir_path =~ m,(.+)/[^/]*$,;
 		}
 	    } else {
 		$self->{inherit_start_path} = $self->dir_path;
@@ -288,13 +305,17 @@ sub flag {
 sub parent {
     my ($self) = @_;
     my $interp = $self->interp;
+
+    my $comp;
     if ($self->inherit_path) {
-	return $interp->load($self->inherit_path);
+	$comp = $interp->load($self->inherit_path);
     } elsif ($self->inherit_start_path) {
-	return $interp->find_comp_upwards($self->inherit_start_path,$interp->autohandler_name);
-    } else {
-	return undef;
+	$comp = $interp->find_comp_upwards($self->inherit_start_path, $interp->autohandler_name);
     }
+
+    $comp->request($self->{request}) if $comp;
+
+    return $comp;
 }
 
 #

@@ -32,14 +32,13 @@ sub title {
 sub assign_runtime_properties {
     my ($self, $interp, $info) = @_;
 
-    $self->{path} = $info->comp_path;
     $self->{source_file} = $info->friendly_name;
     $self->{source_root_key} = $info->extra->{comp_root};
 
     # We used to use File::Basename for this but that is broken
     # because URL paths always use '/' as the dir-separator but we
     # could be running on any OS.
-    ($self->{dir_path}, $self->{name}) = $self->{path} =~ m,(.*/)([^/]+)$,;
+    ($self->{dir_path}, $self->{name}) = $info->comp_path =~ m,(.*/)([^/]+)$,;
     $self->{dir_path} =~ s,/$,,;
 
     $self->SUPER::assign_runtime_properties($interp, $info);

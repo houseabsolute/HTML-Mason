@@ -31,7 +31,9 @@ use HTML::Mason::MethodMaker
 
       read_write => [ qw( autoflush
                           data_cache_defaults
-			  out_method ) ],
+			  out_method
+                          use_autohandlers
+                          use_dhandlers ) ],
     );
 
 __PACKAGE__->valid_params
@@ -48,6 +50,10 @@ __PACKAGE__->valid_params
 		     descr => "A subroutine or scalar reference through which all output will pass" },
      data_cache_defaults => { type => HASHREF|UNDEF, optional => 1,
 			      descr => "A hash of default parameters for Cache::Cache" },
+     use_autohandlers             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF,
+				       descr => "Whether to use Mason's 'autohandler' capability" },
+     use_dhandlers                => { parse => 'boolean', default => 1, type => SCALAR|UNDEF,
+				       descr => "Whether to use Mason's 'dhandler' capability" },
     );
 
 __PACKAGE__->contained_objects
@@ -102,7 +108,7 @@ sub _initialize {
 sub _reinitialize {
     my ($self) = @_;
     $self->_initialize;
-    foreach my $field (qw(aborted aborted_value autohandler_next declined dhandler_arg)) {
+    foreach my $field (qw(aborted aborted_value declined dhandler_arg)) {
 	$self->{$field} = undef;
     }
 
@@ -134,10 +140,13 @@ sub exec {
 	if (!ref($comp) && substr($comp,0,1) eq '/') {
 	    $comp =~ s,/+,/,g;
 	    $orig_path = $path = $comp;
-	    $comp = $interp->load($path);
+	    $comp = $self->fetch_comp($path);
 
 	    unless ($comp) {
-		if (defined($interp->dhandler_name) and $comp = $interp->find_comp_upwards($path,$interp->dhandler_name)) {
+		if ( $self->use_dhandlers and
+		     defined $interp->dhandler_name and
+		     $comp = $interp->find_comp_upwards($path,$interp->dhandler_name) ) {
+
 		    my $parent_path = $comp->dir_path;
 		    ($self->{dhandler_arg} = $path) =~ s{^$parent_path/?}{};
 		}
@@ -157,6 +166,10 @@ sub exec {
 
 	    my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
 	    $self->push_buffer_stack($buffer);
+
+	    # The component will determine its parents here so we
+	    # _must_ do this before building the wrapper chain.
+	    $comp->request($self);
 
 	    # Build wrapper chain and index.
 	    my $first_comp;
@@ -430,8 +443,9 @@ sub fetch_comp
 	return $self->base_comp;
     }
     if ($path eq 'PARENT') {
-	return $self->current_comp->parent
+	my $c = $self->current_comp->parent
 	    or error "PARENT designator used from component with no parent";
+	return $c;
     }
 
     #
@@ -467,8 +481,13 @@ sub fetch_comp
     #
     # Otherwise pass the absolute path to interp->load.
     #
-    $path = absolute_comp_path($path, $self->current_comp->dir_path);
-    return $self->interp->load($path);
+    $path = absolute_comp_path($path, $self->current_comp->dir_path)
+	unless substr($path, 0, 1) eq '/';
+
+    my $comp = $self->interp->load($path);
+    $comp->request($self) if $comp;
+
+    return $comp;
 }
 
 #
@@ -1278,3 +1297,13 @@ L<HTML::Mason::Component>
 L<HTML::Mason::ApacheHandler>
 
 =cut
+
+=item use_autohandlers
+
+True or false, default is true.  If not true, Mason will not attempt
+to use autohandlers.
+
+=item use_dhandlers
+
+True or false, default is true.  If not true, Mason will not attempt
+to use dhandlers.

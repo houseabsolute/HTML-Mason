@@ -77,10 +77,6 @@ __PACKAGE__->valid_params
 				       descr => "A filename in which Mason events will be logged" },
      system_log_separator         => { parse => 'string',  default => "\cA", type => SCALAR,
 				       descr => "A string to separate entries in the Mason events log" },
-     use_autohandlers             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF,
-				       descr => "Whether to use Mason's 'autohandler' capability" },
-     use_dhandlers                => { parse => 'boolean', default => 1, type => SCALAR|UNDEF,
-				       descr => "Whether to use Mason's 'dhandler' capability" },
      use_object_files             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF,
 				       descr => "Whether to cache component objects on disk" },
      use_reload_file              => { parse => 'boolean', default => 0, type => SCALAR|UNDEF,
@@ -114,9 +110,6 @@ sub new
 		       system_log_fh => undef,
 		       system_log_events_hash => undef,
 		     }, $class;
-
-    $self->{autohandler_name} = undef unless $self->{use_autohandlers};
-    $self->{dhandler_name} = undef unless $self->{use_dhandlers};
 
     $self->system_log_events($self->{system_log_events}) if exists $self->{system_log_events};
     $self->_initialize;
@@ -267,7 +260,13 @@ sub load {
 
 	# I think this is broken.  It should also be assigning things
 	# like disk_path (for disk-based comps), comp_root, etc.
-	$comp->assign_runtime_properties($self, url_path => $path, comp_id => $comp_id);
+	my $info = HTML::Mason::ComponentInfo->new( friendly_name => $path,
+						    comp_path => $path,
+						    comp_id => $comp_id,
+						    last_modified => time,
+						    source_callback => sub { },
+						  );
+	$comp->assign_runtime_properties($self, $info);
 
 	$code_cache->{$comp_id} = {comp=>$comp, type=>'physical'};
 	return $comp;
@@ -542,6 +541,10 @@ sub push_files_written
 #
 # Look for component <$name> starting in <$startpath> and moving upwards
 # to the root. Return component object or undef.
+#
+# I think this is a potential waste of time.  The ->load method does
+# lots of work but we only need to call it for the _last_ component
+# found.  Can we use ->comp_exists?  Must research.  -dave
 #
 sub find_comp_upwards
 {
@@ -1066,16 +1069,6 @@ Absolute path of system log.  Default is $data_dir/etc/system.log .
 =item system_log_separator
 
 Separator to use between fields on a line in the system log. Default is ctrl-A (C<"\cA">).
-
-=item use_autohandlers
-
-True or false, default is true.  If not true, Mason will not attempt
-to use autohandlers.
-
-=item use_dhandlers
-
-True or false, default is true.  If not true, Mason will not attempt
-to use dhandlers.
 
 =item use_object_files
 
