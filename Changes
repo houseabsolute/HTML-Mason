@@ -5,6 +5,21 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+1.1201  July 24, 2002
+
+[ ENHANCEMENTS ]
+
+- Added details to the UPGRADE document on what has changed with the
+caching system.
+- Added some documentation on how to arbitrarily expire items in the
+cache with the new caching system.  This is in HTML::Mason::Devel.
+
+[ BUG FIXES ]
+
+- Fix compilation error in HTML::Mason::Tools that was occuring with
+Perl 5.00503.
+- Allow <%method> and <%def> tags to be in any case.
+
 1.12  July 23, 2002
 
 [ ENHANCEMENTS ]
