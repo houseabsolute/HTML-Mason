@@ -5,6 +5,14 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.29_01
+
+[ BUG FIXES ]
+
+- Mason now throws an error if the path specified in a component's
+'inherit' flag cannot be found. Task id #480.
+
+
 1.22  July 14, 2003
 
 [ ENHANCEMENTS ]
@@ -620,6 +628,8 @@ Mason can now figure this out by itself.
 component call uses a component object for its first argument, or the
 call starts with SELF: or PARENT:.
 - ** The "perl_" prefix for Mason tags is no longer supported.
+- ** The backslash character now eliminates a newline at the end of
+any line, not just before %-lines and section tags.
 
 [ ENHANCEMENTS AND NEW FEATURES ]
 
