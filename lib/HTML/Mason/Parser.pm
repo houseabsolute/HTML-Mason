@@ -588,13 +588,8 @@ sub _parse_textseg
 
 	my %h;
 	$h{perl_line} = index($text,"\n%",$s->{curpos});
-	$h{perl_tag}  = index(lc $text,'<%perl>',$s->{curpos});
 	$h{substitute_tag} = index($text,'<%', $s->{curpos});
 	$h{call_tag}  = index($text,'<&',$s->{curpos});
-
-	# Prefer perl_tag to substitute if both matched at the same
-	# place.
-	delete $h{substitute_tag} if $h{substitute_tag} == $h{perl_tag};
 
 	# Sort keys by values (thanks, Randall!)
 	my @keys = ( map {$_->[0]}
@@ -617,7 +612,13 @@ sub _parse_textseg
 								  end => $h{$k} ) )
 		if $s->{curpos} < $h{$k};
 
-	    my $method = "_parse_$k";
+	    # See if <% is actually the first part of <%perl>.
+	    my $method;
+	    if ($k eq 'substitute_tag' and lc(substr($text,$h{$k},7)) eq '<%perl>') {
+		$method = '_parse_perl_tag';
+	    } else {
+		$method = "_parse_$k";
+	    }
 
 	    $self->$method( index => $h{$k},
 			    segbegin => $params{segbegin},
@@ -672,6 +673,7 @@ sub _parse_perl_tag
 
     my $s = $self->{parser_state}{text_parse_state};
 
+    pos($params{text}) = $s->{curpos};
     unless ($params{text} =~ m{</\%perl>}ig) {
 	die $self->_make_error( error => "<%perl> with no matching </%perl>",
 				errpos => $params{segbegin} + $params{index} );
