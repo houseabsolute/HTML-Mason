@@ -78,7 +78,6 @@ sub OK { return 0 }
 sub DECLINED { return -1 }
 sub SERVER_ERROR { return 500 }
 sub NOT_FOUND { return 404 }
-use Apache::Request;
 use Data::Dumper;
 use File::Path;
 use File::Spec;
@@ -313,7 +312,7 @@ sub _get_val
     }
     my $c = Apache->request ? Apache->request : Apache->server;
 
-    my @val = $mod_perl::VERSION < 1.24 ? $c->dir_config($p) : $c->dir_config->get($p);
+    my @val = Apache::perl_hook('TableApi') ? $c->dir_config->get($p) : $c->dir_config($p);
 
     HTML::Mason::Exception::Params->throw( error => "Only a single value is allowed for configuration parameter '$p'\n" )
 	if @val > 1 && ! $wantarray;
@@ -355,6 +354,7 @@ sub new
 
     HTML::Mason::Exception::Params->throw( error => "args_method parameter must be either 'CGI' or 'mod_perl'\n" )
 	if exists $options{args_method} && $options{args_method} !~ /^(?:CGI|mod_perl)$/;
+    require Apache::Request if $options{args_method} eq 'mod_perl';
 
     HTML::Mason::Exception::Params->throw( error => "error_mode parameter must be one of 'html', 'fatal', 'raw_html', or 'raw_fatal'\n" )
 	if exists $options{error_mode} && $options{error_mode} !~ /^(?:raw_)?(?:html|fatal)$/;
@@ -587,8 +587,6 @@ sub handle_request_1
 {
     my ($self,$r,$request) = @_;
 
-    $r = Apache::Request->new($r);
-
     my $interp = $self->interp;
 
     #
@@ -635,8 +633,13 @@ sub handle_request_1
     }
 
     my %args;
-    my $args_method = $self->args_method eq 'mod_perl' ? '_mod_perl_args' : '_cgi_args';
-    %args = $self->$args_method($r,$request);
+    if ($self->args_method eq 'mod_perl') {
+      %args = $self->_mod_perl_args(Apache::Request->new($r));
+    } else {
+      %args = $self->_cgi_args($r);
+    }
+    #my $args_method = $self->args_method eq 'mod_perl' ? '_mod_perl_args' : '_cgi_args';
+    #%args = $self->$args_method($r,$request);
 
     #
     # Deprecated output_mode parameter - just pass to request out_mode.
