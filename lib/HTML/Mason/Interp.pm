@@ -300,63 +300,62 @@ sub load {
     # If code cache contains an up to date entry for this path,
     # use the cached sub.
     #
-    if (exists($code_cache->{$comp_id}) and $code_cache->{$comp_id}->{lastmod} >= $srcmod) {
-	return $code_cache->{$comp_id}->{comp};
-    } else {
-	$objfilemod = (defined($objfile) and $objisfile) ? $objstat[9] : 0;
-	#
-	# Load the component from source or object file.
-	#
-	$self->write_system_log('COMP_LOAD', $comp_id);	# log the load event
+    return $code_cache->{$comp_id}->{comp}
+	if exists($code_cache->{$comp_id}) and $code_cache->{$comp_id}->{lastmod} >= $srcmod;
 
-	my $comp;
-	if ($objfile) {
-	    #
-	    # We are using object files.  Update object file if necessary
-	    # and load component from there.
-	    #
-	    my $object_code;
-	    do
-	    {
-		if ($objfilemod < $srcmod) {
-		    $object_code = $source->object_code( compiler => $self->compiler );
-		    $self->write_object_file( object_code => $object_code, object_file => $objfile );
-		}
-		# read the existing object file
-		$object_code ||= read_file($objfile);
-		$comp = eval { $self->eval_object_code( object_code => $object_code ) };
+    $objfilemod = (defined($objfile) and $objisfile) ? $objstat[9] : 0;
+    #
+    # Load the component from source or object file.
+    #
+    $self->write_system_log('COMP_LOAD', $comp_id);	# log the load event
 
-		if ($@) {
-		    if (isa_mason_exception($@, 'Compilation::IncompatibleCompiler')) {
-			$objfilemod = 0;
-			undef $object_code;
-		    } else {
-			$self->_compilation_error( $source->friendly_name, $@ );
-		    }
-		}
-	    } until ($object_code);
-	} else {
-	    #
-	    # No object files. Load component directly into memory.
-	    #
-	    my $object_code = $source->object_code( compiler => $self->compiler );
+    my $comp;
+    if ($objfile) {
+	#
+	# We are using object files.  Update object file if necessary
+	# and load component from there.
+	#
+	my $object_code;
+	do
+	{
+	    if ($objfilemod < $srcmod) {
+		$object_code = $source->object_code( compiler => $self->compiler );
+		$self->write_object_file( object_code => $object_code, object_file => $objfile );
+	    }
+	    # read the existing object file
+	    $object_code ||= read_file($objfile);
 	    $comp = eval { $self->eval_object_code( object_code => $object_code ) };
-	    $self->_compilation_error( $source->friendly_name, $@ ) if $@;
-	}
-	$comp->assign_runtime_properties($self, $source);
 
+	    if ($@) {
+		if (isa_mason_exception($@, 'Compilation::IncompatibleCompiler')) {
+		    $objfilemod = 0;
+		    undef $object_code;
+		} else {
+		    $self->_compilation_error( $source->friendly_name, $@ );
+		}
+	    }
+	} until ($object_code);
+    } else {
 	#
-	# Delete any stale cached version of this component, then
-	# cache it if it's small enough.
+	# No object files. Load component directly into memory.
 	#
-	$self->delete_from_code_cache($comp_id);
-
-	if ($comp->object_size <= $self->code_cache_max_elem) {
-	    $code_cache->{$comp_id} = {lastmod=>$srcmod, comp=>$comp, type=>'physical'};
-	    $self->{code_cache_current_size} += $comp->object_size;
-	}
-	return $comp;
+	my $object_code = $source->object_code( compiler => $self->compiler );
+	$comp = eval { $self->eval_object_code( object_code => $object_code ) };
+	$self->_compilation_error( $source->friendly_name, $@ ) if $@;
     }
+    $comp->assign_runtime_properties($self, $source);
+
+    #
+    # Delete any stale cached version of this component, then
+    # cache it if it's small enough.
+    #
+    $self->delete_from_code_cache($comp_id);
+
+    if ($comp->object_size <= $self->code_cache_max_elem) {
+	$code_cache->{$comp_id} = {lastmod=>$srcmod, comp=>$comp, type=>'physical'};
+	$self->{code_cache_current_size} += $comp->object_size;
+    }
+    return $comp;
 }
 
 sub delete_from_code_cache {
