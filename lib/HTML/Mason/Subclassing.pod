@@ -1,0 +1,86 @@
+=pod
+
+=head1 NAME
+
+HTML::Mason::Subclassing - Documentation on Subclassing Internal Mason classes
+
+=head1 DESCRIPTION
+
+This is the deep voodoo guide, for folks who want to create their own
+custom subclasses for parts of Mason, such as the Request or Buffer
+objects.
+
+=head1 Class::Container
+
+A number of modules in Mason are subclasses of C<Class::Container>.
+This module was originally part of the Mason core as
+C<HTML::Mason::Container>, but Ken Williams decided to release it separately on CPAN.
+
+It was created to encapsulate some common behaviors for Mason objects
+such as parameter validation and the creation of "contained" objects.
+
+Basically, any Mason object which takes parameters to its constructor
+B<must> inherit from this module.  Of course, since all of the classes
+that you might consider subclassing already inherit from
+C<Class::Container>, you won't need to inherit from it directly.
+However, you may need to use some of its methods.
+
+So before you go further we highly recommend familiarizing yourself
+with C<Class::Container> and its methods.  Also feel free to look at
+some of the Mason core modules to see how C<Class::Container> is used
+within Mason itself.
+
+=head1 SUBCLASSABLE CLASSES
+
+The following classes have been designed with subclassing in mind:
+
+=over 4
+
+=item * HTML::Mason::Request
+
+This object is your old friend C<$m>.  The request contains
+information about the current request context, and provides methods
+for calling other components.
+
+=item * HTML::Mason::Resolver
+
+The resolver's job is to translate a component paths into an actual
+component.  Mason comes with a single Resolver subclass,
+C<HTML::Mason::Resolver::File>, which is used to translate component
+paths into filesystem paths.
+
+=item * HTML::Mason::Lexer
+
+The lexer is responsible for parsing a component.  Creating a new
+lexer would allow you to change Mason's component syntax.
+
+=item * HTML::Mason::Compiler
+
+The compiler takes the parsed chunks from the lexer and gives them
+meaning.  The default compiler, C<HTML::Mason::Compiler::ToObject>,
+turns a Mason component into a Mason "object file", which contains
+actual Perl code.
+
+=item * HTML::Mason::Buffer
+
+Buffers are created and manipulated (mostly) by the request class and
+are responsible for handling output.  Buffers apply filters to output
+and buffer it (surprise) as well.
+
+=item * HTML::Mason::ApacheHandler
+
+The ApacheHandler class is the bridge between the mod_perl world and
+Mason, primarily Mason's Interp class.
+
+It also provides its own C<HTML::Mason::Request> and
+C<HTML::Resolver::File> subclasses which implement some mod_perl
+specific behaviors and features.
+
+=item * HTML::Mason::Interp
+
+The Interp is the core of Mason, and is primarily responsible for
+making all the other objects do their jobs.
+
+=back
+
+=cut
