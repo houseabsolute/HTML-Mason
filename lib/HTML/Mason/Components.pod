@@ -560,7 +560,7 @@ For more than three lines of Perl, consider using a <%perl> block.
 
 =back
 
-=head2 <% xxx %>
+=head2 &lt;% xxx %&gt;
 
 Most useful for printing out variables, as well as more complex
 expressions. Examples:
@@ -575,7 +575,7 @@ expressions. Examples:
 For side-effect commands like assignments, consider using a % line or
 <%perl> block instead.
 
-=head2 <%perl> xxx <%/perl>
+=head2 &lt;%perl&gt; xxx &lt;%/perl&gt;
 
 Useful for Perl blocks of more than a few lines. For a very small
 block, consider using % lines.
