@@ -64,16 +64,8 @@ sub new
     my $class = ref $proto || $proto;
 
     validate( @_, { compiler => { isa => 'HTML::Mason::Compiler' } } );
-    my %p = @_;
 
-    my $self = bless {}, $class;
-
-    foreach ( keys %fields )
-    {
-	$self->{$_} = $p{$_} || $fields{$_};
-    }
-
-    return $self;
+    return bless {%fields, @_}, $class;
 }
 
 sub lex
