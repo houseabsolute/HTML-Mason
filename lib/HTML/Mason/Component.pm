@@ -293,7 +293,18 @@ sub parent {
 #
 # Accessors for various files associated with component
 #
-sub object_file { my $self = shift; return ($self->persistent) ? ( File::Spec->catdir( $self->interp->object_dir, $self->fq_path ) ) : undef }
-sub cache_file { my $self = shift; return ($self->persistent) ? ( File::Spec->catdir( $self->interp->data_cache_dir, compress_path($self->fq_path) ) ) : undef }
+sub object_file { 
+    my $self = shift;
+    return $self->persistent ?
+	File::Spec->catdir( $self->interp->object_dir, $self->fq_path ) :
+	undef;
+}
+
+sub cache_file {
+    my $self = shift;
+    return $self->persistent ?
+	File::Spec->catdir( $self->interp->data_cache_dir, compress_path($self->fq_path) ) :
+	undef;
+}
 
 1;
