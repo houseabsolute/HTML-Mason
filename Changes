@@ -5,18 +5,18 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
-1.29_01
+1.3x
+
+[ BACKWARDS INCOMPATIBILITIES ]
+
+- Mason now requires version 1.24 of mod_perl in the ApacheHandler
+module.
 
 [ BUG FIXES ]
 
 - Mason now throws an error if the path specified in a component's
 'inherit' flag cannot be found. Task id #480.
 
-[ ENHANCEMENTS ]
-
-- The CGIHandler emulation of $r, the Apache request object, is now
-much more complete, and has extensive regression tests, thanks to a
-large patch by David Wheeler.
 
 1.22  July 14, 2003
 
