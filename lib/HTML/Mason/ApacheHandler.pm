@@ -66,7 +66,7 @@ sub cgi_object
 
 sub _run_comp
 {
-    my ($self, $wantarray, $comp, @args) = @_;
+    my $self = shift;
 
     my $apache_print = $self->{apache_print} = \&Apache::print;
 
@@ -554,7 +554,7 @@ sub handle_request {
 	# Do not process error at all in raw mode or if die handler was overriden.
 	#
 	my $raw_err = $err;
-	unless ($self->error_mode =~ /^raw_/ or $interp->die_handler_overridden) {
+	unless ($self->error_mode =~ /^raw_/) {
 	    $err = error_process ($err, $request);
 	}
 
@@ -564,21 +564,17 @@ sub handle_request {
 	# The raw_ modes correspond to pre-1.02 error formats.
 	#
 	if ($self->error_mode eq 'fatal') {
-	    unless ($interp->die_handler_overridden) {
-		$err =~ s/\n/\t/g;
-		$err =~ s/\t$//g;
-		$err .= "\n" if $err !~ /\n$/;
-	    }
+	    $err =~ s/\n/\t/g;
+	    $err =~ s/\t$//g;
+	    $err .= "\n" if $err !~ /\n$/;
 	    die $err;
 	} elsif ($self->error_mode eq 'raw_fatal') {
 	    die ("System error:\n$raw_err\n");
 	} elsif ($self->error_mode =~ /html$/) {
-	    unless ($interp->die_handler_overridden) {
-		if ($self->error_mode =~ /^raw_/) {
-		    $err = "<h3>System error</h3><p><pre><font size=-1>$raw_err</font></pre>\n";
-		} else {
-		    $err = error_display_html($err,$raw_err);
-		}
+	    if ($self->error_mode =~ /^raw_/) {
+		$err = "<h3>System error</h3><p><pre><font size=-1>$raw_err</font></pre>\n";
+	    } else {
+		$err = error_display_html($err,$raw_err);
 	    }
 	    # Send HTTP headers if they have not been sent.
 	    if (!http_header_sent($apreq)) {
@@ -857,9 +853,6 @@ are analagous to the modes above except that the errors are not
 processed for readability or compactness. The resulting messages are
 much longer, but may include information accidentally omitted by
 Mason's processing.
-
-Regardless of this setting, no readability processing occurs if you
-have overriden the L<Interp/die_handler> Interp parameter.
 
 =item interp
 
