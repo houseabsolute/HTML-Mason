@@ -38,13 +38,11 @@ my $comp;
 {
     my $interp = InterpWatcher->new();
     $comp = $interp->make_component( comp_source => 'foo' );
-    undef $interp;
 }
 ok( InterpWatcher->count, 1 );
 
 {
     my $interp = InterpWatcher->new();
     $comp = $interp->make_component( comp_source => 'foo' );
-    undef $interp;
 }
 ok( InterpWatcher->count, 2 );
