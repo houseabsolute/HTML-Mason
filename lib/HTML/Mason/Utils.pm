@@ -3,13 +3,9 @@
 # under the same terms as Perl itself.
 
 package HTML::Mason::Utils;
-require 5.004;
-require Exporter;
-@ISA = qw(Exporter);
-@EXPORT = qw();
-@EXPORT_OK = qw(access_data_cache);
 
 use strict;
+
 use IO::File qw(!/^SEEK/);
 use POSIX;
 use Fcntl qw(:flock);
@@ -18,6 +14,13 @@ use File::Path;
 use HTML::Mason::Config;
 use HTML::Mason::Tools qw(date_delta_to_secs);
 use MLDBM ($HTML::Mason::Config{mldbm_use_db}, $HTML::Mason::Config{mldbm_serializer});
+
+require Exporter;
+
+use vars qw(@ISA @EXPORT_OK);
+
+@ISA = qw(Exporter);
+@EXPORT_OK = qw(access_data_cache);
 
 sub access_data_cache
 {

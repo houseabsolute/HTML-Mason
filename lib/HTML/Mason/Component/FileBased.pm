@@ -3,12 +3,14 @@
 # under the same terms as Perl itself.
 
 package HTML::Mason::Component::FileBased;
-require 5.004;
-@ISA = qw(HTML::Mason::Component);
+
+use strict;
 
 use File::Basename;
-use HTML::Mason::Tools qw(compress_path);
-use strict;
+
+use vars qw(@ISA);
+
+@ISA = qw(HTML::Mason::Component);
 
 use HTML::Mason::MethodMaker ( read_only => [ qw( path source_file ) ] );
 

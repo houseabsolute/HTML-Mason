@@ -9,15 +9,18 @@
 #
 
 package HTML::Mason::Tools;
-require 5.004;
-require Exporter;
-@ISA = qw(Exporter);
-@EXPORT = qw();
-@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs dumper_method paths_eq is_absolute_path make_absolute_path compress_path pkg_loaded pkg_installed);
 
 use strict;
+
 use IO::File qw(!/^SEEK/);
 use Cwd;
+
+require Exporter;
+
+use vars qw(@ISA @EXPORT_OK);
+
+@ISA = qw(Exporter);
+@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs dumper_method paths_eq is_absolute_path make_absolute_path compress_path pkg_loaded pkg_installed);
 
 #
 # Return contents of file. If $binmode is 1, read in binary mode.

@@ -3,19 +3,18 @@
 # under the same terms as Perl itself.
 
 package HTML::Mason::Resolver::File;
-require 5.004;
-require Exporter;
-@ISA = qw(HTML::Mason::Resolver);
-@EXPORT = qw();
-@EXPORT_OK = qw();
+
+use strict;
 
 use HTML::Mason::Resolver;
 use HTML::Mason::Tools qw(paths_eq);
-use strict;
+
+use vars qw(@ISA);
+
+@ISA = qw(HTML::Mason::Resolver);
 
 #
 # Public API
-
 #
 # Given a component path, return the fully-qualified path, plus
 # auxiliary information that will be passed to the get_* methods

@@ -3,11 +3,14 @@
 # under the same terms as Perl itself.
 
 package HTML::Mason::Component::Subcomponent;
-require 5.004;
-@ISA = qw(HTML::Mason::Component);
+
+use strict;
 
 use HTML::Mason::Component;
-use strict;
+
+use vars qw(@ISA);
+
+@ISA = qw(HTML::Mason::Component);
 
 use HTML::Mason::MethodMaker ( read_only => [ qw( name owner ) ] );
 

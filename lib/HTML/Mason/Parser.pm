@@ -3,9 +3,9 @@
 # under the same terms as Perl itself.
 
 package HTML::Mason::Parser;
-require 5.004;
 
 use strict;
+
 use Data::Dumper;
 use File::Path;
 use File::Basename;
@@ -16,7 +16,7 @@ use HTML::Mason::Request;
 use HTML::Mason::Tools qw(dumper_method read_file);
 
 use HTML::Mason::MethodMaker
-( read_write => [ qw( default_escape_flags
+    ( read_write => [ qw( default_escape_flags
 		      ignore_warnings_expr
 		      in_package
 		      postamble
@@ -25,7 +25,7 @@ use HTML::Mason::MethodMaker
 		      preprocess
 		      taint_check
 		      use_strict ) ]
-  );
+    );
 
 # Fields that can be set in new method, with defaults
 my %fields =

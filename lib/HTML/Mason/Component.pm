@@ -7,7 +7,7 @@ require 5.004;
 
 use strict;
 use File::Basename;
-use HTML::Mason::Tools qw(read_file compress_path);
+use HTML::Mason::Tools qw(compress_path);
 use vars qw($AUTOLOAD);
 
 use HTML::Mason::MethodMaker

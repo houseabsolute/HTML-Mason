@@ -3,14 +3,15 @@
 # under the same terms as Perl itself.
 
 package HTML::Mason::Request;
-require 5.004;
 
-use HTML::Mason::Tools qw(is_absolute_path read_file);
+use strict;
 
 use Carp;
-use strict;
+
+use HTML::Mason::Tools qw(is_absolute_path read_file);
+use HTML::Mason::Utils;
+
 use vars qw($REQ $REQ_DEPTH %REQ_DEPTHS);
-my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P,$HTML::Mason::Commands::m);
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( aborted

@@ -3,9 +3,9 @@
 # under the same terms as Perl itself.
 
 package HTML::Mason::Interp;
-require 5.004;
 
 use strict;
+
 use Carp;
 use File::Path;
 use File::Basename;
@@ -16,6 +16,7 @@ use HTML::Mason::Tools qw(is_absolute_path);
 use HTML::Mason::Commands qw();
 use HTML::Mason::Config;
 use HTML::Mason::Resolver::File;
+
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 
 use HTML::Mason::MethodMaker
