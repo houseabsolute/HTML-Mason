@@ -44,9 +44,8 @@ BEGIN
 }
 
 use HTML::Mason::MethodMaker
-    ( read_only  => 'auto_send_headers',
-      read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
-		      qw( ah apache_req ) ] );
+    ( read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
+		      qw( ah apache_req auto_send_headers ) ] );
 
 # A hack for subrequests
 sub _properties { qw(ah apache_req), shift->SUPER::_properties }
@@ -957,9 +956,9 @@ C<HTML::Mason::Interp> class, or a subclass thereof.
 
 =head1 ACCESSOR METHODS
 
-All of the above properties have standard accessor methods of the
-same name: no arguments retrieves the value, and one argument sets it.
-For example:
+All of the above properties, except interp, have standard accessor
+methods of the same name: no arguments retrieves the value, and one
+argument sets it.  For example:
 
     my $ah = new HTML::Mason::ApacheHandler;
     my $decline_dirs = $ah->decline_dirs;
@@ -989,7 +988,8 @@ If this method returns an Apache status code, that means that it could
 not create a Mason request object.
 
 This method is useful if you would like to have a chance to decline a
-request based on properties of the Mason request object.  For example:
+request based on properties of the Mason request object or a component
+object.  For example:
 
     my $req = $ah->prepare_request($r);
     # $req must be an Apache status code if it's not an object
