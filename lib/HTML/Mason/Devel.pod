@@ -1047,7 +1047,7 @@ single-letter escape flags (plus arbitrary whitespace):
 The current valid flags are
 
     h - escape for HTML ('<' => '&lt;', etc.)
-    u - escape for URL (':' => '%3A', etc.)
+    u - escape for URL query parameter (':' => '%3A', etc.) - all chars but [a-zA-Z0-9_.-]
     n - turn off default escape flags
 
 The administrator may specify a set of default escape flags via
@@ -1061,6 +1061,8 @@ this case you would use the C<n> flag to turn off HTML-escaping for a
 specific expression:
 
     <% $html_block |n %>
+
+Future Mason versions will allow user-defined and multi-letter escape flags.
 
 =head2 \ at end of line
 
