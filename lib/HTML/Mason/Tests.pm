@@ -30,11 +30,11 @@ if ($error) {
   $error = join("\n",@lines[0..$lines-1]);
   $error =~ s{ at ([A-Z]:)?/.*}{ }g;
 }
-</%init>\
+</%init>
 <%args>
 $error
 $lines=>1
-</%args>\
+</%args>
 EOF
 	    },
 	    { path => '/shared/display_comp_obj',
@@ -94,7 +94,7 @@ My source dir is /.../<% $subfile %>
 
 <%args>
 $comp
-</%args>\
+</%args>
 EOF
 	    },
 	  );
@@ -375,21 +375,19 @@ sub _run_test
     my $self = shift;
     my $test = $self->{current_test};
 
-    my %params = ( exists $test->{parser_params} ?
-		   %{ $test->{parser_params} } :
+    my %params = ( exists $test->{compiler_params} ?
+		   %{ $test->{compiler_params} } :
 		   ()
 		 );
 
     if ($DEBUG && keys %params)
     {
-	print "Parser params:\n";
+	print "Compiler params:\n";
 	while ( my ($k, $v) = each %params)
 	{
 	    print "$k => $v\n";
 	}
     }
-
-    my $parser = HTML::Mason::Parser->new( %params );
 
     %params = ( exists $test->{interp_params} ?
 		%{ $test->{interp_params} } :
@@ -417,7 +415,7 @@ sub _run_test
 	$interp = HTML::Mason::Interp->new( comp_root => $self->comp_root,
 					    data_dir  => $self->data_dir,
 					    out_method => \$buf,
-					    parser => $parser,
+#					    compiler => $compiler,
 					    %params,
 					  );
     }
@@ -697,9 +695,9 @@ still prepended by /<group name>/.
 The arguments that should be passed to the component, in list or hash
 reference form. If none is given, no arguments are passed.
 
-=item * parser_params
+=item * compiler_params
 
-This is a hash reference of parameters to be passed to the Parser->new
+This is a hash reference of parameters to be passed to the Compiler->new
 method.
 
 =item * interp_params
