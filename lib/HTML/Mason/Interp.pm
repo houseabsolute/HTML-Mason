@@ -71,7 +71,6 @@ __PACKAGE__->valid_params
      system_log_file              => { parse => 'string',  optional => 1, type => SCALAR },
      system_log_separator         => { parse => 'string',  default => "\cA", type => SCALAR },
      use_autohandlers             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
-     use_data_cache               => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
      use_dhandlers                => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
      use_object_files             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
      use_reload_file              => { parse => 'boolean', default => 0, type => SCALAR|UNDEF },
