@@ -225,7 +225,10 @@ from a standalone script">.
 
 This module also provides an C<$r> request object for use inside
 components, similar to the Apache request object under
-C<HTML::Mason::ApacheHandler>, but limited in functionality.
+C<HTML::Mason::ApacheHandler>, but limited in functionality.  Please
+note that we aim to replicate the C<mod_perl> functionality as closely
+as possible - if you find differences, do I<not> depend on them to
+stay different.  We may fix them in a future release.
 
 Finally, this module alters the C<HTML::Mason::Request> object C<$m> to
 provide direct access to the CGI query, should such access be necessary.
@@ -287,8 +290,9 @@ Interpreter lasts for the entire lifetime of the handler.
 This works much like the C<Apache> method of the same name.  When
 passed the name of a header, returns the value of the given outgoing
 header.  When passed a name and a value, sets the value of the header.
-Setting the header to C<undef> will actually I<unset> the header,
-removing it from the table of headers that will be sent to the client.
+Setting the header to C<undef> will actually I<unset> the header
+(instead of setting its value to C<undef>), removing it from the table
+of headers that will be sent to the client.
 
 The headers are eventually passed to the C<CGI> module's C<header()>
 method.
@@ -299,6 +303,10 @@ used instead of the C<header()> method.  This means that in order to
 do a redirect, all you need to do is:
 
  $r->header_out(Location => 'http://redirect.to/here');
+
+You may be happier using the C<< $m->redirect >> method, though,
+because it hides most of the complexities of sending headers and
+getting the status code right.
 
 
 =item * content_type()
