@@ -130,7 +130,6 @@ use File::Path;
 use File::Spec;
 use HTML::Mason::Exceptions( abbr => [qw(param_error system_error error)] );
 use HTML::Mason::Interp;
-use HTML::Mason::Error qw(error_process error_display_html);
 use HTML::Mason::Utils;
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
@@ -748,8 +747,8 @@ sub handle_request_1
 
     my $retval;
     {
-	# Remap $r->print to Mason's $m->out while executing request
-	local *Apache::print = sub { shift; $request->out(@_) };
+	# Remap $r->print to Mason's $m->print while executing request
+	local *Apache::print = sub { shift; $request->print(@_) };
 	$retval = $request->exec($comp_path, %args);
     }
 
