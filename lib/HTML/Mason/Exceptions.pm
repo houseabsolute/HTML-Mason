@@ -59,15 +59,7 @@ BEGIN
 
 use Exception::Class (%e);
 
-# Turn on tracing for each exception class.
-foreach my $pkg (keys(%e)) {
-    $pkg->do_trace(1);
-}
-
-if ($HTML::Mason::DEBUG)
-{
-    Exception::Class::Base->Trace(1);
-}
+Exception::Class::Base->Trace(1);
 
 my %abbrs = map { $e{$_}{abbr} => $_ } grep {exists $e{$_}{abbr}} keys %e;
 
@@ -102,7 +94,7 @@ use overload
 sub as_string
 {
     my ($self) = @_;
-    
+
     return $self->error;
 }
 
@@ -137,7 +129,7 @@ sub analyze_error
     my ($self) = @_;
 
     my ($file, @msgs, @frames);
-    
+
     @frames = $self->filtered_frames;
     if (UNIVERSAL::isa($self, 'HTML::Mason::Exception::Compilation')) {
 	my $error = $self->error;
@@ -162,7 +154,7 @@ sub as_log_line
 
     my $info = $self->analyze_error;
     my @fields;
-    
+
     push(@fields, [File => $info->{file}]);
     push(@fields, [Errors => join(", ", map { sprintf("[%d:%s]", $_->[1], $_->[0]) } @{$info->{errors}})]);
     push(@fields, [Stack => join(", ", map { sprintf("[%s:%d]", $_->filename, $_->line) } @{$info->{frames}})]);
