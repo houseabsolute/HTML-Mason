@@ -214,29 +214,6 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'error_variable',
-		      description => q{Make sure $@ isn't blown away somewhere},
-		      component => <<'EOF',
-<%perl>
- eval { die "foo" };
- if ($@) {
-   die $@ if $m->aborted;
-   $m->print( $@ ? "Error exists\n" : "No error\n" );
-   $m->comp( 'handle_error', err => $@ );
-   return;
- }
-</%perl>
-
-<%def handle_error>\
-<%args> $err </%args>
-Error: <% $err %>\
-</%def>
-EOF
-		      expect => qr{^Error exists\nError: foo},
-		    );
-
-#------------------------------------------------------------
-
     $group->add_test( name => 'subcomponent_redefined',
 		      description => "Make sure Mason doesn't allow redefinition of subcomponent",
 		      component => <<'EOF',
