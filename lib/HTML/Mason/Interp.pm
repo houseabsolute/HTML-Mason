@@ -743,10 +743,8 @@ cache, etc), live within the data_dir.
 
 If this parameter is not given then there are several results.  First,
 Mason will not use object files, since it has no place to put them.
-Second, Mason will not be able to create a system log unless an
-explicit system log file name is given.  Third, the default caching
-class for the request object will be Cache::MemoryCache instead of
-Cache::FileCache.
+Second, the default caching class for the request object will be
+Cache::MemoryCache instead of Cache::FileCache.
 
 =item data_cache_defaults
 

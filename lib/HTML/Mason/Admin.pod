@@ -542,11 +542,6 @@ measured.  It is estimated by the length of the source text plus some
 overhead.  Your process growth will not match the code cache
 size exactly.
 
-You can monitor the performance of the memory cache by turning on
-L<system logs> and counting the COMP_LOAD events. If these are
-occurring frequently even for a long-running process, you may want to
-increase the size of your code cache.
-
 You can prepopulate the cache with components that you know will be
 accessed often; see L<Preloading>. Note that preloaded components
 possess no special status in the cache and can be discarded like any
