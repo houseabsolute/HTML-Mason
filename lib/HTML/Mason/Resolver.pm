@@ -44,7 +44,7 @@ sub _virtual
     my $sub = (caller(1))[3];
     $sub =~ s/.*::(.*?)$/$1/;
     HTML::Mason::Exception::VirtualMethod->throw( error =>
-						  "$sub is a virtual method and must be subclassed in " . ref $self );
+						  "$sub is a virtual method and must be overridden in " . ref $self );
 }
 
 1;
