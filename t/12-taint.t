@@ -2,33 +2,7 @@
 
 use strict;
 
-BEGIN
-{
-    # Cwd in taint mode spits out weird errors with older Perls and
-    # may or may not work at all
-    if ( $] < 5.006 )
-    {
-        # Nasty hack so at least one person can run these damn tests
-        # with 5.00503
-        if ( -d '/home/autarch/mason/dist' )
-        {
-            $INC{'Cwd.pm'} = 1;
-            local $^W = 0;
-            eval <<'EOF';
-sub Cwd::getcwd { '/home/autarch/mason/dist' }
-sub Cwd::cwd { Cwd::getcwd }
-sub getcwd { Cwd::getcwd }
-EOF
-        }
-        else
-        {
-            print "1..0\n";
-            exit;
-        }
-    }
-
-    $ENV{PATH} = '';
-}
+BEGIN { $ENV{PATH} = '/bin:/usr/bin' }
 
 # Cwd has to be loaded after sanitizing $ENV{PATH}
 use Cwd;
