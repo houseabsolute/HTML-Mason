@@ -1418,11 +1418,14 @@ Returns the Interp object associated with this request.
 
 =for html <a name="item_make_subrequest">
 
-=item make_subrequest (parameters)
+=item make_subrequest (comp => path, args => arrayref, other parameters)
 
 This method creates a new Request object which inherits its parent's
 settable properties, such as C<autoflush> and C<out_method>.  These
 values may be overridden by passing parameters to this method.
+
+The "comp" parameter is required, while all other parameters are
+optional.
 
 See the L<Subrequests section in the I<Component Developer's
 Guide>|HTML::Mason::Devel/"Subrequests"> for more details about the
