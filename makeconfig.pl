@@ -102,7 +102,7 @@ sub make_config
 	    $val = $MLDBM::UseDB;
 	} else {
 	    print "\nSearching for DBM packages...";
-	    foreach (qw(DB_File GDBM_File NDBM_File SDBM_File ODBM_File)) {
+	    foreach (qw(GDBM_File DB_File NDBM_File SDBM_File ODBM_File)) {
 		if (have_pkg($_)) {
 		    print "found $_.\n";
 		    $val = $_;

@@ -759,7 +759,7 @@ used right at the top of a C<E<lt>%perl_init%E<gt>> section:
     <%perl_init>
         return if mc_cache_self(expire_in=>'3 hours'[, key=>'fookey']);
         ... <rest of perl_init> ...
-    </%perl_init%>
+    </%perl_init>
 
 B<mc_cache_self> is built on top of B<mc_cache>, so it inherits all
 the expiration options described earlier.
