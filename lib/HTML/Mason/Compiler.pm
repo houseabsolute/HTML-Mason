@@ -194,7 +194,7 @@ sub end_component
     my $self = shift;
 
     $self->lexer->throw_syntax_error("Not enough component-with-content ending tags found")
-	if @{ $self->{comp_with_content_stack} };
+	if $self->{comp_with_content_stack} && @{ $self->{comp_with_content_stack} };
 
     $self->{current_comp} = undef;
 }
