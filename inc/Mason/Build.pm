@@ -1253,6 +1253,29 @@ sub ACTION_test_pod
     }
 }
 
+sub ACTION_test_pod_coverage
+{
+    my $self = shift;
+
+    eval { require Test::Pod::Coverage };
+
+    if ($@)
+    {
+        warn "The test_pod action requires the Test::Pod module.\n";
+        return;
+    }
+
+    $self->depends_on('build');
+
+    my @modules = Test::Pod::Coverage::all_modules( 'blib' );
+    Test::Pod::Coverage->import( tests => scalar @modules );
+
+    foreach my $f (@modules)
+    {
+        Test::Pod::Coverage::pod_coverage_ok($f);
+    }
+}
+
 sub ACTION_install
 {
     my $self = shift;
