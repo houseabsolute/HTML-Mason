@@ -301,12 +301,6 @@ C<$m-E<gt>out> should be used instead of C<print> or C<$r-E<gt>print>,
 since C<$m-E<gt>out> may be redirected or buffered depending on the
 current state of the interpreter.
 
-=for html <a name="item_parser">
-
-=item parser
-
-Returns the Parser object associated with this request.
-
 =for html <a name="item_process_comp_path">
 
 =item process_comp_path (comp_path)
