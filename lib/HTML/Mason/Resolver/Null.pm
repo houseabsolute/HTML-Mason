@@ -49,14 +49,14 @@ HTML::Mason::Resolver::Null - a do-nothing resolver
 =head1 DESCRIPTION
 
 This HTML::Mason::Resolver subclass is useful if you want to create
-components via the C<< HTML::Mason::Interp->make_component >> method
+components via the C<HTML::Mason::Interp->make_component> method
 and you never plan to interact with the filesystem.
 
 Basically, it provides all of the necessary resolver methods but none
 of them do anything.
 
-This means that if you use this method things like C<< $interp->exec
->> will simply not work at all.
+This means that if you use this method things like C<$interp->exec>
+will simply not work at all.
 
 However, if you just want to make an component with an interepreter
 and execute it then it can be useful.  For example:

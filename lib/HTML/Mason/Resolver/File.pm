@@ -151,6 +151,7 @@ on the filesystem, which is the norm for most Mason-based applications.
 
 =head1 CONSTRUCTOR
 
+=over
 
 =item comp_root
 
@@ -167,6 +168,8 @@ If it is an array reference, it should be of the following form:
 The "keys" for each path must be unique names and their "values" must
 be filesystem paths.  These paths will be searched in the provided
 order whenever a component path must be resolved to a filesystem path.
+
+=back
 
 =head1 ADDITIONAL METHODS
 
