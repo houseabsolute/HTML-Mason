@@ -1,8 +1,6 @@
 Component Samples
 =================
 
-cd-me/		Online CD store example.
-
 dump-request	Dumps request parameters, great for debugging.
 		Converted from Apache documentation.
 
