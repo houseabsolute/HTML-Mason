@@ -5,7 +5,7 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
-0.7.1
+0.71  Tue Sep 14 13:12:17 PDT 1999
 
 - Logic of top_level_predicate was reversed in 0.7; fixed.
 L{Reported by Tom Hughes, Eric Hammond}
