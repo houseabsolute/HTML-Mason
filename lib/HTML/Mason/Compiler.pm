@@ -163,6 +163,8 @@ sub _init_comp_data
     my $self = shift;
     my $data = shift;
 
+    $data->{dangling_print} = 0;
+
     $data->{body} = '';
 
     foreach ( qw( def method ) )
@@ -186,6 +188,8 @@ sub end_component
 
     $self->lexer->throw_syntax_error("Not enough component-with-content ending tags found")
 	if @{ $self->{comp_with_content_stack} };
+
+    $self->_close_dangling_print;
 
     $self->{current_comp} = undef;
 }
@@ -230,6 +234,8 @@ sub perl_block
     my $self = shift;
     my %p = @_;
 
+    $self->_close_dangling_print;
+
     $self->_add_body_code( $p{block} );
 }
 
@@ -259,7 +265,13 @@ sub text
 
     $p{text} =~ s,(['\\]),\\$1,g;
 
-    $self->_add_body_code( "\$m->print( '$p{text}' );\n" ) if $p{text} ne '';
+    my $code;
+    $code = '$m->print( ' unless $self->{current_comp}{dangling_print};
+    $code .= "( '$p{text}' ),";
+
+    $self->_add_body_code($code) if $p{text} ne '';
+
+    $self->{current_comp}{dangling_print} = 1;
 }
 
 sub text_block
@@ -332,6 +344,8 @@ sub end_named_block
 {
     my $self = shift;
 
+    $self->_close_dangling_print;
+
     $self->{in_main}++;
 
     $self->{current_comp} = $self;
@@ -363,12 +377,16 @@ sub substitution
 	$text = "\$_escape->( $text, $flags )";
     }
 
-    my $code = "\$m->print( $text );\n";
+    my $code;
+    $code = '$m->print( ' unless $self->{current_comp}{dangling_print};
+    $code .= "( $text ),";
 
     eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
     compiler_error $@ if $@;
 
     $self->_add_body_code($code);
+
+    $self->{current_comp}{dangling_print} = 1;
 }
 
 sub component_call
@@ -390,6 +408,8 @@ sub component_call
     eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
     compiler_error $@ if $@;
 
+    $self->_close_dangling_print;
+
     $self->_add_body_code($code);
 }
 
@@ -406,6 +426,8 @@ sub component_content_call
 
     eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
     compiler_error $@ if $@;
+
+    $self->_close_dangling_print;
 
     $self->_add_body_code($code);
 }
@@ -432,6 +454,8 @@ sub component_content_call_end
     eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
     compiler_error $@ if $@;
 
+    $self->_close_dangling_print;
+
     $self->_add_body_code($code);
 }
 
@@ -445,7 +469,20 @@ sub perl_line
     eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
     compiler_error $@ if $@;
 
+    $self->_close_dangling_print;
+
     $self->_add_body_code($code);
+}
+
+sub _close_dangling_print
+{
+    my $self = shift;
+
+    return unless $self->{current_comp}{dangling_print};
+
+    $self->{current_comp}{body} .= " );\n";
+
+    $self->{current_comp}{dangling_print} = 0;
 }
 
 sub _add_body_code
@@ -453,12 +490,13 @@ sub _add_body_code
     my $self = shift;
     my $code = shift;
 
-    my $comment = '';
+    my $comment = $self->{current_comp}{dangling_print} ? "\n" : '';
+
     if ( $self->lexer->line_number )
     {
 	my $line = $self->lexer->line_number;
 	my $file = $self->lexer->name;
-	$comment = "#line $line $file\n";
+	$comment .= "#line $line $file\n";
     }
 
     $self->{current_comp}{body} .= "$comment$code";
@@ -513,7 +551,7 @@ sub _blocks
     return @{ $self->{current_comp}{blocks}{ shift() } };
 }
 
-sub HTML::Mason::Parser::new 
+sub HTML::Mason::Parser::new
 {
     die "The Parser module is no longer a part of HTML::Mason.  Please see ".
         "the Lexer and Compiler modules, its replacements.\n";
