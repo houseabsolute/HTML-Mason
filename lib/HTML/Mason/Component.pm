@@ -109,7 +109,7 @@ sub _determine_inheritance {
 	if (defined($self->{flags}->{inherit})) {
 	    $self->{inherit_path} = absolute_comp_path($self->{flags}->{inherit}, $self->dir_path);
 	}
-    } elsif ($self->{request}->use_autohandlers && defined $interp->autohandler_name) {
+    } elsif ($self->{request}->use_autohandlers) {
 	if ($interp->allow_recursive_autohandlers) {
 	    if ($self->name eq $interp->autohandler_name) {
 		unless ($self->dir_path eq '/') {

@@ -50,13 +50,13 @@ __PACKAGE__->valid_params
     (
      allow_recursive_autohandlers => { parse => 'boolean', default => 1, type => SCALAR|UNDEF,
 				       descr => 'Whether multiple autohandlers can be invoked on a single request' },
-     autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR|UNDEF,
+     autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR,
 				       descr => "The filename to use for Mason's 'autohandler' capability" },
      code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR,  # 10M
 				       descr => "The maximum size of the component code cache" },
      compiler                     => { isa => 'HTML::Mason::Compiler',
 				       descr => "A Compiler object for compiling components" },
-     dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR|UNDEF,
+     dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR,
 				       descr => "The filename to use for Mason's 'dhandler' capability" },
      # OBJECT cause qr// returns an object
      ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
@@ -900,8 +900,7 @@ discussion of the pros and cons.
 
 =item autohandler_name
 
-File name used for autohandlers. Default is "autohandler". If
-undef, Mason will not look for autohandlers.
+File name used for autohandlers. Default is "autohandler".
 
 =item autoflush
 
@@ -969,8 +968,7 @@ C<$m-E<gt>cache> calls.
 
 =item dhandler_name
 
-File name used for dhandlers. Default is "dhandler". If
-undef, Mason will not look for dhandlers.
+File name used for dhandlers. Default is "dhandler".
 
 =item ignore_warnings_expr
 
