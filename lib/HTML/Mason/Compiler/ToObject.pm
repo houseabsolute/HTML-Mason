@@ -111,7 +111,6 @@ sub compile_to_file
 		    name => $source->friendly_name,
 		    comp_class => $source->comp_class,
 		    fh => $fh );
-    printf "C->compile_to_file(2): rss=%d, vsz=%d\n", `ps -eo rss,vsz -p $$` =~ /(\d+)\s+(\d+)/ if $ENV{MEM};
 
     close $fh 
 	or system_error "Couldn't close object file $file: $!";
