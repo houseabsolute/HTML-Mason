@@ -1049,7 +1049,8 @@ precedence. You would need to use an absolute path to call the
 file-based component. To avoid this situation and for general clarity,
 we recommend that you pick a unique way to name all of your
 subcomponents that is unlikely to interfere with file-based
-components. For example, you could start subcomponent names with ".".
+components. A commonly accepted practice is to start subcomponent
+names with ".".
 
 While inside a subcomponent, you may use absolute or relative paths to
 call file-based components and also call any of your "sibling"
@@ -1104,6 +1105,9 @@ Second, via the call_method component method:
 Methods are commonly used in conjunction with autohandlers to make
 templates more flexible. See L<Object-Oriented
 Techniques|"Object-Oriented Techniques"> for more information.
+
+You cannot create a subcomponent and method with the same name. 
+This is mostly to prevent obfuscation and accidental errors.
 
 =head1 FLAGS AND ATTRIBUTES
 
