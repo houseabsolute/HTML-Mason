@@ -178,7 +178,7 @@ EOF
     $group->add_test( name => 'setting_escapes',
                       description => 'test setting escapes',
                       component => <<'EOF',
-% $m->interp->add_escape( uc => sub { uc $_[0] } );
+% $m->interp->add_escape( uc => sub { ${$_[0]} = uc ${$_[0]} } );
 This will be in <% 'upper case' | uc %>
 EOF
                       expect => <<'EOF',
