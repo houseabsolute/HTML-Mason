@@ -818,7 +818,7 @@ HTML::Mason::handler() routine in handler.pl.
 
 Title that you want this ApacheHandler to appear as under
 Apache::Status.  Default is "HTML::Mason status".  This is useful if
-you create more then one ApacheHandler object and want them all
+you create more than one ApacheHandler object and want them all
 visible via Apache::Status.
 
 =item args_method
@@ -838,7 +838,7 @@ returns the CGI object used in the ApacheHandler code.
 When specifying args_method='mod_perl', the $r global is upgraded
 to an Apache::Request object. This object inherits all Apache
 methods and adds a few of its own, dealing with parameters and
-file uploads. See Apache::Request manual page for more information.
+file uploads.  See L<Apache::Request> for more information.
 
 While Mason will load Apache::Request or CGI as needed at runtime, it
 is recommended that you preload the relevant module either in your
