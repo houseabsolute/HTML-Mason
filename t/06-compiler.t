@@ -273,7 +273,7 @@ $8teen
 </%args>
 Never get here
 EOF
-		      expect_error => 'Invalid <%args> section line in /compiler/bad_var_name component at line 3',
+		      expect_error => quotemeta 'Invalid <%args> section line in /compiler/bad_var_name component at line 3',
 		    );
 
 #------------------------------------------------------------
