@@ -157,26 +157,69 @@ sub new {
 		 }, $class;
 }
 
-sub header_out {
-    my ($self, $header) = (shift, shift);
-    my $h = $self->headers_out;
-    return @_ ? $h->set($header, shift) : $h->get($header);
+# CGI request are _always_ main, and there is never a previous or a next
+# internal request.
+sub main {}
+sub prev {}
+sub next {}
+sub is_main {1}
+sub is_initial_req {1}
+
+# What to do with this?
+sub allowed {}
+
+sub method {
+    shift->query->request_method;
+#    return $ENV{REQUEST_METHOD};
 }
 
-sub headers_out {
+# There mut be a mapping for this.
+sub method_number {}
+
+# Can CGI.pm tell us this?
+sub bytes_sent {0}
+
+# The request line sent by the client." Poached from Apache::Emulator.
+sub the_request {
     my $self = shift;
-    return wantarray ? %{$self->{headers_out}} : $self->{headers_out};
+    $self->{the_request} ||= join ' ', $self->method,
+      ($ENV{QUERY_STRING} ? $self->uri . "?$ENV{QUERY_STRING}" : $self->uri),
+      $ENV{SERVER_PROTOCOL} || 'HTTP/1.0';
 }
 
-sub err_header_out {
-    my ($self, $err_header) = (shift, shift);
-    my $h = $self->err_headers_out;
-    return @_ ? $h->set($err_header, shift) : $h->get($err_header);
+# Is CGI ever a proxy request?
+sub proxy_req {}
+
+sub header_only { $ENV{REQUEST_METHOD} eq 'HEAD' }
+
+sub protocol { $ENV{SERVER_PROTOCOL} || 'HTTP/1.0' }
+
+sub hostname { $ENV{HTTP_HOST} }
+
+# Fake it by just giving the current time.
+sub request_time { time }
+
+sub uri {
+    shift->{uri} ||= $ENV{SCRIPT_NAME} . $ENV{PATH_INFO} || '';
 }
 
-sub err_headers_out {
+# Is this available in CGI?
+sub filename {}
+
+# "The $r->location method will return the path of the
+# <Location> section from which the current "Perl*Handler"
+# is being called." This is irrelevant, I think.
+sub location {}
+
+sub path_info { $ENV{PATH_INFO} }
+
+sub args {
     my $self = shift;
-    return wantarray ? %{$self->{err_headers_out}} : $self->{err_headers_out};
+    if (@_) {
+        # Assign args here.
+    }
+    return $ENV{QUERY_STRING} unless wantarray;
+    # Do more here to return key => arg values.
 }
 
 sub headers_in {
@@ -206,6 +249,46 @@ sub header_in {
     my $h = $self->headers_in;
     return @_ ? $h->set($header, shift) : $h->get($header);
 }
+
+
+#           The $r->content method will return the entity body
+#           read from the client, but only if the request content
+#           type is "application/x-www-form-urlencoded".  When
+#           called in a scalar context, the entire string is
+#           returned.  When called in a list context, a list of
+#           parsed key => value pairs are returned.  *NOTE*: you
+#           can only ask for this once, as the entire body is read
+#           from the client.
+# Not sure what to do with this one.
+sub content {}
+
+# I think this may be irrelevant under CGI.
+sub read {}
+
+# Use LWP?
+sub get_remote_host {}
+sub get_remote_logname {}
+
+sub http_header {
+    my $self = shift;
+    my $h = $self->headers_out;
+    my $e = $self->err_headers_out;
+    my $method = exists $h->{Location} || exists $e->{Location} ?
+      'redirect' : 'header';
+    return $self->query->$method(tied(%$h)->cgi_headers,
+                                 tied(%$e)->cgi_headers);
+}
+
+sub send_http_header {
+    print shift->http_header;
+}
+
+# How do we know this under CGI?
+sub get_basic_auth_pw {}
+sub note_basic_auth_failure {}
+
+# I think that this just has to be empty.
+sub handler {}
 
 sub notes {
     my ($self, $key) = (shift, shift);
@@ -237,28 +320,89 @@ sub subprocess_env {
     return $self->{subprocess_env}{$key};
 }
 
-sub method {
-    shift->query->request_method;
-#    return $ENV{REQUEST_METHOD};
-}
-
 sub content_type {
     shift->header_out('Content-Type', @_);
 }
 
-sub http_header {
-    my $self = shift;
-    my $h = $self->headers_out;
-    my $e = $self->err_headers_out;
-    my $method = exists $h->{Location} || exists $e->{Location} ?
-      'redirect' : 'header';
-    return $self->query->$method(tied(%$h)->cgi_headers,
-                                 tied(%$e)->cgi_headers);
+sub content_encoding {
+    shift->header_out('Content-Encoding', @_);
 }
 
-sub send_http_header {
-    print shift->http_header;
+sub content_languages {
+    my ($self, $langs) = @_;
+    return unless $langs;
+    my $h = shift->headers_out;
+    for my $l (@$langs) {
+        $h->add('Content-Language', $l);
+    }
 }
+
+sub status {
+    shift->header_out('Status', @_);
+}
+
+sub status_line {
+    # What to do here? Should it be managed differently than status?
+    my $self = shift;
+    if (@_) {
+        my $status = shift =~ /^(\d+)/;
+        return $self->header_out('Status', $status);
+    }
+    return $self->header_out('Status');
+}
+
+sub headers_out {
+    my $self = shift;
+    return wantarray ? %{$self->{headers_out}} : $self->{headers_out};
+}
+
+sub header_out {
+    my ($self, $header) = (shift, shift);
+    my $h = $self->headers_out;
+    return @_ ? $h->set($header, shift) : $h->get($header);
+}
+
+sub err_headers_out {
+    my $self = shift;
+    return wantarray ? %{$self->{err_headers_out}} : $self->{err_headers_out};
+}
+
+sub err_header_out {
+    my ($self, $err_header) = (shift, shift);
+    my $h = $self->err_headers_out;
+    return @_ ? $h->set($err_header, shift) : $h->get($err_header);
+}
+
+sub no_cache {
+    my $self = shift;
+    $self->header_out(Pragma => 'no-cache');
+    $self->header_out('Cache-Control' => 'no-cache');
+}
+
+sub print {
+    shift->query->print(@_);
+}
+
+# "Send the contents of a file to the client." Do we really want to do this?
+sub send_fd {}
+
+# Should this perhaps throw an exception?
+sub internal_redirect {}
+sub internal_redirect_handler {}
+
+# Do something with ErrorDocument?
+sub custom_response {}
+
+# I think we'ev made this essentially the same thing.
+BEGIN {
+    local $^W;
+    *send_cgi_header = \&send_http_header;
+}
+
+# Does CGI support logging?
+sub log_reason {}
+sub log_error {}
+sub warn {}
 
 sub params {
     my $self = shift;
