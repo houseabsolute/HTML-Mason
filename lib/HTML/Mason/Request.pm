@@ -201,7 +201,7 @@ sub exec {
 		# If declined, try to find the next dhandler.
 		if ( ($declined = $self->declined) and $path) {
 		    $path =~ s,/[^/]+$,, if defined($self->{dhandler_arg});
-		    if ($self->use_dhandler and my $next_comp = $interp->find_comp_upwards($path, $interp->dhandler_name)) {
+		    if ($self->use_dhandlers and my $next_comp = $interp->find_comp_upwards($path, $interp->dhandler_name)) {
 			$comp = $next_comp;
 			my $parent = $comp->dir_path;
 			$self->_reinitialize;
