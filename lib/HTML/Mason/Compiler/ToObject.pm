@@ -226,7 +226,7 @@ sub _body
     if ( @{ $self->{current_comp}{args} } )
     {
 	@args = ( <<'EOF',
-if (@_ % 2 == 0) { %ARGS = @_ } else { die "Odd number of parameters passed to component expecting name/value pairs" }
+if (@_ % 2 == 0) { %ARGS = @_ } else { HTML::Mason::Exception::Params->throw( error => "Odd number of parameters passed to component expecting name/value pairs" ) }
 EOF
 		  $self->_arg_declarations,
 		);
@@ -284,7 +284,7 @@ sub _arg_declarations
     {
 	my $default_val = ( defined $_->{default} ?
 			    $_->{default} :
-			    qq|die "no value sent for required parameter '$_->{name}'"|,
+			    qq|HTML::Mason::Exception::Params->throw( error => "no value sent for required parameter '$_->{name}'" )|,
 			  );
 	# allow for comments after default declaration
 	$default_val .= "\n" if defined $_->{default} && $_->{default} =~ /\#/;
@@ -307,7 +307,7 @@ sub _arg_declarations
 	    push @args, ( "my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
 			  "UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'} } : ",
 			  "UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'HASH' ) ? \%{ \$ARGS{'$_->{name}'} } : ",
-			  qq|die "single value sent for hash parameter '$_->{type}$_->{name}'");|,
+			  qq|HTML::Mason::Exception::Params->throw( error => "single value sent for hash parameter '$_->{type}$_->{name}'" ) );|,
 			);
 	}
 
