@@ -327,12 +327,12 @@ sub _startup
 	{
 	    require Apache::Request unless defined $Apache::Request::VERSION;
 	}
-
-	# if we are in a simple conf file (meaning one without
-	# multiple different Mason configs) we make the apachehandler
-	# object now and simply reuse it later in the handler sub
-	$AH = $pack->make_ah() if $pack->_in_simple_conf_file;
     }
+
+    # if we are in a simple conf file (meaning one without
+    # multiple different Mason configs) we make the apachehandler
+    # object now and simply reuse it later in the handler sub
+    $AH = $pack->make_ah() if $pack->_in_simple_conf_file;
 }
 
 #
@@ -973,7 +973,11 @@ BEGIN
 sub handler %s
 {
     my ($package, $r) = @_;
+# use Time::HiRes ();
+# my $t0 = [Time::HiRes::gettimeofday()];
+# my $has = $AH ? 'first time' : '';
     my $ah = $AH || $package->make_ah($r);
+# warn "$has TOOK ", Time::HiRes::tv_interval($t0), "\n";
     return $ah->handle_request($r);
 }
 EOF
