@@ -146,7 +146,10 @@ sub add_test
     die "no name provided for test\n"
 	unless exists $p{name};
 
-    $p{path} ||= $p{call_path} || $p{name};
+    unless ( exists $p{path} )
+    {
+	$p{path} = $p{call_path} || $p{name};
+    }
 
     my $call_path = "/$self->{name}/";
     $call_path .= exists $p{call_path} ? $p{call_path} : $p{name};
@@ -157,7 +160,7 @@ sub add_test
 	unless exists $p{description};
 
     die "'$p{name}' test has no component\n"
-	unless exists $p{component};
+	unless exists $p{component} || $p{skip_component};
 
     die "'$p{name}' test has no 'expect' or 'expect_error' key\n"
 	unless exists $p{expect} || exists $p{expect_error} || $p{skip_expect} || $self->{create};
@@ -350,7 +353,7 @@ sub _run_tests
 	    if $VERBOSE;
 
 	$self->{current_test} = $test;
-	$self->_write_test_comp;
+	$self->_write_test_comp unless $test->{skip_component};
 	$self->_run_test;
 
 	$x++;
@@ -601,9 +604,15 @@ reachable at.  All paths are prepended with the group name.  So '/bar'
 as a support component in the 'foo' group's ultimate path would be
 '/foo/bar'.
 
-=item * component (required)
+=item * component
 
-Text of the support component.
+Text of the support component.  This parameter must have a value
+unless the skip_component parameter is true.
+
+=item * skip_component
+
+If true, then the test harness will not write a component to disk for
+this test.
 
 =head2 add_test
 
@@ -698,6 +707,12 @@ Returns the component root directory.
 =head2 data_dir
 
 Return the data directory
+
+=head2 check_output ( actual => $actual_output, expect => $expected_output )
+
+Given the parameters shown above, this method will check to see if the
+two are equal.  If they're not equal, it will print out an error
+message attempting to highlight the difference.
 
 =back
 
