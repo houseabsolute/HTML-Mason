@@ -29,6 +29,23 @@ sub import
 	    *{"$caller\::$rw"} = sub { my $s = shift; $s->{$rw} = shift if @_; return $s->{$rw}; };
 	}
     }
+
+    if ($p{read_write_contained})
+    {
+	foreach my $object (keys %{ $p{read_write_contained} })
+	{
+	    foreach my $rwc (@{ $p{read_write_contained}{$object} })
+	    {
+		no strict 'refs';
+		*{"$caller\::$rwc"} = sub { my $self = shift;
+					    my %new = @_ ? ( $rwc => $_[0] ) : ();
+					    my %args = $self->delayed_object_params( $object,
+										     %new );
+					    return $args{$rwc};
+					};
+	    }
+	}
+    }
 }
 
 1;

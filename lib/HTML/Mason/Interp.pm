@@ -40,7 +40,14 @@ use HTML::Mason::MethodMaker
 			  resolver
 			  use_object_files
 			  use_reload_file ) ],
+
+      read_write_contained => { request => [ qw( autoflush
+                                                 data_cache_defaults ) ] },
       );
+
+BEGIN
+{
+}
 
 # Fields that can be set in new method, with defaults
 __PACKAGE__->valid_params
