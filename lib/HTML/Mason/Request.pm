@@ -1994,7 +1994,7 @@ This modifier can be used with the <& &> tag as well, for example:
 Returns 1 if I<comp_path> is the path of an existing component, 0
 otherwise.  I<comp_path> may be any path accepted by
 L<comp|HTML::Mason::Request/item_comp> or
-L<fetch_comp|HTML::Mason::Request/fetch_comp>, including method or
+L<fetch_comp|HTML::Mason::Request/item_fetch_comp>, including method or
 subcomponent paths.
 
 Depending on implementation, <comp_exists> may try to load the
