@@ -141,14 +141,14 @@ reload this page and see a "4", Mason is working!
 =head1 DOCUMENTATION ROADMAP
 
 Once Mason is on its feet, the next step is to write a component or
-two. The (L<Mason Developer's Manual|HTML::Mason::Devel>) is a
+two. The L<Mason Developer's Manual|HTML::Mason::Devel> is a
 complete tutorial for writing, using, and debugging components. A
 reference companion to the Developer's Manual is the Request API
 documentation, L<HTML::Mason::Request|HTML::Mason::Request>.
 
 Whoever is responsible for setting up and tuning Mason should read the
 (L<Administrator's Manual|HTML::Mason::Admin>), though developers
-might also benefit from reading it as well. This document covers more
+will also benefit from reading it as well. This document covers more
 advanced configuration scenarios and performance optimization. The
 reference companion to the Administrator's manual is the
 L<Parameters Reference|HTML::Mason::Params>, which describes all the
