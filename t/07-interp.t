@@ -543,7 +543,7 @@ EOF
 
     my $interp = HTML::Mason::Interp->new( data_dir => $group->data_dir,
 					   comp_root => $group->comp_root,
-					   code_cache_max_size => 9000 );
+					   code_cache_max_size => 9400 );
 
     $group->add_test( name => 'code_cache_test/code_cache_1',
 		      description => 'Run in order to load up code cache',
