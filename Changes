@@ -61,6 +61,7 @@ pass Interp constructor params directly to the ApacheHandler
 constructor, which will create the interp object internally. 
 - ** The MasonMultipleConfig httpd.conf parameter has been removed.
 Mason can now figure this out by itself.
+- ** The HTML::Mason::Interp time() method has gone away.
 
 [ ENHANCEMENTS AND NEW FEATURES ]
 
