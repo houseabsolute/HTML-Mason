@@ -316,7 +316,8 @@ sub _in_simple_conf_file
 {
     my $self = shift;
 
-    return $ENV{MOD_PERL} && $self->_get_string_param('MasonCompRoot');
+    my @roots = $self->_get_string_param('MasonCompRoot');
+    return $ENV{MOD_PERL} && @roots;
 }
 
 my %AH;
