@@ -95,7 +95,7 @@ Mason is optimized for use with mod_perl, but can also be used from
 CGI or as a standalone tool to generate other types of dynamic text
 files (similar to Text::Template, ePerl, etc.). To learn more about
 this option see the STANDALONE MODE section in
-B<L<HTML::Mason::Interp|HTML::Mason::Interp>>.
+L<HTML::Mason::Interp|HTML::Mason::Interp>.
 
 =back
 
@@ -125,7 +125,7 @@ Beyond this trivial example, components can also embed serious chunks
 of Perl code (say, to pull records from a database). They can also
 call other components, cache results for later reuse, and perform all
 the tricks you expect from a regular Perl program. See
-B<L<HTML::Mason::Devel|HTML::Mason::Devel>> for a full tutorial on building, using and
+L<HTML::Mason::Devel|HTML::Mason::Devel> for a full tutorial on building, using and
 debugging Mason components.
 
 =head1 INSTALLATION
@@ -192,27 +192,30 @@ reload this page and see a "4", Mason is working!
 
 Once Mason is on its feet, the next step is to write a component or
 two. The I<Mason Developer's Manual>
-(B<L<HTML::Mason::Devel|HTML::Mason::Devel>>) is a complete tutorial
-for writing, using, and debugging components. A reference companion to
-the Developer's Manual is the Request API documentation,
-B<L<HTML::Mason::Request|HTML::Mason::Request>>.
+(L<HTML::Mason::Devel|HTML::Mason::Devel>) is a complete tutorial for
+writing, using, and debugging components. A reference companion to the
+Developer's Manual is the Request API documentation,
+L<HTML::Mason::Request|HTML::Mason::Request>.
 
 Whoever is responsible for setting up and tuning Mason should read the
-I<Administrator's Manual>
-(B<L<HTML::Mason::Admin|HTML::Mason::Admin>>), though developers might
-also benefit from reading it as well. This document covers more
-advanced configuration scenarios and performance
+I<Administrator's Manual> (L<HTML::Mason::Admin|HTML::Mason::Admin>),
+though developers might also benefit from reading it as well. This
+document covers more advanced configuration scenarios and performance
 optimization. Reference companions to the Administrator's Manual
-include B<L<HTML::Mason::Component|HTML::Mason::Component>>,
-B<L<HTML::Mason::Interp|HTML::Mason::Interp>>, and
-B<L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>>.
+include L<HTML::Mason::Component|HTML::Mason::Component>,
+L<HTML::Mason::Interp|HTML::Mason::Interp>, and
+L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>.
 
 Most of this documentation assumes that you're running Mason on top of
 mod_perl, since that is the most common configuration.  If you are
 using Mason outside of mod_perl, the documentation is still valid;
 you'll just have to ignore mod_perl specific references like $r and
-the ApacheHandler object, and you'll want to read the STANDALONE MODE section in
-B<L<HTML::Mason::Interp|HTML::Mason::Interp>>.
+the ApacheHandler object, and you'll want to read the STANDALONE MODE
+section in L<HTML::Mason::Interp|HTML::Mason::Interp/"STANDALONE
+MODE">.
+
+If you would like to run Mason via a CGI script, please refer to the
+L<HTML::Mason::CGIHandler|HTML::Mason::CGIHandler> documentation.
 
 =head1 AUTHORS
 
