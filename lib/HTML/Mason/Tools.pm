@@ -29,7 +29,7 @@ sub read_file
     die "read_file: '$file' is a directory" if (-d _);
     my $fh = new IO::File $file;
     die "read_file: could not open file '$file' for reading\n" if !$fh;
-    binmode $fh if $mode == 1;
+    binmode $fh if $binmode == 1;
     local $/ = undef;
     my $text = <$fh>;
     return $text;
