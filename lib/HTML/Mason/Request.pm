@@ -782,6 +782,8 @@ sub request_args
 	return \%h;
     }
 }
+*top_args = \&request_args;
+*top_comp = \&request_comp;
 
 #
 # Subroutine called by every component while in debug mode, convenient
