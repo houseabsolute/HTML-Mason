@@ -38,54 +38,18 @@ __END__
 
 =head1 NAME
 
-HTML::Mason::Resolver::File - translates component paths into filesystem paths
+HTML::Mason::Resolver::File::Apache - translates component paths into filesystem paths
 
 =head1 SYNOPSIS
 
-  my $resolver = HTML::Mason::Resolver::File->new( comp_root => '/var/www/mason' );
-
-  my %comp_info = $resolver->get_info('/some/comp.html');
-
-  my $source = $resolver->get_source(%comp_info);
-
-  my $comp_root = $resolver->comp_root;
-
-  # return "/some/comp.html"
-  my $comp_path = $resolver->file_to_path('/var/www/mason/some/comp.html');
+  my $resolver = HTML::Mason::Resolver::File::Apache->new( comp_root => '/var/www/mason' );
 
 =head1 DESCRIPTION
 
 This HTML::Mason::Resolver subclass is used when components are stored
-on the filesystem, which is the norm for most Mason-based applications.
-
-=head1 CONSTRUCTOR
-
-The C<new> method takes a single mandatory parameter, C<comp_root>.
-This parameter may be either a scalar or an array reference.  If it is
-a scalar, it should be a filesystem path indicating the component
-root.
-
-If it is an array reference, it should be of the following form:
-
- [ [ key1 => '/path/to/root' ],
-   [ key2 => '/path/to/other/root' ] ]
-
-The "keys" for each path must be unique names and their "values" must
-be filesystem paths.  These paths will be searched in order whenever a
-component path must be resolved to a filesystem path.
-
-=head1 ADDITIONAL METHODS
-
-Besides, the methods documented in the HTML::Mason::Resolver method,
-this class provides one additional method.
-
-=over 4
-
-=item comp_root
-
-This method returns the component root, which will either be a scalar
-or an array reference, as documented in L<CONSTRUCTOR|CONSTRUCTOR>.
-
-=back
+on the filesystem and you are using C<HTML::Mason::ApacheHandler> to
+process requests.  It adds an additional method,
+C<apache_request_to_comp_path>, needed by
+C<HTML::Mason::ApacheHandler>.
 
 =cut
