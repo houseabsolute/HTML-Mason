@@ -1060,11 +1060,11 @@ to a temporary variable.
 =item base_comp
 
 Returns the current base component for method and attributes.
-Generally set to the original page component; however, if you invoke
-call_method on a component, C<base_comp> is dynamically set to that
-component until call_method exits. See L<Object-Oriented Techniques in
-the I<Component Developer's Guide>|HTML::Mason::Devel/"Object-Oriented
-Techniques"> for examples of usage.
+Initially, the base component is the same as the requested component
+(returned by C<< $m->request_comp >>.  However, whenever a component
+call is made, the base component changes to the called component,
+unless the component call was made uses a component object for its
+first argument, or the call starts with SELF: or PARENT:.
 
 =for html <a name="item_cache">
 
