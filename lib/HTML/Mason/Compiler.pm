@@ -76,7 +76,7 @@ sub _initialize
     my @lexer_param_keys = keys %{$self->lexer_class->valid_params};
     @lexer_params{@lexer_param_keys} = delete @p{@lexer_param_keys};
 
-    $self->lexer( $self->lexer_class->new(%lexer_params, compiler => $self) );
+    $self->lexer( $self->lexer_class->new(%lexer_params) );
 }
 
 sub set_allowed_globals
@@ -115,7 +115,7 @@ sub compile
 	    if $@;
     }
 
-    $self->lexer->lex( comp_text => $p{comp_text}, name => $p{name} );
+    $self->lexer->lex( comp_text => $p{comp_text}, name => $p{name}, compiler => $self );
 
     return $self->compiled_component;
 }

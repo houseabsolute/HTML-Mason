@@ -13,7 +13,6 @@ Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->
 
 my %valid_params =
   (
-   compiler => { isa => 'HTML::Mason::Compiler' },
   );
 
 sub valid_params { \%valid_params }
@@ -65,14 +64,25 @@ sub new
 sub lex
 {
     my $self = shift;
-    my %p = @_;
+    my %p = validate(@_,
+		     {comp_text => SCALAR, 
+		      name => SCALAR,
+		      compiler => {isa => 'HTML::Mason::Compiler'}}
+		    );
+    
+    # Make these local, because they only apply to the current parse.
+    # This also avoids a circular ref between the compiler & lexer.  They
+    # aren't really data members of $self, but $self is a convenient place
+    # to store them temporarily.
+    local $self->{compiler}  = $p{compiler};
+    local $self->{comp_text} = $p{comp_text};
+    local $self->{name}      = $p{name};
 
-    $self->{comp_text} = $p{comp_text};
-    $self->{comp_text} =~ s/\r//g;
+    # Clean up DOS line endings
+    $self->{comp_text} =~ s/\r\n/\n/g;
 
-    $self->{name} = $p{name};
+    # Initialize lexer state
     $self->{lines} = 1;
-
     $self->{in_def} = $self->{in_method} = 0;
     $self->{pos} = undef;
 
