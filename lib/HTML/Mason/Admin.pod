@@ -39,7 +39,8 @@ other will be ignored.
 Mason is very flexible, and you can replace parts of it by creating
 your own classes.  This documentation assumes that you are simply
 using the classes provide in the Mason distribution.  Customizing and
-subclassing is covered in the L<C<HTML::Mason::Subclassing>> document.
+subclassing is covered in the
+L<Subclassing|HTML::Mason::Subclassing> document.
 
 XXX: Must write that (can use appendix C from the book!).
 
@@ -63,8 +64,8 @@ the C<DocumentRoot> setting, and your I<data directory> will be a
 directory called "mason" located under your C<ServerRoot>.
 
 The I<component root> is the top of your component source tree.  See
-L<CONFIGURING VIRTUAL SITES> to understand why the component root and
-C<DocumentRoot> might differ.
+L<CONFIGURING VIRTUAL SITES|"CONFIGURING VIRTUAL SITES"> to understand
+why the component root and C<DocumentRoot> might differ.
 
 When Mason handles a request, the requested filename must be
 underneath your component root -- that gives Mason a legitimate
@@ -146,7 +147,7 @@ example, comp_root becomes MasonCompRoot and data_dir becomes
 MasonDataDir.
 
 All of the available parameters, along with their F<httpd.conf> name,
-are listed in L<Params>.
+are listed in L<HTML::Mason::Params|HTML::Mason::Params>.
 
 =head1 CONFIGURING VIA A HANDLER SCRIPT
 
@@ -193,13 +194,16 @@ httpd and then copied to each child process.
 
 These objects have a fair number of possible parameters, which are
 discussed in the next two subsections. The various parameters are
-documented in B<L<HTML::Mason::Params>> reference, as well as the
-individual reference manuals for each object:
-B<L<HTML::Mason::Interp>>, B<L<HTML::Mason::ApacheHandler>>,
-B<L<HTML::Mason::Request>>, B<L<HTML::Mason::Compiler>> and
-B<L<HTML::Mason::Compiler::ToObject>>, and
-B<L<HTML::Mason::Resolver::File>>. The B<L<HTML::Mason::Lexer>> object
-takes no parameters.
+documented in B<L<HTML::Mason::Params|HTML::Mason::Params>> reference,
+as well as the individual reference manuals for each object:
+B<L<HTML::Mason::Interp|HTML::Mason::Interp>>,
+B<L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>>,
+B<L<HTML::Mason::Request|HTML::Mason::Request>>,
+B<L<HTML::Mason::Compiler|HTML::Mason::Compiler>> and
+B<L<HTML::Mason::Compiler::ToObject|HTML::Mason::Compiler::ToObject>>,
+and B<L<HTML::Mason::Resolver::File|HTML::Mason::Resolver::File>>. The
+B<L<HTML::Mason::Lexer|HTML::Mason::Lexer>> object takes no
+parameters.
 
 The advantage of embedding these parameters in objects is that
 advanced configurations can create more than one set of objects,
@@ -339,21 +343,23 @@ package that components execute in, by default B<HTML::Mason::Commands>:
       use vars qw($dbh %session);
     }
 
-Alternatively you can use the L<Compiler/allow_globals> parameter:
+Alternatively you can use the L<Compiler's
+allow_globals|HTML::Mason::Compiler/allow_globals> parameter:
 
     my $ah = new HTML::Mason::ApacheHandler (..., allow_globals => [qw($dbh %session)]);
 
 The only advantage to C<allow_globals> is that it will do the right
 thing if you've chosen a different package for components to run in
-(via the L<Compiler::ToObject/in_package> Compiler::ToObject
-parameter.)
+(via the L<Compiler::ToObject
+in_package|HTML::Mason::Compiler::ToObject/in_package> parameter.)
 
 Similarly, to initialize the variable in C<handler.pl>, you need to
 set it in the component package:
 
     $HTML::Mason::Commands::dbh = DBI->connect(...);
 
-Alternatively you can use the L<Interp/set_global> Interp method:
+Alternatively you can use the L<Interp's
+set_global|HTML::Mason::Interp/set_global> method:
 
     $ah->interp->set_global(dbh => DBI->connect(...));
 
@@ -456,7 +462,9 @@ handle a request for /foo/bar/.
 If you would like Mason to handle directory requests, do the
 following:
 
-1. Set the L<ApacheHandler/decline_dirs> ApacheHandler parameter to 0.
+1. Set the L<ApacheHandler's
+   decline_dirs|HTML::Mason::ApacheHandler/decline_dirs> parameter to
+   0.
 
 2. If your C<handler.pl> contains the standard "return -1" line to
 decline non-text requests (as given in the previous section), add a
@@ -498,8 +506,9 @@ Ordinarily, when C<< $m->cache >> is called, Mason passes to the cache
 constructor the C<namespace>, C<username>, and C<cache_root> options,
 along with any other options given in the C<< $m->cache >> method.
 
-You may specify other default constructor options with
-the L<Interp/data_cache_defaults> Interp parameter.  For example,
+You may specify other default constructor options with the L<Interp's
+data_cache_defaults|HTML::Mason::Interp/data_cache_defaults> parameter.  For
+example,
 
     data_cache_defaults =>
        { cache_class => 'SizeAwareFileCache',
@@ -528,15 +537,16 @@ to administer them.
 
 When Mason loads a component, it places it in a memory cache.
 
-The maximum size of the cache is specified with the
-L<Interp/code_cache_max_size> Interp parameter; default is 10MB.
-When the cache fills up, Mason frees up space by discarding a
-number of components. The discard algorithm is least frequently used
-(LFU), with a periodic decay to gradually eliminate old frequency
-information. In a nutshell, the components called most often in recent
-history should remain in the cache.  Very large components (over 20%
-of the maximum cache size) never get cached, on the theory that they
-would force out too many other components.
+The maximum size of the cache is specified with the L<Interp's
+code_cache_max_size|HTML::Mason::Interp/code_cache_max_size>
+parameter; default is 10MB.  When the cache fills up, Mason frees up
+space by discarding a number of components. The discard algorithm is
+least frequently used (LFU), with a periodic decay to gradually
+eliminate old frequency information. In a nutshell, the components
+called most often in recent history should remain in the cache.  Very
+large components (over 20% of the maximum cache size) never get
+cached, on the theory that they would force out too many other
+components.
 
 Note that the "size" of a component in memory cannot literally be
 measured.  It is estimated by the length of the source text plus some
@@ -544,15 +554,15 @@ overhead.  Your process growth will not match the code cache
 size exactly.
 
 You can prepopulate the cache with components that you know will be
-accessed often; see L<Preloading>. Note that preloaded components
+accessed often; see L<Preloading|"Preloading">. Note that preloaded components
 possess no special status in the cache and can be discarded like any
 others.
 
 Naturally, a cache entry is invalidated if the corresponding component
 source file changes.
 
-To turn off code caching completely, set L<Interp/code_cache_max_size> to
-0.
+To turn off code caching completely, set L<Interp's
+code_cache_max_size|HTML::Mason::Interp/code_cache_max_size> to 0.
 
 =head2 Object files
 
@@ -580,7 +590,8 @@ files previously created under that compiler or lexer for the changes
 to take effect.
 
 If for some reason you don't want Mason to create object files, set
-the L<Interp/use_object_files> Interp parameter to 0.
+the L<Interp's use_object_files|HTML::Mason::Interp/use_object_files>
+parameter to 0.
 
 =head2 Static source mode
 
@@ -589,18 +600,20 @@ file every time that component is called. This can add up to a lot
 of file stats.
 
 If you have a live site with infrequent and well-controlled updates,
-you may run in L<Interp/static_source> mode. In this mode Mason will
-not check source timestamps when it uses an in-memory cache or object
-file.  The disadvantage is that you must remove object files and
-restart the server whenever you change component source; however this
-process can be easily automated.
+you may choose to use
+L<static_source|HTML::Mason::Interp/static_source> mode. In this mode
+Mason will not check source timestamps when it uses an in-memory cache
+or object file.  The disadvantage is that you must remove object files
+and restart the server whenever you change component source; however
+this process can be easily automated.
 
 =head2 Preloading
 
 You can tell Mason to preload a set of components in the parent
-process, rather than loading them on demand, using the
-L<Interp/preloads> Interp parameter.  Each child server will start
-with those components loaded in the memory cache. The trade-offs are:
+process, rather than loading them on demand, using the L<Interp's
+preloads|HTML::Mason::Interp/preloads> parameter.  Each child server
+will start with those components loaded in the memory cache. The
+trade-offs are:
 
 =over
 
@@ -755,8 +768,8 @@ default component roots when none is provided by the user.
 When using Mason outside the web, the default component root is simply
 the system's root directory.  If you do not provide your own component
 root, Mason will allow you to use relative paths in calls to the
-L<Interp/load> method, in which case the path will be assumed to be
-relative to the current working directory.
+L<Interp's load|HTML::Mason::Interp/load> method, in which case the
+path will be assumed to be relative to the current working directory.
 
 =head1 AUTHORS
 
@@ -764,10 +777,10 @@ Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams
 
 =head1 SEE ALSO
 
-L<HTML::Mason>,
-L<HTML::Mason::Interp>,
-L<HTML::Mason::ApacheHandler>,
-L<HTML::Mason::Lexer>,
-L<HTML::Mason::Compiler>
+L<HTML::Mason|HTML::Mason>,
+L<HTML::Mason::Interp|HTML::Mason::Interp>,
+L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>,
+L<HTML::Mason::Lexer|HTML::Mason::Lexer>,
+L<HTML::Mason::Compiler|HTML::Mason::Compiler>
 
 =cut
