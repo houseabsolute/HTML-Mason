@@ -38,7 +38,7 @@ BEGIN
 
 use Exception::Class (%e);
 
-if ( HTML::Mason::DEBUG )
+if ($HTML::Mason::DEBUG)
 {
     Exception::Class::Base->do_trace(1);
     foreach my $class (keys %e)
