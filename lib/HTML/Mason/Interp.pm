@@ -472,7 +472,7 @@ sub make_component {
     my %p = @_;
     $p{comp_text} = read_file(delete $p{comp_file}) if exists $p{comp_file};
     HTML::Mason::Exception::Params->throw
-	("Must specify either 'comp_text' or 'comp_file' parameter to 'make_component()'")
+	( error => "Must specify either 'comp_text' or 'comp_file' parameter to 'make_component()'" )
 	unless $p{comp_text};
 
     # The compiler expects 'comp' and 'name'
