@@ -1,6 +1,14 @@
-use ExtUtils::MakeMaker;
-
+use strict;
 use 5.005;
+
+use ExtUtils::MakeMaker;
+use Getopt::Long;
+
+use vars qw(%APACHE);
+
+my %opts;
+GetOptions( \%opts, 'no-prompts' );
+
 require './makeconfig.pl';
 
 # These are required modules.
@@ -27,7 +35,7 @@ chk_version(Apache::Request => '0.31') or
 	. "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
 
 make_config();
-setup_mod_perl_tests() unless $ARGV[0] eq '--no-prompts';
+setup_mod_perl_tests() unless $opts{'no-prompts'};
 
 # Get these into the MY namespace for the MY::test method
 %MY::APACHE = %APACHE;
@@ -37,7 +45,7 @@ setup_mod_perl_tests() unless $ARGV[0] eq '--no-prompts';
 WriteMakefile(
     'NAME'    => 'HTML::Mason',
     'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
-    'PREREQ_PM' => { Data::Dumper => 2.08, 'File::Spec' => 0.8, 'Params::Validate' => 0.04 },
+    'PREREQ_PM' => { Data::Dumper => 2.08, 'File::Spec' => 0.8, 'Params::Validate' => 0.04, Apache::Request => 0.31 },
 
     # %APACHE is created when setup_mod_perl_tests() is called.  The
     # code that does this creation is in makeconfig.pl.
@@ -54,14 +62,14 @@ sub test
 
     my $test = $self->SUPER::test(@_);
 
-    # %APACHE is set in makeconfig.pl.
+    # %MY::APACHE is set in makeconfig.pl.
     # If we are not going to test with Apache there is no harm in
     # setting this anyway.
 
     # The PORT env var is used by Apache::test.  Don't delete it!
-    my $port = $APACHE{port} || 8228;
-    $APACHE{apache_dir} ||= '';
-    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE} = \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$APACHE{apache_dir}^; $1/;
+    my $port = $MY::APACHE{port} || 8228;
+    $MY::APACHE{apache_dir} ||= '';
+    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE} = \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; \$\$ENV{PORT}=$port; \$\$ENV{MY::APACHE_DIR}=q^$MY::APACHE{apache_dir}^; $1/;
 
     return $test;
 }
