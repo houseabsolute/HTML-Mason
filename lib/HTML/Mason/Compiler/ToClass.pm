@@ -32,6 +32,7 @@ sub new
     my %p = @_;
 
     my $self = bless {}, $class;
+    $self = $self->SUPER::new(%p);
 
     foreach ( keys %p )
     {
@@ -80,7 +81,7 @@ sub _class_name
 
     my $class_name = $self->{lexer}->file;
     $class_name =~ s,[/\\],::,g;
-    $class_name =~ s/[^:\w]//g;
+    $class_name =~ s/([^:\w])/'0x' . hex(ord($1))/eg;
 
     return $class_name;
 }
@@ -107,7 +108,7 @@ sub _init
 
     unless ( \$self->{_initialized} )
     {
-        $self->{once}
+        $self->{once};
         \$self->{initialized} = 1;
     }
     $self->{shared}
@@ -196,7 +197,7 @@ sub _subcomponents
     my $class = $self->_class_name;
 
     my @subcomp;
-    while ( my ($name, $data) = each %{ $self->{def} } )
+    while ( my ($name, $data) = each %{ $self->{subcomponents} } )
     {
 	push @subcomp,
 	    <<"EOF";
@@ -220,7 +221,7 @@ sub _methods
     my $class = $self->_class_name;
 
     my @methods;
-    while ( my ($name, $data) = each %{ $self->{method} } )
+    while ( my ($name, $data) = each %{ $self->{methods} } )
     {
 	push @methods,
 	    <<"EOF";
