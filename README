@@ -12,8 +12,8 @@ menus, logos) can be extracted into their own components where they
 need be changed only once to affect the whole site.
 
 Other Mason features include powerful filtering and templating
-facilities, an HTML/data caching model, and a web-based site
-previewing utility.  See http://www.masonhq.com/ for more information.
+facilities, and a HTML/data caching model.  See
+http://www.masonhq.com/ for more information.
 
 PREREQUISITES
 
@@ -90,8 +90,7 @@ http://www.masonhq.com/resources/mailing_lists.html.
 
 CODE EXAMPLES
 
-The samples/ directory contains a few basic components as well as
-a miniature commerce site built with components.
+The samples/ directory contains a few basic components.
 
 The Mason community collaboration system (http://www.masonhq.com/)
 contains, among other things, an archive of contributed code.
