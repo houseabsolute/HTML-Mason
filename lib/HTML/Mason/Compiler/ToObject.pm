@@ -260,7 +260,7 @@ sub _filter_code
 	     ";\n",
 	     "return \$_;\n",
 	     "};\n",
-	     "\$m->push_buffer_stack( \$m->top_buffer->new_child( mode => 'batch', filter => \$filter ) );\n",
+	     "\$m->push_buffer_stack( \$m->top_buffer->new_child( filter => \$filter ) );\n",
 	   );
 }
 
