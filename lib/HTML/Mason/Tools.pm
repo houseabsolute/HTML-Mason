@@ -51,7 +51,7 @@ sub html_escape
     return $text;
 }
 
-sub old_html_escape
+sub basic_html_escape
 {
     my ($text) = @_;
     return unless defined $$text;
@@ -271,7 +271,7 @@ escaping the following characters: '&', '>', '<', and '"'.
 
 The escaped string is this function's return value.
 
-=item old_html_escape
+=item basic_html_escape
 
 This function takes a string reference and HTML-escapes it, escaping
 the following characters: '&', '>', '<', and '"'.
@@ -279,6 +279,18 @@ the following characters: '&', '>', '<', and '"'.
 It is provided for those who wish to use it to replace (or supplement)
 the existing 'h' escape flag, via the Interpreter's L<C<set_escape()>
 method|HTML>::Mason::Interp/item_set_escape>.
+
+This function is provided in order to allow people to return the HTML
+escaping behavior in 1.0x.  However, this behavior presents a
+potential security risk of allowing cross-site scripting attacks.
+HTML escaping should always be done based on the character set a page
+is in.  Merely escaping the four characters mentioned above is not
+sufficient.  The quick summary of why is that for some character sets,
+characters other than '<' may be interpreter as a "less than" sign,
+meaning that just filtering '<' and '>' will not stop all cross-site
+scripting attacks.  See
+http://www.megasecurity.org/Info/cross-site_scripting.txt for more
+details.
 
 It is not exportable.
 
