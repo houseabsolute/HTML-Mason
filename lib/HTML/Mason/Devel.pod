@@ -1088,9 +1088,10 @@ Techniques|"Object-Oriented Techniques"> for more information.
 =head1 FLAGS AND ATTRIBUTES
 
 The C<< <%flags> >> and C<< <%attr> >> sections consist of key/value
-pairs, one per line, joined by '=>'.  The key and value in each pair
-must be valid Perl hash keys and values respectively. An optional
-comment may follow each line.
+pairs, one per line, joined by '=>'.  In each pair, the key must be
+any valid Perl "bareword identifier" (made of letters, numbers, and
+the underscore character), and the value may be any scalar value,
+including references.  An optional comment may follow each line.
 
 =head2 <%flags>
 

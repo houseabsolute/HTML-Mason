@@ -57,6 +57,8 @@ call with content. (reported by Manuel Capinha)
 filesystem paths.  This was a problem with the tests, not the core
 code, but still worth fixing.  (reported by Adam Rinehart).
 - $m->caller() was inadvertently left out of the documentation - fixed.
+- Fixed a small documentation error about what kinds of things are
+valid keys in <%flags> and <%attr> blocks.
 
 1.13  August 26, 2002 (Taiwan time)
 
