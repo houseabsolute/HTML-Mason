@@ -483,6 +483,16 @@ This returns the exception message and stack as an HTML page.
 
 =back
 
+Each of these methods corresponds to a valid error_format parameter
+for the L<Request object|HTML::Mason::Request> such as C<text> or
+C<html>.
+
+You can create your own method in the C<HTML::Mason::Exception>
+namespace, such as C<as_you_wish>, in which case you could set this
+parameter to "you_wish".  This method will receive a single argument,
+the exception object, and is expected to return some sort of string
+containing the formatted error message.
+
 =head1 EXCEPTION CLASS CHECKING
 
 This module also exports the C<isa_mason_exception> function.  This
