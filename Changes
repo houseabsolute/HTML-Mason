@@ -5,7 +5,7 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
-1.22
+1.22  July 14, 2003
 
 [ ENHANCEMENTS ]
 
@@ -20,9 +20,9 @@ rethrown.  Task id #477.
 - If a component with a filter section called abort, the filter was
 run twice.  Task id #473.
 - If an exception was thrown when creating a request, memory was
-leaked.  This can happen when the requested component cannot be
-resolved, or if there is an error in compiling the component's object
-code.  Task id #478.
+leaked.  This can happen when the top-level component cannot be
+found (e.g. 404) or if there is an error in compiling the top-level
+component. Task id #478. Reported by Doug Treder.
 - Removed the use of alarm() and SIG{ALRM} to trap rare infinite loops
 inside the compilation of components. It interfered with Mason
 environments that use alarm() for their own purposes, and the
