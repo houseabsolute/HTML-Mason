@@ -25,7 +25,8 @@ Mason - High-performance, dynamic web site authoring system
                                    comp_root=>'/opt/www/htdocs',
                                    data_dir=>'/opt/mason/data');
     my $ah = new HTML::Mason::ApacheHandler (interp=>$interp);
-    chown ( 60001, 60001, $interp->files_written );  # chown nobody
+    chown ( [getpwnam('nobody')]->[2], [getgrnam('nobody')]->[2],
+            $interp->files_written );   # chown nobody
 
     sub handler
     {
