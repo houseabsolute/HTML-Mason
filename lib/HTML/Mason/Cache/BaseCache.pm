@@ -30,7 +30,8 @@ sub get
 
     if (Cache::BaseCache::Object_Has_Expired($object))
     {
-	if ($params{busy_lock} and time - $object->get_expires_at < $params{busy_lock}) {
+	my $busy_lock_time = $params{busy_lock} ? Cache::BaseCache::Canonicalize_Expiration_Time($params{busy_lock}) : undef;
+	if ($busy_lock_time and time - $object->get_expires_at < $busy_lock_time) {
 	    return $object->get_data( );
 	} else {
 	    $self->remove($key);

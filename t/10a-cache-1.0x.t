@@ -196,9 +196,9 @@ EOF
 my $time = time;
 $m->cache(value=>'gardenia', action=>'store', expire_at=>time);
 sleep(2);
-my $value1 = $m->cache(busy_lock=>5);
-my $value2 = $m->cache(busy_lock=>10);
-my $value3 = $m->cache(busy_lock=>1);
+my $value1 = $m->cache(busy_lock=>5);      # ok
+my $value2 = $m->cache(busy_lock=>'1min'); # ok
+my $value3 = $m->cache(busy_lock=>'1sec'); # not ok
 </%init>
 EOF
 		      expect => <<'EOF',

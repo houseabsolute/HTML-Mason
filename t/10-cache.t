@@ -455,9 +455,9 @@ my $time = time;
 my $cache = $m->cache;
 $cache->set('main', 'gardenia', 0);
 sleep(2);
-my $value1 = $cache->get('main', busy_lock=>5);  # ok
-my $value2 = $cache->get('main', busy_lock=>10); # ok
-my $value3 = $cache->get('main', busy_lock=>1);  # not ok
+my $value1 = $cache->get('main', busy_lock=>5);       # ok
+my $value2 = $cache->get('main', busy_lock=>'1min');  # ok
+my $value3 = $cache->get('main', busy_lock=>'1sec');  # not ok
 </%init>
 EOF
 		      expect => <<'EOF',

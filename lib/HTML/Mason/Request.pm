@@ -1874,7 +1874,7 @@ the buffer cannot be flushed.
 
 =item instance
 
-This class method returns the C<HTML::Mason:::Request> currently in
+This class method returns the C<HTML::Mason::Request> currently in
 use.  If called when no Mason request is active it will return
 C<undef>.
 
