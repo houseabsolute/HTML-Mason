@@ -344,7 +344,7 @@ sub match_named_block
 {
     my ($self, %p) = @_;
 
-    if ( $self->{current}{comp_source} =~ /\G<%(def|method)(?:\s+([^\n]+?))?>/igcs )
+    if ( $self->{current}{comp_source} =~ /\G<%(def|method)(?:\s+([^\n]+?))?\s*>/igcs )
     {
 	my ($type, $name) = (lc $1, $2);
 
