@@ -23,6 +23,8 @@ sub write_comp
 # issues if some of the tests can't write to the data dir.
 sub cleanup_data_dir
 {
+    return if $ENV{MASON_NO_CLEANUP};
+
     local *DIR;
     my $dir = File::Spec->catdir( $ENV{APACHE_DIR}, 'data' );
     opendir DIR, $dir
