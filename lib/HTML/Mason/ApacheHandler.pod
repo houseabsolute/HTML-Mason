@@ -77,9 +77,8 @@ Administrator's Guide>.
 
 Indicates whether Mason should decline directory requests, leaving
 Apache to serve up a directory index or a FORBIDDEN error as
-appropriate. Default is 1. See L<Admin/Allowing requests for
-directories> for more information about handling directories
-with Mason.
+appropriate. Default is 1. See L<Admin/Allowing directory requests>
+for more information about handling directories with Mason.
 
 =item error_mode
 
