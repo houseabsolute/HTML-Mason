@@ -565,17 +565,17 @@ sub handle_request_1
     }
 
     #
-    # Append path_info if filename does not represent an existing file
-    # (mainly for dhandlers).
-    #
-    my $pathname = $r->filename;
-    $pathname .= $r->path_info unless $is_file;
-
-    #
     # Compute the component path via the resolver. Return NOT_FOUND on failure.
     #
-    my $comp_path = $interp->resolver->file_to_path($pathname);
+    my $comp_path = $interp->resolver->apache_request_to_comp_path($r);
     unless ($comp_path) {
+	#
+	# Append path_info if filename does not represent an existing file
+	# (mainly for dhandlers).
+	#
+	my $pathname = $r->filename;
+	$pathname .= $r->path_info unless $is_file;
+
 	$r->warn("[Mason] Cannot resolve file to component: $pathname (is file outside component root?)");
 	return NOT_FOUND;
     }

@@ -47,6 +47,10 @@ sub get_info {
     shift->_virtual;
 }
 
+sub apache_request_to_comp_path {
+    shift->_virtual
+}
+
 sub _virtual
 {
     my $self = shift;
@@ -178,6 +182,14 @@ find matching files on the filesystem.
 This method needs to return the class that component objects should
 use.  If you do not want to create a custom component class, you can
 simply use "HTML::Mason::Component".
+
+=item apache_request_to_comp_path
+
+This method, given an Apache object, should return a component path.
+This method is used by the HTML::Mason::ApacheHandler class to
+translate web requests into component paths.  You can omit this method
+if your resolver subclass will never be used in conjunction with
+HTML::Mason::ApacheHandler.
 
 =back
 

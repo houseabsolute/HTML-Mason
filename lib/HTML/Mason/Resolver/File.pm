@@ -127,15 +127,18 @@ sub glob_path {
 }
 
 #
-# Given a filename, return the associated component path or undef if
-# none exists. This is called for top-level web requests that resolve
-# to a particular file.
+# Given an apache request objectx, return the associated component
+# path or undef if none exists. This is called for top-level web
+# requests that resolve to a particular file.
 #
-sub file_to_path {
-    my ($self,$file) = @_;
+sub apache_request_to_comp_path {
+    my ($self, $r) = @_;
+
+    my $file = $r->filename;
+    $file .= $r->path_info unless -f $file;
 
     foreach my $root (map $_->[1], $self->comp_root_array) {
-	if (paths_eq($root,substr($file,0,length($root)))) {
+	if (paths_eq($root, substr($file, 0, length($root)))) {
 	    my $path = substr($file, ($root eq '/' ? 0 : length($root)));
 	    $path =~ s,\/$,, unless $path eq '/';
 	    return $path;
@@ -172,10 +175,32 @@ on the filesystem, which is the norm for most Mason-based applications.
 
 =head1 CONSTRUCTOR
 
-The C<new> method takes a single parameter.
+The C<new> method takes a single mandatory parameter, C<comp_root>.
+This parameter may be either a scalar or an array reference.  If it is
+a scalar, it should be a filesystem path indicating the component
+root.
+
+If it is an array reference, it should be of the following form:
+
+ [ [ key1 => '/path/to/root' ],
+   [ key2 => '/path/to/other/root' ] ]
+
+The "keys" for each path must be unique names and their "values" must
+be filesystem paths.  These paths will be searched in order whenever a
+component path must be resolved to a filesystem path.
 
 =head1 ADDITIONAL METHODS
 
-Besides, the methods documented
+Besides, the methods documented in the HTML::Mason::Resolver method,
+this class provides one additional method.
+
+=over 4
+
+=item comp_root
+
+This method returns the component root, which will either be a scalar
+or an array reference, as documented in L<CONSTRUCTOR|CONSTRUCTOR>.
+
+=back
 
 =cut
