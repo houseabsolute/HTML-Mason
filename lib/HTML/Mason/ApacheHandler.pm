@@ -313,11 +313,11 @@ sub _startup
     {
 	if ($args_method eq 'CGI')
 	{
-	    require CGI unless defined $CGI::VERSION;
+	    require CGI;
 	}
 	elsif ($args_method eq 'mod_perl')
 	{
-	    require Apache::Request unless defined $Apache::Request::VERSION;
+	    require Apache::Request;
 	}
 
 	# if we are in a simple conf file (meaning one without
