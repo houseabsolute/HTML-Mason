@@ -37,8 +37,8 @@ kill_httpd(1);
 test_load_apache();
 
 my $tests = 4; # multi conf tests
-$tests += 51 if my $have_libapreq = have_module('Apache::Request');
-$tests += 38 if my $have_cgi      = have_module('CGI');
+$tests += 54 if my $have_libapreq = have_module('Apache::Request');
+$tests += 40 if my $have_cgi      = have_module('CGI');
 $tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
 print "1..$tests\n";
 
@@ -46,23 +46,23 @@ print STDERR "\n";
 
 write_test_comps();
 
-if ($have_libapreq) {        # 51 tests
+if ($have_libapreq) {        # 54 tests
     cleanup_data_dir();
-    apache_request_tests(1); # 21 tests
+    apache_request_tests(1); # 22 tests
 
     cleanup_data_dir();
-    apache_request_tests(0); # 16 tests
+    apache_request_tests(0); # 17 tests
 
     cleanup_data_dir();
-    no_config_tests();       # 14 tests
+    no_config_tests();       # 15 tests
 }
 
-if ($have_cgi) {             # 38 tests (+ 1?)
+if ($have_cgi) {             # 40 tests (+ 1?)
     cleanup_data_dir();
-    cgi_tests(1);            # 21 tests + 1 if mod_perl version > 1.24
+    cgi_tests(1);            # 22 tests + 1 if mod_perl version > 1.24
 
     cleanup_data_dir();
-    cgi_tests(0);            # 17 tests
+    cgi_tests(0);            # 18 tests
 }
 
 cleanup_data_dir();
@@ -244,6 +244,11 @@ EOF
 
     write_comp( 'error_as_html', <<'EOF',
 % my $x = undef; @$x;
+EOF
+              );
+
+    write_comp( 'interp_class', <<'EOF',
+Interp class: <% ref $m->interp %>
 EOF
               );
 }
@@ -674,6 +679,19 @@ EOF
 
     ok ( $actual =~ m,.*<b>error:</b>.*Error during compilation.*,s,
          "bad code should cause an HTML error message" );
+
+    my $expected_class = $with_handler ? 'My::Interp' : 'HTML::Mason::Interp';
+
+    $response = Apache::test->fetch('/comps/interp_class');
+    $actual = filter_response($response, $with_handler);
+    $success = HTML::Mason::Tests->check_output( actual => $actual,
+                                                 expect => <<"EOF",
+X-Mason-Test: Initial value
+Interp class: $expected_class
+Status code: 0
+EOF
+                                               );
+    ok($success);
 }
 
 sub multi_conf_tests
