@@ -205,6 +205,67 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => 'flush_clear_filter_comp',
+			 component => <<'EOF',
+Foo
+% $m->flush_buffer;
+Bar
+% $m->clear_buffer;
+Baz
+<%filter>
+s/^/-/gm;
+</%filter>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'flush_clear_filter',
+		      description => 'Flush then clear with filter section',
+		      component => <<'EOF',
+before
+<& flush_clear_filter_comp &>
+after
+EOF
+		      expect => <<'EOF',
+before
+-Foo
+-Baz
+
+after
+EOF
+		    );
+
+#------------------------------------------------------------
+
+
+    $group->add_support( path => 'clear_filter_comp',
+			 component => <<'EOF',
+Bar
+% $m->clear_buffer;
+Baz
+EOF
+		       );
+
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'clear_in_comp_called_with_filter',
+                      description => 'Test that clear_buffer clears _all_ buffers, even inside a filter',
+                      component => <<'EOF',
+Foo
+<& clear_filter_comp &>\
+<%filter>
+s/^/-/gm;
+</%filter>
+EOF
+                      expect => <<'EOF',
+-Baz
+EOF
+                    );
+
+#------------------------------------------------------------
+
         return $group;
 }
 
