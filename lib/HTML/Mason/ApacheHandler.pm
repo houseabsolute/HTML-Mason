@@ -376,6 +376,8 @@ sub new
 	$defaults{data_dir} = Apache->server_root_relative('mason');
     }
 
+    $defaults{request_class} = 'HTML::Mason::Request::ApacheHandler';
+
     my @args = $class->create_contained_objects(%defaults, @_);
 
     my $self = bless {validate( @args, $class->validation_spec )}, $class;
