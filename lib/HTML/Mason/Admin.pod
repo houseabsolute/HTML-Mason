@@ -181,14 +181,14 @@ several ways to load them.
 
 =over
 
-=item 1
+=item
 
 The httpd PerlModule directive:
 
     PerlModule CGI
     PerlModule LWP
 
-=item 2
+=item
 
 In the <%once> section of the component(s) that use the module.
 
@@ -203,7 +203,7 @@ Each method has its own trade-offs:
 
 =over
 
-=item *
+=item
 
 The first method ensures that the module will be loaded by the Apache
 parent process at startup time, saving time and memory.  The second
@@ -213,7 +213,7 @@ component and module are rarely used. See the mod_perl guide's tuning
 section and Vivek Khera's mod_perl tuning guide for more details on
 this issue.
 
-=item *
+=item
 
 The second method uses the modules from inside the package used by
 components (C<HTML::Mason::Commands>), meaning that exported method
@@ -912,11 +912,11 @@ When an error occurs, Mason can respond by:
 
 =over
 
-=item *
+=item
 
 showing a detailed error message in the browser in HTML.
 
-=item *
+=item
 
 die'ing, which sends a 500 status to the browser and lets the error
 message go to the error logs.
