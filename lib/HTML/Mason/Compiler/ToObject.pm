@@ -369,3 +369,22 @@ sub _declared_args
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::Compiler::ToObject - A Compiler subclass that generates Mason object code
+
+=head1 SYNOPSIS
+
+  my $compiler = HTML::Mason::Compiler::ToObject->new;
+
+  my $object_code = $compiler->compile( comp_source => $source, name => $comp_name );
+
+=head1 DESCRIPTION
+
+This Compiler subclass that generates Mason object code (Perl code).
+It is the default Compiler class.
+
+=end
