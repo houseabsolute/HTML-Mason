@@ -115,19 +115,10 @@ sub parse
     }
     
     #
-    # From here on in we must make sure not to alter the number of
-    # characters in the source, or else we will mess up source
-    # references!
-    #
-    # Clean up ctrl chars
-    #
-    $script =~ s/[\cA\cB]/ /g;
-
-    #
     # Pre-substitute \cA and \cB for %PERL and /%PERL to ease parsing.
     #
-    my $perlbeginmark = "\cA"x7;
-    my $perlendmark = "\cB"x8;
+    my $perlbeginmark = "<perl>";
+    my $perlendmark = "</perl>";
     $script =~ s@<%PERL>@$perlbeginmark@gei;
     $script =~ s@</%PERL>@$perlendmark@gei;
     
