@@ -93,6 +93,8 @@ sub _reinitialize {
     foreach my $field (qw(aborted aborted_value autohandler_next declined dhandler_arg)) {
 	$self->{$field} = undef;
     }
+
+    $self->pop_buffer_stack while $self->buffer_stack;
 }
 
 sub exec {
