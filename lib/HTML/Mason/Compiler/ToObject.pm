@@ -6,7 +6,7 @@ package HTML::Mason::Compiler::ToObject;
 
 use strict;
 
-use Params::Validate qw( :all );
+use Params::Validate qw(SCALAR);
 
 use HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
