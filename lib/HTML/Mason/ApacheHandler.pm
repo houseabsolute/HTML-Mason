@@ -367,6 +367,8 @@ sub make_ah
 
     return $AH{$key} if exists $AH{$key};
 
+    # can't use hash_list for this one because it's _either_ a string
+    # or a hash_list
     if (exists $p{comp_root}) {
 	if (@{$p{comp_root}} == 1 && $p{comp_root}->[0] !~ /=>/) {
 	    $p{comp_root} = $p{comp_root}[0];  # Convert to a simple string
@@ -384,20 +386,6 @@ sub make_ah
 
             $p{comp_root} = \@roots;
 	}
-    }
-
-    if (exists $p{escape_flags}) {
-        my %escapes;
-        foreach my $pair (@{$p{escape_flags}}) {
-            my ($key, $val) = split /\s*=>\s*/, $pair, 2;
-            param_error "Configuration parameter MasonEscapeFlags must be a key/value pair ".
-                        "like 'foo => \&foo_escape'.  Invalid parameter:\n$pair"
-                unless defined $key && defined $val;
-
-            $escapes{$key} = $val;
-        }
-
-        $p{escape_flags} = \%escapes;
     }
 
     my $ah = $package->new(%p, $r);
@@ -514,6 +502,29 @@ sub _get_list_param
     }
 
     return \@val;
+}
+
+sub _get_hash_list_param
+{
+    my $self = shift;
+    my @val = $self->_get_val(@_);
+    if (@val == 1 && ! defined $val[0])
+    {
+        return {};
+    }
+
+    my %hash;
+    foreach my $pair (@val)
+    {
+        my ($key, $val) = split /\s*=>\s*/, $pair, 2;
+        param_error "Configuration parameter $_[0] must be a key/value pair ".
+                    qq|like "foo => 'bar'".  Invalid parameter:\n$pair|
+                unless defined $key && defined $val;
+
+        $hash{$key} = $val;
+    }
+
+    return \%hash;
 }
 
 use constant
