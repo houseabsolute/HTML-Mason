@@ -162,6 +162,16 @@ sub create_contained_objects
 	    # User provided an object
 	    param_error "Cannot provide a '$name' object, its creation is delayed"
 		if $delayed;
+
+	    #
+	    # We still need to delete any arguments that _would_ have
+	    # been given to this object's constructor (if the object
+	    # had not been given).  This allows a container class to
+	    # provide defaults for a contained object will still
+	    # accepting an already constructed object as one of its
+	    # params.
+	    #
+	    $class->_get_contained_args(ref $args{$name}, \%args);
 	    next;
 	}
 
@@ -170,11 +180,10 @@ sub create_contained_objects
 	next unless $contained_class;
 
 	if ($delayed) {
-	    $args{"_delayed_$name"}{args} = $class->_get_contained_args($name, $contained_class, \%args);
-	    #warn "saving delayed '$name' args for $contained_class: (@{[ %{$args{qq[_delayed_$name]}} ]})";
+	    $args{"_delayed_$name"}{args} = $class->_get_contained_args($contained_class, \%args);
 	    $args{"_delayed_$name"}{class} = $contained_class;
 	} else {
-	    $args{$name} = $class->_make_contained_object($name, $contained_class, \%args);
+	    $args{$name} = $class->_make_contained_object($contained_class, \%args);
 	}
     }
 
@@ -212,7 +221,7 @@ sub delayed_object_params
 
 sub _get_contained_args
 {
-    my ($class, $name, $contained_class, $args) = @_;
+    my ($class, $contained_class, $args) = @_;
 
     param_error "Invalid class name '$contained_class'"
 	unless $contained_class =~ /^[\w:]+$/;
@@ -240,9 +249,9 @@ sub _get_contained_args
 
 sub _make_contained_object
 {
-    my ($class, $name, $contained_class, $args) = @_;
+    my ($class, $contained_class, $args) = @_;
 
-    my $contained_args = $class->_get_contained_args($name, $contained_class, $args);
+    my $contained_args = $class->_get_contained_args($contained_class, $args);
     return $contained_class->new(%$contained_args);
 }
 
@@ -306,7 +315,37 @@ sub allowed_params
 	next unless $contained_class->can('allowed_params');
 
 	my $subparams = $contained_class->allowed_params($args);
-	@p{keys %$subparams} = values %$subparams;
+
+	#
+	# What we're doing here is checking for parameters in
+	# contained objects that expect an object of which the current
+	# class (for which we are retrieving allowed params) is a
+	# subclass (or the same class).
+	#
+	# For example, the HTML::Mason::Request class accepts an
+	# 'interp' param that must be of the HTML::Mason::Interp
+	# class.
+	#
+	# But the HTML::Mason::Interp class contains a request object.
+	# While it makes sense to say that the interp class can accept
+	# a parameter like 'autoflush' on behalf of the request, it
+	# makes very little sense to say that the interp can accept an
+	# interp as a param.
+	#
+	# This _does_ cause a potential problem if we ever want to
+	# have a class that 'contains' other objects of the same
+	# class.
+	#
+	foreach (keys %$subparams)
+	{
+	    if ( ref $subparams->{$_} &&
+		 exists $subparams->{$_}{isa} &&
+		 $class->isa( $subparams->{$_}{isa} ) )
+	    {
+		next;
+	    }
+	    $p{$_} = $subparams->{$_};
+	}
     }
 
     return \%p;
