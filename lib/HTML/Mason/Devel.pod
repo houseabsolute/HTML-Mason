@@ -13,18 +13,13 @@ installation), you should also read B<HTML::Mason::Admin>. There you
 will find information about virtual site configuration, performance
 tuning, component caching, and so on.
 
-I strongly suggest that you have a working Mason to play with as you
+We strongly suggest that you have a working Mason to play with as you
 work through these examples. Other component examples can be found in
 the C<samples/> directory.
 
 =head1 HOW TO USE THIS MANUAL
 
-This manual has grown a bit too large over time. It will eventually
-split into at least two documents (tutorial and reference manual).
-I've tried to keep related sections together, but this creates a
-non-optimal order for beginners.
-
-If you are just learning Mason and want to get started quickly, I
+If you are just learning Mason and want to get started quickly, we
 recommend the following sections:
 
 o L<What Are Components?>
@@ -35,7 +30,7 @@ o L<Calling Components>
 
 o L<Passing Parameters>
 
-o L<Initialization and Cleanup> (mainly <%init>)
+o L<Initialization and Cleanup> (mainly C<E<lt>%initE<gt>>)
 
 o L<Data Caching>
 
@@ -120,7 +115,7 @@ After 12 pm, the output of this component is:
 
 This short example demonstrates the three primary "in-line" Perl
 sections. In-line sections are generally embedded within HTML and
-execute in the order they appear. Other sections (<%init>, <%args>,
+execute in the order they appear. Other sections (C<E<lt>%initE<gt>>, C<E<lt>%argsE<gt>>,
 etc.) are tied to component events like initialization, cleanup,
 and argument definition.
 
@@ -140,12 +135,12 @@ Lines beginning with a '%' character are treated as Perl.
 
 =item 3.
 
-Multiline blocks of Perl code can be inserted with the <%perl>
-.. </%perl> tag. The enclosed text is executed as Perl and the return
+Multiline blocks of Perl code can be inserted with the C<E<lt>%perlE<gt>>
+.. C<E<lt>/%perlE<gt>> tag. The enclosed text is executed as Perl and the return
 value, if any, is discarded.
 
-The <%perl> tag is case-insensitive. It may appear anywhere in the
-text, and may span any number of lines. <%perl> blocks cannot be
+The C<E<lt>%perlE<gt>> tag is case-insensitive. It may appear anywhere in the
+text, and may span any number of lines. C<E<lt>%perlE<gt>> blocks cannot be
 nested inside one another.
 
 =back
@@ -492,7 +487,7 @@ hostname to relative image URLs:
     <% $m->call_next %>
     
     <%filter>
-    s{(<img\s+src=\")/} {$1http://images.mysite.com}ig;
+    s{(<img\s+src=\")/} {$1http://images.mysite.com/}ig;
     </%filter>
 
 Most of the time autohandler can simply call C<$m-E<gt>call_next>
@@ -505,7 +500,7 @@ use C<$m-E<gt>scomp> to store and process the output.
 What happens if more than one autohandler applies to a page? Prior to
 version 0.85, only the most specific autohandler would execute.  In
 0.85 and beyond each autohandler gets a chance to run.  The top-most
-autohandler runs first; each $m->call_next transfers control to the
+autohandler runs first; each C<$m-E<gt>call_next> transfers control to the
 next autohandler and finally to the originally called component. This
 allows you, for example, to combine general site-wide templates and
 more specific section-based templates.
@@ -568,30 +563,47 @@ parameters.
 Component parameters, whether they come from GET/POST or another
 component, can be accessed in two ways.
 
-1.  Declared named arguments: Components can define a
-C<E<lt>%args%E<gt>> section listing argument names, types, and
-default values, with optional comments. For example:
+1.  Declared named arguments: Components can define an
+C<E<lt>%argsE<gt>> section listing argument names, types, and
+default values. For example:
 
     <%args>
     $a       
     @b       # a comment
     %c
-    $d=>5    # another comment
-    @e=>('foo','baz')
-    %f=>(joe=>1,bob=>2)
+
+    # another comment
+    $d=>5
+    $e=>$d*2
+    @f=>('foo','baz')
+    %g=>(joe=>1,bob=>2)
     </%args>
 
-Here, $a, @b, and %c are required arguments; the component generates
-an error if the caller leaves them unspecified. $d, @e, and %f are
+Here, I<$a>, I<@b>, and I<%c> are required arguments; the component generates
+an error if the caller leaves them unspecified. I<$d>, I<$e>, I<@f> and I<%g> are
 optional arguments; they are assigned the specified default values if
 unspecified.  All the arguments are available as lexically scoped ("my")
 variables in the rest of the component.
 
+Mason fills arguments in top-to-bottom order, and default expressions
+may reference earlier arguments (as $e references $d above).
+
+Arguments are separated by one or more newlines. Comments may be used at
+the end of a line or on their own line.
+
+Only valid Perl variable names may be used in C<E<lt>%argsE<gt>>
+sections.  Parameters with non-valid variable names cannot be
+pre-declared and must be fetched manually out of the %ARGS hash (see
+below).  One common example of undeclarable parameters are the
+"button.x/button.y" parameters sent for a form submit.
+
 2. %ARGS hash: This variable, always available, contains all of the
-parameters passed to the component.  It is especially handy when
-there are many parameters or when parameter names are determined at
-run-time. %ARGS can be used whether or not you have a <%args> ... </%args>
-section.
+parameters passed to the component (whether or not they were
+declared).  It is especially handy for dealing with large numbers of
+parameters, dynamically named parameters, or parameters with non-valid
+variable names. %ARGS can be used with or without an
+C<E<lt>%argsE<gt>> section, and its contents are unrelated to what you
+have declared in C<E<lt>%argsE<gt>>.
 
 Here's how to pass all of a component's parameters to another component:
 
@@ -629,7 +641,10 @@ The following examples illustrate the different ways to pass and receive paramet
     $grades, then $grades will equal {Alice => 92, Bob => 87}
     @grades, then @grades will equal ('Alice', 92, 'Bob', 87)
     %grades, then %grades will equal (Alice => 92, Bob => 87)
-  In addition, $ARGS{grades} will equal {Alice => 92, Bob => 87}.
+  In addition, $ARGS{grades} will equal ['Alice',92,'Bob',87] in the
+    URL case, or {Alice => 92, Bob => 87} in the component call case.
+    (The discrepancy exists because, in a query string, there is no detectable
+    difference between a list or hash.)
 
 =head2 Using @_ instead
 
@@ -642,12 +657,12 @@ and access them as usual through Perl's @_ array:
 
     my ($scalar, $listref, $hashref) = @_;
 
-In this case no <%args> section is necessary.
+In this case no C<E<lt>%argsE<gt>> section is necessary.
 
 We generally recommend named parameters for the benefits of
 readability, syntax checking, and default value automation.  However
 using @_ may be convenient for very small components, especially
-subcomponents created with <%def>.
+subcomponents created with C<E<lt>%defE<gt>>.
 
 =head1 INITIALIZATION AND CLEANUP
 
@@ -744,7 +759,7 @@ section:
 
 =head2 E<lt>%sharedE<gt>
 
-As with <%once>, variables declared in this section can be seen in all
+As with C<E<lt>%onceE<gt>>, variables declared in this section can be seen in all
 of a component's code: the main component, subcomponents, and methods.
 However, the code runs once per request (whenever the component is used)
 and its variables last only til the end of the request.
@@ -753,18 +768,18 @@ Useful for initializing variables needed in, say, the main body and
 one more subcomponents or methods. See L<Devel/Object-Oriented
 Techniques> for an example of usage.
 
-Avoid using <%shared> for side-effect code that needs to run at a
+Avoid using C<E<lt>%sharedE<gt>> for side-effect code that needs to run at a
 predictable time during page generation. You may assume only that
-<%shared> runs just before the first code that needs it and runs at
-most once per request. <%init> offers more a predictable execution
+C<E<lt>%sharedE<gt>> runs just before the first code that needs it and runs at
+most once per request. C<E<lt>%initE<gt>> offers more a predictable execution
 time.
 
-Any component with a <%shared> section incurs an extra performance
+Any component with a C<E<lt>%sharedE<gt>> section incurs an extra performance
 penalty, because (as currently implemented) Mason must recreate its
 anonymous subroutines the first time each new request uses the
 component.  The exact penalty varies between systems and for most
 applications will be unnoticeable. However, one should avoid using
-<%shared> when patently unnecessary, e.g. when an <%init> would work
+C<E<lt>%sharedE<gt>> when patently unnecessary, e.g. when an C<E<lt>%initE<gt>> would work
 as well.
 
 =head1 EMBEDDED COMPONENTS
@@ -773,8 +788,8 @@ as well.
 
 Each instance of this section creates a I<subcomponent> embedded
 inside the current component. Inside you may place anything that a
-regular component contains, with the exception of <%def>, <%method>,
-<%once>, and <%shared> tags.
+regular component contains, with the exception of C<E<lt>%defE<gt>>, C<E<lt>%methodE<gt>>,
+C<E<lt>%onceE<gt>>, and C<E<lt>%sharedE<gt>> tags.
 
 The I<name> consists of characters in the set C<[A-Za-z0-9._-]>. To
 call a subcomponent simply use its name in <& &> or C<$m-E<gt>comp>. A
@@ -793,8 +808,8 @@ call file-based components and also call any of your "sibling"
 subcomponents.
 
 The lexical scope of a subcomponent is separate from the main
-component.  However a subcomponent can declare its own <%args> section
-and have relevant values passed in.  You can also use a <%shared>
+component.  However a subcomponent can declare its own C<E<lt>%argsE<gt>> section
+and have relevant values passed in.  You can also use a C<E<lt>%sharedE<gt>>
 section to declare variables visible from both scopes.
 
 In the following example, we create a ".link" subcomponent to produce a
@@ -891,7 +906,7 @@ non-programmers to work in a cleaner HTML environment.
 
 =head2 &lt;%filter&gt; section
 
-The <%filter> section allows you to arbitrarily filter the output of
+The C<E<lt>%filterE<gt>> section allows you to arbitrarily filter the output of
 the current component. Upon entry to this code, $_ contains the
 component output, and you are expected to modify it in place. The code
 has access to component arguments and can invoke subroutines, call
@@ -1172,8 +1187,8 @@ I<expire_at>: takes an absolute expiration time, in Perl time() format
 
 I<expire_in>: takes a relative expiration time of the form
 "<num><unit>", where <num> is a positive number and <unit> is one of
-seconds, minutes, hours, days, or weeks, or any abbreviation thereof.
-E.g. "10min", "1hour".
+seconds, minutes, hours, days, weeks, months, years, or any reasonable
+abbreviation thereof (m=month, min=minute).  E.g. "10min", "1hour".
 
 I<expire_next>: takes a string, either 'hour' or 'day'. It indicates
 an expiration time at the top of the next hour or day.
@@ -1352,7 +1367,7 @@ headers just before sending the first non-whitespace output.  Any
 initial whitespace output is buffered up until after headers are
 sent. This means that if you want to affect the headers in stream
 mode, you must do so before any component sends non-whitespace
-output. Generally this takes place in an <%init> section.
+output. Generally this takes place in an C<E<lt>%initE<gt>> section.
 
 For example, the following top-level component calls another component
 to see whether the user has a cookie; if not, it inserts a new cookie
@@ -1734,18 +1749,18 @@ until ultimately an "attribute not found" error occurs. Use
 =head2 Sharing data
 
 A component's main body and its methods occupy separate lexical
-scopes. Variables declared, say, in the <%init> section of the main
+scopes. Variables declared, say, in the C<E<lt>%initE<gt>> section of the main
 component cannot be seen from methods.
 
-To share variables, declare them either in the <%once> or <%shared>
-section. Both sections have an all-inclusive scope. The <%once>
+To share variables, declare them either in the C<E<lt>%onceE<gt>> or C<E<lt>%sharedE<gt>>
+section. Both sections have an all-inclusive scope. The C<E<lt>%onceE<gt>>
 section runs once when the component loads; its variables are
-persistent for the lifetime of the component. The <%shared> section
+persistent for the lifetime of the component. The C<E<lt>%sharedE<gt>> section
 runs once per request (when needed), just before any code in the
 component runs; its variables last only til the end of the request.
 
 In the following example, various sections of code require information
-about the logged-in user. We use a <%shared> section to fetch these
+about the logged-in user. We use a C<E<lt>%sharedE<gt>> section to fetch these
 in a single request.
 
     <%attr>
@@ -1768,8 +1783,8 @@ in a single request.
     my $full_name = "$first $last";
     </%shared>
 
-<%shared> presents a good alternative to <%init> when data is needed
-across multiple scopes. Outside these situations, <%init> is preferred
+C<E<lt>%sharedE<gt>> presents a good alternative to C<E<lt>%initE<gt>> when data is needed
+across multiple scopes. Outside these situations, C<E<lt>%initE<gt>> is preferred
 for its slightly greater speed and predictable execution model.
 
 =head2 Example
@@ -1878,7 +1893,7 @@ initialize the object from %ARGS:
 
 =head1 AUTHOR
 
-Jonathan Swartz, swartz@transbay.net
+Jonathan Swartz, swartz@pobox.com
 
 =head1 SEE ALSO
 

@@ -104,7 +104,7 @@ Headers> for more information.
 
 =head1 AUTHOR
 
-Jonathan Swartz, swartz@transbay.net
+Jonathan Swartz, swartz@pobox.com
 
 =head1 SEE ALSO
 

@@ -15,7 +15,7 @@ HTML::Mason::ApacheHandler - Mason/mod_perl interface
 
 =head1 DESCRIPTION
 
-The ApacheHandler object links Mason to Apache, running components in
+The ApacheHandler object links Mason to mod_perl, running components in
 response to HTTP requests. It is controlled primarily through
 parameters to the new() constructor.
 
@@ -24,13 +24,11 @@ HTML::Mason::handler() routine in handler.pl.
 
 =head1 PARAMETERS TO THE use() DECLARATION
 
+
 The following are parameters to pass explicitly when using
-HTML::Mason::ApacheHandler. The line must precede 'use HTML::Mason' to
-take effect; otherwise HTML::Mason implicitly imports ApacheHandler
-with default settings. e.g.
+HTML::Mason::ApacheHandler. e.g.
 
     use HTML::Mason::ApacheHandler (args_method=>'mod_perl');
-    use HTML::Mason;
 
 =over
 
@@ -136,7 +134,7 @@ For example:
 
 =head1 AUTHOR
 
-Jonathan Swartz, swartz@transbay.net
+Jonathan Swartz, swartz@pobox.com
 
 =head1 SEE ALSO
 

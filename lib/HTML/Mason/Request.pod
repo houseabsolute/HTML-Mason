@@ -315,9 +315,17 @@ undef if no such component exists.
 
 =item fetch_next
 
-In scalar context, returns the next component in the content wrapping
-chain; in list context, returns the remaining components in the
-content wrapping chain. Usually called from an autohandler.  See the
+Returns the next component in the content wrapping chain, or undef if
+there is no next component. Usually called from an autohandler.  See
+the L<Devel/autohandlers> section of the I<Component Developer's
+Guide> for usage and examples.
+
+=for html <a name="item_fetch_next_all">
+
+=item fetch_next_all
+
+Returns a list of the remaining components in the content wrapping
+chain. Usually called from an autohandler.  See the
 L<Devel/autohandlers> section of the I<Component Developer's Guide>
 for usage and examples.
 
@@ -395,10 +403,7 @@ By using C<$m-E<gt>time> rather than calling time() directly, you enable
 the option of previewer or port-based time/date simulations. e.g.
 a port that looks one day into the future.
 
-=item top_comp
-
-Returns the component originally called in the request. Note: because
-of autohandlers this may or may not be the first component executed.
+=for html <a name="item_top_args">
 
 =item top_args
 
@@ -406,6 +411,13 @@ Returns the arguments originally passed to the top level component.
 When called in scalar context, a hash reference is returned. When
 called in list context, a list of arguments (which may be assigned to
 a hash) is returned.
+
+=for html <a name="item_top_comp">
+
+=item top_comp
+
+Returns the component originally called in the request. Note: because
+of autohandlers this may or may not be the first component executed.
 
 =back
 
@@ -443,7 +455,7 @@ See the L<HTML::Mason::ApacheHandler> documentation for more details.
 
 =head1 AUTHOR
 
-Jonathan Swartz, swartz@transbay.net
+Jonathan Swartz, swartz@pobox.com
 
 =head1 SEE ALSO
 

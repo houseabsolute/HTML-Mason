@@ -788,6 +788,9 @@ messages are given in terms of the object file. The curious-minded can
 peek inside an object file to see exactly how Mason converted
 a given component to a Perl object.
 
+If you change any Parser options, you must remove object files
+previously created under that parser for the changes to take effect.
+
 If for some reason you don't want Mason to create object files, set
 the L<Interp/use_object_files> Interp parameter to 0.
 
@@ -1034,7 +1037,7 @@ matter; on production servers you may wish to profile the two schemes.
 
 =head1 AUTHOR
 
-Jonathan Swartz, swartz@transbay.net
+Jonathan Swartz, swartz@pobox.com
 
 =head1 SEE ALSO
 

@@ -156,6 +156,15 @@ sub add_test
     $p{call_path} = $call_path;
     $p{call_path} =~ s,/+,/,g;
 
+    if ( ref($p{call_args}) eq 'HASH' )
+    {
+	my @lst = %{$p{call_args}};
+	$p{call_args} = \@lst;
+    }
+    elsif ( !exists($p{call_args}) ) {
+	$p{call_args} = [];
+    }
+
     die "'$p{name}' test has no description\n"
 	unless exists $p{description};
 
@@ -414,7 +423,7 @@ sub _run_test
 
     print "Calling $test->{name} test with path: $test->{call_path}\n" if $DEBUG;
     $test->{pretest_code}->() if $test->{pretest_code};
-    eval { $interp->exec( $test->{call_path} ); };
+    eval { $interp->exec( $test->{call_path}, @{$test->{call_args}} ); };
 
     if ( $@ && ! $test->{expect_error} )
     {
@@ -542,11 +551,36 @@ sub _success
     print "Result for $self->{name}: $test->{name}\nok $self->{test_count}\n";
 }
 
+#
+# We use our own rm_tree, rather than File::Path::rmtree, so that we
+# can silently fail to entirely remove directories. On some systems
+# .nfs files prevent total removal of directories but should not
+# otherwise interfere with tests.
+#
+sub rm_tree {
+    my ($path, $debug) = @_;
+    $path =~ s#/$##;
+    if (-d $path) {
+	local *DIR;
+	opendir DIR, $path or warn "Can't open $path: $!";
+	while (defined(my $file = readdir DIR)) {
+	    next if $file eq '.' or $file eq '..';
+	    rm_tree("$path/$file");
+	}
+	closedir DIR;
+	rmdir $path;
+    } elsif (-f $path) {
+	unlink $path;
+    } else {
+	warn "Can't find $path to remove";
+    }
+}
+
 sub _cleanup
 {
     my $self = shift;
 
-    rmtree ($self->{base_path}, $DEBUG, 1) if $self->{base_path};
+    rm_tree ($self->{base_path}, $DEBUG) if $self->{base_path};
 }
 
 1;
@@ -656,6 +690,11 @@ The path that should be used to call the component.  If none is given,
 then the value is the same as the path option, if that exists,
 otherwise it is /<group name>/<test name>.  If a value is given, it is
 still prepended by /<group name>/.
+
+=item * call_args (optional)
+
+The arguments that should be passed to the component, in list or hash
+reference form. If none is given, no arguments are passed.
 
 =item * parser_params
 
