@@ -701,5 +701,18 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'notes',
+		      description => 'Test the notes() method',
+		      component => <<'EOF',
+% $m->notes('key', 'value');
+k: <% $m->notes('key') %>
+k2: <% $m->notes->{key} %>
+EOF
+		      expect =>
+                      qr/k: value\s+k2: value/,
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }

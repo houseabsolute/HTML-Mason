@@ -156,6 +156,7 @@ sub new
 		      stack => undef,
 		      wrapper_chain => undef,
 		      wrapper_index => undef,
+		      notes => {},
 	     );
 
     $self->{request_comp} = delete($self->{comp});
@@ -1106,6 +1107,16 @@ sub content {
     return $buffer->output;
 }
 
+sub notes {
+  my $self = shift;
+  return $self->{notes} unless @_;
+  
+  my $key = shift;
+  return $self->{notes}{$key} unless @_;
+  
+  return $self->{notes}{$key} = shift;
+}
+
 sub clear_buffer
 {
     my $self = shift;
@@ -1851,6 +1862,21 @@ The "comp" parameter is required, while all other parameters are
 optional.
 
 See DEVEL<subrequests> for more information about subrequests.
+
+=for html <a name="notes"></a>
+
+=item notes (key, value)
+
+The C<notes()> method provides a place to store application data,
+giving developers a way to share data among multiple components.  Any
+data stored here persists for the duration of the request, i.e. the
+same lifetime as the Request object.
+
+Conceptually, C<notes()> contains a hash of key-value pairs.
+C<notes($key, $value)> stores a new entry in this hash.
+C<notes($key)> returns a previously stored value.  C<notes()> without
+any arguments returns a reference to the entire hash of key-value
+pairs.
 
 =for html <a name="item_out"></a>
 
