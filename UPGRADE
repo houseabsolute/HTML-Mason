@@ -76,10 +76,16 @@ that there is no way to "turn off" autohandlers or dhandlers.  Of
 course, the "inherit" flag for components still works.
 
 - The home-brew caching architecture, using MLDBM, has been replaced
-with one that uses Cache::Cache.  The old $m->cache and $m->cache_self
-methods still exist but their semantics have changed.  Please see the
-Developer's Manual (HTML::Mason::Devel) and Request object docs
-(HTML::Mason::Request) for more details.
+with one that uses Cache::Cache. In particular:
+   - The old $m->cache and $m->cache_self methods still exist but
+     their semantics have changed.  See the Developer's Manual
+     (HTML::Mason::Devel) and Request object docs
+     (HTML::Mason::Request) for more details.
+   - Busy locks have not yet been ported to Cache::Cache; this is on
+     the todo list.
+   - The expire_if option is no longer supported. Instead, you can
+     manually perform introspection on the cache object before trying
+     to retrieve the cache. An example is provided in the docs.
 
 - The top_level_predicate ApacheHandler parameter has been removed.
 If you would like to filter requests you can do this via the new
