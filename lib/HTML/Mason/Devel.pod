@@ -34,21 +34,21 @@ MASON> in the Administrator's Guide.
 If you are just learning Mason and want to get started quickly, we
 recommend the following sections:
 
-o L<What Are Components?>
+o L<What Are Components?|What Are Components?>
 
-o L<In-Line Perl Sections>
+o L<In-Line Perl Sections|In-Line Perl Sections>
 
-o L<Calling Components>
+o L<Calling Components|Calling Components>
 
-o L<Passing Parameters>
+o L<Passing Parameters|Passing Parameters>
 
-o L<Initialization and Cleanup> (mainly C<< <%init> >>)
+o L<Initialization and Cleanup|Initialization and Cleanup> (mainly C<< <%init> >>)
 
-o L<Data Caching>
+o L<Data Caching|Data Caching>
 
-o L<Sending HTTP Headers>
+o L<Sending HTTP Headers|Sending HTTP Headers>
 
-o L<Common Traps>
+o L<Common Traps|Common Traps>
 
 =head1 WHAT ARE COMPONENTS?
 
@@ -247,7 +247,7 @@ $m, the Mason request object, provides an analogous API for
 Mason. Almost all Mason features not activated by syntactic tags are
 accessed via $m methods.  You'll be introduced to these methods
 throughout this document as they are needed.  For a description of all
-methods see B<L<HTML::Mason::Request>>.
+methods see B<L<HTML::Mason::Request|HTML::Mason::Request>>.
 
 =head2 System Objects
 
@@ -262,9 +262,10 @@ relevant parameter.
 
 Mason provides an object API for components, allowing you to query a
 component's various asociated files, arguments, etc. For a description
-of all methods see B<L<HTML::Mason::Component>>.  Typically you get a
-handle on a component object from request methods like
-C<< $m->current_comp >> and C<< $m->fetch_comp >>.
+of all methods see
+B<L<HTML::Mason::Component|HTML::Mason::Component>>.  Typically you
+get a handle on a component object from request methods like C<<
+$m->current_comp >> and C<< $m->fetch_comp >>.
 
 Note that for many basic applications all you'll want to do with
 components is call them, for which no object method is needed. See
@@ -384,7 +385,7 @@ content will not be output.
 
 If you wrap a filtering component call around the entire component,
 the result will be functionally similar to a C<< <%filter> >> section.
-See also L<Filtering>.
+See also L<Filtering|Filtering>.
 
 =head2 Advanced Components that Filter Content
 
@@ -629,7 +630,7 @@ A component or dhandler that does not want to handle a particular request may
 defer control to the next dhandler by calling C<< $m->decline >>.
 
 The administrator can customize the file name used for dhandlers
-with the L<Interp/dhandler_name> Interp parameter.
+with the L<Interp/dhandler_name|Interp/dhandler_name> Interp parameter.
 
 =head2 autohandlers
 
@@ -698,10 +699,10 @@ more specific section-based templates.
 Autohandlers can be made even more powerful in conjunction with
 Mason's object-oriented style features: methods, attributes, and
 inheritance.  In the interest of space these are discussed in a
-separate section, L<Devel/Object-Oriented Techniques>.
+separate section, L<Devel/Object-Oriented Techniques|Devel/Object-Oriented Techniques>.
 
 The administrator can customize the file name used for autohandlers
-with the L<Interp/autohandler_name> Interp parameter.
+with the L<Interp/autohandler_name|Interp/autohandler_name> Interp parameter.
 
 =head2 dhandlers vs. autohandlers
 
@@ -1049,7 +1050,7 @@ Second, via the call_method component method:
     $comp->call_method('method1');
 
 Methods are commonly used in conjunction with autohandlers to make
-templates more flexible. See L<Devel/Object-Oriented Techniques> for
+templates more flexible. See L<Devel/Object-Oriented Techniques|Devel/Object-Oriented Techniques> for
 more information.
 
 =head1 FLAGS AND ATTRIBUTES
@@ -1067,7 +1068,7 @@ component's behavior.
 Currently there is only one flag, C<inherit>, which specifies
 the component's I<parent> in the form of a relative or absolute
 component path. A component inherits methods and attributes from its
-parent; see L<Devel/Object-Oriented Techniques> for examples.
+parent; see L<Devel/Object-Oriented Techniques|Devel/Object-Oriented Techniques> for examples.
 
     <%flags>
     inherit=>'/site_handler'
@@ -1130,7 +1131,7 @@ without C<if> statements surrounding each link!  Note that the regular
 expression need not be very robust as long as you have control over what
 will appear in the body.
 
-You can use L<Components that filter Content> if you want to filter
+You can use L<Components that filter Content|Components that filter Content> if you want to filter
 specific parts of a component rather than the entire component.
 
 =head1 OTHER SYNTAX
@@ -1183,7 +1184,7 @@ The current valid flags are
     n - turn off default escape flags
 
 The administrator may specify a set of default escape flags via the
-L<Compiler/default_escape_flags> Compiler parameter. For example, if
+L<Compiler/default_escape_flags|Compiler/default_escape_flags> Compiler parameter. For example, if
 the administrator specifies
 
     default_escape_flags => 'h'
@@ -1295,7 +1296,7 @@ with the new expiration. To expire an item immediately, use
 C<< $m->cache->remove >>.
 
 You can also expire a cache item from an external script; see
-L<Accessing a Cache Externally> below.
+L<Accessing a Cache Externally|Accessing a Cache Externally> below.
 
 =head2 Caching All Output
 
@@ -1316,7 +1317,7 @@ It is typically used right at the top of an C<< <%init> >> section:
 C<< $m->cache_self >> is built on top of C<< $m->cache >>, so it
 accepts all of the cache options described earlier.  C<<
 $m->cache_self >> can also cache a component's return value; see the
-B<L<HTML::Mason::Request>> documentation for details.
+B<L<HTML::Mason::Request|HTML::Mason::Request>> documentation for details.
 
 =head2 Cache Object Meta-data
 
@@ -1427,7 +1428,7 @@ this code will only work as long as F</shared/get_user_cookie> doesn't
 output anything (given its functional nature, it shouldn't).
 
 The administrator can turn off automatic header sending via the
-L<Request/auto_send_headers> Request parameter available when running
+L<Request/auto_send_headers|Request/auto_send_headers> Request parameter available when running
 Mason with the ApacheHandler module.
 
 =head1 USING THE PERL DEBUGGER
@@ -1715,8 +1716,8 @@ Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams
 
 =head1 SEE ALSO
 
-L<HTML::Mason>,
-L<HTML::Mason::Admin>,
-L<HTML::Mason::Request>
+L<HTML::Mason|HTML::Mason>,
+L<HTML::Mason::Admin|HTML::Mason::Admin>,
+L<HTML::Mason::Request|HTML::Mason::Request>
 
 =cut
