@@ -395,8 +395,6 @@ sub _get_mason_params
 
     my $config = $r ? $r->dir_config : Apache->server->dir_config;
 
-    my $specs = $self->allowed_params;
-
     #
     # We will accumulate all the string versions of the keys and
     # values here for later use.
@@ -416,7 +414,7 @@ sub _get_mason_params
 
     return ( \%vals,
 	     map { $_ =>
-                   scalar $self->get_param( $_, $specs->{$_}, \%vals, $r, \%candidates )
+                   scalar $self->get_param( $_, \%vals, \%candidates, $r )
 	         }
 	     keys %candidates );
 }
@@ -424,22 +422,21 @@ sub _get_mason_params
 sub get_param {
     # Gets a single config item from dir_config.
 
-    my ($self, $key, $spec, $vals, $r, $params) = @_;
+    my ($self, $key, $vals, $params, $r) = @_;
+
     $key = $self->calm_form($key);
 
-    $params ||= {};
-
     # If we weren't given a spec, try to locate one in our own class.
-    $spec ||= $self->allowed_params($params)->{$key};
-    error "Unknown config item '$key'" unless $spec;
+    my $spec = $self->allowed_params( $params || {} )->{$key}
+        or error "Unknown config item '$key'";
 
     # Guess the default parse type from the Params::Validate validation spec
     my $type = ($spec->{parse} or
 		$spec->{type} & ARRAYREF ? 'list' :
 		$spec->{type} & SCALAR   ? 'string' :
 		$spec->{type} & CODEREF  ? 'code' :
-		undef);
-    error "Unknown parse type for config item '$key'" unless $type;
+		undef)
+        or error "Unknown parse type for config item '$key'";
 
     my $method = "_get_${type}_param";
     return $self->$method('Mason'.$self->studly_form($key), $vals, $r);
