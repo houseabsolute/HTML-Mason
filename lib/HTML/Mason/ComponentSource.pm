@@ -91,8 +91,8 @@ HTML::Mason::ComponentSource - represents information about an component
 
 =head1 DESCRIPTION
 
-Mason uses the ComponentSource class abstract information about a source
-component, one that has yet to be compiled.
+Mason uses the ComponentSource class to store information about a
+source component, one that has yet to be compiled.
 
 =head1 METHODS
 
