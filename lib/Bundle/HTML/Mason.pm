@@ -20,11 +20,15 @@ C<perl -MCPAN -e 'install Bundle::HTML::Mason'>
 
 Data::Dumper
 
-File::Spec
+File::Spec  0.8
 
-Params::Validate
+Params::Validate  0.10
 
-Apache::Request
+Apache::Request  0.31
+
+Exception::Class  0.98
+
+Cache::Cache  0.99
 
 HTML::Mason
 
