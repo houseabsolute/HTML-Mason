@@ -252,9 +252,8 @@ sub cache
 	$cache_class = "Cache::$cache_class" unless $cache_class =~ /::/;
 	delete($options{cache_class});
     }
-    load_pkg('Cache/Cache.pm', '$m->cache requires the Cache::Cache module, available from CPAN.');
-    (my $cache_pkgfile = "$cache_class.pm") =~ s{::}{/}g;
-    load_pkg($cache_pkgfile, 'Fix your Cache::Cache installation or choose another cache class.');
+    load_pkg('Cache::Cache', '$m->cache requires the Cache::Cache module, available from CPAN.');
+    load_pkg($cache_class, 'Fix your Cache::Cache installation or choose another cache class.');
 
     my $cache = $cache_class->new (\%options)
 	or HTML::Mason::Exception->throw( error => "could not create cache object" );

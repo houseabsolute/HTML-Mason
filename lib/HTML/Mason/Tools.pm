@@ -42,18 +42,6 @@ sub read_file
 }
 
 #
-# Escape HTML &, >, <, and " characters. Borrowed from CGI::Base.
-#
-sub html_escape
-{
-    my ($text) = @_;
-    my %html_escape = ('&' => '&amp;', '>'=>'&gt;', '<'=>'&lt;', '"'=>'&quot;');
-    my $html_escape = join('', keys %html_escape);
-    $text =~ s/([$html_escape])/$html_escape{$1}/mgoe;
-    return $text;
-}
-
-#
 # Determines whether two paths are equal, taking into account
 # case-insensitivity in Windows O/S.
 #
@@ -121,24 +109,26 @@ sub pkg_loaded
 }
 
 #
-# Load package file $pkgfile if not already loaded. Return 1 if file
-# was found and loaded successfully. When file is not found: if
-# optional second argument $nf_error is provided, die with that error
-# message, otherwise return 0. Errors while loading the package are
-# always passed through as fatal errors.
+# Load package $pkg if not already loaded. Return 1 if file was found
+# and loaded successfully. When file is not found: if optional second
+# argument $nf_error is provided, die with that error message,
+# otherwise return 0. Errors while loading the package are always
+# passed through as fatal errors.
 #
 sub load_pkg {
-    my ($pkgfile, $nf_error) = @_;
-    return 1 if exists($INC{$pkgfile});
+    my ($pkg, $nf_error) = @_;
 
-    eval {
-	require $pkgfile;
-    };
+    my $file = File::Spec->catfile( split /::/, $pkg );
+    $file .= '.pm';
+    return 1 if exists $INC{$file};
+
+    eval "use $pkg";
+
     if ($@) {
 	if ($@ =~ /^Can\'t locate .* in \@INC/) {
 	    if (defined($nf_error)) {
 		my $error = sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
-				    $pkgfile, $nf_error, join(" ", @INC));
+				    $pkg, $nf_error, join(" ", @INC));
 		die $error;
 	    } else {
 		undef $@;
@@ -179,7 +169,7 @@ sub escape_perl_expression
     if (defined($expr)) {
 	foreach my $flag (@flags) {
 	    if ($flag eq 'h') {
-		load_pkg('HTML/Entities.pm', 'The |h escape flag requires the HTML::Entities module, available from CPAN.');
+		load_pkg('HTML::Entities', 'The |h escape flag requires the HTML::Entities module, available from CPAN.');
 		$expr = HTML::Entities::encode($expr);
 	    } elsif ($flag eq 'u') {
 		$expr =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
