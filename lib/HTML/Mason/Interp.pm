@@ -306,7 +306,7 @@ sub load {
     $self->delete_from_code_cache($comp_id);
 
     if ($comp->object_size <= $self->code_cache_max_elem) {
-	$code_cache->{$comp_id} = {lastmod=>$srcmod, comp=>$comp, type=>'physical'};
+	$code_cache->{$comp_id} = {lastmod=>$srcmod, comp=>$comp};
 	$self->{code_cache_current_size} += $comp->object_size;
     }
     return $comp;
