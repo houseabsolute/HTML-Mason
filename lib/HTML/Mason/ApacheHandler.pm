@@ -256,7 +256,9 @@ BEGIN {
 		Apache2->import();
 		require Apache::RequestRec;
 		require Apache::RequestIO;
+		require Apache::ServerUtil;
 		require Apache::Log;
+		require APR::Table;
 	} else {
 		require Apache;
 		Apache->import();
