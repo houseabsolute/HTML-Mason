@@ -142,7 +142,7 @@ sub new {
 sub header_out {
     my ($self, $header) = (shift, shift);
 
-    $header = $self->_canonize_header($header);
+    $header = $self->_canonic_header($header);
 
     return $self->_set_header($header, shift) if @_;
     return $self->headers->{$header};
@@ -151,7 +151,7 @@ sub header_out {
 sub content_type {
     my $self = shift;
 
-    my $header = $self->_canonize_header('Content-type');
+    my $header = $self->_canonic_header('Content-type');
 
     return $self->_set_header($header, shift) if @_;
     return $self->headers->{$header};
@@ -165,7 +165,7 @@ sub _set_header {
     return $self->headers->{$header} = $value;
 }
 
-sub _canonize_header {
+sub _canonic_header {
     my ($self, $header) = @_;
 
     # CGI really wants a - before each header
@@ -177,7 +177,7 @@ sub _canonize_header {
 sub http_header {
     my $self = shift;
 
-    my $location = $self->_canonize_header('Location');
+    my $location = $self->_canonic_header('Location');
 
     my $method = exists $self->headers->{$location} ? 'redirect' : 'header';
     return $self->query->$method(%{$self->headers});
