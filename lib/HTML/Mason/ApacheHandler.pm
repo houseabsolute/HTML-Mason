@@ -278,11 +278,27 @@ sub handle_request {
     $debugState = $self->capture_debug_state($apreq)
 	if ($debugMode eq 'all' or $debugMode eq 'error');
 
-    eval { $retval = handle_request_1($self, $apreq, $debugState) };
+    #
+    # Create an Apache-specific request with additional slots.
+    #
+    my $request = new HTML::Mason::Request::ApacheHandler
+	(ah=>$self,
+	 interp=>$interp,
+	 apache_req=>$apreq
+	 );
+    
+    eval { $retval = handle_request_1($self, $apreq, $request, $debugState) };
     my $err = $@;
+    my $err_code = $request->{error_code};
+    undef $request;  # ward off memory leak
     my $err_status = $err ? 1 : 0;
 
     if ($err) {
+	#
+	# If first component was not found, return 404.
+	#
+	return 404 if defined($err_code) and $err_code eq 'top_not_found';
+	
 	#
 	# Take out date stamp and (eval nnn) prefix
 	# Add server name, uri, referer, and agent
@@ -464,7 +480,7 @@ sub capture_debug_state
 
 sub handle_request_1
 {
-    my ($self,$r,$debugState) = @_;
+    my ($self,$r,$request,$debugState) = @_;
     my $interp = $self->interp;
 
     #
@@ -478,45 +494,33 @@ sub handle_request_1
 	    $r->content_type(undef);
 	}
     }
-    
+
+    #
+    # Append path_info if filename does not represent an existing file
+    # (mainly for dhandlers).
+    #
+    my $pathname = $r->filename;
+    $pathname .= $r->path_info unless -f $r->finfo;
+
     #
     # Compute the component path via the resolver.
     #
-    my $compPath = $interp->resolver->file_to_path($r->filename,$interp);
-    return NOT_FOUND unless $compPath;
-
-    $compPath =~ s@/$@@ if $compPath ne '/';
-    while ($compPath =~ s@//@/@) {}
-
-    #
-    # Try to load the component; if not found, try dhandlers
-    # ("default handlers"); otherwise return not found.
-    #
-    my ($comp,$dhandlerArg);
-    if (!($comp = $interp->load($compPath))) {
-	if ($interp->dhandler_name and $comp = $interp->find_comp_upwards($compPath,$interp->dhandler_name)) {
-	    my $remainder = ($comp->dir_path eq '/') ? $compPath : substr($compPath,length($comp->dir_path));
-	    my $pathInfo = $remainder.$r->path_info;
-	    $r->path_info($pathInfo);
-	    $dhandlerArg = substr($pathInfo,1);
-	} else {
-	    return NOT_FOUND;
-	}
-    }
+    my $comp_path = $interp->resolver->file_to_path($pathname,$interp);
+    return NOT_FOUND unless $comp_path;
 
     #
     # Decline if file does not pass top level predicate.
     #
-    if (defined($self->{top_level_predicate})) {
-	my $srcfile = $comp->source_file;
-	if (!$self->{top_level_predicate}->($srcfile)) {
-	    return NOT_FOUND;
-	}
+    if (-f $r->finfo and defined($self->{top_level_predicate})) {
+	return NOT_FOUND unless $self->{top_level_predicate}->($r->filename);
     }
 
-    # $ARGS_METHOD is set by the import subroutine (_cgi_args or
-    # _mod_perl_args).  When inside debug file, get arguments from
-    # special saved hash.  This circumvents POST content issues.
+    #
+    # Parse arguments. $ARGS_METHOD is set by the import subroutine
+    # (_cgi_args or _mod_perl_args).  When inside debug file, get
+    # arguments from special saved hash.  This circumvents POST
+    # content issues.
+    #
     my %args;
     if ($HTML::Mason::IN_DEBUG_FILE) {
 	%args = %{$r->{args_hash}};
@@ -524,17 +528,6 @@ sub handle_request_1
 	%args = $self->$ARGS_METHOD($r);
     }
     $debugState->{args_hash} = \%args if $debugState;
-
-    #
-    # Create an Apache-specific request with additional slots.
-    #
-    my $request = new HTML::Mason::Request::ApacheHandler
-	(ah=>$self,
-	 interp=>$interp,
-	 apache_req=>$r
-	 );
-
-    $request->{dhandler_arg} = $dhandlerArg if (defined($dhandlerArg));
 
     #
     # Deprecated output_mode parameter - just pass to request out_mode.
@@ -592,7 +585,7 @@ sub handle_request_1
 	};
 	$request->{out_method} = $out_method;
 
-	$retval = $request->exec($comp, %args);
+	$retval = $request->exec($comp_path, %args);
 
 	# On a success code, send headers and any buffered whitespace
 	# if it has not already been sent. On an error code, leave it
@@ -602,7 +595,7 @@ sub handle_request_1
 	    $interp->out_method->($delay_buf) unless $delay_buf eq '';
 	}
     } else {
-	$retval = $request->exec($comp, %args);
+	$retval = $request->exec($comp_path, %args);
     }
     undef $request; # ward off leak
     return $retval;

@@ -394,7 +394,7 @@ What happens when a user requests a component that doesn't exist? In
 this case Mason scans backward through the URI, checking each
 directory for a component named I<dhandler> ("default handler").  If
 found, the dhandler is invoked and is expected to use
-C<$r-E<gt>path_info> (the virtual location) as the parameter to some
+C<$m-E<gt>dhandler_arg> as the parameter to some
 access function, perhaps a database lookup or location in another
 filesystem. In a sense, dhandlers are similar in spirit to Perl's
 AUTOLOAD feature; they are the "component of last resort" when a URL
@@ -412,11 +412,9 @@ In this case Mason constructs the following search path:
     /newsfeeds/dhandler                 => found! (search ends)
     /dhandler
 
-The found dhandler would read "/LocalNews/Story1" from
-C<$r-E<gt>path_info> and use it as a retrieval key into a
-database of stories. Optionally, the Mason command
-C<$m-E<gt>dhandler_arg> returns the same path_info stripped of the
-leading slash ("LocalNews/locStory1.html").
+The found dhandler would read "LocalNews/Story1" from
+C<$m-E<gt>dhandler_arg> and use it as a retrieval key into a
+database of stories.
 
 Here's how a simple /newsfeeds/dhandler might look:
 
