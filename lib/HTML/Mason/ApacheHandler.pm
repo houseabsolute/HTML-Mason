@@ -176,41 +176,6 @@ sub redirect
 
 #----------------------------------------------------------------------
 #
-# APACHE-SPECIFIC FILE RESOLVER OBJECT
-#
-package HTML::Mason::Resolver::File::ApacheHandler;
-
-use strict;
-
-use HTML::Mason::Tools qw(paths_eq);
-
-use HTML::Mason::Resolver::File;
-use base qw(HTML::Mason::Resolver::File);
-
-#
-# Given an apache request object, return the associated component
-# path or undef if none exists. This is called for top-level web
-# requests that resolve to a particular file.
-#
-sub apache_request_to_comp_path {
-    my ($self, $r) = @_;
-
-    my $file = $r->filename;
-    $file .= $r->path_info unless -f $file;
-
-    foreach my $root (map $_->[1], $self->comp_root_array) {
-	if (paths_eq($root, substr($file, 0, length($root)))) {
-	    my $path = substr($file, ($root eq '/' ? 0 : length($root)));
-	    $path =~ s,\/$,, unless $path eq '/';
-	    return $path;
-	}
-    }
-    return undef;
-}
-
-
-#----------------------------------------------------------------------
-#
 # APACHEHANDLER OBJECT
 #
 package HTML::Mason::ApacheHandler;
@@ -276,31 +241,24 @@ use HTML::Mason::MethodMaker
 			  interp ) ]
     );
 
-use vars qw($AH);
+use vars qw($AH $STARTED);
 
 # hack to let the make_params_pod.pl script work
-_startup() if Apache->server;
+__PACKAGE__->_startup() if Apache->server;
 sub _startup
 {
-    # This is not really ideal cause if someone loads a subclass we
-    # won't know about it.  Oh well.
-    my $pack = __PACKAGE__;
+    my $pack = shift;
+    return if $STARTED++; # Allows a subclass to call us, without running twice
 
     if ( my $args_method = $pack->get_param('ArgsMethod') )
     {
 	if ($args_method eq 'CGI')
 	{
-	    unless (defined $CGI::VERSION)
-	    {
-		require CGI;
-	    }
+	    require CGI unless defined $CGI::VERSION;
 	}
 	elsif ($args_method eq 'mod_perl')
 	{
-	    unless (defined $Apache::Request::VERSION)
-	    {
-		require Apache::Request;
-	    }
+	    require Apache::Request unless defined $Apache::Request::VERSION;
 	}
 
 	# if we are in a simple conf file (meaning one without
@@ -311,10 +269,9 @@ sub _startup
 }
 
 #
-# This is my best guess as to whether we are being configured via the
-# conf file without multiple configs.  Without a comp root it will
-# blow up sooner or later anyway.  This may not be the case in the
-# future though.
+# This is our best guess as to whether we are being configured via the
+# conf file without multiple configs.  It's flawed, because simple
+# configurations don't require an explicit component root to be set.
 #
 sub _in_simple_conf_file
 {
@@ -335,12 +292,7 @@ sub make_ah
     # them all together in a string that we use to determine whether
     # or not we've seen this particular set of config values before.
     #
-    my $key = '';
-    foreach my $k (sort keys %$vals)
-    {
-	$key .= $k;
-	$key .= $vals->{$k};
-    }
+    my $key = join $;, map "$_$;$vals->{$_}", sort keys %$vals;
 
     #
     # If the user has virtual hosts, each with a different document
@@ -351,7 +303,7 @@ sub make_ah
     # comp root), we append the document root for the current request
     # to the key.
     #
-    $key .= $r->document_root if $r;
+    $key .= $; . $r->document_root if $r;
 
     return $AH{$key} if exists $AH{$key};
 
@@ -509,13 +461,13 @@ sub new
     # get $r off end of params if its there
     my $r = pop if @_ % 2 == 1;
 
-    my $allowed_params = $class->allowed_params(@_);
+    my %defaults = ( request_class  => 'HTML::Mason::Request::ApacheHandler' );
+    my $allowed_params = $class->allowed_params(%defaults, @_);
 
-    my %defaults;
-    if ( exists $allowed_params->{comp_root} &&
-	 ( $r ||  Apache->request ) )
+    if ( exists $allowed_params->{comp_root} and
+	 my $req = $r || Apache->request )  # DocumentRoot is only available inside requests
     {
-	$defaults{comp_root} = $r ? $r->document_root : Apache->request->document_root;
+	$defaults{comp_root} = $req->document_root;
     }
 
     if (exists $allowed_params->{data_dir})
@@ -523,9 +475,6 @@ sub new
 	# constructs path to <server root>/mason
 	$defaults{data_dir} = Apache->server_root_relative('mason');
     }
-
-    $defaults{request_class}  = 'HTML::Mason::Request::ApacheHandler';
-    $defaults{resolver_class} = 'HTML::Mason::Resolver::File::ApacheHandler';
 
     # Set default error_format based on error_mode
     my %params = @_;
@@ -547,14 +496,16 @@ sub new
 
     # Don't allow resolver to get created without comp_root, if it needs one
     if ( exists $allowed_params->{comp_root} && !$defaults{comp_root} && !$params{comp_root} ) {
-	die "No comp_root specified and cannot determine DocumentRoot. Please provide comp_root manually.";
+	die "No comp_root specified and cannot determine DocumentRoot. Please provide comp_root explicitly.";
     }
 
     my $self = $class->SUPER::new(%defaults, @_);
 
-    unless ( $self->interp->resolver->can('apache_request_to_comp_path') )
+    unless ( $self->interp->resolver->can('resolve_backwards') )
     {
-	error "The resolver class your Interp object uses does not implement the 'apache_request_to_comp_path' method.  This means that ApacheHandler cannot resolve requests.  Are you using a handler.pl file created before version 1.10?  Please see the handler.pl sample that comes with the latest version of Mason.";
+	error "The resolver class your Interp object uses does not implement the 'resolve_backwards' method.  ".
+	      "This means that ApacheHandler cannot resolve requests.  Are you using a handler.pl file created ".
+	      "before version 1.10?  Please see the handler.pl sample that comes with the latest version of Mason.";
     }
 
     # If we're running as superuser, change file ownership to http user & group
@@ -715,6 +666,14 @@ sub handle_request
     $req->exec;
 }
 
+sub apache_request_to_comp_path {
+    my ($self, $r) = @_;
+    
+    my $file = $r->filename;
+    $file .= $r->path_info unless -f $file;
+    return $self->interp->resolver->resolve_backwards($file);
+}
+
 sub prepare_request
 {
     my ($self, $r) = @_;
@@ -747,7 +706,7 @@ sub prepare_request
     #
     # Compute the component path via the resolver. Return NOT_FOUND on failure.
     #
-    my $comp_path = $interp->resolver->apache_request_to_comp_path($r);
+    my $comp_path = $self->apache_request_to_comp_path($r);
     unless ($comp_path) {
 	#
 	# Append path_info if filename does not represent an existing file
@@ -885,32 +844,17 @@ sub return_not_found
 #
 BEGIN
 {
-    if ( $mod_perl::VERSION < 1.99 )
-    {
-        eval <<'EOF';
-sub handler ($$)
+    # A method handler is prototyped differently in mod_perl 1.x than in 2.x
+    my $handler_code = sprintf <<'EOF', $mod_perl::VERSION < 1.99 ? ': method' : '($$)';
+sub handler %s
 {
     my ($package, $r) = @_;
-
     my $ah = $AH || $package->make_ah($r);
-
     return $ah->handle_request($r);
 }
 EOF
-    }
-    else
-    {
-        eval <<'EOF';
-sub handler : method
-{
-    my ($package, $r) = @_;
-
-    my $ah = $AH || $package->make_ah($r);
-
-    return $ah->handle_request($r);
-}
-EOF
-    }
+    eval $handler_code;
+    die $@ if $@;
 }
 
 1;
