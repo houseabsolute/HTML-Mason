@@ -15,6 +15,16 @@ Other Mason features include powerful filtering and templating
 facilities, an HTML/data caching model, and a web-based site
 previewing utility.  See http://www.masonhq.com/ for more information.
 
+PREREQUISITES
+
+Mason requires Perl 5.005 or greater, and the following CPAN modules:
+
+* Params::Validate
+
+The following CPAN modules are optional for certain features, but not required:
+
+* Time::HiRes
+
 INSTALLATION
 
 To install Mason, run the standard sequence:
@@ -24,8 +34,7 @@ To install Mason, run the standard sequence:
 	make install
 
 After Mason is installed, you will need to activate it by adding some
-directives to your Apache configuration files, and customizing Mason's
-Config.pm and eg/handler.pl files to match your system.
+directives to your Apache configuration files.
 
 The included pod docs have been pre-converted to HTML for you and
 placed in the htdocs/ directory. The Mason overview (a good place to
