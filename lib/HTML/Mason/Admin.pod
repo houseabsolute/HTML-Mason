@@ -17,18 +17,20 @@ There are two ways to configure Apache/mod_perl to use Mason.
 
 =item * Basic
 
-Mason provides reasonable default under mod_perl, so using Mason can
-be as simple as adding two directives to your Apache configuration
-file, which we will assume is called httpd.conf.  By adding more
-configuration parameters to this file you can implement more complex
-behaviors.
+Mason provides reasonable default behavior under mod_perl, so using
+Mason can be as simple as adding two directives to your Apache
+configuration file.  Throughout this document, we will assume that
+your Apache configuration file is called F<httpd.conf>.  By adding
+more configuration parameters to this file you can implement more
+complex behaviors.
 
 =item * Advanced
 
 If the basic method does not provide enough flexibility for you, you
 can wrap Mason in a custom mod_perl handler.  The wrapper code you
 write can create its own Mason objects, or it can take advantage of
-httpd.conf configuration parameters.
+F<httpd.conf> configuration parameters and let Mason create the
+objects it needs by itself.
 
 =back
 
@@ -37,11 +39,10 @@ forward as the need for flexibility arises.
 
 Mason is very flexible, and you can replace parts of it by creating
 your own classes.  This documentation assumes that you are simply
-using the classes provide in the Mason distribution.  Customizing and
-subclassing is covered in the
-L<Subclassing|HTML::Mason::Subclassing> document.  The two topics are
-orthogonal, as you can mix the configuration techniques discussed here
-with your own custom subclasses.
+using the classes provide in the Mason distribution.  Subclassing is
+covered in the L<Subclassing|HTML::Mason::Subclassing> document.  The
+two topics are orthogonal, as you can mix the configuration techniques
+discussed here with your own custom subclasses.
 
 =head1 BASIC CONFIGURATION VIA httpd.conf DIRECTIVES
 
@@ -57,20 +58,20 @@ The absolutely most minimal configuration looks like this:
 This configuration tells Apache to serve all URLs ending in ".html"
 with Mason.  We use the PerlModule line to tell mod_perl to load Mason
 once at startup time, saving time and memory.  This example does not
-set any Mason configuration parameters, so Mason provides its own
-default values for these.
+set any Mason configuration parameters, so Mason provides uses its
+default values.
 
 =head2 Configuration Parameters
 
 Since the default behavior will not work for everyone, Mason allows
-you to flexibly configure its behavior via httpd.conf configuration
+you to flexibly configure its behavior via F<httpd.conf> configuration
 parameters.
 
-Mason's configuration parameters are set via mod_perl's C<PerlSetVar>
+These configuration parameters are set via mod_perl's C<PerlSetVar>
 and C<PerlAddVar> directives (the latter is only available in mod_perl
 version 1.24 and greater).  Though these parameters are all strings in
-your httpd.conf file, Mason treats differnet directives as different
-types:
+your F<httpd.conf> file, Mason treats different directives as
+containing different types of values:
 
 =over 4
 
@@ -95,7 +96,7 @@ anonymous subroutine might look like:
 
  PerlSetVar  MasonOutMode  "sub { ... }"
 
-A named subroutine call would look like this:
+A named subroutine reference would look like this:
 
  PerlSetVar  MasonOutMode  "\&Some::Module::handle_output"
 
@@ -126,20 +127,20 @@ quoted.
 =back
 
 See L<HTML::Mason::Params|HTML::Mason::Params> for a full list
-of parameters.
+of parameters, and their associated types.
 
 =head1 GENERAL SERVER CONFIGURATION
 
 =head2 Component Root
 
 The component root (P<comp_root>) marks the top of your component
-hierarchy.  When running Mason with the CGIHandler or ApacheHandler
+hierarchy.  When running Mason with the ApacheHandler or CGIHandler
 modules, this defaults to your document root.
 
 The component root defines how component paths are translated into
-real file paths. If your component root is /usr/local/httpd/docs, a
-component path of /products/index.html translates to the file
-/usr/local/httpd/docs/products/index.html.
+real file paths. If your component root is F</usr/local/httpd/docs>, a
+component path of F</products/index.html> translates to the file
+F</usr/local/httpd/docs/products/index.html>.
 
 One cannot call a component outside the component root. If Apache
 passes a file through Mason that is outside the component root (say,
@@ -148,25 +149,27 @@ logs.
 
 You may also specify multiple component roots in the spirit of Perl's
 C<@INC>. Each root is assigned a key that identifies the root
-mnemonically. For example, in httpd.conf:
+mnemonically. For example, in F<httpd.conf>:
 
     PerlAddVar  MasonCompRoot  "private => /usr/home/joe/comps"
     PerlAddVar  MasonCompRoot  "main => /usr/local/www/htdocs"
 
 This specifies two component roots, a main component tree and a
 private tree which overrides certain components.  The order is
-respected ala C<@INC>, so I<private> is searched first and I<main> second.
+respected ala C<@INC>, so I<private> is searched first and I<main>
+second.
 
-The component root keys must be unique in a case-insensitive comparison.
+The component root keys must be unique in a case-insensitive
+comparison.
 
 =head2 Data Directory
 
 The data directory (P<data_dir>) is a writable directory that Mason
 uses for various features and optimizations. By default, it is a
-directory called "mason" under your Apache server root. You will need
-to change this on certain systems that assign a high-level server root
-such as F</usr>, because Mason will not use a default data directory
-under a top-level directory.
+directory called "mason" under your Apache server root.  Because Mason
+will not use a I<default> data directory under a top-level directory,
+you will need to change this on certain systems that assign a
+high-level server root such as F</usr> or F</etc>.
 
 Mason will create the directory on startup, if necessary, and set its
 permissions according to the web server User/Group.
@@ -174,7 +177,7 @@ permissions according to the web server User/Group.
 =head2 External Modules
 
 Components will often need access to external Perl modules. There are
-several ways to bring them in.
+several ways to load them.
 
 =over
 
@@ -219,9 +222,9 @@ method, in contrast, will import symbols into the C<main> package. The
 significance of this depends on whether the modules export symbols and
 whether you want to use them from components.
 
-If you want to preload the modules in your httpd.conf file, and still
-have them export symbols into the C<HTML::Mason::Commands> namespace,
-you can do this:
+If you want to preload the modules in your F<httpd.conf> file, and
+still have them export symbols into the C<HTML::Mason::Commands>
+namespace, you can do this:
 
   <Perl>
   { package HTML::Mason::Commands;
@@ -250,7 +253,7 @@ Mason.  One way is to use C<LocationMatch>, e.g.
 This directs Mason to handle only files with .html or .txt extension,
 as well as those files with no extension.
 
-If you are familiar with Apache, you might have also though of the
+If you are familiar with Apache, you might have also thought of the
 C<FilesMatch> directive.  The problem with using this directive is
 that this directive only matches files that actually exist on the
 filesystem.  You will not be able to use
@@ -258,17 +261,22 @@ L<dhandlers|HTML::Mason::Devel/dhandlers> to catch non-existent files
 if you use a C<FilesMatch> directive, and for this reason we
 discourage its use.
 
-A second way is to indicate the extensions that should I<not> be
-served through Mason, e.g.
+A second possibility is to indicate the extensions that should I<not>
+be served through Mason, e.g.
+
+    <Location />
+      SetHandler   perl-script
+      PerlHandler  HTML::Mason::ApacheHandler
+    </Location>
 
     <LocationMatch "\.(gif|jpe?g|png|gz)$">
       SetHandler  default-handler
     </LocationMatch>
 
-This will send all extensions not listed through Mason, regardless
-of whether the file exists, thus working well with dhandlers. The
-disadvantage of this method is that you have to explicitly list all
-of the non-Mason extensions used on your site.
+This will send all extensions not listed in the C<LocationMatch>
+directive through Mason. The disadvantage of this method is that you
+have to explicitly list all of the non-Mason extensions used on your
+site.
 
 Make sure this directive comes I<after> any directive which turns
 Mason on for certain locations, as Apache gives the last block defined
@@ -299,7 +307,7 @@ components, and make sure your developers stick to this policy. You
 can then prevent private components from being served.
 
 One solution is to place all private components inside a directory,
-say /private, that lies under the component root but outside the
+say F<private/>, that lies under the component root but outside the
 document root. e.g.
 
   component root:     /usr/mason/comps
@@ -308,7 +316,7 @@ document root. e.g.
 
 Since Mason's default component resolution process relies on Apache
 being able to translate URLs to files, this effectively prevents
-outside access to components under /usr/mason/comps/private.
+outside access to components under F</usr/mason/comps/private>.
 
 Another solution is to decide on a naming convention, for example,
 that all private components begin with "_", or that all top-level
@@ -319,10 +327,10 @@ directive:
 
     PerlModule  Apache::Constants
 
-    <FilesMatch "^_">
+    <LocationMatch "^_">
       SetHandler       perl-script
       PerlInitHandler  Apache::Constants::NOT_FOUND
-    </FilesMatch>
+    </LocationMatch>
 
 Even after you've safely protected internal components, top-level
 components that process arguments (such as form handlers) still
@@ -336,8 +344,8 @@ SQL, shell commands, etc.
 By default Mason will decline requests for directories, leaving Apache
 to serve up a directory index or a FORBIDDEN as appropriate.
 Unfortunately this rule applies even if there is a dhandler in the
-directory: /foo/bar/dhandler does not get a chance to
-handle a request for /foo/bar/.
+directory: F</foo/bar/dhandler> does not get a chance to
+handle a request for F</foo/bar/>.
 
 If you would like Mason to handle directory requests, set
 P<decline_dirs> to 0.  The dhandler that catches a directory request
@@ -351,7 +359,8 @@ These examples extend the single site configurations given so far.
 =head3 Multiple sites, one component root
 
 If you want to share some components between your sites, arrange your
-httpd.conf so that all DocumentRoots live under a single component space:
+F<httpd.conf> so that all DocumentRoots live under a single component
+space:
 
     # Web site #1
     <VirtualHost www.site1.com>
@@ -385,16 +394,15 @@ The directory structure for this scenario might look like:
 
 Incoming URLs for each site can only request components in their
 respective DocumentRoots, while components internally can call other
-components anywhere in the component space. The shared/ directory
-is a private directory for use by components, inaccessible from
-the Web.
+components anywhere in the component space. The F<shared/> directory
+is a private directory for use by components, inaccessible from the
+Web.
 
 =head3 Multiple sites, multiple component roots
 
-Sometimes your sites need to have completely distinct component
-hierarchies, e.g. if you are providing Mason ISP services for multiple
-users. In this case the component root must change depending on the
-site requested.
+If your sites need to have completely distinct component hierarchies,
+e.g. if you are providing Mason ISP services for multiple users, then
+the component root must change depending on the site requested.
 
     <VirtualHost www.site1.com>
       DocumentRoot  /usr/local/www/htdocs/site1
@@ -442,16 +450,17 @@ To create a wrapper, you simply need to define a C<handler()>
 subroutine in the package of your choice, and tell mod_perl to use it
 as a content handler.  The file that defines the C<handler()>
 subroutine can be a module, or you can simply load a simple file that
-contains this subroutine definition.  If you adopt the latter route,
-the file has traditionally been called handler.pl, and is often placed
-your Apache configuration directory.  It would be loaded like this:
+contains this subroutine definition.  The latter solution was, for a
+long time, the I<only> way to configure Mason, and the file used was
+traditionally called F<handler.pl>.  This file was usually placed in
+the Apache configuration directory.  It can be loaded like this:
 
   PerlRequire  handler.pl
 
 The eg/ directory of the Mason distribution contains a couple sample
-scripts.  Let's assume, that like the example, your script defines a
-handler in the package C<MyApp::Mason>.  In this case, your Apache
-configuration would look like this:
+F<handler.pl> scripts.  Let's assume, that like the example, your
+script defines a handler in the package C<MyApp::Mason>.  In this
+case, your Apache configuration would look like this:
 
   PerlRequire  handler.pl
 
@@ -460,10 +469,13 @@ configuration would look like this:
     PerlHandler  MyApp::Mason
   </LocationMatch>
 
+You may still see references to a F<handler.pl> file in the Mason
+users list archives, as well as the FAQ.  These references will
+generally be applicable to any custom code wrapping Mason.
+
 =head2 The Wrapper Code
 
-Let's look a the contents of the handler.pl file.  Here's a first
-version:
+Let's look at the guts of some wrapper code.  Here's a first version:
 
   package MyApp::Mason;
 
@@ -471,8 +483,9 @@ version:
   use HTML::Mason::ApacheHandler;
 
   my $ah =
-      HTML::Mason::ApacheHandler->new( comp_root => '/path/to/comp/root',
-                                       data_dir  => '/path/to/data/dir' );
+      HTML::Mason::ApacheHandler->new
+          ( comp_root => '/path/to/comp/root',
+            data_dir  => '/path/to/data/dir' );
 
   sub handler {
       my ($r) = @_;
@@ -481,22 +494,25 @@ version:
   }
 
 This wrapper is fully functional, but it doesn't actually do anything
-you couldn't do more easily by configuring Mason via the httpd.conf
+you couldn't do more easily by configuring Mason via the F<httpd.conf>
 file.  However, it does serve as a good skeleton to which additional
 functionality can easily be added.
 
+=head2 Wrapping with a Module
+
 Remember, this wrapper code doesn't I<have> to be in a file
-handler.pl.  You could just as easily create a an actual module called
-C<MyApp::Mason>, install it just like any other module, and load it
-with:
+F<handler.pl>.  You could just as easily create an actual module
+called C<MyApp::Mason>, install it just like any other module, and
+load it with:
 
   PerlModule  MyApp::Mason
 
 The advantage to this approach is that it uses well-known techniques
 for creating and installing modules, though it involves a bit more
-work than simply slapping a handler.pl file into the Apache
+work than simply dropping a F<handler.pl> file into the Apache
 configuration directory.  But because the process is better defined,
-it may "feel" more solid to developers than the handler.pl approach.
+it may "feel" more solid to some folks than the F<handler.pl>
+approach.
 
 =head2 External Modules Revisited
 
@@ -519,7 +535,7 @@ make sure to change the package name here as well.
 
 Alternatively, you might consider creating a separate piece of code to
 load the modules you need.  For example, you might create a module
-called C<MyApp::MasonInit> that looks a little bit like this:
+called C<MyApp::MasonInit>:
 
   {
       package HTML::Mason::Commands;
@@ -531,15 +547,16 @@ called C<MyApp::MasonInit> that looks a little bit like this:
 
   1;
 
-This can be loaded via C<PerlModule> directive in the httpd.conf file,
-or in the wrapper code.
+This can be loaded via a C<PerlModule> directive in the F<httpd.conf>
+file, or in the wrapper code itself via C<use>.
 
 =head2 Accepting Requests Based on Content Type
 
 As mentioned earlier, letting Mason handle binary files is likely to
-cause problems.  At the same time, we will open up the system to make
-Mason accept directory requests.  Here's a bit of code that could be
-added to the C<handler()> subroutine to do this:
+cause problems.  We want to decline requests for binary files while at
+the same time, we want to open up the system to make Mason accept
+directory requests.  Here's a bit of code that could be added to the
+C<handler()> subroutine to do this:
 
     return DECLINED
         if $r->content_type && $r->content_type !~ m|^text/|i &&
@@ -559,10 +576,11 @@ this:
   use HTML::Mason::ApacheHandler;
 
   my $ah =
-      HTML::Mason::ApacheHandler->new( comp_root => '/path/to/comp/root',
-                                       data_dir  => '/path/to/data/dir',
-                                       decline_dirs => 0,
-                                     );
+      HTML::Mason::ApacheHandler->new
+          ( comp_root => '/path/to/comp/root',
+            data_dir  => '/path/to/data/dir',
+            decline_dirs => 0,
+          );
 
   sub handler {
       my ($r) = @_;
@@ -645,9 +663,9 @@ your objects during server startup.
 
 All of the examples so far have begged the question of why you might
 actually want to write a wrapper, since everything they do can be done
-just as easily via configuration directives in the httpd.conf file.
+just as easily via configuration directives in the F<httpd.conf> file.
 
-How about if you wanted to handle errors in request by calling an
+How about if you wanted to handle all request errors by calling an
 error handling component?  There is no way to do this without wrapper
 code.  Here's an example C<handler()> subroutine that does this:
 
@@ -659,7 +677,7 @@ code.  Here's an example C<handler()> subroutine that does this:
         if ( my $err = $@ )
         {
             $r->pnotes( error => $err );
-            $r->filename( $r->document_root . '/error/500.mhtml' );
+            $r->filename( $r->document_root . '/error/500.html' );
 
             return $ah->handle_request($r);
         }
@@ -686,7 +704,7 @@ however, you like.
 
 =head2 Mixing httpd.conf Configuration with a Wrapper
 
-You can take advantage of Mason's httpd.conf configuration system
+You can take advantage of Mason's F<httpd.conf> configuration system
 while at the same time providing your own wrapper code.  The key to
 doing this is I<not> creating your own ApacheHandler object.  Instead,
 you call the C<< HTML::Mason::ApacheHandler->handler() >> class method
@@ -706,16 +724,15 @@ does this:
 
 The C<< HTML::Mason::ApacheHandler->handler >> method will create an
 ApacheHandler object based on the configuration directives it finds in
-your httpd.conf file.  Obviously, this wrapper is again a skeleton,
+your F<httpd.conf> file.  Obviously, this wrapper is again a skeleton,
 but you could mix and match this wrapper code with any of the code
 shown above.
 
-Alternately you could subclass the C<HTML::Mason::ApacheHandler> if
-you wanted to, and override the C<handler()> method it provides.  See
-the L<Subclassing|HTML::Mason::Subclassing> documentation for more
+Alternately you could subclass the C<HTML::Mason::ApacheHandler>
+class, and override the C<handler()> method it provides.  See the
+L<Subclassing|HTML::Mason::Subclassing> documentation for more
 details.  Of course, you could even create a subclass I<and> write a
-wrapper that called it.  Between the ability to create custom wrapper
-code and subclasses, the possibilities are limitless.
+wrapper that called it.
 
 =head1 DEVELOPMENT
 
@@ -748,7 +765,7 @@ needs to be initialized every request.
 Mason does not have a built-in session mechanism, but you can use the
 C<MasonX::Request::WithApacheSession> module, available from CPAN, to
 add a session to every request.  It can also handle setting and
-reading cookies to store the session id in the browser.
+reading cookies to automatically store the session id in the browser.
 
 =head2 Data Caching
 
@@ -778,20 +795,18 @@ any other options given in the C<< $m->cache >> method.
 You may specify other default constructor options with the
 P<data_cache_defaults> parameter. For example,
 
-    PerlSetVar  MasonCacheDefaults "cache_class => SizeAwareFileCache"
-    PerlAddVar  MasonCacheDefaults "cache_depth => 2"
-    PerlAddVar  MasonCacheDefaults "default_expires_in => 1 hour"
+    PerlSetVar  MasonDataCacheDefaults  "cache_class => SizeAwareFileCache"
+    PerlAddVar  MasonDataCacheDefaults  "cache_depth => 2"
+    PerlAddVar  MasonDataCacheDefaults  "default_expires_in => 1 hour"
 
 Any options passed to individual C<< $m->cache >> calls override these
 defaults.
 
 =item Disabling data caching
 
-If for some reason you want to disable data caching entirely, use
-
-    PerlSetVar  DataCacheDefaults "cache_class => NullCache"
-
-This subclass faithfully implements the cache API but never stores data.
+If for some reason you want to disable data caching entirely, set the
+default P<cache_class> to "NullCache".  This subclass faithfully
+implements the cache API but never stores data.
 
 =back
 
@@ -837,7 +852,7 @@ are conceivable in the future, but even those will not survive between
 web server restarts.
 
 As a secondary, longer-term cache mechanism, Mason stores a compiled
-form of each component in an object file under P<data_dir>/C<obj>. Any
+form of each component in an object file under P<data_dir>/obj. Any
 server process can eval the object file and save time on parsing the
 component source file.  The object file is recreated whenever the
 source file changes.
@@ -939,7 +954,7 @@ output to the browser.
 
     $h->handle_request;
 
-The relevant portions of the httpd.conf file look like:
+The relevant portions of the F<httpd.conf> file look like:
 
     DocumentRoot /path/to/comp/root
     ScriptAlias /cgi-bin/ /path/to/cgi-bin/
@@ -950,9 +965,10 @@ The relevant portions of the httpd.conf file look like:
     </LocationMatch>
 
 This simply causes Apache to call the mason_handler.cgi script every
-time a file under the component root is requested.  This script uses
-the L<CGIHandler class|HTML::Mason::CGIHandler> to do most of the
-heavy lifting.  See that class's documentation ofr more details.
+time a URL ending in ".html" under the component root is requested.
+This script uses the L<CGIHandler class|HTML::Mason::CGIHandler> to do
+most of the heavy lifting.  See that class's documentation for more
+details.
 
 =head2 Using Mason from a Standalone Script
 
@@ -984,7 +1000,7 @@ sending to standard output:
         (comp_root  => '/path/to/comp_root',
          data_dir   => '/path/to/data_dir',
          out_method => \$outbuf
-         );
+        );
     $interp->exec(<component-path>, <args>...);
 
 =head1 AUTHORS
