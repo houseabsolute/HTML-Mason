@@ -229,6 +229,32 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => 'some_comp',
+			 component => <<'EOF',
+Some stuff
+EOF
+		       );
+
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'comp_call_in_filter',
+                      description => 'Test that calling another component from a filter section works',
+                      component => <<'EOF',
+Stuff
+<%filter>
+$_ .= $m->scomp( 'some_comp' );
+$_ = lc $_;
+</%filter>
+EOF
+                      expect => <<'EOF',
+stuff
+some stuff
+EOF
+                    );
+
+#------------------------------------------------------------
+
         return $group;
 }
 
