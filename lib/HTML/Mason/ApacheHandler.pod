@@ -99,6 +99,12 @@ Mason's processing.
 Regardless of this setting, no readability processing occurs if you
 have overriden the L<Interp/die_handler> Interp parameter.
 
+=item interp
+
+The only required parameter.  Specifies a Mason interpreter to use for
+handling requests.  The interpreter should be an instance of the
+C<HTML::Mason::Interp> class, or a subclass thereof.
+
 =item output_mode
 
 This parameter has been replaced by the equivalent Interp parameter
