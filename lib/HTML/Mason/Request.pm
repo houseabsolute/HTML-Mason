@@ -1868,6 +1868,25 @@ header feature.
 
 =back
 
+=head1 CGI-ONLY METHODS
+
+This additional method is available when running Mason with the
+CGIHandler module.
+
+=over
+
+=for html <a name="item_cgi_request"></a>
+
+=item cgi_request
+
+Returns the Apache request emulation object, which is available as
+C<$r> inside components.
+
+See the L<CGIHandler docs|HTML::Mason::CGIHandler/"$r Methods"> for
+more details.
+
+=back
+
 =head1 APACHE- OR CGI-ONLY METHOD
 
 This method is available when Mason is running under either the
