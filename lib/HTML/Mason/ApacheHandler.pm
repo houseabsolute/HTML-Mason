@@ -333,13 +333,6 @@ sub make_ah
     my $ah = $package->new(%p);
     $AH{$key} = $ah if $key;
 
-    # If we're running as superuser, change file ownership to http user & group
-    if (!($> || $<) && $ah->interp->files_written)
-    {
-	chown Apache->server->uid, Apache->server->gid, $ah->interp->files_written
-	    or system_error( "Can't change ownership of files written by interp object: $!\n" );
-    }
-
     return $ah;
 }
 
@@ -498,6 +491,13 @@ sub new
     unless ( $self->interp->resolver->can('apache_request_to_comp_path') )
     {
 	error "The resolver class your Interp object uses does not implement the 'apache_request_to_comp_path' method.  This means that ApacheHandler cannot resolve requests.  Are you using a handler.pl file created before version 1.10?  Please see the handler.pl sample that comes with the latest version of Mason.";
+    }
+
+    # If we're running as superuser, change file ownership to http user & group
+    if (!($> || $<) && $self->interp->files_written)
+    {
+	chown Apache->server->uid, Apache->server->gid, $ah->interp->files_written
+	    or system_error( "Can't change ownership of files written by interp object: $!\n" );
     }
 
     $self->_initialize;
