@@ -387,6 +387,15 @@ sub _run_test
 			  () );
     %interp_params = ( %interp_params, %lexer_params, %compiler_params );
 
+    if ($DEBUG && keys %interp_params)
+    {
+	print "Interp params:\n";
+	while ( my ($k, $v) = each %interp_params)
+	{
+	    print "  $k => $v\n";
+	}
+    }
+
     my $buf;
     my $interp;
 
