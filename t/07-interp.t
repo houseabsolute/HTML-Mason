@@ -943,9 +943,26 @@ EOF
 
 #------------------------------------------------------------
 
-    # This test doesn't pass yet -Ken
     $group->add_test( name => 'make_component',
 		      description => 'test make_component() with a path',
+		      component => <<'EOF',
+% $m->interp->make_component( comp_text => 'Hello, <% "World" %>', path => '/fooey_comp' );
+% $m->comp('/fooey_comp');
+!
+EOF
+		      expect => <<'EOF',
+Hello, World!
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'no_comp_root',
+		      description => 'test a comp_root-less interpreter',
+		      interp => HTML::Mason::Interp->new(data_dir => $group->data_dir),
+		      virtual_comp => 1,
+
 		      component => <<'EOF',
 % $m->interp->make_component( comp_text => 'Hello, <% "World" %>', path => '/fooey_comp' );
 % $m->comp('/fooey_comp');
