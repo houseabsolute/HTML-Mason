@@ -824,17 +824,18 @@ File name used for L<autohandlers|HTML::Mason::Devel/autohandlers>. Default is "
 =item code_cache_max_size
 
 Specifies the maximum size, in bytes, of the in-memory code cache
-where components are stored. Default is 10 MB. See the L<code cache|HTML::Mason::Admin/code cache> section of the administrator's manual
-for further details.
+where components are stored. Default is 10 MB. See the ADMIN<code
+cache> section of the administrator's manual for further details.
 
 =item compiler
 
-The Compiler object to associate with this Interpreter.  By default
-a new object of class L<compiler_class|HTML::Mason::Params/compiler_class> will be created.
+The Compiler object to associate with this Interpreter.  By default a
+new object of class P<compiler_class> will be created.
 
 =item compiler_class
 
-The class to use when creating a compiler. Defaults to L<HTML::Mason::Compiler|HTML::Mason::Compiler>.
+The class to use when creating a compiler. Defaults to
+L<HTML::Mason::Compiler|HTML::Mason::Compiler>.
 
 =item current_time
 
@@ -853,15 +854,15 @@ need to change this on certain systems that assign a high-level
 server root such as F</usr>!
 
 In non-Apache environments, data_dir has no default. If it is left
-unspecified, Mason will not use L<object files|HTML::Mason::Admin/object files>, and the default L<data
-cache class|HTML::Mason::Request/item_cache> will be C<MemoryCache>
-instead of C<FileCache>.
+unspecified, Mason will not use ADMIN<object files>, and the default
+L<data cache class|HTML::Mason::Request/item_cache> will be
+C<MemoryCache> instead of C<FileCache>.
 
 =item escape_flags
 
 A hash reference of escape flags to set for this object.  See the
-section on the L<C<set_escape()> method|set_escape> for more
-details.
+section on the L<C<set_escape()>
+method|HTML::Mason::Interp/set_escape> for more details.
 
 =item ignore_warnings_expr
 
@@ -887,7 +888,8 @@ when the interpreter initializes. e.g.
 
 Default is the empty list.  For maximum performance, this should only
 be used for components that are frequently viewed and rarely updated.
-See the L<preloading|HTML::Mason::Admin/preloading> section of the administrator's manual for further details.
+See the ADMIN<preloading> section of the administrator's manual for
+further details.
 
 As mentioned in the developer's manual, a component's C<< <%once> >>
 section is executed when it is loaded.  For preloaded components, this
@@ -897,12 +899,13 @@ C<< <%once> >> section will fail.
 
 =item request_class
 
-The class to use when creating requests. Defaults to L<HTML::Mason::Request|HTML::Mason::Request>.
+The class to use when creating requests. Defaults to
+L<HTML::Mason::Request|HTML::Mason::Request>.
 
 =item resolver
 
 The Resolver object to associate with this Compiler. By default a new
-object of class L<resolver_class|HTML::Mason::Params/resolver_class> will be created.
+object of class P<resolver_class> will be created.
 
 =item resolver_class
 
@@ -1023,16 +1026,16 @@ in the case of a list or hash.  For example:
 
 The global is set in the package that components run in: usually
 C<HTML::Mason::Commands>, although this can be overridden via the
-L<in_package|HTML::Mason::Params/in_package> parameter.
+P<in_package> parameter.
 The lines above, for example, are equivalent to:
 
     $HTML::Mason::Commands::dbh = DBI->connect(...);
     %HTML::Mason::Commands::session = %s;
 
-assuming that L<in_package|HTML::Mason::Params/in_package> has not been changed.
+assuming that P<in_package> has not been changed.
 
 Any global that you set should also be registered with the
-L<allow_globals|HTML::Mason::Params/allow_globals> parameter; otherwise you'll get warnings from
+P<allow_globals> parameter; otherwise you'll get warnings from
 C<strict>.
 
 =for html <a name="item_comp_exists"></a>
