@@ -12,6 +12,7 @@ if ($@)
     exit;
 }
 
+# Skip if Cache::FileCache not present.
 eval { require Cache::FileCache };
 if ($@)
 {
@@ -289,6 +290,49 @@ EOF
 		    );
 
 #------------------------------------------------------------
+
+    $group->add_test( name => 'expire_if',
+		      description => 'test expire_if',
+		      component => <<'EOF',
+<% join(', ', $value1 || 'undef', $value2 || 'undef', $value3 || 'undef') %>
+<%init>
+my $time = time;
+my $cache = $m->cache;
+$cache->set('main', 'gardenia');
+my $value1 = $cache->get('main', expire_if=>sub { $_[0]->get_created_at <= $time-1 });
+my $value2 = $cache->get('main', expire_if=>sub { $_[0]->get_created_at >= $time });
+my $value3 = $cache->get('main');
+</%init>
+EOF
+		      expect => <<'EOF',
+gardenia, gardenia, undef
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'busy_lock',
+		      description => 'test busy_lock',
+		      component => <<'EOF',
+<% join(', ', $value1 || 'undef', $value2 || 'undef') %>
+<%init>
+my $time = time;
+my $cache = $m->cache;
+$cache->set('main', 'gardenia', 0);
+sleep(1);
+my $value1 = $cache->get('main', busy_lock=>10);
+my $value2 = $cache->get('main');
+</%init>
+EOF
+		      expect => <<'EOF',
+undef, gardenia
+EOF
+		    );
+
+#------------------------------------------------------------
+
+
 
     return $group;
 }
