@@ -46,7 +46,7 @@ my %fields =
      source_ref_start => undef   # legacy, left in for pre-0.8 obj files
      );
 
-my $compCount = 0;
+my $comp_count = 0;
 
 sub new
 {
@@ -66,7 +66,7 @@ sub new
     bless $self, $class;
 
     # Assign defaults.
-    $self->{designator} = "[anon ". ++$compCount . "]" if !defined($self->{fq_path});
+    $self->{designator} = "[anon ". ++$comp_count . "]" if !defined($self->{fq_path});
     $self->{declared_args} = {} if !defined($self->{declared_args});
     $self->{subcomps} = {} if !defined($self->{subcomps});
     $self->{flags} = {} if !defined($self->{flags});
@@ -293,7 +293,7 @@ sub parent {
 #
 # Accessors for various files associated with component
 #
-sub object_file { 
+sub object_file {
     my $self = shift;
     return $self->persistent ?
 	File::Spec->catdir( $self->interp->object_dir, $self->fq_path ) :

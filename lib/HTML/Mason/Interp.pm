@@ -799,11 +799,21 @@ sub status_as_html {
 <blockquote>
  <h4>Startup options:</h4>
  <tt>
-% foreach my $property (sort keys %$interp) {
-%   next if ref $interp->{$property};  # Skipping the complicated stuff for now
-%   my $val = $interp->{$property};
-    <% $property |h %> => <% defined $val ? $val : '<i>undef</i>' %>
-                          <% $val eq $defaults{$property} ? '<font color=green>(default)</font>' : '' %>
+<%perl>
+foreach my $property (sort keys %$interp) {
+    my $val = $interp->{$property};
+    # only object can ->can, others die
+    eval { $val->can('anything') };
+    if (ref $val ) {
+        $val = '<font color="darkred">' . (ref $val);
+        $val .= $@ ? ' reference' : ' object';
+        $val .= '</font>';
+    }
+
+    $val =~ s,([\x00-\x1F]),'<font color="purple">control-' . chr( ord('A') + ord($1) - 1 ) . '</font>',eg; # does this work for non-ASCII?
+</%perl>
+    <% $property | h %> => <% defined $val ? $val : '<i>undef</i>' %>
+                          <% $val eq $defaults{$property} ? '<font color="green">(default)</font>' : '' %>
 		          <br>
 % }
   </tt>
