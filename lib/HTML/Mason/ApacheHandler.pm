@@ -170,9 +170,15 @@ sub handle_request {
     }
 
     #
-    # Create query object and get argument string
+    # Create query object and get argument string.
+    # Special case for debug files w/POST -- standard input not available
+    # for CGI to read in this case.
     #
-    $q = new CGI;
+    if ($HTML::Mason::IN_DEBUG_FILE && $req->method eq 'POST') {
+	$q = new CGI ($req->content);
+    } else {
+	$q = new CGI;
+    }
     $argString = $q->query_string;
 
     my $debugMode = $self->debug_mode;
@@ -297,6 +303,7 @@ PERL
     $o .= "my ";
     $o .= $d->Dumpxs;
     $o .= 'my $r = HTML::Mason::ApacheHandler::simulate_debug_request($dref);'."\n";
+    $o .= 'local %ENV = %{$dref->{ENV}};'."\n";
     $o .= 'my $status = '.$self->debug_handler_proc."(\$r);\n";
     $o .= 'print "return status: $status\n";'."\n}\n\n";
     $o .= <<'PERL';
@@ -346,6 +353,8 @@ sub capture_debug_state
 	$expr .= "\$d{connection}->{$field} = \$r->connection->$field;\n";
     }
     eval($expr);
+
+    $d{ENV} = {%ENV};
 
     return {%d};
 }

@@ -181,6 +181,27 @@ end of the startup code in C<handler.pl>:
     chown ( [getpwnam('nobody')]->[2], [getgrnam('nobody')]->[2],
             $interp->files_written );
 
+=head2 Persistent user sessions (new in 0.5)
+
+With just a few lines in handler.pl you can make a global hash
+(e.g. I<%session>) available to all components containing persistent user
+session data.  If you set a value in the hash, you will see the change
+in future visits by the same user.  The B<Apache::Session> module,
+available from CPAN, provides convenient facilities for this. The
+following lines, commented out in the default handler.pl, implement a
+cookie-based session with user data stored on the filesystem:
+
+    my %session;
+    my $cookie = $r->header_in('Cookie');
+    $cookie =~ s/SESSION_ID=(\w*)/$1/;
+    tie %session, 'Apache::Session::File', $cookie, {'Directory' => '/tmp/session'};
+    $r->header_out("Set-Cookie" => "SESSION_ID=$session{_session_id};") if ( !$cookie );
+    local *HTML::Mason::Commands::session = \%session;
+
+This code is customizable; you can change the user ID location
+(e.g. URL instead of cookie), the user data storage mechanism
+(e.g. DBI database), and the name of the global hash.
+
 =head2 Using global variables (new in 0.5)
 
 Global variables generally make programs harder to read, maintain, and
@@ -202,20 +223,24 @@ once) or inside (if you need to set it every request).
 
 Mason by default parses components in C<strict> mode, so you can't
 simply start referring to a new global or you'll get a fatal
-warning. The solution is to register the global via the L<Parser/allow_globals>
-parameter to Parser:
+warning. The solution is to invoke C<use vars> inside the
+package that components execute in, by default B<HTML::Mason::Commands>:
+
+    { package HTML::Mason::Commands;
+      use vars qw($dbh %session);
+    }
+
+Alternatively you can use the L<Parser/allow_globals> parameter or method:
 
     my $parser = new HTML::Mason::Parser (..., allow_globals => [qw($dbh %session)]);
-or
-    $parser->allow_globals(qw($dbh %session))
+    $parser->allow_globals(qw($foo @bar))
 
-Once a global is registered, Mason will silently include it in a C<use vars>
-statement at the top of every component, thereby suppressing the
-C<strict> warning.
+The only advantage to C<allow_globals> is that it will do
+the right thing if you've chosen a different package for components
+to run in (via the L<Parser/in_package> Parser parameter.)
 
-If you are initializing the variable in handler.pl, you need to set it
-in the package that components execute in, by default
-B<HTML::Mason::Commands>:
+Similarly, to initialize the variable in handler.pl, you need to
+set it in the component package:
 
    $HTML::Mason::Commands::dbh = DBI->connect(...);
 
@@ -223,9 +248,13 @@ Alternatively you can use the L<Interp/set_global> interpreter method:
 
     $interp->set_global(dbh => DBI->connect(...));
 
-Besides being a bit more pleasant on the eye, C<set_global> will do
-the right thing if you've chosen a different package for components
-to run in (via the L<Parser/in_package> Parser parameter.)
+Again, C<set_global> will do the right thing if you've chosen a
+different package for components.
+
+Now when referring to these globals inside components, you can use the
+plain variable name:
+
+    $dbh->prepare...
 
 =head1 STANDARD FEATURES
 

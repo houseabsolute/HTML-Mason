@@ -31,7 +31,6 @@ my %fields =
      current_time => 'real',
      data_dir => undef,
      system_log_file => undef,
-     system_log_events => '',
      system_log_separator => "\cA",
      max_recurse => 16,
      parser => undef,
@@ -64,7 +63,8 @@ sub new
 	last_reload_time => 0,
 	last_reload_file_pos => 0,
 	out_method => sub { print $_[0] },
-	system_log_fh => undef
+	system_log_fh => undef,
+	system_log_events_hash => undef
     };
     my (%options) = @_;
     my ($rootDir,$outMethod,$systemLogEvents);
@@ -114,7 +114,7 @@ sub _initialize
     #
     # Open system log file
     #
-    if ($self->system_log_events) {
+    if ($self->{system_log_events_hash}) {
 	$self->system_log_file($self->data_dir . "/etc/system.log") if !$self->system_log_file;
 	my $fh = new IO::File ">>".$self->system_log_file
 	    or die "Couldn't open system log file ".$self->{system_log_file}." for append";
@@ -648,15 +648,15 @@ sub system_log_events
 {
     my ($self, $value) = @_;
     if (defined($value)) {
-	if (ref($value) eq 'SCALAR') {
+	if (!ref($value)) {
 	    $value =~ s/\s//g;
 	    my %opts = map( ($_, 1), split /\|/, $value);
 	    @opts{qw(REQUEST CACHE COMP_LOAD)} = (1,1,1) if $opts{ALL};
 	    @opts{qw(CACHE_READ CACHE_WRITE)} = (1,1) if $opts{CACHE};
 	    @opts{qw(REQ_START REQ_END)} = (1,1) if $opts{REQUEST};
-	    $self->{system_log_events} = \%opts;
+	    $self->{system_log_events_hash} = \%opts;
 	} elsif (ref($value) eq 'HASH') {
-	    $self->{system_log_events} = $value;
+	    $self->{system_log_events_hash} = $value;
 	} else {
 	    die "system_log_events: argument must be a scalar or hash reference";
 	}
@@ -670,7 +670,7 @@ sub system_log_events
 sub system_log_event_check
 {
     my ($self,$flag) = @_;
-    return ($self->{system_log_fh} && $self->system_log_events->{$flag});
+    return ($self->{system_log_fh} && $self->{system_log_events_hash}->{$flag});
 }
 
 #
@@ -793,12 +793,12 @@ sub call_hooks {
 # Each line begins with the time, pid, and event name.
 #
 # We only print the line if the log file handle is defined AND the
-# event name is in our system_log_events hash.
+# event name is in system_log_events_hash.
 #
 sub write_system_log {
     my $self = shift;
 
-    if ($self->{system_log_fh} && $self->system_log_events->{$_[0]}) {
+    if ($self->{system_log_fh} && $self->{system_log_events_hash}->{$_[0]}) {
 	my $time = ($HTML::Mason::Config{use_time_hires} ? scalar(Time::HiRes::gettimeofday()) : time);
 	$self->{system_log_fh}->print(join ($self->system_log_separator,
 					    $time,                  # current time
