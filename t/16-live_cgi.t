@@ -4,7 +4,7 @@ use strict;
 
 use Module::Build;
 
-my $notes = Module::Build->instance->notes;
+my $notes = Module::Build->current->notes;
 
 unless ($notes->{test_data}{is_maintainer} &&
 	-e "$notes->{test_data}{apache_dir}/CGIHandler.cgi")

@@ -4,7 +4,7 @@ use strict;
 
 use Module::Build;
 
-my $notes = Module::Build->instance->notes;
+my $notes = Module::Build->current->notes;
 
 # Skip test if no mod_perl
 eval { require mod_perl };

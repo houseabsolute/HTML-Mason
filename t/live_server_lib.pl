@@ -6,7 +6,7 @@ use File::Spec;
 
 use Module::Build;
 
-my $notes = Module::Build->instance->notes;
+my $notes = Module::Build->current->notes;
 
 sub write_comp
 {
