@@ -629,12 +629,12 @@ EOF
     my $interp = $self->interp;
     my $comp = $interp->make_component(comp_source => $comp_source);
     my $out;
-    local $interp->{out_method} = \$out;
 
     $self->interp->make_request( comp => $comp,
 				 args => [ah => $self, valid => $interp->allowed_params],
 				 ah => $self,
 				 apache_req => $p{apache_req},
+				 out_method => \$out,
 			       )->exec;
     return $out;
 }
