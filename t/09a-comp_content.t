@@ -117,7 +117,7 @@ EOF
 		      component => <<'EOF',
 <&| filter &>1</&|>
 <br>
-<&| filter &>2</&| filter &>
+<&| filter &>2</&|>
 <br>
 <&| filter &>hi</&|>
 <br>
@@ -144,7 +144,7 @@ EOF
 % my $i;
 <&| repeat , var => \$i , list => [5,4,3,2,1] &>
 <&| filter &> <% $i %> </&|> <p>
-</&| repeat &>
+</&|>
 done!
 EOF
 		      expect => <<'EOF',
@@ -303,7 +303,7 @@ EOF
 <%method happy>
 <% $m->content %>, be happy!
 </%method>
-<&| SELF:happy &>don't worry</&|SELF:happy&>
+<&| SELF:happy &>don't worry</&|>
 <&| sad &>why worry</&|>
 EOF
 			expect => <<'EOF',
