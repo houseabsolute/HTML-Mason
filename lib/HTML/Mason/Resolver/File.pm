@@ -13,6 +13,8 @@ use Params::Validate qw(:all);
 use HTML::Mason::Resolver;
 use base qw(HTML::Mason::Resolver);
 
+use HTML::Mason::Exceptions (abbr => ['param_error']);
+
 __PACKAGE__->valid_params
     (
      comp_root    => { parse => 'list', type => SCALAR|ARRAYREF },
@@ -28,51 +30,61 @@ sub new {
     my $package = shift;
     my $self = $package->SUPER::new(@_);
 
+    # Is this okay?  It simplifies matters many places in future code.
+    $self->comp_root( [[MAIN => $self->comp_root]] ) unless ref $self->comp_root;
+
     #
     # Check that directories are absolute.
     #
-    if (ref $self->{comp_root}) {
-	foreach my $pair (@{$self->comp_root}) {
-	    HTML::Mason::Exception::Params->throw( error => "Multiple-path component root must consist of a list of two-element lists; see documentation" )
-		if ref($pair) ne 'ARRAY';
-	    $pair->[1] = File::Spec->canonpath( $pair->[1] );
-	    HTML::Mason::Exception::Params->throw( error => "comp_root ('$pair->[0]') must contain only absolute directories" )
-		unless File::Spec->file_name_is_absolute( $pair->[1] );
-	}
-
-    } else {
-	# comp_root is a string
-	$self->{comp_root} = File::Spec->canonpath( $self->{comp_root} );
- 	HTML::Mason::Exception::Params->throw( error => "comp_root ('".$self->{comp_root}."') must be an absolute directory" )
-	    unless File::Spec->file_name_is_absolute( $self->{comp_root} );
+    foreach my $pair (@{$self->comp_root}) {
+	param_error "Multiple-path component root must consist of a list of two-element lists; see documentation"
+	    if ref($pair) ne 'ARRAY';
+	$pair->[1] = File::Spec->canonpath( $pair->[1] );
+	param_error "comp_root '$pair->[1]' is not an absolute directory"
+	    unless File::Spec->file_name_is_absolute( $pair->[1] );
     }
 
     return $self;
 }
 
-#
-# With a single component root, the fully-qualified path is just
-# the component path. With multiple component roots, we search
-# through each root in turn, and the fully-qualified path is
-# uc(root key) + component path.
-#
-sub resolve {
-    my ($self,$path) = @_;
-    my $comp_root = $self->{comp_root};
-    if (!ref($comp_root)) {
-	my $srcfile = File::Spec->catdir( $comp_root, $path );
-	return (-f $srcfile) ? ( path => $path, description => $srcfile, last_modified => (stat _)[9] ) : ();
-    } else {
-	foreach my $lref (@$comp_root) {
-	    my ($key,$root) = @$lref;
-	    $key = uc($key);   # Always make key uppercase in fqpath
-	    my $srcfile = File::Spec->catfile( $root, $path );
-	    my @srcstat = stat $srcfile;
-	    my $fq_path = File::Spec->canonpath( File::Spec->catfile( File::Spec->rootdir, $key, $path ) );
-	    return ( path => $fq_path, description => $srcfile, last_modified => $srcstat[9] ) if (-f _);
-	}
-	return;
+#  get_info() returns a hash:
+#  (
+#   url_path => same as incoming path parameter
+#   disk_path => where this component is stored on the filesystem
+#   fq_path   => combination of comp_root and url_path: "$comp_root:$url_path"
+#   comp_root => name of component root we found the component in
+#   last_modified => time of last modification, in seconds
+#  );
+
+sub get_info {
+    my ($self, $path) = @_;
+
+    foreach my $lref (@{$self->comp_root}) {
+	my ($key, $root) = @$lref;
+	my $srcfile = File::Spec->canonpath( File::Spec->catfile( $root, $path ) );
+	next unless -f $srcfile;
+	my $modified = (stat _)[9];
+	my $base = $key eq 'MAIN' ? '' : "/$key";
+	$key = undef if $key eq 'MAIN';
+	return ( url_path => $path, disk_path => $srcfile, fq_path => "$base$path",
+		 comp_root => $key, last_modified => $modified );
     }
+    return;
+}
+
+# If the caller has already done get_info(), they can pass that hash to get_source()
+# and obtain the source.  resolve() will do everything in one step.
+sub get_source {
+    my ($self, %info) = @_;
+    return read_file $info{disk_path};
+}
+
+# Returns everything get_info() returns, plus the component source in a 'comp_text' entry.
+sub resolve {
+    my ($self, $path) = @_;
+
+    my %info = $self->get_info($path) or return;
+    return ( %info, comp_text => read_file($info{disk_path}) );
 }
 
 sub comp_class {
@@ -80,17 +92,12 @@ sub comp_class {
 }
 
 #
-# Given a glob pattern, return all existing paths.
+# Given a glob pattern of url_paths, return all existing url_paths for that glob.
 #
 sub glob_path {
     my ($self,$pattern) = @_;
-    my $comp_root = $self->{comp_root};
-    my @roots;
-    if (!ref($comp_root)) {
-	@roots = ($comp_root);
-    } else {
-	@roots = map($_->[1],@{$comp_root});
-    }
+    my @roots = map $_->[1], @{$self->comp_root};
+
     my %path_hash;
     foreach my $root (@roots) {
 	my @files = glob($root.$pattern);
@@ -101,12 +108,6 @@ sub glob_path {
 	}
     }
     return keys(%path_hash);
-}
-
-sub get_component {
-    my ($self, %lookup_info) = @_;
-
-    return read_file( $lookup_info{description} );
 }
 
 #

@@ -24,6 +24,7 @@ sub new
     return bless {validate(@_, $class->validation_spec)}, $class;
 }
 
+# Returns all info about a component including its source.
 sub resolve {
     shift->_virtual;
 }
@@ -36,7 +37,13 @@ sub comp_class {
     shift->_virtual;
 }
 
-sub get_component {
+# Gets just the source of the component as a string.
+sub get_source {
+    shift->_virtual;
+}
+
+# Returns all info about a component, but not its source.
+sub get_info {
     shift->_virtual;
 }
 
