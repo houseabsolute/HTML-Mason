@@ -38,8 +38,10 @@ sub assign_runtime_properties {
     # We used to use File::Basename for this but that is broken
     # because URL paths always use '/' as the dir-separator but we
     # could be running on any OS.
-    ($self->{dir_path}, $self->{name}) = $info->comp_path =~ m,(.*/)([^/]+)$,;
-    $self->{dir_path} =~ s,/$,,;
+    #
+    # The regex itself it taken from File::Basename.
+    #
+    @{$self}{ 'dir_path', 'name'} = $info->comp_path =~ m,^(.*/)?(.*),s;
 
     $self->SUPER::assign_runtime_properties($interp, $info);
 }
