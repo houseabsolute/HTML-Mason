@@ -218,9 +218,9 @@ BEGIN
 				      sub { $_[0] =~ /^(?:CGI|mod_perl)$/ } },
 				    descr => "Whether to use CGI.pm or Apache::Request for parsing the incoming HTTP request",
 				  },
-	 decline_dirs          => { parse => 'boolean', type => SCALAR|UNDEF, default => 1,
+	 decline_dirs          => { parse => 'boolean', type => BOOLEAN, default => 1,
 				    descr => "Whether Mason should decline to handle requests for directories" },
-	 multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1,
+	 multiple_config       => { parse => 'boolean', type => BOOLEAN, optional => 1,
 				    descr => "Whether multiple Mason configurations are in effect, such as when using VirtualHosts" },
 	 # the only required param
 	 interp                => { isa => 'HTML::Mason::Interp',
