@@ -55,5 +55,23 @@ if ($HTML::Mason::DEBUG)
     Exception::Class::Base->Trace(1);
 }
 
+# The import() method allows this:
+#  use HTML::Mason::Exceptions('abbr' => {short_error => 'HTML::Mason::Exception::Longname',...});
+# ...
+#  short_error("something went wrong");
+
+sub import
+{
+    my ($class, %args) = @_;
+    return unless %args;
+    if ($args{abbr})
+    {
+	my $caller = caller;
+	while (my ($name, $class) = each %{$args{abbr}}) {
+	    no strict 'refs';
+	    *{"${caller}::$name"} = sub { $class->throw( error => shift ) };
+	}
+    }
+}
 
 1;
