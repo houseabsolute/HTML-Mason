@@ -12,6 +12,13 @@ if ($@)
     exit;
 }
 
+eval { require Cache::FileCache };
+if ($@)
+{
+    print "1..0\n";
+    exit;
+}
+
 my $tests = make_tests();
 $tests->run;
 
