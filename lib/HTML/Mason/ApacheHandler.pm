@@ -64,28 +64,6 @@ sub cgi_object
     return $self->{cgi_object};
 }
 
-sub _run_comp
-{
-    my $self = shift;
-
-    my $apache_print = $self->{apache_print} = \&Apache::print;
-
-    # It is very important that the original Apache::print sub be
-    # restored inside this closure.  Imagine that we are in stream
-    # mode and the output method is:
-    #
-    # sub { for (@_) { $r->print($_) if defined } }
-    #
-    # If we don't restore the original Apache::print sub then we
-    # end up in an infinite loop.
-    my $w = $^W;
-    $^W = 0;
-    local *Apache::print = sub { shift; local *Apache::print = $apache_print; $self->out(@_) };
-    $^W = $w;
-
-    return $self->_run_comp2(@_);
-}
-
 #----------------------------------------------------------------------
 #
 # APACHEHANDLER OBJECT
@@ -646,7 +624,12 @@ sub handle_request_1
     };
     $request->out_method($out_method);
 
-    my $retval = $request->exec($comp_path, %args);
+    my $retval;
+    {
+	# Remap $r->print to Mason's $m->out while executing request
+	local *Apache::print = sub { shift; $request->out(@_) };
+	$retval = $request->exec($comp_path, %args);
+    }
 
     # On a success code, send headers if they have not been sent.
     # On an error code, leave it to Apache to send the headers.
