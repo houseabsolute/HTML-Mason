@@ -31,6 +31,33 @@ use Params::Validate qw(SCALAR HASHREF);
 my %VALID_PARAMS = ();
 my %CONTAINED_OBJECTS = ();
 
+# Dump in a format suitable for spreadsheet importing (useful for generating docs)
+sub dump_specs
+{
+    require B::Deparse;
+    print "Name\tType\tDefault\n\n";
+    foreach my $class (sort keys %VALID_PARAMS)
+    {
+	my $params = $VALID_PARAMS{$class};
+	print " --- $class:\n";
+	foreach my $name (sort keys %$params)
+	{
+	    my $spec = $params->{$name};
+	    my ($type, $default) = $spec->{isa} ? ('object',$spec->{isa}) : ($spec->{parse}, $spec->{default});
+	    if (ref($default) eq 'CODE') {
+		$default = 'sub ' . B::Deparse->new()->coderef2text($default);
+		$default =~ s/\s+/ /g;
+	    } elsif (ref($default) eq 'ARRAY') {
+		$default = '[' . join(', ', map "'$_'", @$default) . ']';
+	    } elsif (ref($default) eq 'Regexp') {
+		$type = 'regex';
+		$default =~ s/^\(\?(\w*)-\w*:(.*)\)/\/$2\/$1/;
+	    }
+	    print "$name\t$type\t$default\n";
+	}
+	print "\n";
+    }
+}
 
 sub valid_params
 {
