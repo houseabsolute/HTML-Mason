@@ -1,12 +1,14 @@
 <% $result %>
 This was<% $cached ? '' : ' not' %> cached.
+Return value: <% $return %>
 
 <%init>
 my $cached = 0;
 my $result;
-if (!($result = $m->cache(key=>'fandango'))) {
+my $return;
+unless ($result = $m->cache(key=>'fandango')) {
     $result = "Hello Dolly.";
-    $m->cache(action=>'store', key=>'fandango', value=>$result);
+    $return = $m->cache(action=>'store', key=>'fandango', value=>$result) || '';
 } else {
     $cached = 1;
 }
