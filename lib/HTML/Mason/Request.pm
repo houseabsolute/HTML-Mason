@@ -132,7 +132,7 @@ sub exec {
 	    local $SIG{'__DIE__'} = $interp->die_handler if $interp->die_handler;
 	    eval { $comp = $interp->load($path) };
 	    $err = $@;
-	    $self->_error($err) if $err;
+	    error($err) if $err;
 	}
 	unless ($comp) {
 	    if (defined($interp->dhandler_name) and $comp = $interp->find_comp_upwards($path,$interp->dhandler_name)) {
