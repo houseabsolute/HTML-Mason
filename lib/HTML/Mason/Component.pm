@@ -155,11 +155,7 @@ sub attr {
     my ($self,$name) = @_;
     my $value;
     if ($self->_locate_inherited('attr',$name,\$value)) {
-	if (ref($value) eq 'CODE') {
-	    return $value->();
-	} else {
-	    return $value;
-	}
+	return $value;
     } else {
 	die "no attribute '$name' for component ".$self->title;
     }
