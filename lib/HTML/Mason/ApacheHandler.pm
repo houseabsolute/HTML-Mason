@@ -269,9 +269,9 @@ BEGIN
 }
 
 use HTML::Mason::MethodMaker
-    ( read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
+    ( read_only  => [ 'args_method',
+      read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
 		      qw( apache_status_title
-                          args_method
 			  decline_dirs
 			  interp ) ]
     );
@@ -984,7 +984,8 @@ C<HTML::Mason::Interp> class, or a subclass thereof.
 
 All of the above properties, except interp, have standard accessor
 methods of the same name: no arguments retrieves the value, and one
-argument sets it.  For example:
+argument sets it, except for args_method, which is not settable.  For
+example:
 
     my $ah = new HTML::Mason::ApacheHandler;
     my $decline_dirs = $ah->decline_dirs;
