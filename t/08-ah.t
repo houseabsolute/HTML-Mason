@@ -40,7 +40,7 @@ test_load_apache();
 
 
 {
-    my $both_tests = 12;
+    my $both_tests = 13;
     my $cgi_only_tests = 1;
     my $apr_only_tests = 1;
     my $both_no_handler_tests = 8;
@@ -205,6 +205,13 @@ EOF
 
     write_comp( 'decline_dirs', <<'EOF',
 decline_dirs is <% $HTML::Mason::ApacheHandler::AH->decline_dirs %>
+EOF
+	      );
+
+    write_comp( 'print', <<'EOF',
+This is first.
+% print "This is second.\n";
+This is third.
 EOF
 	      );
 }
@@ -517,6 +524,22 @@ Status code: 0
 EOF
 						  );
     ok($success);
+
+    $path = '/comps/print';
+    $path = "/ah=0$path" if $with_handler;
+
+    $response = Apache::test->fetch($path);
+    $actual = filter_response($response, $with_handler);
+    $success = HTML::Mason::Tests->check_output( actual => $actual,
+						 expect => <<'EOF',
+X-Mason-Test: Initial value
+This is first.
+This is second.
+This is third.
+Status code: 0
+EOF
+					       );
+    ok($success);
 }
 
 sub multi_conf_tests
@@ -651,7 +674,7 @@ sub kill_httpd
     chomp $pid;
 
     print STDERR "Killing httpd process ($pid)\n";
-    kill 15, $pid
+    kill 'TERM', $pid
 	or die "Can't kill process $pid: $!";
 
     if ($wait)
