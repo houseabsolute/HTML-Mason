@@ -34,8 +34,8 @@ kill_httpd(1);
 test_load_apache();
 
 my $tests = 4;
-$tests += 30 if my $have_libapreq = have_module('Apache::Request');
-$tests += 30 if my $have_cgi      = have_module('CGI');
+$tests += 31 if my $have_libapreq = have_module('Apache::Request');
+$tests += 31 if my $have_cgi      = have_module('CGI');
 $tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
 print "1..$tests\n";
 
@@ -43,20 +43,20 @@ print STDERR "\n";
 
 write_test_comps();
 
-if ($have_libapreq) {        # 30 tests
+if ($have_libapreq) {        # 31 tests
     cleanup_data_dir();
-    apache_request_tests(1); # 17 tests
-    
+    apache_request_tests(1); # 18 tests
+
     cleanup_data_dir();
     apache_request_tests(0); # 13 tests
 }
 
-if ($have_cgi) {             # 29 tests
+if ($have_cgi) {             # 31 tests
     cleanup_data_dir();
-    cgi_tests(1);            # 17 tests
-    
+    cgi_tests(1);            # 18 tests
+
     cleanup_data_dir();
-    cgi_tests(0);            # 12 tests
+    cgi_tests(0);            # 13 tests
 }
 
 cleanup_data_dir();
@@ -194,6 +194,13 @@ EOF
 This is first.
 % $r->print("This is second.\n");
 This is third.
+EOF
+	      );
+
+    write_comp( 'flush_buffer', <<'EOF',
+% $m->out("foo\n");
+% $m->flush_buffer;
+bar
 EOF
 	      );
 
@@ -601,6 +608,38 @@ X-Mason-Test: Initial value
 This is first.
 This is second.
 This is third.
+Status code: 0
+EOF
+						   );
+	ok($success);
+    }
+
+    $path = '/comps/flush_buffer';
+    $path = "/ah=0$path" if $with_handler;
+
+    $response = Apache::test->fetch($path);
+    $actual = filter_response($response, $with_handler);
+    $success = HTML::Mason::Tests->check_output( actual => $actual,
+						 expect => <<'EOF',
+X-Mason-Test: Initial value
+foo
+bar
+Status code: 0
+EOF
+					       );
+    ok($success);
+
+    if ($with_handler)
+    {
+	$path = '/ah=1/comps/flush_buffer';
+
+	$response = Apache::test->fetch($path);
+	$actual = filter_response($response, $with_handler);
+	$success = HTML::Mason::Tests->check_output( actual => $actual,
+						     expect => <<'EOF',
+X-Mason-Test: Initial value
+foo
+bar
 Status code: 0
 EOF
 						   );
