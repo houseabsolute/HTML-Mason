@@ -4,19 +4,16 @@
 
 package HTML::Mason::Component::FileBased;
 require 5.004;
-require Exporter;
 @ISA = qw(HTML::Mason::Component);
-@EXPORT = qw();
-@EXPORT_OK = qw();
 
 use File::Basename;
 use HTML::Mason::Tools qw(compress_path);
 use strict;
 
+use HTML::Mason::MethodMaker ( read_only => [ qw( path source_file ) ] );
+
 sub is_file_based { 1 }
 sub persistent { 1 }
-sub path { return $_[0]->{'path'} }
-sub source_file { return $_[0]->{'source_file'} }
 sub source_dir {
     my $dir = dirname($_[0]->source_file);
     $dir =~ s/\/$// unless $dir eq '/';
