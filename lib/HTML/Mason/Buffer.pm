@@ -65,11 +65,11 @@ sub new
 #		}
 #	}
     bless $self, $class;
-    $self->initialize;
+    $self->_initialize;
     return $self;
 }
 
-sub initialize
+sub _initialize
 {
     my $self = shift;
 

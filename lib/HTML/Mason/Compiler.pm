@@ -44,7 +44,7 @@ sub new
     my $class = shift;
     my $self = bless {validate(@_, $class->valid_params)}, $class;
 
-    $self->_init;
+    $self->_initialize;
 
     return $self;
 }
@@ -54,7 +54,7 @@ my %valid_comp_flag = map { $_ => 1 } qw( inherit );
 my %valid_escape_flag = map { $_ => 1 } qw( h n u );
 
 # called from subclasses to set defaults and to make the lexer object
-sub _init
+sub _initialize
 {
     my $self = shift;
     my %p = validate(@_, $self->valid_params);
