@@ -6,36 +6,8 @@ package HTML::Mason::Buffer;
 
 use strict;
 
-# 1) output to a code ref
-# 	coderef, [parent]
-# 	sink => CODEREF
-# 2) output to a user defined scalar ref
-# 	scalarref, [parent]
-# 	sink => SCALARREF
-# 3) output to an internal scalar ref
-# 	parent, mode
-# 	parent => x, buffered => 1
-# 4) output with same code ref as parent
-# 	parent
-# 	parent => x
-# 5) output to internal scalar ref because parent is scalar ref
-# 	parent
-# 	parent => x
-# 
-# comp (first)
-# 	output to $m->output_method (1 or 2, no parent)
-# comp (not first)
-# 	output same as parent (4 or 5)
-# scomp
-# 	output to internal scalar (3) +ignore_flush
-# comp with <%filter>
-# 	output to internal scalar (3)
-# comp with content
-# 	output same as parent (4 or 5)
-# $m->content
-# 	locally replace top level stack, or add an extra level to the stack (3)
-# 	need to manipulate top of stack, so it looks like the right component
-# 	$m->depth will be wrong either way
+use Params::Validate qw(:all);
+Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( sink
@@ -46,24 +18,24 @@ use HTML::Mason::MethodMaker
 		       ) ],
     );
 
+my %valid_params =
+    (
+     sink => { type => SCALARREF | CODEREF, optional => 1 },
+     parent => { isa => 'HTML::Mason::Buffer', optional => 1 },
+     mode => { callbacks =>
+	       { 'batch or stream' => sub { $_[0] =~ /^(?:batch|stream)/ } },
+	       optional => 1 },
+     ignore_flush => { type => SCALAR, default => 0 },
+     filter => { type => CODEREF, optional => 1 },
+    );
+
+sub valid_params { \%valid_params }
+
 sub new
 {
     my $class = shift;
-    my $self = { sink => undef,
-		 parent => undef,
-		 mode => undef,
-		 ignore_flush => 0,
-		 filter => undef,
-		 @_
-	       };
-#	my (%options) = @_;
-#	while (my ($key,$value) = each(%options)) {
-#		if (exists($fields{$key})) {
-#			$self->{$key} = $value;
-#		} else {
-#			die "HTML::Mason::Request::new: invalid option '$key'\n";
-#		}
-#	}
+    my $self = bless { validate( @_, $class->valid_params ) }, $class;
+
     bless $self, $class;
     $self->_initialize;
     return $self;
@@ -73,31 +45,35 @@ sub _initialize
 {
     my $self = shift;
 
+    # first figure out our mode if not given
+    unless ( $self->{mode} )
+    {
+	if ( $self->{sink} )
+	{
+	    $self->{mode} = UNIVERSAL::isa( $self->{sink}, 'CODE' ) ? 'stream' : 'batch';
+	}
+	elsif ( $self->{parent} )
+	{
+	    $self->{mode} = $self->{parent}->mode;
+	}
+	else
+	{
+	    HTML::Mason::Exception::Params->throw( error => "HTML::Mason::Buffer->new requires either a mode, parent, or sink parameter" );
+	}
+    }
+
     if ( defined $self->{sink} )
     {
-	# user-defined sink
-	if ( UNIVERSAL::isa( $self->{sink}, 'CODE' ) )
+	if ( UNIVERSAL::isa( $self->{sink}, 'SCALAR' ) )
 	{
-	    $self->{mode} ||= 'stream';
-	}
-	elsif ( UNIVERSAL::isa( $self->{sink}, 'SCALAR' ) )
-	{
-	    $self->{mode} ||= 'batch';
 	    # convert scalarref to a coderef for efficiency
 	    $self->{buffer} = $self->{sink};
 	    my $b = $self->{buffer};
 	    $self->{sink} = sub { for (@_) { $$b .= $_ if defined } };
 	}
-	else
-	{
-	    HTML::Mason::Exception::Params->throw( error => "Sink must be a coderef or a scalarref." );
-	}
-
     }
     else
     {
-	$self->{mode} ||= $self->{parent}->mode;
-
 	HTML::Mason::Exception::Params->throw( error => "Buffering to a default sink only works in batch mode or with a parent buffer." )
 	    unless $self->{parent} || $self->{mode} eq 'batch';
 
