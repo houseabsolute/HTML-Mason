@@ -136,7 +136,6 @@ My directory is /interp/comp_root_test.
 I have 0 subcomponent(s).
 My title is /interp/comp_root_test/shared [main].
 
-My cache file is /.../cache/MAIN+2finterp+2fcomp_root_test+2fshared
 My object file is /.../obj/MAIN/interp/comp_root_test/shared
 My path is /interp/comp_root_test/shared.
 My fq_path is /MAIN/interp/comp_root_test/shared.
@@ -170,7 +169,6 @@ My directory is /interp/comp_root_test.
 I have 0 subcomponent(s).
 My title is /interp/comp_root_test/private1 [main].
 
-My cache file is /.../cache/MAIN+2finterp+2fcomp_root_test+2fprivate1
 My object file is /.../obj/MAIN/interp/comp_root_test/private1
 My path is /interp/comp_root_test/private1.
 My fq_path is /MAIN/interp/comp_root_test/private1.
@@ -204,7 +202,6 @@ My directory is /interp/comp_root_test.
 I have 0 subcomponent(s).
 My title is /interp/comp_root_test/private2 [alt].
 
-My cache file is /.../cache/ALT+2finterp+2fcomp_root_test+2fprivate2
 My object file is /.../obj/ALT/interp/comp_root_test/private2
 My path is /interp/comp_root_test/private2.
 My fq_path is /ALT/interp/comp_root_test/private2.
