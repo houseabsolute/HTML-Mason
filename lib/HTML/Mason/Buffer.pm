@@ -19,29 +19,23 @@ use HTML::Mason::MethodMaker
 		       ) ],
     );
 
-=pod
-
-=begin for later reference
-
-__PACKAGE__->valid_params
-    (
-     sink         => { parse => 'code', type => SCALARREF | CODEREF, optional => 1,
-		       descr => "A subroutine or scalar reference that will receive the output stream",
-		       public => 0 },
-     parent       => { isa => 'HTML::Mason::Buffer', optional => 1,
-		       descr => "A parent buffer of the current buffer",
-		       public => 0 },
-     ignore_flush => { parse => 'boolean', type => SCALAR, default => 0,
-		       descr => "Whether the flush() method is a no-op or actually flushes content",
-		       public => 0 },
-     filter       => { type => CODEREF, optional => 1,
-		       descr => "A subroutine through which all output should pass",
-		       public => 0 },
-    );
-
-=end
-
-=cut
+# for later reference
+# 
+# __PACKAGE__->valid_params
+#     (
+#      sink         => { parse => 'code', type => SCALARREF | CODEREF, optional => 1,
+# 		       descr => "A subroutine or scalar reference that will receive the output stream",
+# 		       public => 0 },
+#      parent       => { isa => 'HTML::Mason::Buffer', optional => 1,
+# 		       descr => "A parent buffer of the current buffer",
+# 		       public => 0 },
+#      ignore_flush => { parse => 'boolean', type => SCALAR, default => 0,
+# 		       descr => "Whether the flush() method is a no-op or actually flushes content",
+# 		       public => 0 },
+#      filter       => { type => CODEREF, optional => 1,
+# 		       descr => "A subroutine through which all output should pass",
+# 		       public => 0 },
+#     );
 
 sub new
 {
