@@ -5,16 +5,36 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+0.72  Fri Oct 15 08:21:25 PDT 1999
+
+- Eliminated long-standing infinite-block bug when POSTing to a
+non-existent URL
+- Fixed "keys" cache action which never worked as documented
+(submitted by Scott Straley)
+- Fixed source references on Win32 platforms by using text mode when
+reading object file (submitted by Michael Shulman)
+- Fixed various methods in FakeApache
+- Remove final slash from system paths (component root, etc.) and
+check that those paths are absolute
+- Fixed all-text subcomponents, by bypassing the pure-text
+optimization
+- Quoted all hash strings in object file to reduce "Ambiguous use
+of ..." warnings (suggested by Paul Schilling)
+- Replaced */* with default-handler as recommended way to bypass Mason
+(suggested by Dirk Koopman)
+- Removed defunct pure text section in Administrators Guide (reported
+by Michael Shulman)
+
 0.71  Tue Sep 14 13:12:17 PDT 1999
 
 - Logic of top_level_predicate was reversed in 0.7; fixed.
-(Reported by Tom Hughes, Eric Hammond)
+(reported by Tom Hughes, Eric Hammond)
 - mc_suppress_http_header(0) was broken in 0.7; fixed.
-(Reported by Michael Alan Dorman)
+(reported by Michael Alan Dorman)
 - Fixed bug in parser section that determines whether % is at the
-beginning of a line.  (Reported by Tom Hughes)
+beginning of a line.  (reported by Tom Hughes)
 - Parser no longer inadvertently accepts argument names with
-whitespace.  (Reported by Phillip Gwyn)
+whitespace.  (reported by Phillip Gwyn)
 
 0.7  Wed Sep 1 10:12:55 PDT 1999
 
