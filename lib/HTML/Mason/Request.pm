@@ -132,7 +132,7 @@ sub exec {
 	    local $SIG{'__DIE__'} = $interp->die_handler if $interp->die_handler;
 	    eval { $comp = $interp->load($path) };
 	    $err = $@;
-	    goto error if ($err);
+	    $self->_error($err) if $err;
 	}
 	unless ($comp) {
 	    if (defined($interp->dhandler_name) and $comp = $interp->find_comp_upwards($path,$interp->dhandler_name)) {
@@ -197,7 +197,7 @@ sub exec {
     # If an error occurred...
     if ($err and !$self->aborted) {
 	$self->pop_buffer_stack;
-	goto error;
+	$self->_error($err);
     }
 
     # Flush output buffer for batch mode.
@@ -212,10 +212,14 @@ sub exec {
     return $self->{aborted_value} if ($self->{aborted});
 
     return wantarray ? @result : $result;
+}
 
-    error:
+sub _error
+{
+    my ($self, $err) = @_;
+
     # don't mess with error message if default $SIG{__DIE__} was overridden
-    if ($interp->die_handler_overridden) {
+    if ($self->interp->die_handler_overridden) {
 	die $err;
     } else {
 	$err = $self->{error_clean} if $self->{error_clean};
