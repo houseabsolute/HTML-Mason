@@ -393,7 +393,7 @@ EOF
 	$group->add_test( name => 'subrequest_error',
 			  description => 'check error handling for subrequest mechanism',
 			  component => <<'EOF',
-<%def .helper>
+<%def .helper>\
 % $m->subexec('/request/support/subrequest_error_test');
 </%def>
 
