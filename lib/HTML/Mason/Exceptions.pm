@@ -59,7 +59,7 @@ BEGIN
 
 use Exception::Class (%e);
 
-Exception::Class::Base->Trace(1);
+HTML::Mason::Exception->Trace(1);
 
 my %abbrs = map { $e{$_}{abbr} => $_ } grep {exists $e{$_}{abbr}} keys %e;
 
@@ -119,23 +119,26 @@ sub analyze_error
 {
     my ($self) = @_;
 
-    my ($file, @msgs, @frames);
+    my ($file, $msg, @lines, @frames);
 
     @frames = $self->filtered_frames;
+    $msg = $self->error;
     if (UNIVERSAL::isa($self, 'HTML::Mason::Exception::Compilation')) {
-	my $error = $self->error;
-	while ($error =~ /(.*) at (.*) line (\d+)\./g) {
-	    push(@msgs, [$1, $3]);
+	if ($msg =~ /(.*) at (.*) line (\d+)\./g) {
 	    $file = $2;
+	    push(@lines, $3);
 	}
     } else {
-	(my $msg = $self->error) =~ s/\n//g;
-	@msgs = ([$msg, $self->line]);
 	$file = $frames[0]->filename;
+	@lines = $frames[0]->line;
+    }
+    while ($msg =~ /at .* line (\d+)\./g) {
+	push(@lines, $1);
     }
 
     return { file    => $file,
-	     errors  => \@msgs,
+	     msg     => $msg,
+	     lines   => \@lines,
 	     frames  => \@frames };
 }
 
@@ -144,13 +147,13 @@ sub as_log_line
     my ($self) = @_;
 
     my $info = $self->analyze_error;
-    my @fields;
+    (my $msg = $info->{msg}) =~ s/\n/\t/g;
+    my $stack = join(", ", map { sprintf("[%s:%d]", $_->filename, $_->line) } @{$info->{frames}});
+    return sprintf("%s\tStack: %s", $msg, $stack);
+}
 
-    push(@fields, [File => $info->{file}]);
-    push(@fields, [Errors => join(", ", map { sprintf("[%d:%s]", $_->[1], $_->[0]) } @{$info->{errors}})]);
-    push(@fields, [Stack => join(", ", map { sprintf("[%s:%d]", $_->filename, $_->line) } @{$info->{frames}})]);
-
-    return (join("\t", map { sprintf("%s: %s", $_->[0], $_->[1]) } @fields));
+sub as_html
+{
 }
 
 1;
