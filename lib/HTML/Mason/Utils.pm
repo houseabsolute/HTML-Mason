@@ -6,8 +6,7 @@ package HTML::Mason::Utils;
 
 use strict;
 
-use IO::File qw(!/^SEEK/);
-use Fcntl qw(:flock);
+use Fcntl qw(:DEFAULT :flock);
 use File::Basename;
 use File::Path;
 use HTML::Mason::Config;
@@ -45,16 +44,16 @@ sub access_data_cache
 	my $lockfile = "$lockdir/$base.lock";
 
 	# Open file in correct mode for lock type (Tom Hughes)
-	my $lockfh;
+	my $lockfh = do { local *FH; *FH; };
 	if ($lockargs & LOCK_EX) {
-	    $lockfh = new IO::File ">>$lockfile"
+	    open $lockfh, ">>$lockfile"
 		or die "cache: cannot open lockfile '$lockfile' for exclusive lock: $!";
 	} elsif ($lockargs & LOCK_SH) {
-	    $lockfh = new IO::File "<$lockfile";
+	    open $lockfh, "<$lockfile";
 	    if (!$lockfh && !-e $lockfile) {
-		$lockfh = new IO::File ">$lockfile";
-		$lockfh->close;
-		$lockfh = new IO::File "<$lockfile";
+		open $lockfh, ">$lockfile";
+		close $lockfh or die "Can't close $lockfile: $!";
+		open $lockfh, "<$lockfile";
 	    }
 	    die "cache: cannot open lockfile '$lockfile' for shared lock: $!" if !$lockfh;
 	} else {
@@ -144,7 +143,7 @@ sub access_data_cache
 	}
 	
 	untie(%out);
-	$lockfh->close();
+	close $lockfh or die "Can't close lock file: $!";
 
 	return $options{value};
     #
@@ -187,7 +186,7 @@ sub access_data_cache
 	}
 
 	untie(%out);
-	$lockfh->close();
+	close $lockfh or die "Can't close lock file: $!";
 
     #
     # Keys
@@ -254,7 +253,7 @@ sub access_data_cache
 		$mem->{lastUpdated} = $time;
 	    }
 	    untie(%in);
-	    $lockfh->close;
+	    close $lockfh or die "Can't close lock file: $!";
 	}
 
 	#
@@ -292,7 +291,7 @@ sub access_data_cache
 		    or die "cache: cannot create/open cache file '$cacheFile'\n";
 		$out{"$key.busylock"} = $mem->{lastModified}."/".$time;
 		untie(%out);
-		$lockfh->close();
+		close $lockfh or die "Can't close lock file: $!";
 
 		# busy lock was set successfully.  Return undef so that
 		# this process computes the new cache value.
