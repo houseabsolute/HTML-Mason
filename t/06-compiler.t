@@ -88,7 +88,7 @@ EOF
 		      component => <<'EOF',
 Explicitly HTML-escaped: <% $expr |h %><p>
 Explicitly HTML-escaped redundantly: <% $expr |hh %><p>
-Explicitly URL-escaped: <% $expr |u
+Explicitly URL-escaped: <% $expr |un
 %><p>
 No flags: <% $expr %><p>
 No flags again: <% $expr | %><p>
