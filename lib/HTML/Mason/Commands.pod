@@ -101,7 +101,7 @@ To cache the component's output:
 To cache the component's return value:
 
     <%init>
-        my ($cached,$retval) = mc_cache_self(expire_in=>'3 hours'[, key=>'fookey']);
+        my ($retval,$cached) = mc_cache_self(expire_in=>'3 hours'[, key=>'fookey']);
         return $retval if $cached;
         ... <rest of init> ...
     </%init>
@@ -121,13 +121,13 @@ o A component foo calls mc_cache_self for the first time.
 o mc_cache_self sees that the cache is empty and calls foo again
 recursively, with a STORE option to capture its content into a buffer.
 
-o foo again calls mc_cache_self; this time it returns 0 immediately.
+o foo again calls mc_cache_self, which immediately returns 0 this time.
 
 o foo goes about its business and generates content into the mc_cache_self buffer.
 
 o When control is returned to mc_cache_self, it stores the content and
 return value in the cache and also outputs the content normally.
-Finally mc_cache_self returns the list (1,retval) which in turn
+Finally mc_cache_self returns the list (retval,1) which in turn
 causes foo to return immediately.
 
 =item mc_caller ()

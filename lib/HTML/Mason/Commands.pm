@@ -176,10 +176,10 @@ sub mc_cache_self
     mc_out($output);
 
     #
-    # Return 1 (indicating the cache retrieval success) followed by
-    # the return value in case the caller is interested.
+    # Return the component return value in case the caller is interested,
+    # followed by 1 indicating the cache retrieval success.
     #
-    return (1,$retval);
+    return ($retval,1);
 }
 
 sub mc_caller ()
