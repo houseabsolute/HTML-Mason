@@ -68,6 +68,8 @@ sub _apache_test_config
 {
     my $self = shift;
 
+    return unless $self->_is_maintainer;
+
     return if $^O =~ /win32/i;
 
     eval { require mod_perl; };
@@ -75,10 +77,19 @@ sub _apache_test_config
 
     $self->_cleanup_apache_test_files();
 
-    $self->_write_apache_test_conf();
+    $self->_write_apache_test_conf()
+	or return;
+
     $self->_setup_handler('mod_perl');
     $self->_setup_handler('CGI');
     $self->_write_CGIHandler();
+}
+
+sub _is_maintainer
+{
+    return $ENV{MASON_MAINTAINER} if exists $ENV{MASON_MAINTAINER};
+
+    return -d 'CVS' ? 1 : 0;
 }
 
 sub _cleanup_apache_test_files
@@ -110,6 +121,8 @@ sub _write_apache_test_conf
     my $self = shift;
 
     my %conf = Apache::test->get_test_params();
+
+    return unless keys %conf;
 
     my $conf_file = File::Spec->catfile( $self->base_dir, 't', 'httpd.conf' );
     $conf{apache_dir} = File::Basename::dirname($conf_file);
@@ -308,6 +321,8 @@ EOF
 	);
 
     $self->notes( apache_test_conf => \%conf );
+
+    return 1;
 }
 
 sub _setup_handler
@@ -528,13 +543,23 @@ sub _assisted_install_config
 {
     my $self = shift;
 
-    return unless $self->{args}{apache}{httpd};
+    return if $self->_is_maintainer;
 
-    my %httpd_params = Apache::test->get_compilation_params( $self->{args}{apache}{httpd} );
+    my $conf = $self->notes('apache_test_conf');
+
+    unless ( $conf->{httpd} )
+    {
+	my %conf = Apache::test->get_test_params();
+	$conf = \%conf;
+    }
+
+    return unless $conf->{httpd};
+
+    my %httpd_params = Apache::test->get_compilation_params( $conf->{httpd} );
 
     my $conf_file =
-	( $self->{args}{apache}{config_file} ?
-	  $self->{args}{apache}{config_file} :
+	( $conf->{config_file} ?
+	  $conf->{config_file} :
 	  $httpd_params{SERVER_CONFIG_FILE}
 	);
 
@@ -1158,7 +1183,7 @@ sub ACTION_test
 
     $self->notes( test_data => { apache_dir => $conf->{apache_dir},
                                  port       => $conf->{port},
-                                 is_maintainer => -d 'CVS' ? 1 : 0,
+                                 is_maintainer => $self->_is_maintainer,
                                } );
 
     $self->SUPER::ACTION_test;
