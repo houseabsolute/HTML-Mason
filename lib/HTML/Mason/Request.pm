@@ -864,8 +864,6 @@ sub pop_stack {
 sub push_buffer_stack {
     my $self = shift;
 
-    validate_pos( @_, { can => [ qw( receive clear flush output ) ] } );
-
     push @{ $self->{buffer_stack} }, shift;
 }
 
