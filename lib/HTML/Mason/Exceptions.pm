@@ -72,6 +72,8 @@ BEGIN
 use Exception::Class (%e);
 
 HTML::Mason::Exception->Trace(1);
+
+# To avoid circular reference between exception and request.
 HTML::Mason::Exception->NoRefs(1);
 
 # The import() method allows this:
