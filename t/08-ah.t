@@ -23,7 +23,8 @@ use HTML::Mason::Tests;
 
 use lib 'lib', 't/lib';
 
-use Apache::test;
+use Apache::test qw(skip_test have_httpd);
+skip_test unless have_httpd;
 
 # We'll repeat all the tests with an Apache::Request using
 # ApacheHandler if the user has the Apache::Request module installed.
