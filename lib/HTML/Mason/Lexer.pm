@@ -257,7 +257,7 @@ sub variable_list_block
                       ,xgcs
 	  )
     {
-	if ( length $1 && length $2 )
+	if ( defined $1 && defined $2 && length $1 && length $2 )
 	{
 	    $self->{current}{compiler}->variable_declaration( block_type => $p{block_type},
 							      type => $1,
@@ -292,7 +292,7 @@ sub key_val_block
                       \G[ \t]*\n
                      /gcx )
     {
-	if ( length $1 && length $2 )
+	if ( defined $1 && defined $2 && length $1 && length $2 )
 	{
 	    $self->{current}{compiler}->key_value_pair( block_type => $p{block_type},
 							key => $1,
