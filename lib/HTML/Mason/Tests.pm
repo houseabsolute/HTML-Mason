@@ -203,7 +203,7 @@ sub run
 	$self->_run_tests;
     };
 
-    $self->_cleanup;
+    $self->_cleanup unless $ENV{MASON_NO_CLEANUP};
 
     die $@ if $@;
 }
