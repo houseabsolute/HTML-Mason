@@ -939,7 +939,7 @@ EOF
 
     $group->add_test( name => 'no_comp_root',
 		      description => 'test a comp_root-less interpreter',
-		      interp => HTML::Mason::Interp->new(data_dir => $group->data_dir),
+		      interp => HTML::Mason::Interp->new(resolver_class => 'HTML::Mason::Resolver::Null', data_dir => $group->data_dir),
 		      is_virtual => 1,
 
 		      component => <<'EOF',
