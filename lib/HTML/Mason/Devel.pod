@@ -1701,6 +1701,18 @@ method:
 This method uses the clear_buffer/abort technique mentioned above,
 so the same warnings apply regarding evals.
 
+Also, if you generate any output I<after> calling C<< $m->redirect >>,
+then this output will be sent, and will break the redirect.  For
+example:
+
+  % eval { $m->comp('redirect', ...) };
+
+  % die $@ if $@;
+
+The blank line between the two Perl lines is new output generated
+after the redirect.  Either remove it or call C<< $m->clear_buffer >>
+immediately before calling C<die()>.
+
 =head2 Internal Redirects
 
 There are two ways to perform redirects that are invisible to the
