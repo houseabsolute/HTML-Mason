@@ -234,5 +234,50 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'flags_on_one_line',
+			  description => 'tests that a flags block can be one line',
+			  component => <<'EOF',
+a
+<%flags>inherit => undef</%flags>
+b
+EOF
+			  expect => <<'EOF',
+a
+b
+EOF
+			);
+
+#------------------------------------------------------------
+
+	$group->add_test( name => 'attr_uc_ending',
+			  description => 'tests that an attr ending tag can be upper-case',
+			  component => <<'EOF',
+<%ATTR>
+thing => 1</%ATTR>
+thing: <% $m->request_comp->attr('thing') %>
+EOF
+			  expect => <<'EOF',
+thing: 1
+EOF
+			);
+
+#------------------------------------------------------------
+
+	$group->add_test( name => 'args_uc_ending',
+			  description => 'tests that args ending tag can be mixed case',
+			  component => <<'EOF',
+<%ARGS>
+$a => 1</%ARGS>
+a is <% $a %>
+b
+EOF
+			  expect => <<'EOF',
+a is 1
+b
+EOF
+			);
+
+#------------------------------------------------------------
+
     return $group;
 }
