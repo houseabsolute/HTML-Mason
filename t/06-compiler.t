@@ -65,7 +65,7 @@ Explicitly HTML-escaped redundantly: <% $expr |hh %><p>
 Explicitly URL-escaped: <% $expr |u
 %><p>
 No flags: <% $expr %><p>
-No flags again: <% $expr | %><p>
+No flags again: <% $expr %><p>
 Explicitly not escaped: <% $expr | n%><p>
 <%init>
 my $expr = "<b><i>Hello there</i></b>.";
@@ -95,7 +95,7 @@ Explicitly HTML-escaped redundantly: <% $expr | h,h %><p>
 Explicitly URL-escaped: <% $expr |u
 %><p>
 No flags: <% $expr %><p>
-No flags again: <% $expr | %><p>
+No flags again: <% $expr %><p>
 Explicitly not escaped: <% $expr | n %><p>
 <%init>
 my $expr = "<b><i>Hello there</i></b>.";
@@ -125,7 +125,7 @@ Explicitly HTML-escaped redundantly: <% $expr |hh %><p>
 Explicitly URL-escaped: <% $expr |un
 %><p>
 No flags: <% $expr %><p>
-No flags again: <% $expr | %><p>
+No flags again: <% $expr %><p>
 Explicitly not escaped: <% $expr | n%><p>
 <%init>
 my $expr = "<b><i>Hello there</i></b>.";
@@ -156,7 +156,7 @@ Explicitly HTML-escaped redundantly: <% $expr | h , h %><p>
 Explicitly URL-escaped: <% $expr | u, n
 %><p>
 No flags: <% $expr %><p>
-No flags again: <% $expr | %><p>
+No flags again: <% $expr %><p>
 Explicitly not escaped: <% $expr | n %><p>
 <%init>
 my $expr = "<b><i>Hello there</i></b>.";
