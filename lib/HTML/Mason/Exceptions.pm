@@ -117,7 +117,7 @@ use HTML::Mason::MethodMaker
 sub new
 {
     my ($class, %params) = @_;
-    
+
     my $self = $class->SUPER::new(%params);
     $self->format('brief');
     return $self;
@@ -130,11 +130,11 @@ sub throw
 {
     my ($class, %params) = @_;
 
-    if (isa_mason_exception($params{error})) {
-	$params{error} = $params{error}->error;
+    if (HTML::Mason::Exceptions::isa_mason_exception($params{error})) {
+	$params{error} = $params{error}->full_message;
     }
-    if (isa_mason_exception($params{message})) {
-	$params{message} = $params{message}->error;
+    if (HTML::Mason::Exceptions::isa_mason_exception($params{message})) {
+	$params{message} = $params{message}->full_message;
     }
     $class->SUPER::throw(%params);
 }
@@ -174,14 +174,14 @@ sub analyze_error
     my ($file, @lines, @frames);
 
     return $self->{_info} if $self->{_info};
-    
+
     @frames = $self->filtered_frames;
     if ($self->isa('HTML::Mason::Exception::Syntax')) {
 	$file = $self->comp_name;
 	push(@lines, $self->line_number);
     } elsif ($self->isa('HTML::Mason::Exception::Compilation')) {
 	$file = $self->filename;
-	my $msg = $self->error;
+	my $msg = $self->full_message;
 	while ($msg =~ /at .* line (\d+)./g) {
 	    push(@lines, $1);
 	}
@@ -255,15 +255,15 @@ sub as_string
 sub as_brief
 {
     my ($self) = @_;
-    return $self->error;
+    return $self->full_message;
 }
 
 sub as_line
 {
     my ($self) = @_;
     my $info = $self->analyze_error;
-    
-    (my $msg = $self->error) =~ s/\n/\t/g;
+
+    (my $msg = $self->full_message) =~ s/\n/\t/g;
     my $stack = join(", ", map { sprintf("[%s:%d]", $_->filename, $_->line) } @{$info->{frames}});
     return sprintf("%s\tStack: %s\n", $msg, $stack);
 }
@@ -273,7 +273,7 @@ sub as_text
     my ($self) = @_;
     my $info = $self->analyze_error;
 
-    my $msg = $self->error;
+    my $msg = $self->full_message;
     my $stack = join("\n", map { sprintf("  [%s:%d]", $_->filename, $_->line) } @{$info->{frames}});
     return sprintf("%s\nStack:\n%s\n", $msg, $stack);
 }
@@ -284,7 +284,7 @@ sub as_html
     my $info = $self->analyze_error;
 
     my $out;
-    my $msg = HTML::Mason::Tools::html_escape($self->error);
+    my $msg = HTML::Mason::Tools::html_escape($self->full_message);
     $msg =~ s/\n/<br>/g;
     $out .= qq[<html><body>\n];
     $out .= qq[<p align="center"><font face="Verdana, Arial, Helvetica, sans-serif"><b>System error</b></font></p>\n];
@@ -325,32 +325,23 @@ sub as_html
 
 package HTML::Mason::Exception::Syntax;
 
-sub as_string
+sub full_message
 {
     my $self = shift;
 
-    # unholy intermixing with parent class because we want the trace
-    # to go after the error message but we want to massage the message
-    # first.
-    local $self->{message} = $self->{message};
-    $self->{message} .= sprintf(" at %s line %d", $self->comp_name, $self->line_number);
+    my $msg = $self->message;
+    $msg .= sprintf(" at %s line %d", $self->comp_name, $self->line_number);
 
-    return $self->SUPER::as_string;
+    return $msg;
 }
 
 package HTML::Mason::Exception::Compilation;
 
-sub as_string
+sub full_message
 {
     my $self = shift;
 
-    # unholy intermixing with parent class because we want the trace
-    # to go after the error message but we want to massage the message
-    # first.
-    local $self->{message} = $self->{message};
-    $self->{message} = sprintf("Error during compilation of %s:\n%s\n", $self->filename, $self->{message});
-
-    return $self->SUPER::as_string;
+    return sprintf("Error during compilation of %s:\n%s\n", $self->filename || '', $self->message || '');
 }
 
 1;
