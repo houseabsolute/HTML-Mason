@@ -357,12 +357,11 @@ sub caller
 #
 sub callers
 {
-    my ($self,$index) = @_;
-    my @caller_stack = reverse $self->stack;
-    if (defined($index)) {
-	return $caller_stack[$index]->{comp};
+    my $self = shift;
+    if (defined $_[0]) {
+	return $self->stack_entry($_[0])->{comp};
     } else {
-	return map($_->{comp},@caller_stack);
+	return map($_->{comp}, reverse $self->stack);
     }
 }
 
@@ -372,17 +371,10 @@ sub callers
 sub caller_args
 {
     my ($self,$index) = @_;
-    my @caller_stack = reverse $self->stack;
-    if (defined($index)) {
-	if (wantarray) {
-	    return @{$caller_stack[$index]->{args}};
-	} else {
-	    my %h = @{$caller_stack[$index]->{args}};
-	    return \%h;
-	}
-    } else {
-	param_error( "caller_args expects stack level as argument" );
-    }
+    param_error "caller_args expects stack level as argument" unless defined $index;
+
+    my $args = $self->stack_entry($index)->{args};
+    return wantarray ? @$args : { @$args };
 }
 
 sub comp_exists
@@ -805,10 +797,16 @@ sub debug_hook
 # stack handling
 #
 
-# Return the current stack as a list ref.
+# Return the current stack as an array.
 sub stack {
     my ($self) = @_;
     return @{ $self->{stack} };
+}
+
+# Return the stack entry 'i' slots from the /back/ of the array
+sub stack_entry {
+    my ($self, $i) = @_;
+    return $self->{stack}->[-1 - $i];
 }
 
 # Set or retrieve the hashref at the top of the stack.
@@ -845,7 +843,7 @@ sub pop_buffer_stack {
 
 sub buffer_stack {
     my ($self) = @_;
-    return reverse @{ $self->{buffer_stack} };
+    return wantarray ? reverse @{ $self->{buffer_stack} } : @{ $self->{buffer_stack} };
 }
 
 
