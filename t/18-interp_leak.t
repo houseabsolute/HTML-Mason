@@ -1,7 +1,17 @@
 use strict;
 
 use Test;
-BEGIN {plan tests => 2}
+
+BEGIN
+{
+    if ($] < 5.006)
+    {
+        print "1..0\n";
+        exit;
+    }
+
+    plan tests => 2;
+}
 
 use HTML::Mason::Interp;
 use HTML::Mason::Tests;
