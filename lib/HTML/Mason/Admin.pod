@@ -909,7 +909,7 @@ site in the handler.pl:
 
 In this example we assume each virtual server configuration section has a
 
-    PerlSetVar site I<site_name>
+    PerlSetVar site <site_name>
 
 =head1 AUTHOR
 
