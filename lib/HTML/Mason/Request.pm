@@ -1757,8 +1757,10 @@ Returns undef if there is no content.
 
 =item has_content
 
-Returns true if the component was called with content (i.e. with <&| comp &>
-and </&> tags instead of a single <& comp &> tag).
+Returns true if the component was called with content (i.e. with <&|
+comp &> and </&> tags instead of a single <& comp &> tag). This is
+generally better than checking the defined'ness of C<< $m->content >>
+because it will not try to evaluate the content.
 
 =for html <a name="item_count"></a>
 
