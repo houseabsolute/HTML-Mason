@@ -13,7 +13,6 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'interp',
 					 description => 'interp object functionality' );
 
-
 #------------------------------------------------------------
 
     $group->add_support( path => '/autohandler_test/autohandler',
@@ -747,6 +746,12 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => 'preloads_test/subdir/in_a_subdir',
+			 component => 'howareyou',
+		       );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'preload_1',
 		      description => 'Make sure no preloading is done by default',
 		      component => <<'EOF',
@@ -780,8 +785,8 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'preload_3',
-		      description => 'Preload all components by glob pattern',
-		      interp_params => { preloads => [ '/interp/preloads_test/*' ] },
+		      description => 'Preload all components (including subdirectory) by glob pattern',
+		      interp_params => { preloads => [ '/interp/preloads_test/*', '/interp/preloads_test/*/*' ] },
 		      component => <<'EOF',
 <& preloads_test/show_code_cache &>
 EOF
@@ -792,6 +797,7 @@ Code cache contains:
 /interp/preloads_test/hello
 /interp/preloads_test/howareyou
 /interp/preloads_test/show_code_cache
+/interp/preloads_test/subdir/in_a_subdir
 EOF
 		    );
 
@@ -848,8 +854,41 @@ EOF
 EOF
 		    );
 
+#------------------------------------------------------------
+
+    $group->add_support( path => '/comp_path_test/a/b/c/foo',
+			 component => <<'EOF',
+I am foo!
+EOF
+		       );
 
 #------------------------------------------------------------
+
+    $group->add_test( name => 'process_comp_path',
+		      description => 'Test that component paths cannot be resolved outside the comp root',
+		      component => <<'EOF',
+<& ../../../../../interp/comp_path_test/a/b/c/../c/foo &>
+EOF
+		      expect => <<'EOF'
+I am foo!
+
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'process_comp_path2',
+		      description => 'Test that component paths containing /../ work as long they stay in the comp root',
+		      path => '/comp_path_test/a/b/d/process',
+		      call_path => '/comp_path_test/a/b/d/process',
+		      component => <<'EOF',
+<& ../c/foo &>
+EOF
+		      expect => <<'EOF'
+I am foo!
+
+EOF
+		    );
 
     return $group;
 }
