@@ -1376,10 +1376,9 @@ external Perl script), you'll need have the following information:
 =item *
 
 the namespace associated with the component. The function
-C<HTML::Mason::Utils::data_cache_namespace>, given a component path, will
-return the namespace.
-
-XXX: Not if there are multiple comp root!
+C<HTML::Mason::Utils::data_cache_namespace>, given a component path,
+will return the namespace, although this does not work with multiple
+component roots.
 
 =item *
 
@@ -1630,14 +1629,14 @@ change for all component calls B<except> in the following cases:
 
 =over
 
-=item
+=item *
 
 A component is called via its component object rather than its path,
 for example:
 
   <& $m->fetch_comp('/some/comp'), foo => 1 &>
 
-=item
+=item *
 
 A method is called via the use of C<SELF:> or C<PARENT:>.  These are
 covered in more detail below.
