@@ -308,14 +308,12 @@ top-level autohandler.
 =head2 Declining image requests
 
 Mason should be prevented from serving images, tarballs, and other
-binary files as regular components. Performance will suffer, and such
-a file may inadvertently contain a Mason character sequence such as
-"<%".
+binary files as regular components. Not only will performance suffer,
+but binary files may inadvertently contain a Mason character sequence
+such as "<%".
 
-There are several ways to restrict which file types are handled by Mason.
-
-One way is to specify a filename pattern in the Apache configuration,
-e.g.:
+There are several ways to restrict which file types are handled by
+Mason.  One way is to use C<FilesMatch>, e.g.
 
     <FilesMatch "(\.html|\.txt|^[^\.]+)$">
      SetHandler perl-script
@@ -323,15 +321,31 @@ e.g.:
     </FilesMatch>
 
 This directs Mason to handle only files with .html or .txt extension,
-as well as those files with no extension.
+as well as those files with no extension. The disadvantage of this
+method is that the filename must exist for the C<FilesMatch> to match.
+You will not be able to use L<dhandlers|HTML::Mason::Devel/dhandlers>
+to catch non-existent files.
 
-Another way, if you are using a C<handler.pl> script, is to include
+A second way is to use C<LocationMatch> to indicate the extensions
+that should I<not> be served through Mason, e.g.
+
+    <LocationMatch "\.(gif|jpe?g|png|gz)$">
+     SetHandler default-handler
+    </LocationMatch>
+
+This will send all extensions not listed through Mason, regardless
+of whether the file exists, thus working well with dhandlers. The
+disadvantage of this method is that you have to explicitly list all
+of the non-Mason extensions used on your site.
+
+A third way, if you are using a C<handler.pl> script, is to include
 a line like the following at the top of your handler() subroutine:
 
     return -1 if $r->content_type && $r->content_type !~ m|^text/|i;
 
 This line handles requests for text/* MIME types, such as text/html
-and text/plain, and declines others.
+and text/plain, and declines others. The disadvantage of this method
+is that it requires a bit of Perl code to run for every image request.
 
 =head2 Securing top-level components
 
@@ -439,13 +453,25 @@ needs to be initialized every request.
 
 =head2 Sessions
 
-Mason does not have a built-in session mechanism. However, with a page
-or so of code in your C<handler.pl>, you can integrate Jeffrey Baker's
-C<Apache::Session> into your application and make a tied global
-session variable available to all components.
+Mason does not have a built-in session mechanism, but several
+external options are available:
 
-The Mason Sessions How-To, at ..., is the best source of information
-about this surprisingly tricky subject.
+=over
+
+=item
+
+HTML::Mason::Request::WithApacheSession, available from CPAN,
+adds a cookie-based session to every request.
+
+=item
+
+Apache::Session, available from CPAN, can be integrated with about a
+page of code in a handler.pl. This is more complex but more flexible
+than the above. See the Mason Sessions How-To at
+http://www.masonhq.com/user/adpacifico/ApacheSessionMason.html for a
+complete guide.
+
+=back
 
 =head2 Data caching
 
