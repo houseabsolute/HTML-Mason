@@ -2,8 +2,6 @@
 
 use strict;
 
-use Params::Validate;
-
 use HTML::Mason::Tests;
 
 {
