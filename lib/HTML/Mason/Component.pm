@@ -114,12 +114,11 @@ sub run {
 
     $self->{mfu_count}++;
 
-    return $self->{code}->(@_) unless $self->{filter};
+    return $self->{code}->(@_) unless exists $self->{filter};
 
     my $req = HTML::Mason::Request->instance;
 
-    $req->push_filter_buffer( filter => $self->{filter},
-                              filter_args => \@_ );
+    $req->push_filter_buffer( filter_from => $self );
 
     my @r;
 
@@ -144,6 +143,15 @@ sub run {
     return $wantarray ? @result : defined $wantarray ? $result[0] : undef;
 }
 
+sub filter
+{
+    my $self = shift;
+
+    return unless exists $self->{filter};
+
+    return ${ $self->{filter} };
+}
+
 sub dynamic_subs_init {
     my $self = shift;
 
@@ -158,7 +166,7 @@ sub run_dynamic_sub {
     error "call_dynamic: assert error - could not find code for key $key in component " . $self->title
 	unless exists $self->{dynamic_subs_hash}->{$key};
 
-    $self->{dynamic_subs_hash}->{$key}->(@args);
+    return $self->{dynamic_subs_hash}->{$key}->(@args);
 }
 
 # Legacy, left in for pre-0.8 obj files
