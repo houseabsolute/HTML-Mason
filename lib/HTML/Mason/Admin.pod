@@ -193,7 +193,8 @@ httpd and then copied to each child process.
 
 These objects have a fair number of possible parameters, which are
 discussed in the next two subsections. The various parameters are
-documented in the individual reference manuals for each object:
+documented in B<L<HTML::Mason::Params>> reference, as well as the
+individual reference manuals for each object:
 B<L<HTML::Mason::Interp>>, B<L<HTML::Mason::ApacheHandler>>,
 B<L<HTML::Mason::Request>>, B<L<HTML::Mason::Compiler>> and
 B<L<HTML::Mason::Compiler::ToObject>>, and
