@@ -221,6 +221,11 @@ sub _initialize {
     local $SIG{'__DIE__'} = \&rethrow_exception;
 
     eval {
+	# Check the static_source touch file, if it exists, before the
+	# first component is loaded.
+	#
+	$self->interp->check_static_source_touch_file();
+
 	# request_comp can be an absolute path or component object.  If a path,
 	# load into object.
 	my $request_comp = $self->{request_comp};
@@ -380,10 +385,6 @@ sub exec {
     #
     error "subrequest depth > " . $self->max_recurse . " (infinite subrequest loop?)"
 	if $self->request_depth > $self->max_recurse;
-
-    # Check the static_source touch file, if it exists.
-    #
-    $self->interp->check_static_source_touch_file();
 
     #
     # $m is a dynamically scoped global containing this
