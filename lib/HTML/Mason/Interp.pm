@@ -631,7 +631,7 @@ sub comp_root
     if (my $new_comp_root = shift) {
 	die "cannot assign new comp_root unless dynamic_comp_root parameter is set"
 	  unless $self->dynamic_comp_root;
-	$self->assign_comp_root_($new_comp_root);
+	$self->assign_comp_root($new_comp_root);
     }
     if (@{$self->{comp_root}} == 1 and $self->{comp_root}[0][0] eq 'MAIN') {
 	return $self->{comp_root}[0][1];
