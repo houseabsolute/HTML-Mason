@@ -161,7 +161,7 @@ sub start
 	$self->match_text && next;
 
 	# We should never get here - if we do, we're in an infinite loop.
-	syntax_error "Infinite parsing loop encountered in $self->{name} component - Lexer bug?";
+	syntax_error "Infinite parsing loop encountered in $self->{current}{name} component - Lexer bug?";
     }
 
     if ( $self->{current}{in_def} || $self->{current}{in_method} )
@@ -170,7 +170,7 @@ sub start
 	unless ( $end =~ m,</%\Q$type\E>\n?,i )
 	{
 	    my $block_name = $self->{current}{"in_$type"};
-	    syntax_error "No </%$type> tag for <%$type $block_name> block in $self->{name} component near $self->{lines} line";
+	    syntax_error "No </%$type> tag for <%$type $block_name> block in $self->{current}{name} component near $self->{lines} line";
 	}
     }
 }
@@ -327,7 +327,7 @@ sub match_block_end
     else
     {
 	my $line = $self->_next_line;
-	syntax_error "Invalid <%$p{block_type}> section line in $self->{name} component at line $self->{current}{lines}:\n$line";
+	syntax_error "Invalid <%$p{block_type}> section line in $self->{current}{name} component at line $self->{current}{lines}:\n$line";
     }
 }
 
@@ -377,7 +377,7 @@ sub match_substitute
 	else
 	{
 	    my $line = $self->_next_line( $self->{current}{pos} - 2 );
-	    syntax_error "'<%' without matching '%>' in $self->{name} component at line $self->{current}{lines}:\n$line";
+	    syntax_error "'<%' without matching '%>' in $self->{current}{name} component at line $self->{current}{lines}:\n$line";
 	}
     }
 }
@@ -399,7 +399,7 @@ sub match_comp_call
 	else
 	{
 	    my $line = $self->_next_line( $self->{current}{pos} - 2 );
-	    syntax_error "'<&' without matching '&>' in $self->{name} component at line $self->{current}{lines}:\n$line";
+	    syntax_error "'<&' without matching '&>' in $self->{current}{name} component at line $self->{current}{lines}:\n$line";
 	}
     }
 }
@@ -422,7 +422,7 @@ sub match_comp_content_call
 	else
 	{
 	    my $line = $self->_next_line( $self->{current}{pos} - 3 );
-	    syntax_error "'<&|' without matching '&>' in $self->{name} component at line $self->{current}{lines}:\n$line";
+	    syntax_error "'<&|' without matching '&>' in $self->{current}{name} component at line $self->{current}{lines}:\n$line";
 	}
     }
 }
