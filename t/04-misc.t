@@ -20,7 +20,7 @@ sub make_tests
 <& header &>
 Autohandler comp: <% $m->fetch_next->title %>
 % my $buf;
-<% $m->call_next (b=>$a*2) %>
+% $m->call_next(b=>$a*2);
 <& footer &>
 
 <%args>
