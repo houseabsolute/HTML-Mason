@@ -835,8 +835,8 @@ sub prepare_request
 	my $pathname = $r->filename;
 	$pathname .= $r->path_info unless $is_file;
 
-	$r->warn("[Mason] Cannot resolve file to component: " .
-                 "$pathname (is file outside component root?)");
+	warn "[Mason] Cannot resolve file to component: " .
+             "$pathname (is file outside component root?)";
 	return $self->return_not_found($r);
     }
 
