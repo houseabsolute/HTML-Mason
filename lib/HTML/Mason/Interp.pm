@@ -860,8 +860,8 @@ instead of C<FileCache>.
 =item escape_flags
 
 A hash reference of escape flags to set for this object.  See the
-section on the L<C<set_escape()> method|Interp/item_set_escape>
-for more details.
+section on the L<C<set_escape()> method|item_set_escape> for more
+details.
 
 =item ignore_warnings_expr
 
