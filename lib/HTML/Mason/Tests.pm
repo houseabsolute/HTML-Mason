@@ -406,7 +406,14 @@ sub _run_test
 
     eval { $self->_execute($interp) };
 
-    if ($@)
+    return $self->check_result($@);
+}
+
+sub check_result {
+    my ($self, $error) = @_;
+    my $test = $self->{current_test};
+
+    if ($error)
     {
 	if ( $test->{expect_error} )
 	{
@@ -418,14 +425,14 @@ sub _run_test
 	    {
 		if ($VERBOSE)
 		{
-		    print "Got error:\n$@\n...but expected something matching:\n$test->{expect_error}\n";
+		    print "Got error:\n$error\n...but expected something matching:\n$test->{expect_error}\n";
 		}
 		return $self->_fail;
 	    }
 	}
 	else
 	{
-	    print "Unexpected error running $test->{name}:\n$@" if $VERBOSE;
+	    print "Unexpected error running $test->{name}:\n$error" if $VERBOSE;
 	    return $self->_fail;
 	}
 

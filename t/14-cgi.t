@@ -5,10 +5,26 @@ use HTML::Mason::CGIHandler;
 use CGI qw(-no_debug);  # Prevent "(offline mode: enter name=value pairs on standard input)"
 
 {
-    # This class simulates CGI requests.
+    # This class simulates CGI requests.  It's rather ugly, it tries
+    # to fool HTML::Mason::Tests into thinking that CGIHandler is a subclass of Interp.
+
     package CGITest;
     use HTML::Mason::Tests;
     use base 'HTML::Mason::Tests';
+
+    sub _run_test
+    {
+	my $self = shift;
+	my $test = $self->{current_test};
+	
+	$self->{buffer} = '';
+	my $interp = $self->_make_interp;
+	
+	eval { $self->_execute($interp) };
+	
+	return $self->check_result($@);
+    }
+
     sub _execute
     {
 	my ($self, $interp) = @_;  # $interp is a CGIHandler object
@@ -61,6 +77,14 @@ $group->add_test( name => 'args',
 		);
 
 #------------------------------------------------------------
+
+$group->add_test( name => 'cgi_object',
+		  description => 'Test access to the CGI request object',
+		  call_args => [arg => 'boohoo'],
+		  component => q{some <% $m->cgi_object->param('arg') %> cryin'},
+		  expect    => "${basic_header}some boohoo cryin'",
+		);
+
 
 $group->run;
 
