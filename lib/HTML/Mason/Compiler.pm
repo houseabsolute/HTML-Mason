@@ -14,8 +14,8 @@ use HTML::Mason::Exceptions( abbr => [qw(param_error compiler_error syntax_error
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
 
-use HTML::Mason::Container;
-use base qw(HTML::Mason::Container);
+use Class::Container;
+use base qw(Class::Container);
 
 BEGIN
 {
@@ -69,7 +69,10 @@ sub object_id
     # time the program is loaded, whether they are a reference to the
     # same object or not.
     my $spec = $self->validation_spec;
-    my @id_keys = grep { ! exists $spec->{$_}{isa} && ! exists $spec->{$_}{can} } keys %$spec;
+
+    my @id_keys =
+	( grep { ! exists $spec->{$_}{isa} && ! exists $spec->{$_}{can} }
+	  grep { $_ ne 'container' } keys %$spec );
 
     my @vals;
     foreach my $k ( @id_keys )
@@ -152,6 +155,8 @@ sub start_component
 
     $self->{in_main} = 1;
     $self->{comp_with_content_stack} = [];
+
+    $self->{in_block} = undef;
 
     $self->_init_comp_data($self);
 

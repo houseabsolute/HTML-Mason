@@ -11,8 +11,8 @@ use HTML::Mason::Tools qw(read_file compress_path load_pkg absolute_comp_path);
 use HTML::Mason::Utils;
 use HTML::Mason::Buffer;
 
-use HTML::Mason::Container;
-use base qw(HTML::Mason::Container);
+use Class::Container;
+use base qw(Class::Container);
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error abort_error
 					 top_level_not_found_error error)] );

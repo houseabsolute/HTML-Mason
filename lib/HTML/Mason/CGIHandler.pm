@@ -7,8 +7,8 @@ use CGI;
 use File::Spec;
 use Params::Validate qw(:all);
 
-use HTML::Mason::Container;
-use base qw(HTML::Mason::Container);
+use Class::Container;
+use base qw(Class::Container);
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( interp ) ] );

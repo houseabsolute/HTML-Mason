@@ -11,8 +11,8 @@ use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error error)] );
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
 
-use HTML::Mason::Container;
-use base qw(HTML::Mason::Container);
+use Class::Container;
+use base qw(Class::Container);
 
 # This is a block name and what method should be called to lex its
 # contents if it is encountered.  'def' & 'method' blocks are special
@@ -108,6 +108,8 @@ sub object_id
     my @vals;
     foreach my $k ( sort keys %{ $self->validation_spec } )
     {
+	next if $k eq 'container';
+
 	push @vals, $k;
 	push @vals, ( UNIVERSAL::isa( $self->{$k}, 'HASH' )  ? map { $_ => $self->{$k}{$_} } sort keys %{ $self->{$k} } :
 		      UNIVERSAL::isa( $self->{$k}, 'ARRAY' ) ? sort @{ $self->{$k} } :

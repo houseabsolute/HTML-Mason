@@ -21,7 +21,7 @@ use HTML::Mason::MethodMaker
                         ) ],
       );
 
-# XXX Should be a HTML::Mason::Container
+# XXX Should be a Class::Container
 
 my %valid_params =
     (

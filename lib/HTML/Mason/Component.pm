@@ -11,8 +11,8 @@ use HTML::Mason::Tools qw(absolute_comp_path);
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
-use HTML::Mason::Container;
-use base qw(HTML::Mason::Container);
+use Class::Container;
+use base qw(Class::Container);
 
 use HTML::Mason::Exceptions( abbr => ['error'] );
 use HTML::Mason::MethodMaker

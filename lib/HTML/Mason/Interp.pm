@@ -20,8 +20,8 @@ use HTML::Mason::Exceptions( abbr => [qw(param_error system_error wrong_compiler
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
-use HTML::Mason::Container;
-use base qw(HTML::Mason::Container);
+use Class::Container;
+use base qw(Class::Container);
 
 BEGIN
 {

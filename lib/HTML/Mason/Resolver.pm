@@ -13,8 +13,8 @@ Params::Validate::validation_options( on_fail => sub { param_error join '', @_ }
 
 use HTML::Mason::ComponentSource;
 
-use HTML::Mason::Container;
-use base qw(HTML::Mason::Container);
+use Class::Container;
+use base qw(Class::Container);
 
 # Returns HTML::Mason::ComponentSource object
 sub get_info {
@@ -57,7 +57,7 @@ components.
 The HTML::Mason::Resolver provides a virtual parent class from which
 all resolver implementations should inherit.
 
-=head1 HTML::Mason::Container
+=head1 Class::Container
 
 This class is used by most of the Mason object's to manage constructor
 parameters and has-a relationships with other objects.
@@ -65,7 +65,7 @@ parameters and has-a relationships with other objects.
 See the documentation on this class for details on how to declare what
 paremeters are valid for your subclass's constructor.
 
-HTML::Mason::Resolver is a subclass of HTML::Mason::Container so you
+HTML::Mason::Resolver is a subclass of Class::Container so you
 do not need to subclass it yourself.
 
 =head1 METHODS
@@ -78,7 +78,7 @@ implement the following methods.
 =item new
 
 This method is optional.  The new method included in this class is
-simply inherited from C<HTML::Mason::Container>.
+simply inherited from C<Class::Container>.
 If you need something more complicated done in your new method you
 will need to override it in your subclass.
 

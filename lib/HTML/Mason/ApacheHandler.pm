@@ -13,7 +13,7 @@ package HTML::Mason::Request::ApacheHandler;
 use Apache::Constants qw( REDIRECT );
 
 use HTML::Mason::Request;
-use HTML::Mason::Container;
+use Class::Container;
 use Params::Validate qw(BOOLEAN);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
@@ -237,8 +237,8 @@ use vars qw($VERSION);
 
 $VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
 
-use HTML::Mason::Container;
-use base qw(HTML::Mason::Container);
+use Class::Container;
+use base qw(Class::Container);
 
 BEGIN
 {

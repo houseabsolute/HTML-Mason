@@ -6,8 +6,8 @@ package HTML::Mason::Buffer;
 
 use strict;
 
-use HTML::Mason::Container;
-use base qw(HTML::Mason::Container);
+use Class::Container;
+use base qw(Class::Container);
 
 use HTML::Mason::Exceptions( abbr => ['param_error'] );
 
