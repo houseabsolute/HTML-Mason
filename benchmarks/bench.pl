@@ -22,12 +22,24 @@ unless ( @{ $opts{test} } )
     exit;
 }
 
+die "$0 must be run from inside the benchmarks/ directory\n"
+  unless -e 'comps' and -d 'comps';
+
+# Don't check this into CVS because it's big:
+unless (-e 'comps/large.mas') {
+  open my($fh), '> comps/large.mas' or die "Can't create comps/large.mas: $!";
+  print $fh 'x' x 79, "\n" for 1..30_000; # 80 * 30_000 = 2.4 MB
+}
+
 my %tests =
     ( print =>
       sub { call_comp( '/comps/print.mas', title => 'print', integer => 1000 ) },
 
       comp =>
       sub { call_comp( '/comps/comp.mas' ) },
+
+      large =>
+      sub { call_comp( '/comps/large.mas' ) },
     );
 
 foreach my $test ( @{ $opts{test} } )
@@ -50,6 +62,9 @@ print "\n";
 foreach my $name ( @{ $opts{test} } )
 {
     Benchmark::timethis( $opts{reps}, $tests{$name}, $name );
+    my ($rss, $vsz) = `ps -eo rss,vsz -p $$` =~ /(\d+)\s+(\d+)/;
+    print "   Real mem: $rss\n";
+    print "Virtual mem: $vsz\n";
 }
 print "\n";
 
@@ -60,7 +75,6 @@ sub call_comp
     my $out;
     $interp->out_method(\$out);
     $interp->exec( $comp, @args );
-
 }
 
 sub usage
@@ -73,8 +87,9 @@ bench.pl
 
             print  (focuses on $m->print)
             comp   (focuses on $m->comp)
+            large  (a large component)
 
-  -reps   Number of times to repeat each test.  Defaults to 1000.
+  --reps  Number of times to repeat each test.  Defaults to 1000.
 
 EOF
 }
