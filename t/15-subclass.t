@@ -39,7 +39,7 @@ use HTML::Mason::Tests;
 
 	my $comp = $self->SUPER::compiled_component(@_);
 
-	$comp =~ s/!!BAZ!!/$self->{baz_val}/g;
+	$$comp =~ s/!!BAZ!!/$self->{baz_val}/g;
 
 	return $comp;
     }
