@@ -189,12 +189,14 @@ sub write_apache_conf
 </Perl>
 
 <IfDefine CGI>
+  PerlModule  CGI
   PerlRequire $APACHE{apache_dir}/mason_handler_CGI.pl
   SetHandler  perl-script
   PerlHandler HTML::Mason
 </IfDefine>
 
 <IfDefine CGI_no_handler>
+  PerlModule  CGI
   PerlSetVar  MasonCompRoot "$APACHE{comp_root}"
   PerlSetVar  MasonDataDir  "$APACHE{data_dir}"
 EOF
