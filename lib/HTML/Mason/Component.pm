@@ -94,7 +94,7 @@ sub _determine_inheritance {
     } else {
 	if ($self->name eq $interp->autohandler_name) {
 	    unless ($self->dir_path eq '/') {
-		($self->{inherit_start_path}) = $self->dir_path =~ m,(.+)/[^/]*$,;
+		($self->{inherit_start_path}) = $self->dir_path =~ m,^(.*/)?.*,s
 	    }
 	} else {
 	    $self->{inherit_start_path} = $self->dir_path;
