@@ -370,17 +370,6 @@ sub _get_mason_params
 {
     my $self = shift;
 
-    foreach my $obj ( grep { defined } Apache->request, Apache->server )
-    {
-	warn "OBJ: $obj\n";
-	warn "CONF: ", $obj->dir_config, "\n";
-	my $c = $obj->dir_config;
-	while (my ($k, $v) = each %$c)
-	{
-	    warn " $k => $v\n";
-	}
-    }
-
     my $c = Apache->request ? Apache->request : Apache->server;
 
     my $config = $c->dir_config;
