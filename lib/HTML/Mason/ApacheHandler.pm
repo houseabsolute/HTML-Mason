@@ -25,11 +25,9 @@ use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
 
-my ($ap_req_class, $real_apache_print);
 BEGIN
 {
-    $ap_req_class = $mod_perl::VERSION < 1.99 ? 'Apache' : 'Apache::RequestRec';
-    $real_apache_print = \&{"$ap_req_class\::print"};
+    my $ap_req_class = $mod_perl::VERSION < 1.99 ? 'Apache' : 'Apache::RequestRec';
 
     __PACKAGE__->valid_params
 	( ah         => { isa => 'HTML::Mason::ApacheHandler',
@@ -104,14 +102,28 @@ sub exec
     my $r = $self->apache_req;
     my $retval;
 
+    if ( $self->is_subrequest )
+    {
+        # no need to go through all the rigamorale below for
+        # subrequests, and it may even break things to do so, since
+        # $r's print should only be redefined once.
+	eval { $retval = $self->SUPER::exec(@_) };
+    }
+    else
     {
         local $^W = 0;
+        # ack, this has to be done at runtime to account for the fact
+        # that Apache::Filter change's $r's class and implements its
+        # own print() method.
+        my $real_apache_print = $r->can('print');
 
 	# Remap $r->print to Mason's $m->print while executing
 	# request, but just for this $r, in case user does an internal
 	# redirect or apache subrequest.
 	no strict 'refs';
-	local *{"$ap_req_class\::print"} = sub {
+
+        my $req_class = ref $r;
+	local *{"$req_class\::print"} = sub {
 	    my $local_r = shift;
 	    if ($local_r eq $r) {
 		$self->print(@_);
@@ -782,6 +794,9 @@ sub prepare_request
 					 ah => $self,
 					 apache_req => $new_r,
 				       );
+
+    # get this from current object.
+    my $real_apache_print = $r->can('print');
 
     # Craft the request's out method to handle http headers, content
     # length, and HEAD requests.
