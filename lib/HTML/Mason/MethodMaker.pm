@@ -97,18 +97,20 @@ HTML::Mason::MethodMaker - Used to create simple get & get/set methods in other 
 
 =head1 SYNOPSIS
 
- use HTML::Mason::MethodMaker ( read_only => 'foo',
-                                read_write => [
-                                               [ bar => { type => SCALAR } ],
-                                               [ baz => { isa => 'HTML::Mason::Baz' } ],
-                                                'quux', # no validation
-                                              ],
-                                read_write_contained => { other_object =>
-                                                          [ [ 'thing1' => { isa => 'Thing1' } ],
-                                                            'thing2', # no validation
-                                                          ]
-                                                        },
-                              );
+ use HTML::Mason::MethodMaker
+     ( read_only => 'foo',
+       read_write => [
+                      [ bar => { type => SCALAR } ],
+                      [ baz => { isa => 'HTML::Mason::Baz' } ],
+                      'quux', # no validation
+                     ],
+       read_write_contained => { other_object =>
+                                 [
+                                  [ 'thing1' => { isa => 'Thing1' } ],
+                                  'thing2', # no validation
+                                 ]
+                               },
+     );
 
 =head1 DESCRIPTION
 
