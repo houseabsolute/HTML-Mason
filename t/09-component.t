@@ -287,6 +287,85 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'methods',
+		      description => 'Test methods method',
+		      component => <<'EOF',
+% my $comp = $m->request_comp;
+% my $methods = $comp->methods;
+% foreach my $name ( sort keys %$methods ) {
+<% $name %>
+% }
+<% $comp->methods('x') ? 'has' : 'does not have' %> x
+<% $comp->methods('y') ? 'has' : 'does not have' %> y
+<% $comp->methods('z') ? 'has' : 'does not have' %> z
+<%method x>
+x
+</%method>
+<%method y>
+y
+</%method>
+EOF
+		      expect => <<'EOF',
+x
+y
+has x
+has y
+does not have z
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'subcomps',
+		      description => 'Test subcomps method',
+		      component => <<'EOF',
+% my $comp = $m->request_comp;
+% my $subcomps = $comp->subcomps;
+% foreach my $name ( sort keys %$subcomps ) {
+<% $name %>
+% }
+<% $comp->subcomps('x') ? 'has' : 'does not have' %> x
+<% $comp->subcomps('y') ? 'has' : 'does not have' %> y
+<% $comp->subcomps('z') ? 'has' : 'does not have' %> z
+<%def x>
+x
+</%def>
+<%def y>
+y
+</%def>
+EOF
+		      expect => <<'EOF',
+x
+y
+has x
+has y
+does not have z
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'attributes',
+		      description => 'Test attributes method',
+		      component => <<'EOF',
+% my $comp = $m->request_comp;
+% my $attrs = $comp->attributes;
+% foreach my $name ( sort keys %$attrs ) {
+<% $name %>
+% }
+<%attr>
+x => 1
+y => 2
+</%attr>
+EOF
+		      expect => <<'EOF',
+x
+y
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
