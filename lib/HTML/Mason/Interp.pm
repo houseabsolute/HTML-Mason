@@ -108,7 +108,7 @@ sub _initialize
     # that directories are absolute.
     #
     foreach my $field (qw(comp_root data_dir data_cache_dir)) {
-	$self->{$field} =~ s/\/$//g;
+	$self->{$field} =~ s/\/$//g unless $self->{$field} eq '/';
  	die "$field ('".$self->{$field}."') must be an absolute directory" if !is_absolute_path($self->{$field});
     }
     
