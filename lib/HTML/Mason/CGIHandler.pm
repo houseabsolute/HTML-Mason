@@ -1,7 +1,7 @@
 package HTML::Mason::CGIHandler;
 
 use strict;
-use 5.004;
+
 use HTML::Mason;
 use CGI;
 use Carp;
