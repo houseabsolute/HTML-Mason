@@ -157,10 +157,11 @@ This optional parameter should be a hash reference.  It is used to
 pass information that doesn't concern the interpreter from the
 resolver to the component class.
 
-This is needed since a L<C<HTML::Mason::Resolver|C<HTML::Mason::Resolver>> subclass and a
-L<C<HTML::Mason::Component|C<HTML::Mason::Component>> subclass can be rather tightly coupled,
-but they must communicate with each through the interpreter (this may
-change in the future).
+This is needed since a
+L<C<HTML::Mason::Resolver>|HTML::Mason::Resolver> subclass and a
+L<C<HTML::Mason::Component>|HTML::Mason::Component> subclass can be
+rather tightly coupled, but they must communicate with each through
+the interpreter (this may change in the future).
 
 =back
 
