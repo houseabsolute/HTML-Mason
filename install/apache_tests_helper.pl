@@ -71,7 +71,7 @@ sub write_apache_conf
     mkdir $APACHE{comp_root}, 0755
 	or die "Can't make dir '$APACHE{comp_root}': $!";
     mkdir $APACHE{data_dir}, 0755
-	or die "Can't make dir '$APACHE{comp_root}': $!";
+	or die "Can't make dir '$APACHE{data_dir}': $!";
 
     my $libs = _libs();
 
