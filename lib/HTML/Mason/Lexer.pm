@@ -515,7 +515,7 @@ sub match_text
 	my $consumed = join '', grep { defined } $1, $2, $3;
 	return 0 unless length $consumed;
 
-	$self->{current}{compiler}->text( text => $2 ) if length $2;
+	$self->{current}{compiler}->text( text => $2 ) if defined $2 && length $2;
 
 	$self->{current}{lines} += $consumed =~ tr/\n/\n/;
 	return 1;
