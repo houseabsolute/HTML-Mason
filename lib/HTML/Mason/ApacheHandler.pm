@@ -375,7 +375,7 @@ sub make_ah
 		$root = [ split /\s*=>\s*/, $root, 2 ];
 		param_error "Configuration parameter MasonCompRoot must be either ".
                             "a single string value or multiple key/value pairs ".
-                            "like 'foo => /home/mason/foo'"
+                            "like 'foo => /home/mason/foo'.  Invalid parameter:\n$root"
 		    unless defined $root->[1];
 	    }
 	}
@@ -383,6 +383,20 @@ sub make_ah
 
     my $ah = $package->new(%p, $r);
     $AH{$key} = $ah if $key;
+
+    my $escape = $package->_get_escape_params($r);
+    foreach my $pair (@$escape)
+    {
+        my ($key, $val) = split /\s*=>\s*/, $pair, 2;
+        param_error "Configuration parameter MasonSetEscape must be a key/value pair ".
+                    "like 'foo => \&foo_escape'.  Invalid parameter:\n$pair"
+            unless defined $key && defined $val;
+
+        my $coderef = eval $val;
+        param_error "Invalid escape: $val" if $@;
+
+        $ah->interp->set_escape( $key => $coderef );
+    }
 
     return $ah;
 }
@@ -420,7 +434,7 @@ sub _get_mason_params
     # Get all params starting with 'Mason'
     my %candidates;
 
-    foreach my $studly ( keys %$config )
+    foreach my $studly ( grep { $_ ne 'MasonSetEscape' } keys %$config )
     {
 	(my $calm = $studly) =~ s/^Mason// or next;
 	$calm = $self->calm_form($calm);
@@ -433,6 +447,14 @@ sub _get_mason_params
                        scalar $self->get_param( $_, \%vals, \%candidates, $r )
                    }
              keys %candidates );
+}
+
+sub _get_escape_params
+{
+    my $self = shift;
+    my $r = shift;
+
+    return $self->_get_list_param( 'MasonSetEscape', {}, $r );
 }
 
 sub get_param {
