@@ -124,17 +124,17 @@ sub new
 }
 
 # If we create a new exception from a Mason exception, just use the
-# error message, not the stringified exception. Otherwise exceptions
-# can get stringified more than once.
+# short error message, not the stringified exception. Otherwise
+# exceptions can get stringified more than once.
 sub throw
 {
     my ($class, %params) = @_;
 
     if (HTML::Mason::Exceptions::isa_mason_exception($params{error})) {
-	$params{error} = $params{error}->full_message;
+	$params{error} = $params{error}->error;
     }
     if (HTML::Mason::Exceptions::isa_mason_exception($params{message})) {
-	$params{message} = $params{message}->full_message;
+	$params{message} = $params{message}->error;
     }
     $class->SUPER::throw(%params);
 }
