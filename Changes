@@ -5,6 +5,26 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+0.86  Thu May 18 10:54:58 PDT 2000
+
+- Fixed multiple-<%perl>-section infinite loop bug introduced in 0.85.
+- (Re-)Fixed Apache hang on POST not-found bug.
+- Added $m->scall_method, analagous to $m->scomp. (suggested by Michael Shulman)
+- When using mod_perl args method, $r is upgraded to Apache::Request object.
+(suggested by Matt Hoskins)
+- Documented attr, methods, and flags in Component.pod.
+- Improved error msg for <%def> or <%method> lacking name.
+- Improved error msg for using invalid embedded tag in def or
+method. (submitted by Dave Rolsky)
+- Eliminated reliance on hash ordering in tests.
+- Changed test scripts to create separate data dirs for each test
+branch and clear data dir at start of test.
+- Added mixed case and repeated sections to <%perl> tests.
+- ** Removed mod_perl specific $m->http_input; can no longer be
+supported.
+- Fixed args processing loop to allow multiple file
+uploads. (submitted by Matt Hoskins)
+
 0.85  Sun May  7 23:37:18 PDT 2000
 
 - Added object-oriented primitives to components. Components can
