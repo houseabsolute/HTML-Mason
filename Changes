@@ -10,7 +10,7 @@ available at http://www.masonhq.com/code/history.html.
 [ ENHANCEMENTS ]
 
 - Comments are now allowed on separate lines inside <%attr> and
-<%flags> blocks.
+<%flags> blocks.  Task id #475.
 
 [ BUG FIXES ]
 
