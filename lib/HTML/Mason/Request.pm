@@ -56,7 +56,8 @@ BEGIN
     __PACKAGE__->contained_objects
 	(
 	 buffer     => { class => 'HTML::Mason::Buffer',
-			 delayed => 1 },
+			 delayed => 1,
+			 descr => "This class receives component output and dispatches it appropriately" },
 	);
 }
 
