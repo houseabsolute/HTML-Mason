@@ -628,6 +628,9 @@ valid flags are
 The developer can override default escape flags on a per-expression
 basis; see DEVEL<escaping expressions>.
 
+If you want to set I<multiple> flags as the default, this should be
+given as a reference to an array of flags.
+
 =item lexer
 
 The Lexer object to associate with this Compiler. By default a new
