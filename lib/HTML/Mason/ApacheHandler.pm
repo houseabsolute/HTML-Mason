@@ -74,7 +74,10 @@ use HTML::Mason::Utils;
 use Apache::Status;
 use Apache::URI;
 
+# use() params. Assign defaults, in case ApacheHandler is only require'd.
 use vars qw($LOADED $ARGS_METHOD);
+$LOADED = 0;
+$ARGS_METHOD = '_cgi_args';
 
 my @used = ($HTML::Mason::IN_DEBUG_FILE);
 
@@ -516,10 +519,10 @@ sub handle_request_1
     }
 
     #
-    # Parse arguments. $ARGS_METHOD is set by the import subroutine
-    # (_cgi_args or _mod_perl_args).  When inside debug file, get
-    # arguments from special saved hash.  This circumvents POST
-    # content issues.
+    # Parse arguments. $ARGS_METHOD may be set by the import
+    # subroutine (_cgi_args or _mod_perl_args).  When inside debug
+    # file, get arguments from special saved hash.  This circumvents
+    # POST content issues.
     #
     my %args;
     if ($HTML::Mason::IN_DEBUG_FILE) {
