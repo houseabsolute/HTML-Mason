@@ -9,6 +9,31 @@ use Getopt::Long;
 my %opts;
 GetOptions( \%opts, 'no-prompts' );
 
+eval { require HTML::Mason };
+
+unless ($@)
+{
+    if ( $HTML::Mason::VERSION < 1.10 )
+    {
+	print <<"EOF";
+
+It looks like you have an older version of Mason already installed on
+your machine (version $HTML::Mason::VERSION).  This version is not backwards
+compatible with versions of Mason before version 1.09_01.
+Please read the UPGRADE document before continuing with this
+installation.
+
+EOF
+
+	unless ( $opts{'no-prompts'} )
+	{
+	    my $yn = prompt('Continue with installation?', 'N');
+
+	    exit unless $yn =~ /y(?:es)?/i;
+	}
+    }
+}
+
 setup_mod_perl_tests() unless $opts{'no-prompts'};
 #assisted_install_config() unless $opts{'no-prompts'};
 
