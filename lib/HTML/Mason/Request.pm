@@ -62,7 +62,7 @@ BEGIN
 			     callbacks => { "must be one of '1.0' or '1.1'" =>
 				sub { $_[0] eq '1.0' or $_[0] eq '1.1'; } },
                              descr => "Data cache API to use: 1.0 or 1.1" },
-	 data_cache_defaults => { type => HASHREF|UNDEF, optional => 1,
+	 data_cache_defaults => { parse => 'hash_list', type => HASHREF|UNDEF, optional => 1,
 				  descr => "A hash of default parameters for Cache::Cache" },
 	 declined_comps => { type => HASHREF, optional=>1,
 			     descr => "Hash of components that have been declined in previous parent requests",
