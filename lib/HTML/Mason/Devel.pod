@@ -409,6 +409,13 @@ Here's how a simple /newsfeeds/dhandler might look:
     return 404 if !$headline;                  # return "not found" if no such story
     </%init>
 
+By default dhandlers do not get a chance to handle requests to a
+directory itself (e.g. /newsfeeds). These are automatically deferred
+to Apache, which generates an index page or a FORBIDDEN error.  Often
+this is desirable, but if necessary the administrator can let in
+directory requests as well; see L<Admin/Allowing requests for
+directories>.
+
 The administrator can customize the file name used for dhandlers, or
 turn off dhandlers entirely, with the L<Interp/dhandler_name> Interp
 parameter.
