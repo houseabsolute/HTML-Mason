@@ -3,8 +3,8 @@ package HTML::Mason::Plugin;
 use strict;
 
 sub new {
-  my $class = shift;
-  bless { @_ }, $class;
+    my $class = shift;
+    bless { @_ }, $class;
 }
 
 sub start_request {
@@ -37,7 +37,7 @@ HTML::Mason::Plugin - Plugin Base class for Mason
 
 =head1 SYNOPIS
 
-   package HTML::Mason::Plugin::Timer;
+   package MasonX::Plugin::Timer;
    use base qw(HTML::Mason::Plugin);
    use Time::HiRes;
 
@@ -66,7 +66,7 @@ once for each request) or as an actual object of the plugin class.
 If your plugin can be configured, place the configuration in class
 variables - for example,
 
-    $HTML::Mason::Plugin::Timer::Units = 'seconds';
+    $MasonX::Plugin::Timer::Units = 'seconds';
 
 These can be set either from httpd.conf via PerlSetVar
 directives, or in perl directly from a handler.pl file.
@@ -88,10 +88,12 @@ The C<start_request> hook is called before the Mason request begins
 execution.  Its context has the following read-only methods:
 
     request # the current request
-    args    # arrayref of arguments the request was called with
+    args    # arguments the request was called with
 
-The hook may modify the arrayref given in I<request_args>, to change
-or add to the arguments passed to the first component.
+When called in scalar context, I<args> returns a list reference which
+may be modified to change or add to the arguments passed to the first
+component. When called in list context, I<args> returns a list (which
+may be assigned to a hash).
 
 Note that subrequests (see
 L<HTML::Mason::Request|HTML::Mason::Request> will create a new plugin
@@ -116,6 +118,10 @@ exits. Its context has the following read-only methods:
     wantarray   # value of wantarray the request was called with
     result      # arrayref of value(s) that the request is about to return
     error       # reference to error, if any, that the request is about to throw
+
+When called in scalar context, I<args> returns a list reference; when
+called in list context, it returns a list (which may be assigned to a
+hash).
 
 I<result> always contains an array ref; if I<wantarray> is 0, the
 return value is the the first element of that array. The plugin may

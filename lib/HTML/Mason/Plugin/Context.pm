@@ -7,7 +7,13 @@ package HTML::Mason::Plugin::Context::StartRequest;
 use base qw(HTML::Mason::Plugin::Context);
 
 sub request   { $_[0]->[0] }
-sub args      { $_[0]->[1] }
+sub args      {
+    if (wantarray) {
+	return @{$_[0]->[1]};
+    } else {
+	return $_[0]->[1];
+    }
+}
 
 #------------------------------------------------------------
 
@@ -15,7 +21,13 @@ package HTML::Mason::Plugin::Context::EndRequest;
 use base qw(HTML::Mason::Plugin::Context);
 
 sub request   { $_[0]->[0] }
-sub args      { $_[0]->[1] }
+sub args      {
+    if (wantarray) {
+	return @{$_[0]->[1]};
+    } else {
+	return $_[0]->[1];
+    }
+}
 sub output    { $_[0]->[2] }
 sub wantarray { $_[0]->[3] }
 sub result    { $_[0]->[4] }
