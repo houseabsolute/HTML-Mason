@@ -3,6 +3,7 @@
 use strict;
 
 use HTML::Mason::Tests;
+use HTML::Mason::Tools;
 
 # Skip if flock not implemented.
 eval { my $fh = do { local *FH; *FH; }; open $fh, $0; flock $fh,1; };
@@ -28,6 +29,31 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'cache',
 					 description => 'Test caching' );
 
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'cache_packages',
+		      description => 'test that Mason cache packages get created',
+		      component => <<'EOF',
+% my $cache;
+% $cache = $m->cache(cache_class=>'Cache::FileCache');
+<% ref($cache) %>
+<% $HTML::Mason::Cache::FileCache::VERSION + 0 %>
+<% HTML::Mason::Tools::pkg_loaded('HTML::Mason::Cache::FileCache') ? 'loaded' : 'not loaded' %>
+% $cache = $m->cache(cache_class=>'MemoryCache');
+<% ref($cache) %>
+<% $HTML::Mason::Cache::MemoryCache::VERSION + 0%>
+<% HTML::Mason::Tools::pkg_loaded('HTML::Mason::Cache::FileCache') ? 'loaded' : 'not loaded' %>
+EOF
+		      expect => <<'EOF',
+HTML::Mason::Cache::FileCache
+1
+loaded
+HTML::Mason::Cache::MemoryCache
+1
+loaded
+EOF
+		    );
 
 #------------------------------------------------------------
 
