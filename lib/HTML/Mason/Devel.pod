@@ -25,6 +25,10 @@ While Mason can be used for tasks besides implementing a dynamic web
 site, that is what I<most> people want to do with Mason, and is thus
 the focus of this manual.
 
+If you are planning to use Mason outside of the web, this manual will
+still be useful, of course.  Also make sure to read L<Admin/NON-WEB
+MASON> in the Administrator's Guide.
+
 =head1 HOW TO USE THIS MANUAL
 
 If you are just learning Mason and want to get started quickly, we
