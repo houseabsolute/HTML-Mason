@@ -1268,7 +1268,7 @@ defined will cause an error when executing that component.
 One possible use for this feature is to override the built-in HTML
 escaping's assumption of the ISO-8859-1 character set.  You could
 override the 'h' flag in a top-level autohandler or a
-ADIMN<handler.pl|"CONFIGURING VIA HANDLER SCRIPT"> script like this:
+ADMIN<handler.pl|"CONFIGURING VIA HANDLER SCRIPT"> script like this:
 
   $interp->set_escape( h => \&escape_ISO_8859_2 );
 
