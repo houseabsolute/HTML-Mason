@@ -73,7 +73,7 @@ sub error_process {
 		next if ($last && $last->{'line'} eq $linenum && defined $file && $last->{'file'} eq $file);
 	    }
 
-	    push @callstack, { "function" => $func || '', "file" => $file, "line" => $linenum };
+	    push @callstack, { "function" => $func || '', "file" => $file, "line" => $linenum || 0 };
 	}
 
 	# Sometimes the perl warnings span multiple lines. This should do the 
