@@ -220,7 +220,7 @@ sub parse_component
 
 	    if (defined($default)) {
 		$defaultClause = "$var = $default";
-                $defaultClause .= "\n" if ($default =~ /\#/);   # allow comments in default clause
+                $defaultClause .= "\n" if ($default =~ /\#/);   # allow comments following default
 	    } else {
 		$defaultClause = "die \"no value sent for required parameter '$name'\"";
 	    }

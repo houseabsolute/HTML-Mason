@@ -531,13 +531,13 @@ component, can be accessed in two ways.
 
 1.  Declared named arguments: Components can define a
 C<E<lt>%args%E<gt>> section listing argument names, types, and
-default values. For example:
+default values, with optional comments. For example:
 
     <%args>
-    $a
-    @b
+    $a       
+    @b       # a comment
     %c
-    $d=>5
+    $d=>5    # another comment
     @e=>('foo','baz')
     %f=>(joe=>1,bob=>2)
     </%args>
@@ -680,8 +680,9 @@ the end of blocks, <%cleanup> sections are rarely needed.
 xxx contains a list of argument declarations, one per line. Each
 declaration contains a type character ($, @, or %), a name, and
 optionally '=>' followed by a default value. The default value must be
-a valid Perl expression of matching type (scalar, list, hash).
-See L<Accessing Parameters> above for usage and examples.
+a valid Perl expression of matching type (scalar, list, hash).  Each
+declaration may end with a comment marked by '#'. See L<Accessing
+Parameters> above for usage and examples.
 
 =head2 E<lt>%onceE<gt>
 
