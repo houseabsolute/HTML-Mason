@@ -467,7 +467,7 @@ EOF
     if ($with_handler)
     {
 	# error_mode is fatal so we just get a 500
-	$response = Apache::test->fetch( "/ah=4/comps/die" );
+	$response = Apache::test->fetch( "/ah=3/comps/die" );
 	$actual = filter_response($response, $with_handler);
 	ok( $actual =~ m|500 Internal Server Error|,
 	    "die should have generated 500 error" );
