@@ -483,7 +483,7 @@ sub match_text
        )
     {
 	$self->{pos} = pos($comp);
-	
+
 	my $consumed = "$1$2";
 	return 0 unless length $consumed;
 
@@ -526,7 +526,7 @@ sub _next_line
 
     $pos = ( defined $pos ?
 	     $pos :
-	     ( substr( $self->{comp_text}, $self->{pos}, 1 ) =~ /\n/ ?
+	     ( substr( $self->{comp_text}, $self->{pos}, 1 ) eq "\n" ?
 	       $self->{pos} + 1 :
 	       $self->{pos} ) );
 
