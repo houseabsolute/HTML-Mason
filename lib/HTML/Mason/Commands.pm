@@ -16,24 +16,25 @@ use vars qw($REQ @ISA @EXPORT_OK @EXPORT);
  
 require Exporter;
 @ISA=qw(Exporter);
-@EXPORT=qw(
-	mc_abort
-        mc_auto_comp
-	mc_auto_next
-	mc_cache
-	mc_cache_self
-	mc_caller 
-	mc_comp
-	mc_comp_exists
-	mc_comp_source
-	mc_comp_stack
-	mc_date 
-	mc_file 
-	mc_file_root 
-	mc_filter_self
-	mc_out 
-	mc_time
-);
+@EXPORT = qw
+    (mc_abort
+     mc_auto_comp
+     mc_auto_next
+     mc_cache
+     mc_cache_self
+     mc_caller 
+     mc_comp
+     mc_comp_exists
+     mc_comp_source
+     mc_comp_stack
+     mc_date 
+     mc_dhandler_arg
+     mc_file 
+     mc_file_root 
+     mc_filter_self
+     mc_out 
+     mc_time
+     );
 
 @EXPORT_OK=@EXPORT;
 
@@ -207,7 +208,7 @@ sub mc_comp_create
 {
     check_request;
     my ($script) = @_;
-    return $REQ->parser->make_component(script=>$script, parent_path=>$REQ->parent_path);
+    return $REQ->parser->make_component(script=>$script, parent_path=>$REQ->comp->parent_path);
 }
 
 sub mc_comp_exists
@@ -277,6 +278,11 @@ sub mc_date ($)
 	$format =~ s/%(.)/$href->{$1}/g;
 	return $format;
     }
+}
+
+sub mc_dhandler_arg ()
+{
+    return $REQ->dhandler_arg;
 }
 
 sub mc_file ($)

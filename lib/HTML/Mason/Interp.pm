@@ -25,10 +25,12 @@ require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 my %fields =
     (alternate_sources => undef,
      allow_recursive_autohandlers => 0,
+     autohandler_name => 'autohandler',
      comp_root => undef,
      code_cache_mode => 'all',
      current_time => 'real',
      data_dir => undef,
+     dhandler_name => 'dhandler',
      system_log_file => undef,
      system_log_separator => "\cA",
      max_recurse => 16,
@@ -183,15 +185,6 @@ sub exec {
     # Check if reload file has changed.
     $self->check_reload_file if ($self->{use_reload_file});
     
-    # $comp can be an absolute path or component object.  If a path,
-    # load into object.
-    if (!ref($comp) && substr($comp,0,1) eq '/') {
-	my $path = $comp;
-	$comp = $self->load($path) or die "could not find component for path '$path'\n";
-    } elsif (ref($comp) !~ /Component/) {
-	die "exec: first argument ($comp) must be an absolute component path or a component object";
-    }
-
     # Create a new request, unless one has been passed in REQ option.
     my $req;
     if ($req = $args{REQ}) {
@@ -200,21 +193,34 @@ sub exec {
 	$req = new HTML::Mason::Request (interp=>$self);
     }
     
-    # Check for autohandler.
-    my $parent = $comp->parent_path;
-    my $autocomp;
-    if (!$self->{allow_recursive_autohandlers}) {
-	$autocomp = $self->load("$parent/autohandler");
-    } else {
-	while ($parent && !($autocomp = $self->load("$parent/autohandler"))) {
-	    my ($basename,$dirname) = fileparse($parent);
-	    $dirname =~ s/^\.//;    # certain versions leave ./ in $dirname
-	    $parent = substr($dirname,0,-1);
+    # $comp can be an absolute path or component object.  If a path,
+    # load into object.
+    if (!ref($comp) && substr($comp,0,1) eq '/') {
+	my $path = $comp;
+	if (!($comp = $self->load($path))) {
+	    if ($self->{dhandler_name} && $comp = $self->find_comp_upwards($path,$self->{dhandler_name})) {
+		my $parent = $comp->parent_path;
+		($req->{dhandler_arg} = $path) =~ s{^$parent/}{};
+	    }
 	}
+	die "could not find component for path '$path'\n" if !$comp;
+    } elsif (ref($comp) !~ /Component/) {
+	die "exec: first argument ($comp) must be an absolute component path or a component object";
     }
-    if (defined($autocomp)) {
-	$req->{autohandler_next} = [$comp,\%args];
-	$comp = $autocomp;
+
+    # Check for autohandler.
+    if ($self->{autohandler_name}) {
+	my $parent = $comp->parent_path;
+	my $autocomp;
+	if (!$self->{allow_recursive_autohandlers}) {
+	    $autocomp = $self->load("$parent/".$self->{autohandler_name});
+	} else {
+	    $autocomp = $self->find_comp_upwards($parent,$self->{autohandler_name});
+	}
+	if (defined($autocomp)) {
+	    $req->{autohandler_next} = [$comp,\%args];
+	    $comp = $autocomp;
+	}
     }
 
     # Call the first component.
@@ -470,6 +476,24 @@ sub push_files_written
     my $self = shift;
     my $fref = $self->{'files_written'};
     push(@$fref,@_);
+}
+
+#
+# Look for component <$name> starting in <$startpath> and moving upwards
+# to the root. Return component object or undef.
+#
+sub find_comp_upwards
+{
+    my ($self,$startpath,$name) = @_;
+
+    my $comp;
+    my $p = $startpath;
+    while (!($comp = $self->load("$p/$name")) && $p) {
+	my ($basename,$dirname) = fileparse($p);
+	$dirname =~ s/^\.//;    # certain versions leave ./ in $dirname
+	$p = substr($dirname,0,-1);
+    }
+    return $comp;
 }
 
 #

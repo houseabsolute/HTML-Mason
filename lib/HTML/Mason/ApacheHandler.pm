@@ -36,6 +36,7 @@ sub new
 	    die "HTML::Mason::Request::ApacheHandler::new: invalid option '$key'\n";
 	}
     }
+    return $self;
 }
 
 #
@@ -470,19 +471,13 @@ sub handle_request_1
     # Try to load the component; if not found, try dhandlers
     # ("default handlers"); otherwise return not found.
     #
-    my $comp;
+    my ($comp,$dhandlerArg);
     if (!($comp = $interp->load($compPath))) {
-	my $p = $compPath;
-	my $pathInfo = $r->path_info;
-	while (!($comp = $interp->load("$p/dhandler")) && $p) {
-	    my ($basename,$dirname) = fileparse($p);
-	    $dirname =~ s/^\.//;    # certain versions leave ./ in $dirname
-	    $pathInfo = "/$basename$pathInfo";
-	    $p = substr($dirname,0,-1);
-	}
-	if ($comp) {
-	    $compPath = "$p/dhandler";
+	if ($interp->dhandler_name && $comp = $interp->find_comp_upwards($compPath,$interp->dhandler_name)) {
+	    my $remainder = ($comp->parent_path eq '/') ? $compPath : substr($compPath,length($comp->parent_path));
+	    my $pathInfo = $remainder.$r->path_info;
 	    $r->path_info($pathInfo);
+	    $dhandlerArg = substr($pathInfo,1);
 	} else {
 	    $r->warn("Mason: no component corresponding to filename \"".$r->filename."\", comp path \"$compPath\"; returning 404.");
 	    return NOT_FOUND;
@@ -534,19 +529,21 @@ sub handle_request_1
     #
     # Create an Apache-specific request with additional slots.
     #
-    my $req = new HTML::Mason::Request::ApacheHandler
+    my $request = new HTML::Mason::Request::ApacheHandler
 	(ah=>$self,
 	 interp=>$interp,
 	 http_input=>$argString,
 	 apache_req=>$r
 	 );
 
+    $request->dhandler_arg($dhandlerArg) if (defined($dhandlerArg));
+
     #
     # Set up interpreter global variables.
     #
     $interp->set_global(r=>$r);
     
-    return $interp->exec($comp, REQ=>$req, %args);
+    return $interp->exec($comp, REQ=>$request, %args);
 }
 
 sub simulate_debug_request
@@ -584,12 +581,7 @@ sub http_header_sent
 # Apache-specific Mason commands
 #
 package HTML::Mason::Commands;
-sub mc_dhandler_arg ()
-{
-    my $r = $REQ->apache_req or die "mc_dhandler_arg: must be called in Apache environment";
-    return substr($r->path_info,1);
-}
-
+use vars qw($REQ);
 sub mc_suppress_http_header
 {
     my $interp = $REQ->interp;

@@ -80,7 +80,7 @@ sub send_fd
 }
 
 sub warn {
-    my ($self, $msg) = shift;
+    my ($self, $msg) = @_;
     print "warn: $msg\n";
 }
 

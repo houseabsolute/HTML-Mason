@@ -16,6 +16,7 @@ my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P);
 my %fields =
     (autohandler_next => undef,
      count => 0,
+     dhandler_arg => undef,
      interp => undef,
      stack => [],
      );
