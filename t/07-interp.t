@@ -259,7 +259,7 @@ EOF
     $group->add_test( name => 'max_recurse_1',
 		      description => 'Test that recursion 8 levels deep is allowed',
 		      component => <<'EOF',
-% eval { mc_comp('support/recurse_test', max=>8) };
+% eval { $m->comp('support/recurse_test', max=>8) };
 EOF
 		      expect => <<'EOF',
 Entering 0<p>
@@ -289,7 +289,7 @@ EOF
     $group->add_test( name => 'max_recurse_2',
 		      description => 'Test that recursion is stopped after 32 levels',
 		      component => <<'EOF',
-% eval { mc_comp('support/recurse_test', max=>48) };
+% eval { $m->comp('support/recurse_test', max=>48) };
 <& /shared/check_error, error=>$@ &>
 EOF
 		      expect => <<'EOF',
@@ -336,7 +336,7 @@ EOF
 		      description => 'Test interp max_recurse param',
 		      interp_params => { max_recurse => 50 },
 		      component => <<'EOF',
-% eval { mc_comp('support/recurse_test', max=>48) };
+% eval { $m->comp('support/recurse_test', max=>48) };
 <& /shared/check_error, error=>$@ &>
 EOF
 		      expect => <<'EOF',

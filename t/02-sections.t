@@ -463,7 +463,7 @@ EOF
     $group->add_test( name => 'omitted args',
 		      description => 'tests error message when expect args are not passed',
 		      component => <<'EOF',
-% eval { mc_comp('support/perl_args_test', b=>[17,82,16], c=>{britain=>3, spain=>1}) };
+% eval { $m->comp('support/perl_args_test', b=>[17,82,16], c=>{britain=>3, spain=>1}) };
 <& /shared/check_error, error=>$@ &>
 EOF
 		      expect => <<'EOF',
