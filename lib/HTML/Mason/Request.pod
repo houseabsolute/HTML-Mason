@@ -43,12 +43,16 @@ subcomponent takes precedence.
 
 =over
 
+=for html <a name="item_abort">
+
 =item abort ([return value])
 
 Ends the current request, finishing the page without returning
 through components. The optional argument specifies the return
 value from C<Interp::exec>; in a web environment, this ultimately
 becomes the HTTP status code.
+
+=for html <a name="item_cache">
 
 =item cache ([action=>'retrieve|store|expire|keys'], [key=>name],
 [value=>data], [keep_in_memory=>0|1], [expire options...])
@@ -147,6 +151,8 @@ return value in the cache and also outputs the content normally.
 Finally C<$m-E<gt>cache_self> returns the list (retval,1) which in turn
 causes foo to return immediately.
 
+=for html <a name="item_caller_args">
+
 =item caller_args
 
 Returns a list reference of the arguments passed by the component at
@@ -157,7 +163,7 @@ the specified stack level. e.g.
 
     my %top_args = @{$m->caller_args(-1)}    # get top-level arguments as a hash
 
-=for html <a name="callers">
+=for html <a name="item_callers">
 
 =item callers
 
@@ -170,6 +176,8 @@ component object at that index in the list. e.g.
     $m->callers(1)      # component that called us
     $m->callers(-1)     # top-level component
 
+=for html <a name="item_call_next">
+
 =item call_next ([args...])
 
 Calls the component intercepted by an autohandler.  With no arguments,
@@ -179,7 +187,8 @@ original arguments. Works like C<$m-E<gt>comp> in terms of return value and
 scalar/list context.  See the L<Devel/autohandlers> section of the
 I<Component Developer's Guide> for examples.
 
-=for html <a name="comp">
+=for html <a name="item_comp">
+
 =item comp (comp, option=>value, ...)
 
 Calls the component designated by I<comp> with the specified
@@ -192,20 +201,26 @@ then returned from the C<$m-E<gt>comp> call.
 
 The <& &> tag provides a convenient shortcut for C<$m-E<gt>comp>.
 
+=for html <a name="item_comp_exists">
+
 =item comp_exists (comp_path)
 
 Returns 1 if I<comp_path> is the path of an existing component, 0 otherwise. 
+
+=for html <a name="item_count">
 
 =item count
 
 Returns the number of this request, which is unique for a given
 request and interpreter.
 
-=for html <a name="current_comp">
+=for html <a name="item_current_comp">
 
 =item current_comp
 
 Returns the current component object.
+
+=for html <a name="item_decline">
 
 =item decline
 
@@ -215,10 +230,14 @@ up the tree. If no dhandler is available, an error occurs.
 This method bears no relation to the Apache DECLINED status
 except in name.
 
+=for html <a name="item_depth">
+
 =item depth
 
 Returns the current size of the component stack.  The lowest possible
 value is 1, which indicates we are in the top-level component.
+
+=for html <a name="item_dhandler_arg">
 
 =item dhandler_arg
 
@@ -226,18 +245,22 @@ If the request has been handled by a dhandler, this method returns the
 remainder of the URI or C<Interp::exec> path when the dhandler directory is
 removed.  Otherwise returns undef.
 
-=for html <a name="fetch_comp">
+=for html <a name="item_fetch_comp">
 
 =item fetch_comp (comp_path)
 
 Given a I<comp_path>, returns the corresponding component object or
 undef if no such component exists.
 
+=for html <a name="item_fetch_next">
+
 =item fetch_next
 
 Returns the component object intercepted by an autohandler.  See the
 L<Devel/autohandlers> section of the I<Component Developer's Guide>
 for usage and examples.
+
+=for html <a name="item_file">
 
 =item file (filename)
 
@@ -246,10 +269,14 @@ absolute filesystem path (starting with a '/') or relative (no leading
 '/'). If relative, Mason prepends the static file root, or the current
 component directory if no static file root is defined.
 
+=for html <a name="item_file_root">
+
 =item file_root
 
 Returns the static file root, used by C<$m-E<gt>file> to resolve relative
 filenames.
+
+=for html <a name="item_flush_buffer">
 
 =item flush_buffer
 
@@ -258,9 +285,13 @@ headers if they haven't been sent and calls $r->rflush to flush the
 Apache buffer. Flushing the initial bytes of output can make your
 servers appear more responsive.
 
+=for html <a name="item_interp">
+
 =item interp
 
 Returns the Interp object associated with this request.
+
+=for html <a name="item_out">
 
 =item out (string)
 
@@ -272,19 +303,27 @@ C<$m-E<gt>out> should be used instead of C<print> or C<$r-E<gt>print>,
 since C<$m-E<gt>out> may be redirected or buffered depending on the
 current state of the interpreter.
 
+=for html <a name="item_parser">
+
 =item parser
 
 Returns the Parser object associated with this request.
 
+=for html <a name="item_process_comp_path">
+
 =item process_comp_path (comp_path)
 
 Given a I<comp_path>, returns the corresponding absolute component path.
+
+=for html <a name="item_scomp">
 
 =item scomp
 
 Like C<$m-E<gt>comp>, but returns the component output as a string
 instead of printing it. (Think sprintf versus printf.) The
 component's return value is discarded.
+
+=for html <a name="item_time">
 
 =item time
 
@@ -304,9 +343,13 @@ and the ApacheHandler.
 
 =over
 
+=for html <a name="item_ah">
+
 =item ah
 
 Returns the ApacheHandler object associated with this request.
+
+=for html <a name="item_http_input">
 
 =item http_input
 
@@ -315,6 +358,8 @@ string, and for POST, the content block read from the client. Because
 $r->content can only be called once and is automatically called by
 Mason, it cannot be called directly inside components; this method is
 a good way to get at the value of $r->content.
+
+=for html <a name="item_apache_req">
 
 =item apache_req
 
