@@ -1023,6 +1023,18 @@ object.  For example:
 
     $req->exec;
 
+=item request_args ($r)
+
+Given an Apache request object, this method returns a three item list.
+The first item, is a hash reference containing the arguments passed by
+the client's request.
+
+The second is an Apache request object, possibly the one originally
+passed to the method.
+
+The third item may be a CGI.pm object or C<undef>, depending on the
+value of the "args_method" parameter for the ApacheHandler object.
+
 =back
 
 =head1 SEE ALSO
