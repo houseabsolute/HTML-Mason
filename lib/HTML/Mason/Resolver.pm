@@ -57,3 +57,128 @@ sub _virtual
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::Resolver - base class for component path resolvers
+
+=head1 SYNOPSIS
+
+  # make a subclass and use it
+
+=head1 DESCRIPTION
+
+The resolver is responsible for translating a component path like
+/foo/index.html into a component.  By default, Mason expects
+components to be stored on the filesystem, and uses the
+HTML::Mason::Resolver::File class to get information on these
+components.
+
+The HTML::Mason::Resolver provides a virtual parent class from which
+all resolver implementations should inherit.
+
+=head1 HTML::Mason::Container
+
+This class is used by most of the Mason object's to manage constructor
+parameters and has-a relationships with other objects.
+
+See the documentation on this class for details on how to declare what
+paremeters are valid for your subclass's constructor.
+
+HTML::Mason::Resolver is a subclass of HTML::Mason::Container so you
+do not need to subclass it yourself.
+
+=head1 METHODS
+
+If you are interested in creating a resolver subclass, you must
+implement the following methods.
+
+=over 4
+
+=item new
+
+This method is optional.  The new method included in this class does
+the following:
+
+  sub new
+  {
+      my $class = shift;
+      return bless {validate(@_, $class->validation_spec)}, $class;
+  }
+
+If you need something more complicated done in your new method you
+will need to override it in your subclass.
+
+=item get_info
+
+Give a component path, this method is expected to return a hash with
+the following keys.
+
+=over 4
+
+=item * url_path
+
+This is the same as incoming path parameter.
+
+=item * last_modified
+
+This is the last modificatoin time for the component, in Unix time
+(seconds since the epoch).
+
+=item * fq_path
+
+This is a unique id for the component used to distinguish two
+components with the same name in different component
+roots.
+
+If your resolver does not support multiple component roots, this can
+simply be the same as the "url_path" key or it can be any other id you
+wish.
+
+This value will be used when constructing filesystem paths so it needs
+to be something that works on different filesystems.
+
+=back
+
+This method may also return any other keys it wishes.  These keys will
+be passed to the component class's constructor.  This can be handy if
+you are using a custom component class in addition to a custom
+resolver.
+
+=item get_source
+
+This method should expect to receive the hash returned by the
+C<get_info> method.
+
+It should return a single scalar containing the source of the
+component.
+
+=item resolve
+
+This method should expect to receive a single argument, a component
+path, just like the C<get_info> method.  It should return a hash
+containing all of the information returned by the C<get_info> method,
+in addition to a key called "comp_text" which should contain the
+component source.
+
+=item glob_path
+
+The only argument to this method is a path glob pattern, something
+like "/foo/*" or "/foo/*/bar".  Given this path, it should return a
+list of component paths for components which match this glob pattern.
+
+For example, the filesystem resolver simply appends this pattern to
+each component root in turn and calls the Perl C<glob()> function to
+find matching files on the filesystem.
+
+=item comp_class
+
+This method needs to return the class that component objects should
+use.  If you do not want to create a custom component class, you can
+simply use "HTML::Mason::Component".
+
+=back
+
+=cut
