@@ -103,6 +103,10 @@ sub exec
     my $r = $self->apache_req;
     my $retval;
 
+    no strict 'refs';
+    local $HTML::Mason::ApacheHandler::OrigApachePrint = $HTML::Mason::ApacheHandler::OrigApachePrint || \&{"$ap_req_class\::print"};
+    use strict 'refs';
+    
     {
 	# Remap $r->print to Mason's $m->print while executing request
 	no strict 'refs';
@@ -766,7 +770,7 @@ sub prepare_request
     my $print;
     {
 	no strict 'refs';
-	$print = \&{"$ap_req_class\::print"};
+	$print = $HTML::Mason::ApacheHandler::OrigApachePrint || \&{"$ap_req_class\::print"};
     }
 
     # If someone is using a custom request class that doesn't accept
