@@ -581,7 +581,7 @@ to take effect.
 If for some reason you don't want Mason to create object files, set
 the L<Interp/use_object_files> Interp parameter to 0.
 
-=head2 Fixed source mode
+=head2 Static source mode
 
 As described above, Mason checks the timestamp of a component source
 file every time that component is called. This can add up to a lot

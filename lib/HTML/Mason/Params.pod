@@ -263,7 +263,7 @@ Type:               boolean
 
 Default:            0
 
-Name in httpd.conf: FixedSource
+Name in httpd.conf: StaticSource
 
 Belongs to:         HTML::Mason::Interp
 
