@@ -372,7 +372,7 @@ Here's how a simple /newsfeeds/dhandler might look:
     </%init>
 
 You can customize the file name used for dhandlers, or turn off
-autohandlers entirely, with the L<Interp/dhandler_name> Interp
+dhandlers entirely, with the L<Interp/dhandler_name> Interp
 parameter.
 
 =head2 autohandlers
