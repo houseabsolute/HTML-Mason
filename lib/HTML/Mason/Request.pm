@@ -1150,6 +1150,13 @@ sub clear_buffer
     }
 }
 
+sub _clear_all_buffers
+{
+    my $self = shift;
+
+    $_->clear for $self->buffer_stack;
+}
+
 sub flush_buffer
 {
     my $self = shift;

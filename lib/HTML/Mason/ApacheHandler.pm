@@ -181,7 +181,7 @@ sub redirect
     my ($self, $url, $status) = @_;
     my $r = $self->apache_req;
 
-    $self->clear_buffer;
+    $self->_clear_all_buffers;
     $r->method('GET');
     $r->headers_in->unset('Content-length');
     $r->err_header_out( Location => $url );
