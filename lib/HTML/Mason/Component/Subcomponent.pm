@@ -35,4 +35,20 @@ sub path { return $_[0]->owner->path . ":" . $_[0]->name }
 sub persistent { return $_[0]->owner->persistent }
 sub title { return $_[0]->owner->title . ":" . $_[0]->name }
 
+# This method is a bit of a hack but it works ;)
+#
+# Basically, we check if there is a method of the same name in our
+# owner, and to be extra careful, we make sure that that method is
+# actually $self (the same object) in case some wacko defines a method
+# and a subcomp with the same name, in the same component, which is
+# dumb but legal.
+sub is_method
+{
+    my $self = shift;
+
+    my $m = $self->owner->methods( $self->name );
+
+    return $m && $m eq $self;
+}
+
 1;
