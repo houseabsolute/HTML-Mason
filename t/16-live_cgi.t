@@ -29,17 +29,12 @@ require File::Spec->catfile( 't', 'live_server_lib.pl' );
 use Apache::test qw(skip_test have_httpd have_module);
 skip_test unless have_httpd;
 
-local $| = 1;
-
 kill_httpd(1);
 test_load_apache();
 
 plan(tests => 7);
 
-print STDERR "\n";
-
 write_test_comps();
-
 run_tests();
 
 sub write_test_comps
