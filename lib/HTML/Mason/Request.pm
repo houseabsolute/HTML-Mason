@@ -109,9 +109,6 @@ sub exec {
     my ($self, $comp, @args) = @_;
     my $interp = $self->interp;
 
-    # Error may occur in several places in function.
-    my $err;
-
     # Check if reload file has changed.
     $interp->check_reload_file if ($interp->use_reload_file);
 
@@ -128,7 +125,7 @@ sub exec {
 	{
 	    local $SIG{'__DIE__'} = $interp->die_handler if $interp->die_handler;
 	    eval { $comp = $interp->load($path) };
-	    if ($err = $@) {
+	    if (my $err = $@) {
 		UNIVERSAL::can( $err, 'rethrow' ) ? $err->rethrow : error($err);
 	    }
 	}
@@ -147,6 +144,9 @@ sub exec {
     }
 
     my ($result, @result);
+
+    # Error may occur when calling component
+    my $err;
 
     # This block repeats only if $m->decline is called in a component
     my $declined;
@@ -201,7 +201,7 @@ sub exec {
     # If a non-abort error occurred, just rethrow it.
     if ($err and !$self->aborted) {
 	$self->pop_buffer_stack;
-	die $err;
+	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
     }
 
     # Flush output buffer for batch mode.
@@ -612,11 +612,13 @@ sub comp {
     # Finally, call component subroutine.
     #
     my ($result, @result);
-    if (wantarray) {
-	@result = $self->_run_comp(wantarray, $comp, @args);
-    } else {
-	$result = $self->_run_comp(wantarray, $comp, @args);
-    }
+    eval {
+	if (wantarray) {
+	    @result = $self->_run_comp(wantarray, $comp, @args);
+	} else {
+	    $result = $self->_run_comp(wantarray, $comp, @args);
+	}
+    };
 
     #
     # If an error occurred, pop stack and pass error down to next level.
@@ -624,10 +626,12 @@ sub comp {
     # been done higher up.
     #
     if (my $err = $@) {
+	untie *STDOUT if $self->depth == 1; # it was tied in _run_comp
+
 	# any unflushed output is at $self->top_buffer->output
 	$self->pop_stack;
 	$self->pop_buffer_stack;
-	die $err;
+	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
     }
 
     #
@@ -643,7 +647,19 @@ sub comp {
     return wantarray ? @result : $result;  # Will return undef in void context (correct)
 }
 
-sub _run_comp
+#
+# Why _run_comp and _run_comp2 as aliases here?  Well,
+# HTML::Mason::Request::ApacheHandler actually override _run_comp to
+# do some extra prep work before running the component.  But outside
+# of the ApacheHandler world there is no need to have these be
+# separate methods.
+#
+# The alias is simply a slight performance tweak over having _run_comp
+# just call _run_comp2.
+#
+# Better sub names welcome!
+#
+sub _run_comp2
 {
     my ($self, $wantarray, $comp, @args) = @_;
 
@@ -653,11 +669,11 @@ sub _run_comp
 
     my ($result, @result);
     if ($wantarray) {
-	@result = eval { $comp->run(@args) };
+	@result = $comp->run(@args);
     } elsif (defined $wantarray) {
-	$result = eval { $comp->run(@args) };
+	$result = $comp->run(@args);
     } else {
-	eval { $comp->run(@args) };
+	$comp->run(@args);
     }
 
     if ($self->depth == 1) {
@@ -666,6 +682,7 @@ sub _run_comp
 
     return wantarray ? @result : $result;
 }
+*_run_comp = \&_run_comp2;
 
 
 #
@@ -694,7 +711,7 @@ sub content {
 
     $self->push_stack($old_frame);
 
-    die $err if $err;
+    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
 
     return $buffer->output;
 }

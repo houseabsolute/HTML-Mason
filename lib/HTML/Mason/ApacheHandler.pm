@@ -83,24 +83,7 @@ sub _run_comp
     local *Apache::print = sub { shift; local *Apache::print = $apache_print; $self->out(@_) };
     $^W = $w;
 
-    if ($self->depth == 1) {
-	tie *STDOUT, 'Tie::Handle::Mason', $self;
-    }
-
-    my ($result, @result);
-    if ($wantarray) {
-	@result = eval { $comp->run(@args) };
-    } elsif (defined $wantarray) {
-	$result = eval { $comp->run(@args) };
-    } else {
-	eval { $comp->run(@args) };
-    }
-
-    if ($self->depth == 1) {
-	untie *STDOUT;
-    }
-
-    return wantarray ? @result : $result;
+    return $self->_run_comp2(@_);
 }
 
 #----------------------------------------------------------------------
