@@ -531,9 +531,9 @@ else.  It is included (commented out) in the default C<handler.pl>.
 Another way is specifying a filename pattern in the Apache
 configuration, e.g.:
 
-    <FilesMatch "(\.html|\.txt|^[^\.]+)$>
-    SetHandler perl-script
-    PerlHandler HTML::Mason
+    <FilesMatch "(\.html|\.txt|^[^\.]+)$">
+     SetHandler perl-script
+     PerlHandler HTML::Mason
     </FilesMatch>
 
 This directs Mason to handle only files with .html, .txt, or no extension.
