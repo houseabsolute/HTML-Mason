@@ -123,18 +123,18 @@ It is impossible to know which one of these to subclass at compile
 time, since it is possible that your subclass will be loaded before
 either ApacheHandler or CGIHandler.
 
-To handle this, simply call the C<new_super()> method in your
+To handle this, simply call the C<new_superclass()> method in your
 constructor, like this:
 
   sub new
   {
       my $class = shift;
 
-      $class->new_super( $HTML::Mason::ApacheHandler::VERSION ?
-                         'HTML::Mason::Request::ApacheHandler' :
-                         $HTML::Mason::CGIHandler::VERSION ?
-                         'HTML::Mason::Request::CGI' :
-                         'HTML::Mason::Request' );
+      $class->new_superclass( $HTML::Mason::ApacheHandler::VERSION ?
+                              'HTML::Mason::Request::ApacheHandler' :
+                              $HTML::Mason::CGIHandler::VERSION ?
+                              'HTML::Mason::Request::CGI' :
+                              'HTML::Mason::Request' );
 
       my $self = $class->SUPER::new(@_);
 
@@ -144,11 +144,12 @@ constructor, like this:
   }
 
 It is quite important that you do this as these handler-specific
-subclasses provide important functionality.  The C<new_super()> method
-is implemented in the L<C<HTML::Mason::Request>|HTML::Mason::Request>
-base class, and will do the right thing even in cases of multiple
-inheritance.  It also cooperates with C<Class::Container> to make sure
-that it sees changes to the inheritance hierarchy.
+subclasses provide important functionality.  The C<new_superclass()>
+method is implemented in the
+L<C<HTML::Mason::Request>|HTML::Mason::Request> base class, and will
+do the right thing even in cases of multiple inheritance.  It also
+cooperates with C<Class::Container> to make sure that it sees changes
+to the inheritance hierarchy.
 
 =head2 The exec() method
 
