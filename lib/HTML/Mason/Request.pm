@@ -272,6 +272,17 @@ sub cache_self
 #
 sub call { shift->comp(@_) }
 
+sub call_dynamic {
+    my ($m, $key, @args) = @_;
+    my $comp = ($m->current_comp->is_subcomp) ? $m->current_comp->owner : $m->current_comp;
+    if (!defined($comp->{dynamic_subs_request}) or $comp->{dynamic_subs_request} ne $m) {
+	$comp->{dynamic_subs_hash} = $comp->{dynamic_subs_init}->();
+	$comp->{dynamic_subs_request} = $m;
+    }
+    my $sub = $comp->{dynamic_subs_hash}->{$key} or die "call_dynamic: assert error - could not find code for key $key in component ".$comp->title;
+    return $sub->(@args);
+}
+
 sub call_next {
     my ($self,@extra_args) = @_;
     my $comp = shift(@{$self->{wrapper_chain}}) or die "call_next: no next component to invoke";
