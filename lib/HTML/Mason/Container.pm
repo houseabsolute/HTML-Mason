@@ -117,9 +117,6 @@ sub allowed_params
 	}
     }
 
-    # this is also broken.  contained_objects returns defaults, which
-    # could end up being different from what should be created.  Plus
-    # it has to load them.  Ugh, my head hurts.
     my %p = ( %{ $class->validation_spec },
 	      map { eval "use $_";
 		    die $@ if $@;
