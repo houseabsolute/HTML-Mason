@@ -212,9 +212,9 @@ HTML::Mason::CGIHandler - Use Mason in a CGI environment
 In httpd.conf or .htaccess:
 
    Action html-mason /cgi-bin/mason_handler.cgi
-   <FilesMatch "\.html$">
+   <LocationMatch "\.html$">
     SetHandler html-mason
-   </FilesMatch>
+   </LocationMatch>
 
 A script at /cgi-bin/mason_handler.pl :
 
