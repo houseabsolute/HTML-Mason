@@ -4,6 +4,14 @@ use strict;
 
 BEGIN
 {
+    # Cwd in taint mode spits out weird errors with older Perls and
+    # may or may not work at all
+    if ( $] < 5.006 )
+    {
+        print "1..0\n";
+        exit;
+    }
+
     $ENV{PATH} = '';
 
     my $libs = 'use lib qw( ';
