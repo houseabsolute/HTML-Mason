@@ -668,8 +668,8 @@ sub eval_object_text
 	# around in object internals but since there is no longer a
 	# parser_version method in Component.pm there is no other way.
 	# Only pre-1.10 components have parser_version set.
-	HTML::Mason::Exception::Compilation::IncompatibleCompiler->throw( error => 'This object file was created by a pre-0.7 parser.  Please remove the component files in your object directory.' )
-	    if ref $comp && ( ref $comp eq 'CODE' || exists $comp->{parser_version} );
+	HTML::Mason::Exception::Compilation::IncompatibleCompiler->throw( error => 'This object file was created by a pre-1.10 parser.  Please remove the component files in your object directory.' )
+	    if ref $comp && exists $comp->{parser_version};
 
 	HTML::Mason::Exception::Compilation::IncompatibleCompiler->throw( error => 'This object file was created by an incompatible Compiler or Lexer.  Please remove the component files in your object directory.' )
 	    if UNIVERSAL::can( $comp, 'compiler_id' ) && $comp->compiler_id ne $self->compiler->object_id;
