@@ -249,7 +249,7 @@ sub text
 
     $p{text} =~ s,(['\\]),\\$1,g;
 
-    $self->_add_body_code( "\$_out->( '$p{text}' );\n" ) if $p{text} ne '';
+    $self->_add_body_code( "\$m->print( '$p{text}' );\n" ) if $p{text} ne '';
 }
 
 sub text_block
@@ -353,7 +353,7 @@ sub substitution
 	$text = "\$_escape->( $text, $flags )";
     }
 
-    my $code = "\$_out->( $text );\n";
+    my $code = "\$m->print( $text );\n";
 
     $self->postprocess_perl->(\$code) if $self->postprocess_perl;
 
@@ -390,7 +390,7 @@ sub component_content_call
     for ($call) { s/^\s+//; s/\s+$//; }
     push @{ $self->{comp_with_content_stack} }, $call;
 
-    my $code = "\$m->comp( { content => sub {\nmy \$_out = \$m->current_sink;\n";
+    my $code = "\$m->comp( { content => sub {\n";
 
     $self->postprocess_perl->(\$code) if $self->postprocess_perl;
 

@@ -240,7 +240,6 @@ EOF
 		      "my \%ARGS;\n",
 		      @args,
 		      $self->_filter_code,
-		      "my \$_out = \$m->current_sink;\n",
 		      "\$m->debug_hook( \$m->current_comp->path ) if ( \%DB:: );\n\n",
 		      $self->_blocks('init'),
 		      $self->{current_comp}{body},
