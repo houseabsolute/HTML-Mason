@@ -163,8 +163,6 @@ sub _init_comp_data
     my $self = shift;
     my $data = shift;
 
-    $data->{dangling_print} = 0;
-
     $data->{body} = '';
 
     foreach ( qw( def method ) )
@@ -188,8 +186,6 @@ sub end_component
 
     $self->lexer->throw_syntax_error("Not enough component-with-content ending tags found")
 	if @{ $self->{comp_with_content_stack} };
-
-    $self->_close_dangling_print;
 
     $self->{current_comp} = undef;
 }
@@ -234,8 +230,6 @@ sub perl_block
     my $self = shift;
     my %p = @_;
 
-    $self->_close_dangling_print;
-
     $self->_add_body_code( $p{block} );
 }
 
@@ -265,13 +259,9 @@ sub text
 
     $p{text} =~ s,(['\\]),\\$1,g;
 
-    my $code;
-    $code = '$m->print( ' unless $self->{current_comp}{dangling_print};
-    $code .= "( '$p{text}' ),";
+    my $code = "\$m->print( '$p{text}' );\n";
 
     $self->_add_body_code($code);
-
-    $self->{current_comp}{dangling_print} = 1;
 }
 
 sub text_block
@@ -344,8 +334,6 @@ sub end_named_block
 {
     my $self = shift;
 
-    $self->_close_dangling_print;
-
     $self->{in_main}++;
 
     $self->{current_comp} = $self;
@@ -377,16 +365,12 @@ sub substitution
 	$text = "\$_escape->( $text, $flags )";
     }
 
-    my $code;
-    $code = '$m->print( ' unless $self->{current_comp}{dangling_print};
-    $code .= "( $text ),";
+    my $code = "\$m->print( $text );\n";
 
     eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
     compiler_error $@ if $@;
 
     $self->_add_body_code($code);
-
-    $self->{current_comp}{dangling_print} = 1;
 }
 
 sub component_call
@@ -408,8 +392,6 @@ sub component_call
     eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
     compiler_error $@ if $@;
 
-    $self->_close_dangling_print;
-
     $self->_add_body_code($code);
 }
 
@@ -426,8 +408,6 @@ sub component_content_call
 
     eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
     compiler_error $@ if $@;
-
-    $self->_close_dangling_print;
 
     $self->_add_body_code($code);
 }
@@ -454,8 +434,6 @@ sub component_content_call_end
     eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
     compiler_error $@ if $@;
 
-    $self->_close_dangling_print;
-
     $self->_add_body_code($code);
 }
 
@@ -469,20 +447,7 @@ sub perl_line
     eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
     compiler_error $@ if $@;
 
-    $self->_close_dangling_print;
-
     $self->_add_body_code($code);
-}
-
-sub _close_dangling_print
-{
-    my $self = shift;
-
-    return unless $self->{current_comp}{dangling_print};
-
-    $self->{current_comp}{body} .= " );\n";
-
-    $self->{current_comp}{dangling_print} = 0;
 }
 
 sub _add_body_code
@@ -490,13 +455,12 @@ sub _add_body_code
     my $self = shift;
     my $code = shift;
 
-    my $comment = $self->{current_comp}{dangling_print} ? "\n" : '';
-
+    my $comment;
     if ( $self->lexer->line_number )
     {
 	my $line = $self->lexer->line_number;
 	my $file = $self->lexer->name;
-	$comment .= "#line $line $file\n";
+	$comment = "#line $line $file\n";
     }
 
     $self->{current_comp}{body} .= "$comment$code";
