@@ -368,7 +368,7 @@ EOF
     {
 	my $error =
 	    $] >= 5.007003 ? qr/Global symbol "\$r"/ :
-		qr/Might be a runaway multi-line <> string/;
+		qr/Attempt to eval code took longer/;
 
 	$group->add_test( name => 'infinite_loop',
 			  description => 'this code hangs when Interp.pm attempts to eval it.',
