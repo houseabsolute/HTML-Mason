@@ -1,7 +1,0 @@
-amper_test.<p>
-% if (%ARGS) {
-Arguments:<p>
-% while ((my ($key,$val)) = each(%ARGS)) {
-<b><% $key %></b>: <% $val %><br>
-% }
-% }

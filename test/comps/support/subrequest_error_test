@@ -1,2 +1,0 @@
-<& display_req_obj &>
-% die "whoops!";

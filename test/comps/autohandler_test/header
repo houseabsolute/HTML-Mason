@@ -1,6 +1,0 @@
-<body bgcolor=<% $bgcolor %>>
-<h2>The Site</h2>
-
-<%args>
-$bgcolor=>'white'
-</%args>

@@ -1,8 +1,0 @@
-Hello World! var = <% $var %>
-<%init>
-return if mc_cache_self(key=>'fandango');
-</%init>
-<%args>
-$var
-</%args>
-
