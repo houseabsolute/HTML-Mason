@@ -1052,6 +1052,17 @@ Example of usage:
 
     $m->comp($anon_comp);
 
+=for html <a name="item_make_request"></a>
+
+=item make_request (@request_params)
+
+This method creates a Mason request object. The arguments to be passed
+are the same as those for the C<< HTML::Mason::Request->new >>
+constructor or its relevant subclass. This method will likely only be
+of interest to those attempting to write new handlers or to subclass
+C<HTML::Mason::Interp>.  If you want to create a I<subrequest>, see
+L<subrequests|HTML::Mason::Devel/Subrequests> instead.
+
 =for html <a name="item_set_global"></a>
 
 =item set_global ($varname, [values...])
