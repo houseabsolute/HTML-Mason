@@ -544,14 +544,13 @@ EOF
 			  description => 'test turning off strict in a component',
                           interp_params => { use_strict => 0 },
 			  component => <<'EOF',
-$a is <% $a %>
+no errors
 <%init>
-$x = 'a';
-$$x = 1;
+$x = 1;
 </%init>
 EOF
                           expect => <<'EOF',
-$a is 1
+no errors
 EOF
                         );
 
