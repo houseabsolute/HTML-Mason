@@ -75,7 +75,7 @@ use HTML::Mason::MethodMaker
 			 interp
 			 parent_request
 			 request_depth
-			 top_comp ) ],
+			 request_comp ) ],
 
       read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
                       @read_write_params ]
@@ -99,10 +99,10 @@ sub new
 		      wrapper_chain => undef,
 		      wrapper_index => undef,
 		     }, $class;
-    $self->{top_comp} = delete($self->{comp});
-    $self->{top_args} = delete($self->{args});
-    if (UNIVERSAL::isa($self->{top_args}, 'HASH')) {
-	$self->{top_args} = [%{$self->{top_args}}];
+    $self->{request_comp} = delete($self->{comp});
+    $self->{request_args} = delete($self->{args});
+    if (UNIVERSAL::isa($self->{request_args}, 'HASH')) {
+	$self->{request_args} = [%{$self->{request_args}}];
     }
     $self->{count} = ++$self->{interp}{request_count};
     $self->_initialize;
@@ -133,31 +133,31 @@ sub _initialize {
 	$self->{buffer_stack} = [];
 	$self->{stack} = [];
 
-	# top_comp can be an absolute path or component object.  If a path,
+	# request_comp can be an absolute path or component object.  If a path,
 	# load into object.
-	my $top_comp = $self->{top_comp};
+	my $request_comp = $self->{request_comp};
 	my ($path);
-	if (!ref($top_comp)) {
-	    $top_comp =~ s{/+}{/}g;
-	    $self->{top_path} = $path = $top_comp;
+	if (!ref($request_comp)) {
+	    $request_comp =~ s{/+}{/}g;
+	    $self->{top_path} = $path = $request_comp;
 
 	    search: {
-		$top_comp = $self->interp->load($path);
+		$request_comp = $self->interp->load($path);
 
 		# If path was not found, check for dhandler.
-		unless ($top_comp) {
-		    if ( $top_comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
-			my $parent_path = $top_comp->dir_path;
+		unless ($request_comp) {
+		    if ( $request_comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
+			my $parent_path = $request_comp->dir_path;
 			($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
 		    }
 		}
 
 		# If the component was declined previously in this request,
 		# look for the next dhandler up the tree.
-		if ($top_comp and $self->{declined_comps}->{$top_comp->comp_id}) {
-		    $path = $top_comp->dir_path;
-		    unless ($path eq '/' and $top_comp->name eq $interp->dhandler_name) {
-			if ($top_comp->name eq $interp->dhandler_name) {
+		if ($request_comp and $self->{declined_comps}->{$request_comp->comp_id}) {
+		    $path = $request_comp->dir_path;
+		    unless ($path eq '/' and $request_comp->name eq $interp->dhandler_name) {
+			if ($request_comp->name eq $interp->dhandler_name) {
 			    $path =~ s/\/[^\/]+$//;
 			}
 		    }
@@ -165,12 +165,12 @@ sub _initialize {
 		}
 	    }
 
-	    unless ($self->{top_comp} = $top_comp) {
+	    unless ($self->{request_comp} = $request_comp) {
 		top_level_not_found_error "could not find component for initial path '$self->{top_path}'\n";
 	    }
 
-	} elsif ( ! UNIVERSAL::isa( $top_comp, 'HTML::Mason::Component' ) ) {
-	    param_error "comp ($top_comp) must be a component path or a component object";
+	} elsif ( ! UNIVERSAL::isa( $request_comp, 'HTML::Mason::Component' ) ) {
+	    param_error "comp ($request_comp) must be a component path or a component object";
 	}
     };
     $self->{prepare_error} = $@ if $@;
@@ -198,14 +198,13 @@ sub exec {
 	}
 
 	# Build wrapper chain and index.
-	my $top_comp = $self->top_comp;
-
-        my @top_args = $self->top_args;
+	my $request_comp = $self->request_comp;
+        my @request_args = $self->request_args;
 	my $first_comp;
 	{
-	    my @wrapper_chain = ($top_comp);
+	    my @wrapper_chain = ($request_comp);
 
-	    for (my $parent = $top_comp->parent; $parent; $parent = $parent->parent) {
+	    for (my $parent = $request_comp->parent; $parent; $parent = $parent->parent) {
 		unshift(@wrapper_chain,$parent);
 		error "inheritance chain length > " . $interp->max_recurse . " (infinite inheritance loop?)"
 		    if (@wrapper_chain > $interp->max_recurse);
@@ -222,9 +221,9 @@ sub exec {
 
 	    my $old = select SELECTED;
 	    if (wantarray) {
-		@result = eval {$self->comp({base_comp=>$top_comp}, $first_comp, @top_args)};
+		@result = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @request_args)};
 	    } else {
-		$result[0] = eval {$self->comp({base_comp=>$top_comp}, $first_comp, @top_args)};
+		$result[0] = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @request_args)};
 	    }
 	    select STDOUT;
 	    die $@ if $@;
@@ -467,8 +466,8 @@ sub decline
 
     my $subreq = $self->make_subrequest
 	(comp => $self->{top_path},
-	 args => [$self->top_args],
-	 declined_comps => {$self->top_comp->comp_id, 1, %{$self->{declined_comps}}});
+	 args => [$self->request_args],
+	 declined_comps => {$self->request_comp->comp_id, 1, %{$self->{declined_comps}}});
     my $retval = $subreq->exec;
     $self->abort($retval);
 }
@@ -773,13 +772,13 @@ sub flush_buffer
     }
 }
 
-sub top_args
+sub request_args
 {
     my ($self) = @_;
     if (wantarray) {
-	return @{$self->{top_args}};
+	return @{$self->{request_args}};
     } else {
-	my %h = @{$self->{top_args}};
+	my %h = @{$self->{request_args}};
 	return \%h;
     }
 }
@@ -1430,19 +1429,19 @@ component and arguments, and executes it. This is most often used
 to perform an "internal redirect" to a new component such that
 autohandlers and dhandlers take effect.
 
-=for html <a name="item_top_args">
+=for html <a name="item_request_args">
 
-=item top_args
+=item request_args
 
 Returns the arguments originally passed to the top level component
-(see L<Request-E<gt>top_comp|HTML::Mason::Request/top_comp> for
+(see L<Request-E<gt>request_comp|HTML::Mason::Request/request_comp> for
 definition).  When called in scalar context, a hash reference is
 returned. When called in list context, a list of arguments (which may
 be assigned to a hash) is returned.
 
-=for html <a name="item_top_comp">
+=for html <a name="item_request_comp">
 
-=item top_comp
+=item request_comp
 
 Returns the component originally called in the request. Without
 autohandlers, this is the same as the first component executed.  With

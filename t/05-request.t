@@ -34,7 +34,7 @@ EOF
 			 component => <<'EOF',
 My depth is <% $m->depth %>.
 
-The top-level component is <% $m->top_comp->title %>.
+The top-level component is <% $m->request_comp->title %>.
 
 My stack looks like:
 -----
@@ -71,10 +71,10 @@ EOF
     $group->add_support( path => '/support/various_test',
 			 component => <<'EOF',
 Caller is <% $m->caller->title %> or <% $m->callers(1)->title %>.
-The top level component is <% $m->callers(-1)->title %> or <% $m->top_comp->title %>.
+The top level component is <% $m->callers(-1)->title %> or <% $m->request_comp->title %>.
 The full component stack is <% join(",",map($_->title,$m->callers)) %>.
 My argument list is (<% join(",",$m->caller_args(0)) %>).
-The top argument list is (<% join(",",$m->top_args()) %>) or (<% join(",",$m->caller_args(-1)) %>).
+The top argument list is (<% join(",",$m->request_args()) %>) or (<% join(",",$m->caller_args(-1)) %>).
 
 % foreach my $path (qw(various_test /request/sections/perl foobar /shared)) {
 %   my $full_path = HTML::Mason::Tools::absolute_comp_path($path, $m->current_comp->dir_path);
