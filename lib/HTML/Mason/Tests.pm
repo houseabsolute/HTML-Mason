@@ -762,13 +762,13 @@ Text of the component.
 
 The path that this component should written to.  As with support
 components, this path is prepended with the group's name.  If no path
-is given, the value of the name parameter is used.
+is given, it uses call_path, if given, otherwise it uses the name
+parameter.
 
 =item * call_path (optional)
 
 The path that should be used to call the component.  If none is given,
-then the value is the same as the path option, if that exists,
-otherwise it is /<group name>/<test name>.  If a value is given, it is
+it will be /<group name>/<test name>.  If a value is given, it is
 still prepended by /<group name>/.
 
 =item * call_args (optional)
