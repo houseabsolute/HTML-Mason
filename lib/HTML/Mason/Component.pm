@@ -83,20 +83,11 @@ sub assign_runtime_properties {
     $self->{comp_id} = $info->comp_id if defined $info->comp_id;
     $self->{path} = $info->comp_path;
 
+    $self->_determine_inheritance;
+
     foreach my $c (values(%{$self->{subcomps}})) {
 	$c->assign_runtime_properties($interp, $info);
     }
-}
-
-sub request {
-    my $self = shift;
-
-    if (@_) {
-	$self->{request} = shift;
-	$self->_determine_inheritance;
-    }
-
-    return $self->{request};
 }
 
 sub _determine_inheritance {
@@ -109,7 +100,7 @@ sub _determine_inheritance {
 	if (defined($self->{flags}->{inherit})) {
 	    $self->{inherit_path} = absolute_comp_path($self->{flags}->{inherit}, $self->dir_path);
 	}
-    } elsif ($self->{request}->use_autohandlers) {
+    } else {
 	if ($interp->allow_recursive_autohandlers) {
 	    if ($self->name eq $interp->autohandler_name) {
 		unless ($self->dir_path eq '/') {
@@ -312,8 +303,6 @@ sub parent {
     } elsif ($self->inherit_start_path) {
 	$comp = $interp->find_comp_upwards($self->inherit_start_path, $interp->autohandler_name);
     }
-
-    $comp->request($self->{request}) if $comp;
 
     return $comp;
 }
