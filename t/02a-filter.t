@@ -205,6 +205,8 @@ EOF
 
 #------------------------------------------------------------
 
+    # Uh, this is testing with the _opposite_ expectation as the last
+    # test.  Pick one semantic and discard the other test.
     $group->add_support( path => 'flush_clear_filter_comp',
 			 component => <<'EOF',
 Foo
