@@ -38,6 +38,8 @@ BEGIN
 					   type => SCALAR, descr => "Current time (deprecated)" },
 	 data_dir                     => { parse => 'string', optional => 1, type => SCALAR,
 					   descr => "A directory for storing cache files and other state information" },
+         escapes                      => { parse => 'list', optional => 1, type => HASHREF,
+                                           descr => "A list of escape flags to set (as if calling the set_escape() method" },
 	 static_source                => { parse => 'boolean', default => 0, type => BOOLEAN,
 					   descr => "When true, we only compile source files once" },
 	 # OBJECT cause qr// returns an object
@@ -150,13 +152,21 @@ sub _initialize
     }
 
     #
-    # Add the default escape flags
+    # Add the escape flags (including defaults)
     #
     foreach ( [ h => \&HTML::Mason::Tools::html_entities_escape ],
               [ u => \&HTML::Mason::Tools::url_escape ],
             )
     {
         $self->set_escape(@$_);
+    }
+
+    if ( my $e = delete $self->{escapes} )
+    {
+        while ( my ($flag, $code) = each %$e )
+        {
+            $self->set_escape( $flag => $code );
+        }
     }
 }
 
