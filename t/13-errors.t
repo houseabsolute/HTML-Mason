@@ -194,11 +194,7 @@ EOF
 					 error_mode => 'output',
 				       },
 		      component => <<'EOF',
-<%def .foo>
 % die("Horrible death");
-</%def>
-% eval { $m->comp('.foo') };
-<% $@ %>
 EOF
 		      expect => qr{^Horrible death at .*check_error_format_brief line \d+\.$}s,
 		    );
