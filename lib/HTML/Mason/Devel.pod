@@ -19,8 +19,8 @@ the C<samples/> directory.
 
 =head1 HOW TO USE THIS MANUAL
 
-This manual has grown rather too large for its own good. It needs to
-be split into at least two documents (tutorial and reference manual).
+This manual has grown a bit too large over time. It will eventually
+split into at least two documents (tutorial and reference manual).
 I've tried to keep related sections together, but this creates a
 non-optimal order for beginners.
 
@@ -711,9 +711,9 @@ E<lt>%cleanupE<gt> sections are rarely needed.
 
 =head2 E<lt>%onceE<gt>
 
-This code executes once when the component is loaded. Its scope
-includes all of a component's code, and its variables persist for the
-lifetime of the component.
+This code executes once when the component is loaded. Variables
+declared in this section can be seen in all of a component's code and
+persist for the lifetime of the component.
 
 Useful for declaring persistent component-scoped lexical variables
 (especially objects that are expensive to create), declaring
@@ -744,10 +744,10 @@ section:
 
 =head2 E<lt>%sharedE<gt>
 
-Like <%once>, the scope of this section includes all of a component's
-code: the main component, subcomponents, and methods.  However, the
-code runs once per request (whenever the component is used) and its
-variables last only til the end of the request.
+As with <%once>, variables declared in this section can be seen in all
+of a component's code: the main component, subcomponents, and methods.
+However, the code runs once per request (whenever the component is used)
+and its variables last only til the end of the request.
 
 Useful for initializing variables needed in, say, the main body and
 one more subcomponents or methods. See L<Devel/Object-Oriented
@@ -1643,7 +1643,7 @@ primitives introduced in Mason 0.85.
 Note: we use the term object-oriented loosely. Mason borrows concepts
 like inheritance, methods, and attributes from object methodology but
 implements them in a shallow way to solve a particular set of
-problems. Future redesigns may well incorporate a deeper object
+problems. Future redesigns may incorporate a deeper object
 architecture if the current prototype proves successful.
 
 =head2 Determining inheritance
@@ -1715,7 +1715,7 @@ or alternatively a path of the form 'PARENT:method':
     $m->comp('PARENT:header')
 
 In the context of a component path, PARENT is shorthand for
-C<$m-E<gt>current_comp->parent>.
+C<$m-E<gt>current_comp-E<gt>parent>.
 
 The rules for attributes are similar. To access an attribute for the
 page, use C<attr>:
@@ -1830,7 +1830,7 @@ Notice how we provide defaults for each method and attribute, even if blank.
 
     <% $m->call_next %>
 
-An inherited component, even if it only defines attributes and
+Note that this component, though it only defines attributes and
 methods, must call C<$m-E<gt>call_next> if it wants the rest of the
 chain to run.
 
