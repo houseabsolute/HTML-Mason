@@ -902,6 +902,22 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'define_args_hash_auto',
+			  description => 'test setting define_args_hash to always',
+                          call_args => { bar => 7 },
+			  component => <<'EOF',
+<%args>
+$foo => $ARGS{bar}
+</%args>
+foo is <% $foo %>
+EOF
+                          expect => <<'EOF',
+foo is 7
+EOF
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
