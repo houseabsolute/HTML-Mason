@@ -1,5 +1,7 @@
 use strict;
 
+use File::Basename;
+use File::Path;
 use File::Spec;
 
 sub write_comp
