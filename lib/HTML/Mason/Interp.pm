@@ -45,10 +45,6 @@ use HTML::Mason::MethodMaker
                                                  data_cache_defaults ) ] },
       );
 
-BEGIN
-{
-}
-
 # Fields that can be set in new method, with defaults
 __PACKAGE__->valid_params
     (
