@@ -1,7 +1,6 @@
 #!/usr/bin/perl -w
 
 use strict;
-
 use HTML::Mason::Tests;
 
 my $tests = make_tests();
@@ -170,7 +169,7 @@ EOF
 		      component => <<'EOF',
 
 % my $text = $m->scomp('.subcomp', 1,2,3);
---------------------
+-----
 <% $text %>
 
 <%def .subcomp>
@@ -179,7 +178,7 @@ EOF
 EOF
 		      expect => <<'EOF',
 
---------------------
+-----
 
  Hello, you say 123.
 
@@ -196,7 +195,7 @@ EOF
 
 % my $buffy;
 % $m->comp('.subcomp', 1,2,3,4, STORE=>\$buffy);
---------------------
+-----
 <% $buffy %>
 
 <%def .subcomp>
@@ -205,14 +204,13 @@ EOF
 EOF
 		      expect => <<'EOF',
 
---------------------
+-----
 
  Hello, you say 1234.
 
 
 EOF
 		    );
-
 
 #------------------------------------------------------------
 
