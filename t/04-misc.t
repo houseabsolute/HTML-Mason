@@ -106,6 +106,7 @@ EOF
     $group->add_support( path => '/dhandler_test/subdir/dhandler',
 			 component => <<'EOF',
 % $m->decline if $m->dhandler_arg eq 'leaf3';
+% $m->decline if $m->dhandler_arg eq 'slashes';
 dhandler = <% $m->current_comp->title %>
 dhandler arg = <% $m->dhandler_arg %>
 EOF
@@ -172,6 +173,23 @@ EOF
 		      expect => <<'EOF',
 dhandler = /misc/dhandler_test/dhandler
 dhandler arg = subdir/leaf3
+
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'dhandler5',
+		      description => 'decline with doubled slash (//) in URL path',
+		      path => '/dhandler_test/subdir/slashes',
+		      call_path => '//dhandler_test//subdir//slashes',
+		      component => <<'EOF',
+% $m->decline;
+I have many slashes!
+EOF
+		      expect => <<'EOF',
+dhandler = /misc/dhandler_test/dhandler
+dhandler arg = subdir/slashes
 
 EOF
 		    );
