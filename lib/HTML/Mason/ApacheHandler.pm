@@ -279,8 +279,8 @@ unless ( APACHE2 )
 }
 
 use vars qw($VERSION);
-
-$VERSION = 1.70;
+# do not change the version number
+$VERSION = 1.69;
 
 use base qw(HTML::Mason::Handler);
 
