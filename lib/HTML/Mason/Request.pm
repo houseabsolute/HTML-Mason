@@ -24,8 +24,16 @@ BEGIN
 {
     __PACKAGE__->valid_params
 	(
+	 args  => { type => ARRAYREF, optional => 1, default => [],
+		    descr => "Array of arguments to initial component" },
 	 autoflush  => { parse => 'boolean', default => 0, type => SCALAR,
 			 descr => "Whether output should be buffered or sent immediately" },
+	 comp  => { type => SCALAR | HASHREF, optional => 0,
+		    descr => "Initial component, either an absolute path or a component object" },
+	 data_cache_defaults => { type => HASHREF|UNDEF, optional => 1,
+				  descr => "A hash of default parameters for Cache::Cache" },
+	 declined_comps => { type => HASHREF, optional=>1,
+			     descr => "Hash of components that have been declined in previous parent requests (internal)" },
 	 interp     => { isa => 'HTML::Mason::Interp',
 			 descr => "An interpreter for Mason control functions" },
 	 error_format => { parse => 'string', type => SCALAR, default => 'text',
@@ -38,8 +46,6 @@ BEGIN
 			 descr => "How error conditions are returned to the caller" },
 	 out_method => { type => SCALARREF | CODEREF,
 			 descr => "A subroutine or scalar reference through which all output will pass" },
-	 data_cache_defaults => { type => HASHREF|UNDEF, optional => 1,
-				  descr => "A hash of default parameters for Cache::Cache" },
     );
 
     __PACKAGE__->contained_objects
@@ -49,20 +55,24 @@ BEGIN
 	);
 }
 
+my @read_write_params;
+BEGIN { @read_write_params = qw( autoflush
+				 data_cache_defaults
+				 error_format
+				 error_mode
+				 out_method  ); }
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( aborted
 			 aborted_value
 			 count
-			 declined
+			 dhandler_arg
 			 interp
+			 parent_request
+			 request_depth
 			 top_comp ) ],
 
       read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
-		      qw( autoflush
-                          data_cache_defaults
-			  error_format
-			  error_mode
-			  out_method ) ],
+                      @read_write_params ]
     );
 
 sub new
@@ -74,15 +84,20 @@ sub new
     my $self = bless {validate( @args, $class->validation_spec ),
 		      aborted => undef,
 		      aborted_value => undef,
-		      count => 0,
-		      declined => undef,
-		      dhandler_arg => undef,
 		      buffer_stack => undef,
+		      count => 0,
+		      dhandler_arg => undef,
+		      parent_request => undef,
+		      request_depth => 0,
 		      stack => undef,
 		      wrapper_chain => undef,
 		      wrapper_index => undef,
 		     }, $class;
-
+    $self->{top_comp} = delete($self->{comp});
+    $self->{top_args} = delete($self->{args});
+    if (UNIVERSAL::isa($self->{top_args}, 'HASH')) {
+	$self->{top_args} = [%{$self->{top_args}}];
+    }
     $self->{count} = ++$self->{interp}{request_count};
     $self->_initialize;
     return $self;
@@ -106,20 +121,45 @@ sub _initialize {
     # create base buffer
     $self->{buffer_stack} = [];
     $self->{stack} = [];
-}
 
-sub _reinitialize {
-    my ($self) = @_;
-    $self->_initialize;
-    foreach my $field (qw(aborted aborted_value declined dhandler_arg)) {
-	$self->{$field} = undef;
+    # top_comp can be an absolute path or component object.  If a path,
+    # load into object.
+    my $top_comp = $self->{top_comp};
+    my ($path);
+    if (!ref($top_comp) && substr($top_comp, 0, 1) eq '/') {
+	$top_comp =~ s{/+}{/}g;
+	$self->{top_path} = $path = $top_comp;
+	
+	declined:
+	$top_comp = $self->interp->load($path);
+
+	# If path was not found, check for dhandler.
+	unless ($top_comp) {
+	    if ( $top_comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
+		my $parent_path = $top_comp->dir_path;
+		($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
+	    }
+	}
+
+	# If the component was declined previously in this request,
+	# look for the next dhandler up the tree.
+	if ($top_comp and $self->{declined_comps}->{$top_comp->comp_id}) {
+	    $path = $top_comp->dir_path;
+	    unless ($path eq '/' and $top_comp->name eq $interp->dhandler_name) {
+		if ($top_comp->name eq $interp->dhandler_name) {
+		    $path =~ s{/[^\/]+$}{};
+		}
+		goto declined;
+	    }
+	}
+	$self->{top_comp} = $top_comp;
+    } elsif ( ! UNIVERSAL::isa( $top_comp, 'HTML::Mason::Component' ) ) {
+	param_error "comp ($top_comp) must be an absolute component path or a component object";
     }
-
-    $self->{buffer_stack} = [];
 }
 
 sub exec {
-    my ($self, $comp, @args) = @_;
+    my ($self) = @_;
     my $interp = $self->interp;
 
     # All errors returned from this routine will be in exception form.
@@ -130,96 +170,51 @@ sub exec {
 
     my @result;
     eval {
-	# Purge code cache if necessary. Generally happens at the end of
-	# the component; this is just in case many errors are occurring.
-	$interp->purge_code_cache;
-
-	# $comp can be an absolute path or component object.  If a path,
-	# load into object. If not found, check for dhandler.
-	my ($path, $orig_path);
-	if (!ref($comp) && substr($comp,0,1) eq '/') {
-	    $comp =~ s,/+,/,g;
-	    $orig_path = $path = $comp;
-	    $comp = $self->fetch_comp($path);
-
-	    unless ($comp) {
-		if ( $comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
-
-		    my $parent_path = $comp->dir_path;
-		    ($self->{dhandler_arg} = $path) =~ s{^$parent_path/?}{};
-		}
-	    }
-	    unless ($comp) {
-		top_level_not_found_error "could not find component for initial path '$path'\n";
-	    }
-	} elsif ( ! UNIVERSAL::isa( $comp, 'HTML::Mason::Component' ) ) {
-	    param_error "exec: first argument ($comp) must be an absolute component path or a component object";
+	# Create initial buffer.
+	my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
+	$self->push_buffer_stack($buffer);
+	
+	# Build wrapper chain and index.
+	my $top_comp = $self->top_comp;
+	unless ($top_comp) {
+	    top_level_not_found_error "could not find component for initial path '" . $self->{top_path} . "'\n";
 	}
-
-	# This block repeats only if $m->decline is called in a component
-	my $declined;
-	do
+        my @top_args = $self->top_args;
+	my $first_comp;
 	{
-	    $declined = 0;
-
-	    my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
-	    $self->push_buffer_stack($buffer);
-
-	    # Build wrapper chain and index.
-	    my $first_comp;
-	    {
-		my @wrapper_chain = ($comp);
-
-		for (my $parent = $comp->parent; $parent; $parent = $parent->parent) {
-		    unshift(@wrapper_chain,$parent);
-		    error "inheritance chain length > 32 (infinite inheritance loop?)"
-			if (@wrapper_chain > 32);
-		}
-
-		$first_comp = $wrapper_chain[0];
-		$self->{wrapper_chain} = [@wrapper_chain];
-		$self->{wrapper_index} = {map((($wrapper_chain[$_]->path || '') => $_),(0..$#wrapper_chain))};
+	    my @wrapper_chain = ($top_comp);
+	    
+	    for (my $parent = $top_comp->parent; $parent; $parent = $parent->parent) {
+		unshift(@wrapper_chain,$parent);
+		error "inheritance chain length > " . $interp->max_recurse . " (infinite inheritance loop?)"
+		    if (@wrapper_chain > $interp->max_recurse);
 	    }
-
-	    # Fill top_level slots for introspection.
-	    $self->{top_comp} = $comp;
-	    $self->{top_args} = \@args;
-
-	    {
-		local *SELECTED;
-		tie *SELECTED, 'Tie::Handle::Mason', $self;
-
-		my $old = select SELECTED;
-		if (wantarray) {
-		    @result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
-		} else {
-		    $result[0] = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
-		}
-		select STDOUT;
+	    
+	    $first_comp = $wrapper_chain[0];
+	    $self->{wrapper_chain} = [@wrapper_chain];
+	    $self->{wrapper_index} = {map((($wrapper_chain[$_]->path || '') => $_),(0..$#wrapper_chain))};
+	}
+	
+	{
+	    local *SELECTED;
+	    tie *SELECTED, 'Tie::Handle::Mason', $self;
+	    
+	    my $old = select SELECTED;
+	    if (wantarray) {
+		@result = eval {$self->comp({base_comp=>$top_comp}, $first_comp, @top_args)};
+	    } else {
+		$result[0] = eval {$self->comp({base_comp=>$top_comp}, $first_comp, @top_args)};
 	    }
-
-	    if (my $err = $@) {
-		# If declined, try to find the next dhandler.
-		if ( ($declined = $self->declined) and $path) {
-		    $path =~ s,/[^/]+$,, if defined($self->{dhandler_arg});
-		    if (my $next_comp = $interp->find_comp_upwards($path, $interp->dhandler_name)) {
-			$comp = $next_comp;
-			my $parent = $comp->dir_path;
-			$self->_reinitialize;
-			($self->{dhandler_arg} = $orig_path) =~ s{^$parent/}{};
-		    }
-		} else {
-		    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
-		}
-	    }
-
-	} while ($declined && $path);
+	    select STDOUT;
+	    die $@ if $@;
+	}
     };
 
     # Handle errors.
     my $err = $@;
     if ($err and !$self->aborted) {
 	$self->pop_buffer_stack;
+	$interp->purge_code_cache;
 	$self->_handle_error($err);
 	return;
     }
@@ -254,6 +249,31 @@ sub _handle_error
     } else {
 	UNIVERSAL::isa( $self->out_method, 'CODE' ) ? $self->out_method->("$err") : ( ${ $self->out_method } = "$err" );
     }
+}
+
+sub subexec
+{
+    my ($self, $comp, @args) = @_;
+
+    $self->make_subrequest(comp=>$comp, args=>\@args)->exec;
+}
+
+sub make_subrequest
+{
+    my ($self, %params) = @_;
+    my $interp = $self->interp;
+
+    # Give subrequest the same values as parent request for read/write params.
+    my %defaults = map { ($_, $self->$_()) } @read_write_params;
+
+    # Make subrequest, and set parent_request and request_depth appropriately.
+    my $subreq = $interp->make_request(%defaults, %params);
+    $subreq->{parent_request} = $self;
+    $subreq->{request_depth}  = $self->request_depth+1;
+    error "subrequest depth > " . $interp->max_recurse . " (infinite subrequest loop?)"
+	if $subreq->request_depth > $interp->max_recurse;
+    
+    return $subreq;
 }
 
 #
@@ -414,8 +434,13 @@ sub comp_exists
 sub decline
 {
     my ($self) = @_;
-    $self->{declined} = 1;
-    error "decline() called (and not caught)";
+
+    my $subreq = $self->make_subrequest
+	(comp => $self->{top_path},
+	 args => [$self->top_args],
+	 declined_comps => {$self->top_comp->comp_id, 1, %{$self->{declined_comps}}});
+    my $retval = $subreq->exec;
+    $self->abort($retval);
 }
 
 #
@@ -427,8 +452,6 @@ sub depth
     my ($self) = @_;
     return scalar $self->stack;
 }
-
-sub dhandler_arg { shift->{dhandler_arg} }
 
 #
 # Given a component path (absolute or relative), returns a component.
