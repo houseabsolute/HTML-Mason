@@ -638,7 +638,7 @@ By default dhandlers do not get a chance to handle requests to a
 directory itself (e.g. F</newsfeeds>). These are automatically
 deferred to Apache, which generates an index page or a FORBIDDEN
 error.  Often this is desirable, but if necessary the administrator
-can let in directory requests as well; see L<Allowing directgory
+can let in directory requests as well; see L<Allowing directory
 request in Admin|HTML::Mason::Admin/"Allowing directory requests">.
 
 A component or dhandler that does not want to handle a particular
