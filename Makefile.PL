@@ -43,3 +43,10 @@ WriteMakefile(
     'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
     'PREREQ_PM' => { MLDBM => 2.0, Data::Dumper => 2.08 }
 );
+
+sub MY::postamble {
+'
+faq: faq/Makefile
+	cd faq && $(MAKE) $(PASTHRU)
+';
+}
