@@ -574,7 +574,7 @@ sub comp {
 	    eval { $comp->run(@args) };
 	}
 	untie *STDOUT;
-	if ( UNIVERSAL::isa( $obj, 'Apache' ) ) {
+	if ( $obj && UNIVERSAL::isa( $obj, 'Apache' ) ) {
 	    tie *STDOUT, 'Apache', $obj;
 	}
     }
@@ -803,7 +803,7 @@ sub PRINT
     {
 	# This needs to be done to avoid an infinite loop because the
 	# ->out method could end up calling print on STDOUT.
-	if ( UNIVERSAL::isa( $self->{object}, 'Apache' ) )
+	if ( $self->{object} && UNIVERSAL::isa( $self->{object}, 'Apache' ) )
 	{
 	    tie *STDOUT, 'Apache', $self->{object};
 	}
