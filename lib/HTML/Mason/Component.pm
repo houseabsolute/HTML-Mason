@@ -19,13 +19,12 @@ use HTML::Mason::MethodMaker
 			 inherit_start_path
 			 interp
 			 object_size
-			 parser_version ) ],
+			 compiler_id ) ],
 
       read_write => [ qw ( dynamic_subs_request
 			   mfu_count ) ]
       );
 
-# I'm not sure which of these need to be non-optional.
 my %valid_params =
     (
      attr               => {type => HASHREF, default => {}},
@@ -39,7 +38,8 @@ my %valid_params =
      methods            => {type => HASHREF, default => {}},
      mfu_count          => {type => SCALAR,  default => 0},
      object_size        => {type => SCALAR,  default => 0},
-     parser_version     => {type => SCALAR,  optional => 1},
+     parser_version     => {type => SCALAR,  optional => 1}, # allows older components to be instantied
+     compiler_id        => {type => SCALAR,  optional => 1},
      subcomps           => {type => HASHREF, default => {}},
     );
 
@@ -58,7 +58,7 @@ sub new
 
     # Assign defaults.
     $self->{designator} = "[anon ". ++$comp_count . "]" if !defined($self->{fq_path});
-    
+
     # Initialize subcomponent and method properties.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
 	$c->assign_subcomponent_properties($self,$name);
@@ -107,12 +107,6 @@ sub assign_runtime_properties {
 
 sub run {
     my $self = shift;
-
-    #
-    # CODEREF_NAME maps component coderefs to component names (for profiling)
-    #
-    $HTML::Mason::CODEREF_NAME{$self->{code}} = $self->source_file
-	if $::opt_P && defined($self->source_file);
 
     $self->{mfu_count}++;
 
@@ -172,7 +166,7 @@ sub subcomps {
 	return $self->{subcomps}->{$key};
     } else {
 	return $self->{subcomps};
-    }    
+    }
 }
 
 #
