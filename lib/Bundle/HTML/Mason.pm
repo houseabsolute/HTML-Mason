@@ -20,9 +20,11 @@ C<perl -MCPAN -e 'install Bundle::HTML::Mason'>
 
 Data::Dumper
 
-MLDBM
+File::Spec
 
 Params::Validate
+
+Apache::Request
 
 HTML::Mason
 
