@@ -214,7 +214,7 @@ sub call_method {
     my ($self,$name,@args) = @_;
     my $method;
     if ($self->_locate_inherited('methods',$name,\$method)) {
-	$HTML::Mason::Commands::m->comp({base_comp=>$self},$method,@args);
+	HTML::Mason::Request->instance->comp({base_comp=>$self},$method,@args);
     } else {
 	error "no method '$name' for component " . $self->title;
     }
@@ -227,7 +227,7 @@ sub scall_method {
     my ($self,$name,@args) = @_;
     my $method;
     if ($self->_locate_inherited('methods',$name,\$method)) {
-	$HTML::Mason::Commands::m->scomp({base_comp=>$self},$method,@args);
+	HTML::Mason::Request->instance->scomp({base_comp=>$self},$method,@args);
     } else {
 	error "no method '$name' for component " . $self->title;
     }
