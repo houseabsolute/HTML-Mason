@@ -35,10 +35,6 @@ sub comp_class {
     shift->_virtual;
 }
 
-sub apache_request_to_comp_path {
-    shift->_virtual
-}
-
 sub _virtual
 {
     my $self = shift;
@@ -133,7 +129,7 @@ L<C<HTML::Mason::ApacheHandler>> module, then you must implement the
 following method as well, possibly in a different subclass.
 
 For example, Mason includes the C<HTML::Mason::Resolver::File> and
-C<HTML::Mason::Resolver::File::Apache> classes.  The latter simply
+C<HTML::Mason::Resolver::File::ApacheHandler> classes.  The latter simply
 adds an implementation of this method for file based components.
 
 =over 4
