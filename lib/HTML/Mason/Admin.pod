@@ -588,7 +588,7 @@ file every time that component is called. This can add up to a lot
 of file stats.
 
 If you have a live site with infrequent and well-controlled updates,
-you may run in L<Interp/fixed_source> mode. In this mode Mason will
+you may run in L<Interp/static_source> mode. In this mode Mason will
 not check source timestamps when it uses an in-memory cache or object
 file.  The disadvantage is that you must remove object files and
 restart the server whenever you change component source; however this

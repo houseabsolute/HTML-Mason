@@ -37,7 +37,7 @@ BEGIN
 					   descr => "A directory for storing cache files and other state information" },
 	 dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR,
 					   descr => "The filename to use for Mason's 'dhandler' capability" },
-	 fixed_source                 => { parse => 'boolean', default => 0, type => BOOLEAN,
+	 static_source                => { parse => 'boolean', default => 0, type => BOOLEAN,
 					   descr => "When true, we only compile source files once" },
 	 # OBJECT cause qr// returns an object
 	 ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
@@ -76,7 +76,7 @@ use HTML::Mason::MethodMaker
 			  compiler
 			  data_dir
 			  dhandler_name
-			  fixed_source
+			  static_source
 			  ignore_warnings_expr
 			  max_recurse
 			  resolver
@@ -195,10 +195,10 @@ sub load {
     }
 
     #
-    # Get source info from resolver. Cache the results in fixed_source mode.
+    # Get source info from resolver. Cache the results in static_source mode.
     #
     my $source;
-    if ($self->{fixed_source}) {
+    if ($self->static_source) {
 	unless (exists($self->{source_cache}{$path})) {
 	    $self->{source_cache}{$path} = $resolver->get_info($path);
 	}
@@ -221,10 +221,10 @@ sub load {
 
     #
     # If code cache contains an up to date entry for this path, use
-    # the cached sub.  Always use the cached sub in fixed_source mode.
+    # the cached sub.  Always use the cached sub in static_source mode.
     #
     return $code_cache->{$comp_id}->{comp}
-	if exists($code_cache->{$comp_id}) and ( $self->{fixed_source} || $code_cache->{$comp_id}->{lastmod} >= $srcmod );
+	if exists($code_cache->{$comp_id}) and ( $self->static_source || $code_cache->{$comp_id}->{lastmod} >= $srcmod );
 
     if ($self->{use_object_files}) {
 	$objfile = $self->comp_id_to_objfile($comp_id);
@@ -234,7 +234,7 @@ sub load {
 	    error "The object file '$objfile' exists but it is not a file!";
 	}
 
-	if ($self->{fixed_source}) {
+	if ($self->static_source) {
 	    # No entry in the code cache so if the object file exists,
 	    # we will use it, otherwise we must create it.  These
 	    # values make that happen.
@@ -761,7 +761,7 @@ C<$m-E<gt>cache> calls.
 
 File name used for dhandlers. Default is "dhandler".
 
-=item fixed_source
+=item static_source
 
 True or false, default is false. When false, Mason checks the
 timestamp of the component source file each time the component is used

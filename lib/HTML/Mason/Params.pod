@@ -255,7 +255,7 @@ Name in httpd.conf: ErrorMode
 
 Belongs to:         HTML::Mason::Request
 
-=item * fixed_source
+=item * static_source
 
 When true, we only compile source files once.
 

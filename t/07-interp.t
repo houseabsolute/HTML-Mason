@@ -853,32 +853,32 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_support( path => '/support/fixed_source',
+    $group->add_support( path => '/support/static_source',
 		         component => <<'EOF',
-FIXED 1
+STATIC 1
 EOF
 		    );
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'fixed_source',
-		      description => 'test that fixed_source option works',
-                      interp_params => { fixed_source => 1 },
+    $group->add_test( name => 'static_source',
+		      description => 'test that static_source option works',
+                      interp_params => { static_source => 1 },
 		      component => <<'EOF',
-<& support/fixed_source &>\
+<& support/static_source &>\
 <%perl>
 local *F;
 my $comp_root = $m->interp->resolver->comp_root;
-my $file = "$comp_root/interp/support/fixed_source";
+my $file = "$comp_root/interp/support/static_source";
 open F, ">$file" or die "Cannot write to $file: $!";
-print F "FIXED 2\n";
+print F "STATIC 2\n";
 close F;
 </%perl>
-<& support/fixed_source &>
+<& support/static_source &>
 EOF
 		      expect => <<'EOF',
-FIXED 1
-FIXED 1
+STATIC 1
+STATIC 1
 EOF
 		    );
 
