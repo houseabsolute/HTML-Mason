@@ -19,12 +19,11 @@ through components. In a web environment, the optional return value is
 used as the HTTP status code.
 
 =item mc_cache ([action=>'retrieve'], [key=>name],
-B<[keep_in_memory=E<gt>0|1], [expire_if=E<gt>sub])>
+[keep_in_memory=>0|1], [expire_if=>sub])
 
 =item mc_cache (action=>'store', [key=>name], value=>data,
-[keep_in_memory=>0|1],
-B<[expire_at=E<gt>time | expire_next=E<gt>'hour'|'day' |
-expire_in=E<gt>delta])>
+[keep_in_memory=>0|1], [expire_at=>time | expire_next=>'hour'|'day' |
+expire_in=>delta])
 
 =item mc_cache (action=>'expire', [key=>name])
 
