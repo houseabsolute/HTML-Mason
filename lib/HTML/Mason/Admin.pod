@@ -311,22 +311,7 @@ determines whether to use the C<CGI> or C<Apache::Request> module for
 argument handling.  Please see L<HTML::Mason::ApacheHandler/PARAMETERS TO THE use() DECLARATION>
 for more details.
 
-This can only be set once, regardless of how you set
-MasonMultipleConfig.
-
-Defaults to C<CGI>.
-
-=item * MasonMultipleConfig - boolean
-
-If this parameter is true, Mason assumes that you may have multiple
-sets of configuration directives defined, perhaps for multiple
-locations or virtual hosts.  This means that Mason will create a new
-set of parser/interp/handler objects for every request.  If this
-parameter is false, Mason simply creates a single set at server
-startup to maximize shared memory. Defaults to false.
-
-If you set this option, the Apache child processes will need
-the proper permissions to create the data directories.
+Defaults to C<mod_perl>.
 
 =back
 
