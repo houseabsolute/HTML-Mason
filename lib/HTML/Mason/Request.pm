@@ -184,14 +184,18 @@ sub exec {
 	    $self->{top_comp} = $comp;
 	    $self->{top_args} = \@args;
 
-	    # Call the first component, with STDOUT mapped to $m->print.
-	    tie *STDOUT, 'Tie::Handle::Mason', $self;
-	    if (wantarray) {
-		@result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
-	    } else {
-		$result[0] = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
+	    {
+		local *SELECTED;
+		tie *SELECTED, 'Tie::Handle::Mason', $self;
+
+		my $old = select SELECTED;
+		if (wantarray) {
+		    @result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
+		} else {
+		    $result[0] = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
+		}
+		select STDOUT;
 	    }
-	    untie *STDOUT;
 
 	    if (my $err = $@) {
 		# If declined, try to find the next dhandler.
@@ -844,7 +848,6 @@ sub buffer_stack {
 #
 sub current_comp { return $_[0]->top_stack->{comp} }
 sub current_args { return $_[0]->top_stack->{args} }
-sub current_sink { return $_[0]->{buffer_stack}->[-1]->sink }
 sub top_buffer { return $_[0]->{buffer_stack}->[-1] }
 sub base_comp { return $_[0]->top_stack->{base_comp} }
 
@@ -855,7 +858,6 @@ sub TIEHANDLE
     my $class = shift;
 
     my $req = shift;
-    my $object = shift;
 
     return bless { request => $req }, $class;
 }
@@ -864,7 +866,11 @@ sub PRINT
 {
     my $self = shift;
 
+    my $old = select STDOUT;
+
     $self->{request}->print(@_);
+
+    select $old;
 }
 
 sub PRINTF
