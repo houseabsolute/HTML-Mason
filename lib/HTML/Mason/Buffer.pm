@@ -218,18 +218,4 @@ This does B<not> clear the buffer.
 
 =back
 
-=head1 SUBCLASSING
-
-The public API described above is the complete Buffer class API,
-except for one method, C<_initialize>, which is called as part of the
-buffer's construction, from the C<new> method.
-
-Those interested in subclassing this class should also know that the
-constructor may take an additional parameter, C<parent>, which should
-be a Buffer object.  This parameter is automatically supplied by the
-C<new_child> method.
-
-Any subclass of this class you create should declare itself to be a
-subclass of the C<HTML::Mason::Buffer> class.
-
 =cut
