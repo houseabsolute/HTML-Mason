@@ -37,7 +37,7 @@ See CREDITS file for other contributors
 	- improved documentation on how to integrate images and
           non-Mason hierarchies with Mason
 	- differentiated mc_cache and mc_cache_self in the commands
-          manual (suggested by Tom Higgins)
+          manual (suggested by Tom Hukins)
 	- increased discouraging of SDBM, improved warnings when cache
           store fails (suggested by Patrick Kane)
 	- fixed HTML documentation to work with IE (suggested by Fen
@@ -81,7 +81,7 @@ See CREDITS file for other contributors
 	  mode is "none"
 	- code to decline images and other non-text requests was
 	  placed in default handler.pl and described in documentation
-	  (suggested by Patrick Michael Kane)
+	  (suggested by Patrick Kane)
 	- fixed server header output from debug files (suggested by Ewan
 	  Edwards)
 	- created a Mason bundle
