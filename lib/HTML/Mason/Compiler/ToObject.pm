@@ -109,26 +109,25 @@ sub compiled_component
 	    join '', ( "sub {\n",
 		       $self->_blocks('shared'),
 		       "return {\n",
-		       join( ",\n", map { "'$_' => $subs{$_}" } sort keys %subs ),
+		       map( "'$_' => $subs{$_},\n", sort keys %subs ),
 		       "\n}\n}"
 		     );
     }
 
-    $params->{object_size} = (length $header) + (length join '', values %$params, keys %$params);
+    $params->{object_size} = 0;
+    $params->{object_size} += length for ($header, %$params);
 
-    my $object = join '', ( $header,
-			    $self->_subcomponents_footer,
-			    $self->_methods_footer,
-			    $self->_constructor( $self->comp_class,
-						 $params ),
-			    ';',
-			  );
-
-    $object .= "\n\n# MASON COMPILER ID: $id\n";
-
-    $self->{current_comp} = undef;
-
-    return $object;
+    return +(join('',
+		  $header,
+		  $self->_subcomponents_footer,
+		  $self->_methods_footer,
+		  $self->_constructor( $self->comp_class,
+				       $params ),
+		  ';',
+		  "\n\n# MASON COMPILER ID: $id\n",
+		 ),
+	     $self->{current_comp} = undef,
+	    )[0];
 }
 
 sub _compile_subcomponents
