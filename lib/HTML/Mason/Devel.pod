@@ -1294,7 +1294,9 @@ override the 'h' flag in a top-level autohandler or a
 L<handler.pl|HTML::Mason::Admin/"CONFIGURING VIA HANDLER SCRIPT">
 script like this:
 
-  $interp->set_escape( h => \&escape_ISO_8859_2 );
+  $ah->interp->set_escape( h => \&escape_ISO_8859_2 );
+
+where C<$ah> is an ApacheHandler object.
 
 Inside components, the Interpreter object is available via C<<
 $m->interp() >> so you would do this instead:
