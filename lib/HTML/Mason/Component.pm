@@ -174,6 +174,8 @@ sub persistent { 0 }
 #
 sub is_subcomp { 0 }
 
+sub is_method { 0 }
+
 #
 # Only true in FileBased subclass.
 #
@@ -477,7 +479,13 @@ Unlike attributes, flags values do not get inherited from parent components.
 
 =item is_subcomp
 
-Returns true if this is a subcomponent of another component.
+Returns true if this is a subcomponent of another component.  For
+historical reasons, this returns true for both methods and
+subcomponents.
+
+=item is_method
+
+Returns true if this is a method.
 
 =item is_file_based
 
