@@ -34,7 +34,7 @@ kill_httpd(1);
 test_load_apache();
 
 my $tests = 4; # multi conf tests
-$tests += 43 if my $have_libapreq = have_module('Apache::Request');
+$tests += 42 if my $have_libapreq = have_module('Apache::Request');
 $tests += 32 if my $have_cgi      = have_module('CGI');
 $tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
 print "1..$tests\n";
@@ -43,12 +43,12 @@ print STDERR "\n";
 
 write_test_comps();
 
-if ($have_libapreq) {        # 43 tests
+if ($have_libapreq) {        # 42 tests
     cleanup_data_dir();
-    apache_request_tests(1); # 19 tests
+    apache_request_tests(1); # 18 tests
 
     cleanup_data_dir();
-    apache_request_tests(0); # 14 tests
+    apache_request_tests(0); # 13 tests
 
     cleanup_data_dir();
     no_config_tests();    # 11 tests
@@ -56,7 +56,7 @@ if ($have_libapreq) {        # 43 tests
 
 if ($have_cgi) {             # 32 tests
     cleanup_data_dir();
-    cgi_tests(1);            # 20 tests
+    cgi_tests(1);            # 18 tests + 1 if mod_perl version > 1.24
 
     cleanup_data_dir();
     cgi_tests(0);            # 14 tests
@@ -150,7 +150,7 @@ EOF
 
     write_comp( 'multiconf1/autohandler_test', <<'EOF'
 <%args>
-$autohandler => 'absent'
+$autohandler => 'misnamed'
 </%args>
 autohandler is <% $autohandler %>
 EOF
@@ -654,7 +654,7 @@ EOF
     $success = HTML::Mason::Tests->check_output( actual => $actual,
 						 expect => <<'EOF',
 X-Mason-Test: Initial value
-autohandler is absent
+autohandler is misnamed
 Status code: 0
 EOF
 						  );
@@ -675,7 +675,7 @@ EOF
     $response = Apache::test->fetch('/comps/multiconf2/dhandler_test');
     $actual = filter_response($response, 0);
     ok( $actual =~ /404 not found/i,
-	"Attempt to request a non-existent component should not work with dhandlers turned off" );
+	"Attempt to request a non-existent component should not work with incorrect dhandler_name" );
 
     kill_httpd(1);
 }
