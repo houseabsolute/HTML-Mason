@@ -214,6 +214,36 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'subcomponent_redefined',
+		      description => "Make sure Mason doesn't allow redefinition of subcomponent",
+		      component => <<'EOF',
+<%def foo>
+foo
+</%def>
+<%def foo>
+foo
+</%def>
+EOF
+		      expect_error => qr/Duplicate definition of subcomponent/,
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'method_redefined',
+		      description => "Make sure Mason doesn't allow redefinition of method",
+		      component => <<'EOF',
+<%method foo>
+foo
+</%method>
+<%method foo>
+foo
+</%method>
+EOF
+		      expect_error => qr/Duplicate definition of method/,
+		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'method_subcomp_conflict',
 		      description => "Make sure Mason doesn't allow a subcomponent and method to have the same name",
 		      component => <<'EOF',
@@ -225,6 +255,18 @@ foo
 </%def>
 EOF
 		      expect_error => qr/with the same name/,
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'subcomp_bad_name',
+		      description => "Make sure Mason doesn't allow a subcomponent with a bad name",
+		      component => <<'EOF',
+<%def abc+def>
+foo
+</%def>
+EOF
+		      expect_error => qr/Invalid def name/,
 		    );
 
 #------------------------------------------------------------

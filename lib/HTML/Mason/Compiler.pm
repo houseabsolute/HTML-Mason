@@ -382,13 +382,22 @@ sub start_named_block
     my $c = $self->{current_compile};
     my %p = @_;
 
+    # Error if defining one def or method inside another
     $self->lexer->throw_syntax_error
 	("Cannot define a $p{block_type} block inside a method or subcomponent")
 	    unless $c->{in_main};
 
+    # Error for invalid character in name
     $self->lexer->throw_syntax_error("Invalid $p{block_type} name: $p{name}")
 	if $p{name} =~ /[^.\w-]/;
 
+    # Error if two defs or two methods defined with same name
+    $self->lexer->throw_syntax_error
+        (sprintf("Duplicate definition of %s '%s'",
+		 $p{block_type} eq 'def' ? 'subcomponent' : 'method', $p{name}))
+            if exists $c->{$p{block_type}}{ $p{name} };
+    
+    # Error if def and method defined with same name
     my $other_type = $p{block_type} eq 'def' ? 'method' : 'def';
     $self->lexer->throw_syntax_error
         ("Cannot define a method and subcomponent with the same name ($p{name}")
