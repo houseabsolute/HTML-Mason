@@ -824,8 +824,8 @@ File name used for L<autohandlers|HTML::Mason::Devel/autohandlers>. Default is "
 =item code_cache_max_size
 
 Specifies the maximum size, in bytes, of the in-memory code cache
-where components are stored. Default is 10 MB. See the ADMIN<code
-cache> section of the administrator's manual for further details.
+where components are stored. Default is 10 MB. See ADMIN<code cache>
+for further details.
 
 =item compiler
 
@@ -854,7 +854,7 @@ need to change this on certain systems that assign a high-level
 server root such as F</usr>!
 
 In non-Apache environments, data_dir has no default. If it is left
-unspecified, Mason will not use ADMIN<object files>, and the default
+unspecified, Mason will not use L<object files|HTML::Mason::Admin/object files>, and the default
 L<data cache class|HTML::Mason::Request/item_cache> will be
 C<MemoryCache> instead of C<FileCache>.
 
@@ -888,8 +888,7 @@ when the interpreter initializes. e.g.
 
 Default is the empty list.  For maximum performance, this should only
 be used for components that are frequently viewed and rarely updated.
-See the ADMIN<preloading> section of the administrator's manual for
-further details.
+See ADMIN<preloading> for further details.
 
 As mentioned in the developer's manual, a component's C<< <%once> >>
 section is executed when it is loaded.  For preloaded components, this
