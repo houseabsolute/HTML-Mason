@@ -1194,7 +1194,7 @@ This mostly duplicates the behavior of I<scomp>, but can be useful in
 rare cases where you need to capture both a component's output and
 return value.
 
-These modifier can be used with the <& &> tag as well, for example:
+This modifier can be used with the <& &> tag as well, for example:
 
   <& { store => \$buf }, '/some/comp', size => 'medium' &>
 
