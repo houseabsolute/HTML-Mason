@@ -1,11 +1,12 @@
-<HTML>
-<HEAD>
-<TITLE>
-mc_cache Test
-</TITLE>
-</HEAD>
-<BODY>
-Hello World!
-</BODY>
-</HTML>
+Hello Dolly.
+This was not cached.
+
+
+Hello Dolly.
+This was cached.
+
+
+Hello Dolly.
+This was cached.
+
 

@@ -1,11 +1,3 @@
-<HTML>
-<HEAD>
-<TITLE>
-mc_cache Test
-</TITLE>
-</HEAD>
-<BODY>
-Hello World!
-</BODY>
-</HTML>
-
+% for (my $i=0; $i<3; $i++) {
+<& support/cache_test &>
+% }

@@ -1,0 +1,16 @@
+replace
+init
+perl_init
+args
+perl_args
+doc
+perl_doc
+filter
+once
+text
+perl
+percent
+amper
+mc_cache
+mc_cache_self
+def

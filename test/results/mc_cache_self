@@ -1,13 +1,9 @@
-<HTML>
-<HEAD>
-<TITLE>
-mc_cache Test
-</TITLE>
-</HEAD>
-<BODY>
-Hello World!
+Hello World! var = 1
 
-Hello World!
 
-</BODY>
-</HTML>
+Hello World! var = 1
+
+
+Hello World! var = 1
+
+

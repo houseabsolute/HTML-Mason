@@ -5,6 +5,6 @@ args Test
 </TITLE>
 </HEAD>
 <BODY>
-<% mc_comp("support/args_test", message => 'Hello World!') %>
+<& support/args_test, message => 'Hello World!' &>
 </BODY>
 </HTML>

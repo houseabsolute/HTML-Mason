@@ -1,13 +1,5 @@
-<HTML>
-<HEAD>
-<TITLE>
-mc_cache Test
-</TITLE>
-</HEAD>
-<BODY>
-Hello World!
-
-Hello World!
-
-</BODY>
-</HTML>
+% my $var = 1;
+% for (my $i=0; $i<3; $i++) {
+<% mc_comp('support/cache_self_test',var=>$var) %>
+% $var++;
+% }

@@ -1,0 +1,21 @@
+<%def intro>
+% my $comp = $REQ->comp;
+Hello!<br>
+My name is <% $comp->name %>. Full name <% $comp->title %>.<br>
+I was created by <% $comp->parent_comp->path %>.<br>
+<& .link, site=>'masonhq', label=>'Mason' &>
+</%def>
+
+<& intro &><hr>
+<& .link, site=>'apache', label=>'Apache Foundation' &><br>
+<& .link, site=>'yahoo' &><br>
+<& .link, site=>'excite' &>
+<%def .link>
+--> <a href="http://www.<% $site %>.com"><% $label %></a>
+<%args>
+$site
+$label=>ucfirst($site)
+</%args>
+</%def>
+
+
