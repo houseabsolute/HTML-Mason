@@ -134,7 +134,7 @@ sub _initialize {
 
 	    search: {
 		$top_comp = $self->interp->load($path);
-		
+
 		# If path was not found, check for dhandler.
 		unless ($top_comp) {
 		    if ( $top_comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
@@ -142,7 +142,7 @@ sub _initialize {
 			($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
 		    }
 		}
-		
+
 		# If the component was declined previously in this request,
 		# look for the next dhandler up the tree.
 		if ($top_comp and $self->{declined_comps}->{$top_comp->comp_id}) {
@@ -187,7 +187,7 @@ sub exec {
 	if (my $err = $self->{prepare_error}) {
 	    $err->throw;
 	}
-	
+
 	# Build wrapper chain and index.
 	my $top_comp = $self->top_comp;
 
