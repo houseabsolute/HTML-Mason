@@ -46,6 +46,9 @@ sub cgi_request_args
     return %args;
 }
 
+
+1;
+
 __END__
 
 =head1 NAME
