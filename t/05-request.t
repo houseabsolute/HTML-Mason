@@ -464,5 +464,21 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'print',
+		      description => 'Test print function from a component',
+		      component => <<'EOF',
+This is first.
+% print "This is second.\n";
+This is third.
+EOF
+		      expect => <<'EOF',
+This is first.
+This is second.
+This is third.
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
