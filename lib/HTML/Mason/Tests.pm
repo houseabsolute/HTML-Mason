@@ -168,7 +168,7 @@ sub add_test
     die "'$p{name}' test has no 'expect' or 'expect_error' key\n"
 	unless exists $p{expect} || exists $p{expect_error} || $p{skip_expect} || $self->{create};
 
-    foreach ( qw( lexer_params compiler_params interp_params ) )
+    foreach ( qw( interp_params ) )
     {
 	die "$_ must be a hash reference"
 	    if exists $p{$_} && ! UNIVERSAL::isa( $p{$_}, 'HASH' );
@@ -363,25 +363,17 @@ sub _run_tests
     }
 }
 
-sub _run_test
+sub _make_interp
 {
     my $self = shift;
     my $test = $self->{current_test};
+    return $test->{interp} if $test->{interp};
 
-    my %lexer_params = ( exists $test->{lexer_params} ?
-			 %{ $test->{lexer_params} } :
-			 ()
-		       );
-    my %compiler_params = ( exists $test->{compiler_params} ?
-			    %{ $test->{compiler_params} } :
-			    ()
-			  );
     my %interp_params = ( exists $test->{interp_params} ?
 			  %{ $test->{interp_params} } :
 			  () );
-    %interp_params = ( %interp_params, %lexer_params, %compiler_params );
 
-    if ($DEBUG && keys %interp_params)
+    if ($DEBUG && %interp_params)
     {
 	print "Interp params:\n";
 	while ( my ($k, $v) = each %interp_params)
@@ -390,26 +382,32 @@ sub _run_test
 	}
     }
 
-    my $buf;
-    my $interp;
+    return HTML::Mason::Interp->new( comp_root => $self->comp_root,
+				     data_dir  => $self->data_dir,
+				     %interp_params,
+				   );
+}
 
-    if ($test->{interp})
-    {
-	$interp = $test->{interp};
-	$interp->out_method(\$buf);
-    }
-    else
-    {
-	$interp = HTML::Mason::Interp->new( comp_root => $self->comp_root,
-					    data_dir  => $self->data_dir,
-					    out_method => sub { for (@_) { $buf .= $_ if defined $_ } },
-					    %interp_params,
-					  );
-    }
-
+sub _execute
+{
+    my ($self, $interp) = @_;
+    my $test = $self->{current_test};
+    
     print "Calling $test->{name} test with path: $test->{call_path}\n" if $DEBUG;
     $test->{pretest_code}->() if $test->{pretest_code};
-    eval { $interp->exec( $test->{call_path}, @{$test->{call_args}} ); };
+    $interp->exec( $test->{call_path}, @{$test->{call_args}} );
+}
+
+sub _run_test
+{
+    my $self = shift;
+    my $test = $self->{current_test};
+
+    my $buf = '';
+    my $interp = $self->_make_interp;
+    $interp->out_method( sub { for (@_) { $buf .= $_ if defined $_ } } );
+
+    eval { $self->_execute($interp) };
 
     if ($@)
     {
@@ -544,6 +542,8 @@ HTML::Mason::Tests - Test harness for testing Mason
  1
  EOF
                  );
+
+ $group->run;
 
 =head1 DESCRIPTION
 
