@@ -837,5 +837,98 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'call_self',
+		      description => 'Test $m->call_self',
+		      component => <<'EOF',
+called
+<%init>
+my $out;
+if ( $m->call_self( \$out, undef ) )
+{
+    $m->print($out);
+    return;
+}
+</%init>
+EOF
+		      expect => <<'EOF',
+called
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'call_self_retval',
+		      description => 'Test that we can get return value of component via $m->call_self',
+		      component => <<'EOF',
+called
+<%init>
+my @return;
+if ( $m->call_self( undef, \@return ) )
+{
+    $m->print( "0: $return[0]\n1: $return[1]\n" );
+    return;
+}
+return ( 'foo', 'bar' );
+</%init>
+EOF
+		      expect => <<'EOF',
+0: foo
+1: bar
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'call_self_output_and_retval',
+		      description => 'Test that we can get return value and output of component via $m->call_self',
+		      component => <<'EOF',
+called
+<%init>
+my $out;
+my @return;
+if ( $m->call_self( \$out, \@return ) )
+{
+    $m->print( "${out}0: $return[0]\n1: $return[1]\n" );
+    return;
+}
+</%init>
+<%cleanup>
+return ( 'foo', 'bar' );
+</%cleanup>
+EOF
+		      expect => <<'EOF',
+called
+0: foo
+1: bar
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'call_self_with_filter',
+		      description => 'Test that $m->call_self works in presence of filter',
+		      component => <<'EOF',
+called
+<%filter>
+$_ = uc $_;
+$_ .= ' filtered';
+</%filter>
+<%init>
+my $out;
+if ( $m->call_self( \$out, undef ) )
+{
+    $m->print($out);
+    return;
+}
+</%init>
+EOF
+		      expect => <<'EOF',
+CALLED
+ filtered
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
