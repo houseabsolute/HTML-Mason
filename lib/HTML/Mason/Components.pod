@@ -260,7 +260,7 @@ multiple components that call each other in a hierarchical fashion.
 
 To call one component from another, use the <& &> tag:
 
-<& compPath, [name=>value, ...], [STORE=>ref] &>
+    <& compPath, [name=>value, ...], [STORE=>ref] &>
 
 =over
 
@@ -286,7 +286,7 @@ sprintf and printf.
 
 Mason uses a bit of magic parsing to eliminate the need for quotes
 around the component path in common cases. If the first character is
-one of [A-Za-z0-9/_.], the component path is assumed to be a literal
+one of C<[A-Za-z0-9/_.]>, the component path is assumed to be a literal
 string running up to the first comma or &>. Otherwise, the
 component path is evaluated as an expression.
 
@@ -479,9 +479,7 @@ names are still recognized, but the short names are preferred.  If you
 have pre-0.6 components that you'd like to convert, a convenient
 utility exists in F<bin/convert0.6.pl>.
 
-=over
-
-=item <%init> xxx </%init>
+=head2 E<lt>%initE<gt>
 
 Used for initialization code. For example: connecting to a database
 and selecting out rows; opening a file and reading its contents into a
@@ -532,9 +530,9 @@ Since C<E<lt>%initE<gt>> sections fire before any HTTP headers
 are sent, they should do their work quickly to prevent dead time on
 the browser side.
 
-=item <%cleanup> xxx </%cleanup>
+=head2 E<lt>%cleanupE<gt>
 
-Useful for cleanup code. For example: closing a database connection or
+Used for cleanup code. For example: closing a database connection or
 closing a file handle.
 
 Technically a <%cleanup> block is equivalent to a <%perl> block at
@@ -545,7 +543,7 @@ Recall that the end of a component corresponds to the end of a
 subroutine block. Since Perl is so darned good at cleaning up stuff at
 the end of blocks, <%cleanup> sections are rarely needed.
 
-=item <%args> xxx </%args>
+=head2 E<lt>%argsE<gt>
 
 xxx contains a list of argument declarations, one per line. Each
 declaration contains a type character ($, @, or %), a name, and
@@ -553,7 +551,7 @@ optionally '=>' followed by a default value. The default value must be
 a valid Perl expression of matching type (scalar, list, hash).
 See L<Accessing Parameters> above for usage and examples.
 
-=item <%once> xxx </%once>
+=head2 E<lt>%onceE<gt>
 
 This code executes once when the component is loaded. Unlike the other
 sections, its scope is above the component subroutine instead of
@@ -561,32 +559,63 @@ inside it. Useful for declaring persistent component-scoped lexical
 variables (especially objects that are expensive to create), declaring
 subroutines (both named and anonymous), and initializing state.
 
+You cannot call components or use any mc_ command from this section.
+
 Normally this code will execute individually from every HTTP child
-that uses the component. However, if the component is preloaded, it
-will only execute once in the parent.  Unless you have total control
+that uses the component. However, if the component is preloaded, this
+code will only execute once in the parent.  Unless you have total control
 over what components will be preloaded, it is safest to avoid
 initializing variables that can't survive a fork(), e.g. DBI handles.
 For such variables you can use the $initialized variable trick:
 
-<%once>
-my $initialized=0;
-my $dbh;    # declare but don't assign
-...
-</%once>
+    <%once>
+    my $initialized=0;
+    my $dbh;    # declare but don't assign
+    ...
+    </%once>
 
-<%init>
-if (!($initialized++)) {
-    $dbh = DBI::connect ...
-}
-...
-</%init>
+    <%init>
+    if (!($initialized++)) {
+        $dbh = DBI::connect ...
+    }
+    ...
+    </%init>
 
-=item \ at end of line
+=head2 E<lt>%docE<gt>
 
-Useful for suppressing unwanted newlines before Perl lines and block
-tags. In HTML components, this is mostly useful for fixed width areas
-like <PRE> tags, since browsers ignore white space for the most
-part. An example:
+Text in this section is treated as a comment and ignored. Most useful
+for a component's main documentation.  One can easily write a program
+to sift through a set of components and pull out their <%doc> blocks
+to form a reference page.
+
+Can also be used for in-line comments, though I admit it is a somewhat
+cumbersome comment marker.  Another option is '%#':
+
+    %# this is a comment
+
+These comments differ from HTML comments in that they do not appear in
+the HTML.
+
+=head2 E<lt>%textE<gt>
+
+Turns off processing of Mason syntax. Useful, for example, when
+documenting Mason itself from a component:
+
+    <%text>
+    % This is an example of a Perl line.
+    <% This is an example of an expression block. %>
+    </%text>
+
+This works for almost everything, but doesn't let you output
+</%text> itself! When all else fails, use C<mc_out()>:
+
+    %mc_out('The tags are <%text> and </%text>.');
+
+=head2 \ at end of line
+
+A \ suppresses the newline before %-lines and section tags. In HTML
+components, this is mostly useful for fixed width areas like <PRE>
+tags, since browsers ignore white space for the most part. An example:
 
     <PRE>
     foo
@@ -621,37 +650,6 @@ which prints
 The backslash has no special meaning outside this context. In
 particular, you cannot use it to escape a newline before a plain text
 line.
-
-=item <%doc> xxx </%doc>
-
-Most useful for a component's main documentation.  One can easily
-write a program to sift through a set of components and pull out their
-<%doc> blocks to form a reference page.
-
-Can also be used for in-line comments, though I admit it is a somewhat
-cumbersome comment marker.  Another option is '%#':
-
-    %# this is a comment
-
-These comments differ from HTML comments in that they do not appear in
-the HTML.
-
-=item <%text> xxx </%text>
-
-Turns off processing of Mason syntax. Useful, for example, when
-documenting Mason itself from a component:
-
-    <%text>
-    % This is an example of a Perl line.
-    <% This is an example of an expression block. %>
-    </%text>
-
-This works for almost everything, but doesn't let you output
-</%text> itself! When all else fails, use C<mc_out()>:
-
-    %mc_out('The tags are <%text> and </%text>.');
-
-=back
 
 =head1 DATA CACHING
 
