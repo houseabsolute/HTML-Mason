@@ -156,7 +156,7 @@ sub _initialize
               [ u => \&HTML::Mason::Tools::url_escape ],
             )
     {
-        $self->add_escape(@$_);
+        $self->set_escape(@$_);
     }
 }
 
@@ -705,7 +705,7 @@ EOF
     return $out;
 }
 
-sub add_escape
+sub set_escape
 {
     my $self = shift;
     my %p = @_;
@@ -927,9 +927,9 @@ for examples.
 This method isn't generally useful in a mod_perl environment; see
 L<subrequests|HTML::Mason::Devel/Subrequests> instead.
 
-=for html <a name="item_add_escape"></a>
+=for html <a name="item_set_escape"></a>
 
-=item add_escape ($name => \&subroutine)
+=item set_escape ($name => \&subroutine)
 
 This method is called to add an escape flag to the list of known
 escapes for the interpreter.  The flag may only consist of the
@@ -938,7 +938,7 @@ should expect to be given a single scalar reference, which it should
 alter as needed.  Any return value from this subroutine will be
 ignored.
 
-=for html <a name="item_add_escape"></a>
+=for html <a name="item_set_escape"></a>
 
 =item remove_escape ($name)
 
