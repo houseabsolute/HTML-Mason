@@ -111,7 +111,6 @@ use HTML::Mason::ApacheHandler;
 use HTML::Mason::Config;
 use HTML::Mason::Tools qw(date_delta_to_secs html_escape);
 use MLDBM ($HTML::Mason::Config{mldbm_use_db}, $HTML::Mason::Config{mldbm_serializer});
-use IO::File qw(!/^SEEK/);
 use POSIX;
 
 sub open_preview_settings_file
@@ -357,7 +356,8 @@ sub handle_preview_request_1
 		    if (substr($content,$start,length($nextEventStr)) eq $nextEventStr) {
 			$start += length($nextEventStr);
 			my $length = [stat($path)]->[7];
-			my $fh = new IO::File $path;
+			my $fh = do { local *FH; *FH; };
+			open $fh $path or die "Can't open $path: $!";
 			if ($length < 1024) {
 			    local $/ = undef;
 			    my $filetext = <$fh>;
@@ -366,11 +366,12 @@ sub handle_preview_request_1
 			    my $buf;
 			    read($fh,$buf,128);
 			    if ($buf eq substr($content,$start,128)) {
-				$fh->seek(-128,&SEEK_END);
+				seek $fh (-128,2);
 				read($fh,$buf,128);
 				$valid = ($buf eq substr($content,$start+$length-128,128));
 			    }
 			}
+			close $fh or die "Can't close $path: $!";
 			if ($valid) {
 			    $content = substr($content,0,$start-length($nextEventStr)) . substr($content,$start,$length) . $nextEventStr . substr($content,$start+$length);
 			}
