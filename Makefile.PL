@@ -36,6 +36,18 @@ chk_version('Apache::Request' => '0.31') or
         . "    Mason requires version 0.31, or later, of Apache::Request\n"
 	. "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
 
+chk_version('Exception::Class' => '0.97') or
+    warn  "\n"
+	. "*** If you plan to use Mason with mod_perl,\n"
+        . "    Mason requires version 0.31, or later, of Apache::Request\n"
+	. "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
+
+chk_version('Cache::Cache' => '0.99') or
+    warn  "\n"
+	. "*** If you plan to use Mason with mod_perl,\n"
+        . "    Mason requires version 0.31, or later, of Apache::Request\n"
+	. "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
+
 make_config();
 setup_mod_perl_tests() unless $opts{'no-prompts'};
 assisted_install_config() unless $opts{'no-prompts'};
@@ -50,7 +62,8 @@ WriteMakefile(
     'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
     'PREREQ_PM' => { 'Data::Dumper' => 2.08, 'File::Spec' => 0.8, 'Params::Validate' => 0.07,
 		     'Apache::Request' => 0.31,
-		     'Exception::Class' => 0.95,
+		     'Exception::Class' => 0.97,
+		     'Cache::Cache' => 0.99,
 		     },
 
     # %APACHE is created when setup_mod_perl_tests() is called.  The
