@@ -1396,13 +1396,14 @@ normally and its output and return value cached.
 It is typically used right at the top of an C<< <%init> >> section:
 
     <%init>
-    return if $m->cache_self(expires_in => '3 hours' [, key => 'fookey' ]);
+    return if $m->cache_self([key => 'fookey', expires_in => '3 hours',
+                             ... <other cache options> ... ]);
      ... <rest of init> ...
     </%init>
 
 C<< $m->cache_self >> is built on top of C<< $m->cache >>, so it
 accepts all of the cache options described earlier.  C<<
-$m->cache_self >> can also cache a component's return value; see the
+$m->cache_self >> can also cache a component's return value. See the
 B<L<HTML::Mason::Request|HTML::Mason::Request>> documentation for details.
 
 =head2 Cache Object Meta-data
