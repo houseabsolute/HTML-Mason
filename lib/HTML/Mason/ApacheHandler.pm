@@ -3,7 +3,6 @@
 # under the same terms as Perl itself.
 
 use strict;
-require 5.004;
 
 #----------------------------------------------------------------------
 #
@@ -149,62 +148,32 @@ sub valid_params {
     return \%valid_params;
 }
 
-
-# We try to create the objects as soon as possible, before Apache
-# forks.  This leads to a memory savings as the objects (or parts of
-# them) may stay in shared memory.
-
-__PACKAGE__->import;
 sub import
 {
     my $pack = shift;
-
-    return if defined $ARGS_METHOD;
 
     if ( $pack->_in_conf_file )
     {
 	my $args_method = $pack->get_param('ArgsMethod');
 
-	$pack->_load_args_method( args_method => $args_method );
+	if ($args_method eq 'CGI')
+	{
+	    unless ($CGI::VERSION)
+	    {
+		require CGI;
+	    }
+	}
+	elsif ($args_method eq 'mod_perl')
+	{
+	    unless ($Apache::Request::VERSION)
+	    {
+		require Apache::Request;
+	    }
+	}
 
 	# can't do this stuff for MultipleConfig cause the classes may be
 	# different for each config section
 	$pack->make_ah() if $pack->_in_simple_conf_file;
-    }
-    else
-    {
-	# if we have arguments we were called via a use ... ( args_method => 'foo' ) line
-	$pack->_load_args_method(@_) if @_;
-    }
-}
-
-sub _load_args_method
-{
-    my $self = shift;
-
-    my %p = @_;
-    $ARGS_METHOD = $p{args_method};
-
-    $ARGS_METHOD ||= 'CGI';
-    if ($ARGS_METHOD eq 'CGI')
-    {
-	unless ($CGI::VERSION)
-	{
-	    eval 'use CGI';
-	    die $@ if $@;
-	}
-    }
-    elsif ($ARGS_METHOD eq 'mod_perl')
-    {
-	unless ($Apache::Request::VERSION)
-	{
-	    eval 'use Apache::Request;';
-	    die $@ if $@;
-	}
-    }
-    else
-    {
-	die "Invalid args_method parameter ('$p{args_method}') given to HTML::Mason::ApacheHandler\n";
     }
 }
 
@@ -447,7 +416,19 @@ sub _initialize {
     my ($self) = @_;
 
     $self->{request_number} = 0;
-    $self->{args_method} = $ARGS_METHOD;
+
+    if ($self->args_method eq 'mod_perl') {
+	unless ($Apache::Request::VERSION) {
+	    warn "Loading Apache::Request at runtime.  You could save some memory by preloading it in your httpd.conf or handler.pl file\n";
+	    require Apache::Request;
+	}
+    } else {
+	unless ($CGI::VERSION) {
+	    warn "Loading CGI at runtime.  You could save some memory by preloading it in your httpd.conf or handler.pl file\n";
+
+	    require CGI;
+	}
+    }
 
     # Add an HTML::Mason menu item to the /perl-status page.
     if ($Apache::Status::VERSION) {
