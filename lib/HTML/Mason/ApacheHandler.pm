@@ -111,7 +111,7 @@ $VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
 # Fields that can be set in new method, with defaults
 my %fields =
     (
-     apache_status_title => 'mason',
+     apache_status_title => 'HTML::Mason status',
      args_method => 'mod_perl',
      auto_send_headers => 1,
      decline_dirs => 1,
@@ -141,7 +141,7 @@ sub _make_ah
     my %p;
 
     $p{apache_status_title} = _get_string_param('ApacheStatusTitle');
-    $p{auto_send_headers} = _get_boolean_param('ArgsMethod');
+    $p{args_method} = _get_string_param('ArgsMethod');
     $p{auto_send_headers} = _get_boolean_param('AutoSendHeaders');
     $p{debug_handler_proc} = _get_string_param('DebugHandlerProc');
     $p{debug_handler_script} = _get_string_param('DebugHandlerScript');
@@ -361,43 +361,34 @@ sub new
     return $self;
 }
 
-my %status_sub_defined = ();
+# Register with Apache::Status at module startup.  Will get replaced
+# with a more informative status once an interpreter has been created.
+
+my $status_name = 'mason0001';
+
+Apache::Status->menu_item
+    ($status_name => $fields{apache_status_title},
+     sub { ["<b>(no interpreters created in this child yet)</b>"] });
+
 
 sub _initialize {
     my ($self) = @_;
 
-    my $interp = $self->interp;
-
+    # Add an HTML::Mason menu item to the /perl-status page.
     if ($Apache::Status::VERSION) {
-	# Add an HTML::Mason menu item to the /perl-status page. Things we report:
-	# -- Interp properties
-	# -- loaded (cached) components
-	my $name = $self->apache_status_title;
-	unless ($status_sub_defined{$name}) {
+	# A closure, carries a reference to $self
+	my $statsub = sub {
+	    my ($r,$q) = @_; # request and CGI objects
+	    return [] if !defined($r);
 
-	    my $title;
-	    if ($name eq 'mason') {
-		$title='HTML::Mason status';
-	    } else {
-		$title=$name;
-		$name=~s/\W/_/g;
-	    }
-
-	    my $statsub = sub {
-		my ($r,$q) = @_; # request and CGI objects
-		return [] if !defined($r);
-		my @strings = ();
-
-		push (@strings,
-		      qq(<FONT size="+2"><B>) . $self->apache_status_title . qq(</B></FONT><BR><BR>),
-		      $self->interp_status);
-
-		return \@strings;     # return an array ref
-	    };
-	    Apache::Status->menu_item ($name,$title,$statsub);
-	    $status_sub_defined{$name}++;
-	}
+	    return ["<center><h2>" . $self->apache_status_title . "</h2></center>" ,
+		    $self->status_as_html,
+		    $self->interp->status_as_html];
+	};
+	Apache::Status->menu_item($status_name++, $self->apache_status_title, $statsub);
     }
+
+    my $interp = $self->interp;
 
     #
     # Create data subdirectories if necessary. mkpath will die on error.
@@ -413,41 +404,42 @@ sub _initialize {
     $interp->compiler->set_allowed_globals(qw($r));
 }
 
-#
-# Generate an array that describes Interp's current status
-#
-sub interp_status
-{
-    my ($interp) = $_[0]->interp;
+# Generate HTML that describes ApacheHandler's current status.
+# This is used in things like Apache::Status reports.
 
-    my @strings;
-    push @strings,
-        qq(<DL><DT><FONT SIZE="+1"><B>Interp object properties</B></FONT>\n),
-        qq(<DT><B>Startup options</B>\n);
+sub status_as_html {
+    my ($self) = @_;
+    
+    # Should I be scared about this?  =)
 
+    my $comp_text = <<'EOF';
+<h3>ApacheHandler properties:</h3>
+<blockquote>
+ <tt>
+% foreach my $property (sort keys %$ah) {
+%   next if ref $ah->{$property};  # Skipping the complicated stuff for now
+%   my $val = $ah->{$property};
+    <% $property |h %> => <% defined $val ? $val : '<i>undef</i>' %>
+                          <% $val eq $defaults{$property} ? '<font color=green>(default)</font>' : '' %>
+		          <br>
+% }
+  </tt>
+</blockquote>
 
-    push @strings,
-        map {"<DD><TT>$_ = ".(defined($interp->{$_}) ? 
-                                $interp->{$_} : '<I>undef</I>'
-                             )."</TT>\n" 
-            } grep ! ref $interp->{$_}, sort keys %$interp;
+<%args>
+ $ah       # The ApacheHandler we'll elucidate
+ %defaults # Default values for member data
+</%args>
+EOF
 
-    push @strings, '</DL>',
-            '<DL><DT><FONT SIZE="+1"><B>Cached components</B></FONT><DD>';
-
-    if(my $cache = $interp->code_cache)
-    {
-	my $string;
-	foreach my $key (sort keys %$cache) {
-	    $string .= sprintf("<TT>%s (%s)</TT><BR>\n",$key,scalar(localtime($cache->{$key}->{lastmod})));
-	}
-	push (@strings, $string);
-    } else {
-        push @strings, '<I>None</I>';
-    }     
-    push @strings, '</DL>';
-    return @strings;
+    my $interp = $self->interp;
+    my $comp = $interp->make_anonymous_component(comp => $comp_text);
+    my $out;
+    local $interp->{out_method} = \$out;
+    $interp->exec($comp, ah => $self, defaults => \%fields);
+    return $out;
 }         
+
 
 #
 # Standard entry point for handling request

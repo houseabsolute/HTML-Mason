@@ -780,5 +780,54 @@ sub _compilation_error {
     HTML::Mason::Exception::Compilation->throw( error => $msg );
 }
 
+# Generate HTML that describes Interp's current status.
+# This is used in things like Apache::Status reports.  Currently shows:
+# -- Interp properties
+# -- loaded (cached) components
+
+sub status_as_html {
+    my ($self) = @_;
+    
+    # Should I be scared about this?  =)
+
+    my $comp_text = <<'EOF';
+<h3>Interpreter properties:</h3>
+<blockquote>
+ <h4>Startup options:</h4>
+ <tt>
+% foreach my $property (sort keys %$interp) {
+%   next if ref $interp->{$property};  # Skipping the complicated stuff for now
+%   my $val = $interp->{$property};
+    <% $property |h %> => <% defined $val ? $val : '<i>undef</i>' %>
+                          <% $val eq $defaults{$property} ? '<font color=green>(default)</font>' : '' %>
+		          <br>
+% }
+  </tt>
+
+ <h4>Components in memory cache:</h4>
+ <tt>
+% if (my $cache = $interp->code_cache) {
+%   foreach my $key (sort keys %$cache) {
+       <% $key |h%> (modified <% scalar localtime $cache->{$key}->{lastmod} %>)<br>
+%   }
+% } else {
+    <I>None</I>
+% }
+  </tt>
+</blockquote>
+
+<%args>
+ $interp   # The interpreter we'll elucidate
+ %defaults # Default values for interp member data
+</%args>
+EOF
+
+    my $comp = $self->make_anonymous_component(comp => $comp_text);
+    my $out;
+    local $self->{out_method} = \$out;
+    $self->exec($comp, interp => $self, defaults => \%fields);
+    return $out;
+}         
+
 
 1;
