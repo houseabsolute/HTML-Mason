@@ -670,11 +670,6 @@ sub handle_request_1
 		$headers_sent = 1;
 	    }
 	    $interp->out_method->($_[0]);
-
-	    # A hack, but good for efficiency in stream mode: change the
-	    # current sink of the request so all this is bypassed for the
-	    # remainder of this component and its children.
-	    $request->top_stack->{sink} = $interp->out_method if $request->out_mode eq 'stream' and $request->top_stack->{sink} eq $request->out_method;
 	};
 	$request->out_method($out_method);
 
