@@ -9,18 +9,16 @@ use strict;
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
-use HTML::Mason::MethodMaker
-    ( read_write => [ 'interp' ] );
+my %valid_params = ();
+sub valid_params { \%valid_params }
+
+#my %creates_objects = ();
+#sub creates_objects { \%creates_objects }
 
 sub new
 {
     my $class = shift;
-
-    validate_pos( @_, { isa => 'HTML::Mason::Interp' } );
-
-    my $self = { interp => shift };
-
-    return bless $self, $class;
+    return bless {validate(@_, $class->valid_params)}, $class;
 }
 
 sub resolve {

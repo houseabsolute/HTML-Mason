@@ -9,16 +9,51 @@ use strict;
 use File::Spec;
 use HTML::Mason::Resolver;
 use HTML::Mason::Tools qw(paths_eq read_file);
+use Params::Validate qw(:all);
 
 use vars qw(@ISA);
-
 @ISA = qw(HTML::Mason::Resolver);
+
+my %valid_params = 
+    (
+     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF },
+    );
+sub valid_params {
+    my $self = shift;
+    return {%{$self->SUPER::valid_params}, %valid_params};
+}
+
+# For subobject auto-creation
+my %creates_objects = ();
+sub creates_objects { \%creates_objects }
+
+use HTML::Mason::MethodMaker
+    ( read_only => ['comp_root'] );
+
 
 sub new {
     my $package = shift;
     my $self = $package->SUPER::new(@_);
-    HTML::Mason::Exception::Params->throw( error => "must specify value for comp_root\n" )
-	unless $self->interp->comp_root;
+
+    #
+    # Check that directories are absolute.
+    #
+    if (ref $self->{comp_root}) {
+	foreach my $pair (@{$self->comp_root}) {
+	    HTML::Mason::Exception::Params->throw( error => "Multiple-path component root must consist of a list of two-element lists; see documentation" )
+		if ref($pair) ne 'ARRAY';
+	    $pair->[1] = File::Spec->canonpath( $pair->[1] );
+	    HTML::Mason::Exception::Params->throw( error => "comp_root ('$pair->[0]') must contain only absolute directories" )
+		unless File::Spec->file_name_is_absolute( $pair->[1] );
+	}
+
+    } else {
+	# comp_root is a string
+	$self->{comp_root} = File::Spec->canonpath( $self->{comp_root} );
+ 	HTML::Mason::Exception::Params->throw( error => "comp_root ('".$self->{comp_root}."') must be an absolute directory" )
+	    unless File::Spec->file_name_is_absolute( $self->{comp_root} );
+    }
+
     return $self;
 }
 
@@ -30,7 +65,7 @@ sub new {
 #
 sub resolve {
     my ($self,$path) = @_;
-    my $comp_root = $self->interp->comp_root;
+    my $comp_root = $self->{comp_root};
     if (!ref($comp_root)) {
 	my $srcfile = File::Spec->catdir( $comp_root, $path );
 	my @srcstat = stat $srcfile;
@@ -59,7 +94,7 @@ sub comp_class {
 #
 sub glob_path {
     my ($self,$pattern) = @_;
-    my $comp_root = $self->interp->comp_root;
+    my $comp_root = $self->{comp_root};
     my @roots;
     if (!ref($comp_root)) {
 	@roots = ($comp_root);
@@ -93,11 +128,11 @@ sub get_component {
 #
 sub file_to_path {
     my ($self,$file) = @_;
-    my $comp_root = $self->interp->comp_root;
+    my $comp_root = $self->{comp_root};
     my @roots;
 
     if (!ref($comp_root)) {
-	@roots = ($self->interp->comp_root);
+	@roots = ($comp_root);
     } elsif (ref($comp_root) eq 'ARRAY') {
 	@roots = map($_->[1],@{$comp_root});
     } else {

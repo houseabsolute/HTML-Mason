@@ -14,6 +14,7 @@ use HTML::Mason::Config;
 use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
 use HTML::Mason::Tools qw(make_fh read_file taint_is_on);
+use HTML::Mason::Utils qw(create_subobjects);
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
@@ -21,7 +22,6 @@ require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code_cache
-			 comp_root
 			 data_dir
 			 data_cache_dir
 			 die_handler_overridden
@@ -51,8 +51,7 @@ my %valid_params =
      allow_recursive_autohandlers => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
      autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR|UNDEF },
      code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR }, #10M
-     compiler                     => { isa => 'HTML::Mason::Compiler', optional => 1 },
-     compiler_class               => { parse => 'string',  default => 'HTML::Mason::Compiler::ToObject', type => SCALAR },
+     compiler                     => { isa => 'HTML::Mason::Compiler' },
      current_time                 => { parse => 'string',  default => 'real', type => SCALAR },
      data_cache_dir               => { parse => 'string',  optional => 1, type => SCALAR },
      dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR|UNDEF },
@@ -67,8 +66,7 @@ my %valid_params =
 						      sub { $_[0] =~ /^(?:batch|stream)$/ } } },
      max_recurse                  => { parse => 'string',  default => 32, type => SCALAR },
      preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF },
-     resolver                     => { isa => 'HTML::Mason::Resolver', optional => 1 },
-     resolver_class               => { parse => 'string',  default => 'HTML::Mason::Resolver::File', type => SCALAR },
+     resolver                     => { isa => 'HTML::Mason::Resolver' },
      static_file_root             => { parse => 'string',  optional => 1, type => SCALAR },
      system_log_events            => { parse => 'string',  optional => 1, type => SCALAR|HASHREF|UNDEF },
      system_log_file              => { parse => 'string',  optional => 1, type => SCALAR },
@@ -79,17 +77,22 @@ my %valid_params =
      use_object_files             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
      use_reload_file              => { parse => 'boolean', default => 0, type => SCALAR|UNDEF },
 	    
-     comp_root                    => { parse => 'list',   type => SCALAR|ARRAYREF },
      data_dir                     => { parse => 'string', type => SCALAR },
     );
 
 sub valid_params { \%valid_params }
 
+# For subobject auto-creation
+my %creates_objects = ('resolver' => 'HTML::Mason::Resolver::File',
+		       'compiler' => 'HTML::Mason::Compiler::ToObject');
+sub creates_objects { \%creates_objects }
+
 sub new
 {
     my $class = shift;
+    my @args = create_subobjects($class, @_);
 
-    my $self = bless { validate( @_, $class->valid_params ),
+    my $self = bless { validate( @args, $class->valid_params ),
 		       code_cache => {},
 		       code_cache_current_size => 0,
 		       files_written => [],
@@ -118,43 +121,13 @@ sub _initialize
     $self->{code_cache_current_size} = 0;
     $self->{data_cache_defaults} = {};
 
-    # Create compiler if not provided
-    unless ($self->{compiler}) {
-	eval "use $self->{compiler_class}" unless $self->{compiler_class} =~ /[^\w:]/;
-	die $@ if $@;
-	$self->compiler( $self->{compiler_class}->new() );
-    }
-
-    #
-    # Create resolver if not provided
-    #
-    unless ($self->{resolver}) {
-	eval "use $self->{resolver_class}" unless $self->{resolver_class} =~ /[^\w:]/;
-	die $@ if $@;
-	$self->{resolver} = $self->{resolver_class}->new($self);
-    }
-
     #
     # Check that directories are absolute.
     #
-    foreach my $field (qw(comp_root data_dir)) {
-	next if $field eq 'comp_root' and ref($self->{$field}) eq 'ARRAY';
+    foreach my $field (qw(data_dir)) {
 	$self->{$field} = File::Spec->canonpath( $self->{$field} );
  	HTML::Mason::Exception::Params->throw( error => "$field ('".$self->{$field}."') must be an absolute directory" )
 	    unless File::Spec->file_name_is_absolute( $self->{$field} );
-    }
-
-    #
-    # If comp_root has multiple dirs, confirm format.
-    #
-    if (ref($self->comp_root) eq 'ARRAY') {
-	foreach my $pair (@{$self->comp_root}) {
-	    HTML::Mason::Exception::Params->throw( error => "Multiple-path component root must consist of a list of two-element lists; see documentation" )
-		if ref($pair) ne 'ARRAY';
-	    $pair->[1] = File::Spec->canonpath( $pair->[1] );
-	    HTML::Mason::Exception::Params->throw( error => "comp_root ('$pair->[0]') must contain only absolute directories" )
-		unless File::Spec->file_name_is_absolute( $pair->[1] );
-	}
     }
 
     #

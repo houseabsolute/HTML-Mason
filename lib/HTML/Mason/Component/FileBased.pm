@@ -33,9 +33,13 @@ sub dir_path {
 }
 sub assign_runtime_properties {
     my ($self,$interp,$fq_path) = @_;
-    my $comp_root = $interp->comp_root;    
+
+    # XXX I don't think the Component should be poking around in
+    # comp_root.  That's the resolver's territory. -Ken
+    my $comp_root = $interp->resolver->comp_root;    
+    my $source_root;
     if (!ref($comp_root)) {
-	$self->{source_root} = $comp_root;
+	$source_root = $comp_root;
 	$self->{'path'} = $fq_path;
     } else {
 	($self->{source_root_key},$self->{'path'}) = ($fq_path =~ m{ ^/([^/]+)(/.*)$ }x)
@@ -43,13 +47,13 @@ sub assign_runtime_properties {
 	foreach my $lref (@$comp_root) {
 	    my ($key,$root) = @$lref;
 	    if ($self->{source_root_key} eq uc($key)) {
-		$self->{source_root} = $root;
+		$source_root = $root;
 	    }
 	}
 	HTML::Mason::Exception->throw( error => "FQ path ($fq_path) contained unknown source root key" )
-	    unless $self->{source_root};
+	    unless $source_root;
     }
-    $self->{'source_file'} = File::Spec->canonpath( File::Spec->catfile( $self->{source_root}, $self->{'path'} ) );
+    $self->{'source_file'} = File::Spec->canonpath( File::Spec->catfile( $source_root, $self->{'path'} ) );
     $self->SUPER::assign_runtime_properties($interp,$fq_path);
 }
 

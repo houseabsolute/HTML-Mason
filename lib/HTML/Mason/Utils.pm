@@ -66,6 +66,7 @@ sub get_subargs {
     my ($package, $superargs) = @_;
     my %subargs;
 
+    #warn "==== $package superargs = (@{[ %$superargs ]})\n";
     while (my ($name, $default) = each %{$package->creates_objects}) {
 	if (exists $superargs->{$name}) {  # Not creating it, so don't accept its params
 	    $subargs{$name} = $superargs->{$name};
@@ -83,6 +84,7 @@ sub get_subargs {
 	$subargs{$key} = $superargs->{$key} if exists $superargs->{$key};
     }
 
+    #warn "==== $package subargs = (@{[ %subargs ]})\n";
     return %subargs;
 }
 
