@@ -128,10 +128,8 @@ sub file_to_path {
 
     if (!ref($comp_root)) {
 	@roots = ($comp_root);
-    } elsif (ref($comp_root) eq 'ARRAY') {
-	@roots = map($_->[1],@{$comp_root});
     } else {
-	HTML::Mason::Exception::Params->throw( error => "comp_root must be a scalar or listref" );
+	@roots = map($_->[1],@{$comp_root});
     }
     foreach my $root (@roots) {
 	if (paths_eq($root,substr($file,0,length($root)))) {
