@@ -31,7 +31,7 @@ modified.
 - Added handle_cgi_object method to CGIHandler.
 - Mason works with the CVS version of mod_perl 2.0 when mod_perl 2.0's
 backwards compatibility layer is used.  AFAICT, the CVS version is
-close enough to what will be released as 2.0 that few, if any changes,
+close enough to what will be released as 2.0 that few, if any, changes
 should be required once 2.0 is out.
 
 [ BUG FIXES ]
@@ -43,11 +43,12 @@ redirects, for example.
 - The lexing code now handles some weird edge case errors in a better
 way.  One of these involved a component starting with a invalid block
 name like <%foo>.
-- A component that compiles into code with syntax errors seems to
-trigger a Perl bug when Mason attempts to eval it.  This bug is
-present in Perls before 5.7.3, but appears to be fixed in the
-development branch.  Mason will use alarm, if supported by the system,
-to break out of the hanging state.
+- A component that compiles into Perl code that causes syntax errors
+seems to trigger a Perl bug when Mason attempts to eval it.  The
+symptom is that Mason simply hangs when it tries to eval the
+component's object file.  This bug is present in Perls before 5.7.3,
+but appears to be fixed in the development branch.  Mason will use
+alarm, if supported by the system, to work around this.
 - Output from subrequests was appearing _before_ other component
 output.  The new default is that this output appears "inline" in the
 calling component, which we think is most DWIM-ish.  Alternate
