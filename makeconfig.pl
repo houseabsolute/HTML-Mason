@@ -174,23 +174,17 @@ use lib 'lib', 't/lib';
 
 use Cwd;
 use File::Path;
-use File::Spec;
+use File::Basename;
 
-use vars qw($HAS_APACHE_REQUEST $HAS_MOD_PERL $APACHE_DIR $COMP_ROOT $DATA_DIR %APACHE_PARAMS);
-$APACHE_DIR = '';
-$DATA_DIR = '';
+use vars qw(%APACHE);
 
 sub setup_mod_perl_tests
 {
     # Skip if no mod_perl
     eval { require mod_perl; };
     return if $@;
-    $HAS_MOD_PERL = 1;
 
     require Apache::test;
-
-    eval { require Apache::Request; };
-    $HAS_APACHE_REQUEST = $@ ? 0 : 1;
 
     cleanup_files();
 
@@ -198,7 +192,10 @@ sub setup_mod_perl_tests
     setup_handler('CGI');
     write_test_comps();
 
-    setup_handler('mod_perl') if $HAS_APACHE_REQUEST;
+    eval { require Apache::Request; };
+    $APACHE{has_apache_request} = $@ ? 0 : 1;
+
+    setup_handler('mod_perl') if $APACHE{has_apache_request};
 }
 
 sub cleanup_files
@@ -225,28 +222,29 @@ sub cleanup_files
 
 sub write_apache_conf
 {
-    %APACHE_PARAMS = Apache::test->get_test_params();
+    my %p = Apache::test->get_test_params();
+    while (my ($k, $v) = each %p)
+    {
+	$APACHE{$k} = $v;
+    }
 
     my $cwd = cwd();
-    my $conf_file = $APACHE_PARAMS{conf_file} ? "$cwd/$APACHE_PARAMS{conf_file}" : "$cwd/t/httpd.conf";
-    $APACHE_DIR = ( File::Spec->splitpath($conf_file) )[1];
-    $APACHE_DIR =~ s,/$,,;
+    my $conf_file = $APACHE{conf_file} ? "$cwd/$APACHE{conf_file}" : "$cwd/t/httpd.conf";
+    $APACHE{apache_dir} = dirname($conf_file);
+    $APACHE{apache_dir} =~ s,/$,,;
 
-    $COMP_ROOT = "$APACHE_DIR/comps";
-    $DATA_DIR = "$APACHE_DIR/data";
+    $APACHE{comp_root} = "$APACHE{apache_dir}/comps";
+    $APACHE{data_dir} = "$APACHE{apache_dir}/data";
 
-    mkdir $COMP_ROOT, 0755
-	or die "Can't make dir '$COMP_ROOT': $!";
-    mkdir $DATA_DIR, 0755
-	or die "Can't make dir '$COMP_ROOT': $!";
+    mkdir $APACHE{comp_root}, 0755
+	or die "Can't make dir '$APACHE{comp_root}': $!";
+    mkdir $APACHE{data_dir}, 0755
+	or die "Can't make dir '$APACHE{comp_root}': $!";
 
-    my $include;
-    $include = "PerlSetEnv PERL5LIB $ENV{PERL5LIB}\n\n" if $ENV{PERL5LIB};
-
-    $include .= <<"EOF";
+    my $include .= <<"EOF";
 
 <IfDefine CGI>
-  PerlRequire $APACHE_DIR/mason_handler_CGI.pl
+  PerlRequire $APACHE{apache_dir}/mason_handler_CGI.pl
 
   <Location /mason>
     SetHandler perl-script
@@ -260,10 +258,12 @@ sub write_apache_conf
 </IfDefine>
 EOF
 
-    $include .= <<"EOF"
+    if ($APACHE{has_apache_request})
+    {
+	$include .= <<"EOF"
 
 <IfDefine mod_perl>
-  PerlRequire $APACHE_DIR/mason_handler_mod_perl.pl
+  PerlRequire $APACHE{apache_dir}/mason_handler_mod_perl.pl
 
   <Location /mason>
     SetHandler perl-script
@@ -276,11 +276,11 @@ EOF
   </Location>
 </IfDefine>
 EOF
-	if $HAS_APACHE_REQUEST;
+    }
 
     local $^W;
     Apache::test->write_httpd_conf
-	    ( %APACHE_PARAMS,
+	    ( %APACHE,
 	      include => $include
 	    );
 }
@@ -290,19 +290,30 @@ sub setup_handler
     my $args_method = shift;
 
     my $handler = "mason_handler_$args_method.pl";
-    my $handler_file = "$APACHE_DIR/$handler";
+    my $handler_file = "$APACHE{apache_dir}/$handler";
     open F, ">$handler_file"
 	or die "Can't write to '$handler_file': $!";
+
+    my $libs = '';
+    if ($ENV{PERL5LIB})
+    {
+	$libs = 'use lib qw( ';
+	$libs .= join ' ', (split /:|;/, $ENV{PERL5LIB});
+	$libs .= ' );';
+    }
+
     print F <<"EOF";
 package HTML::Mason;
+
+$libs
 
 use HTML::Mason::ApacheHandler ( args_method => '$args_method' );
 use HTML::Mason;
 
 my \$parser = HTML::Mason::Parser->new;
 my \$interp = HTML::Mason::Interp->new( parser => \$parser,
-					comp_root => '$COMP_ROOT',
-					data_dir => '$DATA_DIR' );
+					comp_root => '$APACHE{comp_root}',
+					data_dir => '$APACHE{data_dir}' );
 
 my \$stream_ah = HTML::Mason::ApacheHandler->new( interp => \$interp,
                                                  output_mode => 'stream' );
@@ -366,7 +377,7 @@ EOF
 EOF
 	      );
 
-    if ($HAS_APACHE_REQUEST)
+    if ($APACHE{has_apache_request})
     {
 	write_comp( 'apache_request', <<'EOF',
 <% ref $r %>
@@ -380,7 +391,7 @@ sub write_comp
     my $name = shift;
     my $comp = shift;
 
-    my $file = "$COMP_ROOT/$name";
+    my $file = "$APACHE{comp_root}/$name";
     open F, ">$file"
 	or die "Can't write to '$file': $!";
 
