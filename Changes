@@ -38,13 +38,16 @@ fail with Perl 5.8.0.  Submitted by Michael Gray
 - Fixed a number of cases where the lexer/compiler's behavior differed
 from Mason 1.05 in unintended ways.
 -- Dashes were not being allowed in subcomponent and method names,
-even though this is documented as being allowed.
+even though this is documented as being allowed.  Reported by Ken
+Miller.
 -- Space between a method or subcomponent name and the '>' at the end
 of the tag was not being allowed.  It should be noted that this is not
 documented as being allowed in the docs, and so may change in the
-future.  But for now, we'd rather be compatible with 1.05.
+future.  But for now, we'd rather be compatible with 1.05.  Reported
+by Chris Hutchinson.
 -- Comments were not being allowed after flag and attribute
 assignments.  Again, this is not documented as being allowed.
+Reported by Chris Hutchinson.
 
 
 1.1201  July 24, 2002
