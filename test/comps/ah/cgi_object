@@ -1,0 +1,1 @@
+<% $m->cgi_object->isa('CGI') ? 'CGI' : 'NO CGI' %>
