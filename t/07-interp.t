@@ -1,25 +1,54 @@
 #!/usr/bin/perl -w
-use Cwd;
-use vars (qw($root $branch $comp_root $data_dir));
 
-$branch = "interp";
-my $pwd = cwd();
-$root = (-f "test-common.pl") ? "$pwd/.." : (-f "t/test-common.pl") ? "$pwd" : die "ERROR: cannot find test-common.pl\n";
-unshift(@INC,"$root/lib");
+use strict;
 
-require "$root/t/test-common.pl";
-init();
+use HTML::Mason::Tests;
 
-sub try_exec_with_interp {
-    my ($options,$test,$iteration) = @_;
-    # Create new interp based on options.
-    my $interp = new HTML::Mason::Interp(comp_root => $comp_root, data_dir => $data_dir, %$options);
-    try_exec($interp,$test,$iteration);
+my $tests = make_tests();
+$tests->run;
+
+sub make_tests
+{
+    my $group = HTML::Mason::Tests->new( name => 'interp',
+					 description => 'interp object functionality' );
+
+    $group->add_support( path => '/autohandler_test/autohandler',
+			 component => <<'EOF',
+The recursive autohandler: <% $m->current_comp->path %>
+
+<% $m->call_next %>
+EOF
+		       );
+
+    $group->add_test( name => 'no recursive autohandlers',
+		      description => 'tests turning off recursive autohandlers',
+		      call_path => '/autohandler_test/subdir/hello',
+		      interp_params => { allow_recursive_autohandlers => 0 },
+		      component => <<'EOF',
+Hello World!
+EOF
+		      expect => <<'EOF',
+Hello World!
+EOF
+		    );
+
+    $group->add_test( name => 'no recursive autohandlers',
+		      description => 'tests turning off recursive autohandlers',
+		      call_path => '/autohandler_test/subdir/hello',
+		      component => <<'EOF',
+Hello World!
+EOF
+		      expect => <<'EOF',
+The recursive autohandler: /interp/autohandler_test/autohandler
+
+Hello World!
+EOF
+		    );
+
+    return $group;
 }
 
-sub basic_interp {
-    return (new HTML::Mason::Interp(comp_root => $comp_root, data_dir => $data_dir, @_));
-}
+__END__
 
 print "1..20\n";
 

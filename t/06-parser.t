@@ -1,83 +1,205 @@
 #!/usr/bin/perl -w
-use Cwd;
-use vars (qw($root $branch $comp_root $data_dir));
 
-$branch = "parser";
-my $pwd = cwd();
-$root = (-f "test-common.pl") ? "$pwd/.." : (-f "t/test-common.pl") ? "$pwd" : die "ERROR: cannot find test-common.pl\n";
-unshift(@INC,"$root/lib");
+use strict;
 
-require "$root/t/test-common.pl";
-init();
+use HTML::Mason::Tests;
 
-sub try_parse {
-    my ($options,$test,$expect_error,$error_pattern) = @_;
-    my ($err,$comp);
-    my $failed = sub {
-	print "parsing $test";
-	print " with options ".join(",",%$options) if %$options;
-	print ": ";
-	if ($expect_error) {
-	    print "did not get expected error\n";
-	} else {
-	    print "got unexpected error:\n$err\n";
-	}
-	print "not ok\n";
-	'';
-    };
-    my $parser = new HTML::Mason::Parser (%$options);
-    my $obj_text = $parser->parse_component (script_file=>"$root/test/comps/parser/$test",error=>\$err);
-    if ($obj_text) {
-	$comp = $parser->eval_object_text(object_text=>$obj_text, error=>\$err);
-    }
-    if ($expect_error) {
-	print ((!$err or ($error_pattern and $err !~ /$error_pattern/)) ? &$failed : "ok\n");
-    } else {
-	print (($err) ? &$failed : "ok\n");
-    }
+my $tests = make_tests();
+$tests->run;
+
+sub make_tests
+{
+    my $group = HTML::Mason::Tests->new( name => 'parser',
+					 description => 'parser object functionality' );
+
+    $group->add_test( name => 'allow_globals',
+		      description => 'test that undeclared globals cause an error',
+		      interp_params => { use_object_files => 0 }, # force it to parse comp each time
+		      component => <<'EOF',
+<% $global = 1 %>
+EOF
+		      expect_error => qr/Global symbol .* requires explicit package name/,
+		    );
+
+    $group->add_test( name => 'allow_globals',
+		      description => 'test that undeclared globals cause an error',
+		      pretest_code => sub { undef *HTML::Mason::Commands::global; undef *HTML::Mason::Commands::global },  # repeated to squash a var used only once warning
+		      interp_params => { use_object_files => 0 },
+		      component => <<'EOF',
+<% $global = 1 %>
+EOF
+		      expect_error => qr/Global symbol .* requires explicit package name/,
+		    );
+
+    $group->add_test( name => 'allow_globals',
+		      description => 'test that declared globals are allows',
+		      parser_params => { allow_globals => ['$global'] },
+		      interp_params => { use_object_files => 0 },
+		      component => <<'EOF',
+<% $global = 1 %>
+EOF
+		      expect => <<'EOF',
+1
+EOF
+		    );
+    $group->add_test( name => 'default_escape_flags',
+		      description => 'test that no escaping is done by default',
+		      interp_params => { use_object_files => 0 },
+		      component => <<'EOF',
+Explicitly HTML-escaped: <% $expr |h %><p>
+Explicitly HTML-escaped redundantly: <% $expr |hh %><p>
+Explicitly URL-escaped: <% $expr |nu
+%><p>
+No flags: <% $expr %><p>
+No flags again: <% $expr | %><p>
+Explicitly not escaped: <% $expr | n%><p>
+<%init>
+my $expr = "<b><i>Hello there</i></b>.";
+</%init>
+EOF
+		      expect => <<'EOF',
+Explicitly HTML-escaped: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
+Explicitly HTML-escaped redundantly: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
+Explicitly URL-escaped: %3Cb%3E%3Ci%3EHello%20there%3C%2Fi%3E%3C%2Fb%3E.<p>
+No flags: <b><i>Hello there</i></b>.<p>
+No flags again: <b><i>Hello there</i></b>.<p>
+Explicitly not escaped: <b><i>Hello there</i></b>.<p>
+EOF
+		    );
+
+    $group->add_test( name => 'default_escape_flags',
+		      description => 'test that turning on default escaping works',
+		      interp_params => { use_object_files => 0 },
+		      parser_params => { default_escape_flags => 'h' },
+		      component => <<'EOF',
+Explicitly HTML-escaped: <% $expr |h %><p>
+Explicitly HTML-escaped redundantly: <% $expr |hh %><p>
+Explicitly URL-escaped: <% $expr |nu
+%><p>
+No flags: <% $expr %><p>
+No flags again: <% $expr | %><p>
+Explicitly not escaped: <% $expr | n%><p>
+<%init>
+my $expr = "<b><i>Hello there</i></b>.";
+</%init>
+EOF
+		      expect => <<'EOF',
+Explicitly HTML-escaped: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
+Explicitly HTML-escaped redundantly: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
+Explicitly URL-escaped: %3Cb%3E%3Ci%3EHello%20there%3C%2Fi%3E%3C%2Fb%3E.<p>
+No flags: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
+No flags again: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
+Explicitly not escaped: <b><i>Hello there</i></b>.<p>
+EOF
+		    );
+
+    $group->add_test( name => 'globals_in_default_package',
+		      description => 'tests that components are executed in HTML::Mason::Commands package by default',
+		      interp_params => { use_object_files => 0 },
+		      parser_params => { allow_globals => ['$packvar'] },
+		      component => <<'EOF',
+<% $packvar %>
+<%init>
+$HTML::Mason::Commands::packvar = 'commands';
+$HTML::Mason::NewPackage::packvar = 'newpackage';
+</%init>
+EOF
+		      expect => <<'EOF',
+commands
+EOF
+		    );
+
+    $group->add_test( name => 'globals_in_different_package',
+		      description => 'tests in_package parser parameter',
+		      interp_params => { use_object_files => 0 },
+		      parser_params => { allow_globals => ['$packvar'],
+					 in_package => 'HTML::Mason::NewPackage' },
+		      component => <<'EOF',
+<% $packvar %>
+<%init>
+$HTML::Mason::Commands::packvar = 'commands';
+$HTML::Mason::NewPackage::packvar = 'newpackage';
+</%init>
+EOF
+		      expect => <<'EOF',
+newpackage
+EOF
+		    );
+
+    $group->add_test( name => 'preamble',
+		      description => 'tests preamble parser parameter',
+		      parser_params => { preamble => 'my $msg = "This is the preamble.\n"; $m->out($msg);
+'},
+		      component => <<'EOF',
+This is the body.
+EOF
+		      expect => <<'EOF',
+This is the preamble.
+This is the body.
+EOF
+		    );
+
+    $group->add_test( name => 'postamble',
+		      description => 'tests postamble parser parameter',
+		      parser_params => { postamble => 'my $msg = "This is the postamble.\n"; $m->out($msg);
+'},
+		      component => <<'EOF',
+This is the body.
+EOF
+		      expect => <<'EOF',
+This is the body.
+This is the postamble.
+EOF
+		    );
+
+    $group->add_test( name => 'preprocess',
+		      description => 'test preprocess parser parameter',
+		      parser_params => { preprocess => \&brackets_to_lt_gt },
+		      component => <<'EOF',
+[% 'foo' %]
+bar
+EOF
+		      expect => <<'EOF',
+foo
+bar
+EOF
+		    );
+
+    $group->add_test( name => 'postprocess1',
+		      description => 'test postprocess parser parameter (alpha blocks)',
+		      parser_params => { postprocess => \&uc_alpha },
+		      component => <<'EOF',
+<% 'foo' %>
+bar
+EOF
+		      expect => <<'EOF',
+foo
+BAR
+EOF
+		    );
+
+    $group->add_test( name => 'postprocess2',
+		      description => 'test postprocess parser parameter (perl blocks)',
+		      parser_params => { postprocess => \&add_foo_to_perl },
+		      component => <<'EOF',
+<% 'foo' %>
+bar
+EOF
+		      expect => <<'EOF',
+fooFOO
+bar
+EOF
+		    );
+
+    return $group;
 }
-
-sub try_exec_with_parser {
-    my ($options,$test,$iteration) = @_;
-    # Create new parser and interp based on parser options.
-    # Turn off object files so that we recompile every time.
-    my $parser = new HTML::Mason::Parser (%$options);
-    my $interp = new HTML::Mason::Interp(parser => $parser, comp_root => $comp_root, data_dir => $data_dir, use_object_files => 0);
-    try_exec($interp,$test,$iteration);
-}
-
-print "1..12\n";
-
-# allow_globals
-undef(*HTML::Mason::Commands::global);
-try_parse({},'allow_globals',1,'Global symbol .* requires explicit package name');
-undef(*HTML::Mason::Commands::global);
-try_parse({},'allow_globals',1,'Global symbol .* requires explicit package name');
-undef(*HTML::Mason::Commands::global);
-try_parse({allow_globals=>[qw($global)]},'allow_globals',0);
-
-# default_escape_flags
-try_exec_with_parser({},'default_escape_flags',1);
-try_exec_with_parser({default_escape_flags=>'h'},'default_escape_flags',2);
-
-# ignore_warnings_expr: Can't come up with a good example to test!
-
-# in_package
-try_exec_with_parser({allow_globals=>[qw($packvar)]},'in_package',1);
-try_exec_with_parser({allow_globals=>[qw($packvar)],in_package=>'HTML::Mason::NewPackage'},'in_package',2);
-
-# preamble/postamble
-try_exec_with_parser({postamble=>'my $msg = "This is the postamble.\n"; $m->out($msg);'},'prepost',1);
-try_exec_with_parser({preamble=>'my $msg = "This is the preamble.\n"; $m->out($msg);'},'prepost',2);
 
 # preprocessing the component
-sub bracket_to_lt_gt
+sub brackets_to_lt_gt
 {
     my $comp = shift;
     ${ $comp } =~ s/\[\%(.*?)\%\]/<\%$1\%>/g;
 }
-
-try_exec_with_parser( { preprocess => \&bracket_to_lt_gt }, 'preprocess', 1 );
 
 # postprocessing alpha/perl code
 sub uc_alpha
@@ -91,9 +213,3 @@ sub add_foo_to_perl
     return unless pop eq 'perl';
     ${ $_[0] } =~ s/\);/. 'FOO');/;
 }
-
-try_exec_with_parser( { postprocess => \&uc_alpha }, 'postprocess', 1 );
-try_exec_with_parser( { postprocess => \&add_foo_to_perl }, 'postprocess', 2 );
-
-
-1;
