@@ -16,7 +16,7 @@ use HTML::Mason::MethodMaker
 
 __PACKAGE__->valid_params
     (
-     interp   => {isa => 'HTML::Mason::Interp'},
+     interp => { isa => 'HTML::Mason::Interp' },
     );
 
 __PACKAGE__->contained_objects
@@ -117,6 +117,7 @@ sub redirect {
 ###########################################################
 package HTML::Mason::FakeApache;
 # Analogous to Apache request object $r (but not an actual Apache subclass)
+# In the future we'll probably want to switch this to Apache::Fake or similar
 
 use HTML::Mason::MethodMaker(read_write => [qw(query headers)]);
 
@@ -237,7 +238,9 @@ components, similar to the Apache request object under
 C<HTML::Mason::ApacheHandler>, but limited in functionality.  Please
 note that we aim to replicate the C<mod_perl> functionality as closely
 as possible - if you find differences, do I<not> depend on them to
-stay different.  We may fix them in a future release.
+stay different.  We may fix them in a future release.  Also, if you
+need some missing functionality in C<$r>, let us know, we might be
+able to provide it.
 
 Finally, this module alters the C<HTML::Mason::Request> object C<$m> to
 provide direct access to the CGI query, should such access be necessary.
