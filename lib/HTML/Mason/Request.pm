@@ -240,7 +240,7 @@ sub alter_superclass
     my $self = shift;
     my $new_super = shift;
 
-    my $class = ref $self || $self;
+    my $class = caller;
 
     my $isa_ref;
     {
