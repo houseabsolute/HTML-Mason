@@ -10,7 +10,7 @@ HTML::Mason to develop new and convert existing applications.
 
 =head1 QUESTIONS & ANSWERS
 
-=head2 What is HTML::Mason
+=head2 What is HTML::Mason?
 
 HTML::Mason is a Perl-based web site development and delivery engine.  In
 addition to supporting embedded Perl in HTML pages, HTML::Mason provides
@@ -28,21 +28,30 @@ Yes, at http://www.masonhq.com.
 HTML::Mason is available from CPAN (the Comprehensive Perl Archive Network).
 Details about CPAN are available at http://www.perl.com/.
 
+=head2 What else do I need to use HTML::Mason?
+
+If you are planning on using HTML::Mason in a web environment with the
+Apache webserver, you'll need a working copy of Apache and mod_perl
+installed.  Make sure that your mod_perl installation works correctly before
+trying to get HTML::Mason working.  Also, if you are running RedHat Linux, 
+B<do not> use the mod_perl RPMs that ship with RedHat.  They are not
+reliable (as of RedHat 6.1/mod_perl 1.21).
+
 =head2 Where can I ask questions about HTML::Mason or report bugs?
 
 You are encouraged to use the HTML::Mason mailing list; that way many people
 can answer questions and/or benefit from the answer. Write to
 mason@netizen.com.au.  You may want to browse past messages in the archive
-first.  Go to http://www.netizen.com.au/resources/lists/mason/ for more
+first.  Go to http://netizen.com.au/mailman/listinfo/mason for more
 information or to subscribe (although you can post without being
 subscribed).
 
 If the question is more generally about mod_perl, you may wish to post 
 additionally (or only) to the mod_perl mailing list at modperl@apache.org.
 
-If you have a question or comment that you don't feel is appropriate for the 
-group, write to one of the HTML::Mason authors: Jonathan Swartz 
-(swartz@transbay.net) or Mark Schmick (mark@webz.com).
+If you have a question or comment that you don't feel is appropriate for the
+group, write to the HTML::Mason authors: Jonathan Swartz
+(swartz@transbay.net).
 
 =head2 What is a component?
 
@@ -105,9 +114,10 @@ You can define anonymous subroutines anywhere:
 
 	my $foo = sub {...};
 
-Finally, consider using a separate component instead of a subroutine;
-they are functionally equivalent, and this is playing to Mason's
-strengths.
+Finally, consider using a separate component, if the subroutine is large
+enough, instead of a subroutine; they are functionally equivalent, and this
+is playing to Mason's strengths.  If the subroutine is small, or limited in
+scope, consider using <%def> subcomponents.
 
 =head2 Can I serve images through a HTML::Mason server?
 
@@ -156,6 +166,22 @@ subroutine of your handler.pl:
 
 	return -1 if $r->uri() =~ m|^/plain|;
 
+=head2 Is Mason fast?
+
+It is typically more than fast enough.  50-100 requests per second for a
+simple component is typical for a reasonably modern Linux system.  Some
+simple benchmarking indicates that a Mason component is typically about two
+to three times slower than an equivalent, hand-coded mod_perl module.
+
+Beware of "Hello World!" and other simple benchmarks.  While these
+benchmarks do a good job of measuring the setup and initialization time for
+a package, they are typically not good measures of how a package will
+perform in a complex, real-world application.  As with any program, the only
+way to know if it meets your requirements is to test it yourself.
+
+In general, however, if your application is fast enough in pure mod_perl, it
+will most likely be fast enough under HTML::Mason as well.
+
 =head2 Can I run HTML::Mason outside a web server?
 
 Yes, in fact HTML::Mason can be useful for generating a set of web pages
@@ -164,24 +190,24 @@ stand-alone" in the administration manual (Admin.pm).
 
 =head2 Can I run HTML::Mason via CGI?
 
-Yes, as part of a Perl CGI program you could theoretically create a new
-HTML::Mason interpreter and execute components based on the request.
-However, since HTML::Mason takes some time to load and initialize,
-performance will be poor.
+Yes.  Masonite Ilmari Karonen uses HTML::Mason under CGI.  He has kindly
+posted the necessary steps to do this on the HTML::Mason mailing list.  His
+message can be viewed at http://forum.swarthmore.edu/epigone/mason/gimpswumfrex/Pine.SOL.3.96.990917144751.17640B-100000@simpukka
 
-Although mod_perl is the recommended environment for running HTML::Mason, if
-mod_perl cannot be used, other packages that allow CGI programs to run
-persistantly, such as SpeedyCGI (see www.freshmeat.net) may allow you to
-increase the performance of HTML::Mason.
+Please note that running HTML::Mason under CGI (or other non-persistant
+environments) will entail a substantial performance hit, since the perl
+interpreter will have to load, load up HTML::Mason and its supporting
+modules for every CGI execution.  Using mod_perl or similar persistant
+environments (SpeedyCGI, FastCGI, etc.) avoids this performance bottleneck.
 
 =head2 What platforms does HTML::Mason run on?
 
-So far I am aware of successful installations on Solaris, Linux, FreeBSD,
-and Windows NT.  Because HTML::Mason consists of only Perl code (no C), it
-should work on all Unix systems and most other systems where Perl runs.
-HTML::Mason does use a few nonstandard modules (notably MLDBM) and some file
-access code that may break on obscure systems, but I am not yet aware of
-such problems.
+We are aware of successful installations on Solaris, Linux, FreeBSD, HPUX
+and Windows NT.
+
+Because HTML::Mason consists of only Perl code (no C), it should work
+anywhere Perl runs.  If it doesn't work on your operating system, let us
+know.
 
 =head2 I'm getting a warning "Mason: filename xxx is outside component root; returning 404" in the error logs. What does it mean?
 
