@@ -215,7 +215,7 @@ EOF
     write_comp( 'head_request', <<'EOF',
 <%init>
 my $x = 1;
-foreach (keys %ARGS) {
+foreach (sort keys %ARGS) {
   $r->header_out( 'X-Mason-HEAD-Test' . $x++ => "$_: " . (ref $ARGS{$_} ? 'is a ref' : 'not a ref' ) );
 }
 </%init>
@@ -312,8 +312,8 @@ EOF
     $success = HTML::Mason::Tests->check_output( actual => $actual,
 						 expect => <<'EOF',
 X-Mason-Test: Initial value
-X-Mason-HEAD-Test1: foo: not a ref
-X-Mason-HEAD-Test2: bar: is a ref
+X-Mason-HEAD-Test1: bar: is a ref
+X-Mason-HEAD-Test2: foo: not a ref
 Status code: 0
 EOF
 					       );
