@@ -21,6 +21,10 @@ Zimmerman.
 were left out in previous versions.
 - If ApacheHandler is given an Apache::Request object, it should not
 create a new one.
+- HTML error output could be sent as plain text or some other content
+type depending on your Apache config and the file extension of the
+requested component.  Now we explicitly set $r->content_type before
+sending HTML error output.
 
 1.10  June 25, 2002
 
