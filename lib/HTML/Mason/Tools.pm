@@ -21,7 +21,7 @@ require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(read_file html_escape url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on load_pkg pkg_loaded absolute_comp_path);
+@EXPORT_OK = qw(read_file url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on load_pkg pkg_loaded absolute_comp_path);
 
 #
 # Return contents of file. If $binmode is 1, read in binary mode.
@@ -38,26 +38,6 @@ sub read_file
     return do { local $/; scalar <$fh> };
 }
 
-#
-# Escape HTML &, >, <, and " characters. Borrowed from CGI::Base.
-#
-sub html_escape
-{
-    my ($text) = @_;
-    return unless defined $text;
-    my %html_escape = ('&' => '&amp;', '>'=>'&gt;', '<'=>'&lt;', '"'=>'&quot;');
-    my $html_escape = join('', keys %html_escape);
-    $text =~ s/([$html_escape])/$html_escape{$1}/mgoe;
-    return $text;
-}
-
-sub basic_html_escape
-{
-    my ($text) = @_;
-    return unless defined $$text;
-
-    $$text = html_escape($$text);
-}
 
 #
 # Determines whether two paths are equal, taking into account
@@ -181,22 +161,6 @@ sub make_fh
     return do { local *FH; *FH; };  # double *FH avoids a warning
 }
 
-sub html_entities_escape
-{
-    load_pkg( 'HTML::Entities',
-              'HTML escaping requires the HTML::Entities module, available from CPAN.');
-
-    HTML::Entities::encode_entities(${$_[0]});
-}
-
-sub url_escape
-{
-    my $text = shift;
-    return unless defined $$text;
-
-    $$text =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
-}
-
 sub coerce_to_array
 {
     my ($val, $name) = @_;
@@ -263,36 +227,6 @@ they may change from release to release.  You have been warned.
 This function takes a file name and an optional argument indicating
 whether or not to open the final in binary mode.  It will return the
 entire contents of the file as a scalar.
-
-=item html_escape
-
-This function takes a string and returns its HTML-escaped version,
-escaping the following characters: '&', '>', '<', and '"'.
-
-The escaped string is this function's return value.
-
-=item basic_html_escape
-
-This function takes a string reference and HTML-escapes it, escaping
-the following characters: '&', '>', '<', and '"'.
-
-It is provided for those who wish to use it to replace (or supplement)
-the existing 'h' escape flag, via the Interpreter's L<C<set_escape()>
-method|HTML>::Mason::Interp/item_set_escape>.
-
-This function is provided in order to allow people to return the HTML
-escaping behavior in 1.0x.  However, this behavior presents a
-potential security risk of allowing cross-site scripting attacks.
-HTML escaping should always be done based on the character set a page
-is in.  Merely escaping the four characters mentioned above is not
-sufficient.  The quick summary of why is that for some character sets,
-characters other than '<' may be interpreter as a "less than" sign,
-meaning that just filtering '<' and '>' will not stop all cross-site
-scripting attacks.  See
-http://www.megasecurity.org/Info/cross-site_scripting.txt for more
-details.
-
-It is not exportable.
 
 =item paths_eq
 
