@@ -42,7 +42,6 @@ my $build = $class->new
   (
    module_name => 'HTML::Mason',
    prereq => {
-	      'Data::Dumper' => 2.08,
 	      'File::Spec' => 0.8,
 	      'Params::Validate' => 0.14,
 	      'Apache::Request' => 0.31,

@@ -14,11 +14,6 @@ require 'install/assisted_install_helper.pl';
 
 # These are required modules.
 
-chk_version('Data::Dumper' => '2.08') or
-    warn  "\n"
-	. "*** Mason requires version 2.08, or later, of Data::Dumper\n"
-	. "    from CPAN/modules/by-module/Data/Data-Dumper-x.x.tar.gz\n\n";
-
 chk_version('File::Spec' => '0.8') or
     warn  "\n"
 	. "*** Mason requires version 0.8, or later, of File::Spec\n"
