@@ -82,7 +82,7 @@ sub new_child
 sub receive
 {
     my $self = shift;
-    $self->sink->(@_);
+    $self->sink->(@_) if @_;
 }
 
 sub flush
@@ -96,6 +96,7 @@ sub flush
 sub clear
 {
     my $self = shift;
+    return unless exists $self->{buffer};
     ${$self->{buffer}} = '';
 }
 
