@@ -52,9 +52,10 @@ sub cgi_object
 {
     my ($self) = @_;
 
-    if ($HTML::Mason::ApacheHandler::ARGS_METHOD ne '_cgi_args') {
-	HTML::Mason::Exception->throw( error => "Can't call cgi_object method unless CGI.pm was used to handle incoming arguments.\n" );
-    } elsif (defined($_[1])) {
+    HTML::Mason::Exception->throw( error => "Can't call cgi_object method unless CGI.pm was used to handle incoming arguments.\n" )
+	unless $CGI::VERSION;
+
+    if (defined($_[1])) {
 	$self->{cgi_object} = $_[1];
     } else {
 	# We may not have created a CGI object if, say, request was a
@@ -77,6 +78,7 @@ sub OK { return 0 }
 sub DECLINED { return -1 }
 sub SERVER_ERROR { return 500 }
 sub NOT_FOUND { return 404 }
+use Apache::Request;
 use Data::Dumper;
 use File::Path;
 use File::Spec;
@@ -92,8 +94,8 @@ use Apache::Status;
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( apache_status_title
+                          args_method
 			  auto_send_headers
-
 			  decline_dirs
 			  error_mode
 			  interp
@@ -102,7 +104,7 @@ use HTML::Mason::MethodMaker
       );
 
 # use() params. Assign defaults, in case ApacheHandler is only require'd.
-use vars qw($ARGS_METHOD $AH $VERSION);
+use vars qw($AH $VERSION);
 
 $VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
 
@@ -110,6 +112,7 @@ $VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
 my %fields =
     (
      apache_status_title => 'mason',
+     args_method => 'mod_perl',
      auto_send_headers => 1,
      decline_dirs => 1,
      error_mode => 'html',
@@ -117,56 +120,6 @@ my %fields =
      output_mode => undef,    # deprecated - now interp->out_mode
      top_level_predicate => undef,
      );
-
-# If loaded via a PerlModule directive in a conf file we are being
-# loaded via 'require', not 'use'.  However, the import routine _must_
-# be called at some point during startup or things go boom.
-
-# If mod_perl <= 1.21 we will call import later (in the handler sub)
-# to make sure we can see the user's MasonArgsMethod setting (if there
-# is one)
-__PACKAGE__->import if $mod_perl::VERSION > 1.21;
-
-sub import
-{
-    shift; # class not needed
-
-    return if defined $ARGS_METHOD;
-
-    # We were called by the internal call a few lines back and it
-    # seems that we're not being loaded in a conf file.  We will
-    # expect to be called again via a 'use' line in the handler.pl
-    # file.  This is a bit of a hack, I must say.
-    return if caller eq __PACKAGE__ && ! _in_apache_conf_file();
-
-    my %params = @_;
-
-    if (_in_apache_conf_file())
-    {
-	$params{args_method} = _get_string_param('ArgsMethod');
-    }
-
-    # safe default.
-    $params{args_method} ||= 'CGI';
-    if ($params{args_method} eq 'CGI')
-    {
-	eval 'use CGI';
-	HTML::Mason::Exception->throw( error => $@ ) if $@;
-	$ARGS_METHOD = '_cgi_args';
-    }
-    elsif ($params{args_method} eq 'mod_perl')
-    {
-	eval 'use Apache::Request;';
-	HTML::Mason::Exception->throw( error => $@ ) if $@;
-	$ARGS_METHOD = '_mod_perl_args';
-    }
-    else
-    {
-	HTML::Mason::Exception->throw( error => "Invalid args_method parameter ('$params{args_method}') given to HTML::Mason::ApacheHandler in 'use'\n" );
-    }
-
-    _make_ah() if _in_apache_conf_file() && ! _get_boolean_param('MultipleConfig');
-}
 
 # This is my best guess as to whether we are being configured via the
 # conf file or not.  Without a comp root it will blow up sooner or
@@ -188,6 +141,7 @@ sub _make_ah
     my %p;
 
     $p{apache_status_title} = _get_string_param('ApacheStatusTitle');
+    $p{auto_send_headers} = _get_boolean_param('ArgsMethod');
     $p{auto_send_headers} = _get_boolean_param('AutoSendHeaders');
     $p{debug_handler_proc} = _get_string_param('DebugHandlerProc');
     $p{debug_handler_script} = _get_string_param('DebugHandlerScript');
@@ -373,6 +327,7 @@ sub new
 
     validate( @_,
 	      { apache_status_title => { type => SCALAR, optional => 1 },
+		args_method => { type => SCALAR, optional => 1 },
 		auto_send_headers => { type => SCALAR | UNDEF, optional => 1 },
 		decline_dirs => { type => SCALAR | UNDEF, optional => 1 },
 		error_mode => { type => SCALAR, optional => 1 },
@@ -391,8 +346,11 @@ sub new
 
     my (%options) = @_;
 
+    HTML::Mason::Exception::Params->throw( error => "args_method parameter must be either 'CGI' or 'mod_perl'\n" )
+	if exists $options{args_method} && $options{args_method} !~ /^(?:CGI|mod_perl)$/;
+
     HTML::Mason::Exception::Params->throw( error => "error_mode parameter must be one of 'html', 'fatal', 'raw_html', or 'raw_fatal'\n" )
-	if exists $options{error_mode} && $options{error_mode} !~ /^(?:html|fatal|raw_html|raw_fatal)$/;
+	if exists $options{error_mode} && $options{error_mode} !~ /^(?:raw_)?(?:html|fatal)$/;
 
     while (my ($key,$value) = each(%options)) {
 	$self->{$key} = $value;
@@ -661,15 +619,9 @@ sub handle_request_1
 	return NOT_FOUND;
     }
 
-    #
-    # Parse arguments. $ARGS_METHOD is set by the import subroutine
-    # (_cgi_args or _mod_perl_args).  We pass a reference to $r because
-    # _mod_perl_args upgrades $r to the Apache::Request object.
-    # 
     my %args;
-    HTML::Mason::Exception->throw( "ARGS_METHOD not defined! Did you 'use HTML::Mason::ApacheHandler'?" )
-	unless defined($ARGS_METHOD);
-    %args = $self->$ARGS_METHOD(\$r,$request);
+    my $args_method = $self->args_method eq 'mod_perl' ? '_mod_perl_args' : '_cgi_args';
+    %args = $self->$args_method(\$r,$request);
 
     #
     # Deprecated output_mode parameter - just pass to request out_mode.
@@ -789,8 +741,6 @@ sub _mod_perl_args
 	$apr = Apache::Request->new($apr);
 	$$rref = $apr;
     }
-    
-    return unless $apr->param;
 
     my %args;
     foreach my $key ( $apr->param ) {
@@ -814,7 +764,6 @@ sub handler
     my $r = shift;
 
     my $ah = _make_ah;
-    __PACKAGE__->import unless $ARGS_METHOD;
 
     return $ah->handle_request($r);
 }
