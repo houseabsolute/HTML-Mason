@@ -176,7 +176,7 @@ sub end_component
 {
     my $self = shift;
 
-    syntax_error "Not enough component-with-content ending tags found"
+    $self->lexer->throw_syntax_error("Not enough component-with-content ending tags found")
 	if @{ $self->{comp_with_content_stack} };
 
     $self->{current_comp} = undef;
@@ -187,10 +187,10 @@ sub start_block
     my $self = shift;
     my %p = @_;
 
-    syntax_error "Cannot define a $p{block_type} section inside a method or subcomponent"
+    $self->lexer->throw_syntax_error("Cannot define a $p{block_type} section inside a method or subcomponent")
 	 if $top_level_only_block{ $p{block_type} } && ! $self->{in_main};
 
-    syntax_error "Cannot nest a $p{block_type} inside a $self->{in_block} block: " . $self->lexer->name
+    $self->lexer->throw_syntax_error("Cannot nest a $p{block_type} inside a $self->{in_block} block")
 	 if $self->{in_block};
 
     $self->{in_block} = $p{block_type};
@@ -203,7 +203,8 @@ sub raw_block
     my $self = shift;
     my %p = @_;
 
-    $self->postprocess_perl->( \$p{block} ) if $self->postprocess_perl;
+    eval { $self->postprocess_perl->( \$p{block} ) if $self->postprocess_perl };
+    compiler_error $@ if $@;
 
     my $method = "$p{block_type}_block";
     return $self->$method(%p) if $self->can($method);
@@ -245,7 +246,8 @@ sub text
     my $self = shift;
     my %p = @_;
 
-    $self->postprocess_text->(\$p{text}) if $self->postprocess_text;
+    eval { $self->postprocess_text->(\$p{text}) if $self->postprocess_text };
+    compiler_error $@ if $@;
 
     $p{text} =~ s,(['\\]),\\$1,g;
 
@@ -264,7 +266,7 @@ sub end_block
     my $self = shift;
     my %p = @_;
 
-    syntax_error "End of $p{block_type} encountered while in $self->{in_block} block"
+    $self->lexer->throw_syntax_error("End of $p{block_type} encountered while in $self->{in_block} block")
 	unless $self->{in_block} eq $p{block_type};
 
     $self->{in_block} = undef;
@@ -275,12 +277,12 @@ sub variable_declaration
     my $self = shift;
     my %p = @_;
 
-    compiler_error "variable_declaration called inside a $p{block_type} block"
+    $self->lexer->throw_syntax_error("variable_declaration called inside a $p{block_type} block")
 	unless $p{block_type} eq 'args';
 
     my $arg = "$p{type}$p{name}";
 
-    compiler_error "$arg already defined"
+    $self->lexer->throw_syntax_error("$arg already defined")
         if grep { "$_->{type}$_->{name}" eq $arg } @{ $self->{current_comp}{args} };
 
     push @{ $self->{current_comp}{args} }, { type => $p{type},
@@ -297,7 +299,7 @@ sub key_value_pair
 	unless $p{block_type} eq 'flags' || $p{block_type} eq 'attr';
 
     my $type = $p{block_type} eq 'flags' ? 'flag' : 'attribute';
-    compiler_error "$p{key} $type already defined"
+    $self->lexer->throw_syntax_error("$p{key} $type already defined")
 	if exists $self->{current_comp}{ $p{block_type} }{ $p{key} };
 
     $self->{current_comp}{ $p{block_type} }{ $p{key} } = $p{value}
@@ -308,7 +310,7 @@ sub start_named_block
     my $self = shift;
     my %p = @_;
 
-    syntax_error "Cannot define a $p{type} inside a method or subcomponent"
+    $self->lexer->throw_syntax_error("Cannot define a $p{type} inside a method or subcomponent")
         unless $self->{in_main};
 
     $self->{in_main}--;
@@ -339,7 +341,7 @@ sub substitution
 	%flags = map { $_ => 1 } split //, $p{escape} if $p{escape};
 	foreach (keys %flags)
 	{
-	    compiler_error "invalid <% %> escape flag: '$_'"
+	    $self->lexer->throw_syntax_error("invalid <% %> escape flag: '$_'")
 		unless $valid_escape_flag{$_};
 	}
 	unless ( delete $flags{n} )
@@ -355,7 +357,8 @@ sub substitution
 
     my $code = "\$m->print( $text );\n";
 
-    $self->postprocess_perl->(\$code) if $self->postprocess_perl;
+    eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
+    compiler_error $@ if $@;
 
     $self->_add_body_code($code);
 }
@@ -376,7 +379,8 @@ sub component_call
     }
 
     my $code = "\$m->comp( $call );\n";
-    $self->postprocess_perl->(\$code) if $self->postprocess_perl;
+    eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
+    compiler_error $@ if $@;
 
     $self->_add_body_code($code);
 }
@@ -392,7 +396,8 @@ sub component_content_call
 
     my $code = "\$m->comp( { content => sub {\n";
 
-    $self->postprocess_perl->(\$code) if $self->postprocess_perl;
+    eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
+    compiler_error $@ if $@;
 
     $self->_add_body_code($code);
 }
@@ -401,7 +406,7 @@ sub component_content_call_end
 {
     my $self = shift;
 
-    compiler_error "found component with content ending tag but no beginning tag"
+    $self->lexer->throw_syntax_error("found component with content ending tag but no beginning tag")
 	unless @{ $self->{comp_with_content_stack} };
 
     my $call = pop @{ $self->{comp_with_content_stack} };
@@ -416,7 +421,8 @@ sub component_content_call_end
 
     my $code = "} }, $call );\n";
 
-    $self->postprocess_perl->(\$code) if $self->postprocess_perl;
+    eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
+    compiler_error $@ if $@;
 
     $self->_add_body_code($code);
 }
@@ -428,7 +434,8 @@ sub perl_line
 
     my $code = "$p{line}\n";
 
-    $self->postprocess_perl->(\$code) if $self->postprocess_perl;
+    eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
+    compiler_error $@ if $@;
 
     $self->_add_body_code($code);
 }

@@ -161,7 +161,7 @@ sub start
 	$self->match_text && next;
 
 	# We should never get here - if we do, we're in an infinite loop.
-	syntax_error "Infinite parsing loop encountered in $self->{current}{name} component - Lexer bug?";
+	$self->throw_syntax_error("Infinite parsing loop encountered - Lexer bug?");
     }
 
     if ( $self->{current}{in_def} || $self->{current}{in_method} )
@@ -170,7 +170,7 @@ sub start
 	unless ( $end =~ m,</%\Q$type\E>\n?,i )
 	{
 	    my $block_name = $self->{current}{"in_$type"};
-	    syntax_error "No </%$type> tag for <%$type $block_name> block in $self->{current}{name} component near $self->{lines} line";
+	    $self->throw_syntax_error("No </%$type> tag for <%$type $block_name> block");
 	}
     }
 }
@@ -326,8 +326,7 @@ sub match_block_end
     }
     else
     {
-	my $line = $self->_next_line;
-	syntax_error "Invalid <%$p{block_type}> section line in $self->{current}{name} component at line $self->{current}{lines}:\n$line";
+	$self->throw_syntax_error("Invalid <%$p{block_type}> section line");
     }
 }
 
@@ -376,8 +375,7 @@ sub match_substitute
 	}
 	else
 	{
-	    my $line = $self->_next_line( $self->{current}{pos} - 2 );
-	    syntax_error "'<%' without matching '%>' in $self->{current}{name} component at line $self->{current}{lines}:\n$line";
+	    $self->throw_syntax_error("'<%' without matching '%>'");
 	}
     }
 }
@@ -398,8 +396,7 @@ sub match_comp_call
 	}
 	else
 	{
-	    my $line = $self->_next_line( $self->{current}{pos} - 2 );
-	    syntax_error "'<&' without matching '&>' in $self->{current}{name} component at line $self->{current}{lines}:\n$line";
+	    $self->throw_syntax_error("'<&' without matching '&>'");
 	}
     }
 }
@@ -421,8 +418,7 @@ sub match_comp_content_call
 	}
 	else
 	{
-	    my $line = $self->_next_line( $self->{current}{pos} - 3 );
-	    syntax_error "'<&|' without matching '&>' in $self->{current}{name} component at line $self->{current}{lines}:\n$line";
+	    $self->throw_syntax_error("'<&|' without matching '&>'");
 	}
     }
 }
@@ -533,6 +529,16 @@ sub name
     my $self = shift;
 
     return $self->{current}{name};
+}
+
+sub throw_syntax_error
+{
+    my ($self, $error) = @_;
+
+    HTML::Mason::Exception::Syntax->throw( error => $error,
+					   comp_name => $self->name,
+					   source_line => $self->_next_line,
+					   line_number => $self->line_count );
 }
 
 1;
