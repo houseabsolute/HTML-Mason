@@ -628,45 +628,7 @@ sub print
 {
     my $self = shift;
 
-    # So what's going on here, you might ask?
-    # Isn't Dave always babbling on about encapsulation?
-    #
-    # Here's the deal.  In benchmarks, I found that breaking this
-    # little teeny bit of encapsulation led to to a 33% reduction in
-    # execution time for a program that simply made an interp object
-    # and executed the same component 50 times in a row.
-    #
-    # 33%!  That's nothing to sneeze at.  This is because this method
-    # gets called a _lot_ for any component with a reasonable mix of
-    # text and substitution tags.  In the above-mentioned profiling
-    # test, the component called this method 526 times per execution.
-    # That may be a bit on the high side but isn't unrealstic for a
-    # component that does something like generate a large HTML table.
-    #
-    # So this is a _good_ hack, but please be careful about making
-    # sure it continues to work!
-    #
-
-    #
-    # This is more or less HTML::Mason::Buffer->receive inlined.  If
-    # someone subclasses the buffer class this might break.  Possible
-    # solutions include:
-    #
-    # - don't encourage them to do this!
-    #
-    # - document sink_is_scalar, buffer, & sink methods, and explain
-    # their importance.
-    #
-    my $buffer = $self->{buffer_stack}[-1];
-    if ( $buffer->sink_is_scalar )
-    {
-        local $^W; # ignore undef values
-        ${ $buffer->buffer } .= join '', @_;
-    }
-    else
-    {
-        $buffer->sink->(@_);
-    }
+    $self->top_buffer->receive(@_);
 
     $self->flush_buffer if $self->autoflush;
 }
