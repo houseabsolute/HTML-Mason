@@ -132,7 +132,7 @@ performance.
 
 The component class into which this particular component should be
 blessed when it is created.  This must be a subclass of
-C<HTML::Mason::Component>.
+C<HTML::Mason::Component>, which is the default.
 
 =item * friendly_name
 
