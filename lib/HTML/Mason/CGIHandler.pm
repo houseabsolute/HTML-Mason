@@ -132,7 +132,6 @@ use HTML::Mason::MethodMaker(read_write => [qw(query headers)]);
 
 sub new {
     my $class = shift;
-warn "QS is $ENV{QUERY_STRING}";
     return bless {
 		  query   => new CGI(),
 		  headers => {},
