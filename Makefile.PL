@@ -19,8 +19,7 @@ make_config();
 setup_mod_perl_tests();
 
 # Get these into the MY namespace for the MY::test method
-%MY::APACHE_PARAMS = %APACHE_PARAMS;
-$MY::APACHE_DIR = $APACHE_DIR;
+%MY::APACHE = %APACHE;
 
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
@@ -29,11 +28,10 @@ WriteMakefile(
     'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
     'PREREQ_PM' => { MLDBM => 2.0, Data::Dumper => 2.08, 'File::Spec' => 0.8 },
 
-    # $COMP_ROOT & $DATA_DIR are globals created when
-    # setup_mod_perl_tests() is called.  The code that does this
-    # creation is in makeconfig.pl.
+    # %APACHE is created when setup_mod_perl_tests() is called.  The
+    # code that does this creation is in makeconfig.pl.
     clean => {
-	'FILES' => "lib/HTML/Mason/Config.pm mason_tests $APACHE_DIR/httpd.conf $APACHE_DIR/error_log $APACHE_DIR/httpd $COMP_ROOT $DATA_DIR $APACHE_DIR/mason_handler_CGI.pl $APACHE_DIR/mason_handler_mod_perl.pl",
+	'FILES' => "lib/HTML/Mason/Config.pm mason_tests $APACHE{apache_dir}/httpd.conf $APACHE{apache_dir}/error_log $APACHE{apache_dir}/httpd $APACHE{comp_root} $APACHE{data_dir} $APACHE{apache_dir}/mason_handler_CGI.pl $APACHE{apache_dir}/mason_handler_mod_perl.pl",
     }
 );
 
@@ -47,12 +45,12 @@ sub test
 
     $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE}=\$(TEST_VERBOSE); $1/;
 
-    # %APACHE_PARAMS & $APACHE_DIR are globals set in makeconfig.pl.
+    # %APACHE & $APACHE{apache_dir} are globals set in makeconfig.pl.
     # If we are not going to test with Apache there is no harm in
     # setting this anyway.
-    my $port = $APACHE_PARAMS{port} || 8228;
-    $APACHE_DIR ||= '';
-    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE}=\$(TEST_VERBOSE); \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$APACHE_DIR^; $1/;
+    my $port = $APACHE{port} || 8228;
+    $APACHE{apache_dir} ||= '';
+    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE}=\$(TEST_VERBOSE); \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$APACHE{apache_dir}^; $1/;
 
     return $test;
 }
