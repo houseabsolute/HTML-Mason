@@ -128,7 +128,7 @@ EOF
 % my $comp = $m->current_comp;
 Hello!<br>
 My name is <% $comp->name %>. Full name <% $comp->title %>.<br>
-I was created by <% $comp->parent_comp->path %>.<br>
+I was created by <% $comp->owner->path %>.<br>
 <& .link, site=>'masonhq', label=>'Mason' &>
 </%def>
 

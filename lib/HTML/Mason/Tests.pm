@@ -49,8 +49,8 @@ I am <% $comp->is_file_based ? '' : 'not ' %>file-based.
 % if (defined($comp->name)) {
 My short name is <% $comp->name =~ /anon/ ? '[anon something]' : $comp->name %>.
 % }
-% if ($comp->is_subcomp and defined($comp->parent_comp)) {
-My parent component is <% $comp->parent_comp->title %>.
+% if ($comp->is_subcomp and defined($comp->owner)) {
+My parent component is <% $comp->owner->title %>.
 % }
 % if (defined($comp->dir_path)) {
 My directory is <% $comp->dir_path %>.
