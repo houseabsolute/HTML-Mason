@@ -1,5 +1,5 @@
 package HTML::Mason;
-# Copyright (c) 1998-99 by Jonathan Swartz. All rights reserved.
+# Copyright (c) 1998-2000 by Jonathan Swartz. All rights reserved.
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
