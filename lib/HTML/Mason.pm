@@ -3,6 +3,8 @@ package HTML::Mason;
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
+use 5.004;
+
 $HTML::Mason::VERSION = '0.88';
 
 use HTML::Mason::Parser;
