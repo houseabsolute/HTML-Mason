@@ -11,31 +11,37 @@ use Params::Validate qw(SCALAR);
 use HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
 
+BEGIN
+{
+    __PACKAGE__->valid_params
+	(
+	 comp_class    => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component',
+			    descr => "The class into which component object should be blessed" },
+	 subcomp_class => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component::Subcomponent',
+			    descr => "The class into which subcomponent objects should be blessed" },
+	 in_package => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Commands',
+			 descr => "The package in which component execution should take place" },
+	 preamble   => { parse => 'string',  type => SCALAR, default => '',
+			 descr => "A chunk of Perl code to add to the beginning of each compiled component" },
+	 postamble  => { parse => 'string',  type => SCALAR, default => '',
+			 descr => "A chunk of Perl code to add to the end of each compiled component" },
+	 use_strict => { parse => 'boolean', type => SCALAR, default => 1,
+			 descr => "Whether to turn on Perl's 'strict' pragma in components" },
+	);
+}
+
 use HTML::Mason::MethodMaker
-    ( read_write => [ qw( comp_class
+    ( read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
+		      qw( comp_class
                           in_package
 			  postamble
 			  preamble
+                          subcomp_class
 			  use_strict
                         )
 		    ],
     );
 
-__PACKAGE__->valid_params
-    (
-     comp_class    => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component',
-		        descr => "The class into which component object should be blessed" },
-     subcomp_class => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component::Subcomponent',
-		        descr => "The class into which subcomponent objects should be blessed" },
-     in_package => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Commands',
-		     descr => "The package in which component execution should take place" },
-     preamble   => { parse => 'string',  type => SCALAR, default => '',
-		     descr => "A chunk of Perl code to add to the beginning of each compiled component" },
-     postamble  => { parse => 'string',  type => SCALAR, default => '',
-		     descr => "A chunk of Perl code to add to the end of each compiled component" },
-     use_strict => { parse => 'boolean', type => SCALAR, default => 1,
-		     descr => "Whether to turn on Perl's 'strict' pragma in components" },
-    );
 
 sub compile
 {

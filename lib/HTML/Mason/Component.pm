@@ -23,8 +23,9 @@ use HTML::Mason::MethodMaker
 			 object_size
 			 compiler_id ) ],
 
-      read_write => [ qw ( dynamic_subs_request
-			   mfu_count ) ]
+      read_write => [ [ dynamic_subs_request => { isa => 'HTML::Mason::Request' } ],
+		      [ mfu_count => { type => SCALAR } ],
+		    ]
       );
 
 my %valid_params =

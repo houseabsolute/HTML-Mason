@@ -18,17 +18,21 @@ use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 
 use constant NOT_FOUND => 404;
 
-use HTML::Mason::MethodMaker
-    ( read_write => [ qw( ah apache_req ) ] );
+BEGIN
+{
+    __PACKAGE__->valid_params
+	( ah         => { isa => 'HTML::Mason::ApacheHandler',
+			  descr => 'An ApacheHandler to handle web requests' },
+	  apache_req => { isa => 'Apache', default => undef,
+			  descr => "An Apache request object" },
+	  cgi_object => { isa => 'CGI',    default => undef,
+			  descr => "A CGI.pm request object" },
+	);
+}
 
-__PACKAGE__->valid_params
-    ( ah         => { isa => 'HTML::Mason::ApacheHandler',
-		      descr => 'An ApacheHandler to handle web requests' },
-      apache_req => { isa => 'Apache', default => undef,
-		      descr => "An Apache request object" },
-      cgi_object => { isa => 'CGI',    default => undef,
-		      descr => "A CGI.pm request object" },
-    );
+use HTML::Mason::MethodMaker
+    ( read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
+		      qw( ah apache_req ) ] );
 
 sub new
 {
@@ -180,15 +184,6 @@ use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
 
-use HTML::Mason::MethodMaker
-    ( read_write => [ qw( apache_status_title
-                          args_method
-			  auto_send_headers
-			  decline_dirs
-			  interp
-			  top_level_predicate ) ]
-    );
-
 use vars qw($VERSION);
 
 $VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
@@ -196,34 +191,45 @@ $VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
-__PACKAGE__->valid_params
-    (
-     apache_status_title   => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason status',
-			        descr => "The title of the Apache::Status page" },
-     args_method           => { parse => 'string',  type => SCALAR,       default => 'mod_perl',
-			        callbacks =>
-				{ "must be either 'CGI' or 'mod_perl'" =>
-				  sub { $_[0] =~ /^(?:CGI|mod_perl)$/ } },
-				descr => "Whether to use CGI.pm or Apache::Request for parsing the incoming HTTP request",
-                              },
-     auto_send_headers     => { parse => 'boolean', type => SCALAR|UNDEF, default => 1,
-			        descr => "Whether HTTP headers should be auto-generated" },
+BEGIN
+{
+    __PACKAGE__->valid_params
+	(
+	 apache_status_title   => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason status',
+				    descr => "The title of the Apache::Status page" },
+	 args_method           => { parse => 'string',  type => SCALAR,       default => 'mod_perl',
+				    callbacks =>
+				    { "must be either 'CGI' or 'mod_perl'" =>
+				      sub { $_[0] =~ /^(?:CGI|mod_perl)$/ } },
+				    descr => "Whether to use CGI.pm or Apache::Request for parsing the incoming HTTP request",
+				  },
+	 auto_send_headers     => { parse => 'boolean', type => SCALAR|UNDEF, default => 1,
+				    descr => "Whether HTTP headers should be auto-generated" },
+	 decline_dirs          => { parse => 'boolean', type => SCALAR|UNDEF, default => 1,
+				    descr => "Whether Mason should decline to handle requests for directories" },
+	 multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1,
+				    descr => "Whether multiple Mason configurations are in effect, such as when using VirtualHosts" },
+	 top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1},
+				    descr => "A subroutine that tests whether an HTTP request is valid" },
+	 # the only required param
+	 interp                => { isa => 'HTML::Mason::Interp',
+				    descr => "A Mason interpreter for processing components" },
+	);
 
-     decline_dirs          => { parse => 'boolean', type => SCALAR|UNDEF, default => 1,
-			        descr => "Whether Mason should decline to handle requests for directories" },
-     multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1,
-			        descr => "Whether multiple Mason configurations are in effect, such as when using VirtualHosts" },
-     top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1},
-			        descr => "A subroutine that tests whether an HTTP request is valid" },
+    __PACKAGE__->contained_objects
+	(
+	 interp => 'HTML::Mason::Interp',
+	);
+}
 
-     # the only required param
-     interp                => { isa => 'HTML::Mason::Interp',
-			        descr => "A Mason interpreter for processing components" },
-    );
-
-__PACKAGE__->contained_objects
-    (
-     interp => 'HTML::Mason::Interp',
+use HTML::Mason::MethodMaker
+    ( read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
+		      qw( apache_status_title
+                          args_method
+			  auto_send_headers
+			  decline_dirs
+			  interp
+			  top_level_predicate ) ]
     );
 
 use vars qw($AH);

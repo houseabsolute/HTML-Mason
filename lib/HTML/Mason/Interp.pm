@@ -22,6 +22,55 @@ Params::Validate::validation_options( on_fail => sub { param_error join '', @_  
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
+BEGIN
+{
+    # Fields that can be set in new method, with defaults
+    __PACKAGE__->valid_params
+	(
+	 autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR,
+					   descr => "The filename to use for Mason's 'autohandler' capability" },
+	 code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR,  # 10M
+					   descr => "The maximum size of the component code cache" },
+	 compiler                     => { isa => 'HTML::Mason::Compiler',
+					   descr => "A Compiler object for compiling components" },
+	 data_dir                     => { parse => 'string', optional => 1, type => SCALAR,
+					   descr => "A directory for storing cache files and other state information" },
+	 dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR,
+					   descr => "The filename to use for Mason's 'dhandler' capability" },
+	 fixed_source                 => { parse => 'boolean', default => 0, type => BOOLEAN,
+					   descr => "When true, we only compile source files once" },
+	 # OBJECT cause qr// returns an object
+	 ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
+					   default => qr/Subroutine .* redefined/i,
+					   descr => "A regular expression describing Perl warning messages to ignore" },
+	 out_method                   => { parse => 'code',    type => CODEREF|SCALARREF,
+					   default => sub { print STDOUT grep {defined} @_ },
+					   descr => "A subroutine or scalar reference through which all output will pass" },
+	 max_recurse                  => { parse => 'string',  default => 32, type => SCALAR,
+					   descr => "The maximum component stack depth - helps avoid infinite loops" },
+	 preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF,
+					   descr => "A list of components to load immediately when creating the Interpreter" },
+	 resolver                     => { isa => 'HTML::Mason::Resolver',
+					   descr => "A Resolver object for fetching components from storage" },
+	 system_log_events            => { parse => 'string',  optional => 1, type => BOOLEAN|HASHREF,
+					   descr => "An array or |-separated string of Mason events to log" },
+	 system_log_file              => { parse => 'string',  optional => 1, type => SCALAR,
+					   descr => "A filename in which Mason events will be logged" },
+	 system_log_separator         => { parse => 'string',  default => "\cA", type => SCALAR,
+					   descr => "A string to separate entries in the Mason events log" },
+	 use_object_files             => { parse => 'boolean', default => 1, type => BOOLEAN,
+					   descr => "Whether to cache component objects on disk" },
+	);
+
+    __PACKAGE__->contained_objects
+	(
+	 resolver => 'HTML::Mason::Resolver::File',
+	 compiler => 'HTML::Mason::Compiler::ToObject',
+	 request  => { class => ( 'HTML::Mason::Request' ),
+		       delayed => 1 },
+	);
+}
+
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code_cache
 			 hooks
@@ -30,68 +79,24 @@ use HTML::Mason::MethodMaker
 			 preloads
                          source_cache ) ],
 
-      read_write => [ qw( autohandler_name
-			  code_cache_max_size
+      read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
+		      qw( autohandler_name
+		          code_cache_max_size
 			  compiler
 			  data_dir
- 			  dhandler_name
-                          fixed_source
-		          ignore_warnings_expr
+			  dhandler_name
+			  fixed_source
+			  ignore_warnings_expr
 			  max_recurse
 			  resolver
-			  use_object_files
-		         ) ],
+			  use_object_files )
+		    ],
 
-      read_write_contained => { request => [ qw( autoflush
-                                                 data_cache_defaults ) ] },
+      read_write_contained => { request => [ [ autoflush => { type => BOOLEAN } ],
+					     [ data_cache_defaults => { type => HASHREF } ],
+					   ]
+			      },
       );
-
-# Fields that can be set in new method, with defaults
-__PACKAGE__->valid_params
-    (
-     autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR,
-				       descr => "The filename to use for Mason's 'autohandler' capability" },
-     code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR,  # 10M
-				       descr => "The maximum size of the component code cache" },
-     compiler                     => { isa => 'HTML::Mason::Compiler',
-				       descr => "A Compiler object for compiling components" },
-     dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR,
-				       descr => "The filename to use for Mason's 'dhandler' capability" },
-     fixed_source                 => { parse => 'boolean', default => 0, type => BOOLEAN,
-				       descr => "When true, we only compile source files once" },
-     # OBJECT cause qr// returns an object
-     ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
-				       default => qr/Subroutine .* redefined/i,
-				       descr => "A regular expression describing Perl warning messages to ignore" },
-     out_method                   => { parse => 'code',    type => CODEREF|SCALARREF,
-				       default => sub { print STDOUT grep {defined} @_ },
-				       descr => "A subroutine or scalar reference through which all output will pass" },
-     max_recurse                  => { parse => 'string',  default => 32, type => SCALAR,
-				       descr => "The maximum component stack depth - helps avoid infinite loops" },
-     preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF,
-				       descr => "A list of components to load immediately when creating the Interpreter" },
-     resolver                     => { isa => 'HTML::Mason::Resolver',
-				       descr => "A Resolver object for fetching components from storage" },
-     system_log_events            => { parse => 'string',  optional => 1, type => BOOLEAN|HASHREF,
-				       descr => "An array or |-separated string of Mason events to log" },
-     system_log_file              => { parse => 'string',  optional => 1, type => SCALAR,
-				       descr => "A filename in which Mason events will be logged" },
-     system_log_separator         => { parse => 'string',  default => "\cA", type => SCALAR,
-				       descr => "A string to separate entries in the Mason events log" },
-     use_object_files             => { parse => 'boolean', default => 1, type => BOOLEAN,
-				       descr => "Whether to cache component objects on disk" },
-     data_dir                     => { parse => 'string', optional => 1, type => SCALAR,
-				       descr => "A directory for storing cache files and other state information" },
-    );
-
-# For subobject auto-creation
-__PACKAGE__->contained_objects
-    (
-     resolver => 'HTML::Mason::Resolver::File',
-     compiler => 'HTML::Mason::Compiler::ToObject',
-     request  => { class => ( 'HTML::Mason::Request' ),
-		   delayed => 1 },
-    );
 
 sub new
 {

@@ -20,6 +20,35 @@ use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error abort_error
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
+BEGIN
+{
+    __PACKAGE__->valid_params
+	(
+	 autoflush  => { parse => 'boolean', default => 0, type => SCALAR,
+			 descr => "Whether output should be buffered or sent immediately" },
+	 interp     => { isa => 'HTML::Mason::Interp',
+			 descr => "An interpreter for Mason control functions" },
+	 error_format => { parse => 'string', type => SCALAR, default => 'text',
+			   callbacks => { "must be one of 'brief', 'text', 'line', or 'html'" =>
+					  sub { $_[0] =~ /^(?:brief|text|line|html)$/; } },
+			   descr => "How error messages are formatted" },
+	 error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
+			 callbacks => { "must be one of 'output' or 'fatal'" =>
+					sub { $_[0] =~ /^(?:output|fatal)$/ } },
+			 descr => "How error conditions are returned to the caller" },
+	 out_method => { type => SCALARREF | CODEREF,
+			 descr => "A subroutine or scalar reference through which all output will pass" },
+	 data_cache_defaults => { type => HASHREF|UNDEF, optional => 1,
+				  descr => "A hash of default parameters for Cache::Cache" },
+    );
+
+    __PACKAGE__->contained_objects
+	(
+	 buffer     => { class => 'HTML::Mason::Buffer',
+			 delayed => 1 },
+	);
+}
+
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( aborted
 			 aborted_value
@@ -28,37 +57,12 @@ use HTML::Mason::MethodMaker
 			 interp
 			 top_comp ) ],
 
-      read_write => [ qw( autoflush
+      read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
+		      qw( autoflush
                           data_cache_defaults
 			  error_format
 			  error_mode
 			  out_method ) ],
-    );
-
-__PACKAGE__->valid_params
-    (
-     autoflush  => { parse => 'boolean', default => 0, type => SCALAR,
-		     descr => "Whether output should be buffered or sent immediately" },
-     interp     => { isa => 'HTML::Mason::Interp',
-		     descr => "An interpreter for Mason control functions" },
-     error_format => { parse => 'string', type => SCALAR, default => 'text',
-		       callbacks => { "must be one of 'brief', 'text', 'line', or 'html'" =>
-					  sub { $_[0] =~ /^(?:brief|text|line|html)$/; } },
-                       descr => "How error messages are formatted" },
-     error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
-		     callbacks => { "must be one of 'output' or 'fatal'" =>
-					sub { $_[0] =~ /^(?:output|fatal)$/ } },
-		     descr => "How error conditions are returned to the caller" },
-     out_method => { type => SCALARREF | CODEREF,
-		     descr => "A subroutine or scalar reference through which all output will pass" },
-     data_cache_defaults => { type => HASHREF|UNDEF, optional => 1,
-			      descr => "A hash of default parameters for Cache::Cache" },
-    );
-
-__PACKAGE__->contained_objects
-    (
-     buffer     => { class => 'HTML::Mason::Buffer',
-		     delayed => 1 },
     );
 
 sub new
