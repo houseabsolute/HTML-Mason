@@ -34,6 +34,7 @@ my %fields =
      output_mode => 'batch',
      error_mode => 'html',
      top_level_predicate => sub { return 1 },
+     head_optimization => 1,
      decline_dirs => 1,
      debug_mode => 'none',
      debug_perl_binary => '/usr/bin/perl',
@@ -237,7 +238,7 @@ sub handle_request {
 	    print("<pre><font size=-1>\n$debugMsg\n</font></pre>\n") if defined($debugMsg);
 	}
     } else {
-	print("\n<!--\n$debugMsg\n-->\n") if defined($debugMsg) && http_header_sent($req) && $req->header_out("Content-type") =~ /text\/html/;
+	print("\n<!--\n$debugMsg\n-->\n") if defined($debugMsg) && http_header_sent($req) && !$req->header_only && $req->header_out("Content-type") =~ /text\/html/;
 	print($outbuf) if $self->output_mode eq 'batch';
     }
 
@@ -486,7 +487,8 @@ sub handle_request_1
     #
     my $hdrsub = sub {
 	my ($interp) = @_;
-	$r->send_http_header if (!http_header_sent($r));
+	$r->send_http_header() if !http_header_sent($r);
+	$interp->abort() if $r->header_only && $self->head_optimization;
 	$interp->suppress_hook(name=>'http_header',type=>'start_primary');
     };
     $interp->add_hook(name=>'http_header',type=>'start_primary',code=>$hdrsub);

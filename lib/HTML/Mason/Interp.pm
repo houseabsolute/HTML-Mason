@@ -409,6 +409,17 @@ sub exec_next {
     return wantarray ? @result : $result;
 }
 
+#
+# Abort out of current execution.
+#
+sub abort
+{
+    my ($self) = @_;
+    $self->{exec_state}->{abort_flag} = 1;
+    $self->{exec_state}->{abort_retval} = $_[1];
+    die "aborted";
+}
+
 sub debug_hook
 {
     1;

@@ -49,9 +49,7 @@ my $process_comp_path = sub {
 
 sub mc_abort
 {
-    $INTERP->{exec_state}->{abort_flag} = 1;
-    $INTERP->{exec_state}->{abort_retval} = $_[0];
-    die "aborted";
+    $INTERP->abort(@_);
 }
 
 sub mc_cache
