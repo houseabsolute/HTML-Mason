@@ -72,7 +72,8 @@ my $build = $class->new
 	      'Apache::Request' => 0.31,
 	      'Exception::Class' => 1.00,
 	      'Cache::Cache' => 1.00,
-	      'Params::Validate' => 0.16,
+	      'Params::Validate' => 0.18,
+              'Class::Container' => 0.02,
 	     },
    recommended => {
 		   
