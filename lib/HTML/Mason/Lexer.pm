@@ -374,7 +374,10 @@ my $flag;
 if ( $] >= 5.006 )
 {
     # Unicode-friendly
-    $flag = qr/[[:alpha:]_]\w*/;
+
+    # Use eval because 5.00503 complains even if it doesn't execute
+    # it.
+    eval '$flag = qr/[[:alpha:]_]\w*/;';
 }
 else
 {
