@@ -34,6 +34,12 @@ are converted to
 We try to recognize the most common variations; less common ones will
 need to be converted manually.
 
+Warning: If you use <% mc_comp(...) %> for components that *return*
+HTML rather than outputting it, this will erroneously be converted to
+<& &> (which discards the return value). Unfortunately there is no
+easy way for us to detect this. Please be aware of this case and QA
+your site carefully after conversion.
+
 All directories will be traversed recursively.  We STRONGLY recommend
 that you backup your components, and/or use the -t flag to preview,
 before running this program for real.  Files are modified
@@ -113,17 +119,22 @@ sub convert
     #
     if (!$TEST) {
 	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*\'([^\']+)\'\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g);
-	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*\"([^\"]+)\"\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g);
+	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*\"([^\"\$]+)\"\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g);
+	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*(\"[^\"]+\")\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g);
 	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*(.*?)\s*\)\s*%>} {<& $1 &>}g);
     } else {
 	while ($buf =~ m{(<%\s*mc_comp\s*\(\s*\'([^\']+)\'\s*(.*?)\s*\)\s*%>)}g) {
 	    $report->($1,"<& $2$3 &>");
 	}
 	$buf =~ s{<%\s*mc_comp\s*\(\s*\'([^\']+)\'\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g;
-	while ($buf =~ m{(<%\s*mc_comp\s*\(\s*\"([^\"]+)\"\s*(.*?)\s*\)\s*%>)}g) {
+	while ($buf =~ m{(<%\s*mc_comp\s*\(\s*\"([^\"\$]+)\"\s*(.*?)\s*\)\s*%>)}g) {
 	    $report->($1,"<& $2$3 &>");
 	}
-	$buf =~ s{<%\s*mc_comp\s*\(\s*\"([^\"]+)\"\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g;
+	$buf =~ s{<%\s*mc_comp\s*\(\s*\"([^\"\$]+)\"\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g;
+	while ($buf =~ m{(<%\s*mc_comp\s*\(\s*(\"[^\"]+\")\s*(.*?)\s*\)\s*%>)}g) {
+	    $report->($1,"<& $2$3 &>");
+	}
+	$buf =~ s{<%\s*mc_comp\s*\(\s*(\"[^\"]+\")\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g;
         while ($buf =~ m{(<%\s*mc_comp\s*\((.*?)\s*\)\s*%>)}g) {
 	    $report->($1,"<& $2 &>");
 	}
