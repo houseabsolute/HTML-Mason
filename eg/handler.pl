@@ -2,10 +2,13 @@
 package HTML::Mason;
 
 #
-# Sample Mason handler. At a minimum, set comp_root and data_dir.
+# Sample Mason handler.
 #
 use HTML::Mason;
 use strict;
+
+# Uncomment the next line if you plan to use the Mason previewer.
+#use HTML::Mason::Preview;
 
 # List of modules that you want to use from components (see Admin
 # manual for details)
@@ -36,7 +39,7 @@ sub handler
     # components, activate the following to prevent Mason from
     # evaluating image files as components.
     #
-    #return -1 if $r->content_type !~ m|^text/|io;
+    #return -1 if $r->content_type && $r->content_type !~ m|^text/|io;
     
     $ah->handle_request($r);
 }

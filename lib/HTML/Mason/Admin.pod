@@ -275,9 +275,13 @@ username to keep configurations separate.
 
 =item 3.
 
-Add code to your handler routine (in C<handler.pl>) to intercept
-Previewer requests on the ports defined above. Your handler should end
-up looking like this:
+In your C<handler.pl>, add the line
+
+    use HTML::Mason::Preview;
+
+somewhere underneath "use HTML::Mason". Then add code to your handler
+routine to intercept Previewer requests on the ports defined
+above. Your handler should end up looking like this:
 
     sub handler {
         my ($r) = @_;
