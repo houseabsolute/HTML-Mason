@@ -209,8 +209,8 @@ sub parse_component
                   <%
                    (?:perl_)?          # optional perl_ prefix
                    ($comp_names|       # $2: allowed tag names plus ...
-                    (?:def|method)      # def followed by spaces or tabs and then
-                    [\ \t]+ ( [^>\n]+ ) # by anything that's not '>' or a newline
+                    (?:def|method)      # def or method followed by anything
+                    ( [^>\n]* )         # that's not '>' or a newline
                                         # (which is the name)
                                         # $3: subcomp or method name
                    )
@@ -225,6 +225,9 @@ sub parse_component
 	    my $section_start = pos($state->{script});
 	    my $section_tag_pos = $section_start - length($1);
 	    my $subcomp_name = $3;
+	    if (defined($subcomp_name)) {
+		for ($subcomp_name) { s/^\s+//; s/\s+$//; }
+	    }
 
 	    $self->_parse_textseg( segbegin => $curpos,
 				   length => $section_tag_pos - $curpos,
@@ -328,9 +331,12 @@ sub _parse_subcomponent_or_method
     # Special case for <%def> sections: compile section as component
     # and put object text in subcomps or methods hash (as
     # appropriate), keyed on def name
-    if ($params{name} !~ /^[\w\-\.]+$/) {
+    if ($params{name} !~ /\S/) {
+	die $self->_make_error( error => "must supply name for $params{type}",
+				errpos => $params{section_start} );
+    } elsif ($params{name} !~ /^[\w\-\.]+$/) {
 	die $self->_make_error( error => "invalid $params{type} name '$params{name}': valid characters are [A-Za-z0-9._-]",
-			     errpos => $params{section_start} );
+				errpos => $params{section_start} );
     } elsif (exists $state->{$key}{ $params{name} }) {
 	die $self->_make_error( error => "multiple definitions for $params{type} '$params{name}'",
 				errpos => $params{section_start} );
