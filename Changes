@@ -5,6 +5,16 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.18  January 23, 2003
+
+[ BUG FIXES ]
+
+- Require Exception::Class 1.09.  Version 1.08 has a bug that causes
+problems with Mason when used with any Perl earlier than 5.8.0.
+- Fix a bug in the lexer code that caused Mason to not work with Perl
+5.00503 at all.
+
+
 1.17  January 17, 2003
 
 [ ENHANCEMENTS ]
