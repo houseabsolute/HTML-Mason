@@ -931,6 +931,21 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'comment_in_sub',
+			  description => 'test a substitution that only contains a comment',
+			  component => <<'EOF',
+<% # foo %>
+bar
+EOF
+                          expect => <<'EOF',
+
+bar
+EOF
+                          todo   => 'not sure this can/should be fixed',
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
