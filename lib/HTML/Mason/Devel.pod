@@ -40,13 +40,13 @@ o L<In-Line Perl Sections|"In-Line Perl Sections">
 
 o L<Calling Components|"Calling Components">
 
+o L<Top-Level Components|"Top-Level Components">
+
 o L<Passing Parameters|"Passing Parameters">
 
 o L<Initialization and Cleanup|"Initialization and Cleanup"> (mainly C<< <%init> >>)
 
-o L<Data Caching|"Data Caching">
-
-o L<Sending HTTP Headers|"Sending HTTP Headers">
+o L<Web-Specific Features|"Web-Specific Features">
 
 o L<Common Traps|"Common Traps">
 
