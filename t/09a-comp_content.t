@@ -26,9 +26,9 @@ $c = '' unless defined $c;  # avoid uninitialized value warnings
 $c =~ s/^\s+//;
 $c =~ s/\s+$//;
 if ($words{$c}) {
-	$m->out($words{$c});
+	$m->print($words{$c});
 } else {
-	$m->out("content returned '".$c."'");
+	$m->print("content returned '".$c."'");
 }
 </%perl>
 EOF
@@ -45,7 +45,7 @@ $var
 <%perl>
 for (@list) {
 	$$var = $_;
-	$m->out($m->content);
+	$m->print($m->content);
 }
 </%perl>
 EOF
@@ -75,7 +75,7 @@ EOF
 
     $group->add_support( path => 'filter_test/echo',
 			 component => <<'EOF',
-% $m->out($m->content);
+% $m->print($m->content);
 EOF
 		       );
 
@@ -242,11 +242,11 @@ EOF
 component call
 </%method>
 <&| filter &>
-% $m->out("this is a perl line ");
+% $m->print("this is a perl line ");
 <% "substitution tag" %>
 <& SELF:lala &>
 <%perl>
-$m->out("perl tag");
+$m->print("perl tag");
 </%perl>
 </&>
 EOF

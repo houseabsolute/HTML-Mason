@@ -864,7 +864,7 @@ sub PRINT
 {
     my $self = shift;
 
-    $self->{request}->out(@_);
+    $self->{request}->print(@_);
 }
 
 sub PRINTF

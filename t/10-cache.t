@@ -86,17 +86,17 @@ foreach my $key (qw(foo bar baz)) {
     $m->cache->set($key, $key);
 }
 my @keys = sort $m->cache->get_keys;
-$m->out("keys in cache: ".join(",",@keys)."\n");
+$m->print("keys in cache: ".join(",",@keys)."\n");
 foreach my $key (qw(foo bar baz)) {
     my $value = $m->cache->get($key) || "undefined";
-    $m->out("value for $key is $value\n");
+    $m->print("value for $key is $value\n");
 }
 $m->cache->remove('foo');
 $m->cache->remove('bar');
-$m->out("expiring foo and bar...\n");
+$m->print("expiring foo and bar...\n");
 foreach my $key (qw(foo bar baz)) {
     my $value = $m->cache->get($key) || "undefined";
-    $m->out("value for $key is $value\n");
+    $m->print("value for $key is $value\n");
 }
 </%init>
 EOF

@@ -147,7 +147,7 @@ EOF
 
     $group->add_test( name => 'preamble',
 		      description => 'tests preamble compiler parameter',
-		      interp_params => { preamble => 'my $msg = "This is the preamble.\n"; $m->out($msg);
+		      interp_params => { preamble => 'my $msg = "This is the preamble.\n"; $m->print($msg);
 '},
 		      component => <<'EOF',
 This is the body.
@@ -163,7 +163,7 @@ EOF
 
     $group->add_test( name => 'postamble',
 		      description => 'tests postamble compiler parameter',
-		      interp_params => { postamble => 'my $msg = "This is the postamble.\n"; $m->out($msg);
+		      interp_params => { postamble => 'my $msg = "This is the postamble.\n"; $m->print($msg);
 '},
 		      component => <<'EOF',
 This is the body.
@@ -244,7 +244,7 @@ EOF
 		      interp_params => { postprocess_perl => \&make_foo_foofoo },
 		      component => <<'EOF',
 <% 'foo' %>
-% $m->out("Make mine foo!\n");
+% $m->print("Make mine foo!\n");
 bar
 <% "stuff-$var-stuff" %>
 <%init>

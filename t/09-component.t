@@ -137,7 +137,7 @@ Scalar:\
 <& .subcomp &>
 
 <%def .subcomp>
-% $m->out( wantarray ? ('an','array') : 'scalar' );
+% $m->print( wantarray ? ('an','array') : 'scalar' );
 </%def>
 EOF
 		      expect => <<'EOF',

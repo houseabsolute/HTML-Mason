@@ -87,7 +87,7 @@ Trying to fetch <% $path %> (full path <% $full_path %>):
 %   }
 % }
 
-% $m->out("Output via the out function.");
+% $m->print("Output via the out function.");
 
 /request/file outputs <% int(length($m->scomp("/request/file"))/10) %>0+ characters.
 EOF
@@ -187,7 +187,7 @@ Sending list of arguments:
 <% 'blah','boom','bah' %>
 
 <%perl>
- $m->out(3,4,5);
+ $m->print(3,4,5);
 </%perl>
 EOF
 		      expect => <<'EOF',

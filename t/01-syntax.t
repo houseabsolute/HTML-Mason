@@ -168,7 +168,7 @@ EOF
 			  component => <<'EOF',
 some text,
 %
-% $m->out('foo, ');
+% $m->print('foo, ');
 and some more
 EOF
 			  expect =>    "some text,\nfoo, and some more\n",

@@ -201,7 +201,7 @@ EOF
 	      );
 
     write_comp( 'flush_buffer', <<'EOF',
-% $m->out("foo\n");
+% $m->print("foo\n");
 % $m->flush_buffer;
 bar
 EOF
