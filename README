@@ -15,6 +15,8 @@ Other Mason features include a graphical site previewing utility, an
 HTML/data caching model, and the ability to walk through requests with
 the Perl debugger.
 
+INSTALLATION
+
 To install Mason, run the standard sequence:
 
 	perl Makefile.PL
@@ -29,12 +31,45 @@ The included pod docs have been pre-converted to HTML for you and
 placed in the htdocs/ directory. The Mason overview (a good place to
 start) is in Mason.html.
 
+GETTING HELP
+
+The official Mason web site is at http://www.masonhq.com.  There
+you'll find Mason documentation, news, etc.
+
+A recent copy of the FAQ (Frequently Asked Questions) list is
+included in this release under the faq/ directory.  For the most
+recent version you'll want to go to the web site.
+
+The Mason mailing list, maintained by Kirrily Roberts, is an excellent
+place to ask questions and learn techniques. To subscribe, email
+mason-request@netizen.com.au and put "subscribe" in the body of your
+message. You can search and browse the archives at
+http://www.netizen.com.au/resources/lists/mason/.
+
+If the question is more generally about mod_perl, you may wish to post
+additionally (or only) to the mod_perl mailing list at
+modperl@apache.org.
+
+If you have a question or comment that you don't feel is appropriate
+for the group, write to one of the HTML::Mason authors: Jonathan
+Swartz (swartz@transbay.net) or Mark Schmick (mark@webz.com).
+
+REPORTING BUGS
+
+Send bug reports to the Mason mailing list for quickest response.
+It is a good idea to search the mailing list archives first to see
+if the problem has already been reported.
+
+For all bug reports indicate your architecture, Apache/Perl/module
+versions, etc. For installation problems send your handler.pl and
+httpd.conf. For component problems try to isolate the bug in a single
+small component or set of components, and send those.
+
+LICENSE
+
 Mason was originally developed for the Internet technology group at
-CMP Media, a publisher of technology magazines. Mason currently
-handles 90% of the traffic on CMPnet (http://www.cmpnet.com), a
-network of technology-based sites including TechWeb
-(http://www.techweb.com) and FileMine (http://www.filemine.com).  CMP
-has graciously supported our efforts to release Mason as open source
+CMP Media, a publisher of technology magazines. CMP
+graciously supported our efforts to release Mason as open source
 software to the Perl community.  However, CMP has NO direct
 involvement with the open source release and bears NO responsibility
 for its support or maintenance.
@@ -45,13 +80,3 @@ merchantibility and fitness for a particular purpose.  Mason is
 released under the same terms as Perl itself.  For more information
 see the "README" or "Artistic" files provided with the Perl
 distribution.
-
-Send feedback, questions, bug reports, etc. to the mod_perl list
-(modperl@apache.org; see http://perl.apache.org for more information);
-that way other folks will benefit from the communciation. Or, if you
-prefer, send directly to swartz@transbay.net.
-
-For all bug reports indicate your architecture, Apache/Perl/module
-versions, etc. For installation problems send your handler.pl and
-httpd.conf. For component problems try to isolate the bug in a single
-small component or set of components, and send those.
