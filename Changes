@@ -23,11 +23,11 @@ in which case you are responsible for generating new object files.
 - New <%def> section defines a subcomponent embedded inside a larger
 component.  This allows repeated code and HTML to be modularized
 without affecting the global component namespace.
-L{Devel/e&lt%defe&gt;}
+L{Devel/e&lt%def_i_name_e&gt;}
 - <%args> section now accommodates optional comments for declarations
 L{Devel/e&lt%argse&gt;}
 - Autohandler and dhandler file names are now configurable
-L{Interp/autohandler_name} L{Interp/dhandler_name}
+L{Interp/item_autohandler_name}
 - Dhandlers, which formerly worked only in mod_perl mode, now work in
 stand-alone mode as well
 - Interp::exec is now re-entrant with all request specific information
@@ -35,7 +35,6 @@ having been moved to Request class.
 - ** Reworked Parser API. parse is now called make_component, has a
 simplified set of options, and returns a component object
 directly. make is now called make_dirs. L{Parser/item_make_component}
-L{Parser/item_make_dirs}
 - Fixed mc_auto_comp, which never really worked as documented.
 - Removed obsolete and undocumented Interp::vars and mc_var functions
 
