@@ -80,12 +80,10 @@ sub allow_globals
 sub make_component
 {
     my ($self, %options) = @_;
-    my ($objectFile, $objectTextRef, $filesWritten) =
-	@options{qw(object_file object_text files_written)};
+    my ($objectTextRef) = @options{qw(object_text)};
 
     my $objectText = $self->parse_component(%options) or return undef;
     $$objectTextRef = $objectText if defined($objectTextRef);
-    $self->write_object_file(object_text=>$objectText, object_file=>$objectFile, files_written=>$filesWritten) if defined($objectFile);
     return $self->eval_object_text(object_text=>$objectText,error=>$options{error});
 }
 
@@ -187,12 +185,12 @@ sub parse_component
     #
     my $body = $self->preamble();
     $body .= 'my (%ARGS) = @_;'."\n";
-    $body .= 'my $_out = $REQ->topstack->{sink};'."\n";
+    $body .= 'my $_out = $REQ->sink;'."\n";
 
     #
     # Process args section.
     #
-    my @declaredArgs = ();
+    my %declaredArgs = ();
     if ($sectiontext{args}) {
 	my (@vars);
 	my @decls = split("\n",$sectiontext{args});
@@ -218,7 +216,7 @@ sub parse_component
 	    }
 	    my $name = substr($var,1);
 
-	    push(@declaredArgs,{var=>$var,type=>$type,name=>$name,(defined($default) ? (default=>$default) : ())});
+	    $declaredArgs{$var} = {default=>$default};
 
 	    if (defined($default)) {
 		$defaultClause = "$var = $default";
@@ -522,8 +520,8 @@ sub parse_component
     my @cparams = ("parser_version=>$parserVersion","create_time=>".time());
     push(@cparams,"source_ref_start=>0000000") if $useSourceReference;
     push(@cparams,"subcomps=>{%_subcomps}") if (%subcomps);
-    if (@declaredArgs) {
-	my $d = new Data::Dumper ([\@declaredArgs]);
+    if (%declaredArgs) {
+	my $d = new Data::Dumper ([\%declaredArgs]);
 	my $argsDump = $d->Dumpxs;
 	for ($argsDump) { s/\$VAR1\s*=//g; s/;\s*// }
 	push(@cparams,"declared_args=>$argsDump");

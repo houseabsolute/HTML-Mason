@@ -161,18 +161,39 @@ Called with no arguments, this returns the value of allow_globals as a
 list.  Called with one or more variable names, it appends the names to
 the existing list, removing duplicates if any.
 
+=for html <a name="item_make_component">
+
+=item make_component ([script=>..., script_file=>..., error=>...])
+
+This method compiles a component source script into an anonymous
+Component object.  The source may be passed in as a string in
+I<script>, or as a filename in I<script_file>.
+
+Returns the new Component object on success, or undef if an error
+occurred. I<error> is an optional scalar reference filled with the
+error message.
+
+Example of usage:
+
+    # Make a component
+    my $comp = $parser->make_component
+        (script=>'<%perl>my $name = "World";</%perl>Hello <% $name %>!',
+         error => \my $error)
+      or die "error while compiling component: $error";
+
+    # Call it from inside another component
+    $REQ->call($comp);
+
 =for html <a name="item_make">
 
-=item make ($comp_root, $data_dir, [@paths, $verbose, $predicate,
-$dir_create_mode, $update_reload_file])
+=item make_dirs (comp_root=>..., data_dir=>..., [paths=>[...], verbose=>0|1, predicate=>sub {...},
+dir_create_mode=>..., update_reload_file=>0|1])
 
-make traverses a tree of components, compiles any out-of-date
-components into object files, and reports errors. All parameters
-listed above are passed as name/value pairs; the first two are
-required.
+make_dirs traverses a tree of components, compiles any out-of-date
+components into object files, and reports errors.
 
 I<$comp_root> and I<$data_dir> contain the Mason component root and data
-directory respectively.
+directory respectively. These are required.
 
 I<@paths> is a reference to a list of component paths to make
 recursively. By default, makes '/' (the entire component tree).
@@ -200,44 +221,8 @@ Example of usage:
     
     my $p = new HTML::Mason::Parser;
     $p->allow_globals(qw($r));       # allow Apache $r global
-    $p->make (comp_root=>'/usr/home/swartz/web/comps',
-              data_dir=>'/usr/home/swartz/web/mason');
-
-
-=for html <a name="item_parse">
-
-=item parse ([$script, $script_file, \$result_code, \$result_text, \$pure_text_flag, \$error, $wrap_errors, $save_to])
-
-This method performs the main function of Parser: it compiles a
-component into a Perl subroutine.
-
-The component may be passed in as a string in I<script>, or as a
-filename in I<script_file>.
-
-The subroutine can be output in three ways. I<result_text> is an
-optional scalar reference; if specified, it is filled with a Perl
-script that, when evaluated, returns the new
-subroutine. I<result_code> is an optional code reference filled with
-the new subroutine itself.  I<save_to> is an optional filename for an
-object file.
-
-The method returns 1 on success and 0 if there was an error.  I<error>
-is an optional scalar reference filled with any parsing or compilation
-errors that occur.  Alternatively, if the I<wrap_errors> flag is set
-to true, then any errors that occur are simply wrapped up to be
-displayed by the subroutine -- in this case the method always
-"succeeds" and returns 1.
-
-I<pure_text_flag> is an optional scalar reference filled with a flag
-indicating whether the component was pure text (free of Mason syntax).
-
-Here's an example that creates an object file from a component source
-file:
-
-    $parser->parse(script_file => '/usr/www/docs/template',
-                    save_to => '/usr/www/data/obj/template',
-                    error => \$error)
-         or die "error while compiling component: $error";
+    $p->make_dirs (comp_root=>'/usr/home/swartz/web/comps',
+                   data_dir=>'/usr/home/swartz/web/mason');
 
 =back
 

@@ -14,7 +14,7 @@ examples.
 
 =item mc_abort ([return value])
 
-Ends the current execution, finishing the page without returning
+Ends the current request, finishing the page without returning
 through components. In a web environment, the optional return value is
 used as the HTTP status code.
 
@@ -139,12 +139,13 @@ of the current component. It is typically called at the top of an
 See the L<Components/filtering> section of the I<Component Developer's Guide>
 for usage and examples.
 
-=item mc_comp (compPath, option=>value, ...[, STORE=>ref])
+=item mc_comp (comp, option=>value, ...[, STORE=>ref])
 
-Calls the component designated by I<compPath> with the specified
-option/value pairs. If the component path is absolute (starting with a
-'/'), then the component is found relative to the component root.
-Relative component paths (no leading '/') are relative to the current component
+Calls the component designated by I<comp> with the specified
+option/value pairs. I<comp> may be a component path or a component
+object. If the component path is absolute (starting with a '/'), then
+the component is found relative to the component root.  Relative
+component paths (no leading '/') are relative to the current component
 directory.
 
 Components work exactly like Perl subroutines in terms of return
@@ -193,6 +194,14 @@ use mc_date() rather than UnixDate directly.
 
 mc_date() works faster than UnixDate for some formats by caching results. 
 
+=item mc_dhandler_arg ()
+
+If the request has been handled by a dhandler, this method returns the
+remainder of the URI beyond the dhandler directory.  Similar to the
+PATH_INFO except without the leading slash. See the
+L<Components/dhandlers> section of the I<Component Developer's Guide>
+for examples.
+
 =item mc_file (filename)
 
 Returns the contents of filename as a string. I<filename> may be an
@@ -235,11 +244,6 @@ The following commands are only available when Mason is running in a
 Web environment.
 
 =over
-
-=item mc_dhandler_arg ()
-
-For use in dhandlers. Returns the path_info CGI argument, stripped of
-its leading slash.
 
 =item mc_suppress_http_header (0|1)
 

@@ -520,10 +520,10 @@ sub handle_request_1
     # Send HTTP headers when the primary section is reached.
     #
     my $hdrsub = sub {
-	my ($interp) = @_;
+	my ($req) = @_;
 	$r->send_http_header() if !http_header_sent($r);
-	$interp->abort() if $r->header_only;
-	$interp->suppress_hook(name=>'http_header',type=>'start_primary');
+	$req->abort() if $r->header_only;
+	$req->suppress_hook(name=>'http_header',type=>'start_primary');
     };
     $interp->add_hook(name=>'http_header',type=>'start_primary',code=>$hdrsub);
 

@@ -79,13 +79,7 @@ sub mc_auto_next
     my $aref = $REQ->{autohandler_next} or die "mc_auto_next $no_auto_error";
     my ($comp, $argsref) = @$aref;
     my %args = (%$argsref,@_);
-    my ($result,@result);
-    if (wantarray) {
-	@result = mc_comp($comp, %args);
-    } else {
-	$result = mc_comp($comp, %args);
-    }
-    return wantarray ? @result : $result;
+    return $REQ->call($comp, %args);
 }
 
 sub mc_cache
@@ -128,7 +122,7 @@ sub mc_cache_self
     
     my $interp = $REQ->interp;
     return 0 if !$interp->use_data_cache;
-    return 0 if $REQ->topstack->{in_cache_self_flag};
+    return 0 if $REQ->stack->[0]->{in_cache_self_flag};
     my (%retrieveOptions,%storeOptions);
     foreach (qw(key expire_if keep_in_memory busy_lock)) {
 	if (exists($options{$_})) {
@@ -176,7 +170,7 @@ sub mc_call_self
 {
     check_request;
     my ($cref,$rref) = @_;
-    return 0 if $REQ->topstack->{in_call_self_flag};
+    return 0 if $REQ->stack->[0]->{in_call_self_flag};
     
     #
     # Reinvoke the component with in_call_self_flag=1. Collect
@@ -211,32 +205,13 @@ sub mc_call_stack ()
 sub mc_comp
 {
     check_request;
-    return $REQ->exec_next(@_);
-}
-
-sub mc_comp_create
-{
-    check_request;
-    my ($script) = @_;
-    return $REQ->parser->make_component(script=>$script, parent_path=>$REQ->comp->parent_path);
+    return $REQ->call(@_);
 }
 
 sub mc_comp_exists
 {
     check_request;
-    my ($compPath, %args) = @_;
-
-    $compPath = $REQ->process_comp_path($compPath);
-    return ($REQ->interp->load($compPath)) ? 1 : 0;
-}
-
-sub mc_comp_object
-{
-    check_request;
-    my ($compPath) = @_;
-
-    $compPath = $REQ->process_comp_path($compPath);
-    return $REQ->interp->load($compPath);
+    return ($REQ->fetch_comp($_[0])) ? 1 : 0;
 }
 
 sub mc_comp_source

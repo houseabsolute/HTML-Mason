@@ -288,28 +288,24 @@ sub handle_preview_request_1
 	my ($content,$i,@compEvents,$event,$key,$value,$trace);
 	my $eventnum = 0;
 	my $startCompHook = sub {
-	    my ($self) = @_;
+	    my ($req) = @_;
 	    $content .= "\cAEVENT$eventnum\cA";
-	    my $path = $self->locals->{sourceFile};
-	    my $root = $self->comp_root;
-	    $path =~ s@^$root@@;
-	    $compEvents[$eventnum++] = {type=>'startComp',path=>$path};
+	    my $path = $req->comp->title;
+	    $compEvents[$eventnum++] = {type=>'startComp',path=>$path,comp=>($req->comp)};
 	};
 	my $endCompHook = sub {
-	    my ($self) = @_;
+	    my ($req) = @_;
 	    $content .= "\cAEVENT$eventnum\cA";
-	    my $path = $self->locals->{sourceFile};
-	    my $root = $self->comp_root;
-	    $path =~ s@^$root@@;
+	    my $path = $req->comp->title;
 	    $compEvents[$eventnum++] = {type=>'endComp',path=>$path};
 	};
 	my $startFileHook = sub {
-	    my ($self,$file) = @_;
+	    my ($req,$file) = @_;
 	    $content .= "\cAEVENT$eventnum\cA";
 	    $compEvents[$eventnum++] = {type=>'startFile',path=>$file,start=>length($content)};
 	};
 	my $endFileHook = sub {
-	    my ($self,$file) = @_;
+	    my ($req,$file) = @_;
 	    my $end = length($content);
 	    $content .= "\cAEVENT$eventnum\cA";
 	    $compEvents[$eventnum++] = {type=>'endFile',path=>$file,end=>$end};
@@ -426,7 +422,7 @@ sub handle_preview_request_1
 		    $objcount--;
 		    $objects[$objcount]->{repeat}++;
 		} else {
-		    $objdisplay = ($createObjectLink) ? $createObjectLink->($objtype,$path,scalar(@stack),$objtext) : (('  ' x scalar(@stack)) . $objtext);
+		    $objdisplay = ($createObjectLink && ($event->{type} eq 'startFile' || $event->{comp}->file_based)) ? $createObjectLink->($objtype,$path,scalar(@stack),$objtext) : (('  ' x scalar(@stack)) . $objtext);
 		    $objects[$objcount] = {count=>$objcount,type=>$objtype,text=>$objtext,display=>$objdisplay,label=>$objlabel,color=>'003399',srclink=>$objsrclink,depth=>scalar(@stack),repeat=>1};
 		}
 		push(@stack,$objcount);

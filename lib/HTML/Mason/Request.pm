@@ -74,7 +74,7 @@ sub parser
 #
 # Execute the next component in this request.
 #
-sub exec_next {
+sub call {
     my ($req, $comp, %args) = @_;
     my $interp = $req->{interp};
 
@@ -84,7 +84,7 @@ sub exec_next {
     #
     if (!ref($comp)) {
 	my $path = $comp;
-	$comp = $req->resolve_comp_path($path) or die "could not find component for path '$path'\n";
+	$comp = $req->fetch_comp($path) or die "could not find component for path '$path'\n";
     }
 
     #
@@ -107,7 +107,7 @@ sub exec_next {
     my $sink;
     if (exists($args{STORE})) {
 	my $store = $args{STORE};
-	die "exec_next: STORE value ($store) is not a scalar reference" if ref($store) ne 'SCALAR';
+	die "Request::call: STORE value ($store) is not a scalar reference" if ref($store) ne 'SCALAR';
 	$$store = '';
 	$sink = sub { $$store .= $_[0] if defined ($_[0]) };
 	delete($args{STORE});
@@ -117,14 +117,10 @@ sub exec_next {
 	$sink = $req->{stack}->[0]->{sink};
     }
 
-    #
     # Push new frame onto stack.
-    #
     unshift(@{$req->{stack}},{comp=>$comp,args=>{%args},sink=>$sink});
 
-    #
     # Call start_comp hooks.
-    #
     $req->call_hooks('start_comp');
 
     #
@@ -136,6 +132,7 @@ sub exec_next {
     #
     # Finally, call component subroutine.
     #
+    $comp->{run_count}++;
     my ($result, @result);
     if (wantarray) { @result = $sub->(%args) } else { $result = $sub->(%args) }
 
@@ -198,14 +195,6 @@ sub debug_hook
 }
 
 #
-# Return hash reference at top of stack.
-#
-sub topstack
-{
-    return $_[0]->{stack}->[0];
-}
-
-#
 # Accessor methods for top of stack elements.
 #
 sub comp { return $_[0]->{stack}->[0]->{comp} }
@@ -247,7 +236,7 @@ sub process_comp_path
 # Does relative->absolute conversion as well as checking for local
 # subcomponents.
 #
-sub resolve_comp_path
+sub fetch_comp
 {
     my ($self,$path) = @_;
     if (my $comp = $self->comp->subcomps->{$path}) {

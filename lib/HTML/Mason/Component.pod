@@ -1,0 +1,196 @@
+=head1 NAME
+
+HTML::Mason::Component - Mason Component Class
+
+=head1 SYNOPSIS
+
+    my $comp1 = $REQ->comp;
+    my $comp2 = $REQ->stack[1]->comp;
+    my $comp3 = $REQ->fetch_comp('foo/bar');
+
+    foreach ($comp1,$comp2,$comp3) {
+       print "My name is ".$_->title.".\n";
+    }
+
+=head1 DESCRIPTION
+
+Mason uses the Component class to store components loaded into
+memory. Components come from three distinct sources:
+
+=over 4
+
+=item 1
+
+File-based: loaded from a source or object file.
+
+=item 2
+
+Subcomponents: embedded components defined with the C<E<lt>%defE<gt>> tag.
+
+=item 3
+
+Anonymous: created on-the-fly with the C<make_component> Parser method.
+
+=back
+
+Some of the methods below return different values (or nothing at all)
+depending on the component type.
+
+The component API is primarily useful for introspection, e.g. "what
+component called me" or "does the next component take a certain
+argument".  You can build complex Mason sites without ever dealing
+directly with a component object.
+
+=head2 CREATING AND ACCESSING COMPONENTS
+
+Common ways to get handles on existing component objects include the
+L<Request/comp>, L<Request/stack>, and L<Request/fetch_comp> Request methods.
+
+There is no published C<new> method, because creating a component
+requires a parser. Use the L<Parser/make_component> Parser method to create a
+new component dynamically.
+
+Similarly, there is no C<execute> method, because executing a
+component requires an interpreter. All of the interfaces for calling a
+component (<& &>, C<mc_comp>, C<$interp-E<gt>exec>, C<$REQ-E<gt>call>) which
+normally take a component path, will also take a component object.
+
+=head1 METHODS
+
+=over
+
+=item code
+
+Returns the compiled form of the component as a code reference. You
+should never invoke this directly but rather use one of the
+established interfaces for calling components.
+
+=item create_time
+
+Returns the time (in Perl time() format) when this component object
+was created.
+
+=item declared_args
+
+Returns a reference to a hash of hashes representing the arguments
+declared in the C<E<lt>%argsE<gt>> section. The keys of the main hash are the
+variable names including prefix (e.g. C<$foo>, C<@lst>). Each
+secondary hash contains:
+
+=over 4
+
+=item *
+
+'default': the string specified for default value (e.g. 'fido') or undef
+if none specified.  Note that in general this is not the default value
+itself but rather an expression that gets evaluated every time the
+component runs.
+
+=back
+
+For example:
+
+  # does $comp have an argument called $fido?
+  if (exists($comp->declared_args->{'$fido'})) { ... }
+
+  # does $fido have a default value?
+  if (defined($comp->declared_args->{'$fido'}->{default})) { ... }
+
+=item first_time
+
+Returns true if this is the first time the component has executed,
+false otherwise.  Useful for initializing persistent component
+lexicals:
+
+  if ($REQ->comp->first_time) {
+     $dbh = DBI->connect(...);
+
+Note that in a web-based environment, this "first time" will
+come once for each child and every time the component is reloaded.
+
+=item is_subcomp
+
+Returns true if this is a subcomponent of another component.
+
+=item is_file_based
+
+Returns true if this component was loaded from a source or object
+file.
+
+=item name
+
+Returns a short name of the component.  For file-based components this
+is the filename without the path. For subcomponents this is the name
+specified in C<E<lt>%defE<gt>>. Undefined for anonymous components.
+
+=item parent_comp
+
+Defined only for subcomponents; returns the parent component that this
+subcomponent was defined in.
+
+=item parent_path
+
+Returns the prefix used to resolve relative component paths from this
+component. For file-based components this is the full component path
+minus the final piece.  For subcomponents this is the same as its
+parent component.  Undefined for anonymous components.
+
+=item run_count
+
+Returns the number of times this component has been invoked. In a
+web-based environment, this value is separate for each child and
+resets every time the component is reloaded.
+
+=item subcomps
+
+Returns a hash containing the subcomponents defined in this component,
+with names as keys and component objects as values.
+
+=item title
+
+Returns a printable string denoting this component.  It is intended to
+uniquely identify a component within a given interpreter although this
+is not 100% guaranteed. Mason uses this string in error messages,
+the previewer component trace, and C<mc_comp_stack>.
+
+For file-based components this is the component path.  For
+subcomponents this is "parent_component_path:subcomponent_name". For
+anonymous components this is a unique label like "[anon 17]".
+
+=back
+
+=head1 FILE-BASED METHODS
+
+The following methods apply only to file-based components (those
+loaded from source or object files). They return undef for other
+component types.
+
+=over
+
+=item cache_file
+
+Returns the data cache filename for this component.
+
+=item object_file
+
+Returns the object filename for this component.
+
+=item path
+
+Returns the absolute path of this component.
+
+=item source_file
+
+Returns the source filename for this component.
+
+=back
+
+=head1 AUTHOR
+
+Jonathan Swartz, swartz@transbay.net
+
+=head1 SEE ALSO
+
+L<HTML::Mason::Request>
+
+=cut

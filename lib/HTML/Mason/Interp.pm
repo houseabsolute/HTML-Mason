@@ -29,6 +29,7 @@ my %fields =
      comp_root => undef,
      code_cache_mode => 'all',
      current_time => 'real',
+     data_cache_dir => '',
      data_dir => undef,
      dhandler_name => 'dhandler',
      system_log_file => undef,
@@ -40,8 +41,7 @@ my %fields =
      use_data_cache => 1,
      use_object_files => 1,
      use_reload_file => 0,
-     verbose_compile_error => 0,
-     data_cache_dir => '',
+     verbose_compile_error => 0
      );
 # Create accessor routines
 foreach my $f (keys %fields) {
@@ -227,10 +227,10 @@ sub exec {
     my ($result, @result);
     if (wantarray) {
 	local $SIG{'__DIE__'} = sub { confess($_[0]) };
-	@result = eval {$req->exec_next($comp, %args)};
+	@result = eval {$req->call($comp, %args)};
     } else {
 	local $SIG{'__DIE__'} = sub { confess($_[0]) };
-	$result = eval {$req->exec_next($comp, %args)};
+	$result = eval {$req->call($comp, %args)};
     }
 
     # If an error occurred...
@@ -239,7 +239,7 @@ sub exec {
 	return $req->{abort_retval} if ($req->{abort_flag});
 	my $i = index($err,'HTML::Mason::Interp::exec');
 	$err = substr($err,0,$i) if $i!=-1;
-	$err =~ s/^\s*(HTML::Mason::Commands::__ANON__|HTML::Mason::Request::exec_next).*\n//gm;
+	$err =~ s/^\s*(HTML::Mason::Commands::__ANON__|HTML::Mason::Request::call).*\n//gm;
 	if (@{$req->{stack}}) {
 	    my $errmsg = "error while executing ".$req->comp->title.":\n";
 	    $errmsg .= $err."\n";
@@ -307,7 +307,7 @@ sub load {
 	$self->write_system_log('COMP_LOAD', $path);	# log the load event
 	my $comp = $self->{parser}->eval_object_text(object_file=>$objfile, error=>\$err);
 	die "Error while loading '$objfile' at runtime:\n$err\n" if !$comp;
-	$comp->assign_file_properties($self->comp_root,$self->data_dir,$path);
+	$comp->assign_file_properties($self->comp_root,$self->data_dir,$self->data_cache_dir,$path);
 	
 	if ($self->{code_cache_mode} eq 'all') {
 	    $codeCache->{$path}->{comp} = $comp;
@@ -375,7 +375,7 @@ sub load {
 	    #
 	    $comp = $parser->make_component(script_file=>$srcfile,error=>\$err) or die "Error during compilation of $srcfile:\n$err\n";
 	}
-	$comp->assign_file_properties($self->comp_root,$self->data_dir,$path);
+	$comp->assign_file_properties($self->comp_root,$self->data_dir,$self->data_cache_dir,$path);
 	
 	#
 	# Cache code in memory

@@ -218,13 +218,17 @@ an interpreter, the main thing you'll want to do with it is call a
 component and do something with the output. To call a component, use
 Interp's exec() method:
 
-    $interp->exec(<compPath> [,<..list of component params..>]);
+    $interp->exec(<comp> [,<..list of component params..>]);
+
+where I<comp> is a component path or component object.
 
 Component parameters are given as a series of name/value pairs, just
 as they are with C<mc_comp>. exec returns the return value of
 the component. Component output is sent to standard output by default,
-but you can change this by specifying C<out_method>. Here is a skeleton
-script that calls a component and places the output in a file:
+but you can change this by specifying C<out_method>.
+
+Here is a skeleton script that calls a component and places the output
+in a file:
 
     my $outbuf;
     my $parser = new HTML::Mason::Parser;

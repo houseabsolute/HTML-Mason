@@ -18,12 +18,14 @@ my %fields =
      # All components
      code => undef,
      create_time => undef,
+     embedded => 0,
      file_based => 0,
      declared_args => undef,
      name => undef,
      parent_comp => undef,
      parent_path => undef,
      parser_version => undef,
+     run_count => 0,
      subcomps => undef,
      title => undef,
 
@@ -59,16 +61,19 @@ sub new
     }
     bless $self, $class;
 
-    # Initialize subcomponent properties
+    # Initialize subcomponent properties. Note that other properties
+    # (parent_path, title) are initialized in assign_file_properties.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
-	# Parent points to us
+	# I am a subcomponent
+	$c->{embedded} = 1;
+	
+	# This is my parent
 	$c->{parent_comp} = $self;
 	
-	# It has access to the same subcomps
+	# Access to the same subcomps and parent path
 	$c->{subcomps} = $self->{subcomps};
 
 	# Title is a combination of names
-	$c->{title} = $name;
 	$c->{name} = $name;
     }
 
@@ -78,13 +83,18 @@ sub new
 }
 
 #
+# Is this our first time being run?
+#
+sub first_time { return $_[0]->{run_count} <= 1 }
+
+#
 # For file-based components
 #
 sub assign_file_properties
 {
-    my ($self,$compRoot,$dataDir,$path) = @_;
-    ($self->{file_based},$self->{comp_root},$self->{data_dir},$self->{path},$self->{title}) =
-	(1,$compRoot,$dataDir,$path,$path);
+    my ($self,$compRoot,$dataDir,$cacheDir,$path) = @_;
+    ($self->{file_based},$self->{comp_root},$self->{data_dir},$self->{cache_dir},$self->{path},$self->{title}) =
+	(1,$compRoot,$dataDir,$cacheDir,$path,$path);
     ($self->{parent_path}) = ($path =~ /^(.*)\/[^\/]+$/);
     ($self->{name}) = ($path =~ /([^\/]+)$/);
 
@@ -97,6 +107,7 @@ sub assign_file_properties
 
 sub source_file { my $self = shift; return ($self->file_based) ? ($self->comp_root . $self->path) : undef }
 sub object_file { my $self = shift; return ($self->file_based) ? ($self->data_dir . "/obj/" . $self->path) : undef }
+sub cache_file { my $self = shift; return ($self->file_based) ? ($self->cache_dir . $self->path) : undef }
 
 sub source_ref_text
 {

@@ -1,0 +1,170 @@
+=head1 NAME
+
+HTML::Mason::Request - Mason Request Class
+
+=head1 SYNOPSIS
+
+    $REQ->...
+
+=head1 DESCRIPTION
+
+Mason creates one Request object for every web request (or, in
+stand-alone mode, every C<Interp::exec> call). Inside a component you
+access the current request object via the global C<$REQ>.
+
+Prior to version 0.7, the only way to access request information was
+through specific mc_ commands. For this reason many of the methods
+below have mc_ command equivalents; you are free to use either
+interface.
+
+=head1 METHODS
+
+=over
+
+=item abort ([return value])
+
+Ends the current request, finishing the page without returning
+through components. The optional argument specifies the return
+value from C<Interp::exec>; in a web environment, this ultimately
+becomes the HTTP status code. This method is used to implement
+C<mc_abort>.
+
+=item args
+
+Returns a hash of the arguments passed to the current component.
+Equivalent to C<$REQ-E<gt>stack[0]-E<gt>{args}> and C<%ARGS>.
+
+=item autohandler_next
+
+If the request has been intercepted by an autohandler, this method
+returns a reference to a two-element list: the originally invoked
+component, and a hash reference of the original arguments.  Otherwise
+returns undef. This method is used to implement C<mc_auto_comp>
+and C<mc_auto_next>.
+
+=for html <a name="call">
+
+=item call (comp, option=>value, ...[, STORE=>ref])
+
+Calls the component designated by I<comp> with the specified
+option/value pairs. I<comp> may be an absolute or relative component
+path, or a component object.
+
+The optional STORE option causes all output to be placed in the scalar
+reference provided instead of being sent to the default output stream.
+
+This method is used to implement C<mc_comp> and the <& &> tag.
+
+=for html <a name="comp">
+
+=item comp
+
+Returns the current component object.  Equivalent to
+C<$REQ-E<gt>stack[0]-E<gt>{comp}>.
+
+=item count
+
+Returns the number of this request, which is unique for a given
+request and interpreter.
+
+=item depth
+
+Returns the current size of the component stack.  1 indicates we are
+in the top-level component.
+
+=item dhandler_arg
+
+If the request has been handled by a dhandler, this method returns the
+remainder of the URI or C<Interp::exec> path when the dhandler directory is
+removed.  Otherwise returns undef.  This method is used to implement
+C<mc_dhandler_arg>.
+
+=for html <a name="fetch_comp">
+
+=item fetch_comp (compPath)
+
+Given an absolute or relative component path, returns the
+corresponding component object or undef if no such component exists.
+Looks for subcomponents as well as file-based components.
+
+=item interp
+
+Returns the Interp object associated with this request.
+
+=item parser
+
+Returns the Parser object associated with this request.
+
+=item process_comp_path (compPath)
+
+Given an absolute or relative component path, returns the
+corresponding absolute component path.
+
+=item sink
+
+Returns the current output method: the function through which
+output is being sent.  Equivalent to C<$REQ-E<gt>stack[0]-E<gt>{sink}>.
+
+=for html <a name="stack">
+
+=item stack
+
+Returns the current component stack as a list of hash references, with
+the top of the stack at index 0. Each hash reference contains
+
+=over 4
+
+=item *
+
+'comp': the component object
+
+=item *
+
+'args': a hash reference of the arguments the component was called with
+
+=item *
+
+'sink': the function through which output is being sent; depends on C<output_mode> and STORE options
+
+=back
+
+You may also access top of the stack through convenience functions
+L<Request/comp>, L<Request/args>, and L<Request/sink>.
+
+=back
+
+=head1 APACHE-ONLY METHODS
+
+These additional methods are available when running Mason with mod_perl
+and the ApacheHandler.
+
+=over
+
+=item ah
+
+Returns the ApacheHandler object associated with this request.
+
+=item http_input
+
+Returns the input string for this HTTP request: for GET, the query
+string, and for POST, the content block read from the client. Because
+$r->content can only be called once and is automatically called by
+Mason, it cannot be called directly inside components; this method is
+a good way to get at the value of $r->content.
+
+=item apache_req
+
+Returns the Apache request object.  This is also available in the
+global $r.
+
+=back
+
+=head1 AUTHOR
+
+Jonathan Swartz, swartz@transbay.net
+
+=head1 SEE ALSO
+
+L<HTML::Mason::Component>
+
+=cut
