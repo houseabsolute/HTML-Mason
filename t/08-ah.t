@@ -104,7 +104,7 @@ EOF
 	      );
 
     write_comp( 'cgi_object', <<'EOF',
-<% UNIVERSAL::isa(eval { $m->cgi_object }, 'CGI') ? 'CGI' : 'NO CGI' %>
+<% UNIVERSAL::isa(eval { $m->cgi_object } || undef, 'CGI') ? 'CGI' : 'NO CGI' %><% $@ || '' %>
 EOF
 	      );
 
