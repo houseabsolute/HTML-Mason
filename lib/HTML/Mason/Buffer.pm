@@ -17,7 +17,6 @@ Params::Validate::validation_options( on_fail => sub { param_error join '', @_ }
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( sink
 			 parent
-			 mode
                          filter
 			 ignore_flush
 		       ) ],
@@ -27,10 +26,6 @@ __PACKAGE__->valid_params
     (
      sink         => { type => SCALARREF | CODEREF, optional => 1 },
      parent       => { isa => 'HTML::Mason::Buffer', optional => 1 },
-     mode         => { type => SCALAR,
-		       callbacks =>
-		       { 'batch or stream' => sub { $_[0] =~ /^(?:batch|stream)$/ } },
-		       optional => 1 },
      ignore_flush => { type => SCALAR, default => 0 },
      filter       => { type => CODEREF, optional => 1 },
     );
@@ -55,48 +50,21 @@ sub _initialize
 {
     my $self = shift;
 
-    # first figure out our mode if not given
-    unless ( $self->{mode} )
-    {
-	if ( $self->{sink} )
-	{
-	    $self->{mode} = UNIVERSAL::isa( $self->{sink}, 'CODE' ) ? 'stream' : 'batch';
-	}
-	elsif ( $self->{parent} )
-	{
-	    $self->{mode} = $self->{parent}->mode;
-	}
-	else
-	{
-	    param_error "HTML::Mason::Buffer->new requires either a mode, parent, or sink parameter";
-	}
-    }
-
     if ( defined $self->{sink} )
     {
 	if ( UNIVERSAL::isa( $self->{sink}, 'SCALAR' ) )
 	{
 	    # convert scalarref to a coderef for efficiency
-	    $self->{buffer} = $self->{sink};
-	    my $b = $self->{buffer};
+	    my $b = $self->{buffer} = $self->{sink};
 	    $self->{sink} = sub { for (@_) { $$b .= $_ if defined } };
 	}
     }
     else
     {
-	param_error "Buffering to a default sink only works in batch mode or with a parent buffer."
-	    unless $self->{parent} || $self->{mode} eq 'batch';
-
-	if ($self->{mode} eq 'stream')
-	{
-	    $self->{sink} = $self->{parent}->sink;
-	}
-	else
-	{
-	    $self->{buffer} = '';
-	    my $b = \$self->{buffer};
-	    $self->{sink} = sub { for (@_) { $$b .= $_ if defined } };
-	}
+	# create an empty string to use as buffer
+	my $buf = '';
+	my $b = $self->{buffer} = \$buf;
+	$self->{sink} = sub { for (@_) { $$b .= $_ if defined } };
     }
 
     $self->{ignore_flush} = 1 unless $self->{parent};
@@ -125,20 +93,13 @@ sub flush
 sub clear
 {
     my $self = shift;
-    if ( ref $self->{buffer} )
-    {
-	${ $self->{buffer} } = '';
-    }
-    else
-    {
-	$self->{buffer} = '';
-    }
+    ${$self->{buffer}} = '';
 }
 
 sub output
 {
     my $self = shift;
-    my $output = ref $self->{buffer} ? ${ $self->{buffer} } : $self->{buffer};
+    my $output = ${$self->{buffer}};
     return $self->filter->( $output ) if $self->filter;
     return $output;
 }
