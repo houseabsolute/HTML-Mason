@@ -936,24 +936,24 @@ preloads.
 
 =over
 
-=for html <a name="item_apply_escapes"></a>
-
 =item apply_escapes ($text, $flags, [more flags...])
+
+=for html <a name="item_apply_escapes"></a>
 
 This method applies a one or more escapes to a piece of text.  The
 escapes are specified by giving their flag.  Each escape is applied to
 the text in turn, after which the now-modified text is returned.
 
-=for html <a name="item_remove_escape"></a>
-
 =item remove_escape ($name)
+
+=for html <a name="item_remove_escape"></a>
 
 Given an escape name, this removes that escape from the interpreter's
 known escapes.  If the name is not recognized, it is simply ignored.
 
-=for html <a name="item_set_escape"></a>
-
 =item set_escape ($name => see below])
+
+=for html <a name="item_set_escape"></a>
 
 This method is called to add an escape flag to the list of known
 escapes for the interpreter.  The flag may only consist of the
@@ -981,25 +981,25 @@ configuration file, you can set them like this:
 
 =over
 
-=for html <a name="item_comp_exists"></a>
-
 =item comp_exists (path)
+
+=for html <a name="item_comp_exists"></a>
 
 Given an I<absolute> component path, this method returns a boolean
 value indicating whether or not a component exists for that path.
 
-=for html <a name="item_comp_root"></a>
-
 =item comp_root (comp_root)
+
+=for html <a name="item_comp_root"></a>
 
 This is a convenience method which simply calls the C<comp_root>
 method in the resolver object.  Obviously, if you are using a custom
 resolver class which does not have a C<comp_root> method, then this
 convenience method will not work.
 
-=for html <a name="item_exec"></a>
-
 =item exec (comp, args...)
+
+=for html <a name="item_exec"></a>
 
 Creates a new HTML::Mason::Request object for the given I<comp> and
 I<args>, and executes it. The return value is the return value of
@@ -1012,27 +1012,27 @@ for examples.
 This method isn't generally useful in a mod_perl environment; see
 L<subrequests|HTML::Mason::Devel/Subrequests> instead.
 
-=for html <a name="flush_code_cache"></a>
-
 =item flush_code_cache
+
+=for html <a name="flush_code_cache"></a>
 
 Empties the component cache. When using Perl 5.00503 or earlier, you
 should call this when finished with an interpreter, in order to remove
 circular references that would prevent the interpreter from being
 destroyed.
 
-=for html <a name="item_load"></a>
-
 =item load (path)
+
+=for html <a name="item_load"></a>
 
 Returns the component object corresponding to an absolute component
 C<path>, or undef if none exists.
 
-=for html <a name="item_make_component"></a>
-
 =item make_component (comp_source => ... )
 
 =item make_component (comp_file => ... )
+
+=for html <a name="item_make_component"></a>
 
 This method compiles Mason component source code and returns a
 Component object.  The source may be passed in as a string in C<comp_source>,
@@ -1053,9 +1053,9 @@ Example of usage:
 
     $m->comp($anon_comp);
 
-=for html <a name="item_make_request"></a>
-
 =item make_request (@request_params)
+
+=for html <a name="item_make_request"></a>
 
 This method creates a Mason request object. The arguments to be passed
 are the same as those for the C<< HTML::Mason::Request->new >>
@@ -1064,17 +1064,17 @@ of interest to those attempting to write new handlers or to subclass
 C<HTML::Mason::Interp>.  If you want to create a I<subrequest>, see
 L<subrequests|HTML::Mason::Devel/Subrequests> instead.
 
-=for html <a name="purge_code_cache"></a>
-
 =item purge_code_cache ()
+
+=for html <a name="purge_code_cache"></a>
 
 Called during request execution in order to clear out the code
 cache. Mainly useful to subclasses that may want to take some custom
 action upon clearing the cache.
 
-=for html <a name="item_set_global"></a>
-
 =item set_global ($varname, [values...])
+
+=for html <a name="item_set_global"></a>
 
 This method sets a global to be used in components. C<varname> is a
 variable name, optionally preceded with a prefix (C<$>, C<@>, or

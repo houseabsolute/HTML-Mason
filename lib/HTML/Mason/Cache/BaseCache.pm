@@ -93,15 +93,15 @@ An object of this class is returned from L<$m-E<gt>cache|HTML::Mason::Request/it
 
 =over
 
-=for html <a name="item_clear"></a>
-
 =item clear ()
+
+=for html <a name="item_clear"></a>
 
 Remove all values in the cache.
 
-=for html <a name="item_get"></a>
-
 =item get (key, [%params])
+
+=for html <a name="item_get"></a>
 
 Returns the value associated with I<key> or undef if it is
 non-existent or expired. This is extended with the following optional
@@ -125,9 +125,9 @@ the value.
 
 =back
 
-=for html <a name="item_get_object"></a>
-
 =item get_object (key)
+
+=for html <a name="item_get_object"></a>
 
 Returns the underlying C<Cache::Object> object associated with I<key>.
 The most useful methods on this object are
@@ -136,24 +136,24 @@ The most useful methods on this object are
     $co->get_accessed_at();   # when was object last accessed
     $co->get_expires_at();    # when does object expire
 
-=for html <a name="item_expire"></a>
-
 =item expire (key)
+
+=for html <a name="item_expire"></a>
 
 Expires the value associated with I<key>, if it exists. Differs from
 L<remove|HTML::Mason::Cache::BaseCache/item_remove> only in that
 the cache object is left around, e.g. for retrieval by
 L<get_object|HTML::Mason::Cache::BaseCache/item_get_object>.
 
-=for html <a name="item_remove"></a>
-
 =item remove (key)
+
+=for html <a name="item_remove"></a>
 
 Removes the cache object associated with I<key>, if it exists.
 
-=for html <a name="item_set"></a>
-
 =item set (key, data, [duration])
+
+=for html <a name="item_set"></a>
 
 Associates I<data> with I<key> in the cache. I<duration>
 indicates the time until the value should be erased.  If
