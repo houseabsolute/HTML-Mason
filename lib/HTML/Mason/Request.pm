@@ -12,16 +12,17 @@ use strict;
 use vars qw($REQ $REQ_DEPTH %REQ_DEPTHS);
 my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P,$HTML::Mason::Commands::m);
 
-use HTML::Mason::MethodMaker ( read_only => [ qw( aborted
-						  aborted_value
-						  count
-						  declined
-						  error_code
-						  interp ) ],
+use HTML::Mason::MethodMaker
+    ( read_only => [ qw( aborted
+			 aborted_value
+			 count
+			 declined
+			 error_code
+			 interp ) ],
 
-			       read_write => [ qw( out_method
-						   out_mode ) ],
-			     );
+      read_write => [ qw( out_method
+			  out_mode ) ],
+    );
 
 my %fields =
     (aborted => undef,
