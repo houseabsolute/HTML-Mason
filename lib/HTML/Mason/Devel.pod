@@ -238,11 +238,11 @@ B<L<HTML::Mason::Request>>.
 
 =head2 System Objects
 
-Three system objects share the work of serving requests in Mason:
-Parser, Interp, and ApacheHandler. The administrator creates these
-objects and provides parameters that shape Mason's behavior. As a pure
-component developer you shouldn't need to worry about or access these
-objects, but occasionally we'll mention a relevant parameter.
+Four system objects share the work of serving requests in Mason:
+Lexer, Compiler, Interp, and ApacheHandler. The administrator creates
+these objects and provides parameters that shape Mason's behavior. As
+a pure component developer you shouldn't need to worry about or access
+these objects, but occasionally we'll mention a relevant parameter.
 
 =head2 Component Objects
 
@@ -732,7 +732,7 @@ subroutines (both named and anonymous), and initializing state.
 
 This code does not run inside a request context. You cannot call
 components or access $m from this section. Also, do not attempt to
-return() from a C<E<lt>%onceE<gt>> section; the current parser
+return() from a C<E<lt>%onceE<gt>> section; the current compiler
 cannot properly handle it.
 
 Normally this code will execute individually from every HTTP child
@@ -780,8 +780,8 @@ applications will be unnoticeable. However, one should avoid using
 C<E<lt>%sharedE<gt>> when patently unnecessary, e.g. when an C<E<lt>%initE<gt>> would work
 as well.
 
-Do not attempt to return() from a C<E<lt>%sharedE<gt>> section; the current
-parser cannot properly handle it.
+Do not attempt to return() from a C<E<lt>%sharedE<gt>> section; the
+current compiler cannot properly handle it.
 
 =head1 EMBEDDED COMPONENTS
 
@@ -1066,9 +1066,9 @@ The current valid flags are
     u - escape for URL query string (':' => '%3A', etc.) - all but [a-zA-Z0-9_.-]
     n - turn off default escape flags
 
-The administrator may specify a set of default escape flags via
-the L<Parser/default_escape_flags> Parser parameter. For example,
-if the administrator specifies
+The administrator may specify a set of default escape flags via the
+L<Compiler/default_escape_flags> Compiler parameter. For example, if
+the administrator specifies
 
     default_escape_flags=>'h'
 
