@@ -155,6 +155,9 @@ sub _handle_error
     if (isa_mason_exception($err, 'TopLevelNotFound')) {
 	die $err;
     } else {
+        if ( $self->error_mode eq 'html' ) {
+            $self->apache_req->content_type('text/html');
+        }
 	$self->SUPER::_handle_error($err);
     }
 }
