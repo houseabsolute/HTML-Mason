@@ -400,12 +400,14 @@ sub start_named_block
     $self->_init_comp_data( $c->{ $p{block_type} }{ $p{name} } );
     push @{$self->{paused_compiles}}, $c;
     $self->{current_compile} = $c->{ $p{block_type} }{ $p{name} };
+    $self->{current_compile}->{in_named_block} = {block_type => $p{block_type}, name => $p{name}};
 }
 
 sub end_named_block
 {
     my $self = shift;
 
+    delete $self->{current_compile}->{in_named_block};
     $self->{current_compile} = pop @{$self->{paused_compiles}};
     $self->{current_compile}{in_main}++;
 }
