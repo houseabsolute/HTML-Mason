@@ -175,24 +175,20 @@ my \$interp = HTML::Mason::Interp->new( comp_root => '$APACHE{comp_root}',
 				       data_dir => '$APACHE{data_dir}' );
 chown Apache->server->uid, Apache->server->gid, \$interp->files_written;
 
+my \@modes = ( qw( batch stream batch batch batch ) );
 my \@ah = ( HTML::Mason::ApacheHandler->new( interp => \$interp,
-                                            args_method => '$args_method',
-                                            output_mode => 'batch' ),
+                                            args_method => '$args_method' ),
            HTML::Mason::ApacheHandler->new( interp => \$interp,
-                                            args_method => '$args_method',
-                                            output_mode => 'stream' ),
+                                            args_method => '$args_method' ),
 	   HTML::Mason::ApacheHandler->new( interp => \$interp,
                                             args_method => '$args_method',
-					    top_level_predicate => sub { \$_[0] =~ m,/_.*, ? 0 : 1 },
-                                            output_mode => 'batch' ),
+					    top_level_predicate => sub { \$_[0] =~ m,/_.*, ? 0 : 1 } ),
 	   HTML::Mason::ApacheHandler->new( interp => \$interp,
                                             args_method => '$args_method',
-                                            decline_dirs => 0,
-                                            output_mode => 'batch' ),
+                                            decline_dirs => 0 ),
 	   HTML::Mason::ApacheHandler->new( interp => \$interp,
                                             args_method => '$args_method',
-                                            error_mode => 'fatal',
-                                            output_mode => 'batch' ),
+                                            error_mode => 'fatal' ),
 	 );
 
 sub handler
@@ -214,6 +210,8 @@ sub handler
     \$filename .= \$r->path_info;
     \$filename =~ s,//+,/,g;
     \$r->filename(\$filename);
+
+    \$ah[\$ah_index]->interp->out_mode( \$modes[\$ah_index] );
 
     my \$status = \$ah[\$ah_index]->handle_request(\$r);
     \$r->print( "Status code: \$status\\n" );
