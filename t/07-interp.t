@@ -952,6 +952,22 @@ Hello, World!
 EOF
 		    );
 
+#------------------------------------------------------------
+
+    $group->add_test( name => 'read_write_contained',
+		      description => 'test that we can read/write contained object params',
+		      component => <<'EOF',
+% $m->interp->autoflush(1);
+% my $req = $m->interp->make_request;
+% $m->interp->autoflush(0);
+autoflush for new request is <% $req->autoflush %>
+EOF
+		      expect => <<'EOF',
+autoflush for new request is 1
+EOF
+		    );
+
+#------------------------------------------------------------
 
     return $group;
 }
