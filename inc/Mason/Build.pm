@@ -7,9 +7,692 @@ use Module::Build 0.20;
 
 use base 'Module::Build';
 
-use File::Basename;
-use File::Find;
-use File::Path;
+use lib 't/lib';
+
+use Apache::test;
+use File::Basename ();
+use File::Path ();
+use File::Spec;
+
+sub create_build_script
+{
+    my $self = shift;
+
+    $self->_check_for_old_mason;
+
+    $self->_apache_test_config;
+
+    $self->_assisted_install_config;
+
+    $self->add_to_cleanup('mason_tests');
+
+    $self->SUPER::create_build_script(@_);
+
+    return $self;
+}
+
+sub _check_for_old_mason
+{
+    my $self = shift;
+
+    eval { require HTML::Mason };
+
+    # no Mason installed
+    return if $@;
+
+    if ( $HTML::Mason::VERSION < 1.09 )
+    {
+	print <<"EOF";
+
+It looks like you have an older version of Mason already installed on
+your machine (version $HTML::Mason::VERSION).  This version is not backwards
+compatible with versions of Mason before version 1.09_01.
+Please read the UPGRADE document before continuing with this
+installation.
+
+EOF
+
+	unless ( exists $self->{args}{'noprompts'} )
+	{
+	    my $yn = Module::Build->prompt('Continue with installation?', 'N');
+
+	    exit unless $yn =~ /y(?:es)?/i;
+	}
+    }
+}
+
+sub _apache_test_config
+{
+    my $self = shift;
+
+    return if $^O =~ /win32/i;
+
+    eval { require mod_perl; };
+    return if $@;
+
+    $self->_cleanup_apache_test_files();
+
+    $self->_write_apache_test_conf();
+    $self->_setup_handler('mod_perl');
+    $self->_setup_handler('CGI');
+    $self->_write_CGIHandler();
+}
+
+sub _cleanup_apache_test_files
+{
+    my $self = shift;
+
+    foreach ( qw( httpd httpd.conf mason_handler_CGI.pl mason_handler_mod_perl.pl ) )
+    {
+	my $file = File::Spec->catdir( 't', $_ );
+	if ( -e $file )
+	{
+	    unlink $file
+		or die "Can't unlink '$file': $!";
+	}
+    }
+
+    foreach ( qw( comps data ) )
+    {
+	my $dir = File::Spec->catdir( 't', $_ );
+	if ( -d $dir )
+	{
+	    $self->delete_filetree($dir);
+	}
+    }
+}
+
+sub _write_apache_test_conf
+{
+    my $self = shift;
+
+    my %conf = Apache::test->get_test_params();
+
+    my $conf_file = File::Spec->catfile( $self->base_dir, 't', 'httpd.conf' );
+    $conf{apache_dir} = File::Basename::dirname($conf_file);
+    $conf{apache_dir} =~ s,/$,,;
+
+    $conf{comp_root} = File::Spec->catdir( $conf{apache_dir}, 'comps' );
+    $conf{data_dir} = File::Spec->catdir( $conf{apache_dir}, 'data' );
+
+    mkdir $conf{comp_root}, 0755
+	or die "Can't make dir '$conf{comp_root}': $!";
+    mkdir $conf{data_dir}, 0755
+	or die "Can't make dir '$conf{data_dir}': $!";
+
+    $self->add_to_cleanup( @conf{'comp_root', 'data_dir'} );
+
+    my $libs = $self->_apache_test_conf_libs();
+
+    my $cgi_handler =
+        File::Spec->catfile( $conf{apache_dir}, 'mason_handler_CGI.pl' );
+    my $mod_perl_handler =
+        File::Spec->catfile( $conf{apache_dir}, 'mason_handler_mod_perl.pl' );
+
+    my %multiconf;
+    $multiconf{1}{comp_root} = File::Spec->catfile( $conf{comp_root}, 'multiconf1' );
+    $multiconf{1}{data_dir}  = File::Spec->catfile( $conf{data_dir}, 'multiconf1' );
+    $multiconf{2}{comp_root} = File::Spec->catfile( $conf{comp_root}, 'multiconf2' );
+    $multiconf{2}{data_dir}  = File::Spec->catfile( $conf{data_dir}, 'multiconf2' );
+
+    my $include .= <<"EOF";
+ServerRoot $conf{apache_dir}
+
+# tainting has to be turned on before any Perl code is loaded
+<IfDefine taint>
+  PerlSetEnv PATH /bin:/usr/bin
+  PerlTaintCheck On
+</IfDefine>
+
+<Perl>
+ $libs
+</Perl>
+
+<IfDefine CGI>
+  PerlModule  CGI
+  PerlRequire $cgi_handler
+  SetHandler  perl-script
+  PerlHandler HTML::Mason
+</IfDefine>
+
+<IfDefine CGI_no_handler>
+  PerlModule  CGI
+  PerlSetVar  MasonCompRoot "$conf{comp_root}"
+  PerlSetVar  MasonDataDir  "$conf{data_dir}"
+EOF
+
+    if ($mod_perl::VERSION >= 1.24) {
+	$include .= <<'EOF';
+  PerlAddVar  MasonAllowGlobals $foo
+  PerlAddVar  MasonAllowGlobals @bar
+EOF
+    }
+
+    $include .= <<"EOF";
+  PerlSetVar  MasonArgsMethod CGI
+  SetHandler  perl-script
+  PerlModule  HTML::Mason::ApacheHandler
+  PerlHandler HTML::Mason::ApacheHandler
+</IfDefine>
+
+<IfDefine mod_perl>
+  PerlRequire $mod_perl_handler
+  SetHandler  perl-script
+  PerlHandler HTML::Mason
+</IfDefine>
+
+<IfDefine mod_perl_no_handler>
+  PerlSetVar  MasonArgsMethod mod_perl
+  PerlSetVar  MasonCompRoot "root => $conf{comp_root}"
+  PerlAddVar  MasonCompRoot "root2 => $conf{data_dir}"
+  PerlSetVar  MasonDataDir  "$conf{data_dir}"
+  PerlSetVar  MasonDeclineDirs 0
+  # We need to test setting a "code" type parameter
+  PerlSetVar  MasonPreprocess "sub { \${\$_[0]} =~ s/fooquux/FOOQUUX/ }"
+
+  PerlSetVar  MasonEscapeFlags "old_h  => \\&HTML::Mason::Escapes::basic_html_escape"
+  PerlAddVar  MasonEscapeFlags "old_h2 => basic_html_escape"
+  PerlAddVar  MasonEscapeFlags "uc => sub { \${\$_[0]} = uc \${\$_[0]}; }"
+
+  PerlSetVar  MasonDataCacheDefaults "cache_class => MemoryCache"
+  PerlAddVar  MasonDataCacheDefaults "namespace => foo"
+
+  SetHandler  perl-script
+  PerlModule  HTML::Mason::ApacheHandler
+  PerlHandler HTML::Mason::ApacheHandler
+</IfDefine>
+
+<IfDefine multi_config>
+  PerlSetVar MasonArgsMethod CGI
+
+  <Location /comps/multiconf1>
+    PerlSetVar  MasonCompRoot "$multiconf{1}{comp_root}"
+    PerlSetVar  MasonDataDir  "$multiconf{1}{data_dir}"
+    PerlSetVar  MasonAutohandlerName no_such_file
+    SetHandler  perl-script
+    PerlModule  HTML::Mason::ApacheHandler
+    PerlHandler HTML::Mason::ApacheHandler
+  </Location>
+
+  <Location /comps/multiconf2>
+    PerlSetVar  MasonCompRoot "$multiconf{2}{comp_root}"
+    PerlSetVar  MasonDataDir  "$multiconf{2}{data_dir}"
+    PerlSetVar  MasonDhandlerName no_such_file
+    SetHandler  perl-script
+    PerlModule  HTML::Mason::ApacheHandler
+    PerlHandler HTML::Mason::ApacheHandler
+  </Location>
+
+</IfDefine>
+
+<IfDefine no_config>
+  SetHandler  perl-script
+  PerlHandler HTML::Mason::ApacheHandler
+</IfDefine>
+
+<IfDefine single_level_serverroot>
+  ServerRoot /tmp
+  SetHandler perl-script
+  PerlSetVar MasonDataDir /tmp/one/two
+  PerlHandler HTML::Mason::ApacheHandler
+</IfDefine>
+
+<IfDefine taint>
+  SetHandler  perl-script
+  PerlHandler HTML::Mason::ApacheHandler
+</IfDefine>
+
+<IfDefine CGIHandler>
+  AddHandler cgi-script .cgi
+  Action html-mason /CGIHandler.cgi
+  <Location /comps>
+    Options +ExecCGI
+    SetHandler html-mason
+  </Location>
+</IfDefine>
+EOF
+
+    if ( load_pkg('Apache::Filter') )
+    {
+        my $filter_handler = <<'EOF';
+  sub FilterTest::handler
+  {
+      my $r = shift;
+
+      $r = $r->filter_register;
+
+      my ($fh, $status) = $r->filter_input;
+
+      return $status unless $status == Apache::Constants::OK();
+
+      print uc while <$fh>;
+
+      return $status;
+  }
+EOF
+
+        $include .= <<"EOF";
+<IfDefine filter_tests>
+  PerlModule  Apache::Constants
+  <Perl>
+$filter_handler
+  </Perl>
+
+  PerlSetVar  MasonArgsMethod mod_perl
+  PerlSetVar  MasonCompRoot "root => $conf{comp_root}"
+  PerlSetVar  MasonDataDir  "$conf{data_dir}"
+  PerlModule  Apache::Filter;
+  PerlSetVar  Filter  On
+
+  SetHandler  perl-script
+  PerlModule  HTML::Mason::ApacheHandler
+  PerlHandler HTML::Mason::ApacheHandler FilterTest
+</IfDefine>
+EOF
+    } # matches 'if ( load_pkg('Apache::Filter') )'
+
+    {
+	local $^W;
+	Apache::test->write_httpd_conf
+	    ( %conf,
+	      include => $include
+	    );
+    }
+
+    $self->add_to_cleanup
+	( map { File::Spec->catfile( $conf{apache_dir}, $_ ) }
+	  qw( httpd.conf error_log httpd httpd.pid mason )
+	);
+
+    $self->notes( apache_test_conf => \%conf );
+}
+
+sub _setup_handler
+{
+    my $self = shift;
+    my $args_method = shift;
+
+    my $conf = $self->notes('apache_test_conf');
+
+    my $handler = "mason_handler_$args_method.pl";
+    my $handler_file = File::Spec->catfile( $conf->{apache_dir}, $handler );
+    open F, ">$handler_file"
+	or die "Can't write to '$handler_file': $!";
+
+    my $libs = $self->_apache_test_conf_libs();
+
+    # The code below tries to create its configurations using
+    # different combinations of parameters.  The goal is to have
+    # different combinations of providing contained objects and
+    # providing the contained object class and its parameters.
+    print F <<"EOF";
+package My::Resolver;
+\$My::Resolver::VERSION = '0.01';
+\@My::Resolver::ISA = 'HTML::Mason::Resolver::File::ApacheHandler';
+
+
+package My::Interp;
+\$My::Interp::VERSION = '0.01';
+\@My::Interp::ISA = 'HTML::Mason::Interp';
+
+package HTML::Mason;
+
+$libs
+
+use Apache::Constants qw(REDIRECT);
+
+use HTML::Mason::ApacheHandler;
+use HTML::Mason;
+
+my \@ah_params = ( {},
+                   {},
+                   { decline_dirs => 0 },
+                   {}
+                 );
+
+my \@interp_params = ( {},
+                       { autoflush => 1 },
+                       {},
+                       { error_mode => 'fatal', error_format => 'line' },
+                     );
+
+my \@ah;
+for (my \$x = 0; \$x <= \$#ah_params; \$x++)
+{
+    my \%res_params;
+
+    if ( \$x < 2 )
+    {
+        \%res_params = ( resolver_class => 'My::Resolver',
+                        comp_root => '$conf->{comp_root}',
+                      );
+    }
+    else
+    {
+        \%res_params =
+            ( resolver =>
+              My::Resolver->new( comp_root => '$conf->{comp_root}' )
+            );
+    }
+
+    my \%interp_params;
+    if ( \$x % 2 )
+    {
+
+        \%interp_params = ( interp_class => 'My::Interp',
+                           data_dir => '$conf->{data_dir}',
+                           error_mode => 'output',
+                           error_format => 'html',
+                           \%{\$interp_params[\$x]},
+                         );
+    }
+    else
+    {
+        \%interp_params =
+            ( interp =>
+              My::Interp->new( request_class => 'HTML::Mason::Request::ApacheHandler',
+                               data_dir => '$conf->{data_dir}',
+                               error_mode => 'output',
+                               error_format => 'html',
+                               %res_params,
+                              \%{\$interp_params[\$x]},
+                             )
+            );
+
+        \%res_params = ();
+    }
+
+    my \$ah =
+        HTML::Mason::ApacheHandler->new
+            ( args_method => '$args_method',
+              \%{\$ah_params[\$x]},
+              \%interp_params,
+	      \%res_params,
+            );
+
+    chown Apache->server->uid, Apache->server->gid, \$ah->interp->files_written;
+
+    push \@ah, \$ah;
+}
+
+sub handler
+{
+    my \$r = shift;
+    \$r->header_out('X-Mason-Test' => 'Initial value');
+
+    my (\$ah_index) = \$r->uri =~ /ah=(\\d+)/;
+
+    unless (\$ah[\$ah_index])
+    {
+        \$r->print( "No ApacheHandler object at index #\$ah_index" );
+        warn "No ApacheHandler object at index #\$ah_index\n";
+        return;
+    }
+
+    # strip off stuff just used to figure out what handler to use.
+    my \$filename = \$r->filename;
+    \$filename =~ s,/ah=\\d+,,;
+    \$filename .= \$r->path_info;
+    \$filename =~ s,//+,/,g;
+    \$r->filename(\$filename);
+
+    my \$status = \$ah[\$ah_index]->handle_request(\$r);
+    return \$status if \$status == REDIRECT;
+    \$r->print( "Status code: \$status\\n" );
+}
+
+1;
+EOF
+    close F;
+
+    $self->add_to_cleanup($handler_file);
+}
+
+sub _write_CGIHandler
+{
+    my $self = shift;
+
+    my $conf = $self->notes('apache_test_conf');
+
+    my $handler_file = File::Spec->catfile( $conf->{apache_dir}, 'CGIHandler.cgi' );
+    open F, ">$handler_file"
+	or die "Can't write to '$handler_file': $!";
+
+    my $libs = $self->_apache_test_conf_libs();
+
+    my $data_dir = File::Spec->catdir( $conf->{apache_dir}, 'data' );
+
+    use Config;
+
+    print F <<"EOF";
+$Config{startperl}
+
+$libs
+
+use HTML::Mason::CGIHandler;
+
+my \%p;
+if ( \$ENV{PATH_INFO} =~ s,/autoflush\$,, )
+{
+    \%p = ( autoflush => 1 );
+}
+
+my \$h = HTML::Mason::CGIHandler->new( data_dir  => '$data_dir', \%p );
+
+if ( \$ENV{PATH_INFO} =~ s,/handle_comp\$,, )
+{
+    \$h->handle_comp( \$ENV{PATH_INFO} );
+}
+elsif ( \$ENV{PATH_INFO} =~ s,/handle_cgi_object\$,, )
+{
+    my \$cgi = CGI->new;
+    \$cgi->param( 'foo' => 'bar' );
+    \$h->handle_cgi_object( \$cgi );
+}
+else
+{
+    \$h->handle_request;
+}
+EOF
+
+    close F;
+
+    chmod 0755, $handler_file
+	or die "cannot chmod $handler_file to 0755: $!";
+
+    $self->add_to_cleanup($handler_file);
+}
+
+sub _apache_test_conf_libs
+{
+    my $self = shift;
+
+    my $libs = 'use lib qw( ';
+    $libs .= join ' ', ( File::Spec->catdir( $self->base_dir, 'blib', 'lib' ),
+                         File::Spec->catdir( $self->base_dir, 't', 'lib' ) );
+
+    if ($ENV{PERL5LIB})
+    {
+	$libs .= ' ';
+	$libs .= join ' ', (split /:|;/, $ENV{PERL5LIB});
+    }
+    $libs .= ' );';
+
+    return $libs;
+}
+
+sub _assisted_install_config
+{
+    my $self = shift;
+
+    return unless $self->{args}{apache}{httpd};
+
+    my %httpd_params = Apache::test->get_compilation_params( $self->{args}{apache}{httpd} );
+
+    my $conf_file =
+	( $self->{args}{apache}{config_file} ?
+	  $self->{args}{apache}{config_file} :
+	  $httpd_params{SERVER_CONFIG_FILE}
+	);
+
+    my %config_params = eval { $self->_get_config_file_params($conf_file) };
+    warn " * Can't investigate current installation status:\n $@" and return if $@;
+
+    foreach my $k ( qw( document_root user group ) )
+    {
+	# strip quotes if they're there.
+	for ( $config_params{$k}) { s/^"//; s/"$//; }
+    }
+
+    my $conf_dir = File::Basename::dirname( $conf_file );
+
+    my $has_mason_string = $config_params{has_mason} ? 'does' : 'does not';
+    print <<"EOF";
+
+It is possible to have this program automatically set up a simple
+Mason configuration.  This would involve altering the configuration
+file at $conf_file.
+
+It appears that this configuration file $has_mason_string have
+previous Mason configuration directives.
+
+EOF
+
+    my $default = $config_params{has_mason} ? 'no' : 'yes';
+    $default = 'no' if -e File::Spec->catfile( $conf_dir, 'mason.conf' );
+
+    my $yn =
+	Module::Build->prompt
+	    ( 'Would you like help configuring Apache/mod_perl to use Mason?',
+	      $default );
+
+    return unless $yn =~ /^y/i;
+
+    my %install = ( user => $config_params{user},
+		    group => $config_params{group},
+		    apache_config_file => $conf_file,
+		  );
+
+    print <<'EOF';
+
+Mason needs to know what your component root should be.  This is a
+directory in which Mason can expect to find components.  Generally,
+when starting out with Mason this will either be your server's
+document root or a subdirectory below it.
+
+If this directory does not exist it will be created.
+
+EOF
+
+    do
+    {
+	$install{comp_root} =
+	    Module::Build->prompt( 'Component root?', $config_params{document_root} );
+    } until $install{comp_root};
+
+    print <<'EOF';
+
+Mason needs to know where it should store data files that it
+generated.  This includes compiled components, cache files, and other
+miscellania that Mason generates.  This directory will be made
+readable and writable by the user the web server runs as.
+
+EOF
+
+    do
+    {
+	$install{data_dir} =
+	    Module::Build->prompt( 'Data directory?',
+				   File::Spec->catdir( $httpd_params{HTTPD_ROOT}, 'mason' ) );
+
+	if ($install{data_dir} && -e $install{data_dir})
+	{
+	    my $yn =
+		Module::Build->prompt
+		    ( "This directory ('$install{data_dir}') already exists," .
+		      " is that ok?", 'yes' );
+
+	    delete $install{data_dir} unless $yn =~ /y/;
+	    print "\n";
+	}
+    } until $install{data_dir};
+
+    print <<'EOF';
+
+It is often desirable to tell the web server to only recognize certain
+extensions as Mason components.  This allows you to easily put HTML,
+images, etc. and Mason components all together under the document root
+without worrying that Mason will try to serve static content.
+
+Enter a list of extensions separated by spaces.  Periods are not
+needed.
+
+If you want all files under the document root to be treated as Mason
+components simply enter '!' here.
+
+EOF
+
+    my @ext;
+    do
+    {
+	my $ext =
+	    Module::Build->prompt
+		( 'What extensions should the web server' .
+		  ' recognize as Mason components', 'html' );
+
+	@ext = map { s/^\.//; $_ } split /\s+/, $ext;
+
+	unless (@ext == 1 && $ext[0] eq '!')
+	{
+	    $install{extensions} = \@ext;
+	}
+    } until @ext;
+
+    $self->notes( apache_install => \%install );
+}
+
+sub _get_config_file_params
+{
+    my $self = shift;
+    my $file = shift;
+
+    local *CONF;
+
+    open CONF, "<$file"	or die "Can't read $file: $!\n";
+
+    my %conf;
+    while (<CONF>)
+    {
+	next if /^\s*\#/; # skip comments
+
+	# all regexes below attempt to make sure that they're not in a
+	# comment
+
+	if ( /[^\#]*HTML::Mason/ )
+	{
+	    $conf{has_mason} = 1;
+	}
+
+	if ( /[^\#]*DocumentRoot\s+(.*)/ )
+	{
+	    $conf{document_root} = $1;
+	}
+
+	if ( /[^\#]*User\s+(.*)/ )
+	{
+	    $conf{user} = $1;
+	}
+
+	if ( /[^\#]*Group\s+(.*)/ )
+	{
+	    $conf{group} = $1;
+	}
+    }
+
+    close CONF or die "Can't close $file: $!";
+
+    return %conf;
+}
 
 sub ACTION_build
 {
@@ -359,13 +1042,13 @@ sub _pod_from_html
     Pod::Html::pod2html("--infile=$pod_file", "--outfile=$raw_html_file");
 
     # Fix braindead pod links
-    mkpath(dirname($html_file));
+    File::Path::mkpath( File::Basename::dirname($html_file) );
 
     my $htmlfh = do { local *FH; *FH };
     open $htmlfh, ">$html_file" or die "cannot write to $html_file: $!";
 
     while (<$rawfh>) {
-	my $base_dir = dirname($base);
+	my $base_dir = File::Basename::dirname($base);
 	if ($base_dir eq '.') {
 	    s|HREF="/HTML/Mason/([^\"]+)"|HREF="$1"|gi;
 	} else {
@@ -483,9 +1166,6 @@ sub ACTION_install
     $self->SUPER::ACTION_install;
     $self->depends_on('delete_old_pods');
     $self->depends_on('configure_apache');
-
-    $self->run_perl_script('install/delete_old_pods.pl');  # These could probably be separate actions.
-    $self->run_perl_script('install/configure_apache.pl');
 }
 
 sub ACTION_delete_old_pods
@@ -508,46 +1188,31 @@ sub ACTION_configure_apache
 {
     my $self = shift;
 
-    my $params_file = File::Spec->catfile( $self->build_dir, 'apache_install.txt' );
+    my $install = $self->notes('apache_install');
 
-    return unless -e $params_file;
+    return unless $install;
 
-    my %params = $self->_read_apache_config_params($params_file);
-    my $mason_conf = $self->_write_mason_conf(%params);
-    $self->_alter_httpd_conf( mason_config_file => $mason_conf, %params );
-}
-
-sub _read_apache_config_params
-{
-    my $self = shift;
-    my $params_file = shift;
-
-    local *INST;
-    open INST, "<$params_file";
-    my $install;
-    eval join '', <INST>;
-    die $@ if $@;
-
-    return %$install;
+    my $mason_conf = $self->_write_mason_conf($install);
+    $self->_alter_httpd_conf( { mason_config_file => $mason_conf, %$install } );
 }
 
 sub _write_mason_conf
 {
     my $self = shift;
-    my %params = @_;
+    my $params = shift;
 
     my $conf = <<"EOF";
-PerlSetVar MasonCompRoot "$params{comp_root}"
-PerlSetVar MasonDataDir  "$params{data_dir}"
+PerlSetVar MasonCompRoot "$params->{comp_root}"
+PerlSetVar MasonDataDir  "$params->{data_dir}"
 PerlModule HTML::Mason::ApacheHandler
 
-<Directory "$params{comp_root}">
+<Directory "$params->{comp_root}">
 EOF
 
-    if ( $params{extensions} )
+    if ( $params->{extensions} )
     {
 	my $ext_re = '(';
-	$ext_re .= join '|', map { "\\.$_" } @{ $params{extensions} };
+	$ext_re .= join '|', map { "\\.$_" } @{ $params->{extensions} };
 	$ext_re .= ')$';
 
 	$conf .= qq|  <LocationMatch "$ext_re">\n|;
@@ -557,11 +1222,11 @@ EOF
     SetHandler perl-script
     PerlHandler HTML::Mason::ApacheHandler
 EOF
-    $conf .= "  </LocationMatch>\n" if $params{extensions};
+    $conf .= "  </LocationMatch>\n" if $params->{extensions};
 
     $conf .= "</Directory>\n";
 
-    my $conf_dir = dirname( $params{apache_config_file} );
+    my $conf_dir = File::Basename::dirname( $params->{apache_config_file} );
     my $conf_file = File::Spec->catfile( $conf_dir, 'mason.conf' );
 
     local *CONF;
@@ -575,11 +1240,11 @@ EOF
 sub _alter_httpd_conf
 {
     my $self = shift;
-    my %params = @_;
+    my $params = shift;
 
     local *CONF;
-    open CONF, "<$params{apache_config_file}"
-	or die "Can't read $params{apache_config_file}: $!";
+    open CONF, "<$params->{apache_config_file}"
+	or die "Can't read $params->{apache_config_file}: $!";
 
     my $new = '';
     while (<CONF>)
@@ -595,18 +1260,43 @@ sub _alter_httpd_conf
     # blank line every time this script runs
     chomp $new;
     chomp $new;
-    $new .= "\n\n# Mason config\nInclude $params{mason_config_file}\n";
+    $new .= "\n\n# Mason config\nInclude $params->{mason_config_file}\n";
 
-    close CONF or die "Can't close $params{apache_config_file}: $!";
+    close CONF or die "Can't close $params->{apache_config_file}: $!";
 
-    open CONF, ">$params{apache_config_file}"
-	or die "Can't write to $params{apache_config_file}: $!";
+    open CONF, ">$params->{apache_config_file}"
+	or die "Can't write to $params->{apache_config_file}: $!";
     print CONF $new
-	or die "Can't write to $params{apache_config_file}: $!";
-    close CONF or die "Can't close $params{apache_config_file}: $!";
+	or die "Can't write to $params->{apache_config_file}: $!";
+    close CONF or die "Can't close $params->{apache_config_file}: $!";
+}
+
+# Copied from HTML::Mason::Tools
+sub load_pkg {
+    my ($pkg, $nf_error) = @_;
+
+    my $file = File::Spec->catfile( split /::/, $pkg );
+    $file .= '.pm';
+    return 1 if exists $INC{$file};
+
+    eval "use $pkg";
+
+    if ($@) {
+	if ($@ =~ /^Can\'t locate .* in \@INC/) {
+	    if (defined($nf_error)) {
+		die sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
+			    $pkg, $nf_error, "@INC");
+	    } else {
+		undef $@;
+		return 0;
+	    }
+	} else {
+	    die $@;
+	}
+    }
+    return 1;
 }
 
 1;
 
 __END__
-
