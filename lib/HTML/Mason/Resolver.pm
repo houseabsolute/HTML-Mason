@@ -33,11 +33,21 @@ sub get_last_modified {
 }
 
 sub get_source_text {
-    die "Base class HTML::Mason::Resolver can't get source text";
+    shift->_virtual;
 }
 
 sub get_source_description {
-    die "Base class HTML::Mason::Resolver can't get source description";
+    shift->_virtual;
+}
+
+sub _virtual
+{
+    my $self = shift;
+
+    my $sub = (caller(1))[3];
+    $sub =~ s/.*::(.*?)$/$1/;
+    HTML::Mason::Exception::VirtualMethod->throw( error =>
+						  "$sub is a virtual method and must be subclassed in " . ref $self );
 }
 
 sub get_source_params {

@@ -62,7 +62,7 @@ sub new
 	if (exists($fields{$key})) {
 	    $self->{$key} = $value;
 	} else {
-	    die "HTML::Mason::Component::new: invalid option '$key'\n";
+	    HTML::Mason::Exception::Params->throw( "HTML::Mason::Component::new: invalid option '$key'\n" );
 	}
     }
     bless $self, $class;
@@ -137,14 +137,14 @@ sub dynamic_subs_init {
     my $self = shift;
 
     $self->{dynamic_subs_hash} = $self->{dynamic_subs_init}->();
-    die "could not process <%shared> section (does it contain a return()?)"
+    HTML::Mason::Exception->throw( error => "could not process <%shared> section (does it contain a return()?)" )
 	unless ref($self->{dynamic_subs_hash}) eq 'HASH';
 }
 
 sub run_dynamic_sub {
     my ($self, $key, @args) = @_;
 
-    die "call_dynamic: assert error - could not find code for key $key in component " . $self->title
+    HTML::Mason::Exception->throw( error => "call_dynamic: assert error - could not find code for key $key in component " . $self->title )
 	unless exists $self->{dynamic_subs_hash}->{$key};
 
     $self->{dynamic_subs_hash}->{$key}->(@args);
@@ -202,7 +202,7 @@ sub attr {
     if ($self->_locate_inherited('attr',$name,\$value)) {
 	return $value;
     } else {
-	die "no attribute '$name' for component ".$self->title;
+	HTML::Mason::Exception->throw( error => "no attribute '$name' for component " . $self->title );
     }
 }
 
@@ -223,7 +223,7 @@ sub call_method {
     if ($self->_locate_inherited('methods',$name,\$method)) {
 	$HTML::Mason::Commands::m->comp({base_comp=>$self},$method,@args);
     } else {
-	die "no method '$name' for component ".$self->title;
+	HTML::Mason::Exception->throw( error => "no method '$name' for component " . $self->title );
     }
 }
 
@@ -236,7 +236,7 @@ sub scall_method {
     if ($self->_locate_inherited('methods',$name,\$method)) {
 	$HTML::Mason::Commands::m->scomp({base_comp=>$self},$method,@args);
     } else {
-	die "no method '$name' for component ".$self->title;
+	HTML::Mason::Exception->throw( error => "no method '$name' for component " . $self->title );
     }
 }
 
@@ -259,7 +259,8 @@ sub _locate_inherited {
 	    $$ref = $comp->{$field}->{$key} if $ref;
 	    return 1;
 	}
-	die "inheritance chain length > 32 (infinite inheritance loop?)" if ++$count > 32;
+	HTML::Mason::Exception->throw( error => "inheritance chain length > 32 (infinite inheritance loop?)" )
+	    if ++$count > 32;
     }
     return 0;
 }
@@ -277,7 +278,7 @@ sub flag {
     } elsif (exists($flag_defaults{$name})) {
 	return $flag_defaults{$name};
     } else {
-	die "invalid flag: $name";
+	HTML::Mason::Exception->throw( error => "invalid flag: $name" );
     }
 }
 

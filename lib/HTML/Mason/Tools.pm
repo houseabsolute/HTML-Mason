@@ -28,11 +28,12 @@ use vars qw(@ISA @EXPORT_OK);
 sub read_file
 {
     my ($file,$binmode) = @_;
-    die "read_file: '$file' does not exist" if (!-e $file);
-    die "read_file: '$file' is a directory" if (-d _);
+    HTML::Mason::Exception->throw( error => "read_file: '$file' does not exist" )
+	unless -e $file;
+    HTML::Mason::Exception->throw( error => "read_file: '$file' is a directory" ) if (-d _);
     my $fh = make_fh();
     open $fh, $file
-	or die "read_file: could not open file '$file' for reading: $!";
+	or HTML::Mason::Exception::System->throw( error => "read_file: could not open file '$file' for reading: $!" );
     binmode $fh if $binmode;
     local $/ = undef;
     my $text = <$fh>;

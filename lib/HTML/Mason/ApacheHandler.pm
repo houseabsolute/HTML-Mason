@@ -26,14 +26,15 @@ my %reqfields =
 sub new
 {
     my ($class,%options) = @_;
-    my $interp = $options{interp} or die "HTML::Mason::Request::ApacheHandler::new: must specify interp\n";
+    my $interp = $options{interp} or
+	HTML::Mason::Exception::Params->throw( error => "HTML::Mason::Request::ApacheHandler->new: must specify interp\n" );
     delete $options{interp};
     my $self = $class->SUPER::new(interp=>$interp);
     while (my ($key,$value) = each(%options)) {
 	if (exists($reqfields{$key})) {
 	    $self->{$key} = $value;
 	} else {
-	    die "HTML::Mason::Request::ApacheHandler::new: invalid option '$key'\n";
+	    HTML::Mason::Exception::Params->throw( error => "HTML::Mason::Request::ApacheHandler->new: invalid option '$key'\n" );
 	}
     }
     return $self;
@@ -52,7 +53,7 @@ sub cgi_object
     my ($self) = @_;
 
     if ($HTML::Mason::ApacheHandler::ARGS_METHOD ne '_cgi_args') {
-	die "Can't call cgi_object method unless CGI.pm was used to handle incoming arguments.\n";
+	HTML::Mason::Exception->throw( error => "Can't call cgi_object method unless CGI.pm was used to handle incoming arguments.\n" );
     } elsif (defined($_[1])) {
 	$self->{cgi_object} = $_[1];
     } else {
@@ -84,6 +85,8 @@ use HTML::Mason::Error qw(error_process error_display_html);
 use HTML::Mason::Tools qw(dumper_method html_escape make_fh pkg_installed);
 use HTML::Mason::Utils;
 use Params::Validate qw(:all);
+Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
+
 use Apache;
 use Apache::Status;
 
@@ -148,18 +151,18 @@ sub import
     if ($params{args_method} eq 'CGI')
     {
 	eval 'use CGI';
-	die $@ if $@;
+	HTML::Mason::Exception->throw( error => $@ ) if $@;
 	$ARGS_METHOD = '_cgi_args';
     }
     elsif ($params{args_method} eq 'mod_perl')
     {
 	eval 'use Apache::Request;';
-	die $@ if $@;
+	HTML::Mason::Exception->throw( error => $@ ) if $@;
 	$ARGS_METHOD = '_mod_perl_args';
     }
     else
     {
-	die "Invalid args_method parameter ('$params{args_method}') given to HTML::Mason::ApacheHandler in 'use'\n";
+	HTML::Mason::Exception->throw( error => "Invalid args_method parameter ('$params{args_method}') given to HTML::Mason::ApacheHandler in 'use'\n" );
     }
 
     _make_ah() if _in_apache_conf_file() && ! _get_boolean_param('MultipleConfig');
@@ -243,7 +246,7 @@ sub _make_interp
 	foreach my $root (@comp_root)
 	{
 	    my ($k, $v) = split /\s*=>\s*/, $root;
-	    die "Configuration parameter MasonCompRoot must be either a singular value or a multiple 'hash' values like 'foo => /home/mason/foo'"
+	    HTML::Mason::Exception::Params->throw( error => "Configuration parameter MasonCompRoot must be either a singular value or a multiple 'hash' values like 'foo => /home/mason/foo'" )
 		unless defined $k && defined $v;
 	    push @{ $p{comp_root} }, [ $k => $v ];
 	}
@@ -265,7 +268,7 @@ sub _make_interp
     if ($interp->files_written && $mod_perl::VERSION > 1.21 && ! ($> || $<))
     {
 	chown Apache->server->uid, Apache->server->gid, $interp->files_written
-	    or die "Can't change ownership of files written by interp object\n";
+	    or HTML::Mason::Exception::System->throw( error => "Can't change ownership of files written by interp object\n" );
     }
 
     return $interp;
@@ -320,7 +323,7 @@ sub _get_code_param
 
     my $sub_ref = eval $val;
 
-    die "Configuration parameter '$p' is not valid perl:\n$@\n"
+    HTML::Mason::Exception::Params->throw( error => "Configuration parameter '$p' is not valid perl:\n$@\n" )
 	if $@;
 
     return $sub_ref;
@@ -345,16 +348,16 @@ sub _get_val
     if ( $mod_perl::VERSION <= 1.21 && ( $Apache::Server::Starting || $Apache::ServerStarting ||
 					 $Apache::Server::ReStarting || $Apache::ServerReStarting ) )
     {
-	die "Can't get configuration info during server startup with mod_perl <= 1.21";
+	HTML::Mason::Exception->throw( error => "Can't get configuration info during server startup with mod_perl <= 1.21" );
     }
     my $c = Apache->request ? Apache->request : Apache->server;
 
     my @val = $mod_perl::VERSION < 1.24 ? $c->dir_config($p) : $c->dir_config->get($p);
 
-    die "Only a single value is allowed for configuration parameter '$p'\n"
+    HTML::Mason::Exception::Params->throw( error => "Only a single value is allowed for configuration parameter '$p'\n" )
 	if @val > 1 && ! $wantarray;
 
-    die "Configuration parameter '$p' is required\n"
+    HTML::Mason::Exception::Params->throw( error => "Configuration parameter '$p' is required\n" )
 	if $required && ! defined $val[0];
 
     return ($p, $wantarray ? @val : $val[0]);
@@ -388,7 +391,7 @@ sub new
 
     my (%options) = @_;
 
-    die "error_mode parameter must be one of 'html', 'fatal', 'raw_html', or 'raw_fatal'\n"
+    HTML::Mason::Exception::Params->throw( error => "error_mode parameter must be one of 'html', 'fatal', 'raw_html', or 'raw_fatal'\n" )
 	if exists $options{error_mode} && $options{error_mode} !~ /^(?:html|fatal|raw_html|raw_fatal)$/;
 
     while (my ($key,$value) = each(%options)) {
@@ -579,7 +582,7 @@ sub handle_request {
 	    }
 	    die $err;
 	} elsif ($self->error_mode eq 'raw_fatal') {
-	    die ("System error:\n$raw_err\n");	    
+	    die ("System error:\n$raw_err\n");
 	} elsif ($self->error_mode =~ /html$/) {
 	    unless ($interp->die_handler_overridden) {
 		my $debug_msg;
@@ -664,7 +667,8 @@ sub handle_request_1
     # _mod_perl_args upgrades $r to the Apache::Request object.
     # 
     my %args;
-    die "ARGS_METHOD not defined! Did you 'use HTML::Mason::ApacheHandler'?" unless defined($ARGS_METHOD);
+    HTML::Mason::Exception->throw( "ARGS_METHOD not defined! Did you 'use HTML::Mason::ApacheHandler'?" )
+	unless defined($ARGS_METHOD);
     %args = $self->$ARGS_METHOD(\$r,$request);
 
     #

@@ -86,11 +86,12 @@ sub initialize
 	    $self->{buffer} = $self->{sink};
 	    $self->{sink} = sub { for (@_) { ${ $self->{buffer} } .= $_ if defined } };
 	} else {
-	    die "Sink must be a coderef or a scalarref.";
+	    HTML::Mason::Exception::Params->throw( error => "Sink must be a coderef or a scalarref." );
 	}
     } else {
 	# use the parent's coderef or a new scalarref
-	die "Buffering to default sink requires a parent buffer." unless ref($self->{parent}) eq ref($self);
+	HTML::Mason::Exception::Params->throw( error => "Buffering to default sink requires a parent buffer." )
+	    unless ref($self->{parent}) eq ref($self);
 	$self->{mode} ||= $self->{parent}->mode;
 	if ($self->{mode} eq 'stream' && $self->{parent}->mode eq 'stream') {
 	    ###???	if ($self->{mode} eq 'stream') {
@@ -131,7 +132,7 @@ sub clear
 sub output
 {
     my $self = shift;
-    my $output = ${ $self->buffer};
+    my $output = ${ $self->buffer };
     return $self->filter->( $output ) if $self->filter;
     return $output;
 }
