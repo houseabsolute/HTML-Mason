@@ -7,10 +7,10 @@ package HTML::Mason::Interp;
 use strict;
 
 use Carp;
-use File::Path;
 use File::Basename;
+use File::Path;
+use File::Spec;
 use HTML::Mason::Parser;
-use HTML::Mason::Tools qw(is_absolute_path);
 use HTML::Mason::Commands qw();
 use HTML::Mason::Config;
 use HTML::Mason::Resolver::File;
@@ -94,7 +94,7 @@ sub new
 	}
     }
     die "HTML::Mason::Interp::new: must specify value for data_dir\n" if !$self->{data_dir};
-    $self->{data_cache_dir} ||= ($self->{data_dir} . "/cache");
+    $self->{data_cache_dir} ||= File::Spec->catdir( $self->{data_dir}, 'cache' );
     bless $self, $class;
     $self->out_method($options{out_method}) if (exists($options{out_method}));
     $self->system_log_events($options{system_log_events}) if (exists($options{system_log_events}));
@@ -127,13 +127,23 @@ sub _initialize
     }
 
     #
-    # Remove unnecessary terminating slashes from directories, and check
-    # that directories are absolute.
+    # Check that directories are absolute.
     #
     foreach my $field (qw(comp_root data_dir data_cache_dir)) {
 	next if $field eq 'comp_root' and ref($self->{$field}) eq 'ARRAY';
-	$self->{$field} =~ s/\/$//g unless $self->{$field} =~ /^([A-Za-z]:)?\/$/;
- 	die "$field ('".$self->{$field}."') must be an absolute directory" if !is_absolute_path($self->{$field});
+	$self->{$field} = File::Spec->canonpath( $self->{$field} );
+ 	die "$field ('".$self->{$field}."') must be an absolute directory" unless File::Spec->file_name_is_absolute( $self->{$field} );
+    }
+
+    #
+    # If comp_root has multiple dirs, confirm format.
+    #
+    if (ref($self->comp_root) eq 'ARRAY') {
+	foreach my $pair (@{$self->comp_root}) {
+	    die "Multiple-path component root must consist of a list of two-element lists; see documentation" if ref($pair) ne 'ARRAY';
+	    $pair->[1] = File::Spec->canonpath( $pair->[1] );
+	    die "comp_root ('$pair->[0]') must contain only absolute directories" unless File::Spec->file_name_is_absolute( $pair->[1] );
+	}
     }
 
     #
@@ -145,26 +155,14 @@ sub _initialize
     }
 
     #
-    # If comp_root has multiple dirs, confirm format.
-    #
-    if (ref($self->comp_root) eq 'ARRAY') {
-	foreach my $pair (@{$self->comp_root}) {
-	    die "Multiple-path component root must consist of a list of two-element lists; see documentation" if ref($pair) ne 'ARRAY';
-	    $pair->[1] =~ s/\/$//g unless $pair->[1] =~ /^([A-Za-z]:)?\/$/;
-	    die "comp_root must contain only absolute directories" if !is_absolute_path($pair->[1]);
-	}
-    }
-    
-    #
     # Open system log file
     #
     if ($self->{system_log_events_hash}) {
-	$self->{system_log_file} = $self->data_dir . "/etc/system.log" if !$self->system_log_file;
+	$self->{system_log_file} = File::Spec->catfile( $self->data_dir, 'etc', 'system.log' ) if !$self->system_log_file;
 	my $fh = do { local *FH; *FH; };  # double *FH avoids warning
 	open $fh, ">>".$self->system_log_file
 	    or die "Couldn't open system log file ".$self->{system_log_file}." for append";
-	my $oldfh;
-	select $fh;
+	my $oldfh = select $fh;
 	$| = 1;
 	select $oldfh;
 	$self->{system_log_fh} = $fh;
@@ -192,8 +190,8 @@ sub _initialize
 #
 # Shorthand for various data subdirectories and files.
 #
-sub object_dir { return shift->data_dir . "/obj" }
-sub reload_file { return shift->data_dir . "/etc/reload.lst" }
+sub object_dir { return File::Spec->catdir( shift->data_dir, 'obj' ); }
+sub reload_file { return File::Spec->catfile( shift->data_dir, 'etc', 'reload.lst' ); }
 
 #
 # exec is the initial entry point for executing a component
@@ -289,7 +287,7 @@ sub load {
     if ($self->{use_reload_file}) {
 	return $code_cache->{$fq_path}->{comp} if exists($code_cache->{$fq_path});
 
-	$objfile = $self->object_dir . $fq_path;
+	$objfile = File::Spec->catfile( $self->object_dir, $fq_path );
 	return undef unless (-f $objfile);   # component not found
 	
 	$self->write_system_log('COMP_LOAD', $fq_path);	# log the load event
@@ -307,7 +305,7 @@ sub load {
     my $srcmod = $resolver->get_last_modified(@lookup_info);
     
     if ($self->{use_object_files}) {
-	$objfile = $self->object_dir . $fq_path;
+	$objfile = File::Spec->catfile( $self->object_dir, $fq_path );
 	@objstat = stat $objfile;
 	$objisfile = -f _;
     }
@@ -527,12 +525,14 @@ sub find_comp_upwards
     my ($self,$startpath,$name) = @_;
 
     my $comp;
-    my $p = $startpath;
-    $p =~ s/\/$//;
-    while (!($comp = $self->load("$p/$name")) && $p) {
+    my $p = File::Spec->canonpath($startpath);
+
+    my $last_p;
+    while (!($comp = $self->load( File::Spec->catfile( $p, $name ) )) && $p) {
+	my $last_p = $p;
 	my ($basename,$dirname) = fileparse($p);
-	$dirname =~ s/^\.//;    # certain versions leave ./ in $dirname
-	$p = substr($dirname,0,-1);
+	$p = File::Spec->canonpath($dirname);    # certain versions leave ./ in $dirname
+	last if $p eq $last_p;  # last dir was something like '/' and so is this one
     }
     return $comp;
 }
