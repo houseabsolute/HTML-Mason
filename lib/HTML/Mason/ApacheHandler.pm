@@ -496,7 +496,7 @@ sub new
     # If we're running as superuser, change file ownership to http user & group
     if (!($> || $<) && $self->interp->files_written)
     {
-	chown Apache->server->uid, Apache->server->gid, $ah->interp->files_written
+	chown Apache->server->uid, Apache->server->gid, $self->interp->files_written
 	    or system_error( "Can't change ownership of files written by interp object: $!\n" );
     }
 
