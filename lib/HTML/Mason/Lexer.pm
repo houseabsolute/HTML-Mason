@@ -8,6 +8,8 @@ use strict;
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error error)] );
 
+use HTML::Mason::Tools qw( taint_is_on )
+
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
 
@@ -83,7 +85,8 @@ sub lex
     # We need to untaint the component or else the regexes will fail
     # to a Perl bug.  The delete is important because we need to
     # create an entirely new scalar, not just modify the existing one.
-    ($current->{comp_source}) = delete($current->{comp_source}) =~ /(.*)/s;
+    ($current->{comp_source}) = $current->{comp_source} =~ /(.*)/s
+        taint_is_on;
 
     eval
     {
