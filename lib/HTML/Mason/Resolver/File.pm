@@ -17,7 +17,7 @@ use HTML::Mason::Exceptions (abbr => ['param_error']);
 
 __PACKAGE__->valid_params
     (
-     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF },
+     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF, optional => 1 },
     );
 
 __PACKAGE__->contained_objects();
@@ -27,18 +27,18 @@ sub new {
     my $package = shift;
     my $self = $package->SUPER::new(@_);
 
-    # Put it through the accessor to ensure proper data structure
-    $self->comp_root( $self->{comp_root} ) unless ref $self->{comp_root};
-
-    #
-    # Check that directories are absolute.
-    #
-    foreach my $pair ($self->comp_root_array) {
-	param_error "Multiple-path component root must consist of a list of two-element lists; see documentation"
-	    if ref($pair) ne 'ARRAY';
-	$pair->[1] = File::Spec->canonpath( $pair->[1] );
-	param_error "comp_root '$pair->[1]' is not an absolute directory"
-	    unless File::Spec->file_name_is_absolute( $pair->[1] );
+    if ($self->{comp_root}) {
+	# Put it through the accessor to ensure proper data structure
+	$self->comp_root( $self->{comp_root} ) unless ref $self->{comp_root};
+	
+	# Check that directories are absolute.
+	foreach my $pair ($self->comp_root_array) {
+	    param_error "Multiple-path component root must consist of a list of two-element lists; see documentation"
+		if ref($pair) ne 'ARRAY';
+	    $pair->[1] = File::Spec->canonpath( $pair->[1] );
+	    param_error "comp_root '$pair->[1]' is not an absolute directory"
+		unless File::Spec->file_name_is_absolute( $pair->[1] );
+	}
     }
 
     return $self;
@@ -46,6 +46,7 @@ sub new {
 
 sub comp_root_array
 {
+    return () unless $_[0]->{comp_root};
     return @{ $_[0]->{comp_root} };
 }
 
@@ -57,6 +58,7 @@ sub comp_root
 	validate_pos @_, {type => ARRAYREF|SCALAR};
 	$self->{comp_root} = ref($_[0]) ? $_[0] : [[ MAIN => $_[0] ]];
     }
+    return unless $self->{comp_root};
     return $self->{comp_root}[0][1] if @{$self->{comp_root}} == 1 and $self->{comp_root}[0][0] eq 'MAIN';
     return $self->{comp_root};
 }
@@ -110,7 +112,7 @@ sub comp_class {
 #
 sub glob_path {
     my ($self,$pattern) = @_;
-    my @roots = map $_->[1], $self->comp_root_array;
+    my @roots = map $_->[1], $self->comp_root_array or return;
 
     my %path_hash;
     foreach my $root (@roots) {
@@ -135,7 +137,7 @@ sub file_to_path {
     foreach my $root (map $_->[1], $self->comp_root_array) {
 	if (paths_eq($root,substr($file,0,length($root)))) {
 	    my $path = substr($file, ($root eq '/' ? 0 : length($root)));
-	    $path =~ s/\/$// unless $path eq '/';
+	    $path =~ s,\/$,, unless $path eq '/';
 	    return $path;
 	}
     }
