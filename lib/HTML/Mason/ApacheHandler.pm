@@ -404,11 +404,19 @@ sub _get_mason_params
     my %vals;
 
     # Get all params starting with 'Mason'
-    my %candidates = map { $_ => 1 }
-	             map { /^Mason/ ? $self->calm_form($_) : () } keys %$config;
+    my %candidates;
+
+    foreach my $studly ( keys %$config )
+    {
+	(my $calm = $studly) =~ s/^Mason// or next;
+	$calm = $self->calm_form($calm);
+
+	$candidates{$calm} = $config->{$studly};
+    }
+
     return ( \%vals,
 	     map { $_ =>
-                   scalar $self->get_param( $_, $specs->{$_}, \%vals, $r )
+                   scalar $self->get_param( $_, $specs->{$_}, \%vals, $r, \%candidates )
 	         }
 	     keys %candidates );
 }
@@ -416,11 +424,13 @@ sub _get_mason_params
 sub get_param {
     # Gets a single config item from dir_config.
 
-    my ($self, $key, $spec, $vals, $r) = @_;
+    my ($self, $key, $spec, $vals, $r, $params) = @_;
     $key = $self->calm_form($key);
 
+    $params ||= {};
+
     # If we weren't given a spec, try to locate one in our own class.
-    $spec ||= $self->allowed_params->{$key};
+    $spec ||= $self->allowed_params($params)->{$key};
     error "Unknown config item '$key'" unless $spec;
 
     # Guess the default parse type from the Params::Validate validation spec
@@ -499,7 +509,7 @@ sub new
     # get $r off end of params if its there
     my $r = pop if @_ % 2 == 1;
 
-    my $allowed_params = $class->allowed_params;
+    my $allowed_params = $class->allowed_params(@_);
 
     my %defaults;
     if ( exists $allowed_params->{comp_root} &&
@@ -685,12 +695,14 @@ EOF
     my $comp = $interp->make_component(comp_source => $comp_source);
     my $out;
 
-    $self->interp->make_request( comp => $comp,
-				 args => [ah => $self, valid => $interp->allowed_params],
-				 ah => $self,
-				 apache_req => $p{apache_req},
-				 out_method => \$out,
-			       )->exec;
+    $self->interp->make_request
+	( comp => $comp,
+	  args => [ah => $self, valid => $interp->allowed_params],
+	  ah => $self,
+	  apache_req => $p{apache_req},
+	  out_method => \$out,
+	)->exec;
+
     return $out;
 }
 
