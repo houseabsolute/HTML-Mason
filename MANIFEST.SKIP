@@ -1,6 +1,10 @@
 # Stuff we're not ready to release
 ToClass.pm$
 Events.pm$
+PreCalculatedFile\.pm$
+
+# Apache::Test for Module::Build
+^inc/Apache/TestMB\.pm
 
 # Stuff we create during the build process
 ^t/.*handler.*\.pl
@@ -37,3 +41,4 @@ samples/cd-me.*
 ^HTML-Mason-
 
 ^pod2htm[di]\.\w+$
+
