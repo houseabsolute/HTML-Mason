@@ -18,6 +18,8 @@ require Exporter;
 @ISA=qw(Exporter);
 @EXPORT=qw(
 	mc_abort
+        mc_auto_comp
+	mc_auto_next
 	mc_cache
 	mc_cache_self
 	mc_caller 
@@ -53,11 +55,35 @@ my $process_comp_path = sub {
 };
 
 my $no_interp_error = "called outside of Interp::exec environment";
+my $no_auto_error = "called when no autohandler invoked";
 
 sub mc_abort
 {
     die "mc_abort $no_interp_error" if !$INTERP;
     $INTERP->abort(@_);
+}
+
+sub mc_auto_comp
+{
+    die "mc_auto_comp $no_interp_error" if !$INTERP;
+    my $aref = $INTERP->{exec_state}->{autohandler_next} or die "mc_auto_comp $no_auto_error";
+    return $aref->[0];
+}
+
+sub mc_auto_next
+{
+    die "mc_auto_next $no_interp_error" if !$INTERP;
+    my $aref = $INTERP->{exec_state}->{autohandler_next} or die "mc_auto_next $no_auto_error";
+    my ($compPath, $argsref) = @$aref;
+    my %args = (%$argsref,@_);
+    undef $INTERP->{exec_state}->{autohandler_next};
+    my ($result,@result);
+    if (wantarray) {
+	@result = mc_comp($compPath, %args);
+    } else {
+	$result = mc_comp($compPath, %args);
+    }
+    return wantarray ? @result : $result;
 }
 
 sub mc_cache

@@ -194,6 +194,7 @@ sub exec {
     $self->{exec_state} = {
 	abort_flag => 0,
 	abort_retval => undef,
+	autohandler_next => undef,
 	error_flag => 0,
 	request_code_cache => {}
     };
@@ -201,6 +202,7 @@ sub exec {
 	$self->{exec_state}->{"hooks_$type"} = [values(%$href)] if (%$href);
     }
     $self->check_reload_file if ($self->use_reload_file);
+
     return $self->exec_next($callPath,%args);
 }
 
@@ -232,57 +234,38 @@ sub check_reload_file {
 
 sub exec_next {
     my ($self, $callPath, %args) = @_;
-    my ($err);
+    my (@info);
 
-    $callPath =~ s@/$@@ if ($callPath ne '/');
-    my $allowHandlers = $args{ALLOW_HANDLERS};
+    # Process and remove special arguments.
     my $store = $args{STORE};
-    delete($args{ALLOW_HANDLERS});
     delete($args{STORE});
 
+    # Check for autohandler.
+    if (!@{$self->{stack}}) {
+	(my $callDir = $callPath) =~ s|/[^/]*$||;
+	if (@info = $self->load("$callDir/autohandler")) {
+	    $self->{exec_state}->{autohandler_next} = [$callPath,\%args];
+	}
+    }
+					   
     #
     # Load the component into a subroutine. If code caching is
     # per-request, then check and modify the per-request cache as
     # necessary.
     #
-    my (@info);
-    if ($self->{code_cache_mode} eq 'request') {
-	if (my $inforef = $self->{exec_state}->{request_code_cache}->{$callPath}) {
-	    @info = @$inforef;
+    if (!@info) {
+	if ($self->{code_cache_mode} eq 'request') {
+	    if (my $inforef = $self->{exec_state}->{request_code_cache}->{$callPath}) {
+		@info = @$inforef;
+	    } else {
+		(@info) = $self->load($callPath);
+		$self->{exec_state}->{request_code_cache}->{$callPath} = [@info];
+	    }
 	} else {
 	    (@info) = $self->load($callPath);
-	    $self->{exec_state}->{request_code_cache}->{$callPath} = [@info];
-	}
-    } else {
-	(@info) = $self->load($callPath);
-    }
-    if (!@info) {
-	if (!$allowHandlers) {
-	    die "could not find component for path '$callPath'\n";
-	} else {
-	    #
-	    # This hack implements the ALLOW_HANDLERS flag for
-	    # backward compatibility with Scribe.  Looks for home and
-	    # dhandler files when component not found.  Hopefully can
-	    # remove someday soon.
-	    #
-	    my $pathInfo = '';
-	    my $p = $callPath;
-	    if (!(@info = $self->load("$p/home"))) {
-		while (!(@info = $self->load("$p/dhandler"))) {
-		    my ($basename,$dirname) = fileparse($p);
-		    $pathInfo = "/$basename$pathInfo";
-		    $p = substr($dirname,0,-1);
-		    die "could not find component for path '$callPath'\n" if $p !~ /\S/;
-		}
-		$callPath = "$p/dhandler";
-		my $r = $self->vars('server') or die "No ALLOW_HANDLERS outside of Apache";
-		$r->path_info($pathInfo);
-	    } else {
-		$callPath = "$p/home";
-	    }
 	}
     }
+    die "could not find component for path '$callPath'\n" if (!@info);
     my ($sub,$sourceFile) = @info;
 
     #
@@ -317,8 +300,6 @@ sub exec_next {
     $locals->{sourceFile} = $sourceFile;
     ($locals->{parentPath}) = ($callPath =~ m@^(.*)/([^/]*)$@);
     $locals->{parentPath} = '/' if ($locals->{parentPath} !~ /\S/);
-    $locals->{callFunc} = $sub;
-    $locals->{callArgs} = \%args;
     if ($store) {
 	die "exec_next: STORE is not a scalar reference" if ref($store) ne 'SCALAR';
 	$$store = '';
@@ -328,6 +309,8 @@ sub exec_next {
     } else {
 	$locals->{sink} = $self->{stack}->[1]->{sink};
     }
+    $locals->{callFunc} = $sub;
+    $locals->{callArgs} = \%args;
     $self->{stack}->[0] = $locals;
 
     #
@@ -358,7 +341,7 @@ sub exec_next {
     #
     # If an error occurred...
     #
-    $err = $@;
+    my $err = $@;
     if ($err) {
 	
 	#
