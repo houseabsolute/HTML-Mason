@@ -15,6 +15,7 @@ use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
 use HTML::Mason::Tools qw(make_fh read_file taint_is_on);
 use Params::Validate qw(:all);
+Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 
@@ -120,7 +121,7 @@ sub new
 
     my (%options) = @_;
 
-    die "out_mode parameter must be either 'batch' or 'stream'\n"
+    HTML::Mason::Exception::Params->throw( error => "out_mode parameter must be either 'batch' or 'stream'\n" )
 	if defined $options{out_mode} && $options{out_mode} ne 'batch' && $options{out_mode} ne 'stream';
 
     while (my ($key,$value) = each(%options)) {
@@ -156,7 +157,8 @@ sub _initialize
     # Create resolver if not provided
     #
     unless ($self->{resolver}) {
-	die "must specify value for comp_root\n" if !$self->{comp_root};
+	HTML::Mason::Exception::Params->throw( error => "must specify value for comp_root\n" )
+	    if !$self->{comp_root};
 	my $r = new HTML::Mason::Resolver::File;
 	$self->{resolver} = $r;
     }
@@ -167,7 +169,8 @@ sub _initialize
     foreach my $field (qw(comp_root data_dir)) {
 	next if $field eq 'comp_root' and ref($self->{$field}) eq 'ARRAY';
 	$self->{$field} = File::Spec->canonpath( $self->{$field} );
- 	die "$field ('".$self->{$field}."') must be an absolute directory" unless File::Spec->file_name_is_absolute( $self->{$field} );
+ 	HTML::Mason::Exception::Params->throw( error => "$field ('".$self->{$field}."') must be an absolute directory" )
+	    unless File::Spec->file_name_is_absolute( $self->{$field} );
     }
 
     #
@@ -175,9 +178,11 @@ sub _initialize
     #
     if (ref($self->comp_root) eq 'ARRAY') {
 	foreach my $pair (@{$self->comp_root}) {
-	    die "Multiple-path component root must consist of a list of two-element lists; see documentation" if ref($pair) ne 'ARRAY';
+	    HTML::Mason::Exception::Params->throw( error => "Multiple-path component root must consist of a list of two-element lists; see documentation" )
+		if ref($pair) ne 'ARRAY';
 	    $pair->[1] = File::Spec->canonpath( $pair->[1] );
-	    die "comp_root ('$pair->[0]') must contain only absolute directories" unless File::Spec->file_name_is_absolute( $pair->[1] );
+	    HTML::Mason::Exception::Params->throw( error => "comp_root ('$pair->[0]') must contain only absolute directories" )
+		unless File::Spec->file_name_is_absolute( $pair->[1] );
 	}
     }
 
@@ -196,7 +201,7 @@ sub _initialize
 	$self->{system_log_file} = File::Spec->catfile( $self->data_dir, 'etc', 'system.log' ) if !$self->system_log_file;
 	my $fh = make_fh();
 	open $fh, ">>".$self->system_log_file
-	    or die "Couldn't open system log file ".$self->{system_log_file}." for append";
+	    or HTML::Mason::Exception::System->throw( error => "Couldn't open system log file $self->{system_log_file} for append" );
 	my $oldfh = select $fh;
 	$| = 1;
 	select $oldfh;
@@ -207,9 +212,11 @@ sub _initialize
     # Preloads
     #
     if ($self->preloads) {
-	die "list reference expected for preloads parameter" unless ref($self->preloads) eq 'ARRAY';
+	HTML::Mason::Exception::Exception->throw( error => "array reference expected for preloads parameter" )
+	    unless UNIVERSAL::isa($self->preloads, 'ARRAY');
 	foreach my $pattern (@{$self->preloads}) {
-	    die "preloads pattern must be an absolute path" unless substr($pattern,0,1) eq '/';
+	    HTML::Mason::Exception->throw( error => "preloads pattern must be an absolute path" )
+		unless substr($pattern,0,1) eq '/';
 	    my @paths = $self->resolver->glob_path($pattern,$self);
 	    foreach (@paths) { $self->load($_) }
 	}
@@ -470,7 +477,9 @@ sub current_time {
     my $self = shift;
     if (@_) {
 	my $newtime = shift;
-	die "Interp::current_time: invalid value '$newtime' - must be 'real' or a numeric time value" if $newtime ne 'real' && $newtime !~ /^[0-9]+$/;
+	HTML::Mason::Exception::Params->throw( error => "Interp->current_time: invalid value '$newtime' - must be 'real' or a numeric time value" )
+	    if $newtime ne 'real' && $newtime !~ /^[0-9]+$/;
+	$newtime = time if $newtime eq 'real';
 	return $self->{current_time} = $newtime;
     } else {
 	return $self->{current_time};
@@ -480,7 +489,8 @@ sub current_time {
 sub set_global
 {
     my ($self, $decl, @values) = @_;
-    die "Interp::set_global: expects a variable name and one or more values" if !@values;
+    HTML::Mason::Exception::Params->throw( error => "Interp->set_global: expects a variable name and one or more values")
+	unless @values;
     my ($prefix, $name) = ($decl =~ /^[\$@%]/) ? (substr($decl,0,1),substr($decl,1)) : ("\$",$decl);
 
     my $varname = sprintf("%s::%s",$self->compiler->in_package,$name);
@@ -510,7 +520,7 @@ sub system_log_events
 	} elsif (ref($value) eq 'HASH') {
 	    $self->{system_log_events_hash} = $value;
 	} else {
-	    die "system_log_events: argument must be a scalar or hash reference";
+	    HTML::Mason::Exception::Params->throw( error => "Interp->system_log_events: argument must be a scalar or hash reference" );
 	}
     }
     return $self->{system_log_events};
@@ -583,23 +593,27 @@ sub find_comp_upwards
 #
 # Hook functions.
 #
-my @hookTypes = qw(start_comp end_comp start_file end_file);
-my %hookTypeMap = map(($_,1),@hookTypes);
+my @hook_types = qw(start_comp end_comp start_file end_file);
+my %hook_type_map = map(($_,1),@hook_types);
 
 sub add_hook {
     my ($self, %args) = @_;
     foreach (qw(name type code)) {
-	die "add_hook: must specify $_\n" if !exists($args{$_});
+	HTML::Mason::Exception::Params->throw( error => "Interp->add_hook: must specify $_\n" )
+	    unless exists($args{$_});
     }
-    die "add_hook: type must be one of ".join(",",@hookTypes)."\n" if !$hookTypeMap{$args{type}};
-    die "add_hook: code must be a code reference\n" if ref($args{code}) ne 'CODE';
+    HTML::Mason::Exception::Params->throw( error => "Interp->add_hook: type must be one of " . join(",",@hook_types)."\n" )
+	unless $hook_type_map{$args{type}};
+    HTML::Mason::Exception::Params->throw( error => "Interp->add_hook: code must be a code reference\n" )
+	unless UNIVERSAL::isa( $args{code}, 'CODE' );
     $self->{hooks}->{$args{type}}->{$args{name}} = $args{code};
 }
 
 sub remove_hook {
     my ($self, %args) = @_;
     foreach (qw(name type)) {
-	die "remove_hook: must specify $_\n" if !exists($args{$_});
+	HTML::Mason::Exception::Params->throw( error => "Interp->remove_hook: must specify $_\n" )
+	    unless exists($args{$_});
     }
     delete($self->{hooks}->{$args{type}}->{$args{name}});
 }
@@ -622,7 +636,8 @@ sub write_system_log {
 			 $_[0],                  # event name
 			 $$,                     # pid
 			 @_[1..$#_]              # event-specific fields
-			),"\n");
+			),"\n")
+	    or HTML::Mason::Exception::Params->throw( error => "Cannot write to system log: $!" );
     }
 }
 
