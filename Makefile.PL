@@ -13,22 +13,22 @@ require './makeconfig.pl';
 
 # These are required modules.
 
-chk_version(Data::Dumper => '2.08') or
+chk_version('Data::Dumper' => '2.08') or
     warn  "\n"
 	. "*** Mason requires version 2.08, or later, of Data::Dumper\n"
 	. "    from CPAN/modules/by-module/Data/Data-Dumper-x.x.tar.gz\n\n";
 
-chk_version(File::Spec => '0.8') or
+chk_version('File::Spec' => '0.8') or
     warn  "\n"
 	. "*** Mason requires version 0.8, or later, of File::Spec\n"
 	. "    from CPAN/modules/by-module/File/File-Spec-x.x.tar.gz\n\n";
 
-chk_version(Params::Validate => '0.04') or
+chk_version('Params::Validate' => '0.04') or
     warn  "\n"
 	. "*** Mason requires version 0.04, or later, of Params::Validate\n"
 	. "    from CPAN/modules/by-authors/id/D/DR/DROLSKY/Params-Validate-x.x.tar.gz\n\n";
 
-chk_version(Apache::Request => '0.31') or
+chk_version('Apache::Request' => '0.31') or
     warn  "\n"
 	. "*** If you plan to use Mason with mod_perl,\n"
         . "    Mason requires version 0.31, or later, of Apache::Request\n"
@@ -45,7 +45,7 @@ setup_mod_perl_tests() unless $opts{'no-prompts'};
 WriteMakefile(
     'NAME'    => 'HTML::Mason',
     'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
-    'PREREQ_PM' => { Data::Dumper => 2.08, 'File::Spec' => 0.8, 'Params::Validate' => 0.04, Apache::Request => 0.31 },
+    'PREREQ_PM' => { 'Data::Dumper' => 2.08, 'File::Spec' => 0.8, 'Params::Validate' => 0.04, 'Apache::Request' => 0.31 },
 
     # %APACHE is created when setup_mod_perl_tests() is called.  The
     # code that does this creation is in makeconfig.pl.
