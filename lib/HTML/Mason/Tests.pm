@@ -507,14 +507,14 @@ sub check_output
 				    ( $x == 1 ?
 				      ( $expect[0] ) :
 				      ( $expect[ $x - 2 ], $expect[ $x - 1 ] ) ) );
-		my @actual_next = ( $x == @actual ?
+		my @actual_next = ( $x == $#actual ?
 				    () :
-				    ( $x == @actual - 1 ?
+				    ( $x == $#actual - 1 ?
 				      ( $actual[-1] ) :
 				      ( $actual[ $x + 1 ], $actual[ $x + 2 ] ) ) );
-		my @expect_next = ( $x == @expect ?
+		my @expect_next = ( $x == $#expect ?
 				    () :
-				    ( $x == @expect - 1 ?
+				    ( $x == $#expect - 1 ?
 				      ( $expect[-1] ) :
 				      ( $expect[ $x + 1 ], $expect[ $x + 2 ] ) ) );
 
