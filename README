@@ -27,11 +27,15 @@ Mason requires Perl 5.005 or greater, and the following CPAN modules:
 
 * File::Spec
 
+* Scalar::Util
+
 The following CPAN modules are optional for certain features, but not required:
 
 * Apache::Request
 
 * Cache::Cache
+
+* CGI.pm
 
 INSTALLATION
 
