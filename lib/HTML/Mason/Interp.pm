@@ -732,8 +732,7 @@ sub write_object_file
 sub _compilation_error {
     my ($self, $filename, $err) = @_;
 
-    my $msg = sprintf("Error during compilation of %s:\n%s\n",$filename, $err);
-    compilation_error $msg;
+    HTML::Mason::Exception::Compilation->throw(error=>$err, filename=>$filename);
 }
 
 
