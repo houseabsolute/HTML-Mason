@@ -5,6 +5,15 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+0.73
+
+- Added "code examples" section to README
+- Fixed handler.pl examples to return status when using sessions
+- Fixed "directory not absolute" warning on "/" (reported by Joe Edmonds)
+- Fixed reload file scanning mechanism (submitted by Brian Holmes)
+- Fixed die/eval from one component to another
+- Fixed small suppress_http_header(0) bug
+
 0.72  Fri Oct 15 08:21:25 PDT 1999
 
 - Eliminated long-standing infinite-block bug when POSTing to a

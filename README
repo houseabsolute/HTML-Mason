@@ -2,7 +2,7 @@ Copyright (c) 1998, 1999 by Jonathan Swartz. All rights reserved.
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
-Welcome to Mason, a full-featured web site development and delivery
+Welcome to Mason, a Perl-based web site development and delivery
 system.  Mason allows web pages and sites to be constructed from
 shared, reusable building blocks called components. Components contain
 a mix of Perl and HTML, and can call each other and pass values back
@@ -37,8 +37,8 @@ The official Mason web site is at http://www.masonhq.com/.  There
 you'll find Mason documentation, news, etc.
 
 A recent copy of the FAQ (Frequently Asked Questions) list is
-included in this release under the faq/ directory.  For the most
-recent version you'll want to go to the web site.
+included in this release under the faq/ directory.  The most
+recent version is always available on the web site.
 
 The Mason mailing list, maintained by Kirrily Roberts, is an excellent
 place to ask questions and learn techniques. To subscribe or browse the
@@ -50,6 +50,15 @@ modperl@apache.org.
 
 If you have a question or comment that you don't feel is appropriate
 for the group, write to the author at swartz@transbay.net.
+
+CODE EXAMPLES
+
+The samples/ directory contains a few basic components as well as
+a miniature commerce site built with components.
+
+The Mason component archive (http://www.masonhq.com/arch/) was
+launched in November 1999. It should be another good source of
+examples as well as truly useful utilities.
 
 REPORTING BUGS
 
