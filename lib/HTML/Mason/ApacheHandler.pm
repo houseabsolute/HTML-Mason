@@ -77,7 +77,7 @@ my %fields =
     (
      apache_status_title => 'mason',
      decline_dirs => 1,
-     error_mode => 'fatal',
+     error_mode => 'html',
      interp => undef,
      output_mode => undef,    # deprecated - now interp->out_mode
      top_level_predicate => undef,
@@ -550,8 +550,16 @@ sub handle_request_1
     # Set up interpreter global variables.
     #
     $interp->set_global(r=>$r);
-    
-    return $request->exec($comp, %args);
+
+    #
+    # Execute request inside eval in case of decline
+    #
+    my $retval = eval { $request->exec($comp, %args) };
+    if ($@) {
+	return -1 if $request->declined;
+	die $@;
+    }
+    return $retval;
 }
 
 sub simulate_debug_request

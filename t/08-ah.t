@@ -57,11 +57,12 @@ sub try_exec_with_ah {
     my $r = fake_apache ({uri=>$uri, %$r_options});
 
     # Handle request.
-    eval { $ah->handle_request($r) };
+    my $retval = eval { $ah->handle_request($r) };
     if (my $err = $@) {
 	print "ERROR:\n$err\nnot ok\n";
 	return;
     }
+    $buf .= "Status code: $retval\n";
 
     # Compare current results with stored results.
     compare_results ($test_name, $buf);
@@ -75,6 +76,7 @@ try_exec_with_ah('/basic','basic',{},{});
   local $ENV{QUERY_STRING} = $qs;
   local $ENV{REQUEST_METHOD} = 'GET';
   try_exec_with_ah('/args','args',{},{"args\$" => $qs}); }
-  
+
+try_exec_with_ah('/decline','decline',{},{});
 
 1;
