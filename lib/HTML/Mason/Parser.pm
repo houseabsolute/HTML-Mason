@@ -8,7 +8,11 @@ __END__
 
 =pod
 
-=head1 PARSER
+=head1 NAME
+
+HTML::Mason::Parser - Old module for compiling components
+
+=head1 DESCRIPTION
 
 The Parser object is no longer part of Mason.  It has been replaced by
 the Compiler and Lexer objects.  See the Developer's Manual
