@@ -29,11 +29,11 @@ if ($error) {
   $error = join("\n",@lines[0..$lines-1]);
   $error =~ s{ at ([A-Z]:)?/.*}{ }g;
 }
-</%init>
+</%init>\
 <%args>
 $error
 $lines=>1
-</%args>
+</%args>\
 EOF
 	    },
 	    { path => '/shared/display_comp_obj',
@@ -93,7 +93,7 @@ My source dir is /.../<% $subfile %>
 
 <%args>
 $comp
-</%args>
+</%args>\
 EOF
 	    },
 	  );
@@ -469,15 +469,13 @@ sub check_output
     }
     elsif (@expect < @actual)
     {
-	$diff = @expect - @actual;
+	$diff = @actual - @expect;
 	if ($VERBOSE)
 	{
-	    print "Actual result contained $diff too few lines.\n";
+	    print "Actual result contained $diff too many lines.\n";
 	}
     }
 
-    my @actual_prev = ();
-    my @expect_prev = ();
     my $limit = @actual < @expect ? @actual : @expect;
     my $line = 0;
     for ( my $x = 0; $x < $limit; $x++ )
@@ -490,19 +488,35 @@ sub check_output
 		local $^W; #suppress uninit value warnings.
 		print "Result differed from expected output at line $line\n";
 
-		my $actual = join "\n", ( @actual_prev,
-					  $actual[$x],
-					  $actual[$x + 1] ? $actual[$x + 1] : () );
-		my $expect = join "\n", ( @expect_prev,
-					  $expect[$x],
-					  $expect[$x + 1] ? $expect[$x + 1] : () );
+		my @actual_prev = ( $x == 0 ?
+				    () :
+				    ( $x == 1 ?
+				      ( $actual[0] ) :
+				      ( $actual[ $x - 2 ], $actual[ $x - 1 ] ) ) );
+		my @expect_prev = ( $x == 0 ?
+				  () :
+				    ( $x == 1 ?
+				      ( $expect[0] ) :
+				      ( $expect[ $x - 2 ], $expect[ $x - 1 ] ) ) );
+		my @actual_next = ( $x == @actual ?
+				    () :
+				    ( $x == @actual - 1 ?
+				      ( $actual[-1] ) :
+				      ( $actual[ $x + 1 ], $actual[ $x + 2 ] ) ) );
+		my @expect_next = ( $x == @expect ?
+				    () :
+				    ( $x == @expect - 1 ?
+				      ( $expect[-1] ) :
+				      ( $expect[ $x + 1 ], $expect[ $x + 2 ] ) ) );
+
+		my $actual = join "\n", ( @actual_prev, $actual[$x], @actual_next );
+		my $expect = join "\n", ( @expect_prev, $expect[$x], @expect_next );
+
 		print "Got ...\n<<<<<\n$actual\n>>>>>\n... but expected ...\n<<<<<\n$expect\n>>>>>\n";
 	    }
 	    $diff = 1;
 	    last;
 	}
-	@actual_prev = ( $actual[$x] );
-	@expect_prev = ( $expect[$x] );
     }
 
     return ! $diff;
