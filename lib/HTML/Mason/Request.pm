@@ -138,7 +138,6 @@ use HTML::Mason::MethodMaker
 			 dhandler_arg
 			 interp
 			 parent_request
-                         plugins
                          plugin_objects
 			 request_depth
 			 request_comp ) ],
@@ -237,7 +236,7 @@ sub _initialize {
 
  	# construct a plugin object for each plugin class in each request.
  	$self->{plugin_objects} = [];
- 	foreach my $plugin (@{$self->plugins}) {
+ 	foreach my $plugin (@{ delete $self->{plugins} }) {
  	    my $plugin_object = $plugin;
  	    if (! ref $plugin) {
  	        eval "use $plugin;";
@@ -354,11 +353,11 @@ sub exec {
 
  	    eval {
  	      foreach my $plugin (@{$self->plugin_objects}) {
- 		$plugin->start_request({
- 					request => $self,
- 					args => $request_args,
- 					wantarray => $wantarray
- 				       });
+ 		$plugin->start_request( { request => $self,
+                                          args => $request_args,
+                                          wantarray => $wantarray
+                                        }
+                                      );
  	      }
  	    };
  	    if ($@) {
@@ -377,15 +376,15 @@ sub exec {
  	    my $error = $@;
  	    
  	    # plugins called in reverse order when exiting.
- 	    eval { 
+ 	    eval {
  	      foreach my $plugin (reverse @{$self->plugin_objects}) {
- 		$plugin->end_request({
- 				      request => $self,
- 				      args => $request_args,
- 				      wantarray => $wantarray,
- 				      error => \$error,
- 				      return_value => \@result
- 				     });
+ 		$plugin->end_request( { request => $self,
+                                        args => $request_args,
+                                        wantarray => $wantarray,
+                                        error => \$error,
+                                        return_value => \@result
+                                      }
+                                    );
  	      }
  	    };
  	    if ($@) {
@@ -1123,12 +1122,11 @@ sub comp {
 
     # plugins can modify the arguments before the component sees them!
     foreach my $plugin (@{$self->plugin_objects}) {
-        $plugin->start_component({ 
-				  comp => $comp,       
-				  args => \@_,
-				  request => $self,
-				  wantarray => $wantarray,
-				 }
+        $plugin->start_component( { comp => $comp,
+                                    args => \@_,
+                                    request => $self,
+                                    wantarray => $wantarray,
+                                  }
 				);
     }
 
@@ -1146,16 +1144,16 @@ sub comp {
     };
 
     my $err = $@;
- 
+
     # reverse order for the end hooks.
     foreach my $plugin (reverse @{$self->plugin_objects}) {
-      $plugin->end_component({ comp => $comp,       
-			       args => \@_,
-			       request => $self,
-			       wantarray => $wantarray,
-			       error => \$err,
-			       return_value => \@result
-			     }
+      $plugin->end_component( { comp => $comp,
+                                args => \@_,
+                                request => $self,
+                                wantarray => $wantarray,
+                                error => \$err,
+                                return_value => \@result
+                              }
 			    );
     }
 
