@@ -806,9 +806,10 @@ sub _build_header
     {
 	$header .= "package $pkg;\n";
 	$header .= "use strict;\n" if $self->use_strict;
-	my @g = 
 	$header .= sprintf( "use vars qw(\%s);\n",
 			    join(' ', '$m', @{$self->{'allow_globals'}} ) );
+	$header .= 'my $_escape = \&HTML::Mason::Parser::_escape_perl_expression;'."\n";
+
     }
     $header .= $state->{once} if $state->{once};
 
@@ -911,7 +912,6 @@ sub _build_body
 	$body .= '%ARGS = @_ unless (@_ % 2);' . "\n";
     }
     $body .= 'my $_out = $m->current_sink;'."\n";
-    $body .= 'my $_escape = \&HTML::Mason::Parser::_escape_perl_expression;'."\n";
     
     $body .= '$m->debug_hook($m->current_comp->path) if (%DB::);' . "\n\n";
     $body .= $state->{filter} if $state->{filter};
