@@ -178,7 +178,7 @@ EOF
     $group->add_test( name => 'setting_escapes',
                       description => 'test setting escapes',
                       component => <<'EOF',
-% $m->interp->add_escape( uc => sub { ${$_[0]} = uc ${$_[0]} } );
+% $m->interp->set_escape( uc => sub { ${$_[0]} = uc ${$_[0]} } );
 This will be in <% 'upper case' | uc %>
 EOF
                       expect => <<'EOF',
@@ -191,7 +191,7 @@ EOF
     $group->add_test( name => 'invalid_escape_name',
                       description => 'test setting an escape with an invalid name',
                       component => <<'EOF',
-% $m->interp->add_escape( 'u c' => sub { uc $_[0] } );
+% $m->interp->set_escape( 'u c' => sub { uc $_[0] } );
 EOF
                       expect_error => qr/Invalid escape name/,
                     );
