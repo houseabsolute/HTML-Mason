@@ -458,7 +458,7 @@ sub match_text
 	my $consumed = "$1$2";
 	return 0 unless length $consumed;
 
-	$self->{current}{compiler}->text( text => $1 ) if $1;
+	$self->{current}{compiler}->text( text => $1 ) if length $1;
 
 	$self->{current}{lines} += $consumed =~ tr/\n/\n/;
 	return 1;
