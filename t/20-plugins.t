@@ -5,21 +5,21 @@ use HTML::Mason::Tests;
 
 package HTML::Mason::Plugin::TestBeforeAndAfterRequest;
 use base qw(HTML::Mason::Plugin);
-sub start_request {
+sub start_request_hook {
     my ($self, $context) = @_;
     print "Before Request\n";
 }
-sub end_request {
+sub end_request_hook {
     print "After Request\n";
 }
 
 package HTML::Mason::Plugin::TestBeforeAndAfterComponent;
 use base qw(HTML::Mason::Plugin);
-sub start_component {
+sub start_component_hook {
     my ($self, $context) = @_;
     print "Before Component " . $context->comp->title . "\n";
 }
-sub end_component {
+sub end_component_hook {
     my ($self, $context) = @_;
     print "After Component " . $context->comp->title . "\n";
 }
@@ -27,77 +27,77 @@ sub end_component {
 # test the ordering of plugin calls
 package HTML::Mason::Plugin::TestAllCalls;
 use base qw(HTML::Mason::Plugin);
-sub start_request {
+sub start_request_hook {
     my ($self, $context) = @_;
     my $rcomp = $context->request->request_comp()->title;
     print "AllCalls Request Start on: $rcomp\n";
 }
-sub end_request {
+sub end_request_hook {
     my ($self, $context) = @_;
     my $rcomp = $context->request->request_comp()->title;
     print "AllCalls Request Finish on: $rcomp\n";
 }
-sub start_component {
+sub start_component_hook {
     my ($self, $context) = @_;
     print "AllCalls Before Component " . $context->comp->title . "\n";
 }
-sub end_component {
+sub end_component_hook {
     my ($self, $context) = @_;
     print "AllCalls After Component " . $context->comp->title . "\n";
 }
 
 package HTML::Mason::Plugin::TestResetEachRequest;
 use base qw(HTML::Mason::Plugin);
-sub start_request {
+sub start_request_hook {
     my ($self, $context) = @_;
     my $rcomp = $context->request->request_comp->title();
     print "PreRequest: " . ++ $self->{count} . " : $rcomp\n";
 }
-sub end_request {
+sub end_request_hook {
     my ($self, $context) = @_;
     my $rcomp = $context->request->request_comp->title();
     print "PostRequest: " . ++ $self->{count} . " : $rcomp\n";
 }
-sub start_component {
+sub start_component_hook {
     my ($self, $context) = @_;
     print "PreComponent: " . ++ $self->{count} . " : " . $context->comp->title() ."\n";
 }
-sub end_component {
+sub end_component_hook {
     my ($self, $context) = @_;
     print "PostComponent: " . ++ $self->{count} . " : " . $context->comp->title() ."\n";
 }
 
 package HTML::Mason::Plugin::TestErrorStartRequest;
 use base qw(HTML::Mason::Plugin);
-sub start_request {
+sub start_request_hook {
     my ($self, $context) = @_;
     die("plugin error on start request " . $context->request->request_comp->title);
 }
 
 package HTML::Mason::Plugin::TestErrorEndRequest;
 use base qw(HTML::Mason::Plugin);
-sub end_request {
+sub end_request_hook {
     my ($self, $context) = @_;
     die("plugin error on end request " . $context->request->request_comp->title);
 }
 
 package HTML::Mason::Plugin::TestErrorStartComponent;
 use base qw(HTML::Mason::Plugin);
-sub start_component {
+sub start_component_hook {
     my ($self, $context) = @_;
     die("plugin error on start component " . $context->comp->title);
 }
 
 package HTML::Mason::Plugin::TestErrorEndComponent;
 use base qw(HTML::Mason::Plugin);
-sub end_component {
+sub end_component_hook {
     my ($self, $context) = @_;
     die("plugin error on end component " . $context->comp->title);
 }
 
 package HTML::Mason::Plugin::TestModifyReturnEndComponent;
 use base qw(HTML::Mason::Plugin);
-sub end_component {
+sub end_component_hook {
     my ($self, $context) = @_;
     my $result = $context->result;
     if (defined($result->[0])) {
@@ -107,7 +107,7 @@ sub end_component {
 
 package HTML::Mason::Plugin::TestModifyReturnEndRequest;
 use base qw(HTML::Mason::Plugin);
-sub end_request {
+sub end_request_hook {
     my ($self, $context) = @_;
     my $result = $context->result;
     if (defined($result->[0])) {
@@ -117,7 +117,7 @@ sub end_request {
 
 package HTML::Mason::Plugin::TestCatchErrorEndComponent;
 use base qw(HTML::Mason::Plugin);
-sub end_component {
+sub end_component_hook {
     my ($self, $context) = @_;
     my $error = $context->error;
     if (defined($$error)) {
@@ -128,7 +128,7 @@ sub end_component {
 
 package HTML::Mason::Plugin::TestCatchErrorEndRequest;
 use base qw(HTML::Mason::Plugin);
-sub end_request {
+sub end_request_hook {
     my ($self, $context) = @_;
     my $error = $context->error;
     if (defined($$error)) {
@@ -139,7 +139,7 @@ sub end_request {
 
 package HTML::Mason::Plugin::TestEndRequestModifyOutput;
 use base qw(HTML::Mason::Plugin);
-sub end_request {
+sub end_request_hook {
     my ($self, $context) = @_;
     my $content_ref = $context->output;
     $$content_ref = uc($$content_ref);

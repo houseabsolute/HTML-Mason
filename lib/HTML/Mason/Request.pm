@@ -434,7 +434,7 @@ sub exec {
 		    'HTML::Mason::Plugin::Context::StartRequest';
 		eval {
 		    foreach my $plugin_instance (@{$self->plugin_instances}) {
-			$plugin_instance->start_request( $context );
+			$plugin_instance->start_request_hook( $context );
 		    }
 		};
 		if ($@) {
@@ -460,7 +460,7 @@ sub exec {
 		    'HTML::Mason::Plugin::Context::EndRequest';
 		eval {
 		    foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {
-			$plugin_instance->end_request( $context );
+			$plugin_instance->end_request_hook( $context );
 		    }
 		};
 		if ($@) {
@@ -1204,7 +1204,7 @@ sub comp {
 	    'HTML::Mason::Plugin::Context::StartComponent';
 	
 	foreach my $plugin_instance (@{$self->{plugin_instances}}) {
-	    $plugin_instance->start_component( $context );
+	    $plugin_instance->start_component_hook( $context );
 	}
     }
 
@@ -1246,7 +1246,7 @@ sub comp {
 	    'HTML::Mason::Plugin::Context::EndComponent';
 	
 	foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {
-	    $plugin_instance->end_component( $context );
+	    $plugin_instance->end_component_hook( $context );
 	}
     }
 

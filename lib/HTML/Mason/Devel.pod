@@ -1006,15 +1006,17 @@ This section contains cleanup code that executes just before the
 component exits. For example: closing a database connection or closing
 a file handle.
 
-Technically a << <%cleanup> >> block is equivalent to a C<< <%perl> >>
-block at the end of the component. Since a component corresponds a
-subroutine block, and since Perl is so darned good at cleaning up
-stuff at the end of blocks, C<< <%cleanup> >> sections are rarely
+A << <%cleanup> >> block is equivalent to a C<< <%perl> >> block at
+the end of the component. This means it will NOT execute if the
+component explicitly returns, or if an abort or error occurs in that
+component or one of its children. Because of this limitation, and
+because Perl is usually so good about cleaning up at the end of a
+lexical scope (e.g. component), C<< <%cleanup> >> sections are rarely
 needed.
 
-Because of the way Mason compiles components, if your C<< <%init> >>
-section or component body contain a C<return> statement, then your C<<
-<%cleanup> >> block will not be executed.
+If you need code that is guaranteed to run when the component or
+request exits, consider using a mod_perl cleanup handler, or creating
+a custom class with a DESTROY method.
 
 =head2 <%once>
 

@@ -7,22 +7,22 @@ sub new {
     bless { @_ }, $class;
 }
 
-sub start_request {
+sub start_request_hook {
     # my ($self, $context) = @_;
     # $context has: request, args
 }
 
-sub end_request {
+sub end_request_hook {
     # my ($self, $context) = @_;
     # $context has: request, args, output, wantarray, result, error
 }
 
-sub start_component {
+sub start_component_hook {
     # my ($self, $context) = @_;
     # $context has: request, comp, args
 }
 
-sub end_component {
+sub end_component_hook {
     # my ($self, $context) = @_;
     # $context has: request, comp, args, wantarray, result, error
 }
@@ -41,12 +41,12 @@ HTML::Mason::Plugin - Plugin Base class for Mason
    use base qw(HTML::Mason::Plugin);
    use Time::HiRes;
 
-   sub start_component {
+   sub start_component_hook {
        my ($self, $context) = @_;
        push @{$self->{ timers }}, Time::HiRes::time;
    }
 
-   sub end_component {
+   sub end_component_hook {
        my ($self, $context) = @_;
        my $elapsed = Time::HiRes::time - pop @{$self->{ timers }};
        printf STDERR "Component '%s' took %.1f seconds\n",
@@ -74,17 +74,17 @@ directives, or in perl directly from a handler.pl file.
 =head1 PLUGIN HOOKS
 
 A plugin class defines one or more of the following hooks (methods):
-I<start_request>, I<end_request>, I<start_component>, and
-I<end_component>.
+I<start_request_hook>, I<end_request_hook>, I<start_component_hook>,
+and I<end_component_hook>.
 
 Every hook receives two arguments: the plugin object itself,
 and a context object with various methods.
 
 =over
 
-=item start_request
+=item start_request_hook
 
-The C<start_request> hook is called before the Mason request begins
+C<start_request_hook> is called before the Mason request begins
 execution.  Its context has the following read-only methods:
 
     request # the current request
@@ -100,16 +100,16 @@ L<HTML::Mason::Request|HTML::Mason::Request> will create a new plugin
 object and execute this code again; you can skip your code for
 subrequests by checking C<is_subrequest> on I<request>. e.g.
 
-   sub start_request {
+   sub start_request_hook {
        my ($self, $context) = @_;
        unless ($context->request->is_subrequest()) {
            # perform hook action
        }
    }
 
-=item end_request
+=item end_request_hook
 
-The C<end_request> hook is called before the Mason request
+C<end_request_hook> is called before the Mason request
 exits. Its context has the following read-only methods:
 
     request     # the current request
@@ -128,9 +128,9 @@ return value is the the first element of that array. The plugin may
 modify I<output> to affect what the request outputs, and 
 I<result> and I<error> to affect what the request returns.
 
-=item start_component
+=item start_component_hook
 
-The C<start_component()> hook is called before a component begins
+C<start_component_hook> is called before a component begins
 executing. Its context has the following read-only methods:
 
     request     # the current request
@@ -139,9 +139,9 @@ executing. Its context has the following read-only methods:
 
 The plugin may NOT modify I<args> currently.
 
-=item end_component
+=item end_component_hook
 
-The C<end_component()> hook is called after a component has
+C<end_component_hook()> is called after a component has
 completed. Its context has the following read-only methods:
 
     request     # the current request
