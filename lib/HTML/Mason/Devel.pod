@@ -1527,11 +1527,6 @@ namespace.
 
 =item *
 
-the username associated with the cache; this is "mason" unless it has
-been changed by the administrator.
-
-=item *
-
 the cache_root, for file-based caches only. Defaults to the
 "cache" subdirectory under the Mason data directory.
 
@@ -1546,8 +1541,8 @@ and the cache subclass is C<FileCache>:
 
     my $cache = new Cache::FileCache
         (namespace => data_cache_namespace("/foo/bar"),
-	 cache_root => "/usr/local/www/mason/cache",
-	 username => "mason");
+	 cache_root => "/usr/local/www/mason/cache");
+
     $cache->remove('key1');
 
 =head2 Mason 1.0x Cache API

@@ -441,7 +441,6 @@ sub cache
     }
     $options{namespace}   ||= compress_path($self->current_comp->comp_id);
     $options{cache_root}  ||= $self->interp->cache_dir;
-    $options{username}      = "mason";
 
     # Determine cache_class, adding 'Cache::' in front of user's
     # specification if necessary.
