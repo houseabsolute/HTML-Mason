@@ -366,10 +366,6 @@ EOF
 
     if ( $Config{d_alarm} || $] >= 5.007003 )
     {
-	my $error =
-	    $] >= 5.007003 ? qr/Global symbol "\$r"/ :
-		qr/Attempt to eval code took longer/;
-
 	$group->add_test( name => 'infinite_loop',
 			  description => 'this code hangs when Interp.pm attempts to eval it.',
 			  component => <<'EOF',
@@ -384,7 +380,7 @@ EOF
   <% "foo">large</a
  <% $i->{comment} %>
 EOF
-			  expect_error => $error,
+			  expect_error => qr/Global symbol "\$r"/,
 			);
     }
 
