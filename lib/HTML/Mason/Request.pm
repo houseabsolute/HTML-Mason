@@ -445,6 +445,10 @@ sub cache_self {
 
     return if $self->top_stack->{in_cache_self};
 
+    # Allow expire_in for token backward compatibility with 1.0x
+    if (exists($options{expire_in})) {
+	$options{expires_in} = delete($options{expire_in});
+    }
     my $expires_in = delete $options{expires_in} || 'never';
     my $key = delete $options{key} || '__mason_cache_self__';
     my $cache = $self->cache(%options);
