@@ -17,6 +17,25 @@ I strongly suggest that you have a working Mason to play with as you
 work through these examples. Other component examples can be found in
 the C<samples/> directory.
 
+=head1 HOW TO USE THIS MANUAL
+
+This manual has grown rather too large for its own good. It needs to
+be split into at least two documents (tutorial and reference manual).
+I've tried to keep related sections together, but this creates a
+non-optimal order for beginners.
+
+If you are just learning Mason and want to get started quickly, I
+recommend the following sections:
+
+WHAT ARE COMPONENTS?
+IN-LINE PERL SECTIONS
+CALLING COMPONENTS
+PASSING PARAMETERS
+INITIALIZATION/CLEANUP (<%init> and <%cleanup> only)
+DATA CACHING
+SENDING HTTP HEADERS
+COMMON TRAPS
+
 =head1 WHAT ARE COMPONENTS?
 
 The component - a mix of Perl and HTML - is Mason's basic building
@@ -94,10 +113,9 @@ After 12 pm, the output of this component is:
 
 This short example demonstrates the three primary "in-line" Perl
 sections. In-line sections are generally embedded within HTML and
-execute in the order they appear. Other, specialized Perl sections are
-tied to component events like initialization and cleanup, argument
-definition, etc.  Those are covered later in I<L<Other Perl
-Sections>>.
+execute in the order they appear. Other sections (<%init>, <%args>,
+etc.) are tied to component events like initialization, cleanup,
+and argument definition.
 
 The parsing rules for these Perl sections are as follows:
 
@@ -480,8 +498,8 @@ e.g. if you want to suppress some original arguments or if you want to
 use C<$m-E<gt>scomp> to store and process the output.
 
 What happens if more than one autohandler applies to a page? Prior to
-version 0.85, only the most specific autohandler would execute.  In
-0.85 and beyond each autohandler gets a chance to run.  The top-most
+version 0.82, only the most specific autohandler would execute.  In
+0.82 and beyond each autohandler gets a chance to run.  The top-most
 autohandler runs first; each $m->call_next transfers control to the
 next autohandler and finally to the originally called component. This
 allows you, for example, to combine general site-wide templates and
@@ -628,8 +646,8 @@ subcomponents created with <%def>.
 
 =head1 INITIALIZATION/CLEANUP
 
-The E<lt>%initE<gt>, E<lt>%cleanupE<gt>, and E<lt>%onceE<gt> sections
-contain blocks of Perl that execute at specific times.
+The following sections contain blocks of Perl to execute at specific
+times.
 
 =head2 E<lt>%initE<gt>
 
@@ -662,15 +680,15 @@ HTML without getting distracted or discouraged by Perl code. For example:
 
     <%init>
     # Fetch article from database
-    my $dbh = DBI::connect->("DBI:mysql",...);
+    my $dbh = DBI::connect ...;
     my $sth = $dbh->prepare("select * from articles where id = $article_id");
     my ($headline,$date,$author,$body) = $sth->fetchrow_array;
-
     # Massage the fields
     $headline = uc($headline);
     my ($year,$month,$day) = split('-',$date);
     $date = "$month/$day";
     </%init>
+
     <%args>
     $article_id
     </%args>
@@ -688,10 +706,12 @@ E<lt>%cleanupE<gt> sections are rarely needed.
 
 =head2 E<lt>%onceE<gt>
 
-This code executes once when the component is loaded. Unlike the other
-sections, its scope is above the component subroutine instead of
-inside it. Useful for declaring persistent component-scoped lexical
-variables (especially objects that are expensive to create), declaring
+This code executes once when the component is loaded. Its scope
+includes all of a component's code, and its variables persist for the
+lifetime of the component.
+
+Useful for declaring persistent component-scoped lexical variables
+(especially objects that are expensive to create), declaring
 subroutines (both named and anonymous), and initializing state.
 
 This code does not run inside a request context. You cannot call
@@ -716,6 +736,31 @@ section:
     }
     ...
     </%init>
+
+=head2 E<lt>%sharedE<gt>
+
+Like <%once>, the scope of this section includes all of a component's
+code: the main component, subcomponents, methods, and dynamic
+attributes. However, the code runs once per request (whenever the
+component is used) and its variables last only til the end of the
+request.
+
+Useful for initializing variables needed in, say, the main body and
+one more methods. See L<Devel/Object-Oriented Techniques> for an
+example of usage.
+
+Avoid using <%shared> for side-effect code that needs to run at a
+predictable time during page generation. Assume only that <%shared>
+runs just before the first code that needs it and at most once
+per request. <%init> offers more a predictable execution time.
+
+Any component with a <%shared> section incurs an extra performance
+penalty, because (as currently implemented) Mason must recreate its
+anonymous subroutines the first time each new request uses the
+component.  The exact penalty varies between systems and for most
+applications will be unnoticeable. However, one should avoid using
+<%shared> when patently unnecessary, e.g. when an <%init> would work
+as well.
 
 =head1 COMMENTS/PLAIN TEXT
 
@@ -754,11 +799,11 @@ E<lt>/%textE<gt> itself! When all else fails, use C<$m-E<gt>out>:
 
 =head2 E<lt>%def I<name>E<gt>
 
-Each instance of this section creates a <i>subcomponent</i> embedded inside
-the current component. Inside you may place anything that a regular
-component contains: embedded Perl, C<E<lt>%initE<gt>> and C<E<lt>%argsE<gt>> sections,
-etc. (The only prohibited tags are C<E<lt>%defE<gt>> and
-C<E<lt>%methodE<gt>>, but these will be supported eventually).
+Each instance of this section creates a <i>subcomponent</i> embedded
+inside the current component. Inside you may place almost anything
+that a regular component contains -- embedded Perl, <%init> and <%args>
+sections, etc.  The prohibited tags are <%def>, <%method>, <%once>,
+and <%shared>.
 
 The I<name> consists of characters in the set C<[A-Za-z0-9._-]>. To
 call a subcomponent simply use its name in <& &> or C<$m-E<gt>comp>. A
@@ -830,7 +875,8 @@ more information.
 
 The E<lt>%flagsE<gt> and E<lt>%attrE<gt> sections consist of key/value
 pairs, one per line, joined by '=>'.  The key and value in each pair
-must be valid Perl hash keys and values respectively.
+must be valid Perl hash keys and values respectively. An optional
+comment may follow each line.
 
 =head2 E<lt>%flagsE<gt>
 
@@ -854,7 +900,12 @@ can be queried from other components.
     <%attr>
     color=>'blue'
     fonts=>[qw(arial geneva helvetica)]
+    access=>sub { $r->connection->user eq 'joe' ? 1 : 0 }
     </%attr>
+
+If the right-hand value is a subroutine reference (as in the third
+line above), then that subroutine is invoked to determine the
+value each time the attribute is queried.
 
 To query an attribute of a component, use the C<attr> method:
 
@@ -1287,9 +1338,8 @@ been sent manually.
 To determine the exact header behavior on your system, you need to
 know whether your server's C<out_mode> is 'batch' (meaning all output
 is buffered until the end) or 'stream' (all output is sent
-immediately). Your administrator should have this information. If
-your administrator hasn't touched out_mode then it is probably
-'batch', the default.
+immediately). Your administrator should have this information. If your
+administrator doesn't know then it is probably 'batch', the default.
 
 In batch mode the header situation is extremely simple: Mason waits
 until the very end of the request to send headers. Any component can
@@ -1588,7 +1638,7 @@ subsections to use a different template, or to ignore templates
 entirely.
 
 These issues can be addressed with the object-oriented style
-primitives introduced in Mason 0.85.
+primitives introduced in Mason 0.82.
 
 Note: we use the term object-oriented loosely. Mason borrows concepts
 like inheritance, methods, and attributes from object methodology but
@@ -1684,6 +1734,47 @@ until ultimately an "attribute not found" error occurs. Use
 'attr_exists' to avoid this error for questionable attributes:
 
     if ($self->attr_exists('color')) { ...
+
+=head2 Sharing data
+
+A component's main body and its methods occupy separate lexical
+scopes. Variables declared, say, in the <%init> section of the main
+component cannot be seen from methods or dynamic attributes.
+
+To share variables, declare them either in the <%once> or <%shared>
+section. Both sections have an all-inclusive scope. The <%once>
+section runs once when the component loads; its variables are
+persistent for the lifetime of the component. The <%shared> section
+runs once per request (when needed), just before any code in the
+component runs; its variables last only til the end of the request.
+
+In the following example, various sections of code require information
+about the logged-in user. We use a <%shared> section to fetch these
+in a single request.
+
+    <%attr>
+    title=>sub { "Account for $full_name" }
+    </%attr>
+    
+    <%method lefttoc>
+    <i><% $full_name %></i>
+    (<a href="logout.html">Log out</a>)<br>
+    ...
+    </%method>
+    
+    Welcome, <% $fname %>. Here are your options:
+    
+    <%shared>
+    my $dbh = DBI::connect ...;
+    my $user = $r->connection->user;
+    my $sth = $dbh->prepare("select lname,fname, from users where user_id = '$user'");
+    my ($lname,$fname) = $sth->fetchrow_array;
+    my $full_name = "$first $last";
+    </%shared>
+
+<%shared> presents a good alternative to <%init> when data is needed
+across multiple scopes. Outside these situations, <%init> is preferred
+for its slightly greater speed and predictable execution model.
 
 =head2 Example
 

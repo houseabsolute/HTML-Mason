@@ -257,6 +257,10 @@ sub parse_component
 			die $self->_make_error( error => "repeated <%$section_name> section",
 						errpos => $section_tag_pos );
 		    }
+		    if ( $state->{embedded} and ($section_name eq 'shared' or $section_name eq 'once') ) {
+			die $self->_make_error( error => "<%$section_name> not allowed inside <%def> or <%method>",
+						errpos => $section_tag_pos );
+		    }
 		    my $method = '_parse_' . lc $section_name . '_section';
 		    $self->$method( section => $section );
 		}
