@@ -78,7 +78,7 @@ Mason can now figure this out by itself.
 [ ENHANCEMENTS AND NEW FEATURES ]
 
 - It is now possible to pass chunks of component content as part of a
-component call.  L{Devel/Components that Filter Content}.
+component call.  L{Devel/Component Calls with Content}.
 
 - Mason now supports subrequests via the new $m->subexec and
 $m->make_subrequest methods.  L{Devel/Subrequests}.

@@ -339,7 +339,7 @@ before printing:
     $masthead =~ ...;
     $m->print($masthead);
 
-=head2 Components that Filter Content
+=head2 Component Calls with Content
 
 Components can be used to filter part of the page's content using an
 extended component syntax.
@@ -387,7 +387,7 @@ If you wrap a filtering component call around the entire component,
 the result will be functionally similar to a C<< <%filter> >> section.
 See also L<Filtering|"Filtering">.
 
-=head2 Advanced Components that Filter Content
+=head2 Advanced Components Calls with Content
 
 Internally C<< $m->content >> is implemented with a closure containing
 the part of the component which is the content.  In English, that
@@ -1137,7 +1137,7 @@ without C<if> statements surrounding each link!  Note that the regular
 expression need not be very robust as long as you have control over what
 will appear in the body.
 
-You can use L<Components that filter Content|"Components that filter
+You can use L<Component Calls with Content|"Component Calls with
 Content"> if you want to filter specific parts of a component rather
 than the entire component.
 
