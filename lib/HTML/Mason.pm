@@ -27,6 +27,8 @@ Mason - High-performance, dynamic web site authoring system
 
 =head1 SYNOPSIS
 
+    PerlModule HTML::Mason::ApacheHandler
+
     <FilesMatch "\.html$">
         SetHandler perl-script
         PerlHandler HTML::Mason::ApacheHandler
@@ -150,10 +152,16 @@ The simplest configuration of Mason requires a few lines in your
 httpd.conf. You can find an annotated version of these lines in
 C<eg/httpd.conf> in your distribution.
 
+    PerlModule HTML::Mason::ApacheHandler
+
     <FilesMatch "\.html$">
         SetHandler perl-script
         PerlHandler HTML::Mason::ApacheHandler
     </FilesMatch>
+
+The PerlModule directive simply ensures that the Mason code is loaded
+in the parent process, which can save some memory when running
+mod_perl.
 
 The <FilesMatch> section routes all "\.html$" requests to the Mason
 handler. If you want all Mason pages to have a distinct extension like
