@@ -533,14 +533,13 @@ sub comp {
     # Assume they know what they are doing if a component ref is passed in
     #
     my $base_comp = exists($mods{base_comp}) ? $mods{base_comp} : $self->base_comp;
-    unless (
-        $mods{base_comp} ||	# base_comp override
-        !$path || 		# path is undef if $comp is a reference
-        $path =~ m/^(SELF|PARENT)(:..*)?$/) {
-            $base_comp = ( $path =~ m/(.*):/ ?
-			$self->fetch_comp($1) :
-			$comp );
-	    $base_comp = $base_comp->owner if $base_comp->is_subcomp;
+    unless ( $mods{base_comp} ||	# base_comp override
+	     !$path || 		# path is undef if $comp is a reference
+	     $path =~ m/^(SELF|PARENT)(:..*)?$/ ) {
+	$base_comp = ( $path =~ m/(.*):/ ?
+		       $self->fetch_comp($1) :
+		       $comp );
+	$base_comp = $base_comp->owner if $base_comp->is_subcomp;
     }
 
     # Push new frame onto stack.
