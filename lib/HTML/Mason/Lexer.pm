@@ -445,7 +445,7 @@ sub match_perl_line
 {
     my $self = shift;
 
-    if ( $self->{current}{comp_source} =~ /\G%([^\n]*)(?:\n|\z)/gcs )
+    if ( $self->{current}{comp_source} =~ /\G(?<=^)%([^\n]*)(?:\n|\z)/gcm )
     {
 	$self->{current}{compiler}->perl_line( line => $1 );
 	$self->{current}{lines}++;
