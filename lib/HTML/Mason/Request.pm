@@ -148,51 +148,57 @@ sub exec {
 	param_error "exec: first argument ($comp) must be an absolute component path or a component object";
     }
 
-    # This label is for declined requests.
-    retry:
-    my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method, mode => $self->out_mode );
-    $self->push_buffer_stack($buffer);
-
-    # Build wrapper chain and index.
-    my $first_comp;
-    {my @wrapper_chain = ($comp);
-     for (my $parent = $comp->parent; $parent; $parent = $parent->parent) {
-	 unshift(@wrapper_chain,$parent);
-	 error "inheritance chain length > 32 (infinite inheritance loop?)"
-	     if (@wrapper_chain > 32);
-     }
-     $first_comp = $wrapper_chain[0];
-     $self->{wrapper_chain} = [@wrapper_chain];
-     $self->{wrapper_index} = {map(($wrapper_chain[$_]->path => $_),(0..$#wrapper_chain))};
-    }
-
-    # Fill top_level slots for introspection.
-    $self->{top_comp} = $comp;
-    $self->{top_args} = \@args;
-
-    # Call the first component.
     my ($result, @result);
-    {
-	local $SIG{'__DIE__'} = $interp->die_handler if $interp->die_handler;
-	if (wantarray) {
-	    @result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
-	} else {
-	    $result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
-	}
-    }
-    $err = $@;
 
-    # If declined, try to find the next dhandler.
-    if ($self->declined and $path) {
-	$path =~ s,/[^/]+$,, if defined($self->{dhandler_arg});
-	if (defined($interp->dhandler_name) and my $next_comp = $interp->find_comp_upwards($path, $interp->dhandler_name)) {
-	    $comp = $next_comp;
-	    my $parent = $comp->dir_path;
-	    $self->_reinitialize;
-	    ($self->{dhandler_arg} = $orig_path) =~ s{^$parent/}{};
-	    goto retry;
+    # This block repeats only if $m->decline is called in a component
+    my $declined;
+    do
+    {
+	$declined = 0;
+
+	my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method, mode => $self->out_mode );
+	$self->push_buffer_stack($buffer);
+
+	# Build wrapper chain and index.
+	my $first_comp;
+	{
+	    my @wrapper_chain = ($comp);
+	    for (my $parent = $comp->parent; $parent; $parent = $parent->parent) {
+		unshift(@wrapper_chain,$parent);
+		error "inheritance chain length > 32 (infinite inheritance loop?)"
+		    if (@wrapper_chain > 32);
+	    }
+	    $first_comp = $wrapper_chain[0];
+	    $self->{wrapper_chain} = [@wrapper_chain];
+	    $self->{wrapper_index} = {map(($wrapper_chain[$_]->path => $_),(0..$#wrapper_chain))};
 	}
-    }
+
+	# Fill top_level slots for introspection.
+	$self->{top_comp} = $comp;
+	$self->{top_args} = \@args;
+
+	# Call the first component.
+	{
+	    local $SIG{'__DIE__'} = $interp->die_handler if $interp->die_handler;
+	    if (wantarray) {
+		@result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
+	    } else {
+		$result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
+	    }
+	}
+	$err = $@;
+
+	# If declined, try to find the next dhandler.
+	if ( ($declined = $self->declined) and $path) {
+	    $path =~ s,/[^/]+$,, if defined($self->{dhandler_arg});
+	    if (defined($interp->dhandler_name) and my $next_comp = $interp->find_comp_upwards($path, $interp->dhandler_name)) {
+		$comp = $next_comp;
+		my $parent = $comp->dir_path;
+		$self->_reinitialize;
+		($self->{dhandler_arg} = $orig_path) =~ s{^$parent/}{};
+	    }
+	}
+    } while ($declined && $path);
 
     # If an error occurred...
     if ($err and !$self->aborted) {
