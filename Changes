@@ -10,8 +10,43 @@ available at http://www.masonhq.com/code/history.html.
 [ ENHANCEMENTS ]
 
 - Documented behavior of $m->flush_buffer when a filter is present.
-- Turned of "nowrap" for error message on HTML error page.  No more
+- Turned off "nowrap" for error message on HTML error page.  No more
 horizontal scrolling!
+- Substantially rewrote portions of the Admin Guide, in order to
+improve and clarify the portions related to configuring and
+customizing Mason under mod_perl.
+- Added back "raw error" on HTML error page.
+- Replaced FilesMatch with LocationMatch in docs and FAQ, because
+using FilesMatch means you can't use dhandlers.
+
+[ BUG FIXES ]
+
+- When using the code cache within an Interp, a circular reference was
+created which prevented the Interp object from ever being destroyed.
+With Perl 5.6.0+, this will be automatically prevented by using weak
+references as needed.  With Perl 5.00503, you will need to call the
+new Interp->flush_code_cache method in order to break the circular
+reference.  This bug could cause memory leaks with code that created
+new Interp objects over time, though most uses of Mason do not do
+this.  Reported by Kate Porter.
+- Fixed bad parsing of <% $foo || 50 %>.  Mason was interpreting this
+as an escape flag.  Escape flags now much match /^[[:alpha:]_]\w+/ and
+Mason specifically looks for || in a substitution as well.  Reported
+by Kwindla Kramer.
+- If a dhandler one subdirectory down (like /foo/dhandler) called
+$m->decline, Mason threw a bogus exception.  Fixed by Harmen.
+- Running the test suite caused an error in the shell on Win32 with
+newer versions of MakeMaker.  Reported by Murat Unalan.  (We _think_
+this is fixed but we'd like confirmation from a Win32 user).
+- It was not possible to set the data_cache_defaults parameter from
+the httpd.conf file.  Now it is.
+- Mason was using Apache::Request->new instead of
+Apache::Request->instance.  This meant that if you had a handler that
+ran earlier (like a TransHandler) and that handler created an
+Apache::Request object, then the one Mason created would be missing
+any POST arguments.  Reported by Ray Zimmerman.
+- Several different places in the docs said that Cache::Cache accepts
+a username option, but there is no such thing.
 
 
 1.15  October 14, 2002
