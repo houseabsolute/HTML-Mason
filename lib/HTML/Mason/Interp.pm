@@ -14,8 +14,18 @@ use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
 use HTML::Mason::Tools qw(make_fh read_file taint_is_on load_pkg);
 
+use HTML::Mason::Exceptions
+    ( abbr =>
+      { param_error   => 'HTML::Mason::Exception::Params',
+	system_error  => 'HTML::Mason::Exception::System',
+	wrong_compiler_error => 'HTML::Mason::Exception::Compilation::IncompatibleCompiler',
+	compile_error => 'HTML::Mason::Exception::Compilation',
+	error         => 'HTML::Mason::Exception',
+      },
+    );
+
 use Params::Validate qw(:all);
-Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
+Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
@@ -125,7 +135,7 @@ sub _initialize
     #
     foreach my $field (qw(data_dir)) {
 	$self->{$field} = File::Spec->canonpath( $self->{$field} );
- 	HTML::Mason::Exception::Params->throw( error => "$field ('".$self->{$field}."') must be an absolute directory" )
+ 	param_error "$field '".$self->{$field}."' must be an absolute directory"
 	    unless File::Spec->file_name_is_absolute( $self->{$field} );
     }
 
@@ -144,7 +154,7 @@ sub _initialize
 	$self->{system_log_file} = File::Spec->catfile( $self->data_dir, 'etc', 'system.log' ) if !$self->system_log_file;
 	my $fh = make_fh();
 	open $fh, ">>".$self->system_log_file
-	    or HTML::Mason::Exception::System->throw( error => "Couldn't open system log file $self->{system_log_file} for append" );
+	    or system_error "Couldn't open system log file $self->{system_log_file} for append";
 	my $oldfh = select $fh;
 	$| = 1;
 	select $oldfh;
@@ -156,8 +166,8 @@ sub _initialize
     #
     if ($self->preloads) {
 	foreach my $pattern (@{$self->preloads}) {
-	    HTML::Mason::Exception->throw( error => "preloads pattern must be an absolute path" )
-		 unless File::Spec->file_name_is_absolute($pattern);
+	    error "preloads pattern must be an absolute path"
+		unless File::Spec->file_name_is_absolute($pattern);
 	    my @paths = $self->resolver->glob_path($pattern);
 	    foreach (@paths) { $self->load($_) }
 	}
@@ -429,8 +439,7 @@ sub make_component {
 
     my %p = @_;
     $p{comp_text} = read_file(delete $p{comp_file}) if exists $p{comp_file};
-    HTML::Mason::Exception::Params->throw
-	( error => "Must specify either 'comp_text' or 'comp_file' parameter to 'make_component()'" )
+    param_error "Must specify either 'comp_text' or 'comp_file' parameter to 'make_component()'"
 	unless $p{comp_text};
 
     # The compiler expects 'comp_text' and 'name'
@@ -457,7 +466,7 @@ sub make_component {
 sub set_global
 {
     my ($self, $decl, @values) = @_;
-    HTML::Mason::Exception::Params->throw( error => "Interp->set_global: expects a variable name and one or more values")
+    param_error "Interp->set_global: expects a variable name and one or more values"
 	unless @values;
     my ($prefix, $name) = ($decl =~ s/^([\$@%])//) ? ($1, $decl) : ('$', $decl);
 
@@ -489,7 +498,7 @@ sub system_log_events
 	} elsif (ref($value) eq 'HASH') {
 	    $self->{system_log_events_hash} = $value;
 	} else {
-	    HTML::Mason::Exception::Params->throw( error => "Interp->system_log_events: argument must be a scalar or hash reference" );
+	    param_error "Interp->system_log_events: argument must be a scalar or hash reference";
 	}
     }
     return $self->{system_log_events};
@@ -573,12 +582,11 @@ my %hook_type_map = map(($_,1),@hook_types);
 sub add_hook {
     my ($self, %args) = @_;
     foreach (qw(name type code)) {
-	HTML::Mason::Exception::Params->throw( error => "Interp->add_hook: must specify $_\n" )
-	    unless exists($args{$_});
+	param_error "Interp->add_hook: must specify $_\n" unless exists($args{$_});
     }
-    HTML::Mason::Exception::Params->throw( error => "Interp->add_hook: type must be one of " . join(",",@hook_types)."\n" )
+    param_error "Interp->add_hook: type must be one of " . join(",",@hook_types)."\n"
 	unless $hook_type_map{$args{type}};
-    HTML::Mason::Exception::Params->throw( error => "Interp->add_hook: code must be a code reference\n" )
+    param_error "Interp->add_hook: code must be a code reference\n"
 	unless UNIVERSAL::isa( $args{code}, 'CODE' );
     $self->{hooks}->{$args{type}}->{$args{name}} = $args{code};
 }
@@ -586,7 +594,7 @@ sub add_hook {
 sub remove_hook {
     my ($self, %args) = @_;
     foreach (qw(name type)) {
-	HTML::Mason::Exception::Params->throw( error => "Interp->remove_hook: must specify $_\n" )
+	param_error "Interp->remove_hook: must specify $_\n"
 	    unless exists($args{$_});
     }
     delete($self->{hooks}->{$args{type}}->{$args{name}});
@@ -611,7 +619,7 @@ sub write_system_log {
 			 $$,                     # pid
 			 @_[1..$#_]              # event-specific fields
 			),"\n")
-	    or HTML::Mason::Exception::Params->throw( error => "Cannot write to system log: $!" );
+	    or param_error "Cannot write to system log: $!";
     }
 }
 
@@ -674,10 +682,10 @@ sub eval_object_text
 	# around in object internals but since there is no longer a
 	# parser_version method in Component.pm there is no other way.
 	# Only pre-1.10 components have parser_version set.
-	HTML::Mason::Exception::Compilation::IncompatibleCompiler->throw( error => 'This object file was created by a pre-1.10 parser.  Please remove the component files in your object directory.' )
+	wrong_compiler_error 'This object file was created by a pre-1.10 parser.  Please remove the component files in your object directory.'
 	    if ref $comp && exists $comp->{parser_version};
 
-	HTML::Mason::Exception::Compilation::IncompatibleCompiler->throw( error => 'This object file was created by an incompatible Compiler or Lexer.  Please remove the component files in your object directory.' )
+	wrong_compiler_error 'This object file was created by an incompatible Compiler or Lexer.  Please remove the component files in your object directory.'
 	    if UNIVERSAL::can( $comp, 'compiler_id' ) && $comp->compiler_id ne $self->compiler->object_id;
     }
 
@@ -690,7 +698,7 @@ sub eval_object_text
 	    $err =~ s/has too many errors\..*/has too many errors./s;
 	}
 
-	HTML::Mason::Exception::Compilation->throw( error => $err );
+	compile_error $err;
     } else {
 	return $comp;
     }
@@ -721,7 +729,7 @@ sub write_object_file
 	if (!-d $dirname) {
 	    unlink($dirname) if (-e $dirname);
 	    push(@newfiles,mkpath($dirname,0,0775));
-	    HTML::Mason::Exception::System->throw( error => "Couldn't create directory $dirname: $!" )
+	    system_error "Couldn't create directory $dirname: $!"
 		unless -d $dirname;
 	}
 	rmtree($object_file) if (-d $object_file);
@@ -731,11 +739,11 @@ sub write_object_file
 
     my $fh = make_fh();
     open $fh, ">$object_file"
-	or HTML::Mason::Exception::System->throw( error => "Couldn't write object file $object_file: $!" );
+	or system_error "Couldn't write object file $object_file: $!";
     print $fh $object_text
-	or HTML::Mason::Exception::System->throw( error => "Couldn't write object file $object_file: $!" );
+	or system_error "Couldn't write object file $object_file: $!";
     close $fh 
-	or HTML::Mason::Exception::System->throw( error => "Couldn't close object file $object_file: $!" );
+	or system_error "Couldn't close object file $object_file: $!";
     @$files_written = @newfiles if (defined($files_written))
 }
 
@@ -743,7 +751,7 @@ sub _compilation_error {
     my ($self, $filename, $err) = @_;
 
     my $msg = sprintf("Error during compilation of %s:\n%s\n",$filename, $err);
-    HTML::Mason::Exception::Compilation->throw( error => $msg );
+    compile_error $msg;
 }
 
 
