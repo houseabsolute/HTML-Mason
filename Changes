@@ -28,6 +28,9 @@ value.  Task id #444.  Reported by David Wheeler.
 component's methods or subcomponents from its <%shared> block.  Task
 id #448.  Reported by Randy Harmon.
 
+- If in_package was set, Mason Would die if output was generated after
+a subrequest.  Task id #453.  Reported by David R. Baird.
+
 
 1.19  March 3, 2003
 
