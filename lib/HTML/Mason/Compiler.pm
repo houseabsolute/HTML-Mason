@@ -58,17 +58,24 @@ sub object_id
 {
     my $self = shift;
 
-    # Can't use coderef keys because they stringify differently every
+    # Can't use object keys because they stringify differently every
     # time the program is loaded, whether they are a reference to the
-    # same code or not.
-    my @id_keys = grep { $_ ne 'lexer' && $_ ne 'preprocess' &&
-			 $_ ne 'postprocess_perl' && $_ ne 'postprocess_text' } keys %{ $self->validation_spec };
+    # same object or not.
+    my $spec = $self->validation_spec;
+    my @id_keys = grep { ! exists $spec->{$_}{isa} } keys %$spec;
 
     my @vals;
     foreach my $k ( @id_keys )
     {
 	push @vals, $k;
-	push @vals, ( UNIVERSAL::isa( $self->{$k}, 'HASH' )  ? map { $_ => $self->{$k}{$_} } keys %{ $self->{$k} } :
+
+	# For coderef params we simply indicate whether or not it is
+	# present.  This is better than simply ignoring them but not
+	# by much.  We _could_ use B::Deparse's coderef2text method to
+	# do this properly but I'm not sure if that's a good idea or
+	# if it works for Perl 5.005.
+	push @vals, ( $spec->{$k}{parse} eq 'code'  ? ( $self->{$k} ? 1 : 0 ) :
+		      UNIVERSAL::isa( $self->{$k}, 'HASH' )  ? map { $_ => $self->{$k}{$_} } keys %{ $self->{$k} } :
 		      UNIVERSAL::isa( $self->{$k}, 'ARRAY' ) ? @{ $self->{$k} } :
 		      $self->{$k} );
     }
