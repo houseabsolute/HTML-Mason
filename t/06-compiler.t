@@ -349,7 +349,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'subcomp_parse_error',
-		      description => 'test proper exception throwing for misnamed blocks',
+		      description => 'A misnamed block at the beginning of a component was throwing the lexer into an infinite loop.  Now it should be compiled into a component with a syntax error.',
 		      component => <<'EOF',
 <%subcomp .foo>
  <% 5 %>
@@ -360,14 +360,8 @@ EOF
 
 #------------------------------------------------------------
 
-    # The following test goes into an infinite loop for me (Ken) under
-    # perl 5.6.1.  I can't seem to whittle it down any further.  This
-    # is so bizarre that it seems like it's got to be a perl bug.
-    # (Note that there *is* a syntax error here, but that shouldn't be
-    # causing an infinite loop).
-
-    $group->add_test( name => 'infinite_loop_wrong',
-		      description => 'infinite lexer loop here?',
+    $group->add_test( name => 'no_infinite_loop',
+		      description => 'this used to cause an infinite loop for Ken.  It should not do that any more.',
 		      component => <<'EOF',
 <%args>
  $prev
