@@ -943,6 +943,8 @@ preloads.
 
 =head1 ESCAPE FLAG METHODS
 
+=over
+
 =for html <a name="item_apply_escapes"></a>
 
 =item apply_escapes ($text, $flags, [more flags...])
@@ -980,6 +982,8 @@ configuration file, you can set them like this:
   PerlSetVar  MasonEscapeFlags  "flag  => \&subroutine"
   PerlSetVar  MasonEscapeFlags  "uc    => sub { ${$_[0]} = uc ${$_[0]}; }"
   PerlAddVar  MasonEscapeFlags  "thing => other_thing"
+
+=back
 
 =head1 OTHER METHODS
 
