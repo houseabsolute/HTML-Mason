@@ -540,6 +540,23 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'no_strict',
+			  description => 'test turning off strict in a component',
+                          interp_params => { use_strict => 0 },
+			  component => <<'EOF',
+$a is <% $a %>
+<%init>
+$x = 'a';
+$$x = 1;
+</%init>
+EOF
+                          expect => <<'EOF',
+$a is 1
+EOF
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
