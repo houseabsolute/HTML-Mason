@@ -116,14 +116,8 @@ HTML::Mason::Resolver::File - translates component paths into filesystem paths
 
   my $resolver = HTML::Mason::Resolver::File->new( comp_root => '/var/www/mason' );
 
-  my %comp_info = $resolver->get_info('/some/comp.html');
-
-  my $source = $resolver->get_source(%comp_info);
-
+  my $info = $resolver->get_info('/some/comp.html');
   my $comp_root = $resolver->comp_root;
-
-  # return "/some/comp.html"
-  my $comp_path = $resolver->file_to_path('/var/www/mason/some/comp.html');
 
 =head1 DESCRIPTION
 
