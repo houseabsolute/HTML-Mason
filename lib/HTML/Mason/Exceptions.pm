@@ -169,8 +169,10 @@ sub filtered_frames
 	qw[
 	   (eval)
 	   Exception::Class::Base::throw
+	   Exception::Class::__ANON__
 	   HTML::Mason::Commands::__ANON__
 	   HTML::Mason::Component::run
+	   HTML::Mason::Exception::throw
 	   HTML::Mason::Exceptions::__ANON__
 	   HTML::Mason::Request::_run_comp
 	   ];
@@ -362,7 +364,7 @@ sub as_html
 %    foreach my $frame (@{$info->{frames}}) {
 %        my $f = $frame->filename; HTML::Mason::Escapes::basic_html_escape(\$f);
 %        my $l = $frame->line; HTML::Mason::Escapes::basic_html_escape(\$l);
-	<% $f %>:<% $l %><br>g
+	<% $f %>:<% $l %><br>
 %    }
   </td>
  </tr>
