@@ -1132,10 +1132,6 @@ documentation> for Cache::Cache as well as for relevant subclasses
 (e.g. Cache::FileCache). Our documentation here covers common usage
 but skips many options and features.
 
-To use this feature the administrator will need to obtain Cache::Cache
-from CPAN and may need to change C<Config.pm>.  See L<Admin/Data
-Caching> for more details.
-
 =head2 Basic Usage
 
 The C<$m-E<gt>cache> method returns an object representing the cache
@@ -1189,8 +1185,8 @@ this with the I<cache_class> keyword. The value must be the name of a
 Cache::Cache subclass; if it does not contain a "::", the prefix
 "Cache::" is automatically prepended. For example:
 
-  my $result = $m->cache(cache_class=>'MemoryCache')->get('key');
-  $m->cache(cache_class=>'MemoryCache')->set('key', $result);
+    my $result = $m->cache(cache_class=>'MemoryCache')->get('key');
+    $m->cache(cache_class=>'MemoryCache')->set('key', $result);
 
 You can even specify different subclasses for different keys in the
 same component. Just make sure the correct value is passed to all calls
