@@ -20,8 +20,6 @@ BEGIN
     $DEBUG = $ENV{MASON_DEBUG};
 }
 
-use File::Basename;
-use File::Path;
 use File::Spec;
 use HTML::Mason::Tests;
 use Test;
