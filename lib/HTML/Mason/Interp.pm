@@ -14,15 +14,7 @@ use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
 use HTML::Mason::Tools qw(make_fh read_file taint_is_on load_pkg);
 
-use HTML::Mason::Exceptions
-    ( abbr =>
-      { param_error   => 'HTML::Mason::Exception::Params',
-	system_error  => 'HTML::Mason::Exception::System',
-	wrong_compiler_error => 'HTML::Mason::Exception::Compilation::IncompatibleCompiler',
-	compile_error => 'HTML::Mason::Exception::Compilation',
-	error         => 'HTML::Mason::Exception',
-      },
-    );
+use HTML::Mason::Exceptions( abbr => [qw(param_error system_error wrong_compiler_error compile_error error)] );
 
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );

@@ -12,12 +12,7 @@ package HTML::Mason::Request::ApacheHandler;
 use HTML::Mason::Request;
 use base qw(HTML::Mason::Request);
 
-use HTML::Mason::Exceptions
-    ( abbr => 
-      { param_error => 'HTML::Mason::Exception::Params',
-	error => 'HTML::Mason::Exception',
-      },
-    );
+use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( ah apache_req ) ] );
@@ -86,13 +81,7 @@ sub SERVER_ERROR { return 500 }
 sub NOT_FOUND { return 404 }
 use File::Path;
 use File::Spec;
-use HTML::Mason::Exceptions
-    ( abbr => 
-      { param_error => 'HTML::Mason::Exception::Params',
-	system_error => 'HTML::Mason::Exception::System',
-	error => 'HTML::Mason::Exception',
-      },
-    );
+use HTML::Mason::Exceptions( abbr => [qw(param_error system_error error)] );
 use HTML::Mason::Interp;
 use HTML::Mason::Error qw(error_process error_display_html);
 use HTML::Mason::Utils;

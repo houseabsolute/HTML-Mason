@@ -14,12 +14,7 @@ use strict;
 
 use Cwd;
 use File::Spec;
-use HTML::Mason::Exceptions
-    ( abbr => 
-      { system_error => 'HTML::Mason::Exception::System',
-	error        => 'HTML::Mason::Exception',
-      },
-    );
+use HTML::Mason::Exceptions( abbr => [qw(system_error error)] );
 
 require Exporter;
 

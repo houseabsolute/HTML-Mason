@@ -14,14 +14,7 @@ use HTML::Mason::Buffer;
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
-use HTML::Mason::Exceptions
-    (
-     abbr => {param_error  => 'HTML::Mason::Exception::Params',
-	      syntax_error => 'HTML::Mason::Exception::Syntax',
-	      abort_error  => 'HTML::Mason::Exception::Abort',
-	      error        => 'HTML::Mason::Exception',
-	     }
-    );
+use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error abort_error error)] );
 
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );

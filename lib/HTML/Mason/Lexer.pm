@@ -6,13 +6,7 @@ package HTML::Mason::Lexer;
 
 use strict;
 
-use HTML::Mason::Exceptions
-    ( abbr =>
-      { param_error  => 'HTML::Mason::Exception::Params',
-	syntax_error => 'HTML::Mason::Exception::Syntax',
-	error        => 'HTML::Mason::Exception',
-      },
-    );
+use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error error)] );
 
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
