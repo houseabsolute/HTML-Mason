@@ -22,7 +22,7 @@ use HTML::Mason::Tools qw(html_escape make_fh);
 
 sub error_process {
     my ($error, $req) = @_;
-    
+
     my %conf = (
 		'runtime_error' => 'runtime error',
 		'component_error' => 'undefined component',
@@ -76,7 +76,7 @@ sub error_process {
 		$errors[-1]->{'message'} .= $line;
 	    }
 	}
-	
+
 	# Handle information about what file Mason was trying to compile.
 	# This error is redundant and we do not actually use the information,
 	# but we need to handle the case so it doesn't get pushed into the
@@ -93,7 +93,7 @@ sub error_process {
 	    $error_info{'err_type'} = $conf{'runtime_error'};
 	    $error_info{'err_descr'} = "while executing $1";
 	}
-	
+
 	# Handle perl's errors and 'die' statements.
 	elsif($line =~ /at (\S*) line (\d*)/) {
 	    my ($message, $file, $linenum) =
@@ -131,7 +131,7 @@ sub error_process {
 		push @errors, { "message" => $line };
 	    }
 	}
-	
+
 	# Put everything we can't handle into an extra array.
 	else {
 	    push @misc_info, $line;
@@ -200,7 +200,7 @@ sub error_process {
 	$cs =~ s/\t//g;
 	push(@lines,"Code stack: $cs");
     }
-    
+
     if (@{$error_info{'misc_info'}}) {
 	push(@lines,"Misc info: " . $error_info{'misc_info'}->[0]);
     }
@@ -262,7 +262,7 @@ sub error_table_html {
 	$out .= $conf->{table_entry}->($conf->{'labels'}{$item}, $show{$item}) if $show{$item};
     }
     $out .= qq{</table>};
-    
+
     # Decided for now to avoid clutter and omit processed mason error
     # by default. We'll see whether there is a need for this.
     if (0) {
@@ -282,13 +282,13 @@ sub error_calltrace_html {
     foreach my $ref (@{$error_info->{'calltrace'}}) {
 	$call_trace .= html_escape("$ref->{'file'}:$ref->{'line'}")."<br>";
 	# $call_trace .= $conf->{'table_entry'}->("location:", html_escape("$ref->{'file'}:$ref->{'line'}"));
-	
+
 	# We stop when we reach sys_handler.pl because anything higher on the stack
 	# is called regardless of what component we are in.
 	last if $ref->{'file'} =~ /sys_handler.pl$/;
     }
     $call_trace .= qq(</table><br>);
-    
+
     return $call_trace;
 }
 
@@ -352,7 +352,7 @@ sub create_context_html {
     return '' unless $file;
 
     my $context .= qq(<table border="0" cellpadding="0" cellspacing="0">);
-    
+
     my $fh = make_fh();
     open $fh, $file;
     unless($fh) {
@@ -363,7 +363,7 @@ sub create_context_html {
 	for (@file) { s/ /&nbsp;/g }
 	chomp(@file);
 	unshift(@file,undef);
-	
+
 	# Mark the important context lines.
 	# We do this by going through the error lines and incrementing hash keys to
 	# keep track of which lines we eventually need to print, and we color the
@@ -380,7 +380,7 @@ sub create_context_html {
 		$file[$line_num] = qq(<font color="red">$file[$line_num]</font>);
 	    }
 	}
-	
+
 	# Create the context table.
 	# By going through the keys of the %marks hash, we can tell which lines need
 	# to be printed. We add a '...' line if we skip numbers in the context.
@@ -428,7 +428,7 @@ sub error_notes_html {
 
     # Assemble the table.
     $notes .= qq(<table border="0" cellpadding="0" cellspacing="0">);
-    
+
     my @notes;
     if ($general_errors) {
 	@notes = split("\n", $general_errors);
@@ -463,7 +463,7 @@ sub error_parse {
 
 	} elsif($line =~ /^File:/) {
 	    ($error_info->{'file'}) = ($line =~ /^File: (\S+)/);
-	    
+
 	} elsif($line =~ /^Errors:/) {
 	    my ($errors) = ($line =~ /^Errors: (.*)/);
 	    my @entries = split(/, /, $errors);
@@ -485,8 +485,8 @@ sub error_parse {
 		}
 		push @{$error_info->{'backtrace'}}, { project => $project, component => $component };
 	    }
-	    
-	} elsif($line =~ /^Code stack:/) {		
+
+	} elsif($line =~ /^Code stack:/) {
 	    my ($calltrace) = ($line =~ /^Code stack: (.*)/);
 	    my @entries = split(/, /, $calltrace);
 	    foreach my $entry (@entries) {
