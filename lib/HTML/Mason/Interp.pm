@@ -29,7 +29,7 @@ my %fields =
      current_time => 'real',
      data_dir => undef,
      system_log_file => undef,
-     system_log_events => '',
+     system_log_events => {},
      system_log_separator => "\cA",
      max_recurse => 16,
      parser => undef,
@@ -62,14 +62,17 @@ sub new
 	last_reload_time => 0,
 	last_reload_file_pos => 0,
 	out_method => sub { print $_[0] },
+	system_log_fh => undef
     };
     my (%options) = @_;
-    my ($rootDir,$outMethod);
+    my ($rootDir,$outMethod,$systemLogEvents);
     while (my ($key,$value) = each(%options)) {
 	if (exists($fields{$key})) {
 	    $self->{$key} = $value;
 	} elsif ($key eq 'out_method') {
 	    $outMethod = $value;
+	} elsif ($key eq 'system_log_events') {
+	    $systemLogEvents = $value;
 	} else {
 	    die "HTML::Mason::Interp::new: invalid option '$key'\n";
 	}
@@ -79,6 +82,7 @@ sub new
     die "HTML::Mason::Interp::new: must specify value for data_dir\n" if !$self->{data_dir};
     bless $self, $class;
     $self->out_method($outMethod) if ($outMethod);
+    $self->system_log_events($systemLogEvents) if ($systemLogEvents);
     $self->_initialize;
     return $self;
 }
@@ -106,21 +110,14 @@ sub _initialize
     }
     
     #
-    # Open system log file, and convert events string to hash
+    # Open system log file
     #
     if ($self->system_log_events) {
 	$self->system_log_file($self->data_dir . "/etc/system.log") if !$self->system_log_file;
 	my $fh = new IO::File ">>".$self->system_log_file
 	    or die "Couldn't open system log file ".$self->{system_log_file}." for append";
 	$fh->autoflush(1);
-	my $eventstr = $self->system_log_events;
-	$eventstr =~ s/\s//g;
-	my %opts = map( ($_, 1), split /\|/, $eventstr);
-	@opts{qw(REQUEST CACHE COMP_LOAD)} = (1,1,1) if $opts{ALL};
-	@opts{qw(CACHE_READ CACHE_WRITE)} = (1,1) if $opts{CACHE};
-	@opts{qw(REQ_START REQ_END)} = (1,1) if $opts{REQUEST};
-	$self->system_log_file($fh);
-	$self->system_log_events(\%opts);
+	$self->{system_log_fh} = $fh;
     }
     
     #
@@ -626,6 +623,38 @@ sub vars
 }
 
 #
+# Allow scalar or hash reference as argument to system_log_events.
+#
+sub system_log_events
+{
+    my ($self, $value) = @_;
+    if (defined($value)) {
+	if (ref($value) eq 'SCALAR') {
+	    $value =~ s/\s//g;
+	    my %opts = map( ($_, 1), split /\|/, $value);
+	    @opts{qw(REQUEST CACHE COMP_LOAD)} = (1,1,1) if $opts{ALL};
+	    @opts{qw(CACHE_READ CACHE_WRITE)} = (1,1) if $opts{CACHE};
+	    @opts{qw(REQ_START REQ_END)} = (1,1) if $opts{REQUEST};
+	    $self->{system_log_events} = \%opts;
+	} elsif (ref($value) eq 'HASH') {
+	    $self->{system_log_events} = $value;
+	} else {
+	    die "system_log_events: argument must be a scalar or hash reference";
+	}
+    }
+    return $self->{system_log_events};
+}
+
+#
+# Determine if the specified event should be logged.
+#
+sub system_log_event_check
+{
+    my ($self,$flag) = @_;
+    return ($self->{system_log_fh} && $self->system_log_events->{$flag});
+}
+
+#
 # Allow scalar or code reference as argument to out_method.
 #
 sub out_method
@@ -750,9 +779,9 @@ sub call_hooks {
 sub write_system_log {
     my $self = shift;
 
-    if (defined $self->system_log_file && $self->system_log_events->{$_[0]}) {
+    if ($self->{system_log_fh} && $self->system_log_events->{$_[0]}) {
 	my $time = (pkg_loaded("Time::HiRes") ? scalar(Time::HiRes::gettimeofday()) : time);
-	$self->system_log_file->print(join ($self->system_log_separator,
+	$self->{system_log_fh}->print(join ($self->system_log_separator,
 					    $time,                  # current time
 					    $_[0],                  # event name
 					    $$,                     # pid

@@ -7,7 +7,7 @@ require 5.004;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw();
-@EXPORT_OK = qw(handler);
+@EXPORT_OK = qw();
 
 use strict;
 use vars qw($AUTOLOAD $INTERP);
@@ -144,11 +144,13 @@ sub handle_request {
     #
     # construct (and truncate if necessary) the request to log at start
     #
-    my $rstring = $r->server->server_hostname . $r->uri;
-    $rstring .= "?".scalar($r->args) if defined(scalar($r->args));
-    $rstring = substr($rstring,0,150).'...' if length($rstring) > 150;
-    $interp->write_system_log('REQ_START', ++$self->{request_number},
-			      $rstring);
+    if ($interp->system_log_event_check('REQ_START')) {
+	my $rstring = $r->server->server_hostname . $r->uri;
+	$rstring .= "?".scalar($r->args) if defined(scalar($r->args));
+	$rstring = substr($rstring,0,150).'...' if length($rstring) > 150;
+	$interp->write_system_log('REQ_START', ++$self->{request_number},
+				  $rstring);
+    }
 
     #
     # If output mode is 'batch', collect output in a buffer and
@@ -224,7 +226,6 @@ sub write_debug_file
     my ($self, $r, $dref) = @_;
     my $user = $r->cgi_var('REMOTE_USER') || 'anon';
     my $outFile = sprintf("%d",int(rand(20))+1);
-#$outFile =~ s/\d+/100/ if ($r->the_request =~ m@Reference/travel@);
     my $outDir = $self->debug_dir . "/$user";
     if (!-d $outDir) {
 	mkpath($outDir,0,0755) or die "cannot create debug directory '$outDir'";
@@ -321,7 +322,7 @@ sub capture_debug_state
 	$expr .= "\$d{$field} = \$r->$field;\n";
     }
     foreach my $field (qw(dir_config headers_in headers_out err_headers_out notes subprocess_env cgi_env)) {
-	$expr .= "\$d{$field} = {\$r->$field};\n";
+	$expr .= "{ my \%h = \$r->$field; \$d{$field} = {\%h} }\n";
     }
     eval($expr);
     warn "error creating debug file: $@\n" if $@;
