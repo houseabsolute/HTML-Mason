@@ -107,14 +107,11 @@ sub isa_mason_exception
     my ($err, $name) = @_;
     return unless defined $err;
 
-    if ($name) {
-	my $class = "HTML::Mason::Exception::$name";
-	no strict 'refs';
-	die "no such exception class $class" unless defined(${"${class}::VERSION"});
-	return UNIVERSAL::isa($err, "HTML::Mason::Exception::$name");
-    } else {
-	return UNIVERSAL::isa($err, "HTML::Mason::Exception");
-    }
+    $name = $name ? "HTML::Mason::Exception::$name" : "HTML::Mason::Exception";
+    no strict 'refs';
+    die "no such exception class $name" unless defined(${"${name}::VERSION"});
+
+    return UNIVERSAL::isa($err, $name);
 }
 
 sub rethrow_exception
