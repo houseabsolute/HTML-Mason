@@ -67,6 +67,21 @@ sub cgi_object
     return $self->{cgi_object};
 }
 
+#
+# Override this method to always die when top level component is not found,
+# so we can return NOT_FOUND.
+#
+sub _handle_error
+{
+    my ($self, $err) = @_;
+
+    if (UNIVERSAL::isa($err, 'HTML::Mason::Exception::TopLevelNotFound')) {
+	die $err;
+    } else {
+	$self->SUPER::_handle_error($err);
+    }
+}
+
 #----------------------------------------------------------------------
 #
 # APACHE-SPECIFIC FILE RESOLVER OBJECT
@@ -611,7 +626,7 @@ sub handle_request {
 	    }
 
 	    # Log the error the same way that Apache does (taken from default_handler in http_core.c)
-	    $apreq->log_error("[Mason] File does not exist: ",$apreq->filename . ($apreq->path_info ? $apreq->path_info : ""));
+	    $apreq->log_error("[Mason] File does not exist: ", $apreq->filename . ($apreq->path_info ? $apreq->path_info : ""));
 	    return NOT_FOUND;
 
 	} else {
