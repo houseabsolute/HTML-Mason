@@ -318,7 +318,7 @@ sub as_html
 </%filter>
 
 % HTML::Mason::Escapes::basic_html_escape(\\$msg);
-% $msg =~ s/\n/<br>/;
+% $msg =~ s/\n/<br>/g;
 
 <html><body>
 
