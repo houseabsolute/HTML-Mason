@@ -25,21 +25,14 @@ my %fields =
      out_method => undef,
      out_mode => undef
      );
-# Create read-only accessor routines
-foreach my $f (keys %fields) {
-    no strict 'refs';
-    *{$f} = sub {my $s=shift; die "cannot modify request field $f" if @_; return $s->{$f}};
-}
 
 sub new
 {
     my $class = shift;
     my $self = {
 	%fields,
-	autohandler_next => undef,
 	dhandler_arg => undef,
 	error_flag => undef,
-	inherit_chain => undef,
 	out_buffer => '',
 	stack_array => undef,
 	wrapper_chain => undef
@@ -107,8 +100,8 @@ sub exec {
 	$orig_path = $path = $comp;
 	if (!($comp = $interp->load($path))) {
 	    if (defined($interp->{dhandler_name}) and $comp = $interp->find_comp_upwards($path,$interp->{dhandler_name})) {
-		my $parent = $comp->dir_path;
-		($self->{dhandler_arg} = $path) =~ s{^$parent/}{};
+		my $parent_path = $comp->dir_path;
+		($self->{dhandler_arg} = $path) =~ s{^$parent_path/}{};
 	    }
 	}
 	die "could not find component for path '$path'\n" if !$comp;
@@ -119,42 +112,14 @@ sub exec {
     # This label is for declined requests.
     retry:
     
-    # Build inheritance chain.
-    my @inherit_chain = ($comp);
-    while (1) {
-	my $inherit;
-	my $dir_path = $comp->dir_path;
-	if (exists($comp->flags->{inherit})) {
-	    my $inherit_path = $comp->flags->{inherit};
-	    if ($inherit_path =~ /\S/) {
-		$inherit = $interp->load($self->process_comp_path($inherit_path,$dir_path));
-	    }
-	} elsif (defined($interp->{autohandler_name})) {
-	    # Look for autohandler, making sure that autohandler doesn't inherit
-	    # from itself.
-	    my $comp_is_autohandler = ($comp->name eq $interp->{autohandler_name});
-	    if ($interp->{allow_recursive_autohandlers}) {
-		if ($comp_is_autohandler) {
-		    last if ($dir_path eq '/');
-		    $dir_path =~ s/\/[^\/]*$//;
-		    $dir_path = '/' if !$dir_path;
-		}
-		$inherit = $interp->find_comp_upwards($dir_path,$interp->{autohandler_name});
-	    } else {
-		$inherit = $interp->load("$dir_path/".$interp->{autohandler_name}) unless $comp_is_autohandler;
-	    }
-	}
-	if (defined($inherit)) {
-	    push(@inherit_chain,$inherit);
-	    $comp = $inherit;
-	    die "assert error: inherit chain length > 32 (infinite loop?)" if (@inherit_chain > 32);
-	} else {
-	    last;
-	}
+    # Build wrapper chain.
+    my @wrapper_chain = ($comp);
+    for (my $parent = $comp->parent; $parent; $parent = $parent->parent) {
+	unshift(@wrapper_chain,$parent);
+	die "inheritance chain length > 32 (infinite inheritance loop?)" if (@wrapper_chain > 32);
     }
-    $self->{inherit_chain} = \@inherit_chain;
-    $self->{wrapper_chain} = [reverse(@inherit_chain)];
-    shift(@{$self->{wrapper_chain}});
+    $comp = shift(@wrapper_chain);
+    $self->{wrapper_chain} = [@wrapper_chain];
 
     # Call the first component.
     my ($result, @result);
@@ -376,7 +341,7 @@ sub call_self
 sub comp_exists
 {
     my ($self,$path) = @_;
-    return $self->interp->lookup($self->process_comp_path($path)) ? 1 : 0;
+    return $self->interp->lookup($self->interp->process_comp_path($path,$self->current_comp->dir_path)) ? 1 : 0;
 }
 
 sub decline
@@ -409,39 +374,6 @@ sub fetch_comp
     die "fetch_comp: requires path as first argument" unless defined($path);
 
     #
-    # If path contains a colon, interpret as <comp>:<subcomp>.
-    # SELF means search all components in inherit chain.
-    # SUPER means search all components above current component in inherit chain.
-    #
-    if (index($path,':')!=-1) {
-	my @search_list;
-	my ($main_path,$sub_path) = split(':',$path,2);
-	if ($main_path eq 'SELF') {
-	    @search_list = @{$self->{inherit_chain}};
-	} elsif ($main_path eq 'SUPER') {
-	    # Call the "superclass" method. We start searching in the inheritance chain
-	    # past the current component or the current subcomponent's parent.
-	    # This won't work when we go to multiply embedded subcomponents...
-	    @search_list = @{$self->{inherit_chain}};
-	    my $cur_comp = $self->current_comp;
-	    while (my $next = shift(@search_list)) {
-		last if $next eq $cur_comp or ($cur_comp->is_subcomp and $next eq $cur_comp->parent_comp);
-	    }
-	    return undef unless @search_list;
-	} else {
-	    my $main_comp = $self->fetch_comp($main_path);
-	    return undef unless $main_comp;
-	    @search_list = ($main_comp);
-	}
-	foreach my $main_comp (@search_list) {
-	    if (my $subcomp = $main_comp->subcomps->{$sub_path}) {
-		return $subcomp;
-	    }
-	}
-	return undef;
-    }
-
-    #
     # If path does not contain a slash, check for a subcomponent in the
     # current component first.
     #
@@ -461,8 +393,8 @@ sub fetch_comp
     #
     # Otherwise pass the absolute path to interp->load.
     #
-    $path = $self->process_comp_path($path);
-    return $self->{interp}->load($path);
+    $path = $self->interp->process_comp_path($path,$self->current_comp->dir_path);
+    return $self->interp->load($path);
 }
 
 sub fetch_next { return shift->{wrapper_chain}->[0] }
@@ -549,7 +481,10 @@ sub comp {
     }
 }
 sub comp1 {
-    my ($self, $comp, @args) = @_;
+    my $self = shift;
+    my %mods;
+    %mods = %{shift()} if (ref($_[0]) eq 'HASH');
+    my ($comp,@args) = @_;
     my $interp = $self->{interp};
     my $depth = $REQ_DEPTH;
     die "comp: requires path or component as first argument" unless defined($comp);
@@ -597,7 +532,9 @@ sub comp1 {
 
     # Push new frame onto stack and increment (localized) depth.
     my $stack = $self->stack;
-    push(@$stack,{'comp'=>$comp,args=>[@args],sink=>$sink});
+    my $frame = {'comp'=>$comp,args=>[@args],sink=>$sink};
+    $frame->{called_comp} = exists($mods{called_comp}) ? $mods{called_comp} : $comp;
+    push(@$stack,$frame);
     $REQ_DEPTH++;
 
     # Call start_comp hooks.
@@ -650,6 +587,12 @@ sub scomp {
     die $err if $err;
 
     return $store;
+}
+
+sub process_comp_path
+{
+    my ($self) = shift;
+    return $self->interp->process_comp_path(@_,$self->current_comp->dir_path);
 }
 
 #
@@ -717,26 +660,16 @@ sub debug_hook
 sub current_comp { return $_[0]->top_stack->{'comp'} }
 sub current_args { return $_[0]->top_stack->{args} }
 sub current_sink { return $_[0]->top_stack->{sink} }
+sub called_comp { return $_[0]->top_stack->{called_comp} }
 
-#
-# Return the absolute version of a component path. Handles . and ..
-# Empty string resolves to current component path. Optional second
-# argument is directory path to resolve relative paths against.
-#
-sub process_comp_path
-{
-    my ($self,$comp_path,$dir_path) = @_;
-    if ($comp_path !~ /\S/) {
-	return $self->current_comp->path;
-    }
-    if ($comp_path !~ m@^/@) {
-	$dir_path = $self->current_comp->dir_path unless defined($dir_path);
-	die "relative component path ($comp_path) used from component with no current directory" unless $dir_path;
-	$comp_path = $dir_path . ($dir_path eq "/" ? "" : "/") . $comp_path;
-    }
-    while ($comp_path =~ s@/[^/]+/\.\.@@) {}
-    while ($comp_path =~ s@/\./@/@) {}
-    return $comp_path;    
-}
+# Create generic read-only accessor routines
+
+sub aborted { return shift->{aborted} }
+sub aborted_value { return shift->{aborted_value} }
+sub count { return shift->{count} }
+sub declined { return shift->{declined} }
+sub interp { return shift->{interp} }
+sub out_method { return shift->{out_method} }
+sub out_mode { return shift->{out_mode} }
 
 1;

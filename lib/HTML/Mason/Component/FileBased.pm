@@ -34,7 +34,6 @@ sub dir_path {
 }
 sub assign_runtime_properties {
     my ($self,$interp,$fq_path) = @_;
-    $self->SUPER::assign_runtime_properties($interp,$fq_path);
     my $comp_root = $interp->comp_root;    
     if (!ref($comp_root)) {
 	$self->{source_root} = $comp_root;
@@ -51,6 +50,7 @@ sub assign_runtime_properties {
 	die "Assert error: FQ path ($fq_path) contained unknown source root key" unless $self->{source_root};
     }
     $self->{'source_file'} = $self->{source_root} . $self->{'path'};
+    $self->SUPER::assign_runtime_properties($interp,$fq_path);
 }
 
 1;

@@ -83,6 +83,11 @@ sub send_fd
     print <FD>;
 }
 
+sub finfo
+{
+    return shift->filename;
+}
+
 sub warn {
     my ($self, $msg) = @_;
     print "warn: $msg\n";

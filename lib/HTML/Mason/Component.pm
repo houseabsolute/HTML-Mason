@@ -10,17 +10,22 @@ require Exporter;
 @EXPORT_OK = qw();
 
 use strict;
+use File::Basename;
 use HTML::Mason::Tools qw(read_file compress_path);
 use vars qw($AUTOLOAD);
 
 my %fields =
     (
+     attr => undef,
      code => undef,
      create_time => undef,
      declared_args => undef,
      flags => undef,
      fq_path => undef,
+     inherit_path => undef,
+     inherit_start_path => undef,
      interp => undef,
+     methods => undef,
      mfu_count => 0,
      object_size => 0,
      parser_version => undef,
@@ -28,13 +33,6 @@ my %fields =
      subcomps => undef,
      source_ref_start => undef   # legacy, left in for pre-0.8 obj files
      );
-
-# Create accessor routines
-foreach my $f (keys %fields) {
-    no strict 'refs';
-    next if ($f =~ /^subcomps|flags$/);
-    *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
-}
 
 my $compCount = 0;
 
@@ -79,6 +77,27 @@ sub assign_runtime_properties {
     $self->{fq_path} = $fq_path if $fq_path;
     foreach my $c (values(%{$self->{subcomps}})) {
 	$c->assign_runtime_properties($interp);
+    }
+
+    # Assign inheritance properties
+    if (exists($self->{flags}->{inherit})) {
+	if (defined($self->{flags}->{inherit})) {
+	    $self->{inherit_path} = $interp->process_comp_path($self->{flags}->{inherit},$self->dir_path);
+	}
+    } elsif (defined($interp->autohandler_name)) {
+	if ($interp->{allow_recursive_autohandlers}) {
+	    if ($self->name eq $interp->autohandler_name) {
+		unless ($self->dir_path eq '/') {
+		    $self->{inherit_start_path} = dirname($self->dir_path);
+		}
+	    } else {
+		$self->{inherit_start_path} = $self->dir_path;
+	    }
+	} else {
+	    unless ($self->name eq $interp->autohandler_name) {
+		$self->{inherit_path} = $self->dir_path."/".$interp->autohandler_name;
+	    }		
+	}
     }
 }
 
@@ -126,15 +145,93 @@ sub subcomps {
 }
 
 #
-# Get all flags or particular flag by name
+# Get attribute by name
 #
-sub flags {
-    my ($self,$key) = @_;
-    if (defined($key)) {
-	return $self->{flags}->{$key};
+sub attr {
+    my ($self,$name) = @_;
+    my $value;
+    if ($self->_locate_inherited('attrs',$name,\$value)) {
+	return $value;
     } else {
-	return $self->{flags};
-    }    
+	die "no attribute $name for component $self->title";
+    }
+}
+
+#
+# Determine if particular attribute exists
+#
+sub attr_exists {
+    my ($self,$name) = @_;
+    return $self->_locate_inherited('attrs',$name);
+}
+
+#
+# Call method by name
+#
+sub call_method {
+    my ($self,$name,%args) = @_;
+    my $method;
+    if ($self->_locate_inherited('methods',$name,\$method)) {
+	$HTML::Mason::Commands::m->comp({called_comp=>$self},$method,%args);
+    } else {
+	die "no method $method for component $self->title";
+    }
+}
+
+#
+# Determine if particular method exists
+#
+sub method_exists {
+    my ($self,$name) = @_;
+    return $self->_locate_inherited('methods',$name);
+}
+
+#
+# Locate a component slot element following inheritance path
+#
+sub _locate_inherited {
+    my ($self,$field,$key,$ref);
+    my $count = 0;
+    for (my $comp = $self; $comp; $comp = $comp->parent) {
+	if (exists($comp->{$field}->{$key})) {
+	    $$ref = $comp->{$field}->{$key} if $ref;
+	    return 1;
+	}
+	die "inheritance chain length > 32 (infinite inheritance loop?)" if ++$count > 32;
+    }
+    return 0;
+}
+
+#
+# Get particular flag by name
+#
+sub flag {
+    my ($self,$name) = @_;
+    my %flag_defaults =
+	(
+	 );
+    if (exists($self->{flags}->{$name})) {
+	return $self->{flags}->{$name};
+    } elsif (exists($flag_defaults{$name})) {
+	return $flag_defaults{$name};
+    } else {
+	die "invalid flag: $name";
+    }
+}
+
+#
+# Return parent component according to inherit flag
+#
+sub parent {
+    my ($self) = @_;
+    my $interp = $self->interp;
+    if ($self->inherit_path) {
+	return $interp->load($self->inherit_path);
+    } elsif ($self->inherit_start_path) {
+	return $interp->find_comp_upwards($self->inherit_start_path,$interp->autohandler_name);
+    } else {
+	return undef;
+    }
 }
 
 #
@@ -142,5 +239,21 @@ sub flags {
 #
 sub object_file { my $self = shift; return ($self->persistent) ? ($self->interp->object_dir . $self->fq_path) : undef }
 sub cache_file { my $self = shift; return ($self->persistent) ? ($self->interp->data_cache_dir . "/" . compress_path($self->fq_path)) : undef }
+
+#
+# Create generic read-only accessor routines
+#
+sub code { return shift->{code} }
+sub create_time { return shift->{create_time} }
+sub declared_args { return shift->{declared_args} }
+sub fq_path { return shift->{fq_path} }
+sub inherit_path { return shift->{inherit_path} }
+sub inherit_start_path { return shift->{inherit_start_path} }
+sub interp { return shift->{interp} }
+sub mfu_count { return shift->{mfu_count} }
+sub object_size { return shift->{object_size} }
+sub parser_version { return shift->{parser_version} }
+sub run_count { return shift->{run_count} }
+sub source_ref_start { return shift->{source_ref_start} }
 
 1;

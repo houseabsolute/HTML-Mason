@@ -215,6 +215,21 @@ sub check_reload_file {
 }
 
 #
+# Return the absolute version of a component path. Handles . and ..
+# Second argument is directory path to resolve relative paths against.
+#
+sub process_comp_path
+{
+    my ($self,$comp_path,$dir_path) = @_;
+    if ($comp_path !~ m@^/@) {
+	$comp_path = $dir_path . ($dir_path eq "/" ? "" : "/") . $comp_path;
+    }
+    while ($comp_path =~ s@/[^/]+/\.\.@@) {}
+    while ($comp_path =~ s@/\./@/@) {}
+    return $comp_path;    
+}
+
+#
 # Look up <$path> as a component path. Return fully qualified path or
 # or undef if it does not exist.
 # 
