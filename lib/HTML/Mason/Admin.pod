@@ -61,10 +61,10 @@ The absolutely most minimal configuration looks like this:
     </Location>
 
 This configuration tells Apache to serve all URLs through Mason (see
-the next section for a more refined strategy).  We use the PerlModule
-line to tell mod_perl to load Mason once at startup time, saving time
-and memory.  This example does not set any Mason configuration
-parameters, so Mason uses its default values.
+the next section for a more realistic strategy).  We use the
+PerlModule line to tell mod_perl to load Mason once at startup time,
+saving time and memory.  This example does not set any Mason
+configuration parameters, so Mason uses its default values.
 
 If this is your first time installing and using Mason, we recommend
 that you use the above configuration in a test webserver to start
@@ -116,31 +116,25 @@ Here is a configuration that enforces this naming scheme:
 
     PerlModule HTML::Mason::ApacheHandler
 
-    <FilesMatch "(\.html|\.txt|\.pl)$">
-      SetHandler perl-script
-      PerlHandler HTML::Mason
-    </FilesMatch>
-
     <LocationMatch "(\.html|\.txt|\.pl)$">
       SetHandler perl-script
       PerlHandler HTML::Mason
     </LocationMatch>
 
-    <FilesMatch "(dhandler|autohandler|\.m(html|txt|pl))$"
+    <LocationMatch "(\.m(html|txt|pl)|dhandler|autohandler)$"
       SetHandler perl-script
       PerlInitHandler Apache::Constants::NOT_FOUND
-    </FilesMatch>
+    </LocationMatch>
 
-The first block causes real files named .html, .txt, or .pl to
-be served through Mason.
+The first block causes URLs ending in .html, .txt, or .pl to be served
+through Mason. The second block causes requests to private components
+to return 404 NOT_FOUND, preventing unscrupulous users from even
+knowing which private components exist. Any other file extensions
+(e.g. .gif, .tgz) will be served by Apache's default content handler.
 
-The second block does the same thing for URLs that do not
-correspond to real files. This is essential for using
+You might prefer C<FilesMatch> to C<LocationMatch>. However, be aware
+that C<LocationMatch> will work best in conjunction with Mason's
 L<HTML::Mason::Devel/dhandlers>.
-
-The third block causes requests to private components to return 404
-NOT_FOUND. This prevents unscrupulous users from even knowing which
-private components exist.
 
 =head2 Configuration Parameters
 
@@ -339,19 +333,19 @@ space:
     # Web site #1
     <VirtualHost www.site1.com>
       DocumentRoot  /usr/local/www/htdocs/site1
-      <FilesMatch ...>
+      <LocationMatch ...>
         SetHandler   perl-script
         PerlHandler  HTML::Mason::ApacheHandler
-      </FilesMatch>
+      </LocationMatch>
     </VirtualHost>
 
     # Web site #2
     <VirtualHost www.site2.com>
       DocumentRoot  /usr/local/www/htdocs/site2
-      <FilesMatch ...>
+      <LocationMatch ...>
         SetHandler   perl-script
         PerlHandler  HTML::Mason::ApacheHandler
-      </FilesMatch>
+      </LocationMatch>
     </VirtualHost>
 
     # Mason configuration
@@ -385,10 +379,10 @@ the component root must change depending on the site requested.
       PerlSetVar  MasonCompRoot  /usr/local/www/htdocs/site1
       PerlSetVar  MasonDataDir   /usr/local/mason/site1
 
-      <FilesMatch ...>
+      <LocationMatch ...>
         SetHandler   perl-script
         PerlHandler  HTML::Mason::ApacheHandler
-      </FilesMatch>
+      </LocationMatch>
     </VirtualHost>
 
     # Web site #2
@@ -399,10 +393,10 @@ the component root must change depending on the site requested.
       PerlSetVar  MasonCompRoot  /usr/local/www/htdocs/site2
       PerlSetVar  MasonDataDir   /usr/local/mason/site2
 
-      <FilesMatch ...>
+      <LocationMatch ...>
         SetHandler   perl-script
         PerlHandler  HTML::Mason::ApacheHandler
-      </FilesMatch>
+      </LocationMatch>
     </VirtualHost>
 
 =head1 ADVANCED CONFIGURATION
@@ -441,10 +435,10 @@ this case, your Apache configuration would look like this:
 
   PerlRequire  handler.pl
 
-  <FilesMatch ...>
+  <LocationMatch ...>
     SetHandler   perl-script
     PerlHandler  MyApp::Mason
-  </FilesMatch>
+  </LocationMatch>
 
 You may still see references to a F<handler.pl> file in the Mason
 users list archives, as well as the FAQ.  These references will
@@ -591,10 +585,10 @@ C<PerlSetVar> directive in each C<VirtualHost> block, like this:
   <VirtualHost site1.example.com>
     PerlSetVar  SiteName  site1
 
-    <Location />
+    <LocationMatch ...>
       SetHandler   perl-script
       PerlHandler  MyApp::Mason
-    </Location>
+    </LocationMatch>
   </VirtualHost>
 
 =head3 Creating apachehandler objects on the fly
