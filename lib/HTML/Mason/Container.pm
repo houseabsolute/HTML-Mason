@@ -190,10 +190,16 @@ sub _get_contained_args
     # pass on to its own contained objects
     my $allowed = $contained_class->allowed_params($args);
 
+    my $spec = $class->validation_spec;
+
     my %contained_args;
     foreach (keys %$allowed)
     {
-	$contained_args{$_} = delete $args->{$_} if exists $args->{$_};
+	$contained_args{$_} = $args->{$_} if exists $args->{$_};
+
+	# If both the container _and_ the contained object accept the
+	# same param we should not delete it.
+	delete $args->{$_} unless exists $spec->{$_};
     }
     return \%contained_args;
 }
