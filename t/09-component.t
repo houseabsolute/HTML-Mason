@@ -204,6 +204,35 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'store',
+                      description => 'Test store parameter to component call',
+                      component => <<'EOF',
+
+% my $buffy;
+% my $rtn;
+% $rtn = $m->comp({store => \$buffy}, '.subcomp', 1,2,3,4);
+-----
+<% $buffy %>
+returned <% $rtn %>
+
+<%def .subcomp>
+ Hello, you say <% join '', @_ %>.
+% return 'foo';
+</%def>
+EOF
+                      expect => <<'EOF',
+
+-----
+
+ Hello, you say 1234.
+
+returned foo
+
+EOF
+                    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
