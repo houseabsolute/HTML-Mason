@@ -44,10 +44,12 @@ EOF
 		      component => <<'EOF',
 <%def .helper>
 Executing subrequest
+% print "I can print before the subrequest\n";
 % my $buf;
 % my $req = $m->make_subrequest(comp=>'/shared/display_req_obj', out_method => \$buf);
 % $req->exec();
 <% $buf %>
+% print "I can still print after the subrequest\n";
 </%def>
 
 Calling helper
@@ -58,6 +60,7 @@ EOF
 Calling helper
 
 Executing subrequest
+I can print before the subrequest
 My depth is 1.
 
 The top-level component is /shared/display_req_obj.
@@ -69,6 +72,7 @@ My stack looks like:
 
 
 
+I can still print after the subrequest
 EOF
 		    );
 
