@@ -720,7 +720,7 @@ sub request_args
     #
     my (%args, $cgi_object);
     if ($self->args_method eq 'mod_perl') {
-	$r = Apache::Request->new($r);
+	$r = Apache::Request->new($r) unless UNIVERSAL::isa($r, 'Apache::Request');
 	%args = $self->_mod_perl_args($r);
     } else {
 	$cgi_object = CGI->new;
