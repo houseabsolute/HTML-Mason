@@ -91,6 +91,7 @@ ServerRoot $APACHE{apache_dir}
 
 # tainting has to be turned on before any Perl code is loaded
 <IfDefine taint>
+  PerlSetEnv PATH /bin:/usr/bin
   PerlTaintCheck On
 </IfDefine>
 
