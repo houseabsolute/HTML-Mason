@@ -156,6 +156,20 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'fetch_comp_no_arg',
+		      description => 'fetch_comp with blank or undefined argument returns undef',
+		      component => <<'EOF',
+fetch_comp(undef) = <% defined($m->fetch_comp(undef)) ? 'defined' : 'undefined' %>
+fetch_comp("") = <% defined($m->fetch_comp("")) ? 'defined' : 'undefined' %>
+EOF
+		      expect => <<'EOF',
+fetch_comp(undef) = undefined
+fetch_comp("") = undefined
+EOF
+		 );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'outside_comp_root_prepare',
 		      description => 'test that file exists in dist/t for next two tests',
 		      pre_code => sub { local *F; open(F, ">$outside_comp_root_test_file"); print F "hi"; },
@@ -295,6 +309,18 @@ EOF
 		 );
 
 #------------------------------------------------------------
+
+    $group->add_test( name => 'comp_exists_no_arg',
+		      description => 'comp_exists with blank or undefined argument returns 0',
+		      component => <<'EOF',
+comp_exists(undef) = <% $m->comp_exists(undef) %>
+comp_exists("") = <% $m->comp_exists("") %>
+EOF
+		      expect => <<'EOF',
+comp_exists(undef) = 0
+comp_exists("") = 0
+EOF
+		 );
 
     return $group;
 }

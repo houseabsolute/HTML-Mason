@@ -982,6 +982,7 @@ sub fetch_comp
 {
     my ($self, $path, $current_comp, $error, $exists_only) = @_;
 
+    return undef unless defined($path);
     $current_comp ||= $self->{top_stack}->[STACK_COMP];
 
     if ($self->{use_internal_component_caches}) {
