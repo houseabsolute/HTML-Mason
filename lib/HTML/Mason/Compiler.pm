@@ -9,7 +9,6 @@ use strict;
 use HTML::Mason::Component::FileBased;
 use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Lexer;
-use HTML::Mason::Utils qw(create_subobjects);
 
 use HTML::Mason::Exceptions;
 use Params::Validate qw(:all);

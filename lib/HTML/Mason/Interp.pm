@@ -14,7 +14,7 @@ use HTML::Mason::Config;
 use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
 use HTML::Mason::Tools qw(make_fh read_file taint_is_on compress_path);
-use HTML::Mason::Utils qw(create_subobjects);
+
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
