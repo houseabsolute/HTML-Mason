@@ -560,11 +560,6 @@ specified in C<E<lt>%defE<gt>>. Undefined for anonymous components.
 
 Returns the object filename for this component.
 
-=item owner
-
-Defined only for subcomponents; returns the component that this
-subcomponent was defined in.
-
 =item parent
 
 Returns the parent of this component for inheritance purposes, by
