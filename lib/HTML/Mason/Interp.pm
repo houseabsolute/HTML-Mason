@@ -299,8 +299,12 @@ sub load {
 	# We are using object files.  Update object file if necessary
 	# and load component from there.
 	#
+	my $tries = 0;
 	do
 	{
+	    if ($tries++ == 3) {
+		$self->_compilation_error( $source->friendly_name, "Could not load or recreate object file after 3 tries" );
+	    }
 	    if ($objfilemod < $srcmod) {
 		$self->compiler->compile_to_file( file => $objfile, source => $source);
 	    }
