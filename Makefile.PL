@@ -9,8 +9,8 @@ use vars qw(%APACHE);
 my %opts;
 GetOptions( \%opts, 'no-prompts' );
 
-require './apache_tests_helper.pl';
-require './assisted_install_helper.pl';
+require 'install/apache_tests_helper.pl';
+require 'install/assisted_install_helper.pl';
 
 # These are required modules.
 
@@ -105,7 +105,7 @@ sub install
 
     $install =~ s/install :: all pure_install doc_install/install :: all pure_install doc_install configure_apache/;
 
-    $install .= "\nconfigure_apache :\n\t\$(PERL) configure_apache.pl\n";
+    $install .= "\nconfigure_apache :\n\t\$(PERL) install/configure_apache.pl\n";
 
     return $install;
 }
