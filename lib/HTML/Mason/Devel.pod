@@ -494,7 +494,9 @@ determine whether it is a Netscape browser:
     </%perl>
 
 Because components are implemented underneath with Perl subroutines,
-they can return values and even understand scalar/list context.
+they can return values and even understand scalar/list
+context. e.g. The result of wantarray() inside a component will reflect
+whether the component was called in scalar or list context.
 
 The <& &> notation only calls a component for its side-effect, and
 discards its return value, if any.  To get at the return value of a
