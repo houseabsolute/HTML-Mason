@@ -1545,8 +1545,21 @@ L<CGIHandler|HTML::Mason::CGIHandler> documentation for more details.
 =item redirect ($url)
 
 Given a url, this generates a proper HTTP redirect for that URL. It
-uses $m->clear_buffer to clear out any previous output, and $m->abort
-to abort the request with an appropriate status code.
+uses C<< $m->clear_buffer >> to clear out any previous output, and
+C<< $m->abort >> to abort the request with an appropriate status code.
+
+Since this is implemented using C<< $m->abort >>, it will be trapped
+by an C< eval {} > block.  If you are using an C< eval {} > block in
+your code to trap errors, you need to make sure to rethrow these
+exceptions, like this:
+
+  use HTML::Mason::Exceptions;
+  eval {
+      ...
+  };
+
+  $@->rethrow
+      if $@ && isa_mason_exception($@, 'Abort');
 
 =back
 
