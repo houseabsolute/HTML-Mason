@@ -46,19 +46,8 @@ sub block_body_method
 
     sub blocks_regex
     {
-	return $blocks_re
+	return $blocks_re;
     }
-}
-
-sub simple_block_types
-{
-    return grep { $blocks{$_} eq 'raw_block'} keys %blocks;
-}
-
-# make this settable somehow
-sub named_block_types
-{
-    return ('def', 'method');
 }
 
 sub new
@@ -513,7 +502,7 @@ sub _next_line
     return substr( $self->{current}{comp_source}, $pos, $to_eol );
 }
 
-sub line_count
+sub line_number
 {
     my $self = shift;
 
@@ -534,7 +523,82 @@ sub throw_syntax_error
     HTML::Mason::Exception::Syntax->throw( error => $error,
 					   comp_name => $self->name,
 					   source_line => $self->_next_line,
-					   line_number => $self->line_count );
+					   line_number => $self->line_number );
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::Lexer - Generates events based on component source lexing
+
+=head1 SYNOPSIS
+
+  my $lexer = HTML::Mason::Lexer->new;
+
+  $lexer->lex( comp_source => $source, name => $comp_name, compiler => $compiler );
+
+=head1 DESCRIPTION
+
+The Lexer works in tandem with the Compiler to turn Mason component
+source into something else, generally Perl code.
+
+As the lexer finds component elements, like a tag or block, it calls
+the appropriate event methods in the compiler object it was given.
+
+It has only a few public methods.
+
+You can replace this lexer with one of your own simply by telling the
+Compiler to use a different lexer class.  Your lexer class simply
+needs to call the appropriate methods in the Component Class's API as
+it scans the source.
+
+=head1 METHODS
+
+The lexer has very few public methods.
+
+=over 4
+
+=item new
+
+This method creates a new Lexer object.  This methods takes no
+parameters.
+
+=item lex ( comp_source => ..., name => ..., compiler => ... )
+
+This method tells the lexer to start scanning the given component
+source.  All of these parameters are required.  The C<name> parameter
+will be used in any error messages generated during lexing.  The
+C<compiler> object must be an object that implements the Mason
+Component API.
+
+=item line_number
+
+The current line number that the lexer has reached.
+
+=item name
+
+The name of the component currently being lexed.
+
+=item throw_syntax_error ($error)
+
+This throws an C<HTML::Mason::Exception::Syntax> error with the given
+error message as well as additional information about the component
+source.
+
+=back
+
+=head1 SUBCLASSING
+
+Any subclass of the lexer should declare itself to be a subclass of
+C<HTML::Mason::Lexer>, even if it plans to override all of its public
+methods.
+
+If you want your subclass to work with the existing Compiler classes
+in Mason, you must implement the methods listed above.  If you plan to
+use a custom Compiler class that you're writing, you can do whatever
+you want.
+
+=cut
