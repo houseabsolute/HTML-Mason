@@ -599,20 +599,13 @@ sub comp1 {
     $self->call_hooks('start_comp');
 
     #
-    # CODEREF_NAME maps component coderefs to component names (for profiling)
-    #
-    my $sub = $comp->{code};
-    $HTML::Mason::CODEREF_NAME{$sub} = $comp->source_file if $::opt_P && defined($comp->source_file);
-
-    #
     # Finally, call component subroutine.
     #
-    $comp->{run_count}++; $comp->{mfu_count}++;
     my ($result, @result);
     if (wantarray) {
-	@result = $sub->(@args);
+	@result = $comp->run(@args);
     } else {
-	$result = $sub->(@args);
+	$result = $comp->run(@args);
     }
 
     #

@@ -118,6 +118,21 @@ sub assign_runtime_properties {
     }
 }
 
+sub run
+{
+    my $self = shift;
+
+    #
+    # CODEREF_NAME maps component coderefs to component names (for profiling)
+    #
+    $HTML::Mason::CODEREF_NAME{$self->{code}} = $self->source_file
+	if $::opt_P && defined($self->source_file);
+
+    $self->{run_count}++; $self->{mfu_count}++;
+
+    return wantarray ? $self->{code}->(@_) : scalar $self->{code}->(@_);
+}
+
 # Legacy, left in for pre-0.8 obj files
 sub assign_subcomponent_properties {}
 
