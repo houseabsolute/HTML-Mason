@@ -4,6 +4,8 @@
 
 package HTML::Mason::Container;
 
+use strict;
+
 # The create_contained_objects() method lets one object
 # (e.g. Compiler) transparently create another (e.g. Lexer) by passing
 # creator parameters through to the created object.
@@ -67,7 +69,7 @@ sub _make_contained_object
     die "Invalid class name '$contained_class'" unless $contained_class =~ /^[\w:]+$/;
     {
 	no strict 'refs';
-	unless ( defined ${ "$contained_class\::VERSION" } )
+	unless ( defined %{ "$contained_class\::" } )
 	{
 	    eval "use $contained_class";
 	    die $@ if $@;
@@ -124,19 +126,19 @@ sub allowed_params
 	if ( exists $args->{$low_class} )
 	{
 	    delete $p{$name};
-	    $p{$low_class} = { type => STRING, parse => 'string' };  # A loose spec
+	    $p{$low_class} = { type => SCALAR, parse => 'string' };  # A loose spec
 	}
 
 	# We have to get the allowed params for the contained object
 	# class.  That class could be overridden, in which case we use
 	# the new class provided.  Otherwise, we use our default.
-	my $contained_class = exists $args{$low_class} ? $args{$low_class} : $c{$name};
+	my $contained_class = exists $args->{$low_class} ? $args->{$low_class} : $c{$name};
 
 	# we have to make sure it is loaded before we try calling
 	# ->allowed_params
 	{
 	    no strict 'refs';
-	    unless ( defined ${ "$contained_class\::VERSION" } )
+	    unless ( defined %{ "$contained_class\::" } )
 	    {
 		eval "use $contained_class";
 		die $@ if $@;
@@ -155,7 +157,7 @@ sub validation_spec
     my $class = ref($_[0]) || shift;
 
     my %p = %{ $VALID_PARAMS{$class} };
-    
+
     no strict 'refs';
     foreach my $superclass (@{ "${class}::ISA" }) {
 	next unless exists $VALID_PARAMS{$superclass};
