@@ -9,6 +9,15 @@ BEGIN
         print "1..0\n";
         exit;
     }
+    else
+    {
+        require Scalar::Util;
+        unless ( defined &Scalar::Util::weaken )
+        {
+            print "Your installation of Scalar::Util does not include the weaken subroutine\n";
+            print "1..0\n";
+        }
+    }
 
     plan tests => 2;
 }
