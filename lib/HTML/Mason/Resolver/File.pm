@@ -93,7 +93,7 @@ sub file_to_path {
     }
     foreach my $root (@roots) {
 	if (paths_eq($root,substr($file,0,length($root)))) {
-	    my $path = substr($file,length($root));
+	    my $path = substr($file, ($root eq '/' ? 0 : length($root)));
 	    $path =~ s/\/$// unless $path eq '/';
 	    return $path;
 	}
