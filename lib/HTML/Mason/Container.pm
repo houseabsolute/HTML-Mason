@@ -84,12 +84,10 @@ sub create_delayed_object
     HTML::Mason::Exception::Params->throw( error => "Unknown delayed object '$name'" )
 	unless exists $self->{"_delayed_$name"}{args};
 
-    my %saved_args = %{ $self->{"_delayed_$name"}{args} };
-
     my $class = $self->{"_delayed_$name"}{class}
 	or HTML::Mason::Exception::Params->throw( error => "Unknown class for delayed object '$name'" );
 
-    return $class->new(%saved_args, %args);
+    return $class->new( %{ $self->{"_delayed_$name"}{args} }, %args );
 }
 
 sub _get_contained_args
