@@ -44,12 +44,18 @@ BEGIN
 	 use_strict =>
          { parse => 'boolean', type => SCALAR, default => 1,
            descr => "Whether to turn on Perl's 'strict' pragma in components" },
+
+         define_args_hash =>
+         { parse => 'string', type => SCALAR, default => 'auto',
+           regex => qr/^(?:always|auto|never)$/,
+           descr => "Whether or not to create the %ARGS hash" },
 	);
 }
 
 use HTML::Mason::MethodMaker
     ( read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
 		      qw( comp_class
+                          define_args_hash
                           in_package
 			  postamble
 			  preamble
@@ -347,24 +353,9 @@ sub _body
 {
     my $self = shift;
 
-    my @args;
-    if ( @{ $self->{current_comp}{args} } )
-    {
-	@args = ( <<'EOF',
-if (@_ % 2 == 0) { %ARGS = @_ } else { HTML::Mason::Exception::Params->throw( error => "Odd number of parameters passed to component expecting name/value pairs" ) }
-EOF
-		  $self->_arg_declarations,
-		);
-    }
-    else
-    {
-	@args = ( "{ local \$^W; \%ARGS = \@_ unless (\@_ % 2); }\n" );
-    }
-
     return join '', ( $self->preamble,
                       $self->_set_request,
-		      "my \%ARGS;\n",
-		      @args,
+		      $self->_arg_declarations,
                       $self->_filter,
 		      "\$m->debug_hook( \$m->current_comp->path ) if ( \%DB:: );\n\n",
 		      $self->_blocks('init'),
@@ -391,66 +382,129 @@ sub _arg_declarations
 {
     my $self = shift;
 
+    my @init;
+    my @args_hash;
+    my @pos;
+    my @req_check;
     my @decl;
     my @assign;
-    my @required;
 
-    foreach ( @{ $self->{current_comp}{args} } )
+    my $define_args_hash = $self->_define_args_hash;
+
+    unless ( @{ $self->{current_comp}{args} } )
     {
-	my $var_name = "$_->{type}$_->{name}";
-	push @decl, $var_name;
+        return unless $define_args_hash;
 
-	my $coerce;
-	if ( $coercion_funcs{ $_->{type} } )
-	{
-	    $coerce = $coercion_funcs{ $_->{type} } . "(\$ARGS{'$_->{name}'}, '$var_name')";
-	}
-	else
-	{
-	    $coerce = "\$ARGS{'$_->{name}'}";
-	}
-
-	push @assign, "#line $_->{line} $_->{file}\n"
-	    if defined $_->{line} && defined $_->{file} && $self->use_source_line_numbers;
-	if ( defined $_->{default} )
-	{
-	    my $default_val = $_->{default};
-	    # allow for comments after default declaration
-	    $default_val .= "\n" if defined $_->{default} && $_->{default} =~ /\#/;
-
-	    push @assign,
-		"$_->{type}$_->{name} = exists \$ARGS{'$_->{name}'} ? $coerce : $default_val;\n";
-	}
-	else
-	{
-	    push @required, $_->{name};
-
-	    push @assign,
-		"$var_name = $coerce;\n";
-	}
+        return ( "my \%ARGS;\n",
+                 "{ local \$^W; \%ARGS = \@_ unless (\@_ % 2); }\n"
+               );
     }
 
-    my @req_check;
+    @init = <<'EOF';
+HTML::Mason::Exception::Params->throw
+    ( error =>
+      "Odd number of parameters passed to component expecting name/value pairs"
+    ) if @_ % 2;
+EOF
+
+    if ( $define_args_hash )
+    {
+        @args_hash = "my \%ARGS = \@_;\n";
+    }
+
+    # opening brace will be closed later
+    @pos = <<'EOF';
+{
+    my %pos;
+    for ( my $x = 0; $x < @_; $x += 2 )
+    {
+        $pos{ $_[$x] } = $x + 1;
+    }
+EOF
+
+    my @required =
+        ( map { $_->{name} }
+          grep { ! defined $_->{default} }
+          @{ $self->{current_comp}{args} }
+        );
+
     if (@required)
     {
         # just to be sure
         local $" = ' ';
         @req_check = <<"EOF";
 
-foreach my \$arg ( qw( @required ) )
-{
-    HTML::Mason::Exception::Params->throw
-        ( error => "no value sent for required parameter '\$arg'" )
-        unless exists \$ARGS{\$arg};
-}
+    foreach my \$arg ( qw( @required ) )
+    {
+        HTML::Mason::Exception::Params->throw
+            ( error => "no value sent for required parameter '\$arg'" )
+                unless exists \$pos{\$arg};
+    }
 EOF
+    }
+
+    foreach ( @{ $self->{current_comp}{args} } )
+    {
+	my $var_name = "$_->{type}$_->{name}";
+	push @decl, $var_name;
+
+        my $arg_in_array = "\$_[ \$pos{'$_->{name}'} ]";
+
+	my $coerce;
+	if ( $coercion_funcs{ $_->{type} } )
+	{
+	    $coerce = $coercion_funcs{ $_->{type} } . "( $arg_in_array, '$var_name')";
+	}
+	else
+	{
+	    $coerce = $arg_in_array;
+	}
+
+	push @assign, "#line $_->{line} $_->{file}\n"
+	    if defined $_->{line} && defined $_->{file} && $self->use_source_line_numbers;
+
+	if ( defined $_->{default} )
+	{
+	    my $default_val = $_->{default};
+	    # allow for comments after default declaration
+	    $default_val .= "\n" if defined $_->{default} && $_->{default} =~ /\#/;
+
+	    push @assign, <<"EOF";
+     $var_name =
+         exists \$pos{'$_->{name}'} ? $coerce : $default_val;
+EOF
+	}
+	else
+	{
+	    push @assign,
+		"    $var_name = $coerce;\n";
+	}
     }
 
     my $decl = 'my ( ';
     $decl .= join ', ', @decl;
     $decl .= " );\n";
 
-    return @req_check, $decl, @assign;
+    # closing brace closes opening of @pos
+    return @init, @args_hash, $decl, @pos, @req_check, @assign, "}\n";
+}
+
+sub _define_args_hash
+{
+    my $self = shift;
+
+    return 1 if $self->define_args_hash eq 'always';
+    return 0 if $self->define_args_hash eq 'never';
+
+    foreach ( $self->preamble,
+              $self->_blocks('filter'),
+              $self->_blocks('init'),
+              $self->{current_comp}{body},
+              $self->_blocks('cleanup'),
+            )
+    {
+        return 1 if /ARGS/;
+    }
 }
 
 sub _filter
@@ -565,6 +619,20 @@ Text given for this parameter is placed at the end of each component. See also P
 
 True or false, default is true. Indicates whether or not a given
 component should C<use strict>.
+
+=item define_args_hash
+
+One of "always", "auto", or "never".  This determines whether or not
+an C<%ARGS> hash is created in components.  If it is set to "always",
+one is always defined.  If set to "never", it is never defined.
+
+The default, "auto", will cause the hash to be defined only if some
+part of the component contains the string "ARGS".  This is somewhat
+crude, and may result in some false positives, but this is preferable
+to false negatives.
+
+Not defining the args hash means that we can avoid copying component
+arguments, which can save memory and slightly improve execution speed.
 
 =back
 
