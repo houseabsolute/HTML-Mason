@@ -6,6 +6,7 @@ package HTML::Mason::Resolver::File;
 
 use strict;
 
+use Cwd;
 use File::Spec;
 use HTML::Mason::Tools qw(read_file);
 use Params::Validate qw(:all);
@@ -18,8 +19,11 @@ use HTML::Mason::Exceptions (abbr => ['param_error']);
 
 __PACKAGE__->valid_params
     (
-     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF, default => File::Spec->rel2abs( File::Spec->rootdir ),
-		       descr => "A string or array of arrays indicating the search path for component calls" },
+     comp_root =>
+     { parse => 'list',
+       type => SCALAR|ARRAYREF,
+       default => File::Spec->rel2abs( Cwd::cwd ),
+       descr => "A string or array of arrays indicating the search path for component calls" },
     );
 
 sub new {
@@ -136,6 +140,10 @@ If it is an array reference, it should be of the following form:
 The "keys" for each path must be unique names and their "values" must
 be filesystem paths.  These paths will be searched in the provided
 order whenever a component path must be resolved to a filesystem path.
+
+This parameter defaults to the current working directory.  The
+ApacheHandler and CGIHandler modules default this parameter to the web
+server's document root.
 
 =back
 
