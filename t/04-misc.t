@@ -246,7 +246,7 @@ EOF
     $group->add_test( name => 'accessor_validate',
 		      description => 'test accessor parameter validation',
 		      component => <<'EOF',
-% $m->interp->use_object_files([1]);
+% $m->interp->code_cache_max_size([1]);
 EOF
 		      expect_error => qr/Parameter #1 to .*? was an 'arrayref'/,
 		    );
