@@ -441,6 +441,11 @@ sub new
 
     my $self = bless {validate( @args, $class->validation_spec )}, $class;
 
+    unless ( $self->interp->resolver->can('apache_request_to_comp_path') )
+    {
+	error "The resolver class your Interp object uses does not implement the 'apache_request_to_comp_path' method.  This means that ApacheHandler cannot resolve requests.  Are you using a handler.pl file created before version 1.10?  Please see the handler.pl sample that comes with the latest version of Mason.";
+    }
+
     $self->_initialize;
     return $self;
 }
