@@ -89,7 +89,7 @@ sub parse
     my $wrapErrors = $options{wrap_errors};
     my $saveTo = $options{save_to};
     my ($sub, $err, $errpos);
-    my $pureTextFlag = 1;
+    my $pureTextFlag = ($self->{preprocess} || $self->{postprocess}) ? 0 : 1;
     my $parseError = 1;
 
     #
@@ -364,7 +364,7 @@ sub parse
     # Use source_refer_predicate to determine whether to use source
     # references or directly embedded text.
     #
-    my $useSourceReference = $self->source_refer_predicate->($scriptlength,$alphalength);
+    my $useSourceReference = $self->source_refer_predicate->($scriptlength,$alphalength) && !$self->{preprocess} && !$self->{postprocess};
     my @alphatexts;
     if ($useSourceReference) {
 	$body .= 'my $_srctext = mc_file($INTERP->locals->{sourceFile});'."\n";
