@@ -21,14 +21,17 @@ assignment statements.
 [ ENHANCEMENTS ]
 
 - Cache the result of taint_is_on() for performance.
+- Mason was copying arguments several times for a request, and several
+more times for each component call. The unnecessary copies have been
+eliminated.  As part of eliminating these copies, a new compiler
+parameter has been added, "define_args_hash".  The default setting,
+"auto", should work with all existing Mason components.  See the
+HTML::Mason::Compiler::ToObject docs for details.
 
 [ BUG FIXES ]
 
 - Now assigning runtime properties (such as interp) to method
 component objects as well as subcomponent objects. Task id #462.
-- Mason was copying arguments several times for a request, and
-several more times for each component call. The unnecessary
-copies have been eliminated.
 
 1.20  May 1, 2003 (May Day)
 
