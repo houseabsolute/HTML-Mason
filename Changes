@@ -5,11 +5,55 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
-0.81
+0.85
+
+- Added object-oriented primitives to components. Components can
+define methods and attributes and inherit from parent components.
+Templates can access the current page's methods and attributes for
+greater flexibility.  L{Devel/object_oriented_techniques}
+- ** Major improvements/changes to autohandler feature. Autohandlers
+are now recursive by default, and all applicable autohandlers for a
+given page get a chance to run. If you have multiple autohandlers in
+parent/child directories, or if you used autohandlers with
+allow_recursive_autohandlers=0, you will need to adjust for the new
+policy. L{Devel/autohandlers}
+- Integrated a revamped parse_component that is cleaner, more modular
+and easier to subclass. Courtesy of Dave Rolsky.
+- New <%shared> section contains code that executes once per request
+and whose declarations are visible from the main component, methods and
+subcomponents alike. L{Devel/e_lt_sharede_gt_}
+- Added escape flags for <% %> output. Can now HTML-escape or URI-escape
+expressions on a site-wide or per-expression basis. L{Devel/escaping_expressions}
+- Added choice of CGI or Apache::Request when using ApacheHandler. (submitted by Dave Rolsky) 
+L{ApacheHandler/parameters_to_the_use_declarat}
+- Documented $m->clear_buffer, which removes all pending output from the buffer.
+L{Request/item_clear_buffer}
+- Fixed keys and expires cache actions from m->cache interface. (suggested by Matt Hoskins) 
+- dhandlers can now serve their own directory; added documentation about handling directories.
+L{Admin/allowing_directory_requests}
+- Fixed dhandler bug introduced in 0.81 whereby $m->dhandler_arg only
+contains the first branch of a multi-branch argument.
+- Removed memory leak in ApacheHandler::handle_request_1. (submitted
+by Pascal Eeftinck and Renzo Toma)
+- Changed parent_comp() to owner() for subcomponents/methods. L{Component/item_owner}
+- Increased maximum recurse level from 16 to 32.
+- Reorganized syntax section of developer's manual and added a "how to
+use this manual" section.
+- Added an UPGRADE guide to distribution.
+- Added section about securing top-level components to
+Admin.pod. (suggested by Sean Cazzell) L{Admin/securing_top_level_components}
+- Added section about declining image requests to Admin.pod. L{Admin/declining_image_requests}
+- Eliminated "Subroutine status_mason redefined" warning when creating multiple ApacheHandlers
+- Updated cookie expiration in CD-ME example. (reported by Renzo Toma)
+- Added a "-f" flag to rm in faq Makefile for perl 5.006. (reported by Jeremy Taylor)
+
+0.81  Mon Feb 21 12:23:42 PST 2000
 
 - Now sends headers even when content is blank or all whitespace.
 - Fixed default system log, broken in 0.8. (reported by Renzo Toma)
-- Updated cookie expiration in CD-ME example. (reported by Renzo Toma)
+- Removed remaining traces of dhandler processing from ApacheHandler.
+- ** PATH_INFO no longer contains the dhandler argument; use
+$m->dhandler_arg instead.
 
 0.8  Sun Jan 23 16:48:46 PST 2000
 

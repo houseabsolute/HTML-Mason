@@ -1,4 +1,4 @@
-CREDITS for HTML::Mason
+CREDITS for Mason
 
 The original idea for Mason was inspired by the component system used
 by NetGuide Live at CMP Media in 1996.  HTML++ lives on!
@@ -48,13 +48,16 @@ listed in the Changes file:
 
 John Arnold (John_Arnold@dtc.org)
 Oleg Bartunov (oleg@sai.msu.su)
+Sean Cazzell (cazzell@eng.usf.edu)
 Michael Alan Dorman (mdorman-perl.mason@debian.org)
 Joe Edmonds (jedmonds@stamps.com)
 Ewan Edwards (eskwayrd@csp.net)
+Pascal Eeftinck (arcade@xs4all.nl)
 Jon Frisby (jfrisby@everyone.net)
 Philip Gwyn (liste@artware.qc.ca)
 Eric Hammond (ehammond@stamps.com)
 Brian Holmes (bholmes@cmpnet.cmp.com)
+Matt Hoskins (matt@nipltd.com)
 Tom Hughes (thh@cyberscience.com)
 Tom Hukins (tom@eborcom.com)
 Pelle Johnsen (pelle.johnsen@mail.dk)
@@ -62,13 +65,16 @@ Dirk Koopman (djk@tobit.co.uk)
 Fen Lebalme (fen@lumeria.com)
 Jim Mortko (jskills@goofball.com)
 Chuck O'Donnell (cao@milf18.bus.net)
+Dave Rolsky (autarch@urth.org)
 Aaron Ross (ross@forum.swarthmore.edu)
 Paul Schilling (pfschill@bigfoot.com)
 Randal Schwartz (merlyn@stonehenge.com)
+Jeremy Taylor (jtaylor@brite.net)
 Renzo Toma (renzo.toma@veronica.nl)
 Lee Semel (lsemel@igicom.com)
 Michael Shulman (viritrilbia@kurukshetra.cjb.net)
 Scott Straley (scott@straley.net)
+Jeremy Taylor (jtaylor@brite.net)
 Rafael Weinstein (rafael@avantgo.com)
 Ken Williams (ken@forum.swarthmore.edu)
 
@@ -77,3 +83,4 @@ Thanks y'all!
 Jonathan Swartz
 swartz@transbay.net
 Last updated September 14, 1999
+
