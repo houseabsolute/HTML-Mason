@@ -233,14 +233,20 @@ sub variable_list_block
                         ( [\$\@\%] )    # variable type
                         ( [^\W\d]\w* )  # only allows valid Perl variable names
                         [ \t]*
-			(?:             # this entire entire piece is optional
-			 =>
-                         ( [^\n]+? )     # default value
-		        )?
-                        (?:             # an optional comment
-                         [ \t]*
-                         \#
-                         [^\n]*
+                        # if we have a default arg we'll suck up
+                        # any comment it has as part of the default
+                        # otherwise explcitly search for a comment
+                        (?:
+                         (?:              # this entire entire piece is optional
+                           =>
+                          ( [^\n]+? )     # default value
+                         )
+                         |
+                         (?:              # an optional comment
+                          [ \t]*
+                          \#
+                          [^\n]*
+                         )
                         )?
                         (?= $ending )
                         |
