@@ -46,9 +46,22 @@ sub all_specs
 	foreach my $name (sort keys %$params)
 	{
 	    my $spec = $params->{$name};
-	    my ($type, $default) = $spec->{isa} ?
-	                           ('object', "$spec->{isa}\->new") :
-				   ($spec->{parse}, $spec->{default});
+	    my ($type, $default);
+	    if ($spec->{isa}) {
+		my $obj_class;
+
+		if (exists $CONTAINED_OBJECTS{$class}{$name}) {
+		    $obj_class = $CONTAINED_OBJECTS{$class}{$name};
+		    $obj_class = $obj_class->{class} if ref $obj_class;
+		} else {
+		    $obj_class = $spec->{isa};
+		}
+
+		($type, $default) = ('object', "$obj_class\->new");
+	    } else {
+		($type, $default) = ($spec->{parse}, $spec->{default});
+	    }
+
 	    if (ref($default) eq 'CODE') {
 		$default = 'sub ' . B::Deparse->new()->coderef2text($default);
 		$default =~ s/\s+/ /g;
