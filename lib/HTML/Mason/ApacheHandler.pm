@@ -551,14 +551,4 @@ sub _mod_perl_args
 #
 sub http_header_sent { shift->header_out("Content-type") }
 
-
-#----------------------------------------------------------------------
-#
-# APACHEHANDLER MASON COMMANDS
-#
-package HTML::Mason::Commands;
-use vars qw($m);
-# no longer needed
-sub mc_suppress_http_header {}
-
 1;

@@ -236,12 +236,6 @@ methods.  You'll be introduced to these methods throughout this
 document as they are needed.  For a description of all methods see
 B<L<HTML::Mason::Request>>.
 
-Note to pre-0.8 users: The $m API replaces both the old C<mc_> command
-set and the $REQ variable. See B<L<HTML::Mason::Commands>> for a
-conversion guide.  There is also a utility provided with the
-distribution, F<bin/convert0.8.pl>, that performs appropriate conversions
-on your existing component tree.
-
 =head2 System Objects
 
 Three system objects share the work of serving requests in Mason:
@@ -1390,15 +1384,6 @@ whitespace (and given its functional nature, it shouldn't).
 
 The administrator can turn off automatic header sending via the
 L<ApacheHandler/auto_send_headers> ApacheHandler parameter.
-
-Note to pre-0.8 users: the mc_suppress_http_header command is no longer needed.
-For backwards compatibility, mc_suppress_http_header is still defined
-but does nothing.
-
-(Rationale: By the nature of HTTP headers mc_suppress_http_header was
-only useful up until the first bytes of content were sent. Since Mason
-now waits that long to send headers anyway, there is never any
-justification for suppressing headers.)
 
 =head1 USING THE PERL DEBUGGER
 
