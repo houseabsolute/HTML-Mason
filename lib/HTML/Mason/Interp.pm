@@ -60,7 +60,7 @@ my %fields =
      dhandler_name => 'dhandler',
      die_handler => sub { Carp::confess($_[0]) },
      die_handler_overridden => 0,
-     ignore_warnings_expr => 'Subroutine .* redefined',
+     ignore_warnings_expr => qr/Subroutine .* redefined/i,
      system_log_file => undef,
      system_log_separator => "\cA",
      max_recurse => 32,
@@ -99,6 +99,8 @@ sub new
 		data_cache_dir => { type => SCALAR, optional => 1 },
 		dhandler_name => { type => SCALAR | UNDEF, optional => 1 },
 		die_handler => { type => CODEREF | SCALAR | UNDEF, optional => 1 },
+		# Object cause qr// returns an object
+		ignore_warnings_expr => { type => SCALAR | OBJECT, optional => 1 },
 		out_method => { type => CODEREF | SCALARREF, optional => 1 },
 		out_mode => { type => SCALAR, optional => 1 },
 		max_recurse => { type => SCALAR, optional => 1 },
@@ -590,6 +592,20 @@ sub find_comp_upwards
     return $comp;
 }
 
+sub make_anonymous_component
+{
+    my $self = shift;
+    my %p = @_;
+
+    my $object = $self->compiler->compile( %p, name => '<anonymous component>' );
+
+    my $error;
+    my $comp = $self->eval_object_text( object => $object, error => \$error );
+    $self->_compilation_error( '<<anonymous component>>', $error ) if $error;
+
+    return $comp;
+}
+
 #
 # Hook functions.
 #
@@ -667,30 +683,32 @@ sub eval_object_text
     my ($self, %options) = @_;
     my ($object, $errref) = @options{qw(object error)};
 
+    # If in taint mode, untaint the object text
+    ($object) = ($object =~ /^(.*)/s) if taint_is_on;
+
     #
     # Evaluate object file or text with warnings on
     #
     my $ignore_expr = $self->ignore_warnings_expr;
     my ($comp,$err);
+    my $warnstr = '';
+
     {
-	my $warnstr = '';
 	local $^W = 1;
 	local $SIG{__WARN__} = $ignore_expr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ } : sub { $warnstr .= $_[0] };
 
-	# If in taint mode, untaint the object text
-	($object) = ($object =~ /^(.*)/s) if taint_is_on;
 	$comp = eval $object;
+    }
 
-	$err = $warnstr . $@;
+    $err = $warnstr . $@;
 
-	#
-	# If no error generated and no component object returned, we
-	# have a prematurely-exited <%once> section or other syntax
-	# accident.
-	#
-	unless (1 or $err or (defined($comp) and (UNIVERSAL::isa($comp, 'HTML::Mason::Component') or ref($comp) eq 'CODE'))) {
-	    $err = "could not generate component object (return() in a <%once> section or extra close brace?)";
-	}
+    #
+    # If no error generated and no component object returned, we
+    # have a prematurely-exited <%once> section or other syntax
+    # accident.
+    #
+    unless (1 or $err or (defined($comp) and (UNIVERSAL::isa($comp, 'HTML::Mason::Component') or ref($comp) eq 'CODE'))) {
+	$err = "could not generate component object (return() in a <%once> section or extra close brace?)";
     }
 
     #
@@ -753,20 +771,6 @@ sub write_object_file
     print $fh $object_text;
     close $fh or die "Couldn't close object file $object_file: $!";
     @$files_written = @newfiles if (defined($files_written))
-}
-
-sub make_anonymous_component
-{
-    my $self = shift;
-    my %p = @_;
-
-    my $object = $self->compiler->compile(%p);
-
-    my $error;
-    my $comp = $self->eval_object_text( object => $object, error => \$error );
-    $self->_compilation_error( '<<anonymous component>>', $error ) if $error;
-
-    return $comp;
 }
 
 sub _compilation_error {
