@@ -341,9 +341,13 @@ sub match_named_block
 {
     my ($self, %p) = @_;
 
-    if ( $self->{current}{comp_source} =~ /\G<%(def|method)\s+([^\n]+?)>/igcs )
+    if ( $self->{current}{comp_source} =~ /\G<%(def|method)(?:\s+([^\n]+?))?>/igcs )
     {
 	my ($type, $name) = ($1, $2);
+
+	$self->throw_syntax_error("$type block without a name")
+	    unless defined $name && length $name;
+
 	$self->{current}{compiler}->start_named_block( block_type => $type,
 						       name => $name );
 
@@ -485,7 +489,7 @@ sub match_text
     # Otherwise we'd match the empty string at the beginning, followed
     # by "<%".
     #
-    # - Dave - 1/6/2002
+    # - Dave - 5/6/2002
     #
     if ( $self->{current}{comp_source} =~ m,
                     \G
