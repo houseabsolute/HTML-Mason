@@ -10,6 +10,11 @@
 #        returns its error conditions, or upgrade to Perl 5.6.0 or
 #        greater, which has its own bugs.
 
+#
+# A much simpler alternative to this is to simply use the
+# HTML::Mason::Request::WithApacheSession code available from CPAN.
+#
+
 package MyMason::MyApp;
 
 # Bring in main Mason package.
