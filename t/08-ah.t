@@ -198,9 +198,12 @@ EOF
 	      );
 
     write_comp( 'head_request', <<'EOF',
-% foreach (keys %ARGS) {
-<% $_ %>: <% ref $ARGS{$_} ? 'is a ref' : 'not a ref' %>
-% }
+<%init>
+my $x = 1;
+foreach (keys %ARGS) {
+  $r->header_out( 'X-Mason-HEAD-Test' . $x++ => "$_: " . (ref $ARGS{$_} ? 'is a ref' : 'not a ref' ) );
+}
+</%init>
 EOF
 	      );
 }
@@ -279,12 +282,18 @@ EOF
     $path = '/comps/head_request?foo=1&bar=1&bar=2';
     $path = "/ah=0$path" if $with_handler;
     $response = Apache::test->fetch( { uri => $path, method => 'HEAD' } );
-    $actual = filter_response($response, $with_handler);
+
+    # We pretend that this request is always being done with a
+    # handler.pl file in order to avoid having "Status code: 0"
+    # appended onto the return.  This is because with a handler.pl
+    # (which normally calls $r->print to append that text), $r->print
+    # won't actually do anything for a HEAD request. - dave
+    $actual = filter_response($response, 0);
     $success = HTML::Mason::Tests->check_output( actual => $actual,
 						 expect => <<'EOF',
 X-Mason-Test: Initial value
-foo: not a ref
-bar: is a ref
+X-Mason-HEAD-Test1: foo: not a ref
+X-Mason-HEAD-Test2: bar: is a ref
 Status code: 0
 EOF
 					       );
@@ -655,16 +664,28 @@ sub filter_response
 
     # because the header or content may be undef
     local $^W = 0;
-    my $actual = join "\n", ( 'X-Mason-Test: ' .
-			      # hack until I make a separate test
-			      # suite for the httpd.conf configuration
-			      # stuff
-			      ( $with_handler ?
-				$response->headers->header('X-Mason-Test') :
-				( $response->headers->header('X-Mason-Test') ?
-				  $response->headers->header('X-Mason-Test') :
-				  'Initial value' ) ),
-			      $response->content );
+    my $actual = ( 'X-Mason-Test: ' .
+		   # hack until I make a separate test
+		   # suite for the httpd.conf configuration
+		   # stuff
+		   ( $with_handler ?
+		     $response->headers->header('X-Mason-Test') :
+		     ( $response->headers->header('X-Mason-Test') ?
+		       $response->headers->header('X-Mason-Test') :
+		       'Initial value' ) ) );
+    $actual .= "\n";
+
+    # Any headers starting with X-Mason are added, excluding X-Mason-Test, which is handled above
+    my @headers;
+    $response->headers->scan( sub { return if $_[0] eq 'X-Mason-Test' || $_[0] !~ /^X-Mason/;
+				    push @headers, [ $_[0], "$_[0]: $_[1]\n" ] } );
+
+    foreach my $h ( sort { $a->[0] cmp $b->[0] } @headers )
+    {
+	$actual .= $h->[1];
+    }
+
+    $actual .= $response->content;
 
     my $code = $response->code == 200 ? 0 : $response->code;
     $actual .= "Status code: $code" unless $with_handler;
@@ -721,7 +742,8 @@ sub kill_httpd
 
     print STDERR "Killing httpd process ($pid)\n";
     my $result = kill 'TERM', $pid;
-    if (!$result and $! =~ /no such proc/i) {
+    if ( ! $result and $! =~ /no such (?:file|proc)/i )
+    {
 	# Looks like apache wasn't running, so we're done
 	unlink "$ENV{APACHE_DIR}/httpd.pid" or warn "Couldn't remove '$ENV{APACHE_DIR}/httpd.pid': $!";
 	return;
@@ -738,7 +760,17 @@ sub kill_httpd
 	    $x++;
 	    if ( $x > 10 )
 	    {
-		die "$ENV{APACHE_DIR}/httpd.pid file still exists after 10 seconds.  Exiting.";
+		my $result = kill 'TERM', $pid;
+		if ( ! $result and $! =~ /no such (?:file|proc)/i )
+		{
+		    # Looks like apache wasn't running, so we're done
+		    unlink "$ENV{APACHE_DIR}/httpd.pid" or warn "Couldn't remove '$ENV{APACHE_DIR}/httpd.pid': $!";
+		    return;
+		}
+		else
+		{
+		    die "$ENV{APACHE_DIR}/httpd.pid file still exists after 10 seconds.  Exiting.";
+		}
 	    }
 	}
     }
