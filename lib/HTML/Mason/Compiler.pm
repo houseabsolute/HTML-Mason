@@ -206,6 +206,18 @@ sub perl_block
     $self->_add_body_code( $p{block} );
 }
 
+sub init_block
+{
+    my $self = shift;
+    my %p = @_;
+    
+    my $line = $self->lexer->line_count;
+    my $file = $self->lexer->name;
+    my $comment = "#line $line $file\n";
+
+    push @{ $self->{current_comp}{blocks}{ $p{block_type} } }, "$comment$p{block}";
+}
+
 sub text
 {
     my $self = shift;
