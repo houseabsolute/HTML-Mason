@@ -8,19 +8,23 @@ sub new {
 }
 
 sub start_request {
-  # my ($self, $context) = @_;
+    # my ($self, $context) = @_;
+    # $context has: request, args
 }
 
 sub end_request {
-  # my ($self, $context) = @_;
+    # my ($self, $context) = @_;
+    # $context has: request, args, output, wantarray, result, error
 }
 
 sub start_component {
-  # my ($self, $context) = @_;
+    # my ($self, $context) = @_;
+    # $context has: request, comp, args
 }
 
 sub end_component {
-  # my ($self, $context) = @_;
+    # my ($self, $context) = @_;
+    # $context has: request, comp, args, wantarray, result, error
 }
 
 1;
@@ -108,13 +112,15 @@ exits. Its context has the following read-only methods:
 
     request     # the current request
     args        # arguments the request was called with
+    output      # reference to the contents of the output buffer
     wantarray   # value of wantarray the request was called with
     result      # arrayref of value(s) that the request is about to return
     error       # reference to error, if any, that the request is about to throw
 
 I<result> always contains an array ref; if I<wantarray> is 0, the
 return value is the the first element of that array. The plugin may
-modify both I<result> and I<error> to affect how the request returns.
+modify I<output> to affect what the request outputs, and 
+I<result> and I<error> to affect what the request returns.
 
 =item start_component
 

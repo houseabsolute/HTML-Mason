@@ -16,9 +16,10 @@ use base qw(HTML::Mason::Plugin::Context);
 
 sub request   { $_[0]->[0] }
 sub args      { $_[0]->[1] }
-sub wantarray { $_[0]->[2] }
-sub result    { $_[0]->[2] }
-sub error     { $_[0]->[2] }
+sub output    { $_[0]->[2] }
+sub wantarray { $_[0]->[3] }
+sub result    { $_[0]->[4] }
+sub error     { $_[0]->[5] }
 
 #------------------------------------------------------------
 

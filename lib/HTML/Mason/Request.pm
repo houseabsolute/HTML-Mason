@@ -448,7 +448,7 @@ sub exec {
 	    if ($self->{has_plugins}) {
 		# plugins called in reverse order when exiting.
 		my $context = bless
-		    [$self, $request_args, $wantarray, \@result, \$error],
+		    [$self, $request_args, \$self->{request_buffer}, $wantarray, \@result, \$error],
 		    'HTML::Mason::Plugin::Context::EndRequest';
 		eval {
 		    foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {

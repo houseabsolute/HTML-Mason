@@ -95,7 +95,27 @@ sub end_component {
     die("plugin error on end component " . $context->comp->title);
 }
 
-package HTML::Mason::Plugin::TestCatchError;
+package HTML::Mason::Plugin::TestModifyReturnEndComponent;
+use base qw(HTML::Mason::Plugin);
+sub end_component {
+    my ($self, $context) = @_;
+    my $result = $context->result;
+    if (defined($result->[0])) {
+        $result->[0] = $result->[0] * 2;
+    }
+}
+
+package HTML::Mason::Plugin::TestModifyReturnEndRequest;
+use base qw(HTML::Mason::Plugin);
+sub end_request {
+    my ($self, $context) = @_;
+    my $result = $context->result;
+    if (defined($result->[0])) {
+        $result->[0] = $result->[0] * 2;
+    }
+}
+
+package HTML::Mason::Plugin::TestCatchErrorEndComponent;
 use base qw(HTML::Mason::Plugin);
 sub end_component {
     my ($self, $context) = @_;
@@ -104,6 +124,25 @@ sub end_component {
 	print "Caught error " . $$error . " and trapping it.\n";
 	$$error = undef;
     }
+}
+
+package HTML::Mason::Plugin::TestCatchErrorEndRequest;
+use base qw(HTML::Mason::Plugin);
+sub end_request {
+    my ($self, $context) = @_;
+    my $error = $context->error;
+    if (defined($$error)) {
+	print "Caught error " . $$error . " and trapping it.\n";
+	$$error = undef;
+    }
+}
+
+package HTML::Mason::Plugin::TestEndRequestModifyOutput;
+use base qw(HTML::Mason::Plugin);
+sub end_request {
+    my ($self, $context) = @_;
+    my $content_ref = $context->output;
+    $$content_ref = uc($$content_ref);
 }
 
 package main;
@@ -205,6 +244,7 @@ EOF
 		    
 		  );
 
+#------------------------------------------------------------
 
   $group->add_test( name => 'two_plugins',
 		    description => 'using two different plugins',
@@ -273,6 +313,8 @@ After Request
 AllCalls Request Finish on: /plugins/plugin_ordering
 EOF
 		  );
+
+#------------------------------------------------------------
 
   $group->add_test( name => 'two_of_the_same_plugin',
 		    description => 'two_of_the_same_plugin',
@@ -350,6 +392,8 @@ EOF
 		    );
   
 
+#------------------------------------------------------------
+
   $group->add_test( name => 'error_on_start_request',
 		    description => 'a plugin that dies',
 		    interp_params => 
@@ -360,6 +404,8 @@ EOF
 		    expect_error => 'plugin error on start request /plugins/error_on_start_request',
 		  );
 
+
+#------------------------------------------------------------
 
   $group->add_test( name => 'error_on_end_request',
 		    description => 'a plugin that dies',
@@ -372,6 +418,8 @@ EOF
 		  );
 
 
+#------------------------------------------------------------
+
   $group->add_test( name => 'error_on_start_component',
 		    description => 'a plugin that dies',
 		    interp_params => 
@@ -382,6 +430,8 @@ EOF
 		    expect_error => 'plugin error on start component /plugins/error_on_start_component',
 		  );
 
+#------------------------------------------------------------
+
   $group->add_test( name => 'error_on_end_component',
 		    description => 'a plugin that dies',
 		    interp_params => 
@@ -391,6 +441,8 @@ EOF
 		    component => '<& support/A.m &>',
 		    expect_error => 'plugin error on end component /plugins/error_on_end_component',
 		  );
+
+#------------------------------------------------------------
 
   $group->add_test( name => 'not_persistent_across_requests',
 		    description => 'different plugin for each request',
@@ -422,6 +474,8 @@ PostComponent: 3 : /plugins/not_persistent_across_requests
 PostRequest: 4 : /plugins/not_persistent_across_requests
 EOF
 		  );
+
+#------------------------------------------------------------
 
   my $PersistentPlugin = HTML::Mason::Plugin::TestResetEachRequest->new();
   $group->add_test( name => 'persistent_across_requests',
@@ -455,15 +509,72 @@ PostRequest: 12 : /plugins/persistent_across_requests
 EOF
 		    );
 
-  $group->add_test( name => 'catch_error',
-		    description => 'a plugin that modifies its arguments to trap errors',
+#------------------------------------------------------------
+
+  $group->add_support ( path => '/support/return_numbers',
+                        component => <<'EOF',
+<%def .five><%perl>return 5;</%perl></%def>
+<%def .six><%perl>return 6;</%perl></%def>
+% return $m->comp('.five') + $m->comp('.six');
+EOF
+		    );
+
+  $group->add_test( name => 'modify_return_end_component',
+		    description => 'an end_component plugin that modifies its return value',
 		    interp_params => 
 		    {
-		     plugins => ['HTML::Mason::Plugin::TestCatchError'],
+		     plugins => ['HTML::Mason::Plugin::TestModifyReturnEndComponent'],
+		    },
+		    component => '<% $m->comp("support/return_numbers") %>',
+		    expect => '44',
+		  );
+
+  $group->add_test( name => 'modify_return_end_request',
+		    description => 'an end_request plugin that modifies its return value',
+		    interp_params => 
+		    {
+		     plugins => ['HTML::Mason::Plugin::TestModifyReturnEndRequest'],
+		    },
+		    component => '<% $m->subexec("support/return_numbers") %>',
+		    expect => '22',
+		  );
+
+#------------------------------------------------------------
+
+  $group->add_test( name => 'catch_error_end_component',
+		    description => 'an end_component plugin that modifies its arguments to trap errors',
+		    interp_params => 
+		    {
+		     plugins => ['HTML::Mason::Plugin::TestCatchErrorEndComponent'],
 		    },
 		    component => '<& support/error.m &>',
 		    expect => qr{Caught error uh oh},
 		  );
+
+  $group->add_test( name => 'catch_error_end_request',
+		    description => 'an end_request plugin that modifies its arguments to trap errors',
+		    interp_params => 
+		    {
+		     plugins => ['HTML::Mason::Plugin::TestCatchErrorEndRequest'],
+		    },
+		    component => '<& support/error.m &>',
+		    expect => qr{Caught error uh oh},
+		  );
+
+#------------------------------------------------------------
+
+  $group->add_test( name => 'modify_content_end_request',
+		    description => 'modify content at end of request',
+		    interp_params => 
+		    {
+		     plugins => ['HTML::Mason::Plugin::TestEndRequestModifyOutput'],
+		    },
+		    component => '<%def .something>capitalized</%def>I will be <& .something &>',
+		    expect => <<'EOF',
+I WILL BE CAPITALIZED
+EOF
+		  );
+
   return $group;
 
 }
