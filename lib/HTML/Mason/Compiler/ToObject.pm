@@ -117,6 +117,10 @@ sub compiled_component
     $params->{object_size} = 0;
     $params->{object_size} += length for ($header, %$params);
 
+    # This funky list subscript is just so that we can avoid making a
+    # copy of the returned string.  Otherwise we'd have to save it,
+    # then delete $self->{current_comp}, then return the string.
+    
     return +(join('',
 		  $header,
 		  $self->_subcomponents_footer,
