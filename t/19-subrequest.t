@@ -136,19 +136,26 @@ EOF
 
     $group->add_support( path => '/support/autoflush_subrequest',
 			 component => <<'EOF',
+% $m->autoflush($autoflush) if $autoflush;
 here is the child
-% $m->clear_buffer;
+% $m->clear_buffer if $clear;
+<%args>
+$autoflush => 0
+$clear => 0
+</%args>
 EOF
 		       );
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'autoflush_subrequest',
-		      description => 'make sure that a subrequest respects its parent autoflush setting',
+    $group->add_test( name => 'subrequest_inherits_autoflush',
+		      description => 'make sure that a subrequest inherits its parent autoflush setting (autoflush on)',
 		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 My child says:
+% $m->flush_buffer;
 % $m->subexec('/subrequest/support/autoflush_subrequest');
+% $m->clear_buffer;
 EOF
 		      expect => <<'EOF',
 My child says:
@@ -158,12 +165,45 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'no_autoflush_subrequest',
-		      description => 'make sure that a subrequest respects its parent autoflush setting',
+    $group->add_test( name => 'subrequest_inherits_no_autoflush',
+		      description => 'make sure that a subrequest inherits its parent autoflush setting (autoflush off)',
 		      interp_params => { autoflush => 0 },
 		      component => <<'EOF',
 My child says:
+% $m->flush_buffer;
 % $m->subexec('/subrequest/support/autoflush_subrequest');
+% $m->clear_buffer;
+EOF
+		      expect => <<'EOF',
+My child says:
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'autoflush_in_subrequest',
+		      description => 'make sure that a subrequest with autoflush on does not flush parent',
+		      component => <<'EOF',
+My child says:
+% $m->flush_buffer;
+% $m->subexec('/subrequest/support/autoflush_subrequest', autoflush => 1);
+% $m->clear_buffer;
+EOF
+		      expect => <<'EOF',
+My child says:
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'autoflush_in_parent_not_subrequest',
+		      description => 'make sure that a subrequest with autoflush can clear its own buffers',
+		      interp_params => { autoflush => 1 },
+		      component => <<'EOF',
+My child says:
+% $m->flush_buffer;
+% $m->subexec('/subrequest/support/autoflush_subrequest', autoflush => 0, clear => 1);
+% $m->clear_buffer;
 EOF
 		      expect => <<'EOF',
 My child says:
