@@ -270,15 +270,6 @@ sub cache_self
 	$self->cache(action=>'store',value=>[$output,$retval],%storeOptions);
     } else {
 	($output,$retval) = @$result;
-
-	#
-	# Not clear whether to call these hooks...Best guess is
-	# whether the component output anything. These may
-	# be going away soon anyway...
-	if ($output) {
-	    $self->call_hooks('start_primary');
-	    $self->call_hooks('end_primary');
-	}
     }
     $self->out($output);
 
@@ -518,7 +509,7 @@ sub comp1 {
     } elsif ($self->out_mode eq 'batch') {
 	$sink = sub { $self->{out_buffer} .= $_[0] if defined ($_[0]) };
     } else {
-	$sink = $interp->out_method;
+	$sink = $self->out_method;
     }
 
     #

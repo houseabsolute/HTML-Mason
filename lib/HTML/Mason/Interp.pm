@@ -463,7 +463,7 @@ sub find_comp_upwards
 #
 # Hook functions.
 #
-my @hookTypes = qw(start_comp start_primary end_primary end_comp start_file end_file);
+my @hookTypes = qw(start_comp end_comp start_file end_file);
 my %hookTypeMap = map(($_,1),@hookTypes);
 
 sub add_hook {

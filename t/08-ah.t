@@ -56,6 +56,11 @@ sub try_exec_with_ah {
     # Create fake Apache request.
     my $r = fake_apache ({uri=>$uri, %$r_options});
 
+    # Override send header function, and supply default header value.
+    *HTML::Mason::FakeApache::send_http_header = sub { $buf .= "X-Mason-Test: ".$_[0]->header_out('X-Mason-Test')."\n\n" };
+    HTML::Mason::FakeApache::send_http_header() if 0;
+    $r->headers_out('X-Mason-Test' => 'Initial value');
+
     # Handle request.
     my $retval = eval { $ah->handle_request($r) };
     if (my $err = $@) {
@@ -68,9 +73,12 @@ sub try_exec_with_ah {
     compare_results ($test_name, $buf);
 }
 
-print "1..2\n";
+print "1..5\n";
 
 try_exec_with_ah('/basic','basic',{},{});
+
+try_exec_with_ah('/headers','headers-batch',{output_mode=>'batch'},{});
+try_exec_with_ah('/headers','headers-stream',{output_mode=>'stream'},{});
 
 { my $qs = 'scalar=5&list=a&list=b&hash=key&hash=value';
   local $ENV{QUERY_STRING} = $qs;

@@ -1,3 +1,5 @@
+X-Mason-Test: Initial value
+
 scalar = 5
 list = a,b
 hash = key=>value

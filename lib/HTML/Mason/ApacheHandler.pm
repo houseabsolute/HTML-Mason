@@ -76,6 +76,7 @@ my @used = ($HTML::Mason::IN_DEBUG_FILE);
 my %fields =
     (
      apache_status_title => 'mason',
+     auto_send_headers => 1, 
      decline_dirs => 1,
      error_mode => 'html',
      interp => undef,
@@ -422,18 +423,6 @@ sub capture_debug_state
     return {%d};
 }
 
-#
-# Send HTTP headers when the primary section is reached.
-#
-sub send_headers_hook
-{
-    my ($req) = @_;
-    my $r = $req->apache_req;
-    $r->send_http_header() if !http_header_sent($r);
-    $req->abort() if $r->header_only;
-    $req->suppress_hook(name=>'http_header',type=>'start_primary');
-}
-
 sub handle_request_1
 {
     my ($self,$r,$debugState) = @_;
@@ -525,8 +514,6 @@ sub handle_request_1
 	}
     }
 
-    $interp->add_hook(name=>'http_header',type=>'start_primary',code=>\&send_headers_hook);
-
     #
     # Create an Apache-specific request with additional slots.
     #
@@ -543,7 +530,42 @@ sub handle_request_1
     # Deprecated output_mode parameter - just pass to request out_mode.
     #
     if (my $mode = $self->output_mode) {
-	$request->out_mode($mode);
+	$request->{out_mode} = $mode;
+    }
+
+    #
+    # Craft the out method for this request to handle automatic http
+    # headers.
+    #
+    if ($self->auto_send_headers) {
+	my $headers_sent = 0;
+	my $delay_buf = '';
+	my $out_method = sub {
+	    # Check to see if the header has been sent, first via a fast
+	    # flag, then via a slightly slower $r test.
+	    unless ($headers_sent) {
+		unless (http_header_sent($r)) {
+		    # If the header has not been sent, buffer initial
+		    # whitespace so as to delay headers.
+		    if ($_[0] !~ /\S/) {
+			$delay_buf .= $_[0];
+			return;
+		    } else {
+			$r->send_http_header();
+			$request->abort() if $r->header_only;
+		    }
+		}
+		$interp->out_method->($delay_buf) if $delay_buf ne '';
+		$headers_sent = 1;
+	    }
+	    $interp->out_method->($_[0]);
+
+	    # A hack, but good for efficiency in stream mode: change the
+	    # current sink of the request so all this is bypassed for the
+	    # remainder of this component and its children.
+	    $request->top_stack->{sink} = $interp->out_method if $request->out_mode eq 'stream' and $request->top_stack->{sink} eq $request->out_method;
+	};
+	$request->{out_method} = $out_method;
     }
     
     #
@@ -586,16 +608,12 @@ sub simulate_debug_request
 #
 # Determines whether the http header has been sent.
 #
-sub http_header_sent
-{
-    my ($r) = @_;
-    my $sent = $r->header_out("Content-type");
-    return $sent;
-}
+sub http_header_sent { shift->header_out("Content-type") }
 
 # Create generic read-write accessor routines
 
 sub apache_status_title { my $s=shift; return @_ ? ($s->{apache_status_title}=shift) : $s->{apache_status_title} }
+sub auto_send_headers { my $s=shift; return @_ ? ($s->{auto_send_headers}=shift) : $s->{auto_send_headers} }
 sub decline_dirs { my $s=shift; return @_ ? ($s->{decline_dirs}=shift) : $s->{decline_dirs} }
 sub error_mode { my $s=shift; return @_ ? ($s->{error_mode}=shift) : $s->{error_mode} }
 sub interp { my $s=shift; return @_ ? ($s->{interp}=shift) : $s->{interp} }
@@ -613,13 +631,7 @@ sub debug_dir_config_keys { my $s=shift; return @_ ? ($s->{debug_dir_config_keys
 #
 package HTML::Mason::Commands;
 use vars qw($m);
-sub mc_suppress_http_header
-{
-    if ($_[0]) {
-	$m->suppress_hook(name=>'http_header',type=>'start_primary');
-    } else {
-	$m->unsuppress_hook(name=>'http_header',type=>'start_primary');
-    }
-}
+# no longer needed
+sub mc_suppress_http_header {}
 
 1;

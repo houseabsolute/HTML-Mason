@@ -44,9 +44,7 @@ require Exporter;
 
 sub pure_text_handler
 {
-    $m->call_hooks('start_primary');
     $m->current_sink->($m->current_comp->source_ref_text);
-    $m->call_hooks('end_primary');
 }
 
 my $no_auto_error = "called when no autohandler invoked";

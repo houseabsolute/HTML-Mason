@@ -487,11 +487,6 @@ sub parse_component
     $body .= $sectiontext{init}."\n";
 
     #
-    # Call start_primary hooks.
-    #
-    $body .= "\$m->call_hooks('start_primary');\n";
-    
-    #
     # Postprocess the alphabetical and Perl stuff separately
     #
     if ($self->{postprocess})
@@ -518,11 +513,6 @@ sub parse_component
 	$body .= $perltexts[$i]."\n";
     }
 
-    #
-    # Call end_primary hooks.
-    #
-    $body .= "\$m->call_hooks('end_primary');\n";
-    
     #
     # Insert <%cleanup> section.
     #
