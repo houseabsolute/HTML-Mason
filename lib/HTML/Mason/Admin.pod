@@ -228,7 +228,9 @@ respected ala C<@INC>, so I<private> is searched first and I<main>
 second.
 
 The component root keys must be unique in a case-insensitive
-comparison.
+comparison. The keys are used in several ways. They help to
+distinguish component caches and object files between different
+component roots, and they appear in the C<title()> of a component.
 
 =head2 Data Directory
 
