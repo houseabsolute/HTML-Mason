@@ -80,7 +80,6 @@ use Data::Dumper;
 use File::Path;
 use File::Spec;
 use HTML::Mason::Interp;
-use HTML::Mason::Parser;
 use HTML::Mason::Error qw(error_process error_display_html);
 use HTML::Mason::Tools qw(dumper_method html_escape make_fh pkg_installed);
 use HTML::Mason::Utils;
@@ -257,7 +256,7 @@ sub _make_interp
 	delete $p{$_} unless defined $p{$_};
     }
 
-    my $interp = HTML::Mason::Interp->new( parser => _make_parser(),
+    my $interp = HTML::Mason::Interp->new( compiler => _make_compiler(),
 					   %p,
 					 );
 
@@ -272,22 +271,22 @@ sub _make_interp
     return $interp;
 }
 
-sub _make_parser
+sub _make_compiler
 {
     my %p;
-    $p{allow_globals} = [ _get_list_param('AllowGlobals') ];
-    delete $p{allow_globals} unless @{ $p{allow_globals} };
+    $p{allowed_globals} = [ _get_list_param('AllowedGlobals') ];
+    delete $p{allowed_globals} unless @{ $p{allowed_globals} };
 
     $p{default_escape_flags} = _get_string_param('DefaultEscapeFlags');
     $p{ignore_warnings_expr} = _get_string_param('IgnoreWarningsExpr');
     $p{in_package} = _get_string_param('InPackage');
     $p{postamble} = _get_string_param('Postamble');
     $p{preamble} = _get_string_param('Preamble');
-    $p{taint_check} = _get_boolean_param('TaintCheck') || 0;
     $p{use_strict} = _get_boolean_param('UseStrict');
 
     $p{preprocess} = _get_code_param('Preprocess');
-    $p{postprocess} = _get_code_param('Postprocess');
+    $p{postprocess_perl} = _get_code_param('PostprocessPerl');
+    $p{postprocess_text} = _get_code_param('PostprocessText');
 
     # If not defined we'll use the defaults
     foreach (keys %p)
@@ -295,7 +294,8 @@ sub _make_parser
 	delete $p{$_} unless defined $p{$_};
     }
 
-    return HTML::Mason::Parser->new(%p);
+    require HTML::Mason::Compiler::ToObject;
+    return HTML::Mason::Compiler::ToObject->new(%p);
 }
 
 sub _get_string_param
@@ -449,7 +449,7 @@ sub _initialize {
     #
     # Allow global $r in components
     #
-    $interp->parser->allow_globals(qw($r));
+    $interp->compiler->set_allowed_globals(qw($r));
 }
 
 #
@@ -583,9 +583,6 @@ sub handle_request {
 	} elsif ($self->error_mode =~ /html$/) {
 	    unless ($interp->die_handler_overridden) {
 		my $debug_msg;
-		if ($debugMode eq 'error' or $debugMode eq 'all') {
-		    $debug_msg = $self->write_debug_file($apreq,$debug_state);
-		}
 		if ($self->error_mode =~ /^raw_/) {
 		    $err .= "$debug_msg\n" if $debug_msg;
 		    $err = "<h3>System error</h3><p><pre><font size=-1>$raw_err</font></pre>\n";
