@@ -45,11 +45,11 @@ BEGIN
 	 error_format => { parse => 'string', type => SCALAR, default => 'text',
 			   callbacks => { "must be one of 'brief', 'text', 'line', or 'html'" =>
 					  sub { HTML::Mason::Exception->can("as_$_[0]"); } },
-			   descr => "How error messages are formatted" },
+			   descr => "How error conditions are returned to the caller (brief, text, line or html)" },
 	 error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
 			 callbacks => { "must be one of 'output' or 'fatal'" =>
 					sub { $_[0] =~ /^(?:output|fatal)$/ } },
-			 descr => "How error conditions are returned to the caller (brief, text, line or html)" },
+			 descr => "How error conditions are manifest (output or fatal)" },
 	 max_recurse => { parse => 'string',  default => 32, type => SCALAR,
 			  descr => "The maximum recursion depth for component, inheritance, and request stack" },
 	 out_method => { parse => 'code',    type => CODEREF|SCALARREF,
