@@ -114,6 +114,19 @@ BEGIN
  		      descr => "Classes or objects to run event hooks around Mason actions",
  		    },
 
+         # The next two are only used when creating subrequests
+	 parent_request =>
+         { isa => __PACKAGE__,
+           default => undef,
+           public  => 0,
+         },
+
+	 request_depth =>
+         { type => SCALAR,
+           default => 0,
+           public  => 0,
+         },
+
         );
 
     __PACKAGE__->contained_objects
@@ -157,8 +170,6 @@ sub new
 		      count => 0,
 		      dhandler_arg => undef,
 	              execd => 0,
-		      parent_request => undef,
-		      request_depth => 0,
 		      stack => undef,
 		      wrapper_chain => undef,
 		      wrapper_index => undef,
@@ -172,6 +183,7 @@ sub new
     }
     $self->{count} = ++$self->{interp}{request_count};
     $self->_initialize;
+
     return $self;
 }
 
@@ -247,13 +259,10 @@ sub _initialize {
 
     };
 
-    # Handle errors.
     my $err = $@;
     if ($err and !$self->_aborted_or_declined($err)) {
 	$self->_handle_error($err);
-	return;
     }
-
 }
 
 sub use_dhandlers
@@ -471,9 +480,11 @@ sub make_subrequest
     }
 
     # Make subrequest, and set parent_request and request_depth appropriately.
-    my $subreq = $interp->make_request(%defaults, %params);
-    $subreq->{parent_request} = $self;
-    $subreq->{request_depth}  = $self->request_depth+1;
+    my $subreq =
+        $interp->make_request(%defaults, %params,
+                              parent_request => $self,
+                              request_depth => $self->request_depth + 1);
+
     error "subrequest depth > " . $self->max_recurse . " (infinite subrequest loop?)"
 	if $subreq->request_depth > $self->max_recurse;
 
