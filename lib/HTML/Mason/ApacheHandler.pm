@@ -135,11 +135,15 @@ __PACKAGE__->valid_params
 			      },
      multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1 },
      output_mode           => { parse => 'string',  type => SCALAR,       default => 'batch' },
-     interp_class          => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason::Interp' },
      top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1} },
 
      # the only required param
      interp                => { isa => 'HTML::Mason::Interp' },
+    );
+
+__PACKAGE__->contained_objects
+    (
+     interp => 'HTML::Mason::Interp',
     );
 
 sub import
@@ -189,28 +193,7 @@ sub make_ah
     use vars qw($AH);
     return $AH if $AH && $AH->{last_comp_root} eq $comp_root;
 
-    my %classes = $package->_get_class_params;
-
-    my %p = $package->get_config( $package->allowed_params(%classes) );
-
-    eval "use $p{interp_class}";
-    die $@ if $@;
-
-    $AH = $package->new( interp => $package->_make_interp($p{interp_class}, %classes),
-			 %p,
-		       );
-
-    $AH->{last_comp_root} = $comp_root;
-
-    return $AH;
-}
-
-sub _make_interp
-{
-    my ($self, $interp_class, %classes) = @_;
-    my %p = $self->get_config( $interp_class->allowed_params(%classes) );
-
-    # comp_root is sort of polymorphic, so fix it up
+    my %p = $package->_get_mason_params;
     if (exists $p{comp_root}) {
 	if (@{$p{comp_root}} == 1 && $p{comp_root}->[0] !~ /=>/) {
 	    $p{comp_root} = $p{comp_root}[0];  # Convert to a simple string
@@ -224,17 +207,18 @@ sub _make_interp
 	    }
 	}
     }
-
-    my $interp = $interp_class->new(%p);
+    $AH = $package->new( %p );
 
     # If we're running as superuser, change file ownership to http user & group
-    if ($interp->files_written && ! ($> || $<))
+    if (!($> || $<)  and  $AH->interp->files_written)
     {
-	chown Apache->server->uid, Apache->server->gid, $interp->files_written
-	    or HTML::Mason::Exception::System->throw( error => "Can't change ownership of files written by interp object\n" );
+	chown Apache->server->uid, Apache->server->gid, $AH->interp->files_written
+	    or HTML::Mason::Exception::System->throw( error => "Can't change ownership of files written by interp object: $!\n" );
     }
 
-    return $interp;
+    $AH->{last_comp_root} = $comp_root;
+
+    return $AH;
 }
 
 # The following routines handle getting information from $r->dir_config
@@ -254,13 +238,26 @@ sub studly_form {
     return $string;
 }
 
+sub _get_mason_params
+{
+    my $self = shift;
+
+    my $c = Apache->request ? Apache->request : Apache->server;
+
+    my $config = $c->dir_config;
+
+    # Get all params starting with 'Mason'
+    return map { $_ =~ /^Mason/ ? ( $self->calm_form($_) => $self->get_param($_) ) : () } keys %$config;
+}
+
 sub get_param {
     # Gets a single config item from dir_config.
 
     my ($self, $key, $spec) = @_;
+    $key = $self->calm_form($key);
 
     # If we weren't given a spec, try to locate one in our own class.
-    $spec ||= $self->allowed_params->{$self->calm_form($key)};
+    $spec ||= $self->allowed_params->{$key};
     HTML::Mason::Exception->throw( error => "Unknown config item '$key'" )
         unless $spec;
 
@@ -293,18 +290,6 @@ sub get_config {
 	$config{$key} = $value;
     }
     return %config;
-}
-
-sub _get_class_params
-{
-    my $self = shift;
-
-    my $c = Apache->request ? Apache->request : Apache->server;
-
-    my $config = $c->dir_config;
-
-    # Get all params ending with 'Class'
-    return map { $_ =~ /Class$/ ? ( $self->calm_form($_) => $config->{$_} ) : () } keys %$config;
 }
 
 sub _get_string_param
@@ -367,8 +352,9 @@ sub _get_val
 sub new
 {
     my $class = shift;
+    my @args = $class->create_contained_objects(@_);
 
-    my $self = bless {validate( @_, $class->validation_spec )}, $class;
+    my $self = bless {validate( @args, $class->validation_spec )}, $class;
 
     $self->_initialize;
     return $self;
