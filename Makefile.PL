@@ -70,7 +70,7 @@ unless ( $@ || $^O =~ /mac|darwin/ )
     $prereq{'Apache::Request'} = 0.31;
 }
 
-setup_mod_perl_tests() unless $opts{'no-prompts'};
+setup_mod_perl_tests() if -d 'CVS' && ! $opts{'no-prompts'};
 assisted_install_config() unless $opts{'no-prompts'};
 
 # Get these into the MY namespace for the MY::test method
