@@ -6,7 +6,7 @@ package HTML::Mason::Interp;
 
 use strict;
 
-use vars qw( @ISA %VALID_PARAMS %CONTAINED_OBJECTS );
+use vars qw( %VALID_PARAMS %CONTAINED_OBJECTS );
 
 use Carp;
 use File::Basename;
@@ -23,8 +23,7 @@ Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 
 use HTML::Mason::Container;
-
-@ISA = 'HTML::Mason::Container';
+use base qw(HTML::Mason::Container);
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code_cache
@@ -85,8 +84,6 @@ use HTML::Mason::MethodMaker
 
      data_dir                     => { parse => 'string', type => SCALAR },
     );
-
-sub validation_spec { \%VALID_PARAMS }
 
 # For subobject auto-creation
 %CONTAINED_OBJECTS = ('resolver' => 'HTML::Mason::Resolver::File',
