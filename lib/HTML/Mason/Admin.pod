@@ -29,7 +29,7 @@ maintain the previous C<Config.pm> values.
 
 There are three ways to configure a Mason site:
 
-=over
+=over 4
 
 =item *
 
@@ -346,6 +346,8 @@ A wide set of behaviors can be implemented with a mere few lines of
 well-placed Perl in your handler.pl.  In this section we present the
 basics of setting up handler.pl as well as some ideas for more
 advanced applications.
+
+=over 4
 
 =item * MasonDataCacheDir - string
 
