@@ -136,7 +136,7 @@ sub run {
         }
     };
 
-    $req->flush_buffer;
+    $req->top_buffer->flush;
     $req->pop_buffer_stack;
 
     die $@ if $@;
