@@ -946,6 +946,38 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'in_package_shared',
+			  description => 'Make sure in_package works with %shared',
+		          interp_params => { in_package => 'HTML::Mason::Foo' },
+			  component => <<'EOF',
+<%shared>
+my $foo = 'bar';
+</%shared>
+Foo: <% $foo %>
+EOF
+                          expect => <<'EOF',
+Foo: bar
+EOF
+                        );
+
+#------------------------------------------------------------
+
+	$group->add_test( name => 'in_package_m_in_shared',
+			  description => 'Make sure $m works with %shared when in_package is set',
+		          interp_params => { in_package => 'HTML::Mason::Bar' },
+			  component => <<'EOF',
+<%shared>
+my $dh = $m->dhandler_name;
+</%shared>
+<% $dh %>
+EOF
+                          expect => <<'EOF',
+dhandler
+EOF
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
