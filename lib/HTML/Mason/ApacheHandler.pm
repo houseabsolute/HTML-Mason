@@ -1036,7 +1036,7 @@ L<HTML::Mason::Interp|HTML::Mason::Interp>.
 
 =head1 ACCESSOR METHODS
 
-All of the above properties, except interp, have standard accessor
+All of the above properties, except interp_class, have standard accessor
 methods of the same name: no arguments retrieves the value, and one
 argument sets it, except for args_method, which is not settable.  For
 example:
