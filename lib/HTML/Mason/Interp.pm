@@ -350,6 +350,8 @@ sub comp_id_to_objfile {
 
 # User method for emptying code cache - useful for preventing memory leak
 sub flush_code_cache {
+    my $self = shift;
+
     $self->{code_cache} = {};
     $self->{code_cache_current_size} = 0;
 }
