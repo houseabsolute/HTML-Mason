@@ -279,7 +279,7 @@ use HTML::Mason::MethodMaker
 use vars qw($AH);
 
 # hack to let the make_params_pod.pl script work
-_startup() unless $::MakeParams;
+_startup() if Apache->server;
 sub _startup
 {
     # This is not really ideal cause if someone loads a subclass we
