@@ -931,5 +931,29 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => 'no_comp_root_helper',
+                         component => <<'EOF',
+I am rootless
+EOF
+                       );
+
+#------------------------------------------------------------
+
+    my $comp_root = HTML::Mason::Tests->comp_root;
+    $group->add_test( name => 'no_comp_root',
+		      description => 'test interp without a comp root or data dir',
+		      component => <<'EOF',
+% my $buffer;
+% my $interp = HTML::Mason::Interp->new( out_method => \$buffer );
+% $interp->exec( '/mason_tests/comps/interp/no_comp_root_helper' );
+<% $buffer %>
+EOF
+		      expect => <<'EOF',
+I am rootless
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
