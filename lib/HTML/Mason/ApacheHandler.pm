@@ -222,6 +222,7 @@ sub apache_request_to_comp_path {
 	if (paths_eq($root, substr($file, 0, length($root)))) {
 	    my $path = substr($file, length $root);
             $path = length $path ? join '/', File::Spec->splitdir($path) : '/';
+            chop $path if $path ne '/' && substr($path, -1) eq '/';
 
             return $path;
 	}
