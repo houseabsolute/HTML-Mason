@@ -668,6 +668,23 @@ sub handle_request
     $req->exec;
 }
 
+sub request_args
+{
+    my ($self, $r) = @_;
+    #
+    # Get arguments from Apache::Request or CGI.
+    #
+    my (%args, $cgi_object);
+    if ($self->args_method eq 'mod_perl') {
+	$r = Apache::Request->new($r);
+	%args = $self->_mod_perl_args($r);
+    } else {
+	$cgi_object = CGI->new;
+	%args = $self->_cgi_args($r, $cgi_object);
+    }
+    return \%args;
+}
+
 sub prepare_request
 {
     my ($self, $r) = @_;
@@ -713,17 +730,7 @@ sub prepare_request
 	return $self->return_not_found($r);
     }
 
-    #
-    # Get arguments from Apache::Request or CGI.
-    #
-    my (%args, $cgi_object);
-    if ($self->args_method eq 'mod_perl') {
-	$r = Apache::Request->new($r);
-	%args = $self->_mod_perl_args($r);
-    } else {
-	$cgi_object = CGI->new;
-	%args = $self->_cgi_args($r, $cgi_object);
-    }
+    my $args = $self->request_args($r);
 
     #
     # Set up interpreter global variables.
@@ -754,7 +761,7 @@ sub prepare_request
     # 'ah' and 'apache_req' that's their problem.
     #
     my $request = $interp->make_request( comp => $comp_path,
-					 args => [%args],
+					 args => [%$args],
 					 ah => $self,
 					 apache_req => $r,
 				       );
