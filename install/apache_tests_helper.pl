@@ -169,6 +169,7 @@ EOF
 </IfDefine>
 
 <IfDefine no_config>
+  PerlSetVar  MasonConfigName  NoConfig
   SetHandler  perl-script
   PerlHandler HTML::Mason::ApacheHandler
 </IfDefine>
