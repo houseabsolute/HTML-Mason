@@ -1094,7 +1094,7 @@ my %html_escape = ('&' => '&amp;', '>'=>'&gt;', '<'=>'&lt;', '"'=>'&quot;');
 sub _escape_perl_expression
 {
     my ($expr,@flags) = @_;
-    if (defined($expr) {
+    if (defined($expr)) {
 	foreach my $flag (@flags) {
 	    if ($flag eq 'h') {
 		$expr =~ s/([<>&\"])/$html_escape{$1}/mgoe;
