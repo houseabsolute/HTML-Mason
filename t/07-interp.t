@@ -2,6 +2,7 @@
 
 use strict;
 
+use File::Spec;
 use HTML::Mason::Tests;
 
 my $tests = make_tests();
@@ -45,17 +46,184 @@ Hello World!
 EOF
 		    );
 
+    $group->add_support( path => '/autohandler_test/subdir/plainfile',
+			 component => <<'EOF',
+The local autohandler: <% $m->current_comp->path %>
+
+<% $m->call_next %>
+EOF
+		       );
+
+    $group->add_test( name => 'alternate autohandler name',
+		      description => 'tests that providing an alternate name for autohandlers works',
+		      call_path => '/autohandler_test/subdir/hello',
+		      interp_params => { autohandler_name => 'plainfile' },
+		      component => <<'EOF',
+Hello World!
+EOF
+		      expect => <<'EOF',
+The local autohandler: /interp/autohandler_test/subdir/plainfile
+
+Hello World!
+EOF
+		    );
+
+    my $alt_root = File::Spec->catdir( HTML::Mason::Tests->base_path, 'alt_comps' );
+    my @roots = ( [ main => HTML::Mason::Tests->comp_root,],
+		  [ alt => $alt_root ] );
+
+    $group->add_support( path => '/comp_root_test/showcomp',
+			 component => <<'EOF',
+% my $comp = $m->callers(1);
+<& /shared/display_comp_obj, comp=>$comp &>
+EOF
+		       );
+
+    $group->add_test( name => 'shared',
+		      description => '??',
+		      call_path => '/comp_root_test/shared',
+		      interp_params => { comp_root => \@roots },
+		      component => <<'EOF',
+shared in the main component root.
+<& showcomp &>
+EOF
+		      expect => <<'EOF',
+shared in the main component root.
+Declared args:
+
+This is my first time.
+I am not a subcomponent.
+I am file-based.
+My short name is shared.
+My directory is /interp/comp_root_test.
+I have run 1 time(s).
+I have 0 subcomponent(s).
+My title is /interp/comp_root_test/shared [main].
+
+My cache file is /.../cache/MAIN+2finterp+2fcomp_root_test+2fshared
+My object file is /.../obj/MAIN/interp/comp_root_test/shared
+My path is /interp/comp_root_test/shared.
+My fq_path is /MAIN/interp/comp_root_test/shared.
+My source file is /.../comps/interp/comp_root_test/shared
+My source dir is /.../comps/interp/comp_root_test
+
+
+
+EOF
+		    );
+
+    $group->add_test( name => 'shared',
+		      description => '??',
+		      call_path => '/comp_root_test/shared',
+		      interp_params => { comp_root => \@roots },
+		      component => <<'EOF',
+shared in the main component root.
+<& showcomp &>
+EOF
+		      expect => <<'EOF',
+shared in the main component root.
+Declared args:
+
+This is my first time.
+I am not a subcomponent.
+I am file-based.
+My short name is shared.
+My directory is /interp/comp_root_test.
+I have run 1 time(s).
+I have 0 subcomponent(s).
+My title is /interp/comp_root_test/shared [main].
+
+My cache file is /.../cache/MAIN+2finterp+2fcomp_root_test+2fshared
+My object file is /.../obj/MAIN/interp/comp_root_test/shared
+My path is /interp/comp_root_test/shared.
+My fq_path is /MAIN/interp/comp_root_test/shared.
+My source file is /.../comps/interp/comp_root_test/shared
+My source dir is /.../comps/interp/comp_root_test
+
+
+
+EOF
+		    );
+
+    $group->add_test( name => 'private1',
+		      description => '??',
+		      call_path => '/comp_root_test/private1',
+		      interp_params => { comp_root => \@roots },
+		      component => <<'EOF',
+private1 in the main component root.
+<& showcomp &>
+EOF
+		      expect => <<'EOF',
+private1 in the main component root.
+Declared args:
+
+This is my first time.
+I am not a subcomponent.
+I am file-based.
+My short name is private1.
+My directory is /interp/comp_root_test.
+I have run 1 time(s).
+I have 0 subcomponent(s).
+My title is /interp/comp_root_test/private1 [main].
+
+My cache file is /.../cache/MAIN+2finterp+2fcomp_root_test+2fprivate1
+My object file is /.../obj/MAIN/interp/comp_root_test/private1
+My path is /interp/comp_root_test/private1.
+My fq_path is /MAIN/interp/comp_root_test/private1.
+My source file is /.../comps/interp/comp_root_test/private1
+My source dir is /.../comps/interp/comp_root_test
+
+
+
+EOF
+		    );
+
+    #HACK!
+    HTML::Mason::Tests->write_comp( '/alt_root/comp_root_test/private2', File::Spec->catdir( $alt_root, 'comp_root_test' ), 'private2', <<'EOF' );
+private2 in the alternate component root.
+<& showcomp &>
+EOF
+
+    HTML::Mason::Tests->write_comp( '/alt_root/comp_root_test/shared', File::Spec->catdir( $alt_root, 'comp_root_test' ), 'shared', <<'EOF' );
+shared.html in the alternate component root.
+<& showcomp &>
+EOF
+    $group->add_test( name => 'private1',
+		      description => '??',
+		      call_path => '/comp_root_test/private2',
+		      path => '/foo', # its already written.  HACK!
+		      interp_params => { comp_root => \@roots },
+		      component => <<'EOF',
+foo
+EOF
+		      expect => <<'EOF',
+private2 in the alternate component root.
+Declared args:
+
+This is my first time.
+I am not a subcomponent.
+I am file-based.
+My short name is private2.
+My directory is /interp/comp_root_test.
+I have run 1 time(s).
+I have 0 subcomponent(s).
+My title is /interp/comp_root_test/private2 [alt].
+
+My cache file is /.../cache/ALT+2finterp+2fcomp_root_test+2fprivate2
+My object file is /.../obj/ALT/interp/comp_root_test/private2
+My path is /interp/comp_root_test/private2.
+My fq_path is /ALT/interp/comp_root_test/private2.
+My source file is /.../alt_root/interp/comp_root_test/private2
+My source dir is /.../alt_root/interp/comp_root_test
+
+
+
+EOF
+		    );
     return $group;
 }
 
 __END__
-
-print "1..20\n";
-
-# autohandler_name/allow_recursive_autohandlers
-try_exec_with_interp({allow_recursive_autohandlers=>0},'autohandler_test/subdir/hello',1);
-try_exec_with_interp({},'autohandler_test/subdir/hello',2);
-try_exec_with_interp({autohandler_name=>'plainfile'},'autohandler_test/subdir/hello',3);
 
 # multiple comp_roots
 {my @roots = ([main=>$comp_root],[alt=>"$root/test/alt_root/"]);
