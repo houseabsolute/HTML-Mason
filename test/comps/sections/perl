@@ -6,8 +6,15 @@ perl Test
 </HEAD>
 <BODY>
 <%perl>
-my $message = "Hello World!";
+my $message = "Hello";
+</%PERL>
+<%Perl>
+$message .= " World!";
 </%perl>
+<% $message %>
+<%perl>
+$message = "How are you?";
+</%perL>
 <% $message %>
 </BODY>
 </HTML>
