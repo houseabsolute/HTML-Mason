@@ -44,7 +44,7 @@ WriteMakefile(
     'PREREQ_PM' => { MLDBM => 2.0, Data::Dumper => 2.08 },
     'DIR' => 'faq',
     clean => {
-	'FILES' => 'lib/HTML/Mason/Config.pm test/tmp/*',
+	'FILES' => 'lib/HTML/Mason/Config.pm',
     }
 );
 
