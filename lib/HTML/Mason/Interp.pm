@@ -236,16 +236,21 @@ sub load {
     if ($self->{use_object_files}) {
 	$objfile = $self->comp_id_to_objfile($comp_id);
 
+	my @stat = stat $objfile;
+	if ( @stat && ! -f _ ) {
+	    error "The object file '$objfile' exists but it is not a file!";
+	}
+
 	if ($self->{fixed_source}) {
 	    # No entry in the code cache so if the object file exists,
 	    # we will use it, otherwise we must create it.  These
 	    # values make that happen.
-	    $objfilemod = -f $objfile ? $srcmod : 0;
+	    $objfilemod = @stat ? $srcmod : 0;
 	} else {
 	    # If the object file exists, get its modification time.
 	    # Otherwise (it doesn't exist or it is a directory) we
 	    # must create it.
-	    $objfilemod = (defined($objfile) and -f $objfile) ? (stat _)[9] : 0;
+	    $objfilemod = @stat ? $stat[9] : 0;
 	}
     }
 
