@@ -1725,7 +1725,7 @@ stack level does not exist.
 
 =item caller
 
-A synonym for C<< $m->caller(1) >>, i.e. the component that called the
+A synonym for C<< $m->callers(1) >>, i.e. the component that called the
 currently executing component.
 
 =for html <a name="item_call_next"></a>
