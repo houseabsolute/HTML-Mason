@@ -45,3 +45,27 @@ sub cgi_request_args
 
     return %args;
 }
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::Utils - Publically available functions useful outside of Mason
+
+=head1 DESCRIPTION
+
+The functions in this module are useful when you need to interface
+code you have written with Mason.
+
+=head1 FUNCTIONS
+
+=over 4
+
+=item data_cache_namespace
+
+=item cgi_request_args
+
+=back
+
+=cut
+
