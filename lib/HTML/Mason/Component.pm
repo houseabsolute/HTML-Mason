@@ -138,8 +138,8 @@ sub run {
         }
     };
 
-    $req->top_buffer->flush;
-    $req->pop_buffer_stack;
+    my $buffer = $req->pop_buffer_stack;
+    $req->print( $buffer->output );
 
     die $@ if $@;
 
