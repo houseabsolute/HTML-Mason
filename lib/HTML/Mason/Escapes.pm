@@ -80,7 +80,7 @@ the following characters: '&', '>', '<', and '"'.
 
 It is provided for those who wish to use it to replace (or supplement)
 the existing 'h' escape flag, via the Interpreter's L<C<set_escape()>
-method|HTML>::Mason::Interp/item_set_escape>.
+method|HTML::Mason::Interp/item_set_escape>.
 
 This function is provided in order to allow people to return the HTML
 escaping behavior in 1.0x.  However, this behavior presents a
