@@ -116,6 +116,7 @@ sub object_id
 		      $self->{$k} );
     }
 
+    local $^W; # ignore undef warnings
     # unpack('%32C*', $x) computes the 32-bit checksum of $x
     return unpack('%32C*', join "\0", class => ref($self), @vals);
 }
