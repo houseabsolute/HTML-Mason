@@ -16,7 +16,6 @@ use HTML::Mason::MethodMaker
 
 __PACKAGE__->valid_params
     (
-     dev_dirs => {type => ARRAYREF, optional => 1},
      interp   => {isa => 'HTML::Mason::Interp'},
     );
 
@@ -62,43 +61,14 @@ sub handle_cgi_object {
 sub _handler {
     my ($self, $p) = (shift, shift);
 
-    my $comp = $p->{comp};
-    my ($local_root, $local_datadir);
-    if ($self->{dev_dirs}) {
-	foreach my $dir (@{$self->{dev_dirs}}) {
-	    if ($comp =~ s/^\Q$dir//) {
-		$local_root    = File::Spec->catdir($self->interp->resolver->comp_root, $dir);
-		$local_datadir = File::Spec->catdir($self->interp->data_dir, $dir);
-		last;
-	    }
-	}
-    }
-
     my $r = $self->create_delayed_object('cgi_request', cgi => $p->{cgi});
     $self->interp->set_global('$r', $r);
 
     $self->{output} = '';
 
-    my $old_root;
-    if ($local_root) {
-	$old_root = $self->interp->resolver->comp_root;
-	$self->interp->resolver->comp_root($local_root);
-    }
-
-    my $old_datadir;
-    if ($local_datadir) {
-	$old_datadir = $self->interp->data_dir($local_datadir);
-    }
-
     $self->interp->delayed_object_params('request', cgi_request => $r);
-    eval { $self->interp->exec($comp, $r->params) };
-    # save it in case setting one of the attributes below uses eval{}
-    my $e = $@;
 
-    $self->interp->resolver->comp_root($old_root) if $old_root;
-    $self->interp->data_dir($old_datadir) if $old_datadir;
-
-    die $e if $e;
+    $self->interp->exec($p->{comp}, $r->params);
 
     if (@_) {
 	# This is a secret feature, and should stay secret (or go away) because it's just a hack for the test suite.
@@ -214,7 +184,6 @@ A script at /cgi-bin/mason_handler.pl :
    
    my $h = new HTML::Mason::CGIHandler
     (
-     dev_dirs  => [qw(/cleetus /zeke)],
      data_dir  => '/home/jethro/code/mason_data',
      allow_globals => [qw(%session $u)],
     );
@@ -256,14 +225,7 @@ provide direct access to the CGI query, should such access be necessary.
 =item * new()
 
 Creates a new handler.  Accepts any parameter that the Interpreter
-accepts, and also accepts a C<dev_dirs> parameter.  If a C<dev_dirs>
-parameter is passed, it should contain an array reference of
-directories that contain alternate copies of the entire site.  This
-helps facilitate seperate development copies when you can't afford to
-run a seperate development server.  Using C<dev_dirs> will have the
-effect of temporarily appending the given C<dev_dir> to the component
-root and data directory if the request is for a component in a
-C<dev_dir>.
+accepts.
 
 If no C<comp_root> parameter is passed to C<new()>, the component root
 will be C<$ENV{DOCUMENT_ROOT}>.
