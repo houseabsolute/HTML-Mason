@@ -39,7 +39,7 @@ BEGIN
 					   type => SCALAR, descr => "Current time (deprecated)" },
 	 data_dir                     => { parse => 'string', optional => 1, type => SCALAR,
 					   descr => "A directory for storing cache files and other state information" },
-         escape_flags                 => { parse => 'list', optional => 1, type => HASHREF,
+         escape_flags                 => { parse => 'hash_list', optional => 1, type => HASHREF,
                                            descr => "A list of escape flags to set (as if calling the set_escape() method" },
 	 static_source                => { parse => 'boolean', default => 0, type => BOOLEAN,
 					   descr => "When true, we only compile source files once" },
