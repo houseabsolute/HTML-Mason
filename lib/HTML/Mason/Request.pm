@@ -430,6 +430,7 @@ sub cache
 	%options = ();
     }
 
+    # Combine defaults with options passed in here.
     if ($self->data_cache_defaults) {
 	%options = (%{$self->data_cache_defaults}, %options);
     }
@@ -437,12 +438,18 @@ sub cache
     $options{cache_root}  ||= $self->interp->cache_dir;
     $options{username}      = "mason";
 
+    # Determine cache_class, adding 'Cache::' in front of user's
+    # specification if necessary.
     my $cache_class = $self->interp->cache_dir ? 'Cache::FileCache' : 'Cache::MemoryCache';
     if ($options{cache_class}) {
 	$cache_class = $options{cache_class};
 	$cache_class = "Cache::$cache_class" unless $cache_class =~ /::/;
 	delete($options{cache_class});
     }
+
+    # Now prefix cache class with "HTML::Mason::". This will be a
+    # dynamically constructed package that simply inherits from
+    # HTML::Mason::Cache::BaseCache and the chosen cache class.
     my $mason_cache_class = "HTML::Mason::$cache_class";
     unless (pkg_loaded($mason_cache_class)) {
 	load_pkg('Cache::Cache', '$m->cache requires the Cache::Cache module, available from CPAN.');
