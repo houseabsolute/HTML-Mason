@@ -40,7 +40,6 @@ use strict;
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( sink
 			 parent
-			 buffer
 			 mode
                          filter
 			 ignore_flush
@@ -50,9 +49,7 @@ use HTML::Mason::MethodMaker
 sub new
 {
     my $class = shift;
-    my $scalar;
-    my $self = { buffer => \$scalar,
-		 sink => undef,
+    my $self = { sink => undef,
 		 parent => undef,
 		 mode => undef,
 		 ignore_flush => 0,
@@ -91,13 +88,13 @@ sub initialize
     } else {
 	# use the parent's coderef or a new scalarref
 	HTML::Mason::Exception::Params->throw( error => "Buffering to default sink requires a parent buffer." )
-	    unless ref($self->{parent}) eq ref($self);
+	    unless $self->{parent};
 	$self->{mode} ||= $self->{parent}->mode;
-	if ($self->{mode} eq 'stream' && $self->{parent}->mode eq 'stream') {
-	    ###???	if ($self->{mode} eq 'stream') {
+	if ($self->{mode} eq 'stream') {
 	    $self->{sink} = $self->{parent}->sink;
 	} else {
-	    $self->{sink} = sub { for (@_) { ${ $self->{buffer} } .= $_ if defined } };
+	    $self->{buffer} = '';
+	    $self->{sink} = sub { for (@_) { $self->{buffer} .= $_ if defined } };
 	}
     }
 }
@@ -105,9 +102,7 @@ sub initialize
 sub new_child
 {
     my $self = shift;
-    my $child = HTML::Mason::Buffer->new( parent => $self, @_ );
-
-    return $child;
+    return HTML::Mason::Buffer->new( parent => $self, @_ );
 }
 
 sub receive
@@ -126,17 +121,32 @@ sub flush
 sub clear
 {
     my $self = shift;
-    ${ $self->buffer } = '';
+    if ( ref $self->{buffer} )
+    {
+	${ $self->{buffer} } = '';
+    }
+    else
+    {
+	$self->{buffer} = '';
+    }
 }
 
 sub output
 {
     my $self = shift;
-    my $output = ${ $self->buffer };
+    my $output = ref $self->{buffer} ? ${ $self->{buffer} } : $self->{buffer};
     return $self->filter->( $output ) if $self->filter;
     return $output;
 }
 
+sub destroy
+{
+    my $self = shift;
+    foreach ( qw( parent sink ) )
+    {
+	undef $self->{$_};
+    }
+}
 
 =pod
 =begin nobody

@@ -44,7 +44,6 @@ sub new
     my $self = {
 	%fields,
 	dhandler_arg => undef,
-	out_buffer => '',
 	buffer_stack => undef,
 	stack => undef,
 	wrapper_chain => undef,
@@ -65,7 +64,7 @@ sub new
 
     bless $self, $class;
     $self->{interp} = $options{interp};
-    ++$self->{count};
+    $self->{count} = ++$self->{interp}{request_count};
     $self->_initialize;
     return $self;
 }
@@ -135,6 +134,9 @@ sub exec {
 	HTML::Mason::Exception::Params->throw( error => "exec: first argument ($comp) must be an absolute component path or a component object" );
     }
 
+    # create base buffer
+    $self->push_buffer_stack( HTML::Mason::Buffer->new( sink => $self->out_method, mode => $self->out_mode ) );
+
     # This label is for declined requests.
     retry:
     # Build wrapper chain and index.
@@ -152,9 +154,6 @@ sub exec {
     # Fill top_level slots for introspection.
     $self->{top_comp} = $comp;
     $self->{top_args} = \@args;
-
-    # create base buffer
-    $self->{base_buffer} = HTML::Mason::Buffer->new( sink => $self->out_method, mode => $self->out_mode );
 
     # Call the first component.
     my ($result, @result);
@@ -187,6 +186,7 @@ sub exec {
 
     # Flush output buffer for batch mode.
     $self->flush_buffer if $self->out_mode eq 'batch';
+    $self->pop_buffer_stack;
 
     # Purge code cache if necessary. We do this at the end so as not
     # to affect the response of the request as much.
@@ -198,6 +198,7 @@ sub exec {
     return wantarray ? @result : $result;
 
     error:
+    $self->pop_buffer_stack;
     # don't mess with error message if default $SIG{__DIE__} was overridden
     if ($interp->die_handler_overridden) {
 	die $err;
@@ -508,7 +509,13 @@ sub comp {
 	$comp = $self->fetch_comp($path)
 	    or HTML::Mason::Exception->throw( error => "could not find component for path '$path'\n" );
     }
-    
+
+    #
+    # Check for maximum recursion.
+    #
+    HTML::Mason::Exception->throw( error => "$depth levels deep in component stack (infinite recursive call?)\n" )
+        if ($depth >= $interp->max_recurse);
+
     #
     # $m is a dynamically scoped global containing this
     # request. This needs to be defined in the HTML::Mason::Commands
@@ -518,36 +525,22 @@ sub comp {
     $interp->set_global('m'=>$self) if ($interp->compiler->in_package ne 'HTML::Mason::Commands');
 
     #
-    # Create buffer
-    #
-    my $parent = undef;
-    $parent = $self->top_buffer if $depth;
-    $parent = $self->{base_buffer} unless $parent;
-    my $buffer;
-    if ($mods{store}) {
-        $buffer = $parent->new_child( mode => 'batch', ignore_flush => 1 );
-    } else {
-        $buffer = $parent->new_child();
-    }
-
-    #
     # Determine base_comp (base component for method and attribute
     # references). Stays the same unless passed in as a modifier.
     #
     my $base_comp = exists($mods{base_comp}) ? $mods{base_comp} : $self->base_comp;
 
-    #
-    # Check for maximum recursion.
-    #
-    HTML::Mason::Exception->throw( error => "$depth levels deep in component stack (infinite recursive call?)\n" )
-        if ($depth >= $interp->max_recurse);
-
     # Push new frame onto stack.
     $self->push_stack( {comp => $comp,
 			args => [@args],
-			buffer => $buffer,
 			base_comp => $base_comp,
 		       } );
+
+    if ($mods{store}) {
+        $self->push_buffer_stack($self->top_buffer->new_child( mode => 'batch', ignore_flush => 1 ));
+    } else {
+        $self->push_buffer_stack($self->top_buffer->new_child);
+    }
 
     # Call start_comp hooks.
     $self->call_hooks('start_comp');
@@ -571,14 +564,14 @@ sub comp {
     #
     if (my $err = $@) {
 	##
-	## any unflushed output is at ${$self->top_buffer->buffer}
+	## any unflushed output is at $self->top_buffer->output
 	##
 	$self->{error_backtrace} ||= [reverse(map($_->{'comp'}, $self->stack))];
 	$self->{error_clean}     ||= $err;
-	$self->pop_stack;
 	unless ($self->interp->die_handler_overridden) {
 	    $err .= "\n" if $err !~ /\n$/;
 	}
+	$self->pop_stack;
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : HTML::Mason::Exception->throw( error => $err );
     }
 
@@ -586,16 +579,14 @@ sub comp {
     # Call end_comp hooks.
     #
     $self->call_hooks('end_comp');
-    
-    #
-    # Pop stack and return.
-    #
+
     if ($mods{store}) {
 	${$mods{store}} = $self->top_buffer->output;
     } else {
         $self->top_buffer->flush;
     }
     $self->pop_stack;
+
     return wantarray ? @result : $result;  # Will return undef in void context (correct)
 }
 
@@ -713,16 +704,13 @@ sub top_stack {
 
 sub push_stack {
     my ($self,$href) = @_;
-    if (my $buffer = delete $href->{buffer}) {
-	$self->push_buffer_stack($buffer);
-    }
     push @{ $self->{stack} }, $href;
 }
 
 sub pop_stack {
     my ($self) = @_;
-    $self->pop_buffer_stack;
     pop @{ $self->{stack} };
+    $self->pop_buffer_stack;
 }
 
 sub push_buffer_stack {
@@ -732,7 +720,8 @@ sub push_buffer_stack {
 
 sub pop_buffer_stack {
     my ($self) = @_;
-    return pop @{ $self->{buffer_stack} };
+    my $buffer = pop @{ $self->{buffer_stack} };
+    $buffer->destroy;
 }
 
 sub buffer_stack {
