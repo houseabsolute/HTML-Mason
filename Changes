@@ -28,6 +28,10 @@ change should not cause most people any problems.
 - Various pieces of existing documentation have been tweaked and
 modified.
 - Added handle_cgi_object method to CGIHandler.
+- Mason works with the CVS version of mod_perl 2.0 when mod_perl 2.0's
+backwards compatibility layer is used.  AFAICT, the CVS version is
+close enough to what will be released as 2.0 that few, if any changes,
+should be required once 2.0 is out.
 
 [ BUG FIXES ]
 
