@@ -7,14 +7,12 @@ require 5.004;
 
 use strict;
 use Carp;
-use Data::Dumper;
 use File::Path;
 use File::Basename;
-use File::Find;
 use IO::File;
 use IO::Seekable;
 use HTML::Mason::Parser;
-use HTML::Mason::Tools qw(read_file pkg_loaded is_absolute_path);
+use HTML::Mason::Tools qw(is_absolute_path);
 use HTML::Mason::Commands qw();
 use HTML::Mason::Config;
 use HTML::Mason::Resolver::File;
@@ -241,12 +239,14 @@ sub check_reload_file {
 sub process_comp_path
 {
     my ($self,$comp_path,$dir_path) = @_;
+
     if ($comp_path !~ m@^/@) {
 	$comp_path = $dir_path . ($dir_path eq "/" ? "" : "/") . $comp_path;
     }
-    while ($comp_path =~ s@/[^/]+/\.\.@@) {}
-    while ($comp_path =~ s@/\./@/@) {}
-    return $comp_path;    
+
+    $comp_path =~ s@/[^/]+/\.\.@@;
+    $comp_path =~ s@/\./@/@;
+    return $comp_path;
 }
 
 #
