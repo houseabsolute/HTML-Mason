@@ -186,14 +186,15 @@ sub setup_mod_perl_tests
 
     require Apache::test;
 
+    eval { require Apache::Request; };
+    $APACHE{has_apache_request} = $@ ? 0 : 1;
+
     cleanup_files();
 
     write_apache_conf();
     setup_handler('CGI');
     write_test_comps();
 
-    eval { require Apache::Request; };
-    $APACHE{has_apache_request} = $@ ? 0 : 1;
 
     setup_handler('mod_perl') if $APACHE{has_apache_request};
 }
