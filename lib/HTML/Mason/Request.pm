@@ -792,8 +792,7 @@ sub request_args
     if (wantarray) {
 	return @{$self->{request_args}};
     } else {
-	my %h = @{$self->{request_args}};
-	return \%h;
+	return { @{$self->{request_args}} };
     }
 }
 *top_args = \&request_args;
