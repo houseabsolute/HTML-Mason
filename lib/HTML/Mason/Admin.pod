@@ -248,6 +248,35 @@ high-level server root such as F</usr> or F</etc>.
 Mason will create the directory on startup, if necessary, and set its
 permissions according to the web server User/Group.
 
+=head2 Configuration Name
+
+When you configure Mason via your F<httpd.conf> file, Mason has to
+create an ApacheHandler object for each request.  However, as a
+performance enhancement, Mason caches previously created ApacheHandler
+objects internally.  If you give your configurations a unique name,
+then Mason can use this name as its cache key, and gain a significant
+speed boost.
+
+This name is set with the C<MasonConfigName> parameter.  An example
+use of this would be the following:
+
+  <Location /foo>
+    PerlSetVar  MasonConfigName   Foo
+    PerlSetVar  MasonAllowGlobals $Foo
+    SetHandler  perl-script
+    PerlHandler HTML::Mason::ApacheHandler
+  </Location>
+
+  <Location /bar>
+    PerlSetVar  MasonConfigName   Bar
+    PerlSetVar  MasonAllowGlobals $Bar
+    SetHandler  perl-script
+    PerlHandler HTML::Mason::ApacheHandler
+  </Location>
+
+If you don't provide configuration names, Mason will run substantially
+slower.
+
 =head2 External Modules
 
 Components will often need access to external Perl modules. There are
@@ -801,50 +830,24 @@ file, Mason must create one or more ApacheHandler objects internally
 in order to handle requests.
 
 Mason tries to aggressively cache these objects, in order to avoid
-doing more work than necessary for each request.  There are three
-levels of caching.
+doing more work than necessary for each request.  This is done in two
+different ways.
 
 =over 4
 
-=item 1. Cached at Startup
+=item 1. Cached by Name
 
-Mason first tries to create and cache an ApacheHandler object during
-server startup.  It only does this if it guesses that you have just
-one Mason configuration in your F<httpd.conf> file.
+As mentioned previously, if you set the C<MasonConfigName> parameter,
+Mason will use this as its cache key.  This lets Mason find the right
+ApacheHandler object very quickly.
 
-If Mason can read its configuration information during startup, I<and>
-it finds a "MasonCompRoot" setting in that configuration, then it
-assumes that you only have one Mason configuration defined.  Because
-of the way Apache works, any configuration information inside an
-enclosing block, such as a C<< <VirtualHost> >> or C<< <Location> >>
-block, is not seen during server startup, and so will not be cached.
-If you have Mason configured in the simplest way possible, which does
-not require setting a component root, then Mason will assume you may
-have multiple configurations.
+=item 2. Cached by Configuration
 
-=item 2. Cached by Location
-
-If Mason wasn't able to create a single ApacheHandler object at
-startup, then it assumes that you may have multiple Mason
-configurations defined in different blocks of your F<httpd.conf> file.
-When it makes a new ApacheHandler object, it will cache it based on
-the value of C<< $r->location >> and C<< $r->server->server_hostname
->>.
-
-The problem with this method is that only C<< <Location> >> C<<
-<LocationMatch> >>, C<< <Directory> >>, and C<< <DirectoryMatch> >>
-blocks cause C<< $r->location >> to return anything.  If your
-configuration is directly inside a C<< <FilesMatch> >> or C<<
-<VirtualHost> >> block, then C<< $r->location >> returns C<undef>, and
-Mason cannot cache your configuration based on this.
-
-=item 3. Cached by Configuration
-
-The last cache, which is the slowest, is based on a key made up of all
-your configuration values.  This is slowest because it requires Mason
-to read your configuration I<before> it can do a cache lookup, whereas
-the previous two methods do not require reading the configuration on
-every request.
+The other cache, which is the slowest, is based on a key made up of
+all your configuration values.  This is slowest because it requires
+Mason to read your configuration I<before> it can do a cache lookup,
+whereas lookups by an explicit name do not require reading the
+configuration on every request.
 
 =back
 
