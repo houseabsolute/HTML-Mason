@@ -191,7 +191,6 @@ sub cache
     my $interp = $self->interp;
     return undef unless $interp->use_data_cache;
     $options{action} = $options{action} || 'retrieve';
-    $options{key} = $options{key} || 'main';
     
     my $comp = $self->current_comp;
     $options{cache_file} = $comp->cache_file
@@ -200,15 +199,20 @@ sub cache
 	$options{memory_cache} = $interp->{data_cache_store};
 	delete($options{keep_in_memory});
     }
-    
-    my $results = HTML::Mason::Utils::access_data_cache(%options);
-    if ($options{action} eq 'retrieve') {
-	$interp->write_system_log('CACHE_READ',$comp->title,$options{key},
-				  defined $results ? 1 : 0);
-    } elsif ($options{action} eq 'store') {
-	$interp->write_system_log('CACHE_WRITE',$comp->title,$options{key});
+
+    if ($options{action} eq 'retrieve' or $options{action} eq 'store') {
+	my $results = HTML::Mason::Utils::access_data_cache(%options);
+	if ($options{action} eq 'retrieve') {
+	    $interp->write_system_log('CACHE_READ',$comp->title,$options{key} || 'main',
+				      defined $results ? 1 : 0);
+	} elsif ($options{action} eq 'store') {
+	    $interp->write_system_log('CACHE_WRITE',$comp->title,$options{key} || 'main');
+	}
+	return $results;
+    } else {
+	return HTML::Mason::Utils::access_data_cache(%options);
     }
-    return $results;
+
 }
 
 sub cache_self
