@@ -485,10 +485,10 @@ sub _parse_flags_section
 
     my $state = $self->{parser_state};
 
-    my $hash = $self->_parse_hash_pairs($params{section});
-    foreach my $key (keys(%$hash)) {
+    my ($hash,@keys) = $self->_parse_hash_pairs($params{section});
+    foreach my $key (@keys) {
 	die $self->_make_error( error => "invalid flag '$key'" ) unless $valid_comp_flags{$key};
-    }    
+    }
 
     $state->{flags} = $hash;
 }
@@ -500,7 +500,7 @@ sub _parse_attr_section
 
     my $state = $self->{parser_state};
 
-    my $hash = $self->_parse_hash_pairs($params{section});
+    my ($hash) = $self->_parse_hash_pairs($params{section});
 
     $state->{attr} = $hash;
 }
@@ -510,10 +510,20 @@ sub _parse_hash_pairs
 {
     my ($self, $section) = @_;
 
-    my @pairs = grep {/\S/} split /\n/, $section;
-    my $hash = join ",\n", @pairs;
+    my @keys;
+    my @lines = grep {/\S/} split /\n/, $section;
+    my $error_msg = "invalid <%$section%> syntax: each line must be a hash pair of the form 'name => value'";
+    foreach my $line (@lines) {
+	die $self->_make_error( error => $error_msg ) if (index($line,'=>')==-1);
+	my ($key,$value) = split('=>',$line);
+	for ($key) { s/^\s+//; s/\s+$//; }
+	push(@keys,$key);
+	$line .= "\n" if $value =~ /\#/;   # allow comments following value
+    }
+    
+    my $hash = join ",\n", @lines;
 
-    return "{ $hash }";
+    return ("{ $hash }",@keys);
 }
 
 sub _parse_doc_section
@@ -996,26 +1006,26 @@ sub _build_body
 sub _make_error
 {
     my $self = shift;
+    my %params = @_;
 
-    my $d = Data::Dumper->new([shift]);
+    my $d = Data::Dumper->new([\%params]);
     # Brought in from Tools.
     my $dump = dumper_method($d);
     for ($dump) { s/\$VAR1\s*=//g; s/;\s*$// }
 
-    return $dump;
+    return "MASON: $dump\n";
 }
 
 sub _handle_parse_error
 {
     my ($self, $errdump) = @_;
 
-    my $err;
-    eval "\$err = $errdump";
-
     # Just in case this isn't a die from one our methods but is some
     # sort of 'real' error generated in another module.  We need real
     # exceptions.  bleah.
-    die $err unless keys %$err;
+    die $errdump unless substr($errdump,0,7) eq "MASON: ";
+    my $err = eval(substr($errdump,7));
+    die "assert: could not read _make_error output: $@" if $@;
 
     my $state = $self->{parser_state};
 
