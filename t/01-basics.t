@@ -12,7 +12,7 @@ use strict;
 
 ######################### End of black magic.
 
-my $pwd = Cwd::cwd();
+my $pwd = cwd();
 my $comp_root = "$pwd/test/comps";
 my $data_dir = "$pwd/test/data";
 my $results_dir = "test/results/";

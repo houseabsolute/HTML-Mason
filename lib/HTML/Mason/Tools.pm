@@ -17,6 +17,7 @@ require Exporter;
 
 use strict;
 use IO::File qw(!/^SEEK/);
+use Cwd;
 
 #
 # Return contents of file.
@@ -113,7 +114,7 @@ sub make_absolute_path
     my ($path) = @_;
     # filenames beginning with / or a drive letter (e.g. C:/) are absolute
     unless ($path =~ /^([A-Za-z]:)?\//) {
-	$path = cwd . $path;
+	$path = cwd() . $path;
     }
     return $path;
 }
