@@ -138,7 +138,7 @@ use HTML::Mason::MethodMaker
 			 dhandler_arg
 			 interp
 			 parent_request
-                         plugin_objects
+                         plugin_things
 			 request_depth
 			 request_comp ) ],
 
@@ -235,14 +235,13 @@ sub _initialize {
 	}
 
  	# construct a plugin object for each plugin class in each request.
- 	$self->{plugin_objects} = [];
  	foreach my $plugin (@{ delete $self->{plugins} }) {
- 	    my $plugin_object = $plugin;
- 	    if (! ref $plugin) {
+ 	    my $plugin_thing = $plugin;
+ 	    unless (ref $plugin) {
  	        eval "use $plugin;";
- 	        $plugin_object = $plugin->new();
+ 	        $plugin_thing = $plugin->can('new') ? $plugin->new() : $plugin;
  	    }
- 	    push @{$self->{plugin_objects}}, $plugin_object;
+ 	    push @{$self->{plugin_things}}, $plugin_thing;
  	}
 
     };
@@ -352,7 +351,7 @@ sub exec {
 	    my $old = select SELECTED;
 
  	    eval {
- 	      foreach my $plugin (@{$self->plugin_objects}) {
+ 	      foreach my $plugin (@{$self->plugin_things}) {
  		$plugin->start_request( { request => $self,
                                           args => $request_args,
                                           wantarray => $wantarray
@@ -377,7 +376,7 @@ sub exec {
  	    
  	    # plugins called in reverse order when exiting.
  	    eval {
- 	      foreach my $plugin (reverse @{$self->plugin_objects}) {
+ 	      foreach my $plugin (reverse @{$self->plugin_things}) {
  		$plugin->end_request( { request => $self,
                                         args => $request_args,
                                         wantarray => $wantarray,
@@ -1121,7 +1120,7 @@ sub comp {
     my $wantarray = wantarray;
 
     # plugins can modify the arguments before the component sees them!
-    foreach my $plugin (@{$self->plugin_objects}) {
+    foreach my $plugin (@{$self->plugin_things}) {
         $plugin->start_component( { comp => $comp,
                                     args => \@_,
                                     request => $self,
@@ -1146,7 +1145,7 @@ sub comp {
     my $err = $@;
 
     # reverse order for the end hooks.
-    foreach my $plugin (reverse @{$self->plugin_objects}) {
+    foreach my $plugin (reverse @{$self->plugin_things}) {
       $plugin->end_component( { comp => $comp,
                                 args => \@_,
                                 request => $self,
