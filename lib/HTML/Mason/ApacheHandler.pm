@@ -9,8 +9,15 @@ use strict;
 # APACHE-SPECIFIC REQUEST OBJECT
 #
 package HTML::Mason::Request::ApacheHandler;
-use vars qw(@ISA);
-@ISA = qw(HTML::Mason::Request);
+use HTML::Mason::Request;
+use base qw(HTML::Mason::Request);
+
+use HTML::Mason::Exceptions
+    ( abbr => 
+      { param_error => 'HTML::Mason::Exception::Params',
+	error => 'HTML::Mason::Exception',
+      },
+    );
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( ah apache_req ) ] );
@@ -26,14 +33,14 @@ sub new
 {
     my ($class,%options) = @_;
     my $interp = $options{interp} or
-	HTML::Mason::Exception::Params->throw( error => "HTML::Mason::Request::ApacheHandler->new: must specify interp\n" );
+	param_error( "HTML::Mason::Request::ApacheHandler->new: must specify interp\n" );
     delete $options{interp};
     my $self = $class->SUPER::new(interp=>$interp);
     while (my ($key,$value) = each(%options)) {
 	if (exists($reqfields{$key})) {
 	    $self->{$key} = $value;
 	} else {
-	    HTML::Mason::Exception::Params->throw( error => "HTML::Mason::Request::ApacheHandler->new: invalid option '$key'\n" );
+	    param_error( "HTML::Mason::Request::ApacheHandler->new: invalid option '$key'\n" );
 	}
     }
     return $self;
@@ -51,7 +58,7 @@ sub cgi_object
 {
     my ($self) = @_;
 
-    HTML::Mason::Exception->throw( error => "Can't call cgi_object method unless CGI.pm was used to handle incoming arguments.\n" )
+    error( "Can't call cgi_object method unless CGI.pm was used to handle incoming arguments.\n" )
 	unless defined $CGI::VERSION;
 
     if (defined($_[1])) {
@@ -79,12 +86,18 @@ sub SERVER_ERROR { return 500 }
 sub NOT_FOUND { return 404 }
 use File::Path;
 use File::Spec;
-use HTML::Mason::Exceptions;
+use HTML::Mason::Exceptions
+    ( abbr => 
+      { param_error => 'HTML::Mason::Exception::Params',
+	system_error => 'HTML::Mason::Exception::System',
+	error => 'HTML::Mason::Exception',
+      },
+    );
 use HTML::Mason::Interp;
 use HTML::Mason::Error qw(error_process error_display_html);
 use HTML::Mason::Utils;
 use Params::Validate qw(:all);
-Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
+Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
 use Apache;
 use Apache::Status;
@@ -200,10 +213,9 @@ sub make_ah
 	} else {
 	    foreach my $root (@{$p{comp_root}}) {
 		$root = [ split /\s*=>\s*/, $root, 2 ];
-		HTML::Mason::Exception::Params->throw
-		    ( error => "Configuration parameter MasonCompRoot must be either a single string value ".
-		      "or multiple key/value pairs like 'foo => /home/mason/foo'" )
-			unless defined $root->[1];
+		param_error("Configuration parameter MasonCompRoot must be either a single string value ".
+			    "or multiple key/value pairs like 'foo => /home/mason/foo'" )
+		    unless defined $root->[1];
 	    }
 	}
     }
@@ -213,7 +225,7 @@ sub make_ah
     if (!($> || $<)  and  $AH->interp->files_written)
     {
 	chown Apache->server->uid, Apache->server->gid, $AH->interp->files_written
-	    or HTML::Mason::Exception::System->throw( error => "Can't change ownership of files written by interp object: $!\n" );
+	    or system_error( "Can't change ownership of files written by interp object: $!\n" );
     }
 
     $AH->{last_comp_root} = $comp_root;
@@ -245,9 +257,11 @@ sub _get_mason_params
     my $c = Apache->request ? Apache->request : Apache->server;
 
     my $config = $c->dir_config;
+    my $specs = $self->allowed_params;
 
     # Get all params starting with 'Mason'
-    return map { $_ =~ /^Mason/ ? ( $self->calm_form($_) => $self->get_param($_) ) : () } keys %$config;
+    my @candidates = map { /^Mason/ ? $self->calm_form($_) : () } keys %$config;
+    return map { $_ => $self->get_param($_, $specs->{$_}) } @candidates;
 }
 
 sub get_param {
@@ -258,38 +272,18 @@ sub get_param {
 
     # If we weren't given a spec, try to locate one in our own class.
     $spec ||= $self->allowed_params->{$key};
-    HTML::Mason::Exception->throw( error => "Unknown config item '$key'" )
-        unless $spec;
+    error "Unknown config item '$key'" unless $spec;
 
-    return unless $spec->{parse};
-    my $method = "_get_$spec->{parse}_param";
-    my $value = $self->$method('Mason'.$self->studly_form($key));
-
-    if (!defined($value) and exists($spec->{default})) {
-	$value = $spec->{default};
-    }
-    return $value;
-}
-
-sub get_config {
-    # Gets a bunch of config items (specified in the $valid hash) from
-    # current Apache dir_config variables.  Will assign defaults if
-    # appropriate.  Will *not* check for required params - that
-    # happens later, when the params are fed into methods.
-
-    my ($self, $valid) = @_;
-
-    my %config;
-    while (my ($key, $spec) = each %$valid) {
-	# For dir_config params, value is undef if unmentioned, so
-	# don't store undefs.  The TableAPI might be a way around this.
-	my $value = $self->get_param($key, $spec);
-	next if !defined $value;
-	next if $spec->{parse} eq 'list' and !@$value;
-
-	$config{$key} = $value;
-    }
-    return %config;
+    # Guess the default parse type from the Params::Validate validation spec
+    my $type = ($spec->{parse} or
+		$spec->{type} & ARRAYREF ? 'list' :
+		$spec->{type} & SCALAR   ? 'string' :
+		$spec->{type} & CODEREF  ? 'code' :
+		undef);
+    error "Unknown parse type for config item '$key'" unless $type;
+    
+    my $method = "_get_${type}_param";
+    return scalar $self->$method('Mason'.$self->studly_form($key));
 }
 
 sub _get_string_param
@@ -317,7 +311,7 @@ sub _get_code_param
 
     my $sub_ref = eval $val;
 
-    HTML::Mason::Exception::Params->throw( error => "Configuration parameter '$p' is not valid perl:\n$@\n" )
+    param_error( "Configuration parameter '$p' is not valid perl:\n$@\n" )
 	if $@;
 
     return $sub_ref;
@@ -343,7 +337,7 @@ sub _get_val
 
     my @val = Apache::perl_hook('TableApi') ? $c->dir_config->get($p) : $c->dir_config($p);
 
-    HTML::Mason::Exception::Params->throw( error => "Only a single value is allowed for configuration parameter '$p'\n" )
+    param_error( "Only a single value is allowed for configuration parameter '$p'\n" )
 	if @val > 1 && ! $wantarray;
 
     return ($p, $wantarray ? @val : $val[0]);
