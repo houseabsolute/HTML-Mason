@@ -12,6 +12,9 @@ available at http://www.masonhq.com/changes.html.
 - Mason can detect always detect when an object file was compiled with
 an incompatible compiler/lexer, even if the object file contains
 syntax errors.
+- Method and subcomponent blocks with no name (<%method>) were caught
+as an error, but the error message was very confusing.  This has been
+fixed.
 
 [ BUG FIXES ]
 
