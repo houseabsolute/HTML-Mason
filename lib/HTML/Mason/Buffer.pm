@@ -133,8 +133,10 @@ sub _make_output
     
     $self->{output} = $self->{buffer};
     if ($self->{filter_from}) {
-	my $filtered = $self->{filter_from}->filter->(${$self->{output}});
-	$self->{output} = \$filtered;
+        if ( my $filter = $self->{filter_from}->filter ) {
+            my $filtered = $filter->( ${ $self->{output} } );
+            $self->{output} = \$filtered;
+        }
     }
 }
 
