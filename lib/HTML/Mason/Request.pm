@@ -285,8 +285,6 @@ sub exec {
     # package, as well as the component package if that is different.
     #
     local $HTML::Mason::Commands::m = $self;
-    $interp->set_global('m'=>$self)
-        if ($interp->compiler->in_package ne 'HTML::Mason::Commands');
 
     # Save context of subroutine for use inside eval.
     my $wantarray = wantarray;

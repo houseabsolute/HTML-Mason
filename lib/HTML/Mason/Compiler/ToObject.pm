@@ -363,6 +363,7 @@ EOF
 
     return join '', ( $self->preamble,
 		      "my \%ARGS;\n",
+                      $self->_set_request,
 		      @args,
                       $self->_filter,
 		      "\$m->debug_hook( \$m->current_comp->path ) if ( \%DB:: );\n\n",
@@ -372,6 +373,15 @@ EOF
 		      $self->postamble,
 		      "return undef;\n",
 		    );
+}
+
+sub _set_request
+{
+    my $self = shift;
+
+    return if $self->in_package eq 'HTML::Mason::Commands';
+
+    return 'local $' . $self->in_package . '::m = $HTML::Mason::Commands::m;' . "\n";
 }
 
 my %coercion_funcs = ( '@' => 'HTML::Mason::Tools::coerce_to_array',

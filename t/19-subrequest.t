@@ -265,5 +265,24 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'in_package',
+		      description => 'use in_package with subrequest',
+                      interp_params => { in_package => 'Test::Package' },
+		      component => <<'EOF',
+% $::D = 1;
+Before subreq
+% $m->subexec( '/subrequest/support/output' );
+After subreq
+EOF
+		      expect => <<'EOF',
+Before subreq
+More output
+After subreq
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     return $group;
 }
