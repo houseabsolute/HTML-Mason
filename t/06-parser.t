@@ -46,7 +46,7 @@ sub try_exec_with_parser {
     try_exec($interp,$test,$iteration);
 }
 
-print "1..9\n";
+print "1..12\n";
 
 # allow_globals
 undef(*HTML::Mason::Commands::global);
@@ -69,5 +69,31 @@ try_exec_with_parser({allow_globals=>[qw($packvar)],in_package=>'HTML::Mason::Ne
 # preamble/postamble
 try_exec_with_parser({postamble=>'my $msg = "This is the postamble.\n"; $m->out($msg);'},'prepost',1);
 try_exec_with_parser({preamble=>'my $msg = "This is the preamble.\n"; $m->out($msg);'},'prepost',2);
+
+# preprocessing the component
+sub bracket_to_lt_gt
+{
+    my $comp = shift;
+    ${ $comp } =~ s/\[\%(.*?)\%\]/<\%$1\%>/g;
+}
+
+try_exec_with_parser( { preprocess => \&bracket_to_lt_gt }, 'preprocess', 1 );
+
+# postprocessing alpha/perl code
+sub uc_alpha
+{
+    return unless pop eq 'alpha';
+    ${ $_[0] } = uc ${ $_[0] };
+}
+
+sub add_foo_to_perl
+{
+    return unless pop eq 'perl';
+    ${ $_[0] } =~ s/\);/. 'FOO');/;
+}
+
+try_exec_with_parser( { postprocess => \&uc_alpha }, 'postprocess', 1 );
+try_exec_with_parser( { postprocess => \&add_foo_to_perl }, 'postprocess', 2 );
+
 
 1;
