@@ -641,32 +641,10 @@ sub comp {
     # Finally, call component subroutine.
     #
     my ($result, @result);
-    {
-	my $apache_print = \&Apache::print;
-
-	# It is very important that the original Apache::print sub be
-	# restored inside this closure.  Imagine that we are in stream
-	# mode and the output method is:
-	#
-	# sub { for (@_) { $r->print($_) if defined } }
-	#
-	# If we don't restore the original Apache::print sub then we
-	# end up in an infinite loop.
-	local *Apache::print = sub { shift; local *Apache::print = $apache_print; $self->out(@_) };
-
-	my $obj = tied *STDOUT;
-	tie *STDOUT, 'Tie::Handle::Mason', $self, $obj;
-	if (wantarray) {
-	    @result = eval { $comp->run(@args) };
-	} elsif (defined wantarray) {
-	    $result = eval { $comp->run(@args) };
-	} else {
-	    eval { $comp->run(@args) };
-	}
-	untie *STDOUT;
-	if ( $obj && UNIVERSAL::isa( $obj, 'Apache' ) ) {
-	    tie *STDOUT, 'Apache', $obj;
-	}
+    if (wantarray) {
+	@result = $self->_run_comp(wantarray, $comp, @args);
+    } else {
+	$result = $self->_run_comp(wantarray, $comp, @args);
     }
 
     #
@@ -700,6 +678,27 @@ sub comp {
 
     return wantarray ? @result : $result;  # Will return undef in void context (correct)
 }
+
+sub _run_comp
+{
+    my ($self, $wantarray, $comp, @args) = @_;
+
+    my $obj = tied *STDOUT;
+    tie *STDOUT, 'Tie::Handle::Mason', $self, $obj;
+
+    my ($result, @result);
+    if ($wantarray) {
+	@result = eval { $comp->run(@args) };
+    } elsif (defined $wantarray) {
+	$result = eval { $comp->run(@args) };
+    } else {
+	eval { $comp->run(@args) };
+    }
+    untie *STDOUT;
+
+    return wantarray ? @result : $result;
+}
+
 
 #
 # Like comp, but return component output.
@@ -872,7 +871,6 @@ sub current_args { return $_[0]->top_stack->{args} }
 sub current_sink { return $_[0]->{buffer_stack}->[-1]->sink }
 sub top_buffer { return $_[0]->{buffer_stack}->[-1] }
 sub base_comp { return $_[0]->top_stack->{base_comp} }
-
 
 package Tie::Handle::Mason;
 
