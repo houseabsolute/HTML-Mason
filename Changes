@@ -1,9 +1,43 @@
 Revision history for HTML::Mason.
 
 An HTML version of this file, complete with links to documentation, is
-available at http://www.masonhq.com/changes.html.
+available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
+
+1.14  September 24, 2002
+
+[ BACKWARDS COMPATIBILITY ]
+
+- Added compatibility layer for 1.0x cache API. It is now possible to
+use $m->cache and $m->cache_self in the old way by setting the
+data_cache_api parameter to '1.0'. L{Params/data_cache_api}
+- Added back $comp->create_time, which was renamed as $comp->load_time
+in 1.09_02, as a deprecated method.
+- Added back $interp->time and $m->current_time, which were removed in
+1.09_01, as deprecated methods.
+
+[ ENHANCEMENTS ]
+
+- Implemented expire_if and busy_lock options in new $m->cache->get
+API. These retain the essence of the 1.0x options although both
+work a little differently. L{Devel/Data Caching}
+- Added new module to implement caching extensions,
+HTML::Mason::Cache::BaseCache, with accompanying documentation.
+- Enhanced Params.pod with TOC and full descriptions of all
+parameters.  Standardized rest of documentation to link to Params.pod
+when referring to a parameter.
+
+[ BUG FIXES ]
+
+- %ARGS and <%shared> variables could not be accessed from <%filter>.
+(reported by Adam Roth)
+- Switch.pm did not work in file-based components. (reported by Gert
+Thiel)
+- use_strict could not be turned off. (reported by Viacheslav
+Voytovich)
+- $m->clear_buffer (and $m->redirect) did not work inside a component
+call with content. (reported by Manuel Capinha)
 
 1.13  August 26, 2002 (Taiwan time)
 
