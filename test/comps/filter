@@ -1,0 +1,14 @@
+<HTML>
+<HEAD>
+<TITLE>
+filter Test
+</TITLE>
+</HEAD>
+<BODY>
+!dlorW olleH
+</BODY>
+</HTML>
+
+<%filter>
+s/\!dlorW olleH/Hello World!/;
+</%filter>

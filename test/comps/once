@@ -1,0 +1,18 @@
+<HTML>
+<HEAD>
+<TITLE>
+once Test
+</TITLE>
+</HEAD>
+<BODY>
+<% $message %>
+</BODY>
+</HTML>
+
+<%once>
+my $message = "Hello World";
+</%once>
+
+<%perl_init>
+$message .= "!";
+</%perl_init>

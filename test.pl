@@ -8,7 +8,7 @@
 
 use Test;
 
-BEGIN { plan tests => 12 }
+BEGIN { plan tests => 15 }
 use HTML::Mason;
 
 ######################### End of black magic.
@@ -20,8 +20,8 @@ my $tmp_dir = "test/tmp/";
 
 my $buf;
 
-my @comps = qw(replace init perl_init args perl_args doc perl_doc perl percent
-               amper mc_cache mc_cache_self);
+my @comps = qw(replace init perl_init args perl_args doc perl_doc filter once
+               text perl percent amper mc_cache mc_cache_self);
 
 my $parser = new HTML::Mason::Parser;
 my $interp = new HTML::Mason::Interp( parser=>$parser,
