@@ -72,6 +72,7 @@ sub parse
     my $pureTextFlagRef = $options{pure_text_flag};
     my $errorRef = $options{error};
     my $wrapErrors = $options{wrap_errors};
+    my $saveTo = $options{save_to};
     my ($sub, $err, $errpos);
     my $pureTextFlag = 1;
     my $parseError = 1;
@@ -429,8 +430,15 @@ sub parse
 	    $$errorRef = $err if defined($errorRef);
 	}
     }
-    $$resultCodeRef = $sub if $success && defined($resultCodeRef);
+    
+    if (!$parseError && defined($saveTo)) {
+	File::Path::mkpath(File::Basename::dirname($saveTo));
+	my $fh = new IO::File ">$saveTo" or die "Couldn't write object file $saveTo";
+	print $fh $body;
+	$fh->close;
+    }
     $$resultTextRef = $body if !$parseError && defined($resultTextRef);
+    $$resultCodeRef = $sub if $success && defined($resultCodeRef);
     $$pureTextFlagRef = $pureTextFlag if defined($pureTextFlagRef);
     return $success;
 }
@@ -456,7 +464,6 @@ sub evaluate
 	} elsif ($options{script_file}) {
 	    my $file = $options{script_file};
 	    ($file) = ($file =~ /^(.*)$/s) if $self->taint_check;
-	    die "evaluate: script_file '$file' not a regular file" if (!-f $file);
 	    if (!$cpt) {
 		$sub = do($file);
 	    } else {

@@ -431,55 +431,74 @@ sub pure_text_handler
 #
 sub load {
     my ($self,$path) = @_;
-    my ($sub,$err,$maxfilemod,$srcfile,$objfile,$objfilemod,$srcfilemod);
+    my ($sub,$err,$maxfilemod,$srcfile,$objfile,$objfilemod,$srcfilemod) =
+       (undef);  # kludge to load $sub, prevent "use of uninit .." error
+    my (@srcstat, $srcisfile, @objstat, $objisfile);
     my $codeCache = $self->{code_cache};
     my $compRoot = $self->comp_root;
+    $srcfile = $compRoot . $path;
 
     #
-    # If using reload file, check cache first.
+    # If using reload file, assume that we have a cached subroutine or
+    # object file (also assume we're using obj files). If no obj file
+    # exists, this is likely a dhandler request.
     #
-    if (exists($codeCache->{$path}) && $self->use_reload_file) {
-	return @{$codeCache->{$path}->{info}};
+    if ($self->use_reload_file) {
+	return @{$codeCache->{$path}->{info}} if exists($codeCache->{$path});
+
+	$objfile = $self->object_dir . substr($srcfile,length($compRoot));
+	return () unless (-f $objfile);   # component not found
+	
+	$self->write_system_log('COMP_LOAD', $path);	# log the load event
+	$self->parser->evaluate(script_file=>$objfile,code=>\$sub,error=>\$err);
+	if ($err) {
+	    $sub = sub { die "Error while loading '$objfile' at runtime:\n$err\n" };
+	} elsif (!$sub) {
+	    $sub = \&pure_text_handler;
+	}
+	
+	my @info = ($sub,$srcfile);
+	if ($self->{code_cache_mode} eq 'all') {
+	    $codeCache->{$path}->{info} = \@info;
+	}
+	return @info;
     }
     
     #
     # Determine source and (possibly) object filename.
     # If alternate sources are defined, check those first.
     #
-    $srcfile = $compRoot . $path;
     if (defined($self->alternate_sources)) {
 	my @alts = $self->alternate_sources->('comp',$path);
 	foreach my $alt (@alts) {
-	    if (-f $compRoot . $alt) {
+	    @srcstat = stat ($compRoot . $alt);
+	    if (-f _) {
 		$srcfile = $compRoot . $alt;
 		last;
 	    }
 	}
     }
-    return () if (!-f $srcfile);
+    @srcstat = stat $srcfile unless @srcstat;
+    $srcfilemod = $srcstat[9];
+    $srcisfile = -f _;
+    return () unless ($srcisfile);
+    
     if ($self->use_object_files) {
 	$objfile = $self->object_dir . substr($srcfile,length($compRoot));
+	@objstat = stat $objfile;
+	$objisfile = -f _;
     }
     
-    #
-    # If not using reload file, check the last modified times of
-    # source and object filename.
-    #
-    if (!$self->use_reload_file) {
-	$srcfilemod = [stat($srcfile)]->[9];
-    }
-
     #
     # If code cache contains an up to date entry for this path,
     # use the cached sub.
     #
-    if (exists($codeCache->{$path}) && ($self->use_reload_file || $codeCache->{$path}->{lastmod} >= $srcfilemod) && $codeCache->{$path}->{info}->[1] eq $srcfile) {
+    if (exists($codeCache->{$path})                    and
+	$codeCache->{$path}->{lastmod} >= $srcfilemod  and
+	$codeCache->{$path}->{info}->[1] eq $srcfile) {
 	return @{$codeCache->{$path}->{info}};
     } else {
-	if ($self->use_reload_file) {
-	    $srcfilemod = [stat($srcfile)]->[9];
-	}
-	$objfilemod = (defined($objfile) && (-f $objfile)) ? [stat($objfile)]->[9] : 0;
+	$objfilemod = (defined($objfile) and $objisfile) ? $objstat[9] : 0;
 	
 	#
 	# Determine a subroutine.
@@ -490,23 +509,23 @@ sub load {
 	#
 	$self->write_system_log('COMP_LOAD', $path);	# log the load event
 
-	if ($objfile && $objfilemod >= $srcfilemod) {
-	    if ([stat($objfile)]->[7]==0) {
+	if ($objfile and $objfilemod >= $srcfilemod) {
+	    $self->parser->evaluate(script_file=>$objfile,code=>\$sub,error=>\$err);
+	    if ($err) {
+		$sub = sub { die "Error while loading '$objfile' at runtime:\n$err\n" };
+	    } elsif (!$sub) {
 		$sub = \&pure_text_handler;
-	    } else {
-		$self->parser->evaluate(script_file=>$objfile,code=>\$sub,error=>\$err);
-		if ($err) {
-		    $sub = sub { die "Error while loading '$objfile' at runtime:\n$err\n" };
-		}
 	    }
-	}
-
 	#
 	# Parse the source file, and possibly save result in object file.
 	#
-	else {
+	} else {
 	    my ($script,$objtext,$errmsg,$pureTextFlag);
-	    my $success = $self->parser->parse(script_file=>$srcfile, result_text=>\$objtext, error=>\$errmsg, result_code=>\$sub, pure_text_flag=>\$pureTextFlag);
+	    my $success = $self->parser->parse(script_file=>$srcfile,
+					       result_text=>\$objtext,
+					       error=>\$errmsg,
+					       result_code=>\$sub,
+					       pure_text_flag=>\$pureTextFlag);
 	    $sub = \&pure_text_handler if ($pureTextFlag);
 	    if (!$success) {
 		$errmsg = "Error during compilation of $srcfile:\n$errmsg\n";
@@ -546,7 +565,7 @@ sub load {
 	#
 	my @info = ($sub,$srcfile);
 	if ($self->{code_cache_mode} eq 'all') {
-	    $codeCache->{$path}->{lastmod} = $srcfilemod if !$self->use_reload_file;
+	    $codeCache->{$path}->{lastmod} = $srcfilemod;
 	    $codeCache->{$path}->{info} = \@info;
 	}
 	return @info;

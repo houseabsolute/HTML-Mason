@@ -63,7 +63,7 @@ sub mc_cache_self
     return 0 if !$INTERP->use_data_cache;
     return 0 if $INTERP->locals->{inCacheSelfFlag};
     my (%retrieveOptions,%storeOptions);
-    foreach (qw(key expire_if keep_in_memory)) {
+    foreach (qw(key expire_if keep_in_memory busy_lock)) {
 	if (exists($options{$_})) {
 	    $retrieveOptions{$_} = $options{$_};
 	}

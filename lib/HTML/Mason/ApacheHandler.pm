@@ -224,6 +224,7 @@ sub write_debug_file
     my ($self, $r, $dref) = @_;
     my $user = $r->cgi_var('REMOTE_USER') || 'anon';
     my $outFile = sprintf("%d",int(rand(20))+1);
+#$outFile =~ s/\d+/100/ if ($r->the_request =~ m@Reference/travel@);
     my $outDir = $self->debug_dir . "/$user";
     if (!-d $outDir) {
 	mkpath($outDir,0,0755) or die "cannot create debug directory '$outDir'";
