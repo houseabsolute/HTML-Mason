@@ -172,7 +172,7 @@ Finally, the <Location> directive routes those requests to the handler
 routine C<HTML::Mason::handler>.
 
 If you want to create HTML without necessarily using the .html extension,
-you might optionally change your DefaultType:
+change your DefaultType:
 
     DefaultType text/html
 
@@ -260,7 +260,13 @@ check out the sample components in your browser.
 Once you feel comfortable with Mason, you can "fully" install it by
 deleting the "Alias" directive from your httpd.conf, and changing the
 <Location> mapping from "/mason" to just "/". Now all URLs serve
-through Mason.
+through Mason. If you want to maintain a few directories that 
+don't serve through Mason (e.g. for images), you can put in overrides
+like so:
+
+    <Location /plain>
+            SetHandler */*
+    </Location>
 
 B<HTML::Mason::Admin> describes how to configure Mason to work with
 multiple virtual servers on the same box.
@@ -273,9 +279,9 @@ is a complete tutorial for writing, using, and debugging components. A
 companion to the Developer's Manual is the Mason commands reference,
 B<L<HTML::Mason::Commands>>.
 
-System Admins, or others interested in configuring Mason or tuning for
-performance, should read B<L<HTML::Mason::Admin>>. Details of Mason's
-core modules can be found in B<L<HTML::Mason::Parser>>,
+Whoever is responsible for setting up and tuning Mason should read the
+I<Administrator's Manual> (B<L<HTML::Mason::Admin>>).  Details of
+Mason's core modules can be found in B<L<HTML::Mason::Parser>>,
 B<L<HTML::Mason::Interp>>, and B<L<HTML::Mason::ApacheHandler>>.
 
 Most of this documentation assumes that you're running Mason on top of
