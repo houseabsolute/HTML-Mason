@@ -11,9 +11,9 @@ eliminate repetitive work: common design elements (headers, footers,
 menus, logos) can be extracted into their own components where they
 need be changed only once to affect the whole site.
 
-Other Mason features include a graphical site previewing utility, an
-HTML/data caching model, and the ability to walk through requests with
-the Perl debugger.
+Other Mason features include powerful filtering and templating
+facilities, an HTML/data caching model, and a web-based site
+previewing utility.  See http://www.masonhq.com/ for more information.
 
 INSTALLATION
 
@@ -35,32 +35,24 @@ WARNINGS!
 
 * Don't use Mason with an older mod_perl DSO (dynamic shared object).
 
-Using Mason with an older mod_perl DSO will cause your Apache server
-to fail silently at startup. Red Hat 6.1 is one distribution that
-includes such a broken mod_perl DSO.
+Using Mason with a mod_perl DSO may cause your Apache server to crash
+silently at startup, or fail intermittently. The fix for this problem
+is to install Apache/mod_perl with mod_perl compiled statically into
+the Apache binary.  Packages of Apache with a static mod_perl are
+available around the net.
 
-The fix for this problem is to install Apache/mod_perl with mod_perl
-compiled statically into the Apache binary.  Packages of Apache with a
-static mod_perl are available around the net; check
-http://rpmfind.net/ as a starting point.
-
-Recent testing with Apache 1.3.12/mod_perl 1.24 compiled from source
-on Linux 2.2.13 did not exhibit these problems.  Your mileage may
-vary.
-
-* Don't use Mason with taint checking on.
-
-The current version of Mason interacts badly with a nasty taint bug in
-Perl, causing unexpected behavior such as infinite loops.
+Testing with recent mod_perls showed improvements, but because this
+bug can be so intermittent and difficult to spot, mod_perl DSO with
+Mason is still strictly unsupported.
 
 GETTING HELP
 
 The official Mason web site is at http://www.masonhq.com/.  There
 you'll find Mason documentation, news, etc.
 
-A recent copy of the FAQ (Frequently Asked Questions) list is
-included in this release under the faq/ directory.  The most
-recent version is always available on the web site.
+The FAQ, currently maintained by Kwindla Kramer, can be found at
+http://www.masonhq.com/faq/ or
+http://allafrica.com/tools/mason/faq.html.
 
 Several mailing lists exist for Mason users and developers. Full
 information can be found at http://www.masonhq.com/maillist.html.
@@ -73,11 +65,14 @@ a miniature commerce site built with components.
 The Mason component archive (http://www.masonhq.com/arch/), launched
 in November 1999, should be another good source of examples.
 
+Links to various articles containing code examples are listed at
+http://www.masonhq.com/articles.html.
+
 REPORTING BUGS
 
-Send bug reports to the Mason mailing list for quickest response.
-It is a good idea to search the mailing list archives first to see
-if the problem has already been reported.
+Send bug reports to the user's mailing list for quickest response.  But
+first check the mailing list archives and the official bugs list on
+the Mason site to see if the problem has already been reported.
 
 For all bug reports indicate your architecture, Apache/Perl/module
 versions, etc. For installation problems send your handler.pl and
@@ -86,14 +81,15 @@ small component or set of components, and send those.
 
 CONTENT MANAGEMENT
 
-There is a companion content management system for Mason, maintained
-by Mark Schmick.  CM is a web-based interface to your component and
-content files; it allows designers and programmers to work on a site
-remotely without resorting to ftp or telnet. It supports
+There is a companion content management system for Mason, originally
+developed by Mark Schmick and now maintained by Michael Alan Dorman
+and Jaron Rubenstein.  CM is a web-based interface to your component
+and content files; it allows designers and programmers to work on a
+site remotely without resorting to ftp or telnet. It supports
 staging/production sites, RCS versioning of files, global content
 searching, and a host of other features. CM is written entirely as a
 set of Mason components.  Find out more and download a copy at
-http://www.masonhq.com/Mason-CM/.
+http://mason-cm.sourceforge.net/.
 
 LICENSE
 
