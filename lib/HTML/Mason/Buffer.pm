@@ -19,8 +19,6 @@ use HTML::Mason::MethodMaker
 			 parent
                          filter
 			 ignore_flush
-                         sink_is_scalar
-                         buffer
 		       ) ],
     );
 
