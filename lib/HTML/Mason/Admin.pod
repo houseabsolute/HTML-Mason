@@ -641,17 +641,17 @@ To reduce this overhead Mason generates, in certain cases, code that
 reads from the source file at runtime.  For example, the following
 component:
 
-    <%mc_comp(' top')%>
+    <& top &>
     ... 20K of HTML ...
-    <%mc_comp('center')%>
+    <& center &>
     ... 30K of HTML ...
 
 translates to something like:
 
     my $_srctext = mc_file('/usr/local/www/htdocs/foo/bar');
-    print(mc_comp('top'));
+    mc_comp('top');
     print(substr($_srctext,18,20498));
-    print(mc_comp('center'));
+    mc_comp('center');
     print(substr($_srctext,20520,30720));
 
 The resulting code is a bit slower but more memory efficient. Mason

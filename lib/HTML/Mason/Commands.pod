@@ -71,12 +71,12 @@ parameter, the time when the cache value was last written.
 =item mc_cache_self (... same as mc_cache options...)
 
 Uses mc_cache to cache the entire output of the current component.  It is typically
-used right at the top of a C<E<lt>%perl_init%E<gt>> section:
+used right at the top of a C<E<lt>%init%E<gt>> section:
 
-    <%perl_init>
+    <%init>
         return if mc_cache_self(expire_in=>'3 hours'[, key=>'fookey']);
-        ... <rest of perl_init> ...
-    </%perl_init>
+        ... <rest of init> ...
+    </%init>
 
 The "return if" is necessary. mc_cache_self handles both the retrieve
 and store, so you can pass both kinds of options to it. See
@@ -121,6 +121,8 @@ then returned from the mc_comp call.
 If you want to capture the output of a component in a string, send a
 scalar reference with the STORE option. The output will be placed in
 the scalar instead of being sent to the default output stream.
+
+The <& &> tag provides a convenient shortcut for mc_comp.
 
 =item mc_comp_exists (compPath)
 
@@ -210,7 +212,7 @@ its leading slash.
 
 Mason normally emits any pending HTTP headers just before entering
 the primary section of a component. To prevent this, call
-mc_suppress_http_header(1) somewhere in the C<E<lt>%perl_init%E<gt>>
+mc_suppress_http_header(1) somewhere in the C<E<lt>%init%E<gt>>
 block. You can call mc_suppress_http_header(0) to cancel.
 
 =back

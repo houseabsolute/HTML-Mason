@@ -96,16 +96,18 @@ Installation/handler.pl" section of the administration manual (Admin.pod).
 
 =head2 Can I define subroutines in components?
 
-You should not define traditional named subroutines in components, e.g. "sub
-foo {...}", because components are implemented as subroutines, and Perl does
-not like named subroutines to be defined inside other subroutines.  It may
-not raise an error, but it will not work reliably.  Except in odd situations,
-you should use components to break your code into "subroutines" and use
-mc_comp() to call them.
+You can define named subroutines inside the <%once> section of any
+component.  Defining the subroutine in a <%perl> or <%init> section is
+not reliable because such a definition would end up residing inside
+another subroutine, and Perl doesn't like that.
 
-You can define anonymous subroutines inside components:
+You can define anonymous subroutines anywhere:
 
 	my $foo = sub foo {...};
+
+Finally, consider using a separate component instead of a subroutine;
+they are functionally equivalent, and this is playing to Mason's
+strengths.
 
 =head2 Can I serve images through a HTML::Mason server?
 
@@ -205,9 +207,9 @@ Use mc_abort, documented in the commands manual (Commands.pm).
 =head2 How do I access GET or POST arguments?
 
 GET and POST arguments are automatically parsed and placed into named
-component arguments just as if you had called the component with mc_comp and
-parameters. So you can get at GET/POST data by pre-declaring argument names
-and/or using the %ARGS hash which is always available.
+component arguments just as if you had called the component with <& &>
+or mc_comp.  So you can get at GET/POST data by pre-declaring argument
+names and/or using the %ARGS hash which is always available.
 
 =head2 Should I use CGI.pm to read GET/POST arguments?
 
@@ -289,7 +291,7 @@ be careful! Any code inside the section will still execute. Here's a example
 of commenting out a call to an ad server:
 
 	<!-- temporarily comment out
-	<%mc_comp('FetchAd')%>
+	<& FetchAd &>
 	-->
 
 The ad will still be fetched and counted, but not displayed!

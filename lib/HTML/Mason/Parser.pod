@@ -29,15 +29,18 @@ added to this list.
 
 =item ignore_warnings_expr
 
-Regular expression indicating which warnings to
-ignore when compiling subroutines. Any warning that is not ignored
-will prevent the component from being compiled and executed. For
-example:
+Regular expression indicating which warnings to ignore when compiling
+subroutines. Any warning that is not ignored will prevent the
+component from being compiled and executed. For example:
 
     ignore_warnings_expr =>
         'Global symbol.*requires explicit package'
 
-Undefined by default, meaning that all warnings are fatal. 
+If undef, all warnings are heeded; if '.', all warnings are ignored.
+
+By default, this is set to 'Subroutine .* redefined'.  This allows you
+to declare global subroutines inside <%once> sections and not receive
+an error when the component is reloaded.
 
 =item in_package
 
