@@ -525,7 +525,6 @@ sub code_cache_decay_factor { 0.75 }
 sub eval_object_code
 {
     my ($self, %p) = @_;
-    my $code = ref($p{object_code}) ? $p{object_code} : \($p{object_code} || '');
 
     $self->compiler->assert_creatorship(\%p);
 
