@@ -941,7 +941,7 @@ sub comp {
 
     unless ( $mods{base_comp} ||	# base_comp override
 	     !$path || 		# path is undef if $comp is a reference
-	     ($comp->is_subcomp && $comp->owner eq $self->current_comp) || # called a subcomp
+	     ($comp->is_subcomp && ! $comp->is_method) ||
 	     $path =~ m/^(?:SELF|PARENT)(?:\:..*)?$/ ) {
 	$base_comp = ( $path =~ m/(.*):/ ?
 		       $self->fetch_comp($1) :
