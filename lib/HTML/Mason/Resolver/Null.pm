@@ -76,6 +76,6 @@ EOF
 
 =head1 SEE ALSO
 
-L<HTML::Mason>
+L<HTML::Mason|HTML::Mason>
 
 =cut

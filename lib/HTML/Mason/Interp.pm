@@ -711,7 +711,8 @@ which internally calls the Interp implementation methods. In that case
 the only user method is the new() constructor.
 
 If you want to call components outside of mod_perl (e.g. from CGI or a
-stand-alone Perl script), see the L<STANDALONE MODE> section below.
+stand-alone Perl script), see the L<STANDALONE MODE|"STANDALONE MODE">
+section below.
 
 =head1 PARAMETERS FOR new() CONSTRUCTOR
 
@@ -734,8 +735,8 @@ where components are stored. e.g.
     code_cache_max_size => 20*1024*1024
     code_cache_max_size => 20_000_000
 
-Default is 10 MB. See the L<Admin/Code Cache> section of the I<Admin Guide>
-for further details.
+Default is 10 MB. See the L<Code Cache section in the I<Admin
+Guide>|Admin/"Code Cache"> for further details.
 
 =item compiler
 
@@ -817,8 +818,8 @@ when the interpreter initializes. e.g.
 
 Default is the empty list.  For maximum performance, this should only
 be used for components that are frequently viewed and rarely updated.
-See the L<Admin/preloading> section of the I<Admin Guide> for further
-details.
+See the L<preloading section in the I<Admin Guide>|Admin/preloading>
+for further details.
 
 =item use_object_files
 
@@ -864,17 +865,17 @@ in the case of a list or hash.  For example:
 
 The global is set in the package that components run in: usually
 C<HTML::Mason::Commands>, although this can be overridden via the
-Compiler parameter L<Compiler/in_package>.  The lines above, for
-example, are equivalent to:
+L<Compiler's in_package|Compiler/in_package> parameter.  The lines
+above, for example, are equivalent to:
 
     $HTML::Mason::Commands::dbh = DBI->connect(...);
     %HTML::Mason::Commands::session = %s;
 
 assuming that C<in_package> has not been changed.
 
-Any global that you set should also be registered with the Compiler
-parameter L<Compiler/allow_globals>; otherwise you'll get warnings
-from C<strict>.
+Any global that you set should also be registered with the
+L<Compiler's allow_globals|Compiler/allow_globals> parameter;
+otherwise you'll get warnings from C<strict>.
 
 =for html <a name="item_comp_exists">
 
@@ -894,7 +895,7 @@ Component object.  The source may be passed in as a string in C<comp_source>,
 or as a filename in C<comp_file>.  When using C<comp_file>, the
 filename is specified as a path on the file system, not as a path
 relative to Mason's component root (see 
-L<HTML::Mason::Request/fetch_comp> for that).
+L<Request-E<gt>fetch_comp|HTML::Mason::Request/fetch_comp> for that).
 
 If Mason encounters an error during processing, an exception will be thrown.
 
@@ -1074,8 +1075,8 @@ paths and treat them as being relative to the current director.
 
 =head1 SEE ALSO
 
-L<HTML::Mason>,
-L<HTML::Mason::Admin>,
-L<HTML::Mason::ApacheHandler>
+L<HTML::Mason|HTML::Mason>,
+L<HTML::Mason::Admin|HTML::Mason::Admin>,
+L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>
 
 =cut

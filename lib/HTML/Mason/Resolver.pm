@@ -102,7 +102,7 @@ will need to override it in your subclass.
 =item get_info
 
 Given an absolute component path, returns a new
-L<C<HTML::Mason::ComponentSource>> object.
+L<HTML::Mason::ComponentSource|HTML::Mason::ComponentSource> object.
 
 =item glob_path
 
@@ -130,27 +130,31 @@ resolver.
 =head2 Using a Resolver with HTML::Mason::ApacheHandler
 
 If you are creating a new resolver that you intend to use with the
-L<C<HTML::Mason::ApacheHandler>> module, then you must implement the
-following method as well, possibly in a different subclass.
-
-For example, Mason includes the C<HTML::Mason::Resolver::File> and
-C<HTML::Mason::Resolver::File::ApacheHandler> classes.  The latter simply
-adds an implementation of this method for file based components.
+L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler> module, then
+you must implement the following method as well, possibly in a
+different subclass.
 
 =over 4
 
-=item apache_request_to_comp_path
+=item apache_request_to_comp_path ($r)
 
 This method, given an Apache object, should return a component path.
-This method is used by the HTML::Mason::ApacheHandler class to
+This method is used by the
+L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler> class to
 translate web requests into component paths.  You can omit this method
 if your resolver subclass will never be used in conjunction with
-HTML::Mason::ApacheHandler.
+L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>.
 
 =back
 
+For example, Mason includes the
+L<HTML::Mason::Resolver::File|HTML::Mason::Resolver::File> and
+HTML::Mason::Resolver::File::ApacheHandler classes.  The latter simply
+adds an implementation of the C<apache_request_to_comp_path> method
+for file based components.
+
 =head1 SEE ALSO
 
-L<HTML::Mason>
+L<HTML::Mason|HTML::Mason>
 
 =cut

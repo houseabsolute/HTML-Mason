@@ -150,6 +150,6 @@ as the parameters given for 'read_write' accessors.
 
 =head1 SEE ALSO
 
-L<HTML::Mason>
+L<HTML::Mason|HTML::Mason>
 
 =cut

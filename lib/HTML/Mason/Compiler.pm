@@ -543,8 +543,8 @@ soon as the text has been looked at a little bit.
 
 =head1 SEE ALSO
 
-L<HTML::Mason>,
-L<HTML::Mason::Admin>,
-L<HTML::Mason::Interp>
+L<HTML::Mason|HTML::Mason>,
+L<HTML::Mason::Admin|HTML::Mason::Admin>,
+L<HTML::Mason::Interp|HTML::Mason::Interp>
 
 =cut

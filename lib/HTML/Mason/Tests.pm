@@ -685,8 +685,8 @@ One of the following three options is required:
 =item * expect
 
 The text expected as a result of calling the component.  This
-parameter is _not_ required when running in L<Create mode|ADDITIONAL
-RUN MODES>.
+parameter is _not_ required when running in L<Create mode|"ADDITIONAL
+RUN MODES">.
 
 =item * expect_error
 
@@ -760,6 +760,6 @@ correct!).
 
 =head1 SEE ALSO
 
-L<HTML::Mason>
+L<HTML::Mason|HTML::Mason>
 
 =cut

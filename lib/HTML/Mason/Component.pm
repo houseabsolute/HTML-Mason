@@ -351,11 +351,14 @@ directly with a component object.
 =head2 CREATING AND ACCESSING COMPONENTS
 
 Common ways to get handles on existing component objects include the
-L<Request/current_comp>, L<Request/callers>, and L<Request/fetch_comp> Request methods.
+L<Request-E<gt>current_comp|Request/current_comp>,
+L<Request-E<gt>callers|Request/callers>, and
+L<Request-E<gt>fetch_comp|Request/fetch_comp> methods.
 
 There is no published C<new> method, because creating a component
-requires an Interpreter. Use the L<Interp/make_component> Interp method to create a
-new component dynamically.
+requires an Interpreter. Use the L<Interp's
+make_component|Interp/make_component> method to create a new component
+dynamically.
 
 Similarly, there is no C<execute> or C<call> method, because calling a
 component requires a request. All of the interfaces for calling a
@@ -475,9 +478,10 @@ Returns the entire path of this component, relative to the component root.
 
 =item scall_method (name, args...)
 
-Like L<Component/call_method (name, args...)>, but returns the method
-output as a string instead of printing it. (Think sprintf versus
-printf.) The method's return value, if any, is discarded.
+Like L<Component-E<gt>call_method (name,
+args...)|Component/call_method (name, args...)>, but returns the
+method output as a string instead of printing it. (Think sprintf
+versus printf.) The method's return value, if any, is discarded.
 
 =item subcomps
 
@@ -532,8 +536,8 @@ Returns the directory of the source filename for this component.
 
 =head1 SEE ALSO
 
-L<HTML::Mason>,
-L<HTML::Mason::Devel>,
-L<HTML::Mason::Request>
+L<HTML::Mason|HTML::Mason>,
+L<HTML::Mason::Devel|HTML::Mason::Devel>,
+L<HTML::Mason::Request|HTML::Mason::Request>
 
 =cut

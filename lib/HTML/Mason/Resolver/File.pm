@@ -177,12 +177,12 @@ this class provides one additional method.
 =item comp_root
 
 This method returns the component root, which will either be a scalar
-or an array reference, as documented in L<CONSTRUCTOR|CONSTRUCTOR>.
+or an array reference, as documented in L<CONSTRUCTOR|"CONSTRUCTOR">.
 
 =back
 
 =head1 SEE ALSO
 
-L<HTML::Mason>
+L<HTML::Mason|HTML::Mason>
 
 =cut

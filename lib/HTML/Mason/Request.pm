@@ -906,10 +906,12 @@ method C<instance>.
 
 =head1 COMPONENT PATHS
 
-The methods L<Request/comp>, L<Request/comp_exists>, and
-L<Request/fetch_comp> take a component path argument.  Component paths
-are like URL paths, and always use a forward slash (/) as the
-separator, regardless of what your operating system uses.
+The methods L<Request-E<gt>comp|HTML::Mason::Request/comp>,
+L<Request-E<gt>comp_exists|HTML::Mason::Request/comp_exists>, and
+L<Request-E<gt>fetch_comp|HTML::Mason::Request/fetch_comp> take a
+component path argument.  Component paths are like URL paths, and
+always use a forward slash (/) as the separator, regardless of what
+your operating system uses.
 
 =over
 
@@ -1020,8 +1022,9 @@ without an argument.
 Returns the current base component for method and attributes.
 Generally set to the original page component; however, if you invoke
 call_method on a component, C<base_comp> is dynamically set to that
-component until call_method exits. See L<Devel/Object-Oriented
-Techniques> for examples of usage.
+component until call_method exits. See L<Object-Oriented Techniques in
+the I<Component Developer's Guide>|HTML::Mason::Devel/"Object-Oriented
+Techniques"> for examples of usage.
 
 =for html <a name="item_cache">
 
@@ -1040,9 +1043,10 @@ I<cache_options> may include any valid options to the new() method of
 the cache class. e.g. for Cache::FileCache, valid options include
 default_expires_in and cache_depth.
 
-See the L<Devel/data caching> section of the I<Component Developer's
-Guide> for examples and caching strategies. See the Cache::Cache
-documentation for a complete list of options and methods.
+See the L<data caching in the I<Component Developer's
+Guide>|HTML::Mason::Devel/"data caching"> for examples and caching
+strategies. See the Cache::Cache documentation for a complete list of
+options and methods.
 
 =for html <a name="item_cache_self">
 
@@ -1145,8 +1149,9 @@ from an autohandler. With no arguments, the original arguments are
 passed to the component.  Any arguments specified here serve to
 augment and override (in case of conflict) the original
 arguments. Works like C<$m-E<gt>comp> in terms of return value and
-scalar/list context.  See the L<Devel/autohandlers> section of the
-I<Component Developer's Guide> for examples.
+scalar/list context.  See the L<autohandlers section in the
+I<Component Developer's Guide>|HTML::Mason::Devel/"autohandlers"> for
+examples.
 
 =for html <a name="item_clear_buffer">
 
@@ -1302,17 +1307,17 @@ undef if no such component exists.
 
 Returns the next component in the content wrapping chain, or undef if
 there is no next component. Usually called from an autohandler.  See
-the L<Devel/autohandlers> section of the I<Component Developer's
-Guide> for usage and examples.
+the L<autohandlers section in the I<Component Developer's
+Guide>|HTML::Mason::Devel/"autohandlers"> for usage and examples.
 
 =for html <a name="item_fetch_next_all">
 
 =item fetch_next_all
 
 Returns a list of the remaining components in the content wrapping
-chain. Usually called from an autohandler.  See the
-L<Devel/autohandlers> section of the I<Component Developer's Guide>
-for usage and examples.
+chain. Usually called from an autohandler.  See the L<autohandlers
+section in the I<Component Developer's
+Guide>|HTML::Mason::Devel/"autohandlers"> for usage and examples.
 
 =for html <a name="item_file">
 
@@ -1351,8 +1356,9 @@ This method creates a new Request object which inherits its parent's
 settable properties, such as C<autoflush> and C<out_method>.  These
 values may be overridden by passing parameters to this method.
 
-See the L<Devel/Subrequests> of the Component Developer's Guide for
-more details about the subrequest feature.
+See the L<Subrequests section in the I<Component Developer's
+Guide>|HTML::Mason::Devel/"Subrequests"> for more details about the
+subrequest feature.
 
 =for html <a name="item_out">
 
@@ -1394,9 +1400,10 @@ autohandlers and dhandlers take effect.
 =item top_args
 
 Returns the arguments originally passed to the top level component
-(see L<Request/top_comp> for definition).  When called in scalar
-context, a hash reference is returned. When called in list context, a
-list of arguments (which may be assigned to a hash) is returned.
+(see L<Request-E<gt>top_comp|HTML::Mason::Request/top_comp> for
+definition).  When called in scalar context, a hash reference is
+returned. When called in list context, a list of arguments (which may
+be assigned to a hash) is returned.
 
 =for html <a name="item_top_comp">
 
@@ -1438,8 +1445,9 @@ automatically send HTTP headers before sending content back to the
 client. If you set to false, you should call $r->send_http_header
 manually.
 
-See the L<Devel/sending_http_headers> of the Component Developer's
-Guide for details about the automatic header feature.
+See the L<Sending HTTP Headers section of the I<Component Developer's
+Guide>|HTML::Mason::Devel/"Sending HTTP Headers> for details about the
+automatic header feature.
 
 =for html <a name="item_cgi_object">
 
@@ -1449,7 +1457,8 @@ Returns the CGI object used to parse any CGI parameters submitted to
 the component, assuming that you have not changed the default value of
 the ApacheHandler C<args_method> parameter.  If you are using the
 'mod_perl' args method, then calling this method is a fatal error.
-See the L<HTML::Mason::ApacheHandler> documentation for more details.
+See the L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>
+documentation for more details.
 
 =back
 
@@ -1459,8 +1468,8 @@ Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams
 
 =head1 SEE ALSO
 
-L<HTML::Mason>,
-L<HTML::Mason::Devel>,
-L<HTML::Mason::Component>
+L<HTML::Mason|HTML::Mason>,
+L<HTML::Mason::Devel|HTML::Mason::Devel>,
+L<HTML::Mason::Component|HTML::Mason::Component>
 
 =cut
