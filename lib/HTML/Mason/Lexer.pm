@@ -459,9 +459,9 @@ sub match_text
                      |
                      </%        # a tag end
                      |
-                     <&         # a comp call
+                     <&         # a comp call start
                      |
-                     </&        # a filtering comp end
+                     </&        # a comp call end
                      |
                      \\\n       # an escaped newline
                      |
