@@ -726,10 +726,10 @@ sub _parse_substitute_tag
     # Process escape flags, default and/or provided.
     my $expr = substr($params{text}, $params{index} + 2, $length);
     my $escape_flags = $self->default_escape_flags;
-    if (my ($extra_escape_flags) = ($expr =~ /\|([A-Za-z ]+)$/)) {
+    if (my ($extra_escape_flags) = ($expr =~ /\|([A-Za-z\s]+)$/)) {
 	$expr = substr($expr,0,length($expr)-length($extra_escape_flags)-1);
 	$escape_flags = '' if ($extra_escape_flags =~ /n/);
-	$extra_escape_flags =~ s/[ n]//g;
+	$extra_escape_flags =~ s/[\sn]//g;
 	$escape_flags .= $extra_escape_flags;
     }
     my $perl;
