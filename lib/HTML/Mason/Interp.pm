@@ -877,9 +877,9 @@ value indicating whether or not a component exists for that path.
 
 =for html <a name="item_make_component">
 
-=item make_component (comp_source=>... [, path=>...])
+=item make_component (comp_source => ... )
 
-=item make_component (comp_file=>... [, path=>...])
+=item make_component (comp_file => ... )
 
 This method compiles Mason component source code and returns a
 Component object.  The source may be passed in as a string in C<comp_source>,
@@ -887,11 +887,6 @@ or as a filename in C<comp_file>.  When using C<comp_file>, the
 filename is specified as a path on the file system, not as a path
 relative to Mason's component root (see 
 L<HTML::Mason::Request/fetch_comp> for that).
-
-If you pass a C<path> parameter, the new component will be 'public',
-and callable from other components via the specified path.  Otherwise
-the component will be anonymous, and the only way to access the
-component will be through the returned component object.
 
 If Mason encounters an error during processing, an exception will be thrown.
 
