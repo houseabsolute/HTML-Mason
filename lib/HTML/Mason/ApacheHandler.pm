@@ -13,12 +13,14 @@ package HTML::Mason::Request::ApacheHandler;
 use vars qw(@ISA);
 @ISA = qw(HTML::Mason::Request);
 
-use HTML::Mason::MethodMaker ( read_write => [ qw( ah apache_req ) ] );
+use HTML::Mason::MethodMaker ( read_only => 'cgi_object',
+			       read_write => [ qw( ah apache_req ) ] );
 
 # Fields that can be set in new method, with defaults
 my %reqfields =
     (ah => undef,
      apache_req => undef,
+     cgi_object => undef,
      );
 
 sub new
@@ -297,7 +299,8 @@ sub handle_request {
     my $request = new HTML::Mason::Request::ApacheHandler
 	(ah=>$self,
 	 interp=>$interp,
-	 apache_req=>$apreq
+	 apache_req=>$apreq,
+	 cgi_object=>$self->{cgi_object},
 	 );
     
     eval { $retval = $self->handle_request_1($apreq, $request, $debugState) };
@@ -635,17 +638,17 @@ sub _cgi_args
     my $r = $$rref;
     my $q;
     unless ($r->method eq 'GET' && !scalar($r->args)) {
-        $q = CGI->new;
+        $self->{cgi_object} = CGI->new;
     }
 
-    return () unless defined $q;
+    return unless exists $self->{cgi_object};
 
     my %args;
-    foreach my $key ( $q->param ) {
-	foreach my $value ( $q->param($key) ) {
+    foreach my $key ( $self->{cgi_object}->param ) {
+	foreach my $value ( $self->{cgi_object}->param($key) ) {
 	    if (exists($args{$key})) {
 		if (ref($args{$key}) eq 'ARRAY') {
-		    $args{$key} = [@{$args{$key}}, $value];
+		    push @{ $args{$key} }, $value;
 		} else {
 		    $args{$key} = [$args{$key}, $value];
 		}
@@ -669,14 +672,14 @@ sub _mod_perl_args
     my $apr = Apache::Request->new($$rref);
     $$rref = $apr;
 
-    return () unless $apr->param;
+    return unless $apr->param;
 
     my %args;
     foreach my $key ( $apr->param ) {
 	foreach my $value ( $apr->param($key) ) {
 	    if (exists($args{$key})) {
 		if (ref($args{$key}) eq 'ARRAY') {
-		    $args{$key} = [@{$args{$key}}, $value];
+		    push @{ $args{$key} }, $value;
 		} else {
 		    $args{$key} = [$args{$key}, $value];
 		}
