@@ -14,7 +14,7 @@ use base qw(HTML::Mason::Component);
 
 use HTML::Mason::Exceptions( abbr => ['error'] );
 
-use HTML::Mason::MethodMaker ( read_only => [ qw( path source_file ) ] );
+use HTML::Mason::MethodMaker ( read_only => [ qw( path source_file name dir_path ) ] );
 
 sub is_file_based { 1 }
 sub persistent { 1 }
@@ -27,12 +27,6 @@ sub title {
     return $self->path . ($self->{source_root_key} ? " [".lc($self->{source_root_key})."]" : "");
     #return $self->path . ($self->{source_root_key} ? " [$self->{source_root_key}]" : "");
 }
-sub name { return basename($_[0]->path) }
-sub dir_path {
-    my $dir_path = dirname($_[0]->path);
-    $dir_path =~ s/\/$// unless $dir_path eq '/';
-    return $dir_path;
-}
 
 # Ends up setting $self->{path, source_root_key, source_file} and a few in the parent class
 sub assign_runtime_properties {
@@ -41,6 +35,12 @@ sub assign_runtime_properties {
     $self->{path} = $info{url_path};
     $self->{source_file} = $info{disk_path};
     $self->{source_root_key} = $info{comp_root};
+
+    # We used to use File::Basename for this but that is broken
+    # because URL paths always use '/' as the dir-separator but we
+    # could be running on any OS.
+    ($self->{dir_path}, $self->{name}) = $self->{path} =~ m,(.*/)([^/]+)$,;
+    $self->{dir_path} =~ s,/$,,;
 
     $self->SUPER::assign_runtime_properties($interp, %info);
 }
