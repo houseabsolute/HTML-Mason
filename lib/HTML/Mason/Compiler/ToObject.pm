@@ -21,8 +21,7 @@ use HTML::Mason::MethodMaker
     );
 
 my %fields =
-    ( comp_class => 'HTML::Mason::Component',
-      in_package => 'HTML::Mason::Commands',
+    ( in_package => 'HTML::Mason::Commands',
       postamble => '',
       preamble => '',
       use_strict => 1,
@@ -50,6 +49,15 @@ sub new
     return $self;
 }
 
+sub compile
+{
+    my $self = shift;
+    my %p = @_;
+
+    $self->comp_class( $p{comp_class} || 'HTML::Mason::Component' );
+    return $self->SUPER::compile(%p);
+}
+
 sub compiled_component
 {
     my $self = shift;
@@ -63,13 +71,13 @@ sub compiled_component
     my $params = $self->_component_params;
 
     # Maybe use some sort of checksum of lexer & compiler names and versions?
-    $params->{parser_version} = '';
+    $params->{parser_version} = "'0.8'";
     $params->{create_time} = time;
 
-    $params->{subcomponents} = '\%_subcomponents' if %{ $self->{subcomponents} };
+    $params->{subcomps} = '\%_subcomponents' if %{ $self->{subcomponents} };
     $params->{methods} = '\%_methods' if %{ $self->{methods} };
 
-    if ( $self->{shared} )
+    if ( $self->_blocks('shared') )
     {
 	my %subs;
 	while ( my ($name, $pref) = each %{ $self->{compiled_subcomponents} } )
@@ -89,7 +97,7 @@ sub compiled_component
 
 	$params->{dynamic_subs_init} =
 	    join '', ( "sub {\n",
-		       $self->{current_comp}{shared},
+		       $self->_blocks('shared'),
 		       "return {\n",
 		       join( ",\n", map { "'$_' => $subs{$_}" } sort keys %subs ),
 		       "\n}\n}"
@@ -99,11 +107,13 @@ sub compiled_component
     $params->{object_size} = (length $header) + (length join '', values %$params, keys %$params);
 
     my $object = join '', ( $header,
-			    $self->_constructor( $self->{comp_class},
-						 $params ),
 			    $self->_subcomponents_footer,
 			    $self->_methods_footer,
+			    $self->_constructor( $self->comp_class,
+						 $params ),
+			    ';',
 			  );
+    $object .= ';';
 
     $self->{current_comp} = undef;
 
@@ -151,7 +161,7 @@ sub _make_main_header
 		      sprintf( "use vars qw(\%s);\n",
 			       join ' ', '$m', $self->allow_globals ),
 		      "my \$_escape = \\&HTML::Mason::Parser::_escape_perl_expression;\n",
-		      $self->{once},
+		      $self->_blocks('once'),
 		    );
 }
 
@@ -221,7 +231,7 @@ sub _body
     my $self = shift;
 
     my @args;
-    if ( $self->{current_comp}{args} )
+    if ( keys %{ $self->{current_comp}{args} } )
     {
 	@args = ( <<'EOF',
 if (@_ % 2 == 0) { %ARGS = @_ } else { die "Odd number of parameters passed to component expecting name/value pairs" }
@@ -238,14 +248,30 @@ EOF
 		      "my \%ARGS;\n",
 		      @args,
 		      "my \$_out = \$m->current_sink;\n",
+		      $self->_add_filter,
 		      "\$m->debug_hook( \$m->current_comp->path ) if ( \%DB:: );\n\n",
-		      $self->{current_comp}{filter},
-		      $self->{current_comp}{init},
+		      $self->_blocks('init'),
 		      $self->{current_comp}{body},
-		      $self->{current_comp}{cleanup},
+		      $self->_blocks('cleanup'),
 		      $self->postamble,
 		      "return undef;\n",
 		    );
+}
+
+sub _add_filter
+{
+    my $self = shift;
+    return unless $self->_blocks('filter');
+
+    return ( "{ my (\$_c,\$_r);\n",
+	     "if (\$m->call_self(\\\$_c,\\\$_r)) {\n",
+	     "for (\$_c) {\n",
+	     $self->_blocks('filter'),
+	     "}\n",
+	     "\$m->out(\$_c);\n",
+	     "return \$_r }\n",
+	     "};\n",
+	   );
 }
 
 sub _arg_declarations
@@ -265,18 +291,19 @@ sub _arg_declarations
 	if ( $_->{type} eq '$' )
 	{
 	    push @args,
-		"my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val : \$ARGS{'$_->{name}'} );";
+		( "my $_->{type}$_->{name} = !exists \$ARGS{'$_->{name}'} ? $default_val : \$ARGS{'$_->{name}'};" );
 	}
 	# Array
 	elsif ( $_->{type} eq '@' )
 	{
-	    push @args, ( "my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val : ",
+	    push @args, ( "my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
 			  "UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'}}  : ( \$ARGS{'$_->{name}'} ) );",
 			);
 	}
 	# Hash
-	elsif ($_->{type} eq "\%") {
-	    push @args, ( "my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val : ",
+	elsif ( $_->{type} eq "\%" )
+	{
+	    push @args, ( "my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
 			  "UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'} } : ",
 			  "UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'HASH' ) ? \%{ \$ARGS{'$_->{name}'} } : ",
 			  qq|die "single value sent for hash parameter '$_->{type}$_->{name}'");|,
