@@ -80,6 +80,9 @@ sub assign_runtime_properties {
     }
 }
 
+# Legacy, left in for pre-0.8 obj files
+sub assign_subcomponent_properties {}
+
 #
 # By default components are not persistent.
 #

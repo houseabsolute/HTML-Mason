@@ -24,6 +24,11 @@ convert0.8.pl handles this change. L{Devel/autohandlers}
 request (in batch mode) or just before the first non-whitespace output
 (in stream mode). suppress_http_header no longer needed.
 L{Devel/sending http headers}
+- New organization of Component class into subclasses
+Component::FileBased and Component::Subcomponent. No outward change.
+- Updated object file format. Mason should generally auto-detect
+and recompile old object files, but may not catch everything. Try
+removing your object directory if errors persist.
 - ** mc_suppress_http_header command still exists but does nothing.
 In most cases this should not cause a problem. The only
 incompatibility is if you have used mc_suppress_http_header to
