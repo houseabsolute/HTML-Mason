@@ -117,10 +117,14 @@ sub parse
     #
     # Pre-substitute \cA and \cB for %PERL and /%PERL to ease parsing.
     #
-    my $perlbeginmark = "<perl>";
-    my $perlendmark = "</perl>";
+    my $perlbeginmark = "<%perl>";
+    my $perlendmark = "</%perl>";
+    my $perloffbeginmark = "<%perl_off>";
+    my $perloffendmark = "</%perl_off>";
     $script =~ s@<%PERL>@$perlbeginmark@gei;
     $script =~ s@</%PERL>@$perlendmark@gei;
+    $script =~ s@<%PERL_OFF>@$perloffbeginmark@gei;
+    $script =~ s@</%PERL_OFF>@$perloffendmark@gei;
     
     #
     # Extract perl_init, perl_cleanup, perl_args, and documentation sections.
@@ -289,7 +293,7 @@ sub parse
 		$curpos = $endline+1;
 		$startline = 1;
 		$pureTextFlag = 0;
-	    } elsif ($b>-1 && ($a==-1 || $b<$a) && ($c==-1 || $b<$c)) {
+	    } elsif ($b>-1 && ($a==-1 || $b<$a) && ($c==-1 || $b<=$c)) {
 		# Text delimited by <%PERL> </%PERL>
 		$alpha = [$curpos,$b-$curpos];
 		my $i = index($text,$perlendmark,$b+7);
