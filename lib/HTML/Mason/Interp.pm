@@ -494,16 +494,10 @@ sub eval_object_code
 	#
 	if ( $Config{d_alarm} && $] < 5.007003 )
 	{
-	    my $sec = 5;
-	    eval
-	    {
-		local $SIG{ALRM} =
-		    sub { die $warnstr };
-		alarm $sec;
-		$comp = eval $object_code;
-		alarm 0;
-		die $@ if $@;
-	    };
+           local $SIG{ALRM} = sub { die $warnstr };
+           alarm 5;
+           $comp = eval $object_code;
+           alarm 0;
 	}
 	else
 	{
