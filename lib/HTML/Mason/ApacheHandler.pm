@@ -130,7 +130,7 @@ __PACKAGE__->valid_params
      error_mode            => { parse => 'string',  type => SCALAR,       default => 'html',
 				callbacks =>
 				{ "must be one of 'html', 'fatal', 'raw_html', or 'raw_fatal'" =>
-				  sub { $_[0] =~ /^(?:raw)?(?:html|fatal)$/ } }
+				  sub { $_[0] =~ /^(?:raw_)?(?:html|fatal)$/ } }
 			      },
      multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1 },
      output_mode           => { parse => 'string',  type => SCALAR,       default => 'batch' },
