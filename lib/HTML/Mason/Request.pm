@@ -476,8 +476,12 @@ sub exec {
 	return;
     }
 
-    # Send output buffer to out_method.
-    $self->out_method->($self->{request_buffer});
+    # If there's anything in the output buffer, send it to out_method.
+    # Otherwise skip out_method call to avoid triggering side effects
+    # (e.g. HTTP header sending).
+    if (length($self->{request_buffer}) > 0) {
+	$self->out_method->($self->{request_buffer});
+    }
 
     # Return aborted value or result.
     @result = ($err->aborted_value) if $self->aborted($err);
@@ -1962,6 +1966,11 @@ This modifier can be used with the <& &> tag as well, for example:
 Returns 1 if I<comp_path> is the path of an existing component, 0
 otherwise.  That path given may be relative, in which case the current
 component's directory path will be prepended.
+
+comp_exists does not work with special paths (SELF, PARENT, REQUEST)
+or with subcomponents or methods. See
+L<method_exists|HTML::Mason::Component/item_method_exists> to handle
+the latter.
 
 =item content
 
