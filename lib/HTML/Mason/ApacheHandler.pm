@@ -260,7 +260,7 @@ if ( $mod_perl::VERSION < 1.99 )
 
 use vars qw($VERSION);
 
-$VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
+$VERSION = 1.69;
 
 use Class::Container;
 use base qw(Class::Container);
