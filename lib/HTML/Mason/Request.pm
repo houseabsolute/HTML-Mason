@@ -1695,6 +1695,9 @@ Note: users upgrading from 1.0x and earlier can continue to use the
 old C<$m-E<gt>cache_self> API by setting P<data_cache_api> to '1.0'.
 This support will be removed at a later date.
 
+See the DEVEL<DATA CACHING> section for more details on how to
+exercise finer control over caching.
+
 =for html <a name="item_caller_args"></a>
 
 =item caller_args
