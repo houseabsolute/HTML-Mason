@@ -5,6 +5,15 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.16
+
+[ ENHANCEMENTS ]
+
+- Documented behavior of $m->flush_buffer when a filter is present.
+- Turned of "nowrap" for error message on HTML error page.  No more
+horizontal scrolling!
+
+
 1.15  October 14, 2002
 
 [ BUG FIXES ]
