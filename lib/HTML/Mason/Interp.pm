@@ -585,7 +585,7 @@ sub find_comp_upwards
 
     # $startpath is a URL path so we split it on / and rejoin it in
     # the native filesystem way
-    my $p = File::Spec->canonpath( File::Spec->catpath( split /\//, $startpath ) );
+    my $p = File::Spec->catdir( split /\//, $startpath );
 
     my $last_p;
     while (!($comp = $self->load( File::Spec->catfile( $p, $name ) )) && $p) {
