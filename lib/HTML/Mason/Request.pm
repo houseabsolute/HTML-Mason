@@ -184,7 +184,7 @@ sub exec {
 	    $self->{top_comp} = $comp;
 	    $self->{top_args} = \@args;
 
-	    # Call the first component, with STDOUT mapped to $m->out.
+	    # Call the first component, with STDOUT mapped to $m->print.
 	    tie *STDOUT, 'Tie::Handle::Mason', $self;
 	    if (wantarray) {
 		@result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
@@ -294,35 +294,29 @@ sub cache
 sub cache_self {
     my ($self, %options) = @_;
 
-    return if $self->{in_cache_self};
+    return (wantarray ? () : undef) if $self->top_stack->{in_cache_self};
 
-    my $expire = delete $options{expire_in};
-    my $key = '__cache_self__';
-    $key .= delete $options{key} if exists $options{key};
-
+    my $expires_in = delete $options{expires_in} || 'never';
+    my $key = delete $options{key} || '__cache_self__';
     my $cache = $self->cache(%options);
 
     my ($output, $retval);
     if (my $cached = $cache->get($key)) {
 	($output, $retval) = @$cached;
     } else {
-	local $self->{in_cache_self} = 1;
+	local $self->top_stack->{in_cache_self} = 1;
 
 	$self->push_buffer_stack($self->top_buffer->new_child(sink => \$output, ignore_flush => 1));
 
 	my $comp = $self->top_stack->{comp};
 	my @args = @{ $self->top_stack->{args} };
-
+	
 	#
-	# Because this method should always be called in a scalar
-	# context we need to go back and find the context that the
-	# component was first called in (back up there in the comp
-	# method).
+	# Go back and find the context that the component was first
+	# called in (back up there in the comp method).
 	#
 	my $wantarray = (caller(1))[5];
-
 	my @result;
-
 	eval {
 	    if ($wantarray) {
 		@result = $comp->run(@args);
@@ -332,23 +326,22 @@ sub cache_self {
 		$comp->run(@args);
 	    }
 	};
+	$retval = \@result;
 
 	#
 	# Whether there was an error or not we need to pop the buffer
 	# stack.
 	#
-	my $buffer = $self->pop_buffer_stack;
+	$self->pop_buffer_stack;
+	die if $@;
 
-	if (my $err = $@) {
-	    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
-	}
-
-	$retval = \@result;
-
-	$cache->set($key => [$output, $retval], $expire ? $expire : ());
+	$cache->set($key, [$output, $retval], $expires_in);
     }
 
-    $self->out($output);
+    #
+    # Print the component output.
+    #
+    $self->print($output);
 
     #
     # Return the component return value in case the caller is interested,
@@ -1001,7 +994,7 @@ automatically prepended.
 
 I<cache_options> may include any valid options to the new() method of
 the cache class. e.g. for Cache::FileCache, valid options include
-expires_in, max_size, and cache_depth.
+default_expires_in and cache_depth.
 
 See the L<Devel/data caching> section of the I<Component Developer's
 Guide> for examples and caching strategies. See the Cache::Cache
@@ -1009,42 +1002,60 @@ documentation for a complete list of options and methods.
 
 =for html <a name="item_cache_self">
 
-=item cache_self (expire_in => '...', key => '...', [cache_options])
+=item cache_self (expires_in => '...', key => '...', [cache_options])
 
-This method is called by a component when it wants to cache its entire
-output.
+C<$m-E<gt>cache_self> caches the entire output and return result of a
+component.
 
-It takes all of the options which can be passed to the cache method.
+It takes all of the options which can be passed to the cache method,
+plus two additional options:
 
-In addition, it takes two additional options.  The first,
-I<expire_in>, will be passed to the caching object.  See the
-Cache::Cache documentation for details on what formats it accepts.
+=over expires_in
 
-The second, I<key> is an identifier used to uniquely identify the
-cache results.  This means that you can call cache_self with different
-keys and the component will be executed once for each key.  If no key
-option is provided than a default key is used.
+Indicates when the cache expires - it is passed as the third argument
+to $cache-E<gt>set.  See the Cache::Cache documentation for details on
+what formats it accepts.
+
+=over key
+
+An identifier used to uniquely identify the cache results - it is
+passed as the first argument to $cache-E<gt>get and $cache-E<gt>set.
+A default key will be provided if none is passed.
+
+=back
+
+C<cache_self> either returns undef, or a list containing the
+return value of the component followed by '1'. You should return
+immediately upon getting the latter result, as this indicates
+that you are inside the second invocation of the component.
 
 To cache the component's output:
 
     <%init>
-    return if $m->cache_self(expire_in => '3 hours'[, key => 'fookey']);
+    return if $m->cache_self(expires_in => '3 hours'[, key => 'fookey']);
     ... <rest of init> ...
     </%init>
 
-To cache the component's return value:
+To cache the component's scalar return value:
 
     <%init>
-    my (@retval) = $m->cache_self(expire_in => '3 hours'[, key => 'fookey']);
+    my ($result, $cached) = $m->cache_self(expires_in => '3 hours'[, key => 'fookey']);
+
+    return $result if $cached;
+    ... <rest of init> ...
+    </%init>
+
+To cache the component's list return value:
+
+    <%init>
+    my (@retval) = $m->cache_self(expires_in => '3 hours'[, key => 'fookey']);
 
     return @retval if pop @retval;
     ... <rest of init> ...
     </%init>
 
-The reason that we call C<pop> on C<@retval> is that the return value
-from C<$m-E<gt>cache_self> is a list made up of the return value of
-the component followed by a 1.  This is to ensure that $m->cache_self
-always returns a true value when returning cached results.
+We call C<pop> on C<@retval> to remove the mandatory '1' at the end of
+the list.
 
 =for html <a name="item_caller_args">
 
@@ -1220,17 +1231,17 @@ servers appear more responsive.
 
 Returns the Interp object associated with this request.
 
-=for html <a name="item_out">
+=for html <a name="item_print">
 
-=item out (string)
+=item print (string)
 
 Print the given I<string>. Rarely needed, since normally all HTML is just
-placed in the component body and output implicitly. C<$m-E<gt>out> is useful
+placed in the component body and output implicitly. C<$m-E<gt>print> is useful
 if you need to output something in the middle of a Perl block.
 
-C<$m-E<gt>out> should be used instead of C<print> or C<$r-E<gt>print>,
-since C<$m-E<gt>out> may be redirected or buffered depending on the
-current state of the interpreter.
+In 1.1 and on, C<print> and C<$r-E<gt>print> are remapped to C<$m-E<gt>print>,
+so they may be used interchangeably. Before 1.1, one should only use
+C<$m-E<gt>print>.
 
 =for html <a name="item_scomp">
 
