@@ -1292,12 +1292,12 @@ See the L<HTML::Mason::ApacheHandler> documentation for more details.
 
 =back
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-Jonathan Swartz, swartz@pobox.com
+Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams <ken@mathforum.org>
 
 =head1 SEE ALSO
 
 L<HTML::Mason::Component>
+L<HTML::Mason::Devel>
 L<HTML::Mason::ApacheHandler>
-

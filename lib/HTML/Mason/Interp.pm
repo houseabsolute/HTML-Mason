@@ -1282,10 +1282,6 @@ This allows you to use Mason as a pure text templating solution --
 like Text::Template and its brethren, but with more power (and of
 course more complexity).
 
-=head1 AUTHOR
-
-Jonathan Swartz, swartz@pobox.com
-
 =head1 SEE ALSO
 
 L<HTML::Mason>,

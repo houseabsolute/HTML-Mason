@@ -1719,9 +1719,9 @@ initialize the object from %ARGS:
 
 =back
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-Jonathan Swartz, swartz@pobox.com
+Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams <ken@mathforum.org>
 
 =head1 SEE ALSO
 

@@ -530,10 +530,6 @@ Returns the directory of the source filename for this component.
 
 =back
 
-=head1 AUTHOR
-
-Jonathan Swartz, swartz@pobox.com
-
 =head1 SEE ALSO
 
 L<HTML::Mason::Request>

@@ -203,9 +203,8 @@ I<Administrator's Manual> (B<L<HTML::Mason::Admin>>), though
 developers might also benefit from reading it as well. This document
 covers more advanced configuration scenarios and performance
 optimization. Reference companions to the Administrator's Manual
-include B<L<HTML::Mason::Request>>, B<L<HTML::Mason::Compiler>>,
-B<L<HTML::Mason::Component>>, B<L<HTML::Mason::Interp>>, and
-B<L<HTML::Mason::ApacheHandler>>, B<L<HTML::Mason::Lexer>>,.
+include B<L<HTML::Mason::Component>>, B<L<HTML::Mason::Interp>>, and
+B<L<HTML::Mason::ApacheHandler>>.
 
 Most of this documentation assumes that you're running Mason on top of
 mod_perl, since that is the most common configuration.  If you are
@@ -216,17 +215,12 @@ B<L<HTML::Mason::Interp>>.
 
 =head1 AUTHORS
 
-Jonathan Swartz, swartz@pobox.com and Dave Rolsky, autarch@urth.org
+Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams <ken@mathforum.org>
 
 =head1 SEE ALSO
 
 L<HTML::Mason::Devel>,
 L<HTML::Mason::Request>,
-L<HTML::Mason::Component>,
-L<HTML::Mason::Admin>,
-L<HTML::Mason::Lexer>,
-L<HTML::Mason::Compiler>,
-L<HTML::Mason::Interp>,
-L<HTML::Mason::ApacheHandler>
+L<HTML::Mason::Admin>
 
 =cut

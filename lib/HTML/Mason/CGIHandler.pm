@@ -338,13 +338,6 @@ equally well under CGIHandler and ApacheHandler.
 
 =back
 
-
-=head1 AUTHOR
-
-Ken Williams, ken@mathforum.org
-
-Jonathan Swartz, swartz@pobox.com
-
 =head1 SEE ALSO
 
 L<HTML::Mason>,

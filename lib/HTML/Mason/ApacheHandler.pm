@@ -925,10 +925,6 @@ For example:
     my $auto_send_headers = $ah->auto_send_headers;
     $ah->auto_send_headers(0);
 
-=head1 AUTHOR
-
-Jonathan Swartz, swartz@pobox.com
-
 =head1 SEE ALSO
 
 L<HTML::Mason>,
