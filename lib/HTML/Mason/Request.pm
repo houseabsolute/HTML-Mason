@@ -1012,17 +1012,17 @@ plus two additional options:
 
 =over
 
-=item expires_in
+=item *
 
-Indicates when the cache expires - it is passed as the third argument
-to $cache-E<gt>set.  See the Cache::Cache documentation for details on
-what formats it accepts.
+I<expires_in>: Indicates when the cache expires - it is passed as the
+third argument to $cache-E<gt>set.  See the Cache::Cache documentation
+for details on what formats it accepts.
 
-=item key
+=item *
 
-An identifier used to uniquely identify the cache results - it is
-passed as the first argument to $cache-E<gt>get and $cache-E<gt>set.
-A default key will be provided if none is passed.
+I<key>: An identifier used to uniquely identify the cache results - it
+is passed as the first argument to $cache-E<gt>get and
+$cache-E<gt>set.  A default key will be provided if none is passed.
 
 =back
 
@@ -1185,6 +1185,54 @@ removed. Otherwise returns undef.
 
 C<dhandler_arg> may be called from any component in the request, not just
 the dhandler.
+
+=for html <a name="item_error_format">
+
+=item error_format
+
+Indicates how errors are formatted. The built-in choices are
+
+=over
+
+=item *
+
+I<brief> - just the error message with no trace information
+
+=item *
+
+I<text> - a multi-line text format
+
+=item *
+
+I<line> - a single-line text format, with different pieces of information separated by tabs (useful for log files)
+
+=item *
+
+I<html> - a fancy html format
+
+=back
+
+The default format within mod_perl and CGI environments is either I<line> or
+I<html> depending on whether the error mode is I<fatal> or I<output>,
+respectively. The default for standalone mode is I<text>.
+
+The formats correspond to HTML::Mason::Exception methods named
+as_I<format>. You can define your own format by creating an
+appropriately named method; for example, to define an "xml" format,
+create a method HTML::Mason::Exception::as_xml patterned after one of
+the built-in methods.
+
+=for html <a name="item_error_mode">
+
+=item error_mode
+
+Indicates how errors are returned to the caller.  The choices are
+I<fatal>, meaning die with the error, and I<output>, meaning output
+the error just like regular output.
+
+The default mode within mod_perl and CGI environments is I<output>,
+causing the error will be displayed in HTML form in the browser.
+The default for standalone mode is I<fatal>.
 
 =for html <a name="item_fetch_comp">
 
