@@ -336,6 +336,21 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'line_nums4',
+		      description => 'make sure that errors are reported with the correct line numbers in <%once> blocks',
+		      component => <<'EOF',
+1
+2
+3
+<%once>
+$x = 1;
+</%once>
+EOF
+		      expect_error => qr/Global symbol .* at .* line 5/,
+		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'attr_block_zero',
 		      description => 'test proper handling of zero in <%attr> block values',
 		      component => <<'EOF',
