@@ -7,10 +7,14 @@ available at http://www.masonhq.com/changes.html.
 
 0.7.1
 
-- Fixed bug in parser code that determines whether % is at the
+- Logic of top_level_predicate was reversed in 0.7; fixed.
+L{Reported by Tom Hughes, Eric Hammond}
+- mc_suppress_http_header(0) was broken in 0.7; fixed.
+L{Reported by Michael Alan Dorman}
+- Fixed bug in parser section that determines whether % is at the
 beginning of a line.  L{Reported by Tom Hughes}
-- Parser no longer inadvertently accepts argument names with spaces.
-L{Reported by Phillip Gwyn}
+- Parser no longer inadvertently accepts argument names with
+whitespace.  L{Reported by Phillip Gwyn}
 
 0.7  Thu Aug 12 14:22:50 PDT 1999
 
@@ -44,6 +48,9 @@ having been moved to Request class.
 - ** Reworked Parser API. parse is now called make_component, has a
 simplified set of options, and returns a component object
 directly. make is now called make_dirs. L{Parser/item_make_component}
+- Source references now read from the object file, cleaner for a
+variety of reasons. Preprocess and postprocess now work with source
+references.
 - Removed obsolete and undocumented Interp::vars and mc_var functions
 - Simplified chown/getpwuid usage in handler.pl (submitted by Randal
 Schwartz)

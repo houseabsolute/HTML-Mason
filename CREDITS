@@ -46,10 +46,15 @@ as I brought down the systems with my periodic Mason "improvements".
 The following people have contributed suggestions or patches, as
 listed in the Changes file:
 
+Oleg Bartunov (oleg@sai.msu.su)
+Michael Alan Dorman (mdorman-perl.mason@debian.org)
 Ewan Edwards (eskwayrd@csp.net)
 Philip Gwyn (liste@artware.qc.ca)
+Eric Hammond (ehammond@stamps.com)
+Tom Hughes (thh@cyberscience.com)
 Tom Hukins (tom@eborcom.com)
 Fen Lebalme (fen@lumeria.com)
+Jim Mortko (jskills@goofball.com)
 Chuck O'Donnell (cao@milf18.bus.net)
 Aaron Ross (ross@forum.swarthmore.edu)
 Randal Schwartz (merlyn@stonehenge.com)
@@ -60,4 +65,4 @@ Ken Williams (ken@forum.swarthmore.edu)
 Thanks y'all!
 Jonathan Swartz
 swartz@transbay.net
-Last updated June 3, 1999
+Last updated September 14, 1999
