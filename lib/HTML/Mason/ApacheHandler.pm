@@ -301,9 +301,9 @@ sub _in_simple_conf_file
 my %AH;
 sub make_ah
 {
-    my ($package) = shift;
+    my ($package, $r) = @_;
 
-    my ($vals, %p) = $package->_get_mason_params;
+    my ($vals, %p) = $package->_get_mason_params($r);
 
     #
     # Now that we have all the original config strings stored, we put
@@ -326,7 +326,7 @@ sub make_ah
     # comp root), we append the document root for the current request
     # to the key.
     #
-    $key .= Apache->request->document_root if Apache->request;
+    $key .= $r->document_root if $r;
 
     return $AH{$key} if exists $AH{$key};
 
@@ -343,7 +343,7 @@ sub make_ah
 	}
     }
 
-    my $ah = $package->new(%p);
+    my $ah = $package->new(%p, $r);
     $AH{$key} = $ah if $key;
 
     return $ah;
@@ -369,10 +369,10 @@ sub studly_form {
 sub _get_mason_params
 {
     my $self = shift;
+    my $r = shift;
 
-    my $c = Apache->request ? Apache->request : Apache->server;
+    my $config = $r ? $r->dir_config : Apache->server->dir_config;
 
-    my $config = $c->dir_config;
     my $specs = $self->allowed_params;
 
     #
@@ -382,14 +382,19 @@ sub _get_mason_params
     my %vals;
 
     # Get all params starting with 'Mason'
-    my @candidates = map { /^Mason/ ? $self->calm_form($_) : () } keys %$config;
-    return (\%vals, map { $_ => $self->get_param($_, $specs->{$_}, \%vals) } @candidates);
+    my %candidates = map { $_ => 1 }
+	             map { /^Mason/ ? $self->calm_form($_) : () } keys %$config;
+    return ( \%vals,
+	     map { $_ =>
+                   scalar $self->get_param( $_, $specs->{$_}, \%vals, $r )
+	         }
+	     keys %candidates );
 }
 
 sub get_param {
     # Gets a single config item from dir_config.
 
-    my ($self, $key, $spec, $vals) = @_;
+    my ($self, $key, $spec, $vals, $r) = @_;
     $key = $self->calm_form($key);
 
     # If we weren't given a spec, try to locate one in our own class.
@@ -405,29 +410,26 @@ sub get_param {
     error "Unknown parse type for config item '$key'" unless $type;
 
     my $method = "_get_${type}_param";
-    return scalar $self->$method('Mason'.$self->studly_form($key), $vals);
+    return $self->$method('Mason'.$self->studly_form($key), $vals, $r);
 }
 
 sub _get_string_param
 {
     my $self = shift;
-    my ($p, $val) = $self->_get_val(@_);
-
-    return $val;
+    return $self->_get_val(@_);
 }
 
 sub _get_boolean_param
 {
     my $self = shift;
-    my ($p, $val) = $self->_get_val(@_);
-
-    return $val;
+    return $self->_get_val(@_);
 }
 
 sub _get_code_param
 {
     my $self = shift;
-    my ($p, $val) = $self->_get_val(@_);
+    my $p = $_[0];
+    my $val = $self->_get_val(@_);
 
     return unless $val;
 
@@ -442,7 +444,7 @@ sub _get_code_param
 sub _get_list_param
 {
     my $self = shift;
-    my ($p, @val) = $self->_get_val($_[0], 1);
+    my @val = $self->_get_val(@_);
     if (@val == 1 && ! defined $val[0])
     {
 	@val = ();
@@ -453,35 +455,37 @@ sub _get_list_param
 
 BEGIN
 {
-    my $has_table_api = $mod_perl::VERSION >= 1.99 || Apache::perl_hook('TableApi');
-    use constant HAS_TABLE_API => $has_table_api;
+    use constant
+	HAS_TABLE_API => $mod_perl::VERSION >= 1.99 || Apache::perl_hook('TableApi');
 }
 
 sub _get_val
 {
-    my ($self, $p, $wantarray, $vals) = @_;
+    my ($self, $p, $vals, $r) = @_;
 
-    my $c = Apache->request ? Apache->request : Apache->server;
+    my $c = $r ? $r : Apache->server;
     my @val = HAS_TABLE_API ? $c->dir_config->get($p) : $c->dir_config($p);
 
     param_error "Only a single value is allowed for configuration parameter '$p'\n"
-	if @val > 1 && ! $wantarray;
+	if @val > 1 && ! wantarray;
 
     $vals->{$p} = join '', @val if $vals;
 
-    return ($p, $wantarray ? @val : $val[0]);
+    return wantarray ? @val : $val[0];
 }
 
 sub new
 {
     my $class = shift;
+    # get $r off end of params if its there
+    my $r = pop if @_ % 2 == 1;
 
     my $allowed_params = $class->allowed_params;
 
     my %defaults;
-    if (exists $allowed_params->{comp_root} && Apache->request)
+    if (exists $allowed_params->{comp_root} && $r)
     {
-	$defaults{comp_root} = Apache->request->document_root;
+	$defaults{comp_root} = $r->document_root;
     }
 
     if (exists $allowed_params->{data_dir})
@@ -839,7 +843,7 @@ sub handler ($$)
 {
     my ($package, $r) = @_;
 
-    my $ah = $AH || $package->make_ah();
+    my $ah = $AH || $package->make_ah($r);
 
     return $ah->handle_request($r);
 }
@@ -852,7 +856,7 @@ sub handler : method
 {
     my ($package, $r) = @_;
 
-    my $ah = $AH || $package->make_ah();
+    my $ah = $AH || $package->make_ah($r);
 
     return $ah->handle_request($r);
 }
