@@ -61,9 +61,21 @@ code you have written with Mason.
 
 =over 4
 
-=item data_cache_namespace
+=item data_cache_namespace ($path)
 
-=item cgi_request_args
+Given a component path, this method returns its default
+C<Cache::Cache> namespace.  This can be useful if you want to access
+the cached data outside of Mason.
+
+This method will not work if you are using multiple component roots.
+
+=item cgi_request_args ($cgi, $method)
+
+This function expects to receive a C<CGI.pm> object and the request
+method (GET, POST, etc).  Given these two things, it will return a
+hash containing all the arguments passed via the CGI request.  The
+keys will be argument names and the values will be either scalars or
+array references.
 
 =back
 
