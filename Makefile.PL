@@ -40,7 +40,7 @@ EOF
 # These are required modules.
 
 my %prereq = ( 'File::Spec' => 0.8,
-	       'Params::Validate' => 0.21,
+	       'Params::Validate' => 0.22,
 	       'Exception::Class' => 1.01,
 	       'Cache::Cache' => 1.00,
                'Class::Container' => 0.02,
@@ -51,9 +51,9 @@ chk_version('File::Spec' => '0.8') or
 	. "*** Mason requires version 0.8, or later, of File::Spec\n"
 	. "    from CPAN/modules/by-module/File/File-Spec-x.x.tar.gz\n\n";
 
-chk_version('Params::Validate' => '0.21') or
+chk_version('Params::Validate' => '0.22') or
     warn  "\n"
-	. "*** Mason requires version 0.21, or later, of Params::Validate\n"
+	. "*** Mason requires version 0.22, or later, of Params::Validate\n"
 	. "    from CPAN/modules/by-authors/id/D/DR/DROLSKY/Params-Validate-x.x.tar.gz\n\n";
 
 eval { require mod_perl };
