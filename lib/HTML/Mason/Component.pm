@@ -82,9 +82,11 @@ sub new
     # is_method flag.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
 	$c->assign_subcomponent_properties($self,$name,0);
+	Scalar::Util::weaken($c->{owner}) if CAN_WEAKEN;
     }
     while (my ($name,$c) = each(%{$self->{methods}})) {
 	$c->assign_subcomponent_properties($self,$name,1);
+	Scalar::Util::weaken($c->{owner}) if CAN_WEAKEN;
     }
 
     return $self;

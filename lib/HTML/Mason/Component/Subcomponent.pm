@@ -58,7 +58,11 @@ L<HTML::Mason::Component|HTML::Mason::Component>. Mason uses it to
 implement both subcomponents (defined by C<< <%def> >>) and methods (defined
 by C<< <%method> >>).
 
-A subcomponent gets most of its properties from its owner.
+A subcomponent/method gets most of its properties from its owner. Note
+that the link from the subcomponent to its owner is a weak reference
+(to prevent circular references), so if you grab a subcomponent/method
+object, you should also grab and hold a reference to its owner. If the
+owner goes out of scope, the subcomponent/method object will become unusable.
 
 =head1 METHODS
 
