@@ -12,6 +12,11 @@ available at http://www.masonhq.com/code/history.html.
 - Mason now throws an error if the path specified in a component's
 'inherit' flag cannot be found. Task id #480.
 
+[ ENHANCEMENTS ]
+
+- The CGIHandler emulation of $r, the Apache request object, is now
+much more complete, and has extensive regression tests, thanks to a
+large patch by David Wheeler.
 
 1.22  July 14, 2003
 
