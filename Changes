@@ -5,11 +5,83 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
-0.88
+0.895  Mon Dec 11 21:27:15 PST 2000
+
+- ** Removed ApacheHandler from Mason.pm. It is now necessary to
+explicitly 'use' the HTML::Mason::ApacheHandler module in your
+handler.pl file (or elsewhere).  This fixes an intermittent
+args_method bug and cleans up Mason.pod.
+- ** Changed $m->caller_args to return a hash reference in scalar
+context and a list/hash in list context. Older calls expecting a list
+reference will need to be changed. L{Request/item_caller_args}
+- Fixed Mason to work under Perl's tainting mode again.  Thanks to John
+Tobey for pointing us in the right direction.
+- Modified the definition of "next component" to depend on the current
+component, not merely the number of times $m->call_next has been
+called.  This allows $m->fetch_next to work as documented. Also
+added $m->fetch_next_all, which returns the rest of the wrapper chain.
+L{Request/item_fetch_next}
+- Fixed bug with ../.. in component paths.  Versions 0.88 and 0.89
+would create multiple object files for a single component and would
+allow any filename to be treated as an internal component.  This was
+_not_ exploitable externally via Apache, however.  (reported by Pascal
+Eeftinck)
+- Implemented $m->top_comp and $m->top_args, and fixed documentation
+for $m->callers(-1).  (suggested by Kees Vonk) L{Request/item_top_args}
+- Added full line comments to <%args> sections. (suggested by Matthew
+Lewinski)
+- Revamped test harness system with HTML::Mason::Tests, greatly
+simplifying the new test creation process.
+- Implemented partial compliance with Apache::Filter; Mason can now be
+used as a pre-filter but not yet as a post-filter. i.e. Configurations
+like "PerlHandler HTML::Mason Apache::Compress" will work.
+- Implemented logging of NOT FOUND errors to match plain Apache. Also
+issue special warnings for Mason-specific causes of NOT FOUND.
+- Documented Mason request object's aborted and aborted_value methods.
+L{Request/item_aborted}
+- Documented the fact that any variable declared in the <%args>
+section must be a valid Perl variable name.  The parser will now give
+an error if it encounters an invalid name (such as $foo.x).
+- Eliminated upgrade of Apache request object to Apache::Request class
+if this were done previously.  (submitted by Shevek)
+- Removed FAQ from distribution. Users should seek out the most
+current FAQ, now maintained by Kwindla Kramer, on the web.
+- Fixed bug where an attempt to escape a substitution that contained a
+function operating on a list (like sort or map) ended up appending the
+escape flag characters to the list being operated on.
+- Fixed the test 08-ah to work with CGI versions >= 3.0. (reported by
+Alexei V. Barantsev)
+- Fixed a problem with the parser when running with a locale that used
+a comma as the decimal separator instead of a period. (reported by
+Louis-David Mitterrand)
+- Clarified the 'u' escape flag in docs.
+- Removed use of $r->finfo in Apachehandler.pm, which causes random
+core dumps in certain versions of mod_perl.
+- Updated eg/session_handler.pl code to match Apache::Session 1.50+.
+- Fixed various problems with debug files.
+- Fixed a bug sometimes seen when the parser failed to parse a
+component called by another component.
+- Fixed a bug that prevented the $m->cache_self method from returning
+anything.
+- Fixed documentation regarding 'months' and 'years' units in
+expire_in cache flag.
+- Fixed bug in HTML/Mason/Component/Subcomponent.pm create_time
+method.  (reported by Caleb Crome)
+- Fixed bug where Mason would try to escape undefined values in a
+substitution with an escape flag.  (submitted by Denis Shaposhnikov)
+
+0.89  Thu Sep 14 08:44:58 PDT 2000
+
+- Fixed broken CGI args implementation from 0.88 (old arguments
+appearing in new requests)
+- Fixed system log bug from 0.88
+
+
+0.88  Wed Aug 30 14:49:07 PDT 2000
 
 - Fixed broken Parser postprocessor code (broken since 0.85).  Added
 tests for this code path as well as the preprocessor feature.
-(Reported by Tim Bishop).
+(reported by Tim Bishop)
 - Replaced lots of simple accessors with new HTML::Mason::MethodMaker
 (which just makes simple read-only and read-write accessor methods).
 - Removed all direct hash key access from one object into another.
