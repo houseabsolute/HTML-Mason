@@ -488,7 +488,7 @@ sub eval_object_code
 	    eval
 	    {
 		local $SIG{ALRM} =
-		    sub { die "Attempt to eval code took longer than $sec seconds" };
+		    sub { die $warnstr };
 		alarm $sec;
 		$comp = eval $object_code;
 		alarm 0;
