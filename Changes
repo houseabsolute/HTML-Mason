@@ -7,7 +7,13 @@ See CREDITS file for other contributors
 
 ** denotes an incompatible change
 
-0.5
+0.5.1  Thu Jun 10 23:35:13 PDT 1999
+	- removed leftover "use File::Recurse" in ApacheHandler.pm
+          [modus]
+	- added empty test target to FAQ Makefile, required on certain
+          architectures [modus]
+
+0.5    Thu Jun  3 23:45:09 PDT 1999
 	- removed memory leak associated with "return sub { ... }"
 	- overhauled Config.pm, now maintains previous configuration
           when upgrading Mason (suggested by Patrick Kane)

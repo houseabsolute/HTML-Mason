@@ -3,9 +3,9 @@ CREDITS for HTML::Mason
 The original idea for Mason was inspired by the component system used
 by NetGuide Live at CMP Media in 1996.  HTML++ lives on!
 
-Gady Costeff (gady@yahoo.com), my first manager at CMP, formulated the
-need for a better component-based web engine and blessed us with a
-creative, open-minded environment.
+Gady Costeff (gady@yahoo.com) formulated the need for a better
+component-based web engine and blessed us with a creative, open-minded
+environment.
 
 Tom Smith (tsmith@cmp.com) protected our core development team from
 hostile forces, kept calm during the storms, and was (and continues to
@@ -36,6 +36,9 @@ numerous features.
 
 Kirrily 'Skud' Robert (skud@netizen.com.au) started the Mason mailing
 list despite my foot-dragging, and I'm eternally grateful.
+
+Matt Jalbert (mjalbert@exuberance.com) lent his artistic flair to
+the MasonHQ web site design.
 
 The Internet technology team at CMP was supportive and patient with me
 as I brought down the systems with my periodic Mason "improvements".
