@@ -526,17 +526,19 @@ sub handle_request_1
     }
 
     #
-    # Parse arguments. $ARGS_METHOD may be set by the import
-    # subroutine (_cgi_args or _mod_perl_args).  When inside debug
-    # file, get arguments from special saved hash.  This circumvents
-    # POST content issues.
+    # Parse arguments. $ARGS_METHOD is set by the import subroutine
+    # (_cgi_args or _mod_perl_args).  We pass a reference to $r because
+    # _mod_perl_args upgrades $r to the Apache::Request object.
+    # 
+    # When inside debug file, get arguments from special saved hash.
+    # This circumvents POST content issues.
     #
     my %args;
     die "ARGS_METHOD not defined! Did you 'use HTML::Mason::ApacheHandler'?" unless defined($ARGS_METHOD);
     if ($HTML::Mason::IN_DEBUG_FILE) {
 	%args = %{$r->{args_hash}};
     } else {
-	%args = $self->$ARGS_METHOD($r);
+	%args = $self->$ARGS_METHOD(\$r);
     }
     $debugState->{args_hash} = \%args if $debugState;
 
@@ -617,8 +619,9 @@ sub handle_request_1
 #
 sub _cgi_args
 {
-    my ($self, $r) = @_;
+    my ($self, $rref) = @_;
 
+    my $r = $$rref;
     my $q;
     unless ($r->method eq 'GET' && !scalar($r->args)) {
         $q = CGI->new;
@@ -645,13 +648,15 @@ sub _cgi_args
 }
 
 #
-# Get %args hash via Apache::Request package
+# Get %args hash via Apache::Request package. As a side effect, assign the
+# new Apache::Request package back to $r.
 #
 sub _mod_perl_args
 {
-    my ($self, $r) = @_;
+    my ($self, $rref) = @_;
 
-    my $apr = Apache::Request->new($r);
+    my $apr = Apache::Request->new($$rref);
+    $$rref = $apr;
 
     return () unless $apr->param;
 
