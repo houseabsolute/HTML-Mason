@@ -62,22 +62,26 @@ sub comp_root
 sub get_info {
     my ($self, $path) = @_;
 
-    foreach my $lref ($self->comp_root_array) {
-	my ($key, $root) = @$lref;
-	my $srcfile = File::Spec->canonpath( File::Spec->catfile( $root, $path ) );
+    foreach my $pair ($self->comp_root_array) {
+	my $srcfile = File::Spec->canonpath( File::Spec->catfile( $pair->[1], $path ) );
 	next unless -f $srcfile;
+
+	my $key = $pair->[0];
+
 	my $modified = (stat _)[9];
 	my $base = $key eq 'MAIN' ? '' : "/$key";
 	$key = undef if $key eq 'MAIN';
 
-	return HTML::Mason::ComponentSource->new( friendly_name => $srcfile,
-						  comp_id => "$base$path",
-						  last_modified => $modified,
-						  comp_path => $path,
-						  comp_class => 'HTML::Mason::Component::FileBased',
-						  extra => { comp_root => $key },
-						  source_callback => sub { read_file($srcfile) },
-						);
+	return
+            HTML::Mason::ComponentSource->new
+                    ( friendly_name => $srcfile,
+                      comp_id => "$base$path",
+                      last_modified => $modified,
+                      comp_path => $path,
+                      comp_class => 'HTML::Mason::Component::FileBased',
+                      extra => { comp_root => $key },
+                      source_callback => sub { read_file($srcfile) },
+                    );
     }
     return;
 }
