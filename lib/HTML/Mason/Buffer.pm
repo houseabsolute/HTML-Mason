@@ -81,8 +81,8 @@ sub receive
 
     if ( $self->{buffer} )
     {
-        # grep { defined } is marginally faster than local $^W;
-        ${ $self->{buffer} } .= $_ foreach grep { defined } @_;
+        # grep { defined } is marginally faster than local $^W for the common one-item case
+        ${ $self->{buffer} } .= join '', grep { defined } @_;
     }
     else
     {
