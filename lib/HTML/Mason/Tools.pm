@@ -181,15 +181,21 @@ sub load_pkg {
     return 1;
 }
 
-# Define constant subroutine to determine whether taint is on or off.
-# There is no way to change taint once a script is running.  See
-# perlsec ("once taint mode is on, it's on for the remainder of your
-# script") and perldiag ("Too late for -T option").
-BEGIN {
-    if (eval { "$0$^X" && kill 0; 1 }) {
-	eval 'sub taint_is_on () { 0 }';
-    } else {
-	eval 'sub taint_is_on () { 1 }';
+my $Taint;
+sub taint_is_on
+{
+    return $Taint if defined $Taint;
+
+    if ( $] >= 5.008 )
+    {
+        # We have to eval a string because this variable name causes
+        # earlier Perls to not compile at all.
+        return $Taint = eval '${^TAINT}';
+    }
+    else
+    {
+        local $^W;
+        return eval { $Taint = 0; "$0$^X" && kill 0; $Taint = 1 };
     }
 }
 
