@@ -5,7 +5,7 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
-1.09_01
+1.09_01  April 4, 2002
 
 This is a big release and there are a lot of backwards
 incompatibilities.  Please make sure to read the UPGRADE document,
@@ -161,6 +161,26 @@ way as constructor parameters.
 
 - The component requested and the arguments it was passed are now
 properties of the Request object.
+
+1.04  October 30, 2001
+
+- Fixed locale parser_version 0,8 problem. (submitted by Louis-David Mitterrand) 
+- Fixed inability to use '/' for comp_root. (reported by Doug Hunt) 
+- Fixed HTML::Mason::Parser::make_dirs dying when reload_file not defined. (reported by Ivan E. Panchenko) 
+- Made error_process regexps more specific. (suggested by Vadim Belman) 
+- Fixed $m->count. (reported by David Wheeler) 
+- Fixed writing of object files in taint mode. (submitted by Barrie Slaymaker) 
+- Made it possible to run Makefile.PL without prompts. 
+
+1.03  May 17, 2001
+
+- Made raw error message accessible from the new error display via
+an unobtrusive link.
+- Fixed Apache tests when started by a non-root user. (reported
+by Barrie Slaymaker)
+- Added short-circuits for Apache tests on Win32 and on systems with
+Apache configurations that cannot be properly parsed. (reported by
+Jindra Vavruska)
 
 1.02  April 17, 2001
 
