@@ -5,6 +5,20 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+1.13
+
+[ BUG FIXES ]
+
+- Suppress a "subroutine redefined" warning from
+HTML::Mason::Request::Apachehandler's exec() method.  Reported by
+Marius Feraru.
+- Combining cache_self, <%filter> blocks, and $m->scomp did not work.
+Reported by Calle Dybedahl.
+- Tests 4 & 5 for 06-compiler.t would fail if HTML::Entities was not
+installed.  Now they will be skipped if necessary.
+- Tests 75 & 99 for 08-ah.t depended on hash key ordering and would
+fail with Perl 5.8.0.  Submitted by Michael Gray
+
 1.1201  July 24, 2002
 
 [ ENHANCEMENTS ]
