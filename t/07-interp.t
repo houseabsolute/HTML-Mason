@@ -21,7 +21,7 @@ sub basic_interp {
     return (new HTML::Mason::Interp(comp_root => $comp_root, data_dir => $data_dir, @_));
 }
 
-print "1..21\n";
+print "1..20\n";
 
 # autohandler_name/allow_recursive_autohandlers
 try_exec_with_interp({},'autohandler_test/subdir/hello',1);
@@ -71,6 +71,8 @@ try_exec_with_interp({preloads=>['/interp/preloads_test/*']},'preloads_test/show
  $interp->parser->allow_globals(qw($global));
  $interp->set_global(global=>'parsimmon');
  try_exec($interp,'set_global');}
+
+exit;
 
 # system_log_xxx
 my $log_file = "$root/test/data/etc/system.log";

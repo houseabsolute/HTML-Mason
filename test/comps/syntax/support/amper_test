@@ -1,7 +1,7 @@
 amper_test.<p>
 % if (%ARGS) {
 Arguments:<p>
-% while ((my ($key,$val)) = each(%ARGS)) {
-<b><% $key %></b>: <% $val %><br>
+% foreach my $key (sort keys %ARGS) {
+<b><% $key %></b>: <% $ARGS{$key} %><br>
 % }
 % }
