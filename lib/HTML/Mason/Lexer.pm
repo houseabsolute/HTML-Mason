@@ -184,7 +184,7 @@ sub match_block
 	$self->{current}{compiler}->start_block( block_type => $type );
 
 	my $method = $self->block_body_method($type);
-	$self->$method( block_type => $type );
+	$self->$method( {block_type => $type} );
 
 	return 1;
     }
@@ -192,45 +192,43 @@ sub match_block
 
 sub generic_block
 {
-    my $self = shift;
-    my %p = @_;
+    my ($self, $method, $p) = @_;
 
-    my ($block, $nl) = $self->match_block_end( block_type => $p{block_type},
-					       allow_text => 1 );
+    $p->{allow_text} = 1;
+    my ($block, $nl) = $self->match_block_end( $p );
 
-    my $method = $p{method};
-    $self->{current}{compiler}->$method( block_type => $p{block_type},
+    $self->{current}{compiler}->$method( block_type => $p->{block_type},
 					 block => $block );
 
     $self->{current}{lines} += $block =~ tr/\n/\n/;
     $self->{current}{lines}++ if $nl;
 
-    $self->{current}{compiler}->end_block( block_type => $p{block_type} );
+    $self->{current}{compiler}->end_block( block_type => $p->{block_type} );
 }
 
 sub text_block
 {
     my $self = shift;
-    $self->generic_block(@_, method => 'text_block');
+    $self->generic_block('text_block', @_);
 }
 
 sub raw_block
 {
     my $self = shift;
-    $self->generic_block(@_, method => 'raw_block');
+    $self->generic_block('raw_block', @_);
 }
 
 sub doc_block
 {
     my $self = shift;
-    $self->generic_block(@_, method => 'doc_block');
+    $self->generic_block('doc_block', @_);
 }
 
 sub variable_list_block
 {
-    my ($self, %p) = @_;
+    my ($self, $p) = @_;
 
-    my $ending = qr/ \n | <\/%\Q$p{block_type}\E> /x;
+    my $ending = qr/ \n | <\/%\Q$p->{block_type}\E> /x;
     while ( $self->{current}{comp_source} =~ m,
                        \G               # last pos matched
                        (?:
@@ -263,13 +261,13 @@ sub variable_list_block
                         [ \t]*          # just space
                        )
                        (\n |          # newline or
-                          (?= <\/%\Q$p{block_type}\E> ) )   # end of block (don't consume it)
+                          (?= <\/%\Q$p->{block_type}\E> ) )   # end of block (don't consume it)
                       ,xgc
 	  )
     {
 	if ( defined $1 && defined $2 && length $1 && length $2 )
 	{
-	    $self->{current}{compiler}->variable_declaration( block_type => $p{block_type},
+	    $self->{current}{compiler}->variable_declaration( block_type => $p->{block_type},
 							      type => $1,
 							      name => $2,
 							      default => $3,
@@ -279,19 +277,19 @@ sub variable_list_block
 	$self->{current}{lines}++ if $4;
     }
 
-    my $nl = $self->match_block_end( block_type => $p{block_type},
-				     allow_text => 0 );
+    $p->{allow_text} = 0;
+    my $nl = $self->match_block_end( $p );
     $self->{current}{lines}++ if $nl;
 
-    $self->{current}{compiler}->end_block( block_type => $p{block_type} );
+    $self->{current}{compiler}->end_block( block_type => $p->{block_type} );
 }
 
 sub key_val_block
 {
-    my ($self, %p) = @_;
+    my ($self, $p) = @_;
 
     my $ending = qr, (?: \n |           # newline or
-                         (?= </%\Q$p{block_type}\E> ) )   # end of block (don't consume it)
+                         (?= </%\Q$p->{block_type}\E> ) )   # end of block (don't consume it)
                    ,x;
 
     while ( $self->{current}{comp_source} =~ /
@@ -310,7 +308,7 @@ sub key_val_block
     {
 	if ( defined $1 && defined $2 && length $1 && length $2 )
 	{
-	    $self->{current}{compiler}->key_value_pair( block_type => $p{block_type},
+	    $self->{current}{compiler}->key_value_pair( block_type => $p->{block_type},
 							key => $1,
 							value => $2
 						      );
@@ -319,32 +317,32 @@ sub key_val_block
 	$self->{current}{lines}++;
     }
 
-    my $nl = $self->match_block_end( block_type => $p{block_type},
-				     allow_text => 0 );
+    $p->{allow_text} = 0;
+    my $nl = $self->match_block_end( $p );
     $self->{current}{lines}++ if $nl;
 
-    $self->{current}{compiler}->end_block( block_type => $p{block_type} );
+    $self->{current}{compiler}->end_block( block_type => $p->{block_type} );
 }
 
 sub match_block_end
 {
-    my ($self, %p) = @_;
+    my ($self, $p) = @_;
 
-    my $re = $p{allow_text} ? qr,\G(.*?)</%\Q$p{block_type}\E>(\n?),is
-                            : qr,\G()\s*</%\Q$p{block_type}\E>(\n?),is;
+    my $re = $p->{allow_text} ? qr,\G(.*?)</%\Q$p->{block_type}\E>(\n?),is
+                              : qr,\G()\s*</%\Q$p->{block_type}\E>(\n?),is;
     if ( $self->{current}{comp_source} =~ /$re/gc )
     {
-	return $p{allow_text} ? ($1, $2) : $2;
+	return $p->{allow_text} ? ($1, $2) : $2;
     }
     else
     {
-	$self->throw_syntax_error("Invalid <%$p{block_type}> section line");
+	$self->throw_syntax_error("Invalid <%$p->{block_type}> section line");
     }
 }
 
 sub match_named_block
 {
-    my ($self, %p) = @_;
+    my ($self, $p) = @_;
 
     if ( $self->{current}{comp_source} =~ /\G<%(def|method)(?:\s+([^\n]+?))?\s*>/igcs )
     {
@@ -496,37 +494,38 @@ sub match_text
     #
     # - Dave - 5/6/2002
     #
-    if ( $self->{current}{comp_source} =~ m,
-                    \G
-                    (?:
-                     (\\\n)      # an escaped newline  - throw away
-                     |
-                     \z          # or EOF.
-                     |
-                     (?:
-                      (.+?)       # anything
-	              (           # followed by
+
+    if ( $self->{current}{comp_source} =~ m/\G\z/gc ) {
+	return 0;
+    }
+    
+    if ( $self->{current}{comp_source} =~ m/\G\\\n/gc ) {
+	$self->{current}{lines}++;
+	return 1;
+    }
+
+    if ( $self->{current}{comp_source} =~ m{
+                      \G
+                      (.+?)         # anything
+	              (             # followed by
                        (?<=\n)(?=%) # an eval line - consume the \n
                        |
-                       (?=</?%)   # a substitution or tag start or end  - don't consume
+                       (?=</?[%&])  # a substitution or block or call start or end  - don't consume
                        |
-                       (?=</?&)   # a comp call start or end  - don't consume
+                       (\\\n)       # an escaped newline  - throw away
                        |
-                       \\\n       # an escaped newline  - throw away
-                       |
-                       \z         # or EOF.
+                       \z           # or EOF.
                       )
-                     )
-                    )
-                   ,gcsx
+                   }gcsx
        )
     {
-	my $consumed = join '', grep { defined } $1, $2, $3;
-	return 0 unless length $consumed;
+	# Note: to save memory, it might be preferable to break very
+	# large $1 strings into several pieces and pass the pieces to
+	# compiler->text().  In my testing, this was quite a bit
+	# slower, though.  -Ken 2002-09-19
 
-	$self->{current}{compiler}->text( text => $2 ) if defined $2 && length $2;
-
-	$self->{current}{lines} += $consumed =~ tr/\n/\n/;
+	$self->{current}{compiler}->text( text => $1 );
+	$self->{current}{lines} += $1 =~ tr/\n//;
 	return 1;
     }
     return 0;
