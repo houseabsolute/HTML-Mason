@@ -245,8 +245,6 @@ sub as_html
 
 package HTML::Mason::Exception::Syntax;
 
-use base qw(HTML::Mason::Exception);
-
 sub new
 {
     my $proto = shift;
