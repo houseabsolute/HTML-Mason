@@ -6,8 +6,6 @@ dump-request	Dumps request parameters, great for debugging.
 
 show-env	Dumps current environment.
 
-preview		The Mason Previewer
-
 
 Note: If you are seeing the source of the above pages as plain text,
 it is because the server is assigning the content type "plain/text"
