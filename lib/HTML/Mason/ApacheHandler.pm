@@ -164,16 +164,16 @@ sub import
 	$pack->make_ah() unless $pack->get_param('MultipleConfig');
 
 	my $interp_class = $pack->get_param('interp_class');
-	foreach ( $interp_class, $pack->get_param('compiler_class') ) )
+	foreach ( $interp_class, $pack->get_param('compiler_class') )
 	{
-	    eval "use $p{$_}";
+	    eval "use $_";
 	    die $@ if $@;
 	}
 
-        my $compiler_class = $self->get_param('CompilerClass', $interp_class->valid_params);
+        my $compiler_class = $pack->get_param('CompilerClass', $interp_class->valid_params);
         eval "use $compiler_class";
 
-        my $lexer_class = $self->get_param('LexerClass', $compiler_class->valid_params);
+        my $lexer_class = $pack->get_param('LexerClass', $compiler_class->valid_params);
         eval "use $lexer_class";
 
 	my $args_method = $pack->get_param('ArgsMethod');
