@@ -17,7 +17,8 @@ use HTML::Mason::Exceptions (abbr => ['param_error']);
 
 __PACKAGE__->valid_params
     (
-     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF },
+     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF,
+		       descr => "A string or array of arrays indicating the search path for component calls" },
     );
 
 sub new {
@@ -32,7 +33,7 @@ sub new {
     # If our 'handler' classes subclassed HTML::Mason::Interp, this
     # could be done away with.
     #
-    if ( defined $HTML::Mason::ApacheHandler::VERSION && Apache->can('request') )
+    if ( defined $HTML::Mason::ApacheHandler::VERSION && Apache->request )
     {
 	$defaults{comp_root} = Apache->request->document_root;
     }

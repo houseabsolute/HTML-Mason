@@ -23,12 +23,18 @@ use HTML::Mason::MethodMaker
 
 __PACKAGE__->valid_params
     (
-     comp_class    => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component' },
-     subcomp_class => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component::Subcomponent' },
-     in_package => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Commands' },
-     postamble  => { parse => 'string',  type => SCALAR, default => '' },
-     preamble   => { parse => 'string',  type => SCALAR, default => '' },
-     use_strict => { parse => 'boolean', type => SCALAR, default => 1 },
+     comp_class    => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component',
+		        descr => "The class into which component object should be blessed" },
+     subcomp_class => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component::Subcomponent',
+		        descr => "The class into which subcomponent objects should be blessed" },
+     in_package => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Commands',
+		     descr => "The package in which component execution should take place" },
+     preamble   => { parse => 'string',  type => SCALAR, default => '',
+		     descr => "A chunk of Perl code to add to the beginning of each compiled component" },
+     postamble  => { parse => 'string',  type => SCALAR, default => '',
+		     descr => "A chunk of Perl code to add to the end of each compiled component" },
+     use_strict => { parse => 'boolean', type => SCALAR, default => 1,
+		     descr => "Whether to turn on Perl's 'strict' pragma in components" },
     );
 
 sub compile

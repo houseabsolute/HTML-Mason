@@ -36,13 +36,18 @@ use HTML::Mason::MethodMaker
 
 __PACKAGE__->valid_params
     (
-     autoflush  => { parse => 'string', default => 0, type => SCALAR },
-     interp     => { isa => 'HTML::Mason::Interp' },
+     autoflush  => { parse => 'boolean', default => 0, type => SCALAR,
+		     descr => "Whether output should be buffered or sent immediately" },
+     interp     => { isa => 'HTML::Mason::Interp',
+		     descr => "An interpreter for Mason control functions" },
      error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
 		     callbacks => { "must be one of 'html', 'text', or 'fatal'" =>
-					sub { $_[0] =~ /^(?:html|text|fatal)$/ } } },
-     out_method => { type => SCALARREF | CODEREF },
-     data_cache_defaults => { type => HASHREF|UNDEF, optional => 1 },
+					sub { $_[0] =~ /^(?:html|text|fatal)$/ } },
+		     descr => "How error conditions should be handled" },
+     out_method => { type => SCALARREF | CODEREF,
+		     descr => "A subroutine or scalar reference through which all output will pass" },
+     data_cache_defaults => { type => HASHREF|UNDEF, optional => 1,
+			      descr => "A hash of default parameters for Cache::Cache" },
     );
 
 __PACKAGE__->contained_objects
