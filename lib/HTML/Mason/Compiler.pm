@@ -544,8 +544,124 @@ HTML::Mason::Compiler - Compile Mason component source
 
 =head1 DESCRIPTION
 
-... Ken will be adding these docs (from Appendix A of the book) as
-soon as the text has been looked at a little bit.
+The compiler starts the compilation process by calling its lexer's
+C<lex> method and passing itself as the C<compiler> parameter.  The
+lexer then calls various methods in the compiler as it parses the
+component source.
+
+=head2 Compilation Callbacks
+
+
+These are methods called by the Lexer while processing a component
+source.  You may wish to override some of these methods if you're
+implementing your own custom Compiler class.
+
+=over 4
+
+=item * start_component()
+
+This method is called by the Lexer when it starts processing a
+component.
+
+=item * end_component()
+
+This method is called by the Lexer when it finishes processing a
+component.
+
+=item * start_block(block_type => <string>)
+
+This method is called by the Lexer when it encounters an opening Mason
+block tag like C<< <%perl> >> or C<< <%args> >>.  Its main purpose is
+to keep track of the nesting of different kinds of blocks within each
+other.  The type of block ("init", "once", etc.) is passed via the
+"block_type" parameter.
+
+=item * start_block(block_type => <string>)
+
+This method is called by the Lexer when it encounters a closing Mason
+block tag like C<< </%perl> >> or C<< </%args> >>.  Like
+C<start_block()>, its main purpose is to help maintain syntactic
+integrity.
+
+=item * *_block(block => <string>, [ block_type => <string> ])
+
+Several compiler methods like C<doc_block()>, C<text_block()>, and
+C<raw_block()> are called by the Lexer after C<start_block()> when it
+encounters blocks of certain types.  These methods actually do the
+work of putting the body of a block into the compiled data structure.
+
+The methods that follow this pattern are C<init_block()>,
+C<perl_block()>, C<doc_block()>, C<text_block()>, and C<raw_block()>.
+The last method is called for all C<< <%once> >>, C<< <%cleanup> >>,
+C<< <%filter> >>, C<< <%init> >>, C<< <%perl> >>, and C<< <%shared> >>
+blocks.
+
+=item * text(text => <string>)
+
+Inserts the text contained in a C<text> parameter into the component
+for verbatim output.
+
+This is called when the lexer finds plain text in a component.
+
+=item * variable_declaration( type => <string>, name => <string>, default => <string> )
+
+Inserts a variable declaration from the C<< <%args> >> section into
+the component.
+
+The type will be either "$", "@", or "%", indicating a scalar, array,
+or hash.  The name is the variable name without the leading sigil.
+The default is everything found after the first "=>" on an C<< <%args>
+>> block line, and may include a comment.
+
+=item * key_value_pair(block_type => <string>, key => <string>, value => <string>)
+
+Inserts a key-value pair from a C<< <%flags> >> or C<< <%attr> >>
+section into the component.
+
+The "block_type" parameter will be either "flags" or "attr".
+
+=item * start_named_block(block_type => <string>, name => <name>)
+
+Analogous to L<"start_block()">, but starts a "named" block 
+(C<< <%method> >> or C<< <%def> >>).
+
+=item * end_named_block()
+
+Called by the Lexer to end a "named" block.
+
+=item * substitution(substitution => <string>, escape => <string>)
+
+Called by the Lexer when it encounters a substitution tag 
+(C<< <% ... %> >>).
+
+The value of the "escape" parameter will be everything found after the
+pipe (|) in the substitution tag, and may be more than one character
+such as "nh".
+
+=item * component_call(call => <string>)
+
+Called by the Lexer when it encounters a component call tag without
+embedded content (C<< <& ... &> >>).
+
+The "call" parameter contains the entire contents of the tag.
+
+=item * component_content_call(call => <string>)
+
+Called by the Lexer when it encounters a component call tag with
+embedded content (C<< <&| ... &> >>).
+
+=item * component_content_call_end()
+
+Called by the Lexer when it encounters an ending tag for a component
+call with content (C<< </&> >>).  Note that there is no corresponding
+C<component_call_end()> method for component calls without content,
+because these calls don't have ending tags.
+
+=item * perl_line(line => <string>)
+
+Called by the Lexer when it encounters a C<%>-line.
+
+=back
 
 =head1 SEE ALSO
 
