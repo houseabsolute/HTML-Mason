@@ -15,7 +15,8 @@ sub assisted_install_config
     my %httpd_params = Apache::test->get_compilation_params( $APACHE{httpd} );
 
     my $conf_file = $APACHE{config_file} ? $APACHE{config_file} : $httpd_params{SERVER_CONFIG_FILE};
-    my %config_params = _get_config_file_params($conf_file);
+    my %config_params = eval { _get_config_file_params($conf_file) };
+    warn " * Can't investigate current installation status:\n $@" and return if $@;
 
     foreach my $k ( qw( document_root user group ) )
     {
@@ -123,7 +124,7 @@ sub _get_config_file_params
 
     local *CONF;
 
-    open CONF, "<$file"	or die "Can't read $file: $!";
+    open CONF, "<$file"	or die "Can't read $file: $!\n";
 
     my %conf;
     while (<CONF>)
