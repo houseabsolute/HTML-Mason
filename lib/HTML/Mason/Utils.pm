@@ -49,11 +49,10 @@ sub access_data_cache
 	    open $lockfh, ">>$lockfile"
 		or die "cache: cannot open lockfile '$lockfile' for exclusive lock: $!";
 	} elsif ($lockargs & LOCK_SH) {
-	    open $lockfh, "<$lockfile";
-	    if (!$lockfh && !-e $lockfile) {
-		open $lockfh, ">$lockfile";
+	    if ( (!open $lockfh, "<$lockfile") && !-e $lockfile) {
+		open $lockfh, ">$lockfile" or die "Can't write to $lockfile: $!";
 		close $lockfh or die "Can't close $lockfile: $!";
-		open $lockfh, "<$lockfile";
+		open $lockfh, "<$lockfile" or die "Can't open $lockfile: $!";
 	    }
 	    die "cache: cannot open lockfile '$lockfile' for shared lock: $!" if !$lockfh;
 	} else {
