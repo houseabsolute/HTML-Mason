@@ -178,7 +178,7 @@ sub _in_apache_conf_file
 {
     my $self = shift;
 
-    return $ENV{MOD_PERL} && ( $self->_get_string_param('CompRoot'),
+    return $ENV{MOD_PERL} && ( $self->_get_string_param('CompRoot') ||
 			       $self->get_param('MultipleConfig') );
 }
 
