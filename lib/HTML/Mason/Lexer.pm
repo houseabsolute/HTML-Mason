@@ -377,7 +377,7 @@ sub match_substitute
 	else
 	{
 	    my $line = $self->_next_line( $self->{current}{pos} - 2 );
-	    syntax_error "'<%' without matching '%>' at $self->{current}{lines}:\n$line";
+	    syntax_error "'<%' without matching '%>' at line $self->{current}{lines}:\n$line";
 	}
     }
 }
@@ -399,7 +399,7 @@ sub match_comp_call
 	else
 	{
 	    my $line = $self->_next_line( $self->{current}{pos} - 2 );
-	    syntax_error "'<&' without matching '&>' at $self->{current}{lines}:\n$line";
+	    syntax_error "'<&' without matching '&>' at line $self->{current}{lines}:\n$line";
 	}
     }
 }
@@ -422,7 +422,7 @@ sub match_comp_content_call
 	else
 	{
 	    my $line = $self->_next_line( $self->{current}{pos} - 3 );
-	    syntax_error "'<&|' without matching '&>' at $self->{current}{lines}:\n$line";
+	    syntax_error "'<&|' without matching '&>' at line $self->{current}{lines}:\n$line";
 	}
     }
 }
