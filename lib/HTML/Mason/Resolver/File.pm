@@ -110,6 +110,9 @@ sub glob_path {
 sub get_component {
     my ($self, %lookup_info) = @_;
 
+    HTML::Mason::Exception->throw( "$lookup_info{description} component file is zero length" )
+	unless -s $lookup_info{description};
+
     return read_file( $lookup_info{description} );
 }
 
