@@ -65,8 +65,8 @@ sub compile
     my $self = shift;
     my %p = @_;
 
-    local $self->{comp_class} = $p{comp_class} if exists $p{comp_class};
-    return $self->SUPER::compile( comp_source => $p{comp_source}, name => $p{name} );
+    local $self->{comp_class} = delete $p{comp_class} if exists $p{comp_class};
+    return $self->SUPER::compile( %p );
 }
 
 #
@@ -81,16 +81,13 @@ sub compile
 sub compile_to_file
 {
     my $self = shift;
+    printf "C->compile_to_file: rss=%d, vsz=%d\n", `ps -eo rss,vsz -p $$` =~ /(\d+)\s+(\d+)/ if $ENV{MEM};
 
     my %p = validate( @_, {   file => { type => SCALAR },
 			    source => { isa => 'HTML::Mason::ComponentSource' } },
 		    );
 
     my ($file, $source) = @p{qw(file source)};
-    my $object_code = $self->compile( comp_source => $source->comp_source,
-				      name => $source->friendly_name,
-				      comp_class => $source->comp_class );
-
     my @newfiles = ($file);
 
     if (defined $file && !-f $file) {
@@ -108,9 +105,14 @@ sub compile_to_file
 
     my $fh = make_fh();
     open $fh, "> $file"
-	or system_error "Couldn't write object file $file: $!";
-    print $fh $$object_code
-	or system_error "Couldn't write object file $file: $!";
+	or system_error "Couldn't create object file $file: $!";
+
+    $self->compile( comp_source => $source->comp_source_ref,
+		    name => $source->friendly_name,
+		    comp_class => $source->comp_class,
+		    fh => $fh );
+    printf "C->compile_to_file(2): rss=%d, vsz=%d\n", `ps -eo rss,vsz -p $$` =~ /(\d+)\s+(\d+)/ if $ENV{MEM};
+
     close $fh 
 	or system_error "Couldn't close object file $file: $!";
     
@@ -126,20 +128,44 @@ sub object_id
     return $self->SUPER::object_id;
 }
 
+sub _output_chunk
+{
+    my ($self, $fh, $string) = (shift, shift, shift);
+    if ($fh)
+    {
+	print $fh (ref $_ ? $$_ : $_) foreach grep defined, @_;
+    }
+    else
+    {
+	$$string .= (ref $_ ? $$_ : $_) foreach @_;
+    }
+}
+
+# There are some really spooky relationships between the variables &
+# data members in the compiled_component() routine.
+
 sub compiled_component
 {
-    my $self = shift;
+    my ($self, %p) = @_;
+    my $obj_text = '';
 
     $self->{compiled_def} = $self->_compile_subcomponents if %{ $self->{def} };
     $self->{compiled_method} = $self->_compile_methods if %{ $self->{method} };
 
     $self->{current_comp} = $self;
 
-    my $header = $self->_make_main_header;
-    my $params = $self->_component_params;
-
+    # Create the file header to assert creatorship
     my $id = $self->object_id;
     $id =~ s,([\\']),\\$1,g;
+    $self->_output_chunk($p{fh}, \$obj_text, "# MASON COMPILER ID: $id\n");
+
+    # Some preamble stuff, including 'use strict', 'use vars', and <%once> block
+    my $header = $self->_make_main_header;
+    $self->_output_chunk($p{fh}, \$obj_text, $header);
+
+
+    my $params = $self->_component_params;
+
     $params->{compiler_id} = "'$id'";
     $params->{load_time} = time;
 
@@ -173,17 +199,20 @@ sub compiled_component
 		     );
     }
 
+    $self->_output_chunk($p{fh}, \$obj_text, $self->_subcomponents_footer);
+    $self->_output_chunk($p{fh}, \$obj_text, $self->_methods_footer);
+
+
+
     $params->{object_size} = 0;
     $params->{object_size} += length for ($header, %$params);
 
-    my $obj_text = join('',
-			"# MASON COMPILER ID: $id\n",
-			$header,
-			$self->_subcomponents_footer,
-			$self->_methods_footer,
-			$self->_constructor( $self->comp_class,
-					     $params ),
-			';');
+    $self->_output_chunk($p{fh}, \$obj_text,
+			 $self->_constructor( $self->comp_class,
+					      $params ),
+			 ';',
+			);
+
     delete $self->{current_comp};
     return \$obj_text;
 }
