@@ -35,7 +35,8 @@ test_load_apache();
 
 my $tests = 4;
 $tests += 30 if my $have_libapreq = have_module('Apache::Request');
-$tests += 29 if my $have_cgi      = have_module('CGI');
+$tests += 30 if my $have_cgi      = have_module('CGI');
+$tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
 print "1..$tests\n";
 
 print STDERR "\n";
@@ -195,6 +196,13 @@ This is first.
 This is third.
 EOF
 	      );
+
+    write_comp( 'head_request', <<'EOF',
+% foreach (keys %ARGS) {
+<% $_ %>: <% ref $ARGS{$_} ? 'is a ref' : 'not a ref' %>
+% }
+EOF
+	      );
 }
 
 sub write_comp
@@ -267,6 +275,21 @@ EOF
 						      );
 	ok($success);
     }
+
+    $path = '/comps/head_request?foo=1&bar=1&bar=2';
+    $path = "/ah=0$path" if $with_handler;
+    $response = Apache::test->fetch( { uri => $path, method => 'HEAD' } );
+    $actual = filter_response($response, $with_handler);
+    $success = HTML::Mason::Tests->check_output( actual => $actual,
+						 expect => <<'EOF',
+X-Mason-Test: Initial value
+foo: not a ref
+bar: is a ref
+Status code: 0
+EOF
+					       );
+
+    ok($success);
 
     kill_httpd(1);
 }
