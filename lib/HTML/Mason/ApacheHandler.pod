@@ -52,6 +52,10 @@ to an Apache::Request object. This object inherits all Apache
 methods and adds a few of its own, dealing with parameters and
 file uploads. See Apache::Request manual page for more information.
 
+If you specific args_method='CGI', then the HTML::Mason::Request
+object will have a method called C<cgi_object> available.  This method
+will return the CGI object used in the ApacheHandler code.
+
 =back
 
 =head1 PARAMETERS TO THE new() CONTRUCTOR

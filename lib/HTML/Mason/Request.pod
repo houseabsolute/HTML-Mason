@@ -378,6 +378,16 @@ Returns the ApacheHandler object associated with this request.
 Returns the Apache request object.  This is also available in the
 global $r.
 
+=for html <a name="item_cgi_object">
+
+=item cgi_object
+
+Returns the CGI object used to parse any CGI parameters submitted to
+the component, if (and only if) you are using the CGI module to do
+this rather than the Apache::Request module.  The default is to use
+the CGI module.  See the L<HTML::Mason::ApacheHandler> documentation
+for more details.
+
 =back
 
 =head1 AUTHOR
@@ -387,5 +397,6 @@ Jonathan Swartz, swartz@transbay.net
 =head1 SEE ALSO
 
 L<HTML::Mason::Component>
+L<HTML::Mason::ApacheHandler>
 
 =cut
