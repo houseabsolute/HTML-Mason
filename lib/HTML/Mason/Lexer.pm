@@ -417,7 +417,7 @@ sub match_comp_content_call_end
     my $comp = $self->{comp};
     pos($comp) = $self->{pos};
 
-    if ( $comp =~ m,\G</&\|>,gc )
+    if ( $comp =~ m,\G</&>,gc )
     {
         $self->{pos} = pos($comp);
 

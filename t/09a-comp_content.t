@@ -83,8 +83,8 @@ EOF
 
     $group->add_support( path => 'filter_test/double',
 			 component => <<'EOF',
-<&| filter &>1</&|>
-<&| filter &><% $m->content %></&|>
+<&| filter &>1</&>
+<&| filter &><% $m->content %></&>
 EOF
 		       );
 
@@ -99,7 +99,7 @@ EOF
 <ul>
 <&| repeat , var => \$a, list => [1,2,3,4,5] &>
 <li><% $a %>
-</&|>
+</&>
 </ul>
 
 EOF
@@ -128,11 +128,11 @@ EOF
 		      call_path => 'filter_test/test2',
 		      description => 'Tests a filter changes the contents',
 		      component => <<'EOF',
-<&| filter &>1</&|>
+<&| filter &>1</&>
 <br>
-<&| filter &>2</&|>
+<&| filter &>2</&>
 <br>
-<&| filter &>hi</&|>
+<&| filter &>hi</&>
 <br>
 end
 EOF
@@ -156,8 +156,8 @@ EOF
 		      component => <<'EOF',
 % my $i;
 <&| repeat , var => \$i , list => [5,4,3,2,1] &>
-<&| filter &> <% $i %> </&|> <p>
-</&|>
+<&| filter &> <% $i %> </&> <p>
+</&>
 done!
 EOF
 		      expect => <<'EOF',
@@ -197,7 +197,7 @@ EOF
 		      call_path => 'filter_test/test5',
 		      description => 'test a filter which does not access content',
 		      component => <<'EOF',
-outside <&| null &> inside </&|> outside
+outside <&| null &> inside </&> outside
 EOF
 		      expect => <<'EOF',
 outside  outside
@@ -218,8 +218,8 @@ EOF
 <&| echo &>
 <% $m->current_comp->name %>
 <% $m->caller_args(0) %>
-</&|>
-</&|>
+</&>
+</&>
 EOF
 			expect => <<'EOF',
 test6
@@ -248,7 +248,7 @@ component call
 <%perl>
 $m->out("perl tag");
 </%perl>
-</&|>
+</&>
 EOF
 			expect => <<'EOF',
 content returned 'this is a perl line substitution tag
@@ -266,7 +266,7 @@ EOF
 			call_path => 'filter_test/test8',
 			description => 'test interaction with filter section',
 			component => <<'EOF',
-<&| filter &>hi ho</&|>
+<&| filter &>hi ho</&>
 <%filter>
 s/content returned/simon says/
 </%filter>
@@ -296,7 +296,7 @@ EOF
 			description => 'test filtering $m->content',
 			component => <<'EOF',
 top
-<&| double &>guts</&|>
+<&| double &>guts</&>
 EOF
 			expect => <<'EOF',
 top
@@ -316,8 +316,8 @@ EOF
 <%method happy>
 <% $m->content %>, be happy!
 </%method>
-<&| SELF:happy &>don't worry</&|>
-<&| sad &>why worry</&|>
+<&| SELF:happy &>don't worry</&>
+<&| sad &>why worry</&>
 EOF
 			expect => <<'EOF',
 
@@ -333,7 +333,7 @@ EOF
     $group->add_test( name => 'dollar_underscore',
 		      description => 'Test using $_ in a filter',
 		      component => <<'EOF',
-<&| filter_test/repeat2, list => [1,2,3] &>$_ is <% $_ %></&|>
+<&| filter_test/repeat2, list => [1,2,3] &>$_ is <% $_ %></&>
 EOF
 		      expect => <<'EOF',
 $_ is 1
