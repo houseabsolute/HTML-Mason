@@ -104,7 +104,9 @@ $data_dir = File::Spec->catdir( getcwd(), 'mason_tests', 'data' );
 
 # this is tainted, as is anything with return val from getcwd()
 my $comp2 = read_file( File::Spec->catfile( File::Spec->curdir, 't', 'taint.comp' ) );
-eval { $interp->write_object_file( object_code => $comp2,
+
+# This isn't a part of the documented interface, but we test it here anyway.
+eval { $interp->write_object_file( object_code => \$comp2,
 				   object_file =>
                                    File::Spec->catfile( $data_dir, 'taint_write_test' ),
 				 ); };
@@ -119,9 +121,9 @@ else
 }
 
 my $cwd = getcwd(); # tainted
-my $code = "my \$x = '$cwd';"; # also tainted
-
-eval { $interp->eval_object_code( object_code => $code ) };
+# This isn't a part of the documented interface, but we test it here anyway.
+my $code = "# MASON COMPILER ID: ". $interp->compiler->object_id ."\nmy \$x = '$cwd';"; # also tainted
+eval { $interp->eval_object_code( object_code => \$code ) };
 
 if (! $@)
 {
