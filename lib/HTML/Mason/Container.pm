@@ -50,14 +50,14 @@ sub all_specs
 	    if ($spec->{isa}) {
 		my $obj_class;
 
+		$type = 'object';
+
 		if (exists $CONTAINED_OBJECTS{$class}{$name}) {
 		    $obj_class = $CONTAINED_OBJECTS{$class}{$name};
 		    $obj_class = $obj_class->{class} if ref $obj_class;
-		} else {
-		    $obj_class = $spec->{isa};
-		}
 
-		($type, $default) = ('object', "$obj_class\->new");
+		    $default = "$obj_class\->new";
+		}
 	    } else {
 		($type, $default) = ($spec->{parse}, $spec->{default});
 	    }
