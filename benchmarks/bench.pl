@@ -40,20 +40,20 @@ my %flags =
      test => {type  => ':s',
 	      descr => 'Specify one or more tests to perform.',
 	      default => []},
-     profile
-          => {descr => '(Not implemented)'},
+     profile =>
+             {descr => '(Not implemented)'},
      reps => {type  => ':i',
 	      descr => 'Number of times to repeat each test.  Defaults to 1000.',
 	      default => 1000},
      save => {descr => 'Saves information to result_history.db (an MLDBM DB_File).'},
-     cvs_tag
-          => {type => ':s',
-	      descr => 'A CVS tag (like "-r release-1-1-5") to check out in lib/ first.',
-	     },
+     cvs_tag =>
+	     {type => ':s',
+	      descr => 'A CVS tag (like "-r release-1-1-5") to check out in lib/ first.'},
      tag  => {type  => ':s',
-	      descr => 'Specifies a tag to save to result_history.db.  Default is $HTML::Mason::VERSION or --cvs_tag value.'},
-     clear_cache
-          => {descr => 'Will clear on-disk cache first.  Useful for exercising the compiler.'},
+	      descr => 'Specifies a tag to save to result_history.db.  '.
+	               'Default is $HTML::Mason::VERSION or --cvs_tag value.'},
+     clear_cache =>
+	     {descr => 'Will clear on-disk cache first.  Useful for exercising the compiler.'},
      help => {descr => 'Prints this message and exits.'},
     );
 
