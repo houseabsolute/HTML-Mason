@@ -6,6 +6,12 @@ Dave Rolsky, Ken Williams and Jonathan Swartz.
 
 Other contributors, most recent first:
 
+(Summer '01)
+
+John Williams (no relation) helped implement a number of new features
+for what became Mason 1.10, including buffer objects and component
+calls with content.
+
 (July '01)
 
 Matthew Lewinski created the design for the second overhaul of Mason
