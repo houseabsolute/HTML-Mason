@@ -28,60 +28,27 @@ use lib 'lib', 't/lib';
 use Apache::test qw(skip_test have_httpd);
 skip_test unless have_httpd;
 
-# We'll repeat all the tests with an Apache::Request-using
-# ApacheHandler if the user has the Apache::Request module installed.
-my $has_apache_request = 1;
-eval { require Apache::Request; };
-$has_apache_request = 0 if $@;
-
 local $| = 1;
 
 test_load_apache();
 
-
-{
-    my $both_tests = 13;
-    my $cgi_only_tests = 1;
-    my $apr_only_tests = 1;
-    my $both_no_handler_tests = 9;
-    my $cgi_only_no_handler_tests = 1;
-    $cgi_only_no_handler_tests++ if $mod_perl::VERSION >= 1.24;
-    my $apr_only_no_handler_tests = 3;
-    my $multi_conf_tests = 4;
-
-    my $total = $both_tests + $both_no_handler_tests;
-    $total += $cgi_only_tests + $cgi_only_no_handler_tests;
-    if ($has_apache_request)
-    {
-	$total += $both_tests + $both_no_handler_tests;
-	$total += $apr_only_tests;
-	$total += $apr_only_no_handler_tests;
-    }
-
-    $total += $multi_conf_tests;
-
-    print "1..$total\n";
-}
+print "1..63\n";
 
 print STDERR "\n";
 
 write_test_comps();
 
 cleanup_data_dir();
+apache_request_tests(1);
+
+cleanup_data_dir();
+apache_request_tests(0);
+
+cleanup_data_dir();
 cgi_tests(1);
 
 cleanup_data_dir();
 cgi_tests(0);
-
-
-if ($has_apache_request)
-{
-    cleanup_data_dir();
-    apache_request_tests(1);
-
-    cleanup_data_dir();
-    apache_request_tests(0);
-}
 
 cleanup_data_dir();
 
@@ -151,13 +118,12 @@ EOF
 EOF
 	      );
 
-    if ($has_apache_request)
-    {
-	write_comp( 'apache_request', <<'EOF',
-<% ref $r %>
+    write_comp( 'apache_request', <<'EOF',
+% if ($r->isa('Apache::Request')) {
+Apache::Request
+% }
 EOF
 		  );
-    }
 
     write_comp( 'multiconf1/foo', <<'EOF',
 I am foo in multiconf1
@@ -211,6 +177,13 @@ EOF
     write_comp( 'print', <<'EOF',
 This is first.
 % print "This is second.\n";
+This is third.
+EOF
+	      );
+
+    write_comp( 'r_print', <<'EOF',
+This is first.
+% $r->print("This is second.\n");
 This is third.
 EOF
 	      );
@@ -315,8 +288,8 @@ EOF
 
     unless ($with_handler)
     {
-	# test that MasonDieHandler works (testing a code parameter
-	# from httpd.conf)
+	# test that MasonTopLevelPredicate works (testing a code
+	# parameter from httpd.conf)
 	my $response = Apache::test->fetch('/comps/__top_level_predicate');
 	my $actual = filter_response($response, 0);
 	ok( $actual =~ /404 not found/,
@@ -540,6 +513,58 @@ Status code: 0
 EOF
 					       );
     ok($success);
+
+    if ($with_handler)
+    {
+	$path = '/ah=1/comps/print';
+
+	$response = Apache::test->fetch($path);
+	$actual = filter_response($response, $with_handler);
+	$success = HTML::Mason::Tests->check_output( actual => $actual,
+						     expect => <<'EOF',
+X-Mason-Test: Initial value
+This is first.
+This is second.
+This is third.
+Status code: 0
+EOF
+						   );
+	ok($success);
+    }
+
+    $path = '/comps/r_print';
+    $path = "/ah=0$path" if $with_handler;
+
+    $response = Apache::test->fetch($path);
+    $actual = filter_response($response, $with_handler);
+    $success = HTML::Mason::Tests->check_output( actual => $actual,
+						 expect => <<'EOF',
+X-Mason-Test: Initial value
+This is first.
+This is second.
+This is third.
+Status code: 0
+EOF
+					       );
+    ok($success);
+
+    if ($with_handler)
+    {
+	$path = '/ah=1/comps/r_print';
+
+	$response = Apache::test->fetch($path);
+	$actual = filter_response($response, $with_handler);
+	$success = HTML::Mason::Tests->check_output( actual => $actual,
+						     expect => <<'EOF',
+X-Mason-Test: Initial value
+This is first.
+This is second.
+This is third.
+Status code: 0
+EOF
+						   );
+	ok($success);
+    }
 }
 
 sub multi_conf_tests
