@@ -5,6 +5,13 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+0.7.1
+
+- Fixed bug in parser code that determines whether % is at the
+beginning of a line.  L{Reported by Tom Hughes}
+- Parser no longer inadvertently accepts argument names with spaces.
+L{Reported by Phillip Gwyn}
+
 0.7  Thu Aug 12 14:22:50 PDT 1999
 
 - Improved core implementation with two new classes,

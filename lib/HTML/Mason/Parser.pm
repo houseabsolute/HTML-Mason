@@ -153,8 +153,13 @@ sub parse_component
     # names to be prefixed with perl_.  Record all other text ranges
     # in @textsegs.
     #
+    # $startline keeps track of whether the next text range starts
+    # at the beginning of a line. This becomes important later,
+    # when looking for %-lines.
+    #
     my %sectiontext = (map(($_,''),qw(args cleanup doc filter init once)));
     my $curpos = 0;
+    my $startline = 1;
     my (@textsegs,%subcomps);
     my $scriptlength = length($script);
     while ($script =~ /(<%(?:perl_)?(args|cleanup|def[ \t]+([^>\n]+)|doc|filter|init|once|text)>)/ig) {
@@ -162,14 +167,14 @@ sub parse_component
 	$beginfield = 'def' if (substr($beginfield,0,3) eq 'def');
 	my $beginmark = pos($script)-length($begintag);
 	my $begintail = pos($script);
-	push(@textsegs,[$curpos,$beginmark-$curpos]);
+	push(@textsegs,{start=>$curpos,len=>$beginmark-$curpos,startline=>$startline}) if $curpos < $beginmark;
 	if ($script =~ m/(<\/%(?:perl_)?$beginfield>\n?)/ig) {
 	    my $endtag = $1;
 	    my $endmark = pos($script)-length($endtag);
 	    if ($beginfield eq 'text') {
 		# Special case for <%text> sections: add a special
 		# segment that won't get parsed
-		push(@textsegs,[$begintail,$endmark-$begintail,'<%text>']);
+		push(@textsegs,{start=>$begintail,len=>$endmark-$begintail,startline=>0,noparse=>1});
 	    } elsif ($beginfield eq 'def') {
 		# Special case for <%def> sections: compile section as
 		# component and put object text in subcomps hash,
@@ -197,13 +202,14 @@ sub parse_component
 	    }
 	    $curpos = pos($script);
 	    $pureTextFlag = 0;
+	    $startline = (substr($endtag,-1,1) eq "\n");
 	} else {
 	    $err = "<%$beginfield> with no matching </%$beginfield>";
 	    $errpos = $beginmark;
 	    goto parse_error;
 	}
     }
-    push(@textsegs,[$curpos,$scriptlength-$curpos]) if $curpos < $scriptlength;
+    push(@textsegs,{start=>$curpos,len=>$scriptlength-$curpos,startline=>$startline}) if $curpos < $scriptlength;
 
     #
     # Start body of subroutine with user preamble and args declare.
@@ -229,7 +235,7 @@ sub parse_component
 	    } else {
 		($var) = ($decl =~ /^\s*(\S+)/);
 	    }
-	    $var =~ s/\s//g;
+	    for ($var) { s/^\s+//; s/\s+$// }
 	    # %ARGS is automatic, so ignore explicit declaration.
 	    next if ($var eq '%ARGS');
 	    push (@vars,$var);
@@ -284,19 +290,20 @@ sub parse_component
     # @alphasecs and @perltexts represent alternating plain text
     # and perl sections.
     #
-    my $startline = 1;
     my $alphalength=0;
     my (@alphasecs, @perltexts);
 
     foreach my $textseg (@textsegs) {
+	my ($segbegin, $textlength);
+	($segbegin,$textlength,$startline) =
+	    ($textseg->{start},$textseg->{len},$textseg->{startline});
+	
 	# Special case for <%text> sections
-	if (@{$textseg}>2 && $textseg->[2] eq '<%text>') {
-	    push(@alphasecs,[$textseg->[0],$textseg->[1]]);
+	if ($textseg->{noparse}) {
+	    push(@alphasecs,[$segbegin,$textlength]);
 	    push(@perltexts,'');
 	    next;
 	}
-	my $segbegin = $textseg->[0];
-	my $textlength = $textseg->[1];
 	my $text = substr($script,$segbegin,$textlength);
 	my $curpos = 0;
 	while ($curpos < $textlength) {
