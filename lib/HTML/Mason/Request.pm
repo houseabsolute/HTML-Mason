@@ -132,7 +132,7 @@ sub exec {
 	    local $SIG{'__DIE__'} = $interp->die_handler if $interp->die_handler;
 	    eval { $comp = $interp->load($path) };
 	    $err = $@;
-	    error($err) if $err;
+	    UNIVERSAL::can( $err, 'rethrow' ) ? $err->rethrow : error($err);
 	}
 	unless ($comp) {
 	    if (defined($interp->dhandler_name) and $comp = $interp->find_comp_upwards($path,$interp->dhandler_name)) {
@@ -450,7 +450,7 @@ sub fetch_comp
     if ($path !~ /\//) {
 	my $cur_comp = $self->current_comp;
 	# Check my subcomponents.
-	if (my $subcomp = $cur_comp->subcomps->{$path}) {	
+	if (my $subcomp = $cur_comp->subcomps->{$path}) {
 	    return $subcomp;
 	}
 	# If I am a subcomponent, also check my owner's subcomponents.
