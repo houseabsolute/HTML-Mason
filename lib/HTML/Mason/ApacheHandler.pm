@@ -20,7 +20,6 @@ sub NOT_FOUND { return 404 }
 use Data::Dumper;
 use File::Basename;
 use File::Path;
-use File::Recurse;
 use HTML::Mason::Interp;
 use HTML::Mason::Commands;
 use HTML::Mason::FakeApache;
