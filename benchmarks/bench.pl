@@ -7,6 +7,7 @@ use lib '../lib';
 use Benchmark;
 use Cwd;
 use HTML::Mason;
+use File::Path;
 
 use Getopt::Long;
 
@@ -14,6 +15,7 @@ my %opts = ( reps => 1000 );
 GetOptions( 'test:s'  => \@{ $opts{test} },
             'profile' => \$opts{profile},
             'reps:i'  => \$opts{reps},
+	    'clear_cache' => \$opts{clear_cache},
           );
 
 unless ( @{ $opts{test} } )
@@ -30,6 +32,11 @@ unless (-e 'comps/large.mas') {
   open my($fh), '> comps/large.mas' or die "Can't create comps/large.mas: $!";
   print $fh 'x' x 79, "\n" for 1..30_000; # 80 * 30_000 = 2.4 MB
 }
+
+# Clear out the mason-data directory, otherwise we might include
+# compilation in one run and not the next
+my $data_dir = File::Spec->rel2abs( File::Spec->catdir( cwd, 'mason-data' ) );
+rmtree($data_dir) if $opts{clear_cache};
 
 my %tests =
     ( print =>
@@ -54,8 +61,7 @@ foreach my $test ( @{ $opts{test} } )
 
 my $interp =
     HTML::Mason::Interp->new( comp_root => File::Spec->rel2abs(cwd),
-                              data_dir  =>
-                              File::Spec->rel2abs( File::Spec->catdir( cwd, 'mason-data' ) ),
+                              data_dir  => $data_dir,
                             );
 
 print "\n";
