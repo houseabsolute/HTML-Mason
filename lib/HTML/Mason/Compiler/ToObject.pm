@@ -53,18 +53,17 @@ BEGIN
 }
 
 use HTML::Mason::MethodMaker
-    ( read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
-		      qw( comp_class
-                          define_args_hash
-                          in_package
-			  postamble
-			  preamble
-                          subcomp_class
-			  use_strict
-                        )
+    ( read_only => [
+		    qw( comp_class
+			define_args_hash
+			in_package
+			postamble
+			preamble
+			subcomp_class
+			use_strict
+			)
 		    ],
-    );
-
+      );
 
 sub compile
 {
@@ -123,15 +122,6 @@ sub compile_to_file
     return \@newfiles;
 }
 
-sub object_id
-{
-    my $self = shift;
-
-    local $self->{comp_class} = '';
-
-    return $self->SUPER::object_id;
-}
-
 sub _output_chunk
 {
     my ($self, $fh, $string) = (shift, shift, shift);
@@ -157,19 +147,12 @@ sub compiled_component
     local $c->{compiled_def} = $self->_compile_subcomponents if %{ $c->{def} };
     local $c->{compiled_method} = $self->_compile_methods if %{ $c->{method} };
 
-    # Create the file header to assert creatorship
-    my $id = $self->object_id;
-    $id =~ s,([\\']),\\$1,g;
-    $self->_output_chunk($p{fh}, \$obj_text, "# MASON COMPILER ID: $id\n");
-
     # Some preamble stuff, including 'use strict', 'use vars', and <%once> block
     my $header = $self->_make_main_header;
     $self->_output_chunk($p{fh}, \$obj_text, $header);
 
-
     my $params = $self->_component_params;
 
-    $params->{compiler_id} = "'$id'";
     $params->{load_time} = time;
 
     $params->{subcomps} = '\%_def' if %{ $c->{def} };
@@ -215,29 +198,6 @@ sub compiled_component
 			);
 
     return \$obj_text;
-}
-
-sub assert_creatorship
-{
-    my ($self, $p) = @_;
-    my $id;
-    if ($p->{object_code}) {
-	# Read the object code as a string
-
-	($id) = ${$p->{object_code}} =~ /\A# MASON COMPILER ID: (\S+)$/m
-	    or wrong_compiler_error "Couldn't find a Compiler ID in compiled code.";
-    } else {
-	# Open the object file and read its first line
-
-	my $fh = make_fh();
-	open $fh, $p->{object_file} or die "Can't read $p->{object_file}: $!";
-	($id) = <$fh> =~ /\A# MASON COMPILER ID: (\S+)$/m
-	    or wrong_compiler_error "Couldn't find a Compiler ID in $p->{object_file}.";
-	close $fh;
-    }
-    
-    wrong_compiler_error 'This object file was created by an incompatible Compiler or Lexer.  Please remove the component files in your object directory.'
-	unless $id eq $self->object_id;
 }
 
 sub _compile_subcomponents
@@ -659,6 +619,13 @@ Not defining the args hash means that we can avoid copying component
 arguments, which can save memory and slightly improve execution speed.
 
 =back
+
+=head1 ACCESSOR METHODS
+
+All of the above properties have read-only accessor methods of the
+same name. You cannot change any property of a compiler after it has
+been created (but you can create multiple compilers with different
+properties).
 
 =head1 METHODS
 

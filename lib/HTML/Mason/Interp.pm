@@ -65,6 +65,10 @@ BEGIN
          { parse => 'hash_list', optional => 1, type => HASHREF,
            descr => "A list of escape flags to set (as if calling the set_escape() method" },
 
+	 object_file_extension =>
+         { parse => 'string',  type => SCALAR, default => '.obj',
+           descr => "Extension to add to the end of object files" },
+
 	 # OBJECT cause qr// returns an object
 	 ignore_warnings_expr =>
          { parse => 'string',  type => SCALAR|OBJECT, default => qr/Subroutine .* redefined/i,
@@ -112,6 +116,7 @@ use HTML::Mason::MethodMaker
                          compiler
 			 data_dir
 			 dynamic_comp_root
+			 object_file_extension
 			 preallocated_output_buffer
 			 preloads
                          resolver
@@ -451,7 +456,12 @@ sub delete_from_code_cache {
 sub comp_id_to_objfile {
     my ($self, $comp_id) = @_;
 
-    return File::Spec->catfile( $self->object_dir, split /\//, $comp_id );
+    return File::Spec->catfile
+	(
+	 $self->object_dir,
+	 $self->compiler->object_id,
+	 split(/\//, $comp_id)
+	 ) . $self->object_file_extension;
 }
 
 #
@@ -761,8 +771,6 @@ sub eval_object_code
 {
     my ($self, %p) = @_;
 
-    $self->compiler->assert_creatorship(\%p);
-
     #
     # Evaluate object file or text with warnings on, unless
     # ignore_warnings_expr is '.'.
@@ -785,18 +793,6 @@ sub eval_object_code
     }
 
     $err = $warnstr . $@;
-
-    unless ($err) {
-	# Yes, I know I always freak out when people start poking
-	# around in object internals but since there is no longer a
-	# parser_version method in Component.pm there is no other way.
-	# Only pre-1.10 components have parser_version set.
-	wrong_compiler_error 'This object file was created by a pre-1.10 parser.  Please remove the component files in your object directory.'
-	    if ref $comp && exists $comp->{parser_version};
-
-	wrong_compiler_error 'This object file was created by an incompatible Compiler or Lexer.  Please remove the component files in your object directory.'
-	    if UNIVERSAL::can( $comp, 'compiler_id' ) && $comp->compiler_id ne $self->compiler->object_id;
-    }
 
     #
     # Return component or error
@@ -1174,6 +1170,10 @@ are turned off completely as a specially optimized case.
 By default, this is set to 'Subroutine .* redefined'.  This allows you
 to declare global subroutines inside <%once> sections and not receive
 an error when the component is reloaded.
+
+=item object_file_extension
+
+Extension to add to the end of object files. Default is ".obj".
 
 =item preloads
 

@@ -108,26 +108,6 @@ sub lex
     rethrow_exception $err;
 }
 
-sub object_id
-{
-    my $self = shift;
-
-    my @vals;
-    foreach my $k ( sort keys %{ $self->validation_spec } )
-    {
-	next if $k eq 'container';
-
-	push @vals, $k;
-	push @vals, ( UNIVERSAL::isa( $self->{$k}, 'HASH' )  ? map { $_ => $self->{$k}{$_} } sort keys %{ $self->{$k} } :
-		      UNIVERSAL::isa( $self->{$k}, 'ARRAY' ) ? sort @{ $self->{$k} } :
-		      $self->{$k} );
-    }
-
-    local $^W; # ignore undef warnings
-    # unpack('%32C*', $x) computes the 32-bit checksum of $x
-    return unpack('%32C*', join "\0", class => ref($self), @vals);
-}
-
 sub start
 {
     my $self = shift;
@@ -680,5 +660,9 @@ If you want your subclass to work with the existing Compiler classes
 in Mason, you must implement the methods listed above.  If you plan to
 use a custom Compiler class that you're writing, you can do whatever
 you want.
+
+We recommend that any parameters you add to Lexer be read-only,
+because the compiler object_id is only computed once on creation
+and would not reflect any changes to Lexer parameters.
 
 =cut

@@ -783,6 +783,20 @@ server process can eval the object file and save time on parsing the
 component source file.  The object file is recreated whenever the
 source file changes.
 
+The object file pathname is formed from three parts:
+
+=over
+
+=item * the compiler L<object_id|HTML::Mason::Compiler/item_object_id> -
+this prevents different versions of Mason or compilers from using the same
+object file, such as after an upgrade
+
+=item * the component path
+
+=item * P<object_file_extension>, by default ".obj"
+
+=back
+
 Besides improving performance, object files can be useful for
 debugging.  If you feel the need to see what your source has been
 translated into, you can peek inside an object file to see exactly how

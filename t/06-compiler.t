@@ -9,6 +9,11 @@ use HTML::Mason::Tools qw(load_pkg);
 my $tests = make_tests();
 $tests->run;
 
+{ package HTML::Mason::Commands;
+  sub _make_interp {
+      $tests->_make_interp(@_);
+  }}
+
 sub make_tests {
     my $group = HTML::Mason::Tests->tests_class->new( name => 'compiler',
 						      description => 'compiler and lexer object functionality' );
@@ -1005,6 +1010,59 @@ my $dh = $m->dhandler_name;
 EOF
                           expect => <<'EOF',
 dhandler
+EOF
+                        );
+
+#------------------------------------------------------------
+
+	$group->add_test( name => 'compiler_id_change',
+			  description => 'Make sure different compiler params use different object dirs',
+			  component => <<'EOF',
+<%args>
+$count => 0
+$compiler_params => {}
+$object_id_hash => {}
+</%args>
+
+count = <% $count %>
+object_id = <% $m->interp->compiler->object_id %>
+postprocess_text = <% $m->interp->compiler->postprocess_text %>
+
+<%perl>
+my $object_id = $m->interp->compiler->object_id;
+if ($object_id_hash->{$object_id}++) {
+    die "object_id '$object_id' has been seen (count = $count)!";
+}
+if ($count == 0) {
+    $compiler_params->{enable_autoflush} = 0;
+} elsif ($count == 1) {
+    $compiler_params->{default_escape_flags} = 'h';
+} elsif ($count == 2) {
+    $compiler_params->{use_source_line_numbers} = 0;
+} elsif ($count == 3) {
+    $compiler_params->{postprocess_text} = sub { my $content = shift; $$content =~ tr/a-z/A-Z/ };
+} else {
+    return;
+}
+my $buf;
+my $interp = _make_interp(comp_root => $m->interp->comp_root,
+			  data_dir => $m->interp->data_dir,
+			  out_method => \$buf,
+			  %$compiler_params);
+$interp->exec($m->current_comp->path, count=>$count+1, compiler_params=>$compiler_params, object_id_hash=>$object_id_hash);
+$m->print($buf);
+</%perl>
+EOF
+                          expect => <<'EOF',
+count = 0
+
+count = 1
+
+count = 2
+
+count = 3
+
+COUNT = 4
 EOF
                         );
 

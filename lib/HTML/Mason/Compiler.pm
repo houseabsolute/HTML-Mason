@@ -71,17 +71,17 @@ BEGIN
 }
 
 use HTML::Mason::MethodMaker
-    ( read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
-                      qw(
-			 enable_autoflush
-			 lexer
-			 preprocess
-			 postprocess_perl
-			 postprocess_text
-			 use_source_line_numbers
-			 )
+    ( read_only => [qw(
+		       enable_autoflush
+		       lexer
+		       object_id
+		       preprocess
+		       postprocess_perl
+		       postprocess_text
+		       use_source_line_numbers
+		       )
 		    ],
-    );
+      );
 
 my $old_escape_re = qr/^[hnu]+$/;
 
@@ -96,10 +96,14 @@ sub new
     # Verify the validity of the global names
     $self->allow_globals( @{$self->{allow_globals}} );
 
+    # Compute object_id once, on the assumption that all of compiler's
+    # and lexer's parameters are read-only.
+    $self->compute_object_id;
+    
     return $self;
 }
 
-sub object_id
+sub compute_object_id
 {
     my $self = shift;
 
@@ -112,7 +116,8 @@ sub object_id
 	( grep { ! exists $spec->{$_}{isa} && ! exists $spec->{$_}{can} }
 	  grep { $_ ne 'container' } keys %$spec );
 
-    my @vals;
+    my @vals = ('HTML::Mason::VERSION', $HTML::Mason::VERSION);
+
     foreach my $k ( @id_keys )
     {
 	push @vals, $k;
@@ -123,17 +128,15 @@ sub object_id
 	# do this properly but I'm not sure if that's a good idea or
 	# if it works for Perl 5.005.
 	push @vals,
-            $HTML::Mason::VERSION,
-            ( $spec->{$k}{parse} eq 'code'  ? ( $self->{$k} ? 1 : 0 ) :
-              UNIVERSAL::isa( $self->{$k}, 'HASH' )  ?
-              map { $_ => $self->{$k}{$_} } sort keys %{ $self->{$k} } :
-              UNIVERSAL::isa( $self->{$k}, 'ARRAY' ) ? sort @{ $self->{$k} } :
-              $self->{$k} );
+	( $spec->{$k}{parse} eq 'code'  ? ( $self->{$k} ? 1 : 0 ) :
+	  UNIVERSAL::isa( $self->{$k}, 'HASH' )  ?
+	  map { $_ => $self->{$k}{$_} } sort keys %{ $self->{$k} } :
+	  UNIVERSAL::isa( $self->{$k}, 'ARRAY' ) ? sort @{ $self->{$k} } :
+	  $self->{$k} );
     }
 
     local $^W; # ignore undef warnings
-    # unpack('%32C*', $x) computes the 32-bit checksum of $x
-    return join '!', $self->lexer->object_id, unpack('%32C*', join "\0", @vals);
+    $self->{object_id} = unpack('%32C*', join "\0", @vals);
 }
 
 my %top_level_only_block = map { $_ => 1 } qw( cleanup once shared );
@@ -803,6 +806,13 @@ may be more appropriate for in-depth debugging sessions.
 
 =back
 
+=head1 ACCESSOR METHODS
+
+All of the above properties have read-only accessor methods of the
+same name. You cannot change any property of a compiler after it has
+been created (but you can create multiple compilers with different
+properties).
+
 =head1 METHODS
 
 There are several methods besides the compilation callbacks below that
@@ -817,9 +827,8 @@ The "comp_class" parameter may be ignored by the compiler.
 =item object_id
 
 This method should return a unique id for the given compiler object.
-This is used by the interpreter when loading previously compiled
-objects in order to determine whether or not the object should be
-re-compiled.
+This is used by the interpreter when determining the object directory,
+for example.
 
 =back
 
@@ -935,6 +944,14 @@ because these calls don't have ending tags.
 Called by the Lexer when it encounters a C<%>-line.
 
 =back
+
+=head1 SUBCLASSING
+
+We recommend that any parameters you add to Compiler be read-only,
+because the compiler object_id is only computed once on creation
+and would not reflect any changes to Lexer parameters.
+
+=cut
 
 =head1 SEE ALSO
 
