@@ -14,8 +14,6 @@ use HTML::Mason::Exceptions;
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
 
-use Digest::MD5 ();
-
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
@@ -81,7 +79,8 @@ sub object_id
 		      $self->{$k} );
     }
 
-    return join '!', ( $self->lexer->object_id, Digest::MD5::md5_hex(@vals) );
+    # unpack('%32C*', $x) computes the 32-bit checksum of $x
+    return join '!', $self->lexer->object_id, unpack('%32C*', join "\0", @vals);
 }
 
 my %top_level_only_block = map { $_ => 1 } qw( cleanup once shared );

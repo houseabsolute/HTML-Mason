@@ -11,8 +11,6 @@ use HTML::Mason::Exceptions;
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
 
-use Digest::MD5 ();
-
 use base qw(HTML::Mason::Container);
 
 __PACKAGE__->valid_params();
@@ -120,7 +118,8 @@ sub object_id
 		      $self->{$k} );
     }
 
-    return Digest::MD5::md5_hex( class => ref $self, @vals );
+    # unpack('%32C*', $x) computes the 32-bit checksum of $x
+    return unpack('%32C*', join "\0", class => ref($self), @vals);
 }
 
 sub start
