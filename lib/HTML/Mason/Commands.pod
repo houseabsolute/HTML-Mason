@@ -18,14 +18,8 @@ Ends the current execution, finishing the page without returning
 through components. In a web environment, the optional return value is
 used as the HTTP status code.
 
-=item mc_cache ([action=>'retrieve'], [key=>name],
-[keep_in_memory=>0|1], [expire_if=>sub])
-
-=item mc_cache (action=>'store', [key=>name], value=>data,
-[keep_in_memory=>0|1], [expire_at=>time | expire_next=>'hour'|'day' |
-expire_in=>delta])
-
-=item mc_cache (action=>'expire', [key=>name])
+=item mc_cache ([action=>'retrieve|store|expire|keys'], [key=>name],
+[value=>data], [keep_in_memory=>0|1], [expire options...])
 
 mc_cache() lets you store and retrieve the results
 of computation for improved performance. Each component has its own
@@ -74,9 +68,7 @@ o I<expire_if>: calls a given anonymous subroutine and expires if the
 subroutine returns a non-zero value. The subroutine is called with one
 parameter, the time when the cache value was last written.
 
-=item mc_cache_self ([key=>name], [keep_in_memory=>0|1],
-B<[expire_if=E<gt>sub | expire_at=E<gt>time |
-expire_next=E<gt>'hour'|'day' | expire_in=E<gt>delta])>
+=item mc_cache_self (... same as mc_cache options...)
 
 Uses mc_cache to cache the entire output of the current component.  It is typically
 used right at the top of a C<E<lt>%perl_init%E<gt>> section:
@@ -132,7 +124,16 @@ the scalar instead of being sent to the default output stream.
 
 =item mc_comp_exists (compPath)
 
-Returns 1 if compPath is a valid component path, 0 otherwise. 
+Returns 1 if I<compPath> is a valid component path, 0 otherwise. 
+
+=item mc_comp_source ([compPath])
+
+Returns the full source filename for I<compPath>, which may be
+absolute or relative. With no arguments, defaults to the current
+component. For example, to get the last modified time of this
+component:
+
+    my $lastmod = (stat(mc_comp_source))[9];
 
 =item mc_comp_stack ()
 
@@ -160,11 +161,12 @@ mc_date() works faster than UnixDate for some formats by caching results.
 =item mc_file (filename)
 
 Returns the contents of filename as a string. I<filename> may be an
-absolute filesystem path (starting with a '/') or relative (no
-leading '/'); if relative, the static file root is prepended.
+absolute filesystem path (starting with a '/') or relative (no leading
+'/'). If relative, Mason prepends the static file root, or the current
+component directory if no static file root is defined.
 
 Developers are encouraged to use relative paths whenever possible.
-This eliminates the need for component updates when data files are
+This eliminates the need for component updates when content files are
 moved (the administrator just updates the static file root).
 
 =item mc_file_root ()

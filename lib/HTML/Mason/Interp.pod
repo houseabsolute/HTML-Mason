@@ -94,7 +94,9 @@ section of the I<Admin Guide> for further details.
 Absolute path to prepend to relative filenames passed to C<mc_file()>. Does
 not require a trailing slash. For example, if the file root is
 '/foo/bar', then C<mc_file('baz/bap')> will read the file
-'/foo/bar/baz/bap'.
+'/foo/bar/baz/bap'. Undefined by default; if left undefined,
+relative path names to C<mc_file()> are prepended with the
+current component directory.
 
 =item system_log_file
 

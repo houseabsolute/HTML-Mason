@@ -36,9 +36,13 @@ require Exporter;
 
 #
 # Convert relative paths to absolute, handle . and ..
+# Empty string resolves to current component path.
 #
 my $process_comp_path = sub {
     my ($compPath) = @_;
+    if ($compPath !~ /\S/) {
+	return $INTERP->locals->{callPath};
+    }
     if ($compPath !~ m@^/@) {
 	$compPath = chop_slash($INTERP->locals->{parentPath}) . "/" . $compPath;
     }
@@ -216,7 +220,11 @@ sub mc_file ($)
     my ($file) = @_;
     # filenames beginning with / or a drive letter (e.g. C:/) are absolute
     unless ($file =~ /^([A-Za-z]:)?\//) {
-	$file = $INTERP->static_file_root . "/" . $file;
+	if ($INTERP->static_file_root) {
+	    $file = $INTERP->static_file_root . "/" . $file;
+	} else {
+	    $file = $INTERP->comp_root . (chop_slash($INTERP->locals->{parentPath})) . "/" . $file;
+	}
     }
     $INTERP->call_hooks('start_file',$file);
     my $content = read_file($file);
