@@ -29,21 +29,6 @@ EOF
     $group->add_test( name => 'no recursive autohandlers',
 		      description => 'tests turning off recursive autohandlers',
 		      call_path => '/autohandler_test/subdir/hello',
-		      interp_params => { allow_recursive_autohandlers => 0 },
-		      component => <<'EOF',
-Hello World!
-EOF
-		      expect => <<'EOF',
-Hello World!
-EOF
-		    );
-
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'no recursive autohandlers',
-		      description => 'tests turning off recursive autohandlers',
-		      call_path => '/autohandler_test/subdir/hello',
 		      component => <<'EOF',
 Hello World!
 EOF
