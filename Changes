@@ -44,11 +44,11 @@ L{Component/item_owner}
 - Reorganized syntax section of developer's manual and added a "how to
 use this manual" section.
 - Added an UPGRADE guide to distribution.
-- Added section about securing top-level components to
-Admin.pod. (suggested by Sean Cazzell)
+- Added section about securing top-level components to Admin.pod.
+(suggested by Sean Cazzell)
 L{Admin/securing_top_level_components}
-- Added section about declining image requests to
-Admin.pod. L{Admin/declining_image_requests}
+- Added section about declining image requests to Admin.pod.
+L{Admin/declining_image_requests}
 - Eliminated "Subroutine status_mason redefined" warning when creating
 multiple ApacheHandlers.
 - Updated cookie expiration in CD-ME example. (reported by Renzo Toma)
