@@ -18,7 +18,7 @@ use HTML::Mason::Exceptions (abbr => ['param_error']);
 
 __PACKAGE__->valid_params
     (
-     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF, optional=>1,
+     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF, default => File::Spec->rel2abs( Cwd::cwd() ),
 		       descr => "A string or array of arrays indicating the search path for component calls" },
     );
 
@@ -27,18 +27,16 @@ sub new {
 
     my $self = $package->SUPER::new(@_);
 
-    if ($self->{comp_root}) {
-	# Put it through the accessor to ensure proper data structure
-	$self->comp_root( $self->{comp_root} ) unless ref $self->{comp_root};
+    # Put it through the accessor to ensure proper data structure
+    $self->comp_root( $self->{comp_root} ) unless ref $self->{comp_root};
 
-	# Check that directories are absolute.
-	foreach my $pair ($self->comp_root_array) {
-	    param_error "Multiple-path component root must consist of a list of two-element lists; see documentation"
-		if ref($pair) ne 'ARRAY';
-	    $pair->[1] = File::Spec->canonpath( $pair->[1] );
-	    param_error "comp_root '$pair->[1]' is not an absolute directory"
-		unless File::Spec->file_name_is_absolute( $pair->[1] );
-	}
+    # Check that directories are absolute.
+    foreach my $pair ($self->comp_root_array) {
+	param_error "Multiple-path component root must consist of a list of two-element lists; see documentation"
+	    if ref($pair) ne 'ARRAY';
+	$pair->[1] = File::Spec->canonpath( $pair->[1] );
+	param_error "comp_root '$pair->[1]' is not an absolute directory"
+	    unless File::Spec->file_name_is_absolute( $pair->[1] );
     }
 
     return $self;
@@ -106,15 +104,6 @@ sub glob_path {
 	}
     }
     return keys(%path_hash);
-}
-
-sub default_path_prefix {
-    my ($self) = shift;
-    if ($self->{comp_root}) {
-	return undef;
-    } else {
-	return "/" . join("/", grep { $_ =~ /\S/ } File::Spec->splitdir(cwd));
-    }
 }
 
 1;

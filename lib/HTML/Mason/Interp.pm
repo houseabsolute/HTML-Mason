@@ -88,6 +88,7 @@ use HTML::Mason::MethodMaker
 			  fixed_source
 			  ignore_warnings_expr
 			  max_recurse
+                          out_method
 			  resolver
 			  use_object_files )
 		    ],
@@ -216,15 +217,6 @@ sub load {
     my ($maxfilemod, $objfile, $objfilemod);
     my $code_cache = $self->code_cache;
     my $resolver = $self->{resolver};
-
-    # If path is not absolute, prepend default_path_prefix.
-    unless (substr($path, 0, 1) eq '/') {
-	if (my $default_path_prefix = $resolver->default_path_prefix) {
-	    $path = join("/", $default_path_prefix, $path);
-	} else {
-	    error "initial component path must be absolute";
-	}
-    }
 
     #
     # Get source info from resolver. Cache the results in fixed_source mode.
@@ -466,22 +458,6 @@ sub system_log_event_check
 }
 
 sub comp_root { shift->resolver->comp_root(@_) }
-
-#
-# Allow scalar or code reference as argument to out_method.
-#
-sub out_method
-{
-    my ($self) = shift;
-
-    if (@_)
-    {
-	validate_pos( @_, { type => SCALARREF | CODEREF } );
-	$self->{out_method} = shift;
-    }
-
-    return $self->{out_method};
-}
 
 sub files_written
 {
