@@ -110,7 +110,7 @@ $group->add_test( name => 'headers',
 		  expect    => qr/Foo: bar/,
 		);
 
-$group->add_test( name => 'redirect headers',
+$group->add_test( name => 'redirect_headers',
 		  description => 'Test header generation',
 		  component => q{% $m->redirect('/hello.html');},
 		  expect    => qr/Status: 302\s+Location: \/hello\.html|Location: \/hello\.html\s+Status: 302/,
