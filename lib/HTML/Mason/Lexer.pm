@@ -229,7 +229,7 @@ sub variable_list_block
 {
     my ($self, $p) = @_;
 
-    my $ending = qr/ \n | <\/%\Q$p->{block_type}\E> /x;
+    my $ending = qr/ \n | <\/%\Q$p->{block_type}\E> /ix;
     while ( $self->{current}{comp_source} =~ m,
                        \G               # last pos matched
                        (?:
@@ -263,7 +263,7 @@ sub variable_list_block
                        )
                        (\n |          # newline or
                           (?= <\/%\Q$p->{block_type}\E> ) )   # end of block (don't consume it)
-                      ,xgc
+                      ,ixgc
 	  )
     {
 	if ( defined $1 && defined $2 && length $1 && length $2 )
