@@ -170,7 +170,7 @@ sub exec {
 	    }
 	    $first_comp = $wrapper_chain[0];
 	    $self->{wrapper_chain} = [@wrapper_chain];
-	    $self->{wrapper_index} = {map(($wrapper_chain[$_]->path => $_),(0..$#wrapper_chain))};
+	    $self->{wrapper_index} = {map((($wrapper_chain[$_]->path || '') => $_),(0..$#wrapper_chain))};
 	}
 
 	# Fill top_level slots for introspection.
