@@ -953,5 +953,27 @@ EOF
 
 #------------------------------------------------------------
 
+    if ( load_pkg('Switch') )
+    {
+        $group->add_test( name => 'source_filter',
+                          description => 'make sure source filters work',
+                          component => <<'EOF',
+no explosion
+<%init>
+use Switch;
+
+my $x = 1;
+
+switch ($x) { case 1 { $x = 2 } }
+</%init>
+EOF
+                          expect => <<'EOF',
+no explosion
+EOF
+                        );
+    }
+
+#------------------------------------------------------------
+
     return $group;
 }
