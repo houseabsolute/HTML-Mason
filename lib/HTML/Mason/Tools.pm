@@ -13,13 +13,14 @@ package HTML::Mason::Tools;
 use strict;
 
 use Cwd;
+use File::Spec;
 
 require Exporter;
 
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(read_file html_escape date_delta_to_secs dumper_method paths_eq compress_path pkg_loaded pkg_installed is_taint_on);
+@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs dumper_method paths_eq is_absolute_path make_absolute_path compress_path mason_canonpath pkg_loaded pkg_installed make_fh);
 
 #
 # Return contents of file. If $binmode is 1, read in binary mode.
@@ -29,12 +30,13 @@ sub read_file
     my ($file,$binmode) = @_;
     die "read_file: '$file' does not exist" if (!-e $file);
     die "read_file: '$file' is a directory" if (-d _);
-    my $fh = do { local *FH; *FH; };
+    my $fh = make_fh();
     open $fh, $file
 	or die "read_file: could not open file '$file' for reading: $!";
     binmode $fh if $binmode;
     local $/ = undef;
     my $text = <$fh>;
+    close $fh;
     return $text;
 }
 
@@ -85,6 +87,8 @@ sub compress_path
 # accept our patch.
 #
 sub mason_canonpath {
+    # Just like File::Spec::canonpath, but we're having trouble
+    # getting a patch through to them.
     shift;
     my $path = shift;
     $path =~ s|/+|/|g unless($^O eq 'cygwin');       # xx////yy  -> xx/yy
@@ -93,12 +97,11 @@ sub mason_canonpath {
 	$path =~ s|^(\./)+||s unless $path eq "./";  # ./xx      -> xx
 	$path =~ s|^/(\.\./)+|/|s;                   # /../../xx -> xx
 	$path =~ s|/\Z(?!\n)|| unless $path eq "/";  # xx/       -> xx
+	$path =~ s|/[^/]+/\.\.$|| && redo;           # /xx/..    -> /
 	$path =~ s|[^/]+/\.\./|| && redo;            # /xx/../yy -> /yy
     }
     return $path;
 }
-
-no strict 'refs';
 
 #
 # Determine if package is installed without loading it, by checking
@@ -120,6 +123,7 @@ sub pkg_loaded
     my ($pkg) = @_;
 
     my $varname = "${pkg}::VERSION";
+    no strict 'refs';
     return $$varname ? 1 : 0;
 }
 
@@ -132,3 +136,9 @@ sub is_taint_on
 }
 
 1;
+
+sub make_fh
+{
+    return do { local *FH; *FH; };  # double *FH avoids a warning
+}
+
