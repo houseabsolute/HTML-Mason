@@ -521,6 +521,19 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'uc_method',
+			  description => 'make sure that <%METHOD ...> is allowed',
+			  component => <<'EOF',
+calling SELF:foo - <& SELF:foo &>
+<%METHOD foo>bar</%METHOD>
+EOF
+                          expect => <<'EOF',
+calling SELF:foo - bar
+EOF
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
