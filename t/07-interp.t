@@ -754,38 +754,6 @@ EOF
 
 #------------------------------------------------------------
 
-    my $log_file = File::Spec->catfile( $group->base_path, 'system.log' );
-    unlink $log_file;
-
-    $interp = HTML::Mason::Interp->new( data_dir => $group->data_dir,
-					comp_root => $group->comp_root,
-					system_log_file => $log_file,
-					system_log_events => 'COMP_LOAD',
-					system_log_separator => ':::',
-				      );
-
-
-    $group->add_test( name => 'system_log',
-		      description => 'Test system log COMP_LOAD event',
-		      interp => $interp,
-		      component => <<"EOF",
-<%perl>
-local \*F;
-open F, '$log_file';
-my \@f = <F>;
-my \@files = map { chomp; my \@i = split /:::/; \$i[3] } \@f;
-</\%perl>
-Number of files: <% scalar \@files %>
-Filename: <% \$files[0] %>
-EOF
-		      expect => <<'EOF',
-Number of files: 1
-Filename: /interp/system_log
-EOF
-		    );
-
-#------------------------------------------------------------
-
     $group->add_support( path => '/comp_path_test/a/b/c/foo',
 			 component => <<'EOF',
 I am foo!
@@ -945,7 +913,7 @@ EOF
 		      component => <<'EOF',
 % my $buffer;
 % my $interp = HTML::Mason::Interp->new( out_method => \$buffer );
-% $interp->exec( '/mason_tests/comps/interp/no_comp_root_helper' );
+% $interp->exec( 'mason_tests/comps/interp/no_comp_root_helper' );
 <% $buffer %>
 EOF
 		      expect => <<'EOF',
