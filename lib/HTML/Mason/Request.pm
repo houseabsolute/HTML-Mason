@@ -170,7 +170,7 @@ sub new
 # in the future this method may do something completely different but
 # for now this works just fine.
 sub instance {
-    return $HTML::Mason::Commands::m;
+    return $HTML::Mason::Commands::m; #; this comment fixes a parsing bug in Emacs cperl-mode
 }
 
 sub _initialize {
