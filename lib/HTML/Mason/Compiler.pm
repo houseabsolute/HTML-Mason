@@ -421,7 +421,7 @@ sub substitution
               grep { $_ ne 'n' } @flags
             );
 
-        $text = "\$m->interp->apply_escapes( $text, $flags )" if $text;
+        $text = "\$m->interp->apply_escapes( (join '', ($text)), $flags )" if $flags;
     }
 
     my $code = "\$m->print( $text );\n";
