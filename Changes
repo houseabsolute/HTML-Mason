@@ -40,6 +40,8 @@ redirect than 302.
 
 [ BUG FIXES ]
 
+- Calling <%def> subcomponents no longer changes base_comp, which is
+important in autohandlers.  (reported by Ian Robertson)
 - The documentation incorrectly indicated that you could create an
 ApacheHandler object during server startup without providing a
 component root.  This will also shown incorrectly in the sample
