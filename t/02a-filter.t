@@ -50,6 +50,30 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/support/has_filter',
+			 component => <<'EOF',
+lower case
+<%filter>
+$_ = uc $_;
+</%filter>
+EOF
+		       );
+
+    $group->add_test( name => 'filter_and_clear',
+                      description => 'make sure <%filter> does not break $m->clear_buffer',
+                      component => <<'EOF',
+I should not show up.
+<& support/has_filter &>
+% $m->clear_buffer;
+I should show up.
+EOF
+                      expect => <<'EOF',
+I should show up.
+EOF
+                    );
+
+#------------------------------------------------------------
+
         return $group;
 }
 
