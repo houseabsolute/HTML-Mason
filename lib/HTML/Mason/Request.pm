@@ -274,10 +274,10 @@ sub cache
 	%options = (%{$self->data_cache_defaults}, %options);
     }
     $options{namespace}   ||= compress_path($self->current_comp->comp_id);
-    $options{cache_root}  ||= File::Spec->catdir($self->interp->data_dir,"cache");
+    $options{cache_root}  ||= $self->interp->cache_dir;
     $options{username}      = "mason";
 
-    my $cache_class = 'Cache::FileCache';
+    my $cache_class = $self->interp->cache_dir ? 'Cache::FileCache' : 'Cache::MemoryCache';
     if ($options{cache_class}) {
 	$cache_class = $options{cache_class};
 	$cache_class = "Cache::$cache_class" unless $cache_class =~ /::/;
@@ -991,9 +991,10 @@ C<$m-E<gt>cache> returns a new cache object with a namespace specific
 to this component.
 
 I<cache_class> specifies the class of cache object to create. It
-defaults to Cache::FileCache and must be a subclass of Cache::Cache.
-If I<cache_class> does not contain a "::", the prefix "Cache::" is
-automatically prepended.
+defaults to Cache::FileCache in most cases, or Cache::MemoryCache if
+the interpreter has no data directory, and must be a subclass of
+Cache::Cache.  If I<cache_class> does not contain a "::", the prefix
+"Cache::" is automatically prepended.
 
 I<cache_options> may include any valid options to the new() method of
 the cache class. e.g. for Cache::FileCache, valid options include

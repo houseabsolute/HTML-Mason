@@ -80,7 +80,7 @@ __PACKAGE__->valid_params
 				       descr => "A string to separate entries in the Mason events log" },
      use_object_files             => { parse => 'boolean', default => 1, type => BOOLEAN,
 				       descr => "Whether to cache component objects on disk" },
-     data_dir                     => { parse => 'string', type => SCALAR,
+     data_dir                     => { parse => 'string', optional => 1, type => SCALAR,
 				       descr => "A directory for storing cache files and other state information" },
     );
 
@@ -123,31 +123,42 @@ sub _initialize
     # Check that directories are absolute.
     #
     foreach my $field (qw(data_dir)) {
-	$self->{$field} = File::Spec->canonpath( $self->{$field} );
- 	param_error "$field '".$self->{$field}."' must be an absolute directory"
-	    unless File::Spec->file_name_is_absolute( $self->{$field} );
+	if ($self->{$field}) {
+	    $self->{$field} = File::Spec->canonpath( $self->{$field} );
+	    param_error "$field '".$self->{$field}."' must be an absolute directory"
+		unless File::Spec->file_name_is_absolute( $self->{$field} );
+	}
     }
 
     #
     # Create data subdirectories if necessary. mkpath will die on error.
     #
-    foreach my $subdir ( qw(obj cache etc) ) {
-	my @newdirs = mkpath( File::Spec->catdir( $self->data_dir, $subdir ) , 0, 0775 );
-	$self->push_files_written(@newdirs);
+    if ($self->data_dir) {
+	foreach my $subdir ( qw(obj cache etc) ) {
+	    my @newdirs = mkpath( File::Spec->catdir( $self->data_dir, $subdir ) , 0, 0775 );
+	    $self->push_files_written(@newdirs);
+	}
+    } else {
+	$self->use_object_files(0);
     }
 
     #
     # Open system log file
     #
     if ($self->{system_log_events_hash}) {
-	$self->{system_log_file} = File::Spec->catfile( $self->data_dir, 'etc', 'system.log' ) if !$self->system_log_file;
-	my $fh = make_fh();
-	open $fh, ">>".$self->system_log_file
-	    or system_error "Couldn't open system log file $self->{system_log_file} for append";
-	my $oldfh = select $fh;
-	$| = 1;
-	select $oldfh;
-	$self->{system_log_fh} = $fh;
+	if (! $self->system_log_file && $self->data_dir) {
+	    # make a default if we have a data_dir
+	    $self->system_log_file( File::Spec->catfile( $self->data_dir, 'etc', 'system.log' ) );
+	}
+	if ($self->system_log_file) {
+	    my $fh = make_fh();
+	    open $fh, ">>".$self->system_log_file
+		or system_error "Couldn't open system log file $self->{system_log_file} for append";
+	    my $oldfh = select $fh;
+	    $| = 1;
+	    select $oldfh;
+	    $self->{system_log_fh} = $fh;
+	}
     }
 
     #
@@ -167,7 +178,8 @@ sub _initialize
 #
 # Shorthand for various data subdirectories and files.
 #
-sub object_dir { return File::Spec->catdir( shift->data_dir, 'obj' ); }
+sub object_dir { my $self = shift; return $self->data_dir ? File::Spec->catdir( $self->data_dir, 'obj' ) : ''; }
+sub cache_dir  { my $self = shift; return $self->data_dir ? File::Spec->catdir( $self->data_dir, 'cache' ) : ''; }
 
 #
 # exec is the initial entry point for executing a component
@@ -873,8 +885,15 @@ will be created.
 
 =item data_dir
 
-The required Mason data directory. Mason's various data directories
-(obj, cache, debug, etc), live within the data_dir.
+The Mason data directory. Mason's various data directories (obj,
+cache, etc), live within the data_dir.
+
+If this parameter is not given then there are several results.  First,
+Mason will not use object files, since it has no place to put them.
+Second, Mason will not be able to create a system log unless an
+explicit system log file name is given.  Third, the default caching
+class for the request object will be Cache::MemoryCache instead of
+Cache::FileCache.
 
 =item data_cache_defaults
 
@@ -882,7 +901,7 @@ A hash reference of default options to use for the C<$m-E<gt>cache>
 command. For example, to use the Cache::MemoryCache implementation
 by default,
 
-    data_cache_defaults=>{cache_class=>'MemoryCache'}
+    data_cache_defaults => {cache_class => 'MemoryCache'}
 
 These settings are overriden by options given to particular
 C<$m-E<gt>cache> calls.
