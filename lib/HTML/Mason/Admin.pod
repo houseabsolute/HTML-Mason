@@ -1034,12 +1034,11 @@ the result to standard output:
     use strict;
 
     my $interp = HTML::Mason::Interp->new ();
-    $interp->exec(<absolute-file-path>, <args>...);
+    $interp->exec(<relative path to file>, <args>...);
 
-Because no component root was specified, the root is set to '/' and
-any file on the system may be used as a component. If you have a
-well defined and contained component tree, you'll probably want to
-specify a component root.
+Because no component root was specified, the root is set to your
+current working directory.  If you have a well defined and contained
+component tree, you'll probably want to specify a component root.
 
 Because no data directory was specified, object files will not be
 created and data caching will not work in the default manner. If
