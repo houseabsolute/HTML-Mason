@@ -503,7 +503,7 @@ sub new
             " Please provide comp_root explicitly.";
     }
 
-    my $self = $class->SUPER::new(%defaults, @_);
+    my $self = $class->SUPER::new(%defaults, %params);
 
     unless ( $self->interp->resolver->can('resolve_backwards') )
     {
