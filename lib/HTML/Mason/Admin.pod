@@ -141,7 +141,10 @@ Here is a simple C<handler.pl>, also provided in the C<eg/> directory:
    }
    
    # Create ApacheHandler object at startup.
-   my $ah = HTML::Mason::ApacheHandler->new();
+   my $ah =
+       HTML::Mason::ApacheHandler->new
+           ( comp_root => '/path/to/comp_root',
+             data_dir   => '/path/to/data_dir',);
    
    sub handler
    {
