@@ -48,7 +48,7 @@ sub new
     return bless { %defaults, @_ }, $class
 }
 
-sub comp_source
+sub comp_source_ref
 {
     my $self = shift;
 
@@ -64,8 +64,11 @@ sub comp_source
 	error "source callback returned no source for $self->{friendly_name} component";
     }
 
-    return $source;
+    my $sourceref = ref($source) ? $source : \$source;
+    return $sourceref;
 }
+
+sub comp_source { ${shift()->comp_source_ref} }
 
 sub object_code
 {
