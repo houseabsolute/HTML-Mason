@@ -11,24 +11,19 @@ available at http://www.masonhq.com/code/history.html.
 
 - Added an $m->notes() method, which is similar to $r->pnotes() but
 may be used outside a mod_perl environment.  Task id #449.
-
 - Mason will now only convert non-reference exceptions to
 HTML::Mason::Exception objects, so it should cooperate better with
 modules like Error.pm.  Task id #446.
-
 - Added more documentation on Mason's error handling and exception
 system.  Task id #446.
-
 - If Mason was configured via the Apache httpd.conf file, it could in
 many cases be quite a bit slower than configuration via a custom
 handler subroutine.  Now configuration via the httpd.conf is much
 faster, and is only about 5% slower than a custom handler subroutine.
 Reported by Jeremy Blain.
-
 - Mason's test harness now gives verbose output when the TEST_VERBOSE
 environment variable is true.  This eliminates the need for setting
 MASON_VERBOSE.
-
 - ** It is now an error to have a subcomponent and method with the
 same name in a single component.
 
@@ -36,17 +31,13 @@ same name in a single component.
 
 - Mason would die if asked to compile a component that evaluates
 to a false value.  Task id #444.  Reported by David Wheeler.
-
 - Mason now gives a better error message if you try to call a
 component's methods or subcomponents from its <%shared> block.  Task
 id #448.  Reported by Randy Harmon.
-
 - If in_package was set, Mason would die if output was generated after
 a subrequest.  Task id #453.  Reported by David R. Baird.
-
 - If Perl's print() was called after a subrequest, Mason would die
 when run with any Perl before 5.8.0.  Task id #458.
-
 - If a component called $m->cache_self, and then $m->decline, no
 output would be generated.  Task id #454.  Patch by Vadim Ustiansky.
 
