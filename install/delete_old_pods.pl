@@ -1,14 +1,15 @@
 #!/usr/bin/perl -w
 
 use strict;
+use File::Spec;
 
-foreach ( qw( Interp ApacheHandler Request Component ) )
-{
-    my $pod_file = `perldoc -l HTML::Mason::$_`;
-    chomp $pod_file;
-
-    if ( $pod_file =~ /\.pod$/ )
-    {
-	unlink $pod_file or die "Cannot unlink $pod_file: $!";
+foreach my $dir (@INC) {
+    foreach my $pm ( qw( Interp ApacheHandler Request Component ) ) {
+	my $pod_file = File::Spec->catfile( $dir, 'HTML', 'Mason', "$pm.pod" );
+	
+	if ( -e $pod_file ) {
+	    warn "Removing obsolete documentation file $pod_file\n";
+	    unlink $pod_file or warn "Cannot unlink $pod_file: $!";
+	}
     }
 }
