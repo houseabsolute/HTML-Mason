@@ -6,15 +6,139 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..1\n"; }
-END {print "not ok 1\n" unless $loaded;}
+use Test;
+
+BEGIN { plan tests => 10 }
 use HTML::Mason;
-$loaded = 1;
-print "ok 1\n";
 
 ######################### End of black magic.
 
-# Insert your test code below (better if it prints "ok 13"
-# (correspondingly "not ok 13") depending on the success of chunk 13
-# of the test code):
+my $comp_root = "test/comps/";
+my $data_dir = "test/data/";
+my $results_dir = "test/results/";
+my $tmp_dir = "test/tmp/";
 
+my $buf;
+
+my @comps = qw(replace init perl_init args perl_args doc perl_doc perl percent
+               amper);
+
+my $parser = new HTML::Mason::Parser;
+my $interp = new HTML::Mason::Interp( parser=>$parser,
+                                      comp_root => $comp_root,
+                                      data_dir => $data_dir,
+                                      out_method => \$buf, );
+
+foreach my $component ( @comps ) {
+  undef $buf;
+  my $result;
+  print "$component ";
+  eval { $interp->exec($component); };
+  
+  open(F, ">$tmp_dir$component"); print F $buf; close(F);
+  my $error = compareFiles("$tmp_dir$component", "$results_dir$component");
+  ok(($@ || $error), 0);
+}
+
+
+# The file comparison subroutines below were taken from Gerald Richter's
+# HTML::Embperl package.
+
+sub chompcr
+
+    {
+    chomp ($_[0]) ;
+    if ($_[0] =~ /(.*?)\s*\r$/) 
+	{
+	$_[0] = $1
+	}
+    elsif ($_[0] =~ /(.*?)\s*$/) 
+	{
+	$_[0] = $1
+	}
+    }
+
+sub compareFiles
+    {
+    my ($f1, $f2, $errin) = @_ ;
+    my $line = 1 ;
+    my $err  = 0 ;
+
+    open F1, $f1 || die "***Cannot open $f1" ; 
+    if (!$errin)
+	{
+	open F2, $f2 || die "***Cannot open $f2" ; 
+	}
+
+    while (defined ($l1 = <F1>))
+	{
+	chompcr ($l1) ;
+	if (!$errin) 
+	    {
+	    $l2 = <F2> ;
+	    chompcr ($l2) ;
+	    }
+	if (!defined ($l2))
+	    {
+	    print "\nError in Line $line\nIs:\t$l1\nShould:\t<EOF>\n" ;
+	    return $line ;
+	    }
+
+	
+	$eq = 0 ;
+	while (((!$notseen && ($l2 =~ /^\^\^(.*?)$/)) || ($l2 =~ /^\^\-(.*?)$/)) && !$eq)
+	    {
+	    $l2 = $1 ;
+	    if (($l1 =~ /^\s*$/) && ($l2 =~ /^\s*$/))
+                { 
+                $eq = 1 ;
+                }
+            else
+                {
+                $eq = $l1 =~ /$l2/ ;
+                }
+            $l2 = <F2> if (!$eq) ;
+	    chompcr ($l2) ;
+	    }
+
+	if (!$eq)
+	    {
+	    if ($l2 =~ /^\^(.*?)$/)
+		{
+		$l2 = $1 ;
+		$eq = $l1 =~ /$l2/ ;
+		}
+	    else
+		{
+		$eq = $l1 eq $l2 ;
+		}
+	    }
+
+	if (!$eq)
+	    {
+	    print "\nError in Line $line\nIs:\t>$l1<\nShould:\t>$l2<\n" ;
+	    return $line ;
+	    }
+	$line++ ;
+	}
+
+    if (!$errin)
+	{
+	while (defined ($l2 = <F2>))
+	   {
+	   chompcr ($l2) ;
+	   if (!($l2 =~ /^\s*$/))
+		{
+		print "\nError in Line $line\nIs:\t\nShould:\t$l2\n" ;
+		return $line ;
+		}
+	    $line++ ;
+	    }
+	}
+
+    close F1 ;
+    close F2 ;
+
+    return $err ; 
+    }
+    
