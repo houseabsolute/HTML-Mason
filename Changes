@@ -28,7 +28,7 @@ parameter has been added, "define_args_hash".  The default setting,
 "auto", should work with all existing Mason components.  See the
 HTML::Mason::Compiler::ToObject docs for details.  Task id #464.
 Suggested by Doug Treder.
-- Add more details about subclassing the compiler to the Subclassing
+- Added more details about subclassing the compiler to the Subclassing
 documentation.
 - There is now a compiler parameter called "use_source_line_numbers",
 which can be used to turn off line numbering based on the source file.
