@@ -27,9 +27,8 @@ package HTML::Mason::Container;
 sub create_contained_objects
 {
     my ($class, %args) = @_;
-    #warn "--- creating $package, received args (@{[%args]})\n";
 
-    my %c = $class->contained_objects;
+    my %c = $class->contained_objects(%args);
     while (my ($name, $default_class) = each %c) {
 
 	# Figure out exactly which class to make an object of
@@ -57,7 +56,7 @@ sub _make_contained_object
 
     # Everything this class will accept, including parameters it will
     # pass onto its own contained objects
-    my $allowed = $contained_class->allowed_params;
+    my $allowed = $contained_class->allowed_params(%$args);
 
     my %contained_args;
 
@@ -74,29 +73,77 @@ sub _make_contained_object
 sub contained_objects
 {
     my $class = shift;
+    my %args = @_;
 
+    my @c;
     {
 	no strict 'refs';
-	return %{ "$class\::CONTAINED_OBJECTS" };
+	my @isa = ( ref $class || $class, @{ "$class\::ISA" } );
+	while ( my $c = shift @isa )
+	{
+	    # make a copy of the global.
+	    my %c = %{ \%{ "$c\::CONTAINED_OBJECTS" } };
+	    foreach my $name ( keys %c )
+	    {
+		$c{$_} = $args{"${name}_class"} if exists $args{"${name}_class"};
+	    }
+
+	    push @c, %c;
+	}
     }
+
+    return @c;
 }
 
 sub allowed_params
 {
-    my $class = shift;
+    my ($class, %args) = @_;
 
-    my %c = $class->contained_objects;
+    my %c = $class->contained_objects(%args);
+
+    my @classes;
+    foreach my $name (keys %c)
+    {
+	# it will accept a foo_class parameter
+	$p{"${name}_class"} = { optional => 1 };
+
+	if ( $args{"${name}_class"} )
+	{
+	    push @classes, $args{"${name}_class"};
+	}
+	elsif ( $c{$name} )
+	{
+	    push @classes, $c{$name};
+	}
+    }
 
     # this is also broken.  contained_objects returns defaults, which
     # could end up being different from what should be created.  Plus
     # it has to load them.  Ugh, my head hurts.
     my %p = ( %{ $class->validation_spec },
-	      map { eval "require $_";
+	      map { eval "use $_";
 		    die $@ if $@;
-		    %{ $_->validation_spec } } values %c
+		    %{ $_->allowed_params(%args) } } @classes
 	    );
 
     return \%p;
+}
+
+sub validation_spec
+{
+    my $class = shift;
+
+    my @p;
+    {
+	no strict 'refs';
+	my @isa = ( ref $class || $class, @{ "$class\::ISA" } );
+	while ( my $c = shift @isa )
+	{
+	    push @p, %{ "$c\::VALID_PARAMS" };
+	}
+    }
+
+    return { @p };
 }
 
 1;
