@@ -22,9 +22,6 @@ use HTML::Mason::Commands qw();
 use HTML::Mason::Config;
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 
-use vars qw($AUTOLOAD $_SUB %_ARGS);
-my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P);
-
 my %fields =
     (alternate_sources => undef,
      allow_recursive_autohandlers => 0,
@@ -44,7 +41,7 @@ my %fields =
      verbose_compile_error => 0,
      data_cache_dir => '',
      );
-# Minor speedup: create anon. subs to reduce AUTOLOAD calls
+# Create accessor routines
 foreach my $f (keys %fields) {
     next if $f =~ /^current_time|system_log_events$/;  # don't overwrite real sub.
     no strict 'refs';
@@ -99,7 +96,7 @@ sub _initialize
     #
     # Create parser if not provided
     #
-    if (!$self->parser) {
+    if (!$self->{parser}) {
 	my $p = new HTML::Mason::Parser;
 	$self->parser($p);
     }
@@ -175,36 +172,77 @@ sub data_cache_filename
 #
 sub object_dir { return shift->data_dir . "/obj" }
 sub reload_file { return shift->data_dir . "/etc/reload.lst" }
-#this is now explicit
-#sub data_cache_dir { return shift->data_dir . "/cache" }
 
 #
-# exec is the initial entry point for executing a component.
-# It initializes globals like stack and exec_state. It is
-# non-reentrant (i.e. it should be not be called from inside
-# another exec).
-#
-# exec_next is the reentrant continuation function. For example,
-# it is called by mc_comp from inside components.
+# exec is the initial entry point for executing a component
+# in a new request.
 #
 sub exec {
-    my ($self, $callPath, %args) = @_;
-    my ($result);
+    my ($self, $comp, %args) = @_;
 
-    $self->{stack} = [];
-    $self->{exec_state} = {
-	abort_flag => 0,
-	abort_retval => undef,
-	autohandler_next => undef,
-	error_flag => 0,
-	request_code_cache => {}
-    };
-    while (my ($type,$href) = each(%{$self->{hooks}})) {
-	$self->{exec_state}->{"hooks_$type"} = [values(%$href)] if (%$href);
+    # Check if reload file has changed.
+    $self->check_reload_file if ($self->{use_reload_file});
+    
+    # $comp can be an absolute path or component object.  If a path,
+    # load into object.
+    if (!ref($comp) && substr($comp,0,1) eq '/') {
+	my $path = $comp;
+	$comp = $self->load($path) or die "could not find component for path '$path'\n";
+    } elsif (ref($comp) !~ /Component/) {
+	die "exec: first argument ($comp) must be an absolute component path or a component object";
     }
-    $self->check_reload_file if ($self->use_reload_file);
 
-    return $self->exec_next($callPath,%args);
+    # Create a new request, unless one has been passed in REQ option.
+    my $req;
+    if ($req = $args{REQ}) {
+	delete($args{REQ});
+    } else {
+	$req = new HTML::Mason::Request (interp=>$self);
+    }
+    
+    # Check for autohandler.
+    my $parent = $comp->parent_path;
+    my $autocomp;
+    if (!$self->{allow_recursive_autohandlers}) {
+	$autocomp = $self->load("$parent/autohandler");
+    } else {
+	while ($parent && !($autocomp = $self->load("$parent/autohandler"))) {
+	    my ($basename,$dirname) = fileparse($parent);
+	    $dirname =~ s/^\.//;    # certain versions leave ./ in $dirname
+	    $parent = substr($dirname,0,-1);
+	}
+    }
+    if (defined($autocomp)) {
+	$req->{autohandler_next} = [$comp,\%args];
+	$comp = $autocomp;
+    }
+
+    # Call the first component.
+    my ($result, @result);
+    if (wantarray) {
+	local $SIG{'__DIE__'} = sub { confess($_[0]) };
+	@result = eval {$req->exec_next($comp, %args)};
+    } else {
+	local $SIG{'__DIE__'} = sub { confess($_[0]) };
+	$result = eval {$req->exec_next($comp, %args)};
+    }
+
+    # If an error occurred...
+    my $err = $@;
+    if ($err) {
+	return $req->{abort_retval} if ($req->{abort_flag});
+	my $i = index($err,'HTML::Mason::Interp::exec');
+	$err = substr($err,0,$i) if $i!=-1;
+	$err =~ s/^\s*(HTML::Mason::Commands::__ANON__|HTML::Mason::Request::exec_next).*\n//gm;
+	my $errmsg = "error while executing ".$req->comp->path."\n";
+	$errmsg .= $err."\n";
+	if ($req->depth > 1) {
+	    $errmsg .= "backtrace: " . join(" <= ",map($_->{comp}->path,@{$req->stack}))."\n";
+	}
+	die ($errmsg);
+    }
+
+    return wantarray ? @result : $result;
 }
 
 #
@@ -233,253 +271,45 @@ sub check_reload_file {
     }
 }
 
-sub exec_next {
-    my ($self, $callPath, %args) = @_;
-    my (@info);
-
-    # Process and remove special arguments.
-    my $store = $args{STORE};
-    delete($args{STORE});
-
-    # Check for autohandler.
-    if (!@{$self->{stack}}) {
-	(my $callDir = $callPath) =~ s|/[^/]*$||;
-	if (!$self->{allow_recursive_autohandlers}) {
-	    @info = $self->load("$callDir/autohandler");
-	} else {
-	    while ($callDir && !(@info = $self->load("$callDir/autohandler"))) {
-		my ($basename,$dirname) = fileparse($callDir);
-		$dirname =~ s/^\.//;    # certain versions leave ./ in $dirname
-		$callDir = substr($dirname,0,-1);
-	    }
-	}
-	if (@info) {
-	    $self->{exec_state}->{autohandler_next} = [$callPath,\%args];
-	    $callPath = "$callDir/autohandler";
-	}
-    }
-					   
-    #
-    # Load the component into a subroutine. If code caching is
-    # per-request, then check and modify the per-request cache as
-    # necessary.
-    #
-    if (!@info) {
-	if ($self->{code_cache_mode} eq 'request') {
-	    if (my $inforef = $self->{exec_state}->{request_code_cache}->{$callPath}) {
-		@info = @$inforef;
-	    } else {
-		(@info) = $self->load($callPath);
-		$self->{exec_state}->{request_code_cache}->{$callPath} = [@info];
-	    }
-	} else {
-	    (@info) = $self->load($callPath);
-	}
-    }
-    die "could not find component for path '$callPath'\n" if (!@info);
-    my ($sub,$sourceFile) = @info;
-
-    #
-    # Push an empty locals record on the stack.
-    #
-    unshift(@{$self->{stack}},{});
-    
-    #
-    # $INTERP is a global containing this interpreter. This needs to
-    # be defined in the HTML::Mason::Commands package, as well
-    # as the component package if that is different.
-    #
-    local $HTML::Mason::Commands::INTERP = $self;
-    $self->set_global(INTERP=>$self) if ($self->{parser}->{in_package} ne 'HTML::Mason::Commands');
-
-    #
-    # Check for maximum recursion.
-    #
-    my $depth = $self->depth;
-    if ($depth > $self->max_recurse) {
-	my $max = $self->max_recurse;
-	shift(@{$self->{stack}});
-        die ">$max levels deep in component stack (infinite recursive call?)\n";
-    }
-
-    #
-    # Set up stack locals.
-    #
-    my $locals = {};
-    $locals->{callPath} = $callPath;
-    $locals->{truePath} = $callPath;
-    $locals->{sourceFile} = $sourceFile;
-    ($locals->{parentPath}) = ($callPath =~ m@^(.*)/([^/]*)$@);
-    $locals->{parentPath} = '/' if ($locals->{parentPath} !~ /\S/);
-    if ($store) {
-	die "exec_next: STORE is not a scalar reference" if ref($store) ne 'SCALAR';
-	$$store = '';
-	$locals->{sink} = sub { $$store .= $_[0] }
-    } elsif ($depth==1) {
-	$locals->{sink} = $self->out_method;
-    } else {
-	$locals->{sink} = $self->{stack}->[1]->{sink};
-    }
-    $locals->{callFunc} = $sub;
-    $locals->{callArgs} = \%args;
-    $self->{stack}->[0] = $locals;
-
-    #
-    # Call start_comp hooks.
-    #
-    $self->call_hooks('start_comp');
-
-    #
-    # CODEREF_NAME maps component coderefs to component names (for profiling)
-    #
-    $HTML::Mason::CODEREF_NAME{$sub} = $sourceFile if $::opt_P;
-
-    #
-    # Call component subroutine in an eval context.
-    #
-    my ($result, @result);
-    {
-	local $_SUB = $sub;
-	local %_ARGS = %args;
-	local $SIG{'__DIE__'} = sub { confess($_[0]) };
-	if (wantarray) {
-	    @result = eval {$sub->(%args);};
-	} else {
-	    $result = eval {$sub->(%args);};
-	}
-    }
-
-    #
-    # If an error occurred...
-    #
-    my $err = $@;
-    if ($err) {
-	
-	#
-	# If we are in an abort state (e.g. user called mc_abort),
-	# just die up til top level.
-	#
-        if ($self->{exec_state}->{abort_flag}) {
-            shift(@{$self->{stack}});
-            if (scalar(@{$self->{stack}}) > 0) {
-                die "aborted";
-            } else {
-                return $self->{exec_state}->{abort_retval};
-            }
-        }
-
-	#
-	# If this is the first level to process the error,
-	# add some information and clean it up.
-	#
-        if (!$self->{exec_state}->{error_flag}) {
-	    $self->{exec_state}->{error_flag} = 1;
-            my $i = index($err,'HTML::Mason::Interp::exec');
-            $err = substr($err,0,$i)."..." if $i!=-1;
-            $err = "error while executing $callPath:\n$err";
-            if ($self->depth > 1) {
-                $err .= "backtrace: ";
-                $err .= join(" <= ",map($_->{callPath},@{$self->{stack}}));
-            }
-	}
-	$err =~ s@\[[^\]]*\] ([^:]+:) @@mg;
-
-	#
-	# Pass error along to next level.
-	#
-	shift(@{$self->{stack}});
-	die ("$err\n");
-    }
-
-    #
-    # Call end_comp hooks.
-    #
-    $self->call_hooks('end_comp');
-
-    #
-    # Pop stack and return.
-    #
-    shift(@{$self->{stack}});
-    return wantarray ? @result : $result;
-}
-
 #
-# Abort out of current execution.
-#
-sub abort
-{
-    my ($self) = @_;
-    $self->{exec_state}->{abort_flag} = 1;
-    $self->{exec_state}->{abort_retval} = $_[1];
-    die "aborted";
-}
-
-sub debug_hook
-{
-    1;
-}
-
-#
-# Subroutine called for pure text components. Read and print out source.
-#
-sub pure_text_handler
-{
-    my $interp = $HTML::Mason::Commands::INTERP;
-    $interp->call_hooks('start_primary');
-    my $srcfile = $interp->locals->{sourceFile};
-    my $srctext = read_file($srcfile);
-    $interp->locals->{sink}->($srctext);
-    $interp->call_hooks('end_primary');
-    return undef;
-}
-
-#
-# Load the component <$path> into a subroutine, possibly parsing
-# the source and/or caching the code. Returns a list containing
-# the code reference and source filename, or an empty list if the
+# Load <$path> into a component, possibly parsing the source and/or
+# caching the code. Returns a component object or undef if the
 # component was not found.
 #
 sub load {
     my ($self,$path) = @_;
-    my ($sub,$err,$maxfilemod,$srcfile,$objfile,$objfilemod,$srcfilemod) =
-       (undef);  # kludge to load $sub, prevent "use of uninit .." error
+    my ($err,$maxfilemod,$srcfile,$objfile,$objfilemod,$srcfilemod);
     my (@srcstat, @objstat, $objisfile);
     my $codeCache = $self->{code_cache};
-    my $compRoot = $self->comp_root;
+    my $compRoot = $self->{comp_root};
     $srcfile = $compRoot . $path;
 
     #
-    # If using reload file, assume that we have a cached subroutine or
-    # object file (also assume we're using obj files). If no obj file
-    # exists, this is likely a dhandler request.
+    # If using reload file, assume that we are using object files and
+    # have a cached subroutine or object file.
     #
-    if ($self->use_reload_file) {
-	return @{$codeCache->{$path}->{info}} if exists($codeCache->{$path});
+    if ($self->{use_reload_file}) {
+	return @{$codeCache->{$path}->{comp}} if exists($codeCache->{$path});
 
 	$objfile = $self->object_dir . substr($srcfile,length($compRoot));
-	return () unless (-f $objfile);   # component not found
+	return undef unless (-f $objfile);   # component not found
 	
 	$self->write_system_log('COMP_LOAD', $path);	# log the load event
-	$self->parser->evaluate(script_file=>$objfile,code=>\$sub,error=>\$err);
-	if ($err) {
-	    $sub = sub { die "Error while loading '$objfile' at runtime:\n$err\n" };
-	} elsif (!$sub) {
-	    $sub = \&pure_text_handler;
-	}
+	my $comp = $self->{parser}->eval_object_file($objfile,\$err);
+	die "Error while loading '$objfile' at runtime:\n$err\n" if !$comp;
 	
-	my @info = ($sub,$srcfile);
 	if ($self->{code_cache_mode} eq 'all') {
-	    $codeCache->{$path}->{info} = \@info;
+	    $codeCache->{$path}->{comp} = $comp;
 	}
-	return @info;
+	return $comp;
     }
     
     #
     # Determine source and (possibly) object filename.
     # If alternate sources are defined, check those first.
     #
-    if (defined($self->alternate_sources)) {
-	my @alts = $self->alternate_sources->('comp',$path);
+    if (defined($self->{alternate_sources})) {
+	my @alts = $self->{alternate_sources}->('comp',$path);
 	foreach my $alt (@alts) {
 	    @srcstat = stat ($compRoot . $alt);
 	    if (-f _) {
@@ -492,7 +322,7 @@ sub load {
     return () unless (-f _);
     $srcfilemod = $srcstat[9];
     
-    if ($self->use_object_files) {
+    if ($self->{use_object_files}) {
 	$objfile = $self->object_dir . substr($srcfile,length($compRoot));
 	@objstat = stat $objfile;
 	$objisfile = -f _;
@@ -504,8 +334,8 @@ sub load {
     #
     if (exists($codeCache->{$path})                    and
 	$codeCache->{$path}->{lastmod} >= $srcfilemod  and
-	$codeCache->{$path}->{info}->[1] eq $srcfile) {
-	return @{$codeCache->{$path}->{info}};
+	$codeCache->{$path}->{comp}->source_file eq $srcfile) {
+	return @{$codeCache->{$path}->{comp}};
     } else {
 	$objfilemod = (defined($objfile) and $objisfile) ? $objstat[9] : 0;
 	
@@ -518,91 +348,33 @@ sub load {
 	#
 	$self->write_system_log('COMP_LOAD', $path);	# log the load event
 
+	my $comp;
 	if ($objfile and $objfilemod >= $srcfilemod) {
-	    $self->parser->evaluate(script_file=>$objfile,code=>\$sub,error=>\$err);
-	    if ($err) {
-		$sub = sub { die "Error while loading '$objfile' at runtime:\n$err\n" };
-	    } elsif (!$sub) {
-		$sub = \&pure_text_handler;
-	    }
-	#
-	# Parse the source file, and possibly save result in object file.
-	#
+	    $comp = $self->{parser}->eval_object_file($objfile,\$err);
+	    die "Error while loading '$objfile' at runtime:\n$err\n" if !$comp;
 	} else {
-	    my ($script,$objtext,$errmsg,$pureTextFlag);
-	    my $success = $self->parser->parse(script_file=>$srcfile,
-					       result_text=>\$objtext,
-					       error=>\$errmsg,
-					       result_code=>\$sub,
-					       pure_text_flag=>\$pureTextFlag);
-	    $sub = \&pure_text_handler if ($pureTextFlag);
-	    if (!$success) {
-		$errmsg = "Error during compilation of $srcfile:\n$errmsg\n";
-		if ($objtext && $self->verbose_compile_error) {
-		    my @lines = split(/\n/,$objtext);
-		    for (my $l = 0; $l < @lines; $l++) {
-			$errmsg .= sprintf("%4d %s\n",$l+1,$lines[$l]);
-		    }
-		}
-		$errmsg =~ s/\'/\\\'/g;
-		$errmsg =~ s/\(eval [0-9]\) //g;
-		($errmsg) = ($errmsg =~ /^(.*)$/s);
-		my $script = "sub { die '$errmsg' };";
-		$sub = eval($script);
-	    }
+	    #
+	    # Parse the source file, and possibly save result in object file.
+	    #
 	    if ($objfile) {
-		# Create object file.  Note: we attempt to handle
-		# several cases in which a file already exists and we
-		# wish to create a directory, or vice versa.  However,
-		# not every case is handled; to be complete, mkpath
-		# would have to unlink any existing file in its way.
-		my ($dirname) = dirname($objfile);
-		if (!-d $dirname) {
-		    unlink($dirname) if (-e $dirname);
-		    my @newdirs = mkpath($dirname,0,0775);
-		    $self->push_files_written(@newdirs);
-		}
-		rmtree($objfile) if (-d $objfile);
-		my $outfh = new IO::File ">$objfile" or die "Interp::load: cannot open '$objfile' for writing\n";
-		$self->push_files_written($objfile);
-		$outfh->print($objtext) if (!$pureTextFlag);
+		my @newfiles;
+		$comp = $self->{parser}->make_component(script_file=>$srcfile,object_file=>$objfile,files_written=>\@newfiles,path=>$path,error=>\$err);
+		$self->push_files_written(@newfiles);
+	    } else {
+		$comp = $self->{parser}->make_component(script_file=>$srcfile,path=>$path,error=>\$err);
 	    }
+	    die "Error during compilation of $srcfile:\n$err\n" if !$comp;
 	}
 	
 	#
 	# Cache code in memory
 	#
-	my @info = ($sub,$srcfile);
 	if ($self->{code_cache_mode} eq 'all') {
 	    $codeCache->{$path}->{lastmod} = $srcfilemod;
-	    $codeCache->{$path}->{info} = \@info;
+	    $codeCache->{$path}->{comp} = $comp;
 	}
-	return @info;
+	return $comp;
     }
-}
-
-#
-# Return a reference to the hash at the top of the stack.
-#
-sub locals {
-    my ($self) = @_;
-    return $self->{stack}->[0];
-}
-
-#
-# Return the current number of stack levels. 1 is top level.
-#
-sub depth {
-    my ($self) = @_;
-    return scalar(@{$self->{stack}});
-}
-
-#
-# Return a reference to the entire stack.
-#
-sub stack {
-    my ($self) = @_;
-    return $self->{stack};
 }
 
 #
@@ -616,19 +388,6 @@ sub current_time {
 	return $self->{current_time} = $newtime;
     } else {
 	return $self->{current_time};
-    }
-}
-
-#
-# Get or set a user-defined variable.
-#
-sub vars
-{
-    my ($self, $field, $value) = @_;
-    if (defined($value)) {
-        return $self->{vars}->{$field} = $value;
-    } else {
-        return $self->{vars}->{$field};
     }
 }
 
@@ -737,34 +496,6 @@ sub remove_hook {
     delete($self->{hooks}->{$args{type}}->{$args{name}});
 }
 
-sub suppress_hook {
-    my ($self, %args) = @_;
-    foreach (qw(name type)) {
-	die "suppress_hook: must specify $_\n" if !exists($args{$_});
-    }
-    my $code = $self->{hooks}->{$args{type}}->{$args{name}};
-    $self->{exec_state}->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
-}
-
-sub unsuppress_hook {
-    my ($self, %args) = @_;
-    foreach (qw(name type)) {
-	die "unsuppress_hook: must specify $_\n" if !exists($args{$_});
-    }
-    my $code = $self->{hooks}->{$args{type}}->{$args{name}};
-    $self->{exec_state}->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
-    push(@{$self->{exec_state}->{"hooks_$args{type}"}},$code);
-}
-
-sub call_hooks {
-    my ($self, $type, @params) = @_;
-    if ($self->{exec_state}->{"hooks_$type"}) {
-	foreach my $code (@{$self->{exec_state}->{"hooks_$type"}}) {
-	    $code->($self, @params);
-	}
-    }
-}
-
 #
 # Write a line to the Mason system log.
 # Each line begins with the time, pid, and event name.
@@ -786,16 +517,4 @@ sub write_system_log {
     }
 }
 
-sub AUTOLOAD {
-    my $self = shift;
-    my $type = ref($self) or die "autoload error: bad function $AUTOLOAD";
-
-    my $name = $AUTOLOAD;
-    $name =~ s/.*://;   # strip fully-qualified portion
-    return if $name eq 'DESTROY';
-
-    die "No such function `$name' in class $type";
-}
 1;
-
-__END__

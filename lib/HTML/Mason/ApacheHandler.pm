@@ -2,15 +2,52 @@
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
-package HTML::Mason::ApacheHandler;
 require 5.004;
+
+#
+# Apache-specific Request object
+#
+package HTML::Mason::Request::ApacheHandler;
+require Exporter;
+use vars qw(@ISA);
+@ISA = qw(HTML::Mason::Request);
+
+my %reqfields =
+    (ah => undef,
+     http_input => undef,
+     apache_req => undef,
+     );
+# Create accessor routines
+foreach my $f (keys(%reqfields)) {
+    no strict 'refs';
+    *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
+}
+
+sub new
+{
+    my ($class,%options) = @_;
+    my $interp = $options{interp} or die "HTML::Mason::Request::ApacheHandler::new: must specify interp\n";
+    delete $options{interp};
+    my $self = HTML::Mason::Request::new($class,interp=>$interp);
+    while (my ($key,$value) = each(%options)) {
+	if (exists($reqfields{$key})) {
+	    $self->{$key} = $value;
+	} else {
+	    die "HTML::Mason::Request::ApacheHandler::new: invalid option '$key'\n";
+	}
+    }
+}
+
+#
+# ApacheHandler object
+#
+package HTML::Mason::ApacheHandler;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw();
 @EXPORT_OK = qw();
 
 use strict;
-use vars qw($AUTOLOAD $INTERP);
 #JS - 6/30 - seems to infinite loop when using debug...help?!
 #use Apache::Constants qw(OK DECLINED SERVER_ERROR NOT_FOUND);
 sub OK { return 0 }
@@ -28,6 +65,8 @@ use HTML::Mason::Utils;
 use Apache::Status;
 use CGI qw(-private_tempfiles);
 
+my @used = ($HTML::Mason::IN_DEBUG_FILE);
+	    
 my %fields =
     (
      interp => undef,
@@ -431,17 +470,17 @@ sub handle_request_1
     # Try to load the component; if not found, try dhandlers
     # ("default handlers"); otherwise return not found.
     #
-    my @info;
-    if (!(@info = $interp->load($compPath))) {
+    my $comp;
+    if (!($comp = $interp->load($compPath))) {
 	my $p = $compPath;
 	my $pathInfo = $r->path_info;
-	while (!(@info = $interp->load("$p/dhandler")) && $p) {
+	while (!($comp = $interp->load("$p/dhandler")) && $p) {
 	    my ($basename,$dirname) = fileparse($p);
 	    $dirname =~ s/^\.//;    # certain versions leave ./ in $dirname
 	    $pathInfo = "/$basename$pathInfo";
 	    $p = substr($dirname,0,-1);
 	}
-	if (@info) {
+	if ($comp) {
 	    $compPath = "$p/dhandler";
 	    $r->path_info($pathInfo);
 	} else {
@@ -449,7 +488,7 @@ sub handle_request_1
 	    return NOT_FOUND;
 	}
     }
-    my $srcfile = $info[1];
+    my $srcfile = $comp->source_file;
 
     #
     # Decline if file does not pass top level predicate.
@@ -493,13 +532,21 @@ sub handle_request_1
     $interp->add_hook(name=>'http_header',type=>'start_primary',code=>$hdrsub);
 
     #
+    # Create an Apache-specific request with additional slots.
+    #
+    my $req = new HTML::Mason::Request::ApacheHandler
+	(ah=>$self,
+	 interp=>$interp,
+	 http_input=>$argString,
+	 apache_req=>$r
+	 );
+
+    #
     # Set up interpreter global variables.
     #
-    $interp->vars(http_input=>$argString);
-    $interp->vars(server=>$r);
     $interp->set_global(r=>$r);
     
-    return $interp->exec($compPath,%args);
+    return $interp->exec($comp, REQ=>$req, %args);
 }
 
 sub simulate_debug_request
@@ -533,37 +580,24 @@ sub http_header_sent
     return $sent;
 }
 
-sub AUTOLOAD {
-    my $self = shift;
-    my $type = ref($self) or die "autoload error: bad function $AUTOLOAD";
-
-    my $name = $AUTOLOAD;
-    $name =~ s/.*://;   # strip fully-qualified portion
-    return if $name eq 'DESTROY';
-
-    die "No such function `$name' in class $type";
-}
-1;
-
 #
 # Apache-specific Mason commands
 #
-
 package HTML::Mason::Commands;
 sub mc_dhandler_arg ()
 {
-    my $r = $INTERP->vars('server');
-    die "mc_dhandler_arg: must be called in Apache environment" if !$r;
+    my $r = $REQ->apache_req or die "mc_dhandler_arg: must be called in Apache environment";
     return substr($r->path_info,1);
 }
 
 sub mc_suppress_http_header
 {
+    my $interp = $REQ->interp;
     if ($_[0]) {
-	$INTERP->suppress_hook(name=>'http_header',type=>'start_primary');
+	$interp->suppress_hook(name=>'http_header',type=>'start_primary');
     } else {
-	$INTERP->unsuppress_hook(name=>'http_header',type=>'start_primary');
+	$interp->unsuppress_hook(name=>'http_header',type=>'start_primary');
     }
 }
 
-__END__
+1;
