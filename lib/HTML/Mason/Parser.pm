@@ -535,17 +535,18 @@ sub evaluate
 
 sub make {
     my ($self, %options) = @_;
-    my $sourceDir = $options{source_dir} or die "make: must specify source_dir\n";
-    my $objectDir = $options{object_dir} or die "make: must specify object_dir\n";
-    my $errorDir = $options{error_dir} or die "make: must specify error_dir\n";
-    die "make: object_dir must be different from source_dir\n" if $sourceDir eq $objectDir;
-    die "make: source_dir '$sourceDir' does not exist\n" if (!-d $sourceDir);
-    die "make: object_dir '$objectDir' does not exist\n" if (!-d $objectDir);
+    my $compRoot = $options{comp_root} or die "make: must specify comp_root\n";
+    my $dataDir = $options{data_dir} or die "make: must specify data_dir\n";
+    die "make: source_dir '$compRoot' does not exist\n" if (!-d $compRoot);
+    die "make: object_dir '$dataDir' does not exist\n" if (!-d $dataDir);
+    my $sourceDir = $compRoot;
+    my $objectDir = "$dataDir/obj";
+    my $errorDir = "$dataDir/errors";
     my @paths = (exists($options{paths})) ? @{$options{paths}} : ('/');
     my $verbose = (exists($options{verbose})) ? $options{verbose} : 1;
     my $predicate = $options{predicate} || sub { $_[0] !~ /\~/ };
     my $dirCreateMode = $options{dir_create_mode} || 0775;
-    my $reloadFile = $options{reload_file};
+    my $reloadFile = $options{update_reload_file} ? "$dataDir/etc/reload.lst" : undef;
     my ($relfh);
     if (defined($reloadFile)) {
 	$relfh = new IO::File ">>$reloadFile" or die "make: cannot open '$reloadFile' for writing\n";
