@@ -63,7 +63,9 @@ foreach (keys %prereq) {
 }
 
 eval { require mod_perl };
-unless ( $@ || $^O =~ /mac|darwin/ )
+my $has_only_mp2 = $@ && eval { require Apache2 };
+
+unless ( ( $@ || $^O =~ /mac|darwin/ ) || $has_only_mp2 )
 {
     chk_version('Apache::Request' => '0.32') or
 	warn  "\n"
