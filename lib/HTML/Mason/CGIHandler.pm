@@ -28,10 +28,10 @@ __PACKAGE__->contained_objects
 
 
 sub new {
-    my ($package, %args) = @_;
+    my $package = shift;
     
     # If no comp_root given, use DOCUMENT_ROOT
-    my @my_args = $package->create_contained_objects(comp_root => $ENV{DOCUMENT_ROOT}, %args);
+    my @my_args = $package->create_contained_objects(comp_root => $ENV{DOCUMENT_ROOT}, @_);
 
     my $self = bless { validate @my_args, $package->validation_spec };
     $self->interp->out_method(\$self->{output});
