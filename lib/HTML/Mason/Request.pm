@@ -211,10 +211,12 @@ sub new_superclass
     my $self = shift;
     my $new_super = shift;
 
+    my $class = ref $self || $self;
+
     my $isa_ref;
     {
         no strict 'refs';
-        $isa_ref = \@{ref $self . '::ISA'};
+        $isa_ref = \@{"$class\::ISA"};
     }
 
     # handles multiple inheritance properly and preserve
@@ -229,7 +231,6 @@ sub new_superclass
             {
                 $isa_ref->[$x] = $new_super;
 
-                my $class = ref $self;
                 $class->valid_params( %{ $class->original_validation_spec } );
             }
 
