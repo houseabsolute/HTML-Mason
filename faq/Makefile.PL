@@ -12,7 +12,10 @@ WriteMakefile(
 sub MY::top_targets {
 	'
 pure_all all :: faq
-faq :
+faq ::	html_mason_faq.html
+test:
+
+html_mason_faq.html: html_mason_faq.pod
 	pod2html --htmlroot=. --podpath=. --infile=html_mason_faq.pod \
 			--outfile=html_mason_faq.html && \
 	rm pod2html-itemcache pod2html-dircache

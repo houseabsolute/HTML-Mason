@@ -41,12 +41,7 @@ make_config();
 WriteMakefile(
     'NAME'    => 'HTML::Mason',
     'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
-    'PREREQ_PM' => { MLDBM => 2.0, Data::Dumper => 2.08 }
+    'PREREQ_PM' => { MLDBM => 2.0, Data::Dumper => 2.08 },
+    'DIR' => 'faq',
 );
 
-sub MY::postamble {
-'
-faq: faq/Makefile
-	cd faq && $(MAKE) $(PASTHRU)
-';
-}
