@@ -17,13 +17,21 @@ tests for this code path as well as the preprocessor feature.
 - Added warning about using mod_perl as a DSO to README file.
 - Added 'cgi_object' method to HTML::Mason::Request::ApacheHandler.
 This method returns the CGI object Mason uses internally (unless
-you're using Apache::Request instead).  Added documentation for
-this. (suggested by many people)
+you're using Apache::Request instead in which case its a fatal error).
+Added documentation for this. (suggested by many people).
 - Squashed warning in assignment to %ARGS in component sub body.
 - Fixed call_method and scall_method to take arbitrary list of args
-instead of hash
-- Fixed expression escape flags to allow arbitrary following whitespace
-(reported by Mikhail Zabaluev)
+instead of hash.
+- Fixed expression escape flags to allow arbitrary following
+whitespace.  (reported by Mikhail Zabaluev)
+- Added FAQ on how to handle file uploads.
+- $m->cache returns the value stored on a succesful store action.
+- Reduced memory usage by removing unneeded uses of various modules.
+On my box I see about a 500k or so reduction in memory use (Dave).
+- Mason seems to be working under a mod_perl DSO, at least under
+mod_perl 1.24 and Apache 1.3.12.  This probably has nothing to do with
+Mason but people are encouraged to experiment with a mod_perl DSO and
+report back to the mason list.
 
 0.87  Wed May 24 08:49:12 PDT 2000
 
