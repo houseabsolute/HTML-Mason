@@ -172,25 +172,25 @@ sub make_config
 
 use lib 'lib', 't/lib';
 
-use Apache::test;
 use Cwd;
 use File::Path;
 use File::Spec;
 
-use vars qw($HAS_APACHE_REQUEST $CONF_DIR $COMP_ROOT $DATA_DIR %APACHE_PARAMS);
-$CONF_DIR = '';
+use vars qw($HAS_APACHE_REQUEST $HAS_MOD_PERL $APACHE_DIR $COMP_ROOT $DATA_DIR %APACHE_PARAMS);
+$APACHE_DIR = '';
 $DATA_DIR = '';
 
 sub setup_mod_perl_tests
 {
     # Skip if no mod_perl
-    eval { require mod_perl };
-    # need to use it twice to avoid annoying warning
-    return unless $mod_perl::VERSION || $mod_perl::VERSION;
+    eval { require mod_perl; };
+    return if $@;
+    $HAS_MOD_PERL = 1;
 
-    $HAS_APACHE_REQUEST = 1;
+    require Apache::test;
+
     eval { require Apache::Request; };
-    $HAS_APACHE_REQUEST = 0 if $@;
+    $HAS_APACHE_REQUEST = $@ ? 0 : 1;
 
     cleanup_files();
 
@@ -227,13 +227,13 @@ sub write_apache_conf
 {
     %APACHE_PARAMS = Apache::test->get_test_params();
 
-    my $conf_file = $APACHE_PARAMS{conf_file} || 't/httpd.conf';
-    $CONF_DIR = ( File::Spec->splitpath($conf_file) )[1];
-    $CONF_DIR =~ s,/$,,;
-
     my $cwd = cwd();
-    $COMP_ROOT = "$cwd/$CONF_DIR/comps";
-    $DATA_DIR = "$cwd/$CONF_DIR/data";
+    my $conf_file = $APACHE_PARAMS{conf_file} ? "$cwd/$APACHE_PARAMS{conf_file}" : "$cwd/t/httpd.conf";
+    $APACHE_DIR = ( File::Spec->splitpath($conf_file) )[1];
+    $APACHE_DIR =~ s,/$,,;
+
+    $COMP_ROOT = "$APACHE_DIR/comps";
+    $DATA_DIR = "$APACHE_DIR/data";
 
     mkdir $COMP_ROOT, 0755
 	or die "Can't make dir '$COMP_ROOT': $!";
@@ -243,7 +243,7 @@ sub write_apache_conf
     my $include = <<"EOF";
 
 <IfDefine CGI>
-  PerlRequire $CONF_DIR/mason_handler_CGI.pl
+  PerlRequire $APACHE_DIR/mason_handler_CGI.pl
 
   <Location /mason>
     SetHandler perl-script
@@ -260,7 +260,7 @@ EOF
     $include .= <<"EOF"
 
 <IfDefine mod_perl>
-  PerlRequire $CONF_DIR/mason_handler_mod_perl.pl
+  PerlRequire $APACHE_DIR/mason_handler_mod_perl.pl
 
   <Location /mason>
     SetHandler perl-script
@@ -287,7 +287,7 @@ sub setup_handler
     my $args_method = shift;
 
     my $handler = "mason_handler_$args_method.pl";
-    my $handler_file = "$CONF_DIR/$handler";
+    my $handler_file = "$APACHE_DIR/$handler";
     open F, ">$handler_file"
 	or die "Can't write to '$handler_file': $!";
     print F <<"EOF";
@@ -302,9 +302,9 @@ my \$interp = HTML::Mason::Interp->new( parser => \$parser,
 					data_dir => '$DATA_DIR' );
 
 my \$stream_ah = HTML::Mason::ApacheHandler->new( interp => \$interp,
-                                                  output_mode => 'stream' );
+                                                 output_mode => 'stream' );
 my \$batch_ah = HTML::Mason::ApacheHandler->new( interp => \$interp,
-                                                 output_mode => 'batch' );
+                                                output_mode => 'batch' );
 
 sub handler
 {
