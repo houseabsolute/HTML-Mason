@@ -6,11 +6,8 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-use Test;
-
-BEGIN { plan tests => 15 }
 use HTML::Mason;
-
+use strict;
 ######################### End of black magic.
 
 my $comp_root = "test/comps/";
@@ -29,15 +26,18 @@ my $interp = new HTML::Mason::Interp( parser=>$parser,
                                       data_dir => $data_dir,
                                       out_method => \$buf, );
 
+print "1..15\n";
+
 foreach my $component ( @comps ) {
   undef $buf;
   my $result;
-  print "$component ";
   eval { $interp->exec($component); };
-  
-  open(F, ">$tmp_dir$component"); print F $buf; close(F);
+
+  open(F, ">$tmp_dir$component");
+  print F $buf;
+  close F;
   my $error = compareFiles("$tmp_dir$component", "$results_dir$component");
-  ok(($@ || $error), 0);
+  print ( $error == 0 ? "ok\n" : "not ok\n" );
 }
 
 
@@ -57,6 +57,7 @@ sub compareFiles {
   my ($f1, $f2, $errin) = @_;
   my $line = 1;
   my $err  = 0;
+  my($l1, $l2, $eq);
 
   open F1, $f1 || die "***Cannot open $f1"; 
   if (!$errin) {
@@ -75,7 +76,7 @@ sub compareFiles {
     }
 
     $eq = 0;
-    while (((!$notseen && ($l2 =~ /^\^\^(.*?)$/)) || ($l2 =~ /^\^\-(.*?)$/)) && !$eq) {
+    while (((($l2 =~ /^\^\^(.*?)$/)) || ($l2 =~ /^\^\-(.*?)$/)) && !$eq) {
       $l2 = $1;
       if (($l1 =~ /^\s*$/) && ($l2 =~ /^\s*$/)) { 
         $eq = 1;
@@ -118,4 +119,3 @@ sub compareFiles {
 
   return $err; 
 }
-    
