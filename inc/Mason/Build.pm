@@ -177,8 +177,8 @@ ServerRoot $conf{apache_dir}
   PerlSetVar  MasonCompRoot "$conf{comp_root}"
   PerlSetVar  MasonDataDir  "$conf{data_dir}"
 
-  PerlAddVar  MasonAllowGlobals $foo
-  PerlAddVar  MasonAllowGlobals @bar
+  PerlAddVar  MasonAllowGlobals \$foo
+  PerlAddVar  MasonAllowGlobals \@bar
 
   PerlSetVar  MasonArgsMethod CGI
   SetHandler  perl-script
