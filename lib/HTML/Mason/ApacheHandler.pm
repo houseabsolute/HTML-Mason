@@ -822,9 +822,12 @@ sub prepare_request
 	my $retval = ( isa_mason_exception($err, 'Abort')   ? $err->aborted_value  :
 		       isa_mason_exception($err, 'Decline') ? $err->declined_value :
 		       rethrow_exception $err );
-	unless ($retval and $retval != 200) {
+	$retval = OK if $retval == 200;
+	unless ($retval) {
 	    unless (APACHE2) {
-		$r->send_http_header();
+		unless ($r->headers_out->{"Content-type"}) { 
+		    $r->send_http_header();
+		}
 	    }
 	}
 	return $retval;
@@ -956,7 +959,7 @@ sub _set_mason_req_out_method
     my $out_method;
     if (APACHE2) {
 
-	# mod_perl-2 does not need to call $r->send_httpd_headers
+	# mod_perl-2 does not need to call $r->send_http_headers
 	$out_method = sub {
             $r->$final_output_method( grep { defined } @_ );
 	    $r->rflush;

@@ -37,7 +37,7 @@ kill_httpd(1);
 test_load_apache();
 
 my $tests = 19; # multi conf & taint tests
-$tests += 59 if my $have_libapreq = have_module('Apache::Request');
+$tests += 60 if my $have_libapreq = have_module('Apache::Request');
 $tests += 40 if my $have_cgi      = have_module('CGI');
 $tests += 15 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
 $tests++ if $have_cgi;
@@ -49,9 +49,9 @@ print STDERR "\n";
 
 write_test_comps();
 
-if ($have_libapreq) {        # 59 tests
+if ($have_libapreq) {        # 60 tests
     cleanup_data_dir();
-    apache_request_tests(1); # 22 tests
+    apache_request_tests(1); # 23 tests
 
     cleanup_data_dir();
     apache_request_tests(0); # 22 tests
@@ -388,6 +388,19 @@ Status code: 0
 EOF
 						  );
     ok($success);
+
+    if ($with_handler)
+    {
+	$response = Apache::test->fetch('/ah=4/comps/apache_request');
+	$actual = filter_response($response, $with_handler);
+	$success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+								  expect => <<'EOF',
+X-Mason-Test: Initial value
+Status code: 0
+EOF
+	);
+	ok($success);
+    }
 
     unless ($with_handler)
     {

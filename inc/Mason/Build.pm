@@ -379,6 +379,22 @@ package My::Interp;
 \$My::Interp::VERSION = '0.01';
 \@My::Interp::ISA = 'HTML::Mason::Interp';
 
+package My::ThrowingInterp;
+\$My::ThrowingInterp::VERSION = '0.01';
+\@My::ThrowingInterp::ISA = 'HTML::Mason::Interp';
+use HTML::Mason::Exceptions;
+
+sub make_request {
+    my \$self = shift;
+    my \%p = \@_;
+    my \$r = \$p{apache_req}
+      || \$self->delayed_object_params('request', 'apache_req')
+      || \$self->delayed_object_params('request', 'cgi_request');
+    \$r->content_type( 'text/fooml' );
+    \$r->send_http_header unless \$mod_perl::VERSION >= 1.99;
+    HTML::Mason::Exception::Abort->throw(error => 'foo', aborted_value => 200);
+}
+
 package HTML::Mason;
 
 $libs
@@ -441,6 +457,15 @@ my \@ah;
 		error_format => 'line',
 		#res_params
 		resolver => My::Resolver->new(),
+		comp_root => '$conf->{comp_root}',
+	);
+
+\$ah[4] = HTML::Mason::ApacheHandler->new(
+		args_method => '$args_method',
+		interp_class => 'My::ThrowingInterp',
+		data_dir => '$conf->{data_dir}',
+		error_mode => 'output',
+		error_format => 'html',
 		comp_root => '$conf->{comp_root}',
 	);
 
