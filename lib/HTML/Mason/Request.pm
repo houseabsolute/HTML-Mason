@@ -32,9 +32,7 @@ use HTML::Mason::MethodMaker
                           data_cache_defaults
 			  error_format
 			  error_mode
-			  out_method
-                          use_autohandlers
-                          use_dhandlers ) ],
+			  out_method ) ],
     );
 
 __PACKAGE__->valid_params
@@ -55,10 +53,6 @@ __PACKAGE__->valid_params
 		     descr => "A subroutine or scalar reference through which all output will pass" },
      data_cache_defaults => { type => HASHREF|UNDEF, optional => 1,
 			      descr => "A hash of default parameters for Cache::Cache" },
-     use_autohandlers             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF,
-				       descr => "Whether to use Mason's 'autohandler' capability" },
-     use_dhandlers                => { parse => 'boolean', default => 1, type => SCALAR|UNDEF,
-				       descr => "Whether to use Mason's 'dhandler' capability" },
     );
 
 __PACKAGE__->contained_objects
@@ -148,8 +142,7 @@ sub exec {
 	    $comp = $self->fetch_comp($path);
 
 	    unless ($comp) {
-		if ( $self->use_dhandlers and
-		     $comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
+		if ( $comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
 
 		    my $parent_path = $comp->dir_path;
 		    ($self->{dhandler_arg} = $path) =~ s{^$parent_path/?}{};
@@ -204,7 +197,7 @@ sub exec {
 		# If declined, try to find the next dhandler.
 		if ( ($declined = $self->declined) and $path) {
 		    $path =~ s,/[^/]+$,, if defined($self->{dhandler_arg});
-		    if ($self->use_dhandlers and my $next_comp = $interp->find_comp_upwards($path, $interp->dhandler_name)) {
+		    if (my $next_comp = $interp->find_comp_upwards($path, $interp->dhandler_name)) {
 			$comp = $next_comp;
 			my $parent = $comp->dir_path;
 			$self->_reinitialize;
@@ -1308,14 +1301,3 @@ Jonathan Swartz, swartz@pobox.com
 L<HTML::Mason::Component>
 L<HTML::Mason::ApacheHandler>
 
-=cut
-
-=item use_autohandlers
-
-True or false, default is true.  If not true, Mason will not attempt
-to use autohandlers.
-
-=item use_dhandlers
-
-True or false, default is true.  If not true, Mason will not attempt
-to use dhandlers.

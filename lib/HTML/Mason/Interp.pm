@@ -29,8 +29,7 @@ use HTML::Mason::MethodMaker
 			 system_log_separator
 			 preloads ) ],
 
-      read_write => [ qw( allow_recursive_autohandlers
-			  autohandler_name
+      read_write => [ qw( autohandler_name
 			  code_cache_max_size
 			  compiler
 			  data_dir
@@ -48,8 +47,6 @@ use HTML::Mason::MethodMaker
 # Fields that can be set in new method, with defaults
 __PACKAGE__->valid_params
     (
-     allow_recursive_autohandlers => { parse => 'boolean', default => 1, type => SCALAR|UNDEF,
-				       descr => 'Whether multiple autohandlers can be invoked on a single request' },
      autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR,
 				       descr => "The filename to use for Mason's 'autohandler' capability" },
      code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR,  # 10M
@@ -880,14 +877,6 @@ stand-alone Perl script), see the L<STANDALONE MODE> section below.
 =head1 PARAMETERS FOR new() CONSTRUCTOR
 
 =over
-
-=item allow_recursive_autohandlers
-
-True or false. Default is true as of verison 0.85. If true,
-autohandlers apply both to their own directories and all
-subdirectories; if undef, only to their own directories. See the
-L<Devel/autohandlers> section of the Component Developer's Guide for a
-discussion of the pros and cons.
 
 =item autohandler_name
 

@@ -92,18 +92,12 @@ sub _determine_inheritance {
 	    $self->{inherit_path} = absolute_comp_path($self->{flags}->{inherit}, $self->dir_path);
 	}
     } else {
-	if ($interp->allow_recursive_autohandlers) {
-	    if ($self->name eq $interp->autohandler_name) {
-		unless ($self->dir_path eq '/') {
-		    ($self->{inherit_start_path}) = $self->dir_path =~ m,(.+)/[^/]*$,;
-		}
-	    } else {
-		$self->{inherit_start_path} = $self->dir_path;
+	if ($self->name eq $interp->autohandler_name) {
+	    unless ($self->dir_path eq '/') {
+		($self->{inherit_start_path}) = $self->dir_path =~ m,(.+)/[^/]*$,;
 	    }
 	} else {
-	    unless ($self->name eq $interp->autohandler_name) {
-		$self->{inherit_path} = $self->dir_path."/".$interp->autohandler_name;
-	    }
+	    $self->{inherit_start_path} = $self->dir_path;
 	}
     }
 }

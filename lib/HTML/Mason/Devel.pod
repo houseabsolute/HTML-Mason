@@ -577,9 +577,8 @@ requests>.
 A component or dhandler that does not want to handle a particular request may
 defer control to the next dhandler by calling C<< $m->decline >>.
 
-The administrator can customize the file name used for dhandlers, or
-turn off dhandlers entirely, with the L<Interp/dhandler_name> Interp
-and L<Request/use_dhandlers> Request parameters.
+The administrator can customize the file name used for dhandlers
+with the L<Interp/dhandler_name> Interp parameter.
 
 =head2 autohandlers
 
@@ -650,9 +649,8 @@ Mason's object-oriented style features: methods, attributes, and
 inheritance.  In the interest of space these are discussed in a
 separate section, L<Devel/Object-Oriented Techniques>.
 
-The administrator can customize the file name used for autohandlers,
-or turn off autohandlers entirely, with the L<Interp/autohandler_name>
-Interp and L<Request/use_autohandlers> Request parameters.
+The administrator can customize the file name used for autohandlers
+with the L<Interp/autohandler_name> Interp parameter.
 
 =head2 dhandlers vs. autohandlers
 

@@ -214,10 +214,6 @@ multiple component roots.
 
 Corresponds to the C<data_dir> parameter.
 
-=item * MasonAllowRecursiveAutohandlers - boolean
-
-Corresponds to the C<allow_recursive_autohandlers> parameter.
-
 =item * MasonAutohandlerName - string
 
 Corresponds to the C<autohandler_name> parameter.
@@ -305,14 +301,6 @@ Corresponds to the C<data_cache_defaults> parameter.
 =item * MasonErrorMode - string
 
 Correponds to the C<error_mode> parameter.
-
-=item * MasonUseAutohandlers - boolean
-
-Correponds to the C<use_autohandlers> parameter.
-
-=item * MasonUseDhandlers - boolean
-
-Correponds to the C<use_dhandlers> parameter.
 
 =back
 
