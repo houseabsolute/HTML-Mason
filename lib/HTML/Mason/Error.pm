@@ -60,7 +60,7 @@ sub error_process {
 	    }
 
 	    if (defined $func) {
-		next if $func =~ m#eval|require 0# and $file =~ m#HTML/Mason/Request#;
+		next if $func =~ m#eval|require 0# and defined $file and $file =~ m#HTML/Mason/Request#;
 		next if $func =~ m#HTML::Mason::Request::exec#;
 		next if $func =~ m#HTML::Mason::Component::run#;
 		next if $func =~ m#HTML::Mason::ApacheHandler#;
