@@ -750,6 +750,13 @@ value.  In this mode, the C<run> method will print detailed
 information of its actions.  This mode includes the output printed in
 VERBOSE mode.
 
+=head2 No cleanup mode
+
+Setting the MASON_NO_CLEANUP environment variable will tell the module
+to not clean up generated data from running the tests.  This includes
+the components written to disk and the data directory used during
+testing.  This can be useful when debugging.
+
 =head2 Create mode
 
 If the individual tests are run from the command line with the
