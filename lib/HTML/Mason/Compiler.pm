@@ -426,7 +426,7 @@ sub start_named_block
     # Error if def and method defined with same name
     my $other_type = $p{block_type} eq 'def' ? 'method' : 'def';
     $self->lexer->throw_syntax_error
-        ("Cannot define a method and subcomponent with the same name ($p{name}")
+        ("Cannot define a method and subcomponent with the same name ($p{name})")
             if exists $c->{$other_type}{ $p{name} };
 
     $c->{in_main}--;
@@ -568,18 +568,33 @@ sub component_content_call_end
 {
     my $self = shift;
     my $c = $self->{current_compile};
+    my %p = @_;
 
-    $self->lexer->throw_syntax_error("found component with content ending tag but no beginning tag")
+    $self->lexer->throw_syntax_error("Found component with content ending tag but no beginning tag")
 	unless @{ $c->{comp_with_content_stack} };
 
     my $call = pop @{ $c->{comp_with_content_stack} };
+    my $call_end = $p{call_end};
+    for ($call_end) { s/^\s+//; s/\s+$//; }
 
+    my $comp = undef;
     if ( $call =~ m,^[\w/.],)
     {
 	my $comma = index($call, ',');
 	$comma = length $call if $comma == -1;
-	(my $comp = substr($call, 0, $comma)) =~ s/\s+$//;
+	($comp = substr($call, 0, $comma)) =~ s/\s+$//;
 	$call = "'$comp'" . substr($call, $comma);
+    }
+    if ($call_end) {
+	if ($call_end !~ m,^[\w/.],) {
+	    $self->lexer->throw_syntax_error("Cannot use an expression inside component with content ending tag; use a bare component name or </&> instead");
+	}
+	if (!defined($comp)) {
+	    $self->lexer->throw_syntax_error("Cannot match an expression as a component name; use </&> instead");
+	}
+	if ($call_end ne $comp) {
+	    $self->lexer->throw_syntax_error("Component name in ending tag ($call_end) does not match component name in beginning tag ($comp)");
+	}
     }
 
     my $code = "} }, $call\n );\n";

@@ -484,9 +484,11 @@ sub match_comp_content_call_end
 {
     my $self = shift;
 
-    if ( $self->{current}{comp_source} =~ m,\G</&>,gc )
+    if ( $self->{current}{comp_source} =~ m,\G</&(.*?)>,gc )
     {
-        $self->{current}{compiler}->component_content_call_end;
+	my $call = $1 || '';
+        $self->{current}{compiler}->component_content_call_end( call_end => $call );
+	$self->{current}{lines} += $call =~ tr/\n//;
 
         return 1;
     }

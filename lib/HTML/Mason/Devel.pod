@@ -366,6 +366,22 @@ between a filtering component and a normal component is that a
 filtering component is expected to fetch the content by calling
 $m->content and do something with it.
 
+The ending tag may optionally contain the name of the component, and Mason
+will verify that it matches the name in the starting tag.  This may
+be helpful when the tags are far apart or nested.  To avoid 
+ambiguous situations, this is only allowed when the component name
+is an unquoted literal (starting with C<[\w/_.]>).  For anything
+more complicated, such as C<< <|& $var &> >> or C<< <&| 'name' &> >>,
+the simple C<< </&> >> form must be used.
+
+   <&| "outer" &>
+     <&| /inner/comp, arg=>'this' &>
+       <&| .mycomp &>
+          Yada yada yada
+       </& .mycomp >
+     </& /inner/comp >
+   </&>
+
 Here is an example of a component used for localization.  Its content
 is a series of strings in different languages, and it selects the
 correct one based on a global C<$lang> variable, which could be setup
