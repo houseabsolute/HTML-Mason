@@ -686,8 +686,6 @@ test.
 
 Run the tests in the group.
 
-=back
-
 =head2 Class methods
 
 These methods are provided since some tests may need to know these
