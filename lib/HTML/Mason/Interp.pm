@@ -15,7 +15,7 @@ use File::Spec;
 use HTML::Mason::Config;
 use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
-use HTML::Mason::Tools qw(make_fh read_file taint_is_on);
+use HTML::Mason::Tools qw(make_fh read_file taint_is_on compress_path);
 use HTML::Mason::Utils qw(create_subobjects);
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
@@ -733,6 +733,22 @@ sub _compilation_error {
     my $msg = sprintf("Error during compilation of %s:\n%s\n",$filename, $err);
     HTML::Mason::Exception::Compilation->throw( error => $msg );
 }
+
+
+sub object_file {
+    my ($self, $comp) = @_;
+    return $comp->persistent ?
+	File::Spec->catdir( $self->object_dir, $comp->fq_path ) :
+	undef;
+}
+
+sub cache_file {
+    my ($self, $comp) = @_;
+    return $comp->persistent ?
+	File::Spec->catdir( $self->data_cache_dir, compress_path($comp->fq_path) ) :
+	undef;
+}    
+
 
 # Generate HTML that describes Interp's current status.
 # This is used in things like Apache::Status reports.  Currently shows:

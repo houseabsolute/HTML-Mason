@@ -7,7 +7,6 @@ package HTML::Mason::Component;
 use strict;
 use File::Basename;
 use File::Spec;
-use HTML::Mason::Tools qw(compress_path);
 use Params::Validate qw(:all);
 use vars qw($AUTOLOAD);
 
@@ -29,15 +28,13 @@ use HTML::Mason::MethodMaker
 # I'm not sure which of these need to be non-optional.
 my %valid_params =
     (
-     attr               => {type => HASHREF, optional => 1},
-     code               => {type => CODEREF, optional => 1},
+     attr               => {type => HASHREF, default => {}},
+     code               => {type => CODEREF},
      create_time        => {type => SCALAR,  optional => 1},
      declared_args      => {type => HASHREF, default => {}},
-     dynamic_subs_init  => {type => CODEREF, optional => 1},
+     dynamic_subs_init  => {type => CODEREF, default => sub {}},
      flags              => {type => HASHREF, default => {}},
      fq_path            => {type => SCALAR,  optional => 1},
-     inherit_path       => {type => SCALAR,  optional => 1},
-     inherit_start_path => {type => SCALAR,  optional => 1},
      interp             => {isa => 'HTML::Mason::Interp', optional => 1},
      methods            => {type => HASHREF, default => {}},
      mfu_count          => {type => SCALAR,  default => 0},
@@ -78,6 +75,7 @@ sub new
 # Assign interpreter and, optionally, new fq_path to component.
 # Must be run before component will fully work.
 #
+# Ends up assigning $self->{interp, fq_path, inherit_path, inherit_start_path}
 sub assign_runtime_properties {
     my ($self,$interp,$fq_path) = @_;
     $self->{interp} = $interp;
@@ -299,16 +297,12 @@ sub parent {
 #
 sub object_file {
     my $self = shift;
-    return $self->persistent ?
-	File::Spec->catdir( $self->interp->object_dir, $self->fq_path ) :
-	undef;
+    return $self->interp->object_file($self);
 }
 
 sub cache_file {
     my $self = shift;
-    return $self->persistent ?
-	File::Spec->catdir( $self->interp->data_cache_dir, compress_path($self->fq_path) ) :
-	undef;
+    return $self->interp->cache_file($self);
 }
 
 1;
@@ -342,12 +336,12 @@ File-based: loaded from a source or object file.
 
 =item 2
 
-Subcomponents: embedded components defined with the C<E<lt>%defE<gt>> tag.
+Subcomponents: embedded components defined with the C<E<lt>%defE<gt>> 
+or C<E<lt>%methodE<gt>> tags.
 
 =item 3
 
-Anonymous: created on-the-fly with the C<make_anonymous_component>
-Interp method.
+Anonymous: created on-the-fly with the C<make_component> Interp method.
 
 =back
 
@@ -365,13 +359,13 @@ Common ways to get handles on existing component objects include the
 L<Request/current_comp>, L<Request/callers>, and L<Request/fetch_comp> Request methods.
 
 There is no published C<new> method, because creating a component
-requires a parser. Use the L<Parser/make_component> Parser method to create a
+requires an Interpreter. Use the L<Interp/make_component> Interp method to create a
 new component dynamically.
 
 Similarly, there is no C<execute> or C<call> method, because calling a
 component requires a request. All of the interfaces for calling a
-component (<& &>, C<$m->comp>, C<$interp-E<gt>exec>
-which normally take a component path, will also take a component
+component (<& &>, C<$m->comp>, C<$interp-E<gt>exec>)
+which normally take a component path will also take a component
 object.
 
 =head1 METHODS
@@ -402,7 +396,7 @@ was created.
 
 Returns a reference to a hash of hashes representing the arguments
 declared in the C<E<lt>%argsE<gt>> section. The keys of the main hash are the
-variable names including prefix (e.g. C<$foo>, C<@lst>). Each	
+variable names including prefix (e.g. C<$foo>, C<@list>). Each	
 secondary hash contains:
 
 =over 4
@@ -411,7 +405,7 @@ secondary hash contains:
 
 'default': the string specified for default value (e.g. 'fido') or undef
 if none specified.  Note that in general this is not the default value
-itself but rather an expression that gets evaluated every time the
+itself but rather a Perl expression that gets evaluated every time the
 component runs.
 
 =back
@@ -428,14 +422,15 @@ For example:
 
 Returns the component's notion of a current directory, relative to the
 component root; this is used to resolve relative component paths. For
-file-based components this is the full component path minus the final
-piece.  For subcomponents this is the same as its parent component.
+file-based components this is the full component path minus the filename.
+For subcomponents this is the same as the component that defines it.
 Undefined for anonymous components.
 
 =item flag (name)
 
 Returns the value for the specified system flag.  Flags are declared
 in the C<E<lt>%flagsE<gt>> section and affect the behavior of the component.
+Unlike attributes, flags values do not get inherited from parent components.
 
 =item is_subcomp
 
@@ -480,13 +475,13 @@ Can be changed via the C<inherit> flag.
 
 =item path
 
-Returns the absolute path of this component.
+Returns the entire path of this component, relative to the component root.
 
 =item scall_method (name, args...)
 
 Like L<Component/call_method (name, args...)>, but returns the method
 output as a string instead of printing it. (Think sprintf versus
-printf.) The method's return value is discarded.
+printf.) The method's return value, if any, is discarded.
 
 =item subcomps
 
