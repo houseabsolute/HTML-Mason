@@ -12,7 +12,7 @@ require Exporter;
 use strict;
 use IO::File qw(!/^SEEK/);
 use POSIX;
-use Fcntl;
+use Fcntl qw(:flock);
 use File::Basename;
 use HTML::Mason::Config;
 use HTML::Mason::Tools qw(date_delta_to_secs);
@@ -35,13 +35,14 @@ sub access_data_cache
     my $path = $cacheFile;
 
     my $lockCacheFile = sub {
+	my $lockargs = shift || LOCK_EX|LOCK_NB;
 	my ($base,$lockdir) = fileparse($physFile);
 	$lockdir .= "locks";
 	mkpath($lockdir,0,0755) if (!-d $lockdir);
 	my $lockfile = "$lockdir/$base.lock";
-	my $lockfh = new IO::File ">>$lockfile"
+	my $lockfh = new IO::File "+>> $lockfile"
 	   or die "cache: cannot open lockfile '$lockfile' for locking\n";
-	return (&get_lock($lockfh)) ? $lockfh : undef;
+	return (flock($lockfh, $lockargs)) ? $lockfh : undef;
     };
     
     #
@@ -214,6 +215,8 @@ sub access_data_cache
 	# our entry may be modified - check it.
 	#
 	if ($fileLastModified > $mem->{lastUpdated}) {
+	    my $lockfh = &$lockCacheFile(LOCK_SH|LOCK_NB);
+	    return unless $lockfh;
 	    my %in;
 	    tie (%in, $tieClass, $cacheFile, O_RDONLY, 0);
 
@@ -231,6 +234,7 @@ sub access_data_cache
 		$mem->{lastUpdated} = $time;
 	    }
 	    untie(%in);
+	    $lockfh->close;
 	}
 
 	#
@@ -288,15 +292,3 @@ sub access_data_cache
     }
 }
 
-#
-# Returns 1 if the exclusive, non-blocking lock was obtained,
-# undef otherwise.
-#
-sub get_lock {
-	my $fh = shift;
-
-	my $LOCK_EX = 2;
-	my $LOCK_NB = 4;
-	my $LOCK_UN = 8;
-	return flock $fh, $LOCK_EX|$LOCK_NB;
-}
