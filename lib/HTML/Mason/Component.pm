@@ -4,15 +4,27 @@
 
 package HTML::Mason::Component;
 require 5.004;
-require Exporter;
-@ISA = qw(Exporter);
-@EXPORT = qw();
-@EXPORT_OK = qw();
 
 use strict;
 use File::Basename;
 use HTML::Mason::Tools qw(read_file compress_path);
 use vars qw($AUTOLOAD);
+
+use HTML::Mason::MethodMaker ( read_only => [ qw( code
+						  create_time
+						  declared_args
+						  fq_path
+						  inherit_path
+						  inherit_start_path
+						  interp
+						  mfu_count
+						  object_size
+						  parser_version
+						  run_count ) ],
+
+			       read_write => [ qw ( dynamic_subs_request
+						    dynamic_subs_hash ) ]
+			     );
 
 my %fields =
     (
@@ -256,25 +268,5 @@ sub parent {
 #
 sub object_file { my $self = shift; return ($self->persistent) ? ($self->interp->object_dir . $self->fq_path) : undef }
 sub cache_file { my $self = shift; return ($self->persistent) ? ($self->interp->data_cache_dir . "/" . compress_path($self->fq_path)) : undef }
-
-# Create generic read-write accessor routines
-sub dynamic_subs_request { my $s=shift; return @_ ? ($s->{dynamic_subs_request}=shift) : $s->{dynamic_subs_request} }
-sub dynamic_subs_hash { my $s=shift; return @_ ? ($s->{dynamic_subs_hash}=shift) : $s->{dynamic_subs_hash} }
-
-#
-# Create generic read-only accessor routines
-#
-sub code { return shift->{code} }
-sub create_time { return shift->{create_time} }
-sub declared_args { return shift->{declared_args} }
-sub fq_path { return shift->{fq_path} }
-sub inherit_path { return shift->{inherit_path} }
-sub inherit_start_path { return shift->{inherit_start_path} }
-sub interp { return shift->{interp} }
-sub mfu_count { return shift->{mfu_count} }
-sub object_size { return shift->{object_size} }
-sub parser_version { return shift->{parser_version} }
-sub run_count { return shift->{run_count} }
-sub source_ref_start { return shift->{source_ref_start} }
 
 1;

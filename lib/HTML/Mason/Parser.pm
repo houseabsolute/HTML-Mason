@@ -15,6 +15,17 @@ use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Request;
 use HTML::Mason::Tools qw(dumper_method read_file);
 
+use HTML::Mason::MethodMaker ( read_write => [ qw( default_escape_flags
+						   ignore_warnings_expr
+						   in_package
+						   postamble
+						   postprocess
+						   preamble
+						   preprocess
+						   taint_check
+						   use_strict ) ]
+			     );
+
 # Fields that can be set in new method, with defaults
 my %fields =
     (allow_globals => [],
@@ -1256,18 +1267,6 @@ sub make_dirs
 	}
     }
 }
-
-# Create generic read-write accessor routines
-
-sub default_escape_flags { my $s=shift; return @_ ? ($s->{default_escape_flags}=shift) : $s->{default_escape_flags} }
-sub ignore_warnings_expr { my $s=shift; return @_ ? ($s->{ignore_warnings_expr}=shift) : $s->{ignore_warnings_expr} }
-sub in_package { my $s=shift; return @_ ? ($s->{in_package}=shift) : $s->{in_package} }
-sub postamble { my $s=shift; return @_ ? ($s->{postamble}=shift) : $s->{postamble} }
-sub postprocess { my $s=shift; return @_ ? ($s->{postprocess}=shift) : $s->{postprocess} }
-sub preamble { my $s=shift; return @_ ? ($s->{preamble}=shift) : $s->{preamble} }
-sub preprocess { my $s=shift; return @_ ? ($s->{preprocess}=shift) : $s->{preprocess} }
-sub taint_check { my $s=shift; return @_ ? ($s->{taint_check}=shift) : $s->{taint_check} }
-sub use_strict { my $s=shift; return @_ ? ($s->{use_strict}=shift) : $s->{use_strict} }
 
 1;
 

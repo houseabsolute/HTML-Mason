@@ -4,10 +4,6 @@
 
 package HTML::Mason::FakeApache;
 require 5.003;
-require Exporter;
-@ISA = qw(Exporter);
-@EXPORT = ();
-@EXPORT_OK = ();
 
 use mod_perl;
 use strict;

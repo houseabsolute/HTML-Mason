@@ -4,10 +4,6 @@
 
 package HTML::Mason::Interp;
 require 5.004;
-require Exporter;
-@ISA = qw(Exporter);
-@EXPORT = qw();
-@EXPORT_OK = qw();
 
 use strict;
 use Carp;
@@ -23,6 +19,30 @@ use HTML::Mason::Commands qw();
 use HTML::Mason::Config;
 use HTML::Mason::Resolver::File;
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
+
+use HTML::Mason::MethodMaker ( read_only => [ qw( code_cache
+						  comp_root
+						  data_dir
+						  hooks
+						  system_log_file
+						  system_log_separator
+						  preloads ) ],
+
+			       read_write => [ qw( allow_recursive_autohandlers
+						   autohandler_name
+						   code_cache_max_size
+						   data_cache_dir
+						   dhandler_name
+						   max_recurse
+						   out_mode
+						   parser
+						   resolver
+						   static_file_root
+						   use_data_cache
+						   use_object_files
+						   use_reload_file
+						   verbose_compile_error ) ],
+			     );
 
 # Fields that can be set in new method, with defaults
 my %fields =
@@ -563,32 +583,5 @@ sub write_system_log {
 sub code_cache_min_size { shift->code_cache_max_size * 0.75 }
 sub code_cache_max_elem { shift->code_cache_max_size * 0.20 }
 sub code_cache_decay_factor { 0.75 }
-
-# Create generic read-write accessor routines
-
-sub allow_recursive_autohandlers { my $s=shift; return @_ ? ($s->{allow_recursive_autohandlers}=shift) : $s->{allow_recursive_autohandlers} }
-sub autohandler_name { my $s=shift; return @_ ? ($s->{autohandler_name}=shift) : $s->{autohandler_name} }
-sub code_cache_max_size { my $s=shift; return @_ ? ($s->{code_cache_max_size}=shift) : $s->{code_cache_max_size} }
-sub data_cache_dir { my $s=shift; return @_ ? ($s->{data_cache_dir}=shift) : $s->{data_cache_dir} }
-sub dhandler_name { my $s=shift; return @_ ? ($s->{dhandler_name}=shift) : $s->{dhandler_name} }
-sub max_recurse { my $s=shift; return @_ ? ($s->{max_recurse}=shift) : $s->{max_recurse} }
-sub out_mode { my $s=shift; return @_ ? ($s->{out_mode}=shift) : $s->{out_mode} }
-sub parser { my $s=shift; return @_ ? ($s->{parser}=shift) : $s->{parser} }
-sub resolver { my $s=shift; return @_ ? ($s->{resolver}=shift) : $s->{resolver} }
-sub static_file_root { my $s=shift; return @_ ? ($s->{static_file_root}=shift) : $s->{static_file_root} }
-sub use_data_cache { my $s=shift; return @_ ? ($s->{use_data_cache}=shift) : $s->{use_data_cache} }
-sub use_object_files { my $s=shift; return @_ ? ($s->{use_object_files}=shift) : $s->{use_object_files} }
-sub use_reload_file { my $s=shift; return @_ ? ($s->{use_reload_file}=shift) : $s->{use_reload_file} }
-sub verbose_compile_error { my $s=shift; return @_ ? ($s->{verbose_compile_error}=shift) : $s->{verbose_compile_error} }
-
-# Create generic read-only accessor routines
-
-sub code_cache { return shift->{code_cache} }
-sub comp_root { return shift->{comp_root} }
-sub data_dir { return shift->{data_dir} }
-sub hooks { return shift->{hooks} }
-sub system_log_file { return shift->{system_log_file} }
-sub system_log_separator { return shift->{system_log_separator} }
-sub preloads { return shift->{preloads} }
 
 1;

@@ -4,10 +4,6 @@
 
 package HTML::Mason::Request;
 require 5.004;
-require Exporter;
-@ISA = qw(Exporter);
-@EXPORT = qw();
-@EXPORT_OK = qw();
 
 use HTML::Mason::Tools qw(is_absolute_path read_file);
 
@@ -15,6 +11,17 @@ use Carp;
 use strict;
 use vars qw($REQ $REQ_DEPTH %REQ_DEPTHS);
 my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P,$HTML::Mason::Commands::m);
+
+use HTML::Mason::MethodMaker ( read_only => [ qw( aborted
+						  aborted_value
+						  count
+						  declined
+						  error_code
+						  interp ) ],
+
+			       read_write => [ qw( out_method
+						   out_mode ) ],
+			     );
 
 my %fields =
     (aborted => undef,
@@ -712,19 +719,5 @@ sub current_comp { return $_[0]->top_stack->{'comp'} }
 sub current_args { return $_[0]->top_stack->{args} }
 sub current_sink { return $_[0]->top_stack->{sink} }
 sub base_comp { return $_[0]->top_stack->{base_comp} }
-
-# Create generic read-write accessor routines
-
-sub out_method { my $s=shift; return @_ ? ($s->{out_method}=shift) : $s->{out_method} }
-sub out_mode { my $s=shift; return @_ ? ($s->{out_mode}=shift) : $s->{out_mode} }
-
-# Create generic read-only accessor routines
-
-sub aborted { return shift->{aborted} }
-sub aborted_value { return shift->{aborted_value} }
-sub count { return shift->{count} }
-sub declined { return shift->{declined} }
-sub error_code { return shift->{error_code} }
-sub interp { return shift->{interp} }
 
 1;

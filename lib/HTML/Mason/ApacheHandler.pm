@@ -13,6 +13,8 @@ package HTML::Mason::Request::ApacheHandler;
 use vars qw(@ISA);
 @ISA = qw(HTML::Mason::Request);
 
+use HTML::Mason::MethodMaker ( read_write => [ qw( ah apache_req ) ] );
+
 # Fields that can be set in new method, with defaults
 my %reqfields =
     (ah => undef,
@@ -34,11 +36,6 @@ sub new
     }
     return $self;
 }
-
-# Create generic read-write accessor routines
-
-sub ah { my $s=shift; return @_ ? ($s->{ah}=shift) : $s->{ah} }
-sub apache_req { my $s=shift; return @_ ? ($s->{apache_req}=shift) : $s->{apache_req} }
 
 # Override flush_buffer to also call $r->rflush
 sub flush_buffer
@@ -70,6 +67,22 @@ use HTML::Mason::FakeApache;
 use HTML::Mason::Tools qw(dumper_method html_escape url_unescape pkg_installed);
 use HTML::Mason::Utils;
 use Apache::Status;
+
+use HTML::Mason::MethodMaker ( read_write => [ qw( apache_status_title
+						   auto_send_headers
+
+						   debug_dir_config_keys
+						   debug_mode
+						   debug_handler_proc
+						   debug_handler_script
+						   debug_perl_binary
+
+						   decline_dirs
+						   error_mode
+						   interp
+						   output_mode
+						   top_level_predicate ) ]
+			     );
 
 # use() params. Assign defaults, in case ApacheHandler is only require'd.
 use vars qw($LOADED $ARGS_METHOD);
@@ -702,20 +715,6 @@ sub simulate_debug_request
 #
 sub http_header_sent { shift->header_out("Content-type") }
 
-# Create generic read-write accessor routines
-
-sub apache_status_title { my $s=shift; return @_ ? ($s->{apache_status_title}=shift) : $s->{apache_status_title} }
-sub auto_send_headers { my $s=shift; return @_ ? ($s->{auto_send_headers}=shift) : $s->{auto_send_headers} }
-sub decline_dirs { my $s=shift; return @_ ? ($s->{decline_dirs}=shift) : $s->{decline_dirs} }
-sub error_mode { my $s=shift; return @_ ? ($s->{error_mode}=shift) : $s->{error_mode} }
-sub interp { my $s=shift; return @_ ? ($s->{interp}=shift) : $s->{interp} }
-sub output_mode { my $s=shift; return @_ ? ($s->{output_mode}=shift) : $s->{output_mode} }
-sub top_level_predicate { my $s=shift; return @_ ? ($s->{top_level_predicate}=shift) : $s->{top_level_predicate} }
-sub debug_mode { my $s=shift; return @_ ? ($s->{debug_mode}=shift) : $s->{debug_mode} }
-sub debug_perl_binary { my $s=shift; return @_ ? ($s->{debug_perl_binary}=shift) : $s->{debug_perl_binary} }
-sub debug_handler_script { my $s=shift; return @_ ? ($s->{debug_handler_script}=shift) : $s->{debug_handler_script} }
-sub debug_handler_proc { my $s=shift; return @_ ? ($s->{debug_handler_proc}=shift) : $s->{debug_handler_proc} }
-sub debug_dir_config_keys { my $s=shift; return @_ ? ($s->{debug_dir_config_keys}=shift) : $s->{debug_dir_config_keys} }
 
 #----------------------------------------------------------------------
 #

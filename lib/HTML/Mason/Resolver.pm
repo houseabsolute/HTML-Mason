@@ -4,10 +4,6 @@
 
 package HTML::Mason::Resolver;
 require 5.004;
-require Exporter;
-@ISA = qw(Exporter);
-@EXPORT = qw();
-@EXPORT_OK = qw();
 
 use strict;
 
