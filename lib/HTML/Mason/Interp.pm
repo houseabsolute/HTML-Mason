@@ -832,6 +832,12 @@ unspecified, Mason will not use L<object files|HTML::Mason::Admin/object files>,
 cache class|HTML::Mason::Request/item_cache> will be C<MemoryCache>
 instead of C<FileCache>.
 
+=item escapes
+
+A hash reference of escape flags to set for this object.  See the
+section on the L<C<set_escape()> method|Interpreter/item_set_scape>
+for more details.
+
 =item ignore_warnings_expr
 
 Regular expression indicating which warnings to ignore when loading
