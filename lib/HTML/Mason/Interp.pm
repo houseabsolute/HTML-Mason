@@ -113,14 +113,12 @@ sub _initialize
     $self->{code_cache_current_size} = 0;
 
     #
-    # Check that directories are absolute.
+    # Check that data_dir is absolute.
     #
-    foreach my $field (qw(data_dir)) {
-	if ($self->{$field}) {
-	    $self->{$field} = File::Spec->canonpath( $self->{$field} );
-	    param_error "$field '$self->{$field}' must be an absolute directory"
-		unless File::Spec->file_name_is_absolute( $self->{$field} );
-	}
+    if ($self->{data_dir}) {
+        $self->{data_dir} = File::Spec->canonpath( $self->{data_dir} );
+        param_error "data_dir '$self->{data_dir}' must be an absolute directory"
+            unless File::Spec->file_name_is_absolute( $self->{data_dir} );
     }
 
     #
