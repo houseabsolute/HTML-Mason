@@ -509,15 +509,8 @@ sub handle_request {
 	$apreq = $apreq->filter_register;
     }
 
-    #
-    # If someone is using a custom request class that doesn't accept
-    # 'ah' and 'apache_req' that's their problem.
-    #
-    my $request = $self->interp->make_request( ah => $self,
-					       apache_req => $apreq,
-					     );
-    eval { $retval = $self->handle_request_1($apreq, $request) };
-    
+    eval { $retval = $self->handle_request_1($apreq) };
+
     if (my $err = $@) {
 	#
 	# If first component was not found, return NOT_FOUND. In case
@@ -533,7 +526,7 @@ sub handle_request {
 	    # Log the error the same way that Apache does (taken from default_handler in http_core.c)
 	    $apreq->log_error("[Mason] File does not exist: ",$apreq->filename . ($apreq->path_info ? $apreq->path_info : ""));
 	    return NOT_FOUND;
-	    
+
 	} else {
 	    die $err;
 	}
@@ -548,7 +541,7 @@ sub preview_dir { return shift->interp->data_dir . "/preview" }
 
 sub handle_request_1
 {
-    my ($self,$r,$request) = @_;
+    my ($self, $r) = @_;
 
     my $interp = $self->interp;
 
@@ -594,6 +587,13 @@ sub handle_request_1
 	$r->warn("[Mason] File fails top level predicate: ".$r->filename);
 	return NOT_FOUND;
     }
+
+    # If someone is using a custom request class that doesn't accept
+    # 'ah' and 'apache_req' that's their problem.
+    #
+    my $request = $interp->make_request( ah => $self,
+					 apache_req => $apreq,
+				       );
 
     my %args;
     if ($self->args_method eq 'mod_perl') {
