@@ -190,6 +190,9 @@ sub compile
 			  } );
     my $src = ref($p{comp_source}) ? $p{comp_source} : \$p{comp_source};
 
+    local $self->{current_comp} = {};
+    local $self->{paused_compiles} = []; # So we're re-entrant in subcomps
+
     # Preprocess the source.  The preprocessor routine is handed a
     # reference to the entire source.
     if ($self->preprocess)
@@ -206,18 +209,14 @@ sub compile
 sub start_component
 {
     my $self = shift;
+    my $c = $self->{current_comp};
 
-    compiler_error "Cannot start a component while already compiling a component"
-        if $self->{current_comp};
+    $c->{in_main} = 1;
+    $c->{comp_with_content_stack} = [];
 
-    $self->{in_main} = 1;
-    $self->{comp_with_content_stack} = [];
+    $c->{in_block} = undef;
 
-    $self->{in_block} = undef;
-
-    $self->_init_comp_data($self);
-
-    $self->{current_comp} = $self;
+    $self->_init_comp_data($c);
 }
 
 sub _init_comp_data
@@ -246,25 +245,25 @@ sub _init_comp_data
 sub end_component
 {
     my $self = shift;
+    my $c = $self->{current_comp};
 
     $self->lexer->throw_syntax_error("Not enough component-with-content ending tags found")
-	if $self->{comp_with_content_stack} && @{ $self->{comp_with_content_stack} };
-
-    $self->{current_comp} = undef;
+	if $c->{comp_with_content_stack} && @{ $c->{comp_with_content_stack} };
 }
 
 sub start_block
 {
     my $self = shift;
+    my $c = $self->{current_comp};
     my %p = @_;
 
     $self->lexer->throw_syntax_error("Cannot define a $p{block_type} section inside a method or subcomponent")
-	 if $top_level_only_block{ $p{block_type} } && ! $self->{in_main};
+	 if $top_level_only_block{ $p{block_type} } && ! $c->{in_main};
 
-    $self->lexer->throw_syntax_error("Cannot nest a $p{block_type} inside a $self->{in_block} block")
-	 if $self->{in_block};
+    $self->lexer->throw_syntax_error("Cannot nest a $p{block_type} inside a $c->{in_block} block")
+	 if $c->{in_block};
 
-    $self->{in_block} = $p{block_type};
+    $c->{in_block} = $p{block_type};
 }
 
 sub raw_block
@@ -272,6 +271,7 @@ sub raw_block
     # These blocks contain Perl code - so don't include <%text> and so on.
 
     my $self = shift;
+    my $c = $self->{current_comp};
     my %p = @_;
 
     eval { $self->postprocess_perl->( \$p{block} ) if $self->postprocess_perl };
@@ -331,12 +331,13 @@ sub text_block
 sub end_block
 {
     my $self = shift;
+    my $c = $self->{current_comp};
     my %p = @_;
 
-    $self->lexer->throw_syntax_error("End of $p{block_type} encountered while in $self->{in_block} block")
-	unless $self->{in_block} eq $p{block_type};
+    $self->lexer->throw_syntax_error("End of $p{block_type} encountered while in $c->{in_block} block")
+	unless $c->{in_block} eq $p{block_type};
 
-    $self->{in_block} = undef;
+    $c->{in_block} = undef;
 }
 
 sub variable_declaration
@@ -378,11 +379,12 @@ sub key_value_pair
 sub start_named_block
 {
     my $self = shift;
+    my $c = $self->{current_comp};
     my %p = @_;
 
     $self->lexer->throw_syntax_error
 	("Cannot define a $p{block_type} block inside a method or subcomponent")
-	    unless $self->{in_main};
+	    unless $c->{in_main};
 
     $self->lexer->throw_syntax_error("Invalid $p{block_type} name: $p{name}")
 	if $p{name} =~ /[^.\w-]/;
@@ -390,22 +392,22 @@ sub start_named_block
     my $other_type = $p{block_type} eq 'def' ? 'method' : 'def';
     $self->lexer->throw_syntax_error
         ("Cannot define a method and subcomponent with the same name ($p{name}")
-            if exists $self->{$other_type}{ $p{name} };
+            if exists $c->{$other_type}{ $p{name} };
 
-    $self->{in_main}--;
+    $c->{in_main}--;
 
-    $self->{ $p{block_type} }{ $p{name} } = {};
-    $self->_init_comp_data( $self->{ $p{block_type} }{ $p{name} } );
-    $self->{current_comp} = $self->{ $p{block_type} }{ $p{name} };
+    $c->{ $p{block_type} }{ $p{name} } = {};
+    $self->_init_comp_data( $c->{ $p{block_type} }{ $p{name} } );
+    push @{$self->{paused_compiles}}, $c;
+    $self->{current_comp} = $c->{ $p{block_type} }{ $p{name} };
 }
 
 sub end_named_block
 {
     my $self = shift;
 
-    $self->{in_main}++;
-
-    $self->{current_comp} = $self;
+    $self->{current_comp} = pop @{$self->{paused_compiles}};
+    $self->{current_comp}{in_main}++;
 }
 
 sub substitution
@@ -487,11 +489,12 @@ sub component_call
 sub component_content_call
 {
     my $self = shift;
+    my $c = $self->{current_comp};
     my %p = @_;
 
     my $call = $p{call};
     for ($call) { s/^\s+//; s/\s+$//; }
-    push @{ $self->{comp_with_content_stack} }, $call;
+    push @{ $c->{comp_with_content_stack} }, $call;
 
     my $code = "\$m->comp( { content => sub {\n";
 
@@ -500,17 +503,18 @@ sub component_content_call
 
     $self->_add_body_code($code);
 
-    $self->{current_comp}{last_body_code_type} = 'component_content_call';
+    $c->{last_body_code_type} = 'component_content_call';
 }
 
 sub component_content_call_end
 {
     my $self = shift;
+    my $c = $self->{current_comp};
 
     $self->lexer->throw_syntax_error("found component with content ending tag but no beginning tag")
-	unless @{ $self->{comp_with_content_stack} };
+	unless @{ $c->{comp_with_content_stack} };
 
-    my $call = pop @{ $self->{comp_with_content_stack} };
+    my $call = pop @{ $c->{comp_with_content_stack} };
 
     if ( $call =~ m,^[\w/.],)
     {
@@ -527,7 +531,7 @@ sub component_content_call_end
 
     $self->_add_body_code($code);
 
-    $self->{current_comp}{last_body_code_type} = 'component_content_call_end';
+    $c->{last_body_code_type} = 'component_content_call_end';
 }
 
 sub perl_line
@@ -568,21 +572,22 @@ sub _add_body_code
 sub dump
 {
     my $self = shift;
+    my $c = $self->{current_comp};
 
     warn "Main component\n";
 
-    $self->_dump_data( $self );
+    $self->_dump_data( $c );
 
-    foreach ( keys %{ $self->{def} } )
+    foreach ( keys %{ $c->{def} } )
     {
 	warn "  Subcomponent $_\n";
-	$self->_dump_data( $self->{def}{$_}, '  ' );
+	$self->_dump_data( $c->{def}{$_}, '  ' );
     }
 
-    foreach ( keys %{ $self->{method} } )
+    foreach ( keys %{ $c->{method} } )
     {
 	warn "  Methods $_\n";
-	$self->_dump_data( $self->{method}{$_}, '  ');
+	$self->_dump_data( $c->{method}{$_}, '  ');
     }
 }
 

@@ -151,12 +151,11 @@ sub _output_chunk
 sub compiled_component
 {
     my ($self, %p) = @_;
+    my $c = $self->{current_comp};
     my $obj_text = '';
 
-    local $self->{compiled_def} = $self->_compile_subcomponents if %{ $self->{def} };
-    local $self->{compiled_method} = $self->_compile_methods if %{ $self->{method} };
-
-    $self->{current_comp} = $self;
+    local $c->{compiled_def} = $self->_compile_subcomponents if %{ $c->{def} };
+    local $c->{compiled_method} = $self->_compile_methods if %{ $c->{method} };
 
     # Create the file header to assert creatorship
     my $id = $self->object_id;
@@ -173,19 +172,19 @@ sub compiled_component
     $params->{compiler_id} = "'$id'";
     $params->{load_time} = time;
 
-    $params->{subcomps} = '\%_def' if %{ $self->{def} };
-    $params->{methods} = '\%_method' if %{ $self->{method} };
+    $params->{subcomps} = '\%_def' if %{ $c->{def} };
+    $params->{methods} = '\%_method' if %{ $c->{method} };
 
     if ( $self->_blocks('shared') )
     {
 	my %subs;
-	while ( my ($name, $pref) = each %{ $self->{compiled_def} } )
+	while ( my ($name, $pref) = each %{ $c->{compiled_def} } )
 	{
 	    my $key = "subcomponent_$name";
 	    $subs{$key} = $pref->{code};
 	    $pref->{code} = "sub {\n\$m->call_dynamic('$key',\@_)\n}";
 	}
-	while (my ($name, $pref) = each %{ $self->{compiled_method} } )
+	while (my ($name, $pref) = each %{ $c->{compiled_method} } )
 	{
 	    my $key = "method_$name";
 	    $subs{$key} = $pref->{code};
@@ -217,7 +216,6 @@ sub compiled_component
 			 ';',
 			);
 
-    delete $self->{current_comp};
     return \$obj_text;
 }
 
@@ -264,9 +262,9 @@ sub _compile_subcomponents_or_methods
     my $type = shift;
 
     my %compiled;
-    foreach ( keys %{ $self->{$type} } )
+    foreach ( keys %{ $self->{current_comp}{$type} } )
     {
-	$self->{current_comp} = $self->{$type}{$_};
+	local $self->{current_comp} = $self->{current_comp}{$type}{$_};
 	$compiled{$_} = $self->_component_params;
     }
 
@@ -304,16 +302,17 @@ sub _methods_footer
 sub _subcomponent_or_method_footer
 {
     my $self = shift;
+    my $c = $self->{current_comp};
     my $type = shift;
 
-    return '' unless %{ $self->{current_comp}{$type} };
+    return '' unless %{ $c->{$type} };
 
     return join('',
 		"my %_$type =\n(\n",
 		map( {("'$_' => " ,
 		       $self->_constructor( $self->{subcomp_class},
-					    $self->{"compiled_$type"}{$_} ) ,
-		       ",\n")} keys %{ $self->{"compiled_$type"} } ) ,
+					    $c->{"compiled_$type"}{$_} ) ,
+		       ",\n")} keys %{ $c->{"compiled_$type"} } ) ,
 		"\n);\n"
 	       );
 }
