@@ -197,7 +197,7 @@ sub access_data_cache
 	
 	my %in;
 	tie (%in, $tieClass, $cacheFile, O_RDONLY, 0);
-	my @keys = keys(%in);
+	my @keys = map(substr($_,0,-9),grep(/\.contents$/,keys(%in)));
 	untie (%in);
 	return @keys;
 	
