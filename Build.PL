@@ -11,7 +11,7 @@ use File::Spec;
 my %prereq = ( 'Cache::Cache'     => 1.00,
                'Class::Container' => 0.07,
                'CGI'              => 2.46,
-               'Exception::Class' => 1.14,
+               'Exception::Class' => 1.15,
                'File::Spec'       => 0.8,
                'Params::Validate' => 0.59,
                'Scalar::Util'     => 1.01,
