@@ -583,8 +583,10 @@ sub verbose_compile_error { my $s=shift; return @_ ? ($s->{verbose_compile_error
 
 # Create generic read-only accessor routines
 
+sub code_cache { return shift->{code_cache} }
 sub comp_root { return shift->{comp_root} }
 sub data_dir { return shift->{data_dir} }
+sub hooks { return shift->{hooks} }
 sub system_log_file { return shift->{system_log_file} }
 sub system_log_separator { return shift->{system_log_separator} }
 sub preloads { return shift->{preloads} }
