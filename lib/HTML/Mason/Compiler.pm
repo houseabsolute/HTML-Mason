@@ -629,8 +629,8 @@ the component.
 
 The type will be either "$", "@", or "%", indicating a scalar, array,
 or hash.  The name is the variable name without the leading sigil.
-The default is everything found after the first "=>" on an C<< <%args>
->> block line, and may include a comment.
+The default is everything found after the first "=>" on an C<< <%args> >>
+block line, and may include a comment.
 
 =item key_value_pair(block_type => <string>, key => <string>, value => <string>)
 
