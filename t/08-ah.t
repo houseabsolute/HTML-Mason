@@ -35,7 +35,7 @@ $has_apache_request = 0 if $@;
 local $| = 1;
 
 print '1..';
-print $has_apache_request ? 11 : 5;
+print $has_apache_request ? 12 : 6;
 print "\n";
 
 $TEST_NUM = 0;
@@ -84,6 +84,17 @@ sub apache_request_tests
     start_httpd('mod_perl');
 
     standard_tests();
+
+    my $response = Apache::test->fetch( '/mason/comps/apache_request' );
+    my $actual = filter_response($response);
+    my $success = HTML::Mason::Tests->check_output( actual => $actual,
+						    expect => <<'EOF',
+X-Mason-Test: Initial value
+Apache::Request
+Status code: 0
+EOF
+						  );
+    ok($success);
 
     kill_httpd();
 }

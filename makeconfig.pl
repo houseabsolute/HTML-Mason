@@ -362,6 +362,14 @@ EOF
 <% $m->cgi_object->isa('CGI') ? 'CGI' : 'NO CGI' %>
 EOF
 	      );
+
+    if ($HAS_APACHE_REQUEST)
+    {
+	write_comp( 'apache_request', <<'EOF',
+<% ref $r %>
+EOF
+		  );
+    }
 }
 
 sub write_comp
