@@ -19,6 +19,8 @@ use HTML::Mason::MethodMaker
 			 parent
                          filter
 			 ignore_flush
+                         sink_is_scalar
+                         buffer
 		       ) ],
     );
 
@@ -87,7 +89,8 @@ sub receive
 
     if ( $self->{sink_is_scalar} )
     {
-        $self->{sink} .= join '', grep { defined } @_;
+        # grep { defined } is marginally faster than local $^W;
+        ${ $self->{buffer} } .= join '', grep { defined } @_;
     }
     else
     {
