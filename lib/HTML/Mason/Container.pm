@@ -69,7 +69,7 @@ sub _make_contained_object
     die "Invalid class name '$contained_class'" unless $contained_class =~ /^[\w:]+$/;
     {
 	no strict 'refs';
-	unless ( defined %{ "$contained_class\::" } )
+	unless ( defined ${ "$contained_class\::VERSION" } )
 	{
 	    eval "use $contained_class";
 	    die $@ if $@;
@@ -138,7 +138,7 @@ sub allowed_params
 	# ->allowed_params
 	{
 	    no strict 'refs';
-	    unless ( defined %{ "$contained_class\::" } )
+	    unless ( defined ${ "$contained_class\::VERSION" } )
 	    {
 		eval "use $contained_class";
 		die $@ if $@;
