@@ -32,13 +32,10 @@ sub read_file
     error "read_file: '$file' does not exist" unless -e $file;
     error "read_file: '$file' is a directory" if (-d _);
     my $fh = make_fh();
-    open $fh, $file
+    open $fh, "< $file"
 	or system_error "read_file: could not open file '$file' for reading: $!";
     binmode $fh if $binmode;
-    local $/ = undef;
-    my $text = <$fh>;
-    close $fh;
-    return $text;
+    return do { local $/; scalar <$fh> };
 }
 
 #
