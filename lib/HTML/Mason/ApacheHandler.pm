@@ -177,25 +177,32 @@ sub make_ah
 {
     my ($package) = shift;
 
-    my %p = $package->_get_mason_params;
+    my ($vals, %p) = $package->_get_mason_params;
 
+    #
+    # Now that we have all the original config strings stored, we put
+    # them all together in a string that we use to determine whether
+    # or not we've seen this particular set of config values before.
+    #
     my $key = '';
-    foreach my $k (sort keys %p)
+    foreach my $k (sort keys %$vals)
     {
-	# We can't see the contents of a code ref so we can't reliably
-	# say whether two code refs are the same.  Therefore, we
-	# simply will not cache this particular ApacheHandler object.
-	if ( ref $p{$k} && UNIVERSAL::isa( $p{$k}, 'CODE' ) )
-	{
-	    $key = '';
-	    last;
-	}
-
 	$key .= $k;
-	$key .= ref $p{$k} ? @{ $p{$k} } : $p{$k};
+	$key .= $vals->{$k};
     }
 
-    return $AH{$key} if $key && exists $AH{$key};
+    #
+    # If the user has virtual hosts, each with a different document
+    # root, then we will have to be called from the handler method.
+    # This means we have an active request.  In order to distinguish
+    # between virtual hosts with identical config directives that have
+    # no comp root defined (meaning they expect to use the default
+    # comp root), we append the document root for the current request
+    # to the key.
+    #
+    $key .= Apache->request->document_root if Apache->request;
+
+    return $AH{$key} if exists $AH{$key};
 
     if (exists $p{comp_root}) {
 	if (@{$p{comp_root}} == 1 && $p{comp_root}->[0] !~ /=>/) {
@@ -249,15 +256,21 @@ sub _get_mason_params
     my $config = $c->dir_config;
     my $specs = $self->allowed_params;
 
+    #
+    # We will accumulate all the string versions of the keys and
+    # values here for later use.
+    #
+    my %vals;
+
     # Get all params starting with 'Mason'
     my @candidates = map { /^Mason/ ? $self->calm_form($_) : () } keys %$config;
-    return map { $_ => $self->get_param($_, $specs->{$_}) } @candidates;
+    return (\%vals, map { $_ => $self->get_param($_, $specs->{$_}, \%vals) } @candidates);
 }
 
 sub get_param {
     # Gets a single config item from dir_config.
 
-    my ($self, $key, $spec) = @_;
+    my ($self, $key, $spec, $vals) = @_;
     $key = $self->calm_form($key);
 
     # If we weren't given a spec, try to locate one in our own class.
@@ -273,7 +286,7 @@ sub get_param {
     error "Unknown parse type for config item '$key'" unless $type;
 
     my $method = "_get_${type}_param";
-    return scalar $self->$method('Mason'.$self->studly_form($key));
+    return scalar $self->$method('Mason'.$self->studly_form($key), $vals);
 }
 
 sub _get_string_param
@@ -321,7 +334,7 @@ sub _get_list_param
 
 sub _get_val
 {
-    my ($self, $p, $wantarray) = @_;
+    my ($self, $p, $wantarray, $vals) = @_;
 
     my $c = Apache->request ? Apache->request : Apache->server;
 
@@ -329,6 +342,8 @@ sub _get_val
 
     param_error( "Only a single value is allowed for configuration parameter '$p'\n" )
 	if @val > 1 && ! $wantarray;
+
+    $vals->{$p} = join '', @val;
 
     return ($p, $wantarray ? @val : $val[0]);
 }
