@@ -24,7 +24,6 @@ use HTML::Mason::Tests;
 use lib 'lib', 't/lib';
 
 use Apache::test;
-use Cwd;
 
 # We'll repeat all the tests with an Apache::Request using
 # ApacheHandler if the user has the Apache::Request module installed.
@@ -40,19 +39,20 @@ print "\n";
 
 $TEST_NUM = 0;
 
+print STDERR "\n";
 cgi_tests();
 
 if ($has_apache_request)
 {
-    print "Waiting for previous httpd to shut down\n";
+    print STDERR "Waiting for previous httpd to shut down\n";
     my $x = 0;
-    while ( -e 't/httpd.pid' )
+    while ( -e "$ENV{APACHE_DIR}/httpd.pid" )
     {
 	sleep (1);
 	$x++;
 	if ( $x > 10 )
 	{
-	    die "t/httpd.pid file still exists after 10 seconds.  Exiting.";
+	    die "$ENV{APACHE_DIR}t/httpd.pid file still exists after 10 seconds.  Exiting.";
 	}
     }
 
@@ -182,14 +182,13 @@ sub start_httpd
 {
     my $def = shift;
 
-    my $cwd = cwd;
-    my $cmd ="t/httpd -D$def -f $cwd/t/httpd.conf";
-    print "Executing $cmd\n";
+    my $cmd ="$ENV{APACHE_DIR}/httpd -D$def -f $ENV{APACHE_DIR}/httpd.conf";
+    print STDERR "Executing $cmd\n";
     system ($cmd)
 	and die "Can't start httpd server as '$cmd': $!";
 
     my $x = 0;
-    print "Waiting for httpd to start.\n";
+    print STDERR "Waiting for httpd to start.\n";
     until ( -e 't/httpd.pid' )
     {
 	sleep (1);
@@ -203,14 +202,13 @@ sub start_httpd
 
 sub kill_httpd
 {
-    my $cwd = cwd;
-    open PID, "$cwd/t/httpd.pid"
-	or die "Can't open '$cwd/t/httpd.pid': $!";
+    open PID, "$ENV{APACHE_DIR}/httpd.pid"
+	or die "Can't open '$ENV{APACHE_DIR}/httpd.pid': $!";
     my $pid = <PID>;
     close PID;
     chomp $pid;
 
-    print "Killing httpd process ($pid)\n";
+    print STDERR "Killing httpd process ($pid)\n";
     kill 15, $pid
 	or die "Can't kill process $pid: $!";
 }
