@@ -225,6 +225,23 @@ EOF
 		      expect_error => qr/argh! at .*/,
 		    );
 
+#------------------------------------------------------------
+
+    $group->add_test( name => 'cache_self_scomp',
+                      description => 'make sure that $m->cache_self cooperates with $m->scomp',
+                      component => <<'EOF',
+<% $m->scomp( 'support/cache_self', x => 1 ) %>
+<% $m->scomp( 'support/cache_self', x => 99 ) %>
+EOF
+                      expect => <<'EOF',
+x is 1
+
+x is 1
+EOF
+                    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
