@@ -113,14 +113,14 @@ sub mason_canonpath {
     # Just like File::Spec::canonpath, but we're having trouble
     # getting a patch through to them.
     my $path = shift;
-    $path =~ s|/+|/|g;                               # xx////yy  -> xx/yy
-    $path =~ s|(/\.)+/|/|g;                          # xx/././yy -> xx/yy
+    $path =~ s|/+|/|g;                                 # xx////yy  -> xx/yy
+    $path =~ s|(?:/\.)+/|/|g;                          # xx/././yy -> xx/yy
     {
-	$path =~ s|^(\./)+||s unless $path eq "./";  # ./xx      -> xx
-	$path =~ s|^/(\.\./)+|/|s;                   # /../../xx -> xx
-	$path =~ s|/\Z(?!\n)|| unless $path eq "/";  # xx/       -> xx
-	$path =~ s|/[^/]+/\.\.$|| && redo;           # /xx/..    -> /
-	$path =~ s|[^/]+/\.\./|| && redo;            # /xx/../yy -> /yy
+	$path =~ s|^(?:\./)+||s unless $path eq "./";  # ./xx      -> xx
+	$path =~ s|^/(?:\.\./)+|/|s;                   # /../../xx -> xx
+	$path =~ s|/\Z(?!\n)|| unless $path eq "/";    # xx/       -> xx
+	$path =~ s|/[^/]+/\.\.$|| && redo;             # /xx/..    -> /
+	$path =~ s|[^/]+/\.\./|| && redo;              # /xx/../yy -> /yy
     }
     return $path;
 }
