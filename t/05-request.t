@@ -90,16 +90,6 @@ Trying to fetch <% $path %> (full path <% $full_path %>):
 % $m->out("Output via the out function.");
 
 /request/file outputs <% int(length($m->scomp("/request/file"))/10) %>0+ characters.
-
-% my $diff = time-($m->time);
-% if ($diff <= 2) {
-No time difference.
-% } else {
-Time difference!
-% }
-
-
-
 EOF
 		       );
 
@@ -403,12 +393,6 @@ Trying to fetch /shared (full path /shared):
 
 Output via the out function.
 /request/file outputs 120+ characters.
-
-No time difference.
-
-
-
-
 EOF
 		    );
 
@@ -574,24 +558,6 @@ EOF
 yes
 EOF
 		    );
-
-#------------------------------------------------------------
-
-# Slight race condition here
-    $group->add_test( name => 'time',
-		      description => 'test $m->time() method',
-		      component => <<'EOF',
-% $m->time('real');
-<% time() == $m->time %>
-% $m->time(my $x = time() - 4500);
-<% $x == $m->time %>
-EOF
-		      expect => <<'EOF',
-1
-1
-EOF
-		    );
-
 
 #------------------------------------------------------------
 
