@@ -91,6 +91,13 @@ versions, etc. For installation problems send your handler.pl and
 httpd.conf. For component problems try to isolate the bug in a single
 small component or set of components, and send those.
 
+If you are experiencing test failures, please run the tests like this:
+
+  make test TEST_VERBOSE=1
+
+and send the output along with the bug report.  Otherwise we'll just
+ask you to do this before we can do anything.
+
 CONTENT MANAGEMENT
 
 There is a companion content management system for Mason, originally
