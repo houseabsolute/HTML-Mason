@@ -54,7 +54,7 @@ sub comp_source_ref
 
     my $source = eval { $self->{source_callback}->() };
 
-    rethrow_exception($@);
+    rethrow_exception $@;
 
     unless ( defined $source )
     {

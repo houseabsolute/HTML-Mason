@@ -40,6 +40,7 @@ use HTML::Mason::Buffer;
 use Class::Container;
 use base qw(Class::Container);
 
+# HTML::Mason::Exceptions always exports rethrow_exception() and isa_mason_exception()
 use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error abort_error
 					 top_level_not_found_error error)] );
 
@@ -181,10 +182,8 @@ sub _initialize {
     # Mason exception and placed in the {prepare_error} slot.  exec()
     # will then trigger the error. This makes for an easier new + exec
     # API.
-    local $SIG{'__DIE__'} = sub {
-        rethrow_exception( $_[0] );
-    };
-
+    local $SIG{'__DIE__'} = \&rethrow_exception;
+    
     eval {
 	# create base buffer
 	$self->{buffer_stack} = [];
@@ -277,9 +276,7 @@ sub exec {
     }
 
     # All errors returned from this routine will be in exception form.
-    local $SIG{'__DIE__'} = sub {
-        rethrow_exception( $_[0] );
-    };
+    local $SIG{'__DIE__'} = \&rethrow_exception;
 
     #
     # $m is a dynamically scoped global containing this
@@ -709,10 +706,10 @@ sub call_self
 
         pop @{ $self->{buffer_stack} };
 
-        rethrow_exception($@);
+        rethrow_exception $@;
     };
 
-    rethrow_exception($@);
+    rethrow_exception $@;
 
     return 1;
 }
@@ -1073,7 +1070,7 @@ sub comp {
         pop @{ $self->{buffer_stack} };
     }
 
-    rethrow_exception($err);
+    rethrow_exception $err;
 
     return wantarray ? @result : $result[0];  # Will return undef in void context (correct)
 }
@@ -1104,7 +1101,7 @@ sub content {
 
     push @{ $self->{stack} }, $old_frame;
 
-    rethrow_exception($err);
+    rethrow_exception $err;
 
     return $buffer->output;
 }

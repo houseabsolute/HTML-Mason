@@ -101,7 +101,7 @@ sub lex
     # refs inside the compiler
     $current->{compiler}->end_component;
 
-    rethrow_exception($@);
+    rethrow_exception $@;
 }
 
 sub object_id
