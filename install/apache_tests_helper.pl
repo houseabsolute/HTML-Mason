@@ -122,7 +122,8 @@ EOF
   PerlSetVar  MasonDataDir  "$APACHE{data_dir}"
   PerlSetVar  MasonDeclineDirs 0
 
-  PerlSetVar  MasonEscapeFlags "old_h => \\&HTML::Mason::Tools::basic_html_escape"
+  PerlSetVar  MasonEscapeFlags "old_h  => \\&HTML::Mason::Escapes::basic_html_escape"
+  PerlAddVar  MasonEscapeFlags "old_h2 => basic_html_escape"
   PerlAddVar  MasonEscapeFlags "uc => sub { \${\$_[0]} = uc \${\$_[0]}; }"
 
   SetHandler  perl-script
