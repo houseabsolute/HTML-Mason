@@ -1063,6 +1063,14 @@ of interest to those attempting to write new handlers or to subclass
 C<HTML::Mason::Interp>.  If you want to create a I<subrequest>, see
 L<subrequests|HTML::Mason::Devel/Subrequests> instead.
 
+=for html <a name="purge_code_cache"></a>
+
+=item purge_code_cache ()
+
+Called during request execution in order to clear out the code
+cache. Mainly useful to subclasses that may want to take some custom
+action upon clearing the cache.
+
 =for html <a name="item_set_global"></a>
 
 =item set_global ($varname, [values...])
