@@ -23,11 +23,13 @@ Mason requires Perl 5.005 or greater, and the following CPAN modules:
 
 * Exception::Class
 
+* Class::Container
+
+* File::Spec
+
 The following CPAN modules are optional for certain features, but not required:
 
 * Apache::Request
-
-* Time::HiRes
 
 * Cache::Cache
 
