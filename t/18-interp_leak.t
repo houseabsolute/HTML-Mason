@@ -34,6 +34,8 @@ $group->_write_support_comps;
                                          );
 
     $interp->exec('/interp_leaks/test_comp');
+
+    undef $interp;
 }
 
 ok $destroy_count, 1;
@@ -47,6 +49,8 @@ ok $destroy_count, 1;
                                          );
 
     $interp->exec('/interp_leaks/test_comp');
+
+    undef $interp;
 }
 
 ok $destroy_count, 2;
