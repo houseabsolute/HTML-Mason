@@ -116,17 +116,32 @@ EOF
 
 #------------------------------------------------------------
 
+    # This only tests for paths passed through Request::fetch_comp,
+    # not Interp::load.  Not sure how zealously we want to
+    # canonicalize.
+    #
     $group->add_test( name => 'canonicalize_paths',
 		      description => 'test that various paths are canonicalized to the same component',
 		      component => <<'EOF',
 <%perl>
-my $comp1 = $m->fetch_comp('///comp-calls/support//amper_test')
+my $path1 = '///comp-calls/support//amper_test';
+my $comp1 = $m->fetch_comp($path1)
   or die "could not fetch comp1";
-my $comp2 = $m->fetch_comp('./support/./././amper_test')
+my $path2 = './support/./././amper_test';
+my $comp2 = $m->fetch_comp($path2)
   or die "could not fetch comp2";
-my $comp3 = $m->fetch_comp('./support/../support/../support/././amper_test')
+my $path3 = './support/../support/../support/././amper_test';
+my $comp3 = $m->fetch_comp($path3)
   or die "could not fetch comp3";
-die "different component objects for same canonical path: $comp1, $comp2, $comp3" unless $comp1 == $comp2 && $comp2 == $comp3;
+unless ($comp1 == $comp2 && $comp2 == $comp3) {
+    die sprintf
+	(
+	 "different component objects for same canonical path:\n  %s (%s -> %s)\n  %s (%s -> %s)\n  %s (%s -> %s)",
+	 $comp1, $path1, $comp1->path,
+	 $comp2, $path2, $comp2->path,
+	 $comp3, $path3, $comp3->path,
+	 );
+}
 $m->comp($comp1);
 $m->comp($comp2);
 $m->comp($comp3);
@@ -134,9 +149,7 @@ $m->comp($comp3);
 EOF
 		      expect => <<'EOF',
 amper_test.<p>
-
 amper_test.<p>
-
 amper_test.<p>
 EOF
 		 );
