@@ -763,22 +763,22 @@ sub _get_config_file_params
     return %conf;
 }
 
-sub ACTION_build
+sub ACTION_code
 {
     my $self = shift;
 
     $self->depends_on('params_pod');
 
-    $self->SUPER::ACTION_build(@_);
+    $self->SUPER::ACTION_code(@_);
+
+    $self->_convert_custom_pod;
 }
 
 sub ACTION_docs
 {
     my $self = shift;
 
-    # This has to be done to the blib files or else if we run this
-    # from our local repositories we end up modifying those files.
-    $self->_convert_custom_pod('blib');
+    $self->_convert_custom_pod;
 
     $self->SUPER::ACTION_docs(@_);
 }
@@ -956,14 +956,19 @@ sub _files_with_pod
 sub _convert_custom_pod
 {
     my $self = shift;
-    my $dir = shift;
 
-    print "Converting custom POD tags in files under $dir\n";
+    return if $self->{converted_pod};
 
-    foreach my $file ( $self->_files_with_pod($dir) )
+    print "Converting custom POD tags in files under blib\n";
+
+    # This has to be done to the blib files or else if we run this
+    # from our local repositories we end up modifying those files.
+    foreach my $file ( $self->_files_with_pod('blib') )
     {
 	$self->_convert_pod_in_file($file);
     }
+
+    $self->{converted_pod} = 1;
 }
 
 sub _convert_pod_in_file
