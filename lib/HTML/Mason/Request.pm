@@ -1846,7 +1846,7 @@ servers appear more responsive.
 
 Attempts to flush the buffers are ignored within the context of a call
 to C<< $m->scomp >> or when output is being stored in a scalar
-reference, as with the C< { store => \$out } > component call
+reference, as with the C< { store =E<gt> \$out } > component call
 modifier.
 
 Additionally, if a component has a C<< <%filter> >> block, that
@@ -1928,7 +1928,7 @@ C<$m-E<gt>print>.
 =item request_args
 
 Returns the arguments originally passed to the top level component
-(see L<Request-E<gt>request_comp|HTML::Mason::Request/item_request_comp> for
+(see L<request_comp|HTML::Mason::Request/item_request_comp> for
 definition).  When called in scalar context, a hash reference is
 returned. When called in list context, a list of arguments (which may
 be assigned to a hash) is returned.
@@ -2018,7 +2018,7 @@ more details.
 
 =back
 
-=head1 APACHE- OR CGI-ONLY METHOD
+=head1 APACHE- OR CGI-ONLY METHODS
 
 This method is available when Mason is running under either the
 ApacheHandler or CGIHandler modules.
@@ -2036,7 +2036,7 @@ the ApacheHandler P<args_method> parameter.  If you are using the
 See the L<ApacheHandler|HTML::Mason::ApacheHandler> and
 L<CGIHandler|HTML::Mason::CGIHandler> documentation for more details.
 
-=for html <a name="item_redirect"></a>
+=for html <a name="item_redirect_url_status_"></a>
 
 =item redirect ($url, [$status])
 
