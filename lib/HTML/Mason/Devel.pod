@@ -1126,10 +1126,10 @@ under special circumstances, one component does not access another
 component's cache. Each cached value may be set to expire at a certain
 time.
 
-Data caching is implemented with DeWitt Clinton's Cache::Cache
+Data caching is implemented with DeWitt Clinton's C<Cache::Cache>
 module. To get the full benefit out of caching you should I<read the
-documentation> for Cache::Cache as well as for relevant subclasses
-(e.g. Cache::FileCache). Our documentation here covers common usage
+documentation> for C<Cache::Cache> as well as for relevant subclasses
+(e.g. C<Cache::FileCache>). Our documentation here covers common usage
 but skips many options and features.
 
 =head2 Basic Usage
@@ -1143,10 +1143,10 @@ for this component. Here's the typical usage of C<$m-E<gt>cache>:
         $m->cache->set('key', $result);
     }
 
-C<$m-E<gt>cache->get> attempts to retrieve this component's cache
-value. If the value is available it is placed in C<$result>. If the
+C<$m-E<gt>cache-E<gt>get> attempts to retrieve this component's cache
+value. If the value is available it is placed in I<$result>. If the
 value is not available, C<$result> is computed and stored in the
-cache by C<$m-E<gt>cache->set>.
+cache by C<$m-E<gt>cache-E<gt>set>.
 
 =head2 Multiple Keys/Values
 
@@ -1175,14 +1175,14 @@ L<Accessing a Cache Externally> below.
 
 =head2 Choosing a Cache Subclass
 
-Cache::Cache is a purely virtual API implemented by a variety of
+C<Cache::Cache> is a purely virtual API implemented by a variety of
 subclasses. For example, Cache::FileCache implements the interface with a
 set of directories and files, while Cache::MemoryCache implements the
 interface in memory.
 
 By default C<$m-E<gt>cache> uses Cache::FileCache, but you can override
 this with the I<cache_class> keyword. The value must be the name of a
-Cache::Cache subclass; if it does not contain a "::", the prefix
+C<Cache::Cache> subclass; if it does not contain a "::", the prefix
 "Cache::" is automatically prepended. For example:
 
     my $result = $m->cache(cache_class=>'MemoryCache')->get('key');
@@ -1203,7 +1203,7 @@ external Perl script), you'll need have the following information:
 =item *
 
 the namespace associated with the component. The function
-HTML::Mason::Utils::data_cache_namespace, given a component path, will
+C<HTML::Mason::Utils::data_cache_namespace>, given a component path, will
 return the namespace.
 
 =item *
@@ -1233,7 +1233,7 @@ and the cache subclass is C<Cache::FileCache>:
 
 =head2 Guarantees (or lack thereof)
 
-Cache::Cache will make a best effort to cache data until it expires,
+C<Cache::Cache> will make a best effort to cache data until it expires,
 but will not guarantee it.  The data cache is not a permanent reliable
 store in itself; you should not place in the cache critical data
 (e.g. user session information) that cannot be regenerated from
