@@ -14,8 +14,7 @@ Params::Validate::validation_options( on_fail => sub { param_error join '', @_ }
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( sink
 			 parent
-                         filter
-                         filter_args
+                         filter_from
 			 ignore_flush
 			 ignore_clear
 		       ) ],
@@ -63,13 +62,6 @@ sub _initialize
 	# create an empty string to use as buffer
 	my $buf = '';
 	$self->{buffer} = \$buf;
-    }
-
-    if ( $self->{filter} &&
-         ! ( $self->{filter_args} && @{ $self->{filter_args} } )
-       )
-    {
-        $self->{filter_args} = [];
     }
 
     $self->{ignore_flush} = 1 unless $self->{parent};
@@ -124,7 +116,7 @@ sub output
     my $self = shift;
     return unless exists $self->{buffer};
     my $output = ${$self->{buffer}};
-    return $self->{filter}->( $output, @{ $self->{filter_args} } ) if $self->{filter};
+    return $self->{filter_from}->filter->($output) if $self->{filter_from};
     return $output;
 }
 
