@@ -470,7 +470,7 @@ If you have recursive mode turned on but want a particular autohandler
 to apply only to the current directory, use a conditional like this:
 
     <%init>
-    return mc_auto_continue if (mc_auto_comp =~ /\//);
+    return mc_auto_next if (mc_auto_comp =~ /\//);
     ... rest of autohandler ...
     </%init>
 
