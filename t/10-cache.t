@@ -206,6 +206,25 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support ( path => 'support/cache_self_and_die',
+			  component => <<'EOF',
+<%init>
+return if $m->cache_self;
+die "argh!";
+</%init>
+EOF
+			);
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'cache_self_error',
+		      description => 'test $m->cache_self with an error to make sure errors are propogated',
+		      component => <<'EOF',
+<& support/cache_self_and_die, x => 1, key => 1 &>
+EOF
+		      expect_error => qr/argh! at .*/,
+		    );
+
     return $group;
 }
 
