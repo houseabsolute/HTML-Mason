@@ -136,8 +136,6 @@ sub taint_is_on
     not eval { "$0$^X" && kill 0; 1 };
 }
 
-1;
-
 sub make_fh
 {
     return do { local *FH; *FH; };  # double *FH avoids a warning
@@ -166,3 +164,7 @@ sub escape_perl_expression
     }
     return $expr;
 }
+
+
+1;
+
