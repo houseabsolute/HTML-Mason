@@ -1059,6 +1059,13 @@ convenience method will not work.
 
 =back
 
+=head1 MEMORY LEAK WARNING
+
+When using Perl 5.00503, using the code cache creates a circular
+reference between Interp and component objects.  This means that
+Interp objects will never be destroyed.  If you are using Perl 5.6.0
+or greater, Mason uses weak references to prevent this problem.
+
 =head1 SEE ALSO
 
 L<HTML::Mason|HTML::Mason>,
