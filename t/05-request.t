@@ -316,23 +316,6 @@ EOF
 
 #------------------------------------------------------------
 
-
-    $group->add_support( path => '/support/dir/autohandler',
-			 component => <<'EOF',
-I am the autohandler.
-EOF
-		       );
-
-#------------------------------------------------------------
-
-    $group->add_support( path => '/support/dir/comp',
-			 component => <<'EOF',
-I am the called comp (no autohandler).
-EOF
-		       );
-
-#------------------------------------------------------------
-
     $group->add_test( name => 'various',
 		      call_args => {junk=>5},
 		      description => 'tests caller, callers, fetch_comp, process_comp_path, comp_exists and scomp',
