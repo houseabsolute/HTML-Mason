@@ -499,9 +499,10 @@ sub new
     my $allowed_params = $class->allowed_params;
 
     my %defaults;
-    if (exists $allowed_params->{comp_root} && $r)
+    if ( exists $allowed_params->{comp_root} &&
+	 ( $r ||  Apache->request ) )
     {
-	$defaults{comp_root} = $r->document_root;
+	$defaults{comp_root} = $r ? $r->document_root : Apache->request->document_root;
     }
 
     if (exists $allowed_params->{data_dir})
