@@ -145,6 +145,7 @@ sub _write_apache_test_conf
         File::Spec->catfile( $conf{apache_dir}, 'mason_handler_CGI.pl' );
     my $mod_perl_handler =
         File::Spec->catfile( $conf{apache_dir}, 'mason_handler_mod_perl.pl' );
+    my $default_args_method = (Apache::test::have_module('Apache::Request') ? 'mod_perl' : 'CGI');
 
     my %multiconf;
     $multiconf{1}{comp_root} = File::Spec->catfile( $conf{comp_root}, 'multiconf1' );
@@ -220,7 +221,7 @@ ServerRoot $conf{apache_dir}
 </IfDefine>
 
 <IfDefine multi_config>
-  PerlSetVar MasonArgsMethod CGI
+  PerlSetVar MasonArgsMethod $default_args_method
   PerlModule  HTML::Mason::ApacheHandler
 
   <Location /comps/multiconf1>
@@ -250,11 +251,13 @@ ServerRoot $conf{apache_dir}
   ServerRoot /tmp
   SetHandler perl-script
   PerlSetVar MasonDataDir /tmp/one/two
+  PerlSetVar  MasonArgsMethod $default_args_method
   PerlHandler HTML::Mason::ApacheHandler
 </IfDefine>
 
 <IfDefine taint>
   SetHandler  perl-script
+  PerlSetVar  MasonArgsMethod $default_args_method
   PerlHandler HTML::Mason::ApacheHandler
 </IfDefine>
 

@@ -361,9 +361,12 @@ sub have_module {
     my $mod = shift;
     my $v = shift;
     eval {# surpress "can't boostrap" warnings
-	 local $SIG{__WARN__} = sub {};
-	 require Apache;
-	 require Apache::Constants;
+	local $SIG{__WARN__} = sub {};
+	if ($mod_perl::VERSION >= 1.99) {
+	    require Apache2;
+	} else {
+	    require Apache;
+	}
     };
 
     eval "require $mod";
