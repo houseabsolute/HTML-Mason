@@ -1509,6 +1509,12 @@ the ApacheHandler C<args_method> parameter.  If you are using the
 See the L<ApacheHandler|HTML::Mason::ApacheHandler> and
 L<CGIHandler|HTML::Mason::CGIHandler> documentation for more details.
 
+=for html <a name="item_redirect">
+
+=item redirect ($url)
+
+Given a url, this generates a proper HTTP redirect for that URL.
+
 =back
 
 =head1 AUTHORS
