@@ -274,19 +274,22 @@ serialization mechanisms (B<Data::Dumper>, B<FreezeThaw> or
 B<Storable>). Mason's Config.pm controls which packages are used.
 
 The most important task is selecting a good DBM package.  Most
-standard DBM packages (B<SDBM>, B<ODBM>, B<NDBM>) are unsuitable for data
-caching due to significant limitations on the size of keys and values.
-Perl only comes with B<SDBM>, so you'll need to obtain a good-quality
-package if you haven't already. At this time the best options are
-Berkeley DB (B<DB_File>), available at www.sleepycat.com, and GNU's gdbm
-(B<GDBM>), available at GNU mirror sites everywhere.
+standard DBM packages (B<SDBM>, B<ODBM>, B<NDBM>) are unsuitable for
+data caching due to significant limitations on the size of keys and
+values. Perl only comes with B<SDBM>, so you'll need to obtain a
+good-quality package if you haven't already. At this time the best
+options are Berkeley DB (B<DB_File>) version 2.x, available at
+www.sleepycat.com, and GNU's gdbm (B<GDBM>), available at GNU mirror
+sites everywhere. Stay away from Berkeley DB version 1.x on Linux
+which has a serious memory leak (and is unfortunately pre-installed on
+many distributions).
 
-As far as the serialization methods, all of them should work fine.
-B<Data::Dumper> is probably simplest: it comes with the latest versions
-of Perl, is required by Mason anyway, and produces readable output
-(possibly useful for debugging cache files).  On the other hand
-B<Storable> is significantly faster than the other options according to
-the MLDBM documentation.
+As far as the serialization methods, all of them should work
+fine. B<Data::Dumper> is probably simplest: it comes with the latest
+versions of Perl, is required by Mason anyway, and produces readable
+output (possibly useful for debugging cache files).  On the other hand
+B<Storable> is significantly faster than the other options according
+to the MLDBM documentation.
 
 =item Administration
 
