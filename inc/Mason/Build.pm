@@ -379,76 +379,65 @@ use constant REDIRECT => 302;
 use HTML::Mason::ApacheHandler;
 use HTML::Mason;
 
-my \@ah_params = ( {},
-                   {},
-                   { decline_dirs => 0 },
-                   {}
-                 );
-
-my \@interp_params = ( {},
-                       { autoflush => 1 },
-                       {},
-                       { error_mode => 'fatal', error_format => 'line' },
-                     );
 
 my \@ah;
-for (my \$x = 0; \$x <= \$#ah_params; \$x++)
-{
-    my \%res_params;
 
-    if ( \$x < 2 )
-    {
-        \%res_params = ( resolver_class => 'My::Resolver',
-                        comp_root => '$conf->{comp_root}',
-                      );
-    }
-    else
-    {
-        \%res_params =
-            ( resolver =>
-              My::Resolver->new( comp_root => '$conf->{comp_root}' )
-            );
-    }
+\$ah[0] = HTML::Mason::ApacheHandler->new(
+		args_method => '$args_method',
+		#interp_params
+		interp => My::Interp->new( 
+			request_class => 'HTML::Mason::Request::ApacheHandler',
+			data_dir => '$conf->{data_dir}',
+			error_mode => 'output',
+			error_format => 'html',
+		#res_params
+			resolver_class => 'My::Resolver',
+			comp_root => '$conf->{comp_root}',
+		),
+	);
 
-    my \%interp_params;
-    if ( \$x % 2 )
-    {
+\$ah[1] = HTML::Mason::ApacheHandler->new(
+		args_method => '$args_method',
+		#interp_params
+		interp_class => 'My::Interp',
+		data_dir => '$conf->{data_dir}',
+		error_mode => 'output',
+		error_format => 'html',
+		autoflush => 1,
+		#res_params
+		resolver_class => 'My::Resolver',
+		comp_root => '$conf->{comp_root}',
+	);
 
-        \%interp_params = ( interp_class => 'My::Interp',
-                           data_dir => '$conf->{data_dir}',
-                           error_mode => 'output',
-                           error_format => 'html',
-                           \%{\$interp_params[\$x]},
-                         );
-    }
-    else
-    {
-        \%interp_params =
-            ( interp =>
-              My::Interp->new( request_class => 'HTML::Mason::Request::ApacheHandler',
-                               data_dir => '$conf->{data_dir}',
-                               error_mode => 'output',
-                               error_format => 'html',
-                               %res_params,
-                              \%{\$interp_params[\$x]},
-                             )
-            );
+#\$ah[2] = HTML::Mason::ApacheHandler->new(
+#		args_method => '$args_method',
+#		decline_dirs => 0,
+#		#interp_params
+#		interp => My::Interp->new( 
+#			request_class => 'HTML::Mason::Request::ApacheHandler',
+#			data_dir => '$conf->{data_dir}',
+#			error_mode => 'output',
+#			error_format => 'html',
+#		#res_params
+#			resolver => My::Resolver->new( comp_root => '$conf->{comp_root}'),
+#		),
+#	);
 
-        \%res_params = ();
-    }
+\$ah[3] = HTML::Mason::ApacheHandler->new(
+		args_method => '$args_method',
+		#interp_params
+		interp_class => 'My::Interp',
+		data_dir => '$conf->{data_dir}',
+		error_mode => 'fatal',
+		error_format => 'line',
+		#res_params
+		resolver => My::Resolver->new( comp_root => '$conf->{comp_root}'),
+		comp_root => '$conf->{comp_root}',
+	);
 
-    my \$ah =
-        HTML::Mason::ApacheHandler->new
-            ( args_method => '$args_method',
-              \%{\$ah_params[\$x]},
-              \%interp_params,
-	      \%res_params,
-            );
 
-    chown \$ah->get_uid_gid, \$ah->interp->files_written;
+chown \$ah[0]->get_uid_gid, \$ah[0]->interp->files_written;
 
-    push \@ah, \$ah;
-}
 
 sub handler
 {
