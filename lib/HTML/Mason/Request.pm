@@ -248,6 +248,8 @@ sub cache
 	$cache_class = "Cache::$cache_class" unless $cache_class =~ /::/;
 	delete($options{cache_class});
     }
+    (my $lib_file = $cache_class) =~ s/::/\//g;
+    require "$lib_file.pm" unless exists($INC{$cache_class});
 
     my $cache = $cache_class->new (\%options)
 	or HTML::Mason::Exception->throw( error => "could not create cache object" );
