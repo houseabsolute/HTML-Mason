@@ -932,7 +932,7 @@ EOF
 % $m->interp->make_component(comp_source => '<% &>');
 EOF
                       # Would be better to do $@->isa(syntax-error) or the like.
-		      expect_error => '/without matching/',
+		      expect_error => qr/without matching/,
 		    );
 
 #------------------------------------------------------------
