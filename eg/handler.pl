@@ -13,7 +13,6 @@ use HTML::Mason;
 # Uncomment the second line (and comment the first) to use
 # Apache::Request instead of CGI.pm to parse arguments.
 use HTML::Mason::ApacheHandler;
-# use HTML::Mason::ApacheHandler (args_method=>'mod_perl');
 
 # Uncomment the next line if you plan to use the Mason previewer.
 #use HTML::Mason::Preview;
@@ -28,9 +27,7 @@ use strict;
 
 # Create Mason objects
 #
-my $parser = new HTML::Mason::Parser;
-my $interp = new HTML::Mason::Interp (parser=>$parser,
-                                      comp_root=>'<component root>',
+my $interp = new HTML::Mason::Interp (comp_root=>'<component root>',
                                       data_dir=>'<data directory>');
 my $ah = new HTML::Mason::ApacheHandler (interp=>$interp);
 
