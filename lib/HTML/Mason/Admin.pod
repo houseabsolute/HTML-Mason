@@ -330,20 +330,21 @@ advanced applications.
 This method requires only a bit of Apache configuration.  First, use a
 PerlRequire directive to tell mod_perl to load your handler.pl.  This
 file can be located anywhere, though the Apache conf/ subdirectory is
-a good place as any.  Second, set your PerlHandler simply to
-HTML::Mason rather than HTML::Mason::ApacheHandler.
+a good place as any.  Second, set your PerlHandler simply to the
+package you declare in your F<handler.pl> file (such as
+MyMason::MyApp), rather than HTML::Mason::ApacheHandler.
 
     PerlRequire /path/to/handler.pl
 
     <FilesMatch "\.html$">
         SetHandler perl-script
         # notice - no ::ApacheHandler!
-        PerlHandler HTML::Mason
+        PerlHandler MyMason::MyApp
     </FilesMatch>
 
 =head2 Creating the Mason objects
 
-C<handler.pl> explicitly creates just one Mason object, the
+F<handler.pl> explicitly creates just one Mason object, the
 ApacheHandler. This object routes mod_perl requests to Mason.  It, in
 turn, creates the Interp object, which creates a number of other
 objects, including the Compiler, Lexer, Resolver, and Request(s).
@@ -509,7 +510,7 @@ parameter.)
 Similarly, to initialize the variable in C<handler.pl>, you need to
 set it in the component package:
 
-   $HTML::Mason::Commands::dbh = DBI->connect(...);
+    $HTML::Mason::Commands::dbh = DBI->connect(...);
 
 Alternatively you can use the L<Interp/set_global> Interp method:
 
