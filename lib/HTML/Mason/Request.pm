@@ -489,7 +489,9 @@ sub comp {
     undef $self->{error_clean};
     
     # Get modifiers: optional hash reference passed in as first argument.
-    my %mods = (ref($_[0]) eq 'HASH') ? %{shift()} : ();
+    # merge multiple hash references to simplify user and internal usage.
+    my %mods = ();
+    %mods = (%{shift()},%mods) while ref($_[0]) eq 'HASH';
 
     my ($comp,@args) = @_;
     my $interp = $self->interp;
@@ -522,7 +524,7 @@ sub comp {
     $parent = $self->top_buffer if $depth;
     $parent = $self->{base_buffer} unless $parent;
     my $buffer;
-    if ($mods{scomp}) {
+    if ($mods{store}) {
         $buffer = $parent->new_child( mode => 'batch', ignore_flush => 1 );
     } else {
         $buffer = $parent->new_child();
@@ -588,12 +590,11 @@ sub comp {
     #
     # Pop stack and return.
     #
-    if ($mods{scomp}) {
-        my $output = $self->top_buffer->output;
-	$self->pop_stack;
-        return $output;
+    if ($mods{store}) {
+	${$mods{store}} = $self->top_buffer->output;
+    } else {
+        $self->top_buffer->flush;
     }
-    $self->top_buffer->flush;
     $self->pop_stack;
     return wantarray ? @result : $result;  # Will return undef in void context (correct)
 }
@@ -603,9 +604,9 @@ sub comp {
 #
 sub scomp {
     my $self = shift;
-    my $hashref = ( ref($_[0]) eq 'HASH' ? shift : {} );
-    $hashref->{scomp} = 1;
-    return $self->comp($hashref,@_);
+    my $buf;
+    $self->comp({store=>\$buf},@_);
+    return $buf;
 }
 
 sub process_comp_path
