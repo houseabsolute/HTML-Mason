@@ -65,8 +65,7 @@ sub resolve {
     my $comp_root = $self->{comp_root};
     if (!ref($comp_root)) {
 	my $srcfile = File::Spec->catdir( $comp_root, $path );
-	my @srcstat = stat $srcfile;
-	return (-f _) ? ( path => $path, description => $srcfile, last_modified => $srcstat[9] ) : ();
+	return (-f $srcfile) ? ( path => $path, description => $srcfile, last_modified => (stat _)[9] ) : ();
     } elsif (UNIVERSAL::isa($comp_root, 'ARRAY')) {
 	foreach my $lref (@$comp_root) {
 	    my ($key,$root) = @$lref;
