@@ -650,19 +650,7 @@ sub comp {
     return wantarray ? @result : $result;  # Will return undef in void context (correct)
 }
 
-#
-# Why _run_comp and _run_comp2 as aliases here?  Well,
-# HTML::Mason::Request::ApacheHandler actually override _run_comp to
-# do some extra prep work before running the component.  But outside
-# of the ApacheHandler world there is no need to have these be
-# separate methods.
-#
-# The alias is simply a slight performance tweak over having _run_comp
-# just call _run_comp2.
-#
-# Better sub names welcome!
-#
-sub _run_comp2
+sub _run_comp
 {
     my ($self, $wantarray, $comp, @args) = @_;
 
@@ -685,8 +673,6 @@ sub _run_comp2
 
     return wantarray ? @result : $result;
 }
-*_run_comp = \&_run_comp2;
-
 
 #
 # Like comp, but return component output.
