@@ -853,3 +853,435 @@ EOF
 
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::Interp - Mason Component Interpreter
+
+=head1 SYNOPSIS
+
+    my $i = new HTML::Mason::Interp (data_dir=>'/usr/local/mason',
+                                     comp_root=>'/usr/local/www/htdocs/',
+                                     ...other params...);
+
+=head1 DESCRIPTION
+
+Interp is the Mason workhorse, executing components and routing their
+output and errors to all the right places. In a mod_perl environment,
+Interp objects are handed off immediately to an ApacheHandler object
+which internally calls the Interp implementation methods. In that case
+the only user method is the new() constructor.
+
+If you want to call components outside of mod_perl (e.g. from CGI or a
+stand-alone Perl script), see the L<STANDALONE MODE> section below.
+
+=head1 PARAMETERS FOR new() CONSTRUCTOR
+
+=over
+
+=item allow_recursive_autohandlers
+
+True or undef. Default is true as of verison 0.85. If true,
+autohandlers apply both to their own directories and all
+subdirectories; if undef, only to their own directories. See the
+L<Devel/autohandlers> section of the Component Developer's Guide for a
+discussion of the pros and cons.
+
+=item autohandler_name
+
+File name used for autohandlers. Default is "autohandler". If
+undef, Mason will not look for autohandlers.
+
+=item code_cache_max_size
+
+Specifies the maximum size, in bytes, of the in-memory code cache
+where components are stored. e.g.
+
+    code_cache_max_size => 20*1024*1024
+    code_cache_max_size => 20_000_000
+
+Default is 10 MB. See the L<Admin/Code Cache> section of the I<Admin Guide>
+for further details.
+
+=item comp_root
+
+The required Mason component root. All components live under the comp_root.
+
+You may also specify multiple component roots to be searched in the
+spirit of Perl's @INC. To do so you must specify a list of lists:
+
+    comp_root => [[key1, root1], [key2, root2], ...]
+
+Each pair consists of a key and root.  The key is a string that
+identifies the root mnemonically to a component developer.  Data cache
+and object directories are split up by these keys to make sure
+different components sharing the same path have different cache and
+object files. The key is also included whenever Mason prints the
+component title, as in an error message.
+
+For example:
+
+    comp_root => [['private', '/usr/home/joe/comps'],
+                  ['main', '/usr/local/www/htdocs']]
+
+This specifies two component roots, a main component tree and a
+private tree which overrides certain components.  The order is
+respected ala @INC, so 'private' is searched first and 'main' second.
+
+=item compiler
+
+Compiler object for compiling components on the fly.  If none is
+provided a default compiler using the
+C<HTML::Mason::Compiler::ToObject> and C<HTML::Mason::Lexer> classes
+will be created.
+
+=item current_time
+
+Overrides the time returned by $m->time with a fixed Perl time() value
+(seconds since the epoch). On time-sensitive sites, this can be used
+to set up port-based time/date simulations, e.g. a port that looks one
+day into the future.
+
+With no current_time parameter (the default), $m->time reports the
+true time.
+
+=item data_dir
+
+The required Mason data directory. Mason's various data directories
+(obj, cache, debug, etc), live within the data_dir.
+
+=item data_cache_defaults
+
+A hash reference of default options to use for the C<$m-E<gt>cache>
+command.
+
+=item die_handler
+
+Specifies a subroutine reference to be used to override $SIG{__DIE__}
+when components are being executed.  If this parameter is specified
+then it will override the normal error handling done by Mason.  The
+default error handler produces a stack trace that excludes the part of
+the stack inside the Mason core code.
+
+If this parameter is false, then $SIG{__DIE__} will not be overridden
+at all.  Defaults to:
+
+ sub { Carp::confess($_[0]) }
+
+=item dhandler_name
+
+File name used for dhandlers. Default is "dhandler". If
+undef, Mason will not look for dhandlers.
+
+=item ignore_warnings_expr
+
+Regular expression indicating which warnings to ignore when compiling
+components. Any warning that is not ignored will prevent the
+component from being compiled and executed. For example:
+
+    ignore_warnings_expr =>
+        'Global symbol.*requires explicit package'
+
+If undef, all warnings are heeded; if '.', all warnings are ignored.
+
+By default, this is set to 'Subroutine .* redefined'.  This allows you
+to declare global subroutines inside <%once> sections and not receive
+an error when the component is reloaded.
+
+=item max_recurse
+
+The maximum component stack depth the interpreter is allowed to
+descend before signalling an error.  Default is 32.
+
+=item out_method
+
+Indicates where to send output. If out_method is a reference to a
+scalar, output is appended to the scalar.  If out_method is a
+reference to a subroutine, the subroutine is called with each output
+string. For example, to send output to a file called "mason.out":
+
+    my $fh = new IO::File ">mason.out";
+    ...
+    out_method => sub { $fh->print($_[0]) }
+
+By default, out_method prints to standard output. (In a mod_perl
+environment this is automatically redirected to the HTTP client.)
+
+=item out_mode
+
+Specifies one of two ways to send output, 'batch' or 'stream'.  In
+batch mode Mason computes the entire page in a memory buffer and then
+transmits it all at once. In stream mode Mason outputs data as soon as
+it is computed. (This does not take into account buffering done by
+Apache or the O/S.) The default mode is batch.  See the 
+L<Admin/staging vs production> section of the I<Admin Guide> for a
+discussion of the trade-offs.
+
+=item preloads
+
+A list of component paths, optionally with glob wildcards, to load
+when the interpreter initializes. e.g.
+
+    preloads => ['/foo/index.html','/bar/*.pl']
+
+Default is the empty list. This should only be used for components that
+are frequently viewed and rarely updated.  See the L<Admin/preloading>
+section of the I<Admin Guide> for further details.
+
+=item static_file_root
+
+Absolute path to prepend to relative filenames passed to C<$m-E<gt>file()>. Does
+not require a trailing slash. For example, if the file root is
+'/foo/bar', then C<$m-E<gt>file('baz/bap')> will read the file
+'/foo/bar/baz/bap'. Undefined by default; if left undefined,
+relative path names to C<$m-E<gt>file()> are prepended with the
+current component directory.
+
+=item system_log_events
+
+A string value indicating one or more events to record in the system
+log, separated by "|". Default is to log nothing.
+
+=item system_log_file
+
+Absolute path of system log.  Default is data_dir/etc/system.log.
+
+=item system_log_separator
+
+Separator to use between fields on a line in the system log. Default is ctrl-A ("\cA").
+
+=item use_autohandlers
+
+True or undef, default is true.  If not true, Mason will not attempt
+to use autohandlers.
+
+=item use_data_cache
+
+True or undef, default is true. Specifies whether the $m->cache and
+related commands are operational.  You may need to disable data
+caching temporarily for debugging purposes, but normally this should
+be left alone.
+
+=item use_dhandlers
+
+True or undef, default is true.  If not true, Mason will not attempt
+to use dhandlers.
+
+=item use_object_files
+
+True or undef, default is true.  Specifies whether Mason creates
+object files to save the results of component parsing. You may want to
+turn off object files for disk space reasons, but otherwise this
+should be left alone.
+
+=item use_reload_file
+
+True or undef, default is undef. If true, disables Mason's automatic
+timestamp checking on component source files, relying instead on an
+explicitly updated L<Admin/reload file>.
+
+=back
+
+=head1 ACCESSOR METHODS
+
+All of the above properties have standard accessor methods of the same
+name. In general, no arguments retrieves the value, and one argument
+sets and returns the value.  For example:
+
+    my $interp = new HTML::Mason::Interp (...);
+    my $c = $interp->compiler;
+    my $comproot = $interp->comp_root;
+    $interp->out_method(\$buf);
+
+The following properties can be queried but not modified:
+comp_root, data_dir, system_log_file, system_log_separator, preloads.
+
+=head1 OTHER METHODS
+
+=over
+
+=for html <a name="item_set_global">
+
+=item set_global ($varname, [values...])
+
+This method sets a global to be used in components. C<varname> is a
+variable name, optionally preceded with a prefix (C<$>, C<@>, or
+C<%>); if the prefix is omitted then C<$> is assumed. C<varname> is
+followed by a value, in the case of a scalar, or by one or more values
+in the case of a list or hash.  For example:
+
+    # Set a global variable $dbh containing the database handle
+    $interp->set_global(dbh => DBI->connect(...));
+
+    # Set a global hash %session from a local hash
+    $interp->set_global('%session', %s);
+
+The global is set in the package that components run in: usually
+C<HTML::Mason::Commands>, although this can be overridden via the
+Compiler parameter L<Compiler/in_package>.  The lines above, for
+example, are equivalent to:
+
+    $HTML::Mason::Commands::dbh = DBI->connect(...);
+    %HTML::Mason::Commands::session = %s;
+
+assuming that C<in_package> has not been changed.
+
+Any global that you set should also be registered with the Compiler
+parameter L<Compiler/allow_globals>; otherwise you'll get warnings
+from C<strict>.
+
+=item make_anonymous_component (comp_text=>... [, path=>...])
+
+=item make_anonymous_component (comp_file=>... [, path=>...])
+
+This method compiles Mason component source code and returns a
+Component object.  The source may be passed in as a string in C<comp_text>,
+or as a filename in C<comp_file>.  When using C<comp_file>, the
+filename is specified as a path on the file system, not as a path
+relative to Mason's component root.
+
+If you pass a C<path> parameter, the new component will be 'public',
+and callable from other components via the specified path.  Otherwise
+the component will be anonymous, and the only way to access the
+component will be through the returned component object.
+
+If Mason encounters an error during processing, an exception will be thrown.
+
+Example of usage:
+
+    # Make an anonymous component
+    my $anon_comp =
+      eval { $interp->make_component
+               ( comp=>'<%perl>my $name = "World";</%perl>Hello <% $name %>!' ) };
+    die $@ if $@;
+    
+    # Make a public component
+    eval { $interp->make_component
+             ( comp=>'<%perl>my $name = "World";</%perl>Hello <% $name %>!',
+               path=>'/hello/world.ma' ) };
+    die $@ if $@;
+    
+    $m->comp($anon_comp);
+    $m->comp('/hello/world.ma');
+
+=back
+
+=head1 STANDALONE MODE
+
+Although Mason is most commonly used in conjunction with mod_perl,
+there is also a functional API that allows you to use Mason from CGI
+programs or from stand-alone Perl scripts.  In the latter case Mason can be
+used as a glorified Text::Template, producing a set of
+files from components, or used to generate a flat version of a componentized site.
+
+When using Mason outside of mod_perl, just create an Interp object;
+you do not need the ApacheHandler object.  Once you've created an
+interpreter, the main thing you'll want to do with it is call a
+component and do something with the output. To call a component, use
+Interp's exec() method:
+
+    $interp->exec(<comp> [,<..list of component params..>]);
+
+where I<comp> is a component path or component object.
+
+Component parameters are given as a series of name/value pairs, just
+as they are with C<$m-E<gt>comp>. exec returns the return value of
+the component. Component output is sent to standard output by default,
+but you can change this by specifying C<out_method>.
+
+Here is a skeleton CGI script that calls a component and sends the
+output to the browser.
+
+    #!/usr/bin/perl -w
+    use CGI;
+    use HTML::Mason;
+    use HTML::Mason::Utils qw(cgi_request_args);
+
+    my $interp = new HTML::Mason::Interp (comp_root=>'...',
+                                          data_dir=>'...');
+
+    my $q = new CGI;
+    my $comp = $ENV{'PATH_TRANSLATED'};
+    my $root = $interp->comp_root;
+    $comp =~ s/^$root//
+        or die "Requested file '$comp' is outside component root '$root'";
+    my %args = cgi_request_args($q, $q->request_method);
+    print $q->header;
+
+    $interp->exec($comp, %args);
+
+The relevant portions of my httpd.conf file look like:
+
+    DocumentRoot /path/to/comp/root
+    ScriptAlias /cgi-bin/ /path/to/cgi-bin/
+    Action html-mason /cgi-bin/handler.cgi
+
+    <Directory /path/to/comp/root>
+    SetHandler html-mason
+    </Directory>
+
+This simply causes Apache to call my handler.cgi script every time a
+file under the component root is requested.
+
+It should be noted that because this script simply prints standard
+HTTP headers and then executes a component, there would be no way of
+sending non-OK responses to the browser from your components.
+
+A more complex handler.cgi script might look like this:
+
+    #!/usr/bin/perl -w
+    use CGI;
+    use HTML::Mason;
+    use HTML::Mason::Compiler::ToObject;
+    use HTML::Mason::Utils qw(cgi_request_args);
+    use HTTP::Headers;
+
+    my $compiler = HTML::Mason::Compiler::ToObject->new( allow_globals => '$H' );
+    my $interp = new HTML::Mason::Interp (comp_root=>'...',
+                                          data_dir=>'...',
+                                          compiler=>$compiler);
+
+    my $q = new CGI;
+    my $comp = $ENV{'PATH_TRANSLATED'};
+    my $root = $interp->comp_root;
+    $comp =~ s/^$root//
+        or die "Requested file '$comp' is outside component root '$root'";
+    my %args = cgi_request_args($q, $q->request_method);
+
+    # Gather all component output into a buffer.
+    my $buffer;
+    $interp->out_method(\$buffer);
+
+    my $H = new HTTP::Headers;
+    $interp->set_global('$H'=>$H);
+
+    eval { $interp->exec($comp, %args) };
+
+    if ($@) {
+        handle_error($@);
+    } else {
+        unless ($H->header('content-type')) {
+            $H->header('content-type' => 'text/html');
+        }
+        print $H->as_string;
+        print $buffer;
+    }
+
+This script offers components the use of a global named C<$h> which
+can be used to set headers (for example, for a redirect).  It also
+catches errors in the execution of the script and has a routine to
+handle them.
+
+=head1 AUTHOR
+
+Jonathan Swartz, swartz@pobox.com
+
+=head1 SEE ALSO
+
+L<HTML::Mason>,
+L<HTML::Mason::ApacheHandler>,
+L<HTML::Mason::Admin>
+
+=cut

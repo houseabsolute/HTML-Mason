@@ -808,3 +808,157 @@ sub handler ($$)
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::ApacheHandler - Mason/mod_perl interface
+
+=head1 SYNOPSIS
+
+    use HTML::Mason::ApacheHandler;
+
+    my $ah = new HTML::Mason::ApacheHandler (..name/value params..);
+    ...
+    sub handler {
+        my $r = shift;
+        $ah->handle_request($r);
+    }
+
+=head1 DESCRIPTION
+
+The ApacheHandler object links Mason to mod_perl, running components in
+response to HTTP requests. It is controlled primarily through
+parameters to the new() constructor.
+
+handle_request() is not a user method, but rather is called from the
+HTML::Mason::handler() routine in handler.pl.
+
+
+=head1 PARAMETERS TO THE new() CONTRUCTOR
+
+=over
+
+=item apache_status_title
+
+Title that you want this ApacheHandler to appear as under
+Apache::Status.  Default is "HTML::Mason status".  This is useful if
+you create more then one ApacheHandler object and want them all
+visible via Apache::Status.
+
+=item args_method
+
+Method to use for unpacking GET and POST arguments. The valid options
+are 'CGI' and 'mod_perl'; these indicate that a CGI.pm or
+Apache::Request object (respectively) will be created for the purposes
+of argument handling.
+
+Apache::Request is the default and requires that you have installed
+this package.
+
+When specifying args_method='CGI', the Mason request object ($m)
+will have a method called C<cgi_object> available.  This method
+returns the CGI object used in the ApacheHandler code.
+
+When specifying args_method='mod_perl', the $r global is upgraded
+to an Apache::Request object. This object inherits all Apache
+methods and adds a few of its own, dealing with parameters and
+file uploads. See Apache::Request manual page for more information.
+
+While Mason will load Apache::Request or CGI as needed at runtime, it
+is recommended that you preload the relevant module either in your
+httpd.conf or handler.pl file as this will save some memory.
+
+=item auto_send_headers
+
+True or undef; default true.  Indicates whether Mason should
+automatically send HTTP headers before sending content back to the
+client. If you set to false, you should call $r->send_http_header
+manually.
+
+See the L<Devel/sending_http_headers> of the Component Developer's
+Guide for details about the automatic header feature.
+
+=item decline_dirs
+
+Indicates whether Mason should decline directory requests, leaving
+Apache to serve up a directory index or a FORBIDDEN error as
+appropriate. Default is 1. See L<Admin/Allowing directory requests>
+for more information about handling directories with Mason.
+
+=item error_mode
+
+Specifies how to handle Perl errors. Options are 'html', 'fatal',
+'raw_html', and 'raw_fatal'; the default is 'html'.
+
+In html mode the handler sends a readable HTML version of the error
+message to the client. This mode is most useful on a development
+server.
+
+In fatal mode the handler simply dies with a compact version of the
+error message. This may be caught with an eval around
+C<$ah-E<gt>handle_request> or left for Apache to handle. In the latter
+case the error will end up in the error logs. This mode is most
+useful on a production server.
+
+The raw_html and raw_fatal modes emulate pre-1.02 error behavior. They
+are analagous to the modes above except that the errors are not
+processed for readability or compactness. The resulting messages are
+much longer, but may include information accidentally omitted by
+Mason's processing.
+
+Regardless of this setting, no readability processing occurs if you
+have overriden the L<Interp/die_handler> Interp parameter.
+
+=item interp
+
+The only required parameter.  Specifies a Mason interpreter to use for
+handling requests.  The interpreter should be an instance of the
+C<HTML::Mason::Interp> class, or a subclass thereof.
+
+=item output_mode
+
+This parameter has been replaced by the equivalent Interp parameter
+L<Interp/out_mode>. For backward compatibility, setting
+C<$ah-E<gt>output_mode> will cause C<$interp-E<gt>out_mode> to be set
+appropriately.
+
+=item top_level_predicate
+
+Reference to a subroutine that decides whether a component can answer
+top level requests. This allows for private-use components that live
+within the DocumentRoot but are inaccesible from URLs. By default,
+always returns 1.
+
+The subroutine receives one parameter, the absolute path to the
+component.  It then returns either a true (serve component) or false
+(reject component). In this example, the predicate rejects requests
+for components whose name starts with an "_" character:
+
+    top_level_predicate => sub { $_[0] !~ m{/_[^/]+$}
+
+=back
+
+=head1 ACCESSOR METHODS
+
+All of the above properties have standard accessor methods of the
+same name: no arguments retrieves the value, and one argument sets it.
+For example:
+
+    my $ah = new HTML::Mason::ApacheHandler;
+    my $errmode = $ah->error_mode;
+    $ah->error_mode('html');
+
+=head1 AUTHOR
+
+Jonathan Swartz, swartz@pobox.com
+
+=head1 SEE ALSO
+
+L<HTML::Mason>,
+L<HTML::Mason::Parser>,
+L<HTML::Mason::Interp>,
+L<HTML::Mason::Admin>
+
+=cut

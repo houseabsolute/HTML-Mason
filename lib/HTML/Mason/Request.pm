@@ -839,3 +839,405 @@ sub PRINTF
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::Request - Mason Request Class
+
+=head1 SYNOPSIS
+
+    $m->abort (...)
+    $m->comp (...)
+    etc.
+
+=head1 DESCRIPTION
+
+The Request API is your gateway to all Mason features not provided by
+syntactic tags. Mason creates a new Request object for every web
+request. Inside a component you access the current request object via
+the global C<$m>.  Outside of a component, you can use the class
+method C<instance>.
+
+=head1 COMPONENT PATHS
+
+The methods L<Request/comp>, L<Request/comp_exists>, L<Request/fetch_comp>, and
+L<Request/process_comp_path> take a component path as argument.
+
+=over
+
+=item *
+
+If the path is absolute (starting with a '/'), then the component is
+found relative to the component root.
+
+=item *
+
+If the path is relative (no leading '/'), then the component is found
+relative to the current component directory.
+
+=item *
+
+If the path matches both a subcomponent and file-based component, the
+subcomponent takes precedence.
+
+=back
+
+=head1 METHODS
+
+=over
+
+=for html <a name="item_instance">
+
+=item instance
+
+This class method returns the C<HTML::Mason:::Request> currently in
+use.  If called when no Mason request is active it will return C<undef>.
+
+=for html <a name="item_abort">
+
+=item abort ([return value])
+
+Ends the current request, finishing the page without returning
+through components. The optional argument specifies the return
+value from C<Interp::exec>; in a web environment, this ultimately
+becomes the HTTP status code.
+
+abort() is implemented via die() and can thus be caught by eval(). 
+
+Under the current implementation, any pending C<E<lt>%filterE<gt>> sections will
+not be applied to the output after an abort.  This is a known bug but
+there is no easy workaround.
+
+The methods C<aborted> and C<aborted_value> return a boolean
+indicating whether the current request was aborted and the argument
+with which it was aborted, respectively. These would be used,
+for example, after an eval() returned with a non-empty C<$@>.
+
+=for html <a name="item_aborted">
+
+=item aborted
+
+Returns true or undef indicating whether the current request was aborted
+with C<abort>.
+
+=for html <a name="item_aborted_value">
+
+=item aborted_value
+
+Returns the argument passed to C<abort> when the request was
+aborted. Returns undef if the request was not aborted or was aborted
+without an argument.
+
+=for html <a name="item_base_comp">
+
+=item base_comp
+
+Returns the current base component for method and attributes.
+Generally set to the original page component; however, if you invoke
+call_method on a component, C<base_comp> is dynamically set to that
+component until call_method exits. See L<Devel/Object-Oriented
+Techniques> for examples of usage.
+
+=for html <a name="item_cache">
+
+=item cache (cache_class=>'...', [cache_options])
+
+C<$m-E<gt>cache> returns a new cache object with a namespace specific
+to this component.
+
+I<cache_class> specifies the class of cache object to create. It
+defaults to Cache::FileCache and must be a subclass of Cache::Cache.
+If I<cache_class> does not contain a "::", the prefix "Cache::" is
+automatically prepended.
+
+I<cache_options> may include any valid options to the new() method of
+the cache class. e.g. for Cache::FileCache, valid options include
+expires_in, max_size, and cache_depth.
+
+See the L<Devel/data caching> section of the I<Component Developer's
+Guide> for examples and caching strategies. See the Cache::Cache
+documentation for a complete list of options and methods.
+
+=for html <a name="item_caller_args">
+
+=item caller_args
+
+Returns the arguments passed by the component at the specified stack
+level. Use a positive argument to count from the current component and
+a negative argument to count from the component at the bottom of the
+stack. e.g.
+
+    $m->caller_args(0)   # arguments passed to current component
+    $m->caller_args(1)   # arguments passed to component that called us
+    $m->caller_args(-1)  # arguments passed to first component executed
+
+When called in scalar context, a hash reference is returned.  When
+called in list context, a list of arguments (which may be assigned to
+a hash) is returned.
+
+=for html <a name="item_callers">
+
+=item callers
+
+With no arguments, returns the current component stack as a list of
+component objects, starting with the current component and ending with
+the top-level component. With one numeric argument, returns the
+component object at that index in the list. Use a positive argument to
+count from the current component and a negative argument to count from
+the component at the bottom of the stack. e.g.
+
+    my @comps = $m->callers   # all components
+    $m->callers(0)            # current component
+    $m->callers(1)            # component that called us
+    $m->callers(-1)           # first component executed
+
+=for html <a name="item_call_next">
+
+=item call_next ([args...])
+
+Calls the next component in the content wrapping chain; usually called
+from an autohandler. With no arguments, the original arguments are
+passed to the component.  Any arguments specified here serve to
+augment and override (in case of conflict) the original
+arguments. Works like C<$m-E<gt>comp> in terms of return value and
+scalar/list context.  See the L<Devel/autohandlers> section of the
+I<Component Developer's Guide> for examples.
+
+=for html <a name="item_clear_buffer">
+
+=item clear_buffer
+
+Clears the Mason output buffer. Any output sent before this line is
+discarded. Useful for handling error conditions that can only be
+detected in the middle of a request.
+
+clear_buffer only works in batch output mode, and is thwarted by
+C<flush_buffer>.
+
+=for html <a name="item_comp">
+
+=item comp (comp, args...)
+
+Calls the component designated by I<comp> with the specified
+option/value pairs. I<comp> may be a component path or a component
+object. 
+
+Components work exactly like Perl subroutines in terms of return
+values and context. A component can return any type of value, which is
+then returned from the C<$m-E<gt>comp> call.
+
+The <& &> tag provides a convenient shortcut for C<$m-E<gt>comp>.
+
+=for html <a name="item_comp_exists">
+
+=item comp_exists (comp_path)
+
+Returns 1 if I<comp_path> is the path of an existing component, 0 otherwise. 
+
+=for html <a name="content">
+
+=item content
+
+Evaluates the content (passed between <&| comp &> and </&> tags) of the 
+current component, and returns the resulting text.
+
+Returns undef if there is no content.
+
+=for html <a name="item_count">
+
+=item count
+
+Returns the number of this request, which is unique for a given
+request and interpreter.
+
+=for html <a name="item_current_comp">
+
+=item current_comp
+
+Returns the current component object.
+
+=for html <a name="item_decline">
+
+=item decline
+
+Used from a top-level component or dhandler, this method aborts the
+current request and restarts with the next applicable dhandler
+up the tree. If no dhandler is available, an error occurs.
+This method bears no relation to the Apache DECLINED status
+except in name.
+
+=for html <a name="item_depth">
+
+=item depth
+
+Returns the current size of the component stack.  The lowest possible
+value is 1, which indicates we are in the top-level component.
+
+=for html <a name="item_dhandler_arg">
+
+=item dhandler_arg
+
+If the request has been handled by a dhandler, this method returns the
+remainder of the URI or C<Interp::exec> path when the dhandler directory is
+removed. Otherwise returns undef.
+
+C<dhandler_arg> may be called from any component in the request, not just
+the dhandler.
+
+=for html <a name="item_fetch_comp">
+
+=item fetch_comp (comp_path)
+
+Given a I<comp_path>, returns the corresponding component object or
+undef if no such component exists.
+
+=for html <a name="item_fetch_next">
+
+=item fetch_next
+
+Returns the next component in the content wrapping chain, or undef if
+there is no next component. Usually called from an autohandler.  See
+the L<Devel/autohandlers> section of the I<Component Developer's
+Guide> for usage and examples.
+
+=for html <a name="item_fetch_next_all">
+
+=item fetch_next_all
+
+Returns a list of the remaining components in the content wrapping
+chain. Usually called from an autohandler.  See the
+L<Devel/autohandlers> section of the I<Component Developer's Guide>
+for usage and examples.
+
+=for html <a name="item_file">
+
+=item file (filename)
+
+Returns the contents of filename as a string. I<filename> may be an
+absolute filesystem path (starting with a '/') or relative (no leading
+'/'). If relative, Mason prepends the static file root, or the current
+component directory if no static file root is defined.
+
+=for html <a name="item_file_root">
+
+=item file_root
+
+Returns the static file root, used by C<$m-E<gt>file> to resolve relative
+filenames.
+
+=for html <a name="item_flush_buffer">
+
+=item flush_buffer
+
+Flushes the Mason output buffer. Under mod_perl, also sends HTTP
+headers if they haven't been sent and calls $r->rflush to flush the
+Apache buffer. Flushing the initial bytes of output can make your
+servers appear more responsive.
+
+=for html <a name="item_interp">
+
+=item interp
+
+Returns the Interp object associated with this request.
+
+=for html <a name="item_out">
+
+=item out (string)
+
+Print the given I<string>. Rarely needed, since normally all HTML is just
+placed in the component body and output implicitly. C<$m-E<gt>out> is useful
+if you need to output something in the middle of a Perl block.
+
+C<$m-E<gt>out> should be used instead of C<print> or C<$r-E<gt>print>,
+since C<$m-E<gt>out> may be redirected or buffered depending on the
+current state of the interpreter.
+
+=for html <a name="item_process_comp_path">
+
+=item process_comp_path (comp_path)
+
+Given a I<comp_path>, returns the corresponding absolute component path.
+
+=for html <a name="item_scomp">
+
+=item scomp (comp, args...)
+
+Like C<$m-E<gt>comp>, but returns the component output as a string
+instead of printing it. (Think sprintf versus printf.) The
+component's return value is discarded.
+
+=for html <a name="item_time">
+
+=item time
+
+Returns the interpreter's notion of the current time in Perl time()
+format (number of seconds since the epoch).
+
+By using C<$m-E<gt>time> rather than calling time() directly, you enable
+the option of previewer or port-based time/date simulations. e.g.
+a port that looks one day into the future.
+
+=for html <a name="item_top_args">
+
+=item top_args
+
+Returns the arguments originally passed to the top level component
+(see L<Request/top_comp> for definition).  When called in scalar
+context, a hash reference is returned. When called in list context, a
+list of arguments (which may be assigned to a hash) is returned.
+
+=for html <a name="item_top_comp">
+
+=item top_comp
+
+Returns the component originally called in the request. Without
+autohandlers, this is the same as the first component executed.  With
+autohandlers, this is the component at the end of the
+C<$m-E<gt>call_next> chain.
+
+=back
+
+=head1 APACHE-ONLY METHODS
+
+These additional methods are available when running Mason with mod_perl
+and the ApacheHandler.
+
+=over
+
+=for html <a name="item_ah">
+
+=item ah
+
+Returns the ApacheHandler object associated with this request.
+
+=for html <a name="item_apache_req">
+
+=item apache_req
+
+Returns the Apache request object.  This is also available in the
+global $r.
+
+=for html <a name="item_cgi_object">
+
+=item cgi_object
+
+Returns the CGI object used to parse any CGI parameters submitted to
+the component, assuming that you have not changed the default value of
+the ApacheHandler C<args_method> parameter.  If you are using the
+'mod_perl' args method, then calling this method is a fatal error.
+See the L<HTML::Mason::ApacheHandler> documentation for more details.
+
+=back
+
+=head1 AUTHOR
+
+Jonathan Swartz, swartz@pobox.com
+
+=head1 SEE ALSO
+
+L<HTML::Mason::Component>
+L<HTML::Mason::ApacheHandler>
+
+=cut
