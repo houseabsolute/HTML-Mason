@@ -601,7 +601,7 @@ sub cache_self {
     #
     my $filter;
     $filter = pop @{ $self->{buffer_stack} }
-        if $self->top_buffer->filter;
+        if $self->top_stack->{comp}->has_filter;
 
     my ($output, $retval);
     eval
