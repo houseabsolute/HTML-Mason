@@ -1635,20 +1635,39 @@ The following examples would generally appear at the top of a C<<
 <%init> >> section.  Here is a no-op C<< $m->call_self >> that leaves
 the output and return value untouched:
 
+    <%init>
     my ($output, $retval);
     if ($m->call_self(\$output, \$retval)) {
         $m->print($output);
         return $retval;
     }
+    ...
 
 Here is a simple output filter that makes the output all uppercase.
 Note that we ignore both the original and the final return value.
 
+    <%init>
     my $output;
     if ($m->call_self(\$output, undef)) {
         $m->print(uc $output);
         return;
     }
+    ...
+
+Here is a piece of code that traps all errors occuring anywhere in the
+component or its children, e.g. for the purpose of handling
+application-specific exceptions. This is difficult to do with a manual
+C<eval> because it would have to span multiple code sections and the
+main component body.
+
+    <%init>
+    # Run this component with an eval around it
+    my $in_parent = eval { $m->call_self() };
+    if ($@) {
+        # check $@ and do something with it
+    }
+    return if $in_parent;
+    ...
 
 =for html <a name="item_clear_buffer"></a>
 
