@@ -12,43 +12,36 @@ use vars qw(@ISA);
 
 @ISA = qw(HTML::Mason::Component);
 
-use HTML::Mason::MethodMaker ( read_only => [ qw( name owner ) ] );
+use HTML::Mason::MethodMaker ( read_only => [ qw( comp_id is_method name owner path ) ] );
 
 #
-# Assign parent and name at runtime
+# Assign parent, name, and is_method flag when owner component is created.
 #
 sub assign_subcomponent_properties {
     my $self = shift;
-    ($self->{owner},$self->{name}) = @_;
+    ($self->{owner}, $self->{name}, $self->{is_method}) = @_;
+}
+
+#
+# Override path that would be set by parent's version of method.
+#
+sub assign_runtime_properties {
+    my ($self, $interp, $source) = @_;
+    $self->SUPER::assign_runtime_properties($interp, $source);
+    $self->{comp_id} = sprintf("[%s '%s' of %s]", $self->{is_method} ? 'method' : 'subcomponent',
+			       $self->name, $self->owner->comp_id);
+    $self->{path} = $self->owner->path . ":" . $self->name;
 }
 
 sub cache_file { return $_[0]->owner->cache_file }
 sub load_time { return $_[0]->owner->load_time }
-sub comp_id { return "[subcomponent '" . $_[0]->name . "' of " . $_[0]->owner->comp_id . "]" }
 sub compiler_id { return $_[0]->owner->compilation_params }
 sub dir_path { return $_[0]->owner->dir_path }
 sub is_subcomp { 1 }
 sub object_file { return $_[0]->owner->object_file }
 sub parent { return $_[0]->owner->parent }
-sub path { return $_[0]->owner->path . ":" . $_[0]->name }
 sub persistent { return $_[0]->owner->persistent }
 sub title { return $_[0]->owner->title . ":" . $_[0]->name }
-
-# This method is a bit of a hack but it works ;)
-#
-# Basically, we check if there is a method of the same name in our
-# owner, and to be extra careful, we make sure that that method is
-# actually $self (the same object) in case some wacko defines a method
-# and a subcomp with the same name, in the same component, which is
-# dumb but legal.
-sub is_method
-{
-    my $self = shift;
-
-    my $m = $self->owner->methods( $self->name );
-
-    return $m && $m eq $self;
-}
 
 1;
 
@@ -70,6 +63,11 @@ A subcomponent gets most of its properties from its owner.
 =head1 METHODS
 
 =over 4
+
+=item is_method
+
+Returns 1 if this is a method (declared by C<< <%method> >>), 0 if it is a
+subcomponent (defined by c<< <%def> >>).
 
 =item owner
 

@@ -78,12 +78,13 @@ sub new
     my $class = shift;
     my $self = bless { %defaults, @_ }, $class;
 
-    # Initialize subcomponent and method properties.
+    # Initialize subcomponent and method properties: owner, name, and
+    # is_method flag.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
-	$c->assign_subcomponent_properties($self,$name);
+	$c->assign_subcomponent_properties($self,$name,0);
     }
     while (my ($name,$c) = each(%{$self->{methods}})) {
-	$c->assign_subcomponent_properties($self,$name);
+	$c->assign_subcomponent_properties($self,$name,1);
     }
 
     return $self;
@@ -99,7 +100,7 @@ sub assign_runtime_properties {
 
     $self->_determine_inheritance;
 
-    foreach my $c (values(%{$self->{subcomps}})) {
+    foreach my $c (values(%{$self->{subcomps}}), values(%{$self->{methods}})) {
 	$c->assign_runtime_properties($interp, $source);
     }
 }

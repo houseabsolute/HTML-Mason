@@ -28,6 +28,15 @@ $useless=>17
 </%args>
 </%def>
 
+<%method meth>
+% my $adj = 'sad';
+I am a <% $adj %> method.
+<%args>
+$crucial
+$useless=>17
+</%args>
+</%method>
+
 % my $anon = $m->interp->make_component(comp_source=>join("\n",'% my $adj = "flummoxed";','I am a <% $adj %> anonymous component.'),name=>'anonymous');
 
 <% '-' x 60 %>
@@ -39,6 +48,11 @@ File-based:
 
 Subcomponent:
 <& /shared/display_comp_obj, comp=>$m->fetch_comp('.subcomp')  &>
+
+<% '-' x 60 %>
+
+Method:
+<& /shared/display_comp_obj, comp=>$m->fetch_comp('SELF:meth')  &>
 
 <% '-' x 60 %>
 
@@ -54,6 +68,7 @@ EOF
 		      expect => <<'EOF',
 
 
+
 ------------------------------------------------------------
 
 File-based:
@@ -61,6 +76,7 @@ Declared args:
 @animals=>('lions','tigers')
 
 I am not a subcomponent.
+I am not a method.
 I am file-based.
 My short name is comp_obj.
 My directory is /component/comp_obj_test.
@@ -80,6 +96,7 @@ $crucial
 $useless=>17
 
 I am a subcomponent.
+I am not a method.
 I am not file-based.
 My short name is .subcomp.
 My parent component is /component/comp_obj_test/comp_obj.
@@ -93,21 +110,39 @@ My comp_id is [subcomponent '.subcomp' of /component/comp_obj_test/comp_obj].
 
 ------------------------------------------------------------
 
+Method:
+Declared args:
+$crucial
+$useless=>17
+
+I am a subcomponent.
+I am a method.
+I am not file-based.
+My short name is meth.
+My parent component is /component/comp_obj_test/comp_obj.
+My directory is /component/comp_obj_test.
+I have 0 subcomponent(s).
+My title is /component/comp_obj_test/comp_obj:meth.
+
+My path is /component/comp_obj_test/comp_obj:meth.
+My comp_id is [method 'meth' of /component/comp_obj_test/comp_obj].
+
+
+------------------------------------------------------------
+
 Anonymous component:
 I am a flummoxed anonymous component.
 I am a flummoxed anonymous component.
 Declared args:
 
 I am not a subcomponent.
+I am not a method.
 I am not file-based.
 My short name is [anon something].
 I have 0 subcomponent(s).
 My title is [anon something].
 
 My comp_id is [anon something].
-
-
-
 EOF
 		     );
 
