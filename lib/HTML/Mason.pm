@@ -10,4 +10,11 @@ $HTML::Mason::VERSION = '1.1';
 use HTML::Mason::Parser;
 use HTML::Mason::Interp;
 
+sub version
+{
+    shift;
+
+    return $HTML::Mason::VERSION;
+}
+
 1;

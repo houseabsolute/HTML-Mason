@@ -83,7 +83,7 @@ sub date_delta_to_secs
 #
 sub dumper_method {
     my ($d) = @_;
-    return ($HTML::Mason::Config{use_data_dumper_xs} ? $d->Dumpxs : $d->Dumper);
+    return ($HTML::Mason::Config{use_data_dumper_xs} ? $d->Dumpxs : $d->Dump);
 }
 
 #
