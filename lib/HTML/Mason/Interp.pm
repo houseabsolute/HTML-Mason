@@ -167,12 +167,12 @@ sub _initialize
 
 sub data_cache_filename
 {
-    my ($self, $path) = @_;
-    my $cacheFile = $path;
-    $cacheFile =~ s@^/@@;
-    $cacheFile =~ s@/@::@g;
-    $cacheFile = $self->data_cache_dir."/".$cacheFile;
-    return $cacheFile;
+    my ($self,$path) = @_;
+    for ($path) {
+	s@^/@@;
+	s/([^\w\.\-\~])/sprintf('+%02x', ord $1)/eg;
+    }
+    return $self->data_cache_dir."/".$path;
 }
 
 #

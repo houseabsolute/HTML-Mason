@@ -24,6 +24,9 @@ After that, you can edit it by hand, following the comments inside.
 files. This allows Mason internally to grab the configuration data
 with "C<use HTML::Mason::Config>".
 
+When upgrading from a previous version, "make install" will
+maintain the previous Config.pm values.
+
 Currently this file controls:
 
 o Whether or not certain optional modules, such as Time::HiRes,
@@ -218,12 +221,11 @@ parameters and declare lexical (C<my>) variables in components, there
 is very little need for globals at all.
 
 That said, there are times when it is very useful to make a value
-available to all Mason components. One example is the Apache request
-object; this is automatically made available as the global $r. Other
-examples are a DBI database handler or a hash of user session
-information.  Usually you initialize the global in your handler.pl,
-either outside the handler() subroutine (if you only need to set it
-once) or inside (if you need to set it every request).
+available to all Mason components: a DBI database handler, a hash of
+user session information, the server root for forming absolute URLs.
+Usually you initialize the global in your handler.pl, either outside
+the handler() subroutine (if you only need to set it once) or inside
+(if you need to set it every request).
 
 Mason by default parses components in C<strict> mode, so you can't
 simply start referring to a new global or you'll get a fatal
@@ -299,9 +301,13 @@ to the MLDBM documentation.
 
 Once set up, data caching requires little administration. When a
 component calls C<mc_cache> or C<mc_cache_self> for the first time,
-Mason automatically creates a new cache file under C<data_dir/cache>,
-replacing slashes in the component path with "::". For example, the
-cache file for component C</foo/bar> is C<data_dir/cache/foo::bar>.
+Mason automatically creates a new cache file under C<data_dir/cache>.
+The name of the file is determined by encoding the path as follows:
+
+    s/([^\w\.\-\~])/sprintf('+%02x', ord $1)/eg;
+
+like URL encoding with a '+' escape character. For example, the
+cache file for component C</foo/bar> is C<data_dir/cache/foo+2fbar>.
 
 Currently Mason never deletes cache files, not even when the
 associated component file is modified.  (This may change in the near future.)
@@ -563,16 +569,15 @@ B<Suggested Uses>
 
 Performance: REQUEST events are useful for analyzing the performance
 of all Mason requests occurring on your site, and identifying the
-slowest requests. (You cannot measure this with standard Apache logs
-since they only record the end time of the request.) eg/perflog.pl
-in the Mason distribution is a log parser that outputs the average
-compute time of each unique URL, in order from slowest to quickest.
+slowest requests. eg/perflog.pl in the Mason distribution is a log
+parser that outputs the average compute time of each unique URL, in
+order from slowest to quickest.
 
 Server activity: REQUEST events are useful for determining what
 your web server children are working on, especially when you have a
 runaway.  For a given process, simply tail the log and find the last
 REQ_START event with that process id. (You can also use the Apache
-status page for this, of course.)
+status page for this.)
 
 Cache efficiency: CACHE events are useful for monitoring cache "hit
 rates" (number of successful reads over total number of reads) over
@@ -705,7 +710,7 @@ behavior in two ways:
 1.  Does not check component source files at all, relying solely on
 object files.  This means the developer or an automated system is
 responsible for recompiling any components that change and recreating
-object files, using the Parser L<Parser/parse> method.
+object files, using the Parser L<Parser/make_component> method.
 
 2.  Rather than continuously checking whether object files have
 changed, Mason monitors a "reload file" containing an ever-growing
@@ -738,7 +743,7 @@ debugging, while the main priority for the production site is
 performance. This section describes various ways to adapt Mason for
 each case.
 
-=head2 Output mode
+=head2 Out mode
 
 Mason can spew data in two modes. "Batch" mode means that Mason
 computes the entire page in memory and then transmits it all at
@@ -768,7 +773,25 @@ table which never gets closed. The user may see a partial page and
 have to "View source" to see the error message. In batch mode, the
 error message is output neatly and alone.
 
-You control output mode by setting C<ah-E<gt>output_mode> to "batch"
+If you don't mind the performance implications of batch mode, then
+running all servers (development and production) in batch mode offers
+additional flexibility to developers:
+
+=over
+
+=item
+
+HTTP headers can be manipulated in any component since they are not sent
+til the end. See L<Devel/sending_http_headers>.
+
+=item
+
+$m->clear_buffer can help in presenting a clean error message to the
+client. See L<Request/clear_buffer>.
+
+=back
+
+You control output mode by setting C<interp-E<gt>out_mode> to "batch"
 or "stream".
 
 =head2 Error mode
@@ -809,13 +832,13 @@ Consider reload files only for frequently visited production sites.
 
 =head1 CONFIGURING VIRTUAL SITES 
 
-The example below extends the L<Mason/single site configuration>
+These examples extend the L<Mason/single site configuration>
 example in B<HTML::Mason>.
 
-When configuring Mason to serve multiple virtual hosts, Mason's
-comp_root must be separated from the DocumentRoot (since DocumentRoot
-changes per virtual server). In this case you'll want to collect all
-of your DocumentRoots inside a single component space:
+=head2 Multiple sites, one component root
+
+If you want to share some components between your sites, arrange your
+httpd.conf so that all DocumentRoots live under a single component space:
 
     # httpd.conf
     PerlRequire /usr/local/mason/handler.pl
@@ -838,16 +861,13 @@ of your DocumentRoots inside a single component space:
         </Location>
     </VirtualHost>
 
-In contrast to these big changes to httpd.conf, the Mason bootstrap in
-handler.pl stays the same:
+In handler.pl:
 
     my $interp = new HTML::Mason::Interp (parser=>$parser,
                     comp_root=>'/usr/local/www/htdocs'
                     data_dir=>'/usr/local/mason/');
 
-The <Location> directives in this example now route all requests
-through Mason--every page is dynamic. The directory structure for this
-scenario might looks like this:
+The directory structure for this scenario might look like:
 
     /usr/local/www/htdocs/  # component root
         +- shared/          # shared components
@@ -856,9 +876,35 @@ scenario might looks like this:
 
 Incoming URLs for each site can only request components in their
 respective DocumentRoots, while components internally can call other
-components anywhere in the component space. The shared/ directory,
-then, is a private directory for use by components, inaccessible from
+components anywhere in the component space. The shared/ directory
+is a private directory for use by components, inaccessible from
 the Web.
+
+=head2 Multiple sites, multiple component roots
+
+Sometimes your sites need to have completely distinct component
+hierarchies, e.g. if you are providing Mason ISP services for multiple
+users. In this case the component root must change depending on the
+site requested. Since you can't change an interpreter's component root
+dynamically, you need to maintain separate Mason objects for each
+site in the handler.pl:
+
+    my (%interp,%ah);
+    foreach my $site qw(...) {
+        $interp{$site} = new HTML::Mason::Interp  (comp_root=>"/usr/local/www/$site",...);
+        $ah{$site} = new HTML::Mason::ApacheHandler (interp=>$interp{$site},...);
+    }
+
+    ...
+
+    sub handler {
+        my $site = $r->dir_config('site');
+        $ah{$site}->handle_request($r);
+    }
+
+In this example we assume each virtual server configuration section has a
+
+    PerlSetVar site I<site_name>
 
 =head1 AUTHOR
 

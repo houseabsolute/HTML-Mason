@@ -188,9 +188,16 @@ B<&lt;%perl&gt; xxx &lt;%/perl&gt;>
 
 Useful for Perl blocks of more than a few lines.
 
-=head1 REQUEST OBJECTS
+=head1 MASON OBJECTS
 
-Two global objects are available from all components: $r and $m.
+This section describes the various objects in the Mason universe.
+If you're just starting out, all you need to worry about initially
+are the request objects.
+
+=head2 REQUEST OBJECTS
+
+Two global per-request objects are available to all components: $r and
+$m.
 
 $r, the mod_perl request object, provides a Perl API to the current
 Apache request.  It is fully described in Apache.pod. Here is a
@@ -208,6 +215,27 @@ Mason features not activated by syntactic tags are accessed via $m
 methods.  You'll be introduced to these methods throughout this
 document as they are needed.  For a description of all methods see
 B<L<HTML::Mason::Request>>.
+
+=head2 SYSTEM OBJECTS
+
+Three system objects share the work of serving requests in Mason:
+Parser, Interp, and ApacheHandler. The administrator creates these
+objects and provides parameters that shape Mason's behavior. As a pure
+component developer you shouldn't need to worry about or access these
+objects, but occasionally we'll mention a parameter that affects a
+feature.
+
+=head2 COMPONENT OBJECTS
+
+Mason provides an object API for components, allowing you to query a
+component's various asociated files, arguments, etc. For a description
+of all methods see B<L<HTML::Mason::Component>>.  Typically you get a
+handle on a component object from request methods like
+C<$m->current_comp> and C<$m->fetch_comp>. 
+
+Note that for many basic applications all you'll want to do with
+components is call them, for which no object method is needed. See
+next section.
 
 =head1 CALLING COMPONENTS
 
@@ -264,7 +292,7 @@ Here are some examples:
     # begin with a letter or number; delimit with () to remedy this
     <& (int(rand(2)) ? 'thiscomp' : 'thatcomp'), id=>123 &>
 
-Several Mason methods also provide ways to call components.  C<$m->comp>
+Several request methods also exist for calling components.  C<$m->comp>
 performs the equivalent action to <& &>:
 
     $m->comp('/shared/masthead', color=>'salmon');
@@ -274,7 +302,7 @@ the component output, allowing the caller to examine and modify it
 before printing:
 
     my $masthead = $m->scomp('/shared/masthead', color=>'salmon');
-    $masthead =~ ...
+    $masthead =~ ...;
 
 =head2 Components that compute values
 
@@ -469,7 +497,7 @@ If you have recursive mode turned on but want a particular autohandler
 to apply only to the current directory, use a conditional like this:
 
     <%init>
-    return $m->auto_next if ($m->auto_comp =~ /\//);
+    return $m->auto_next if ($m->auto_comp->dir_path eq $m->current_comp->dir_path);
     ... rest of autohandler ...
     </%init>
 
