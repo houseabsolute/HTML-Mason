@@ -181,10 +181,16 @@ sub load_pkg {
     return 1;
 }
 
+# For performance, cache whether taint is on or off the first time the
+# function is called.  According to perlsec, "Once taint mode is on,
+# it's on for the remainder of your script.
+my $taint_is_on;
 sub taint_is_on
 {
+    return $taint_is_on if defined($taint_is_on);
     local $^W;
-    return not eval { "$0$^X" && kill 0; 1 };
+    $taint_is_on = (not eval { "$0$^X" && kill 0; 1 }) ? 1 : 0;
+    return $taint_is_on;
 }
 
 sub make_fh
