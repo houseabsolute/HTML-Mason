@@ -84,10 +84,13 @@ sub object_id
 	# by much.  We _could_ use B::Deparse's coderef2text method to
 	# do this properly but I'm not sure if that's a good idea or
 	# if it works for Perl 5.005.
-	push @vals, ( $spec->{$k}{parse} eq 'code'  ? ( $self->{$k} ? 1 : 0 ) :
-		      UNIVERSAL::isa( $self->{$k}, 'HASH' )  ? map { $_ => $self->{$k}{$_} } sort keys %{ $self->{$k} } :
-		      UNIVERSAL::isa( $self->{$k}, 'ARRAY' ) ? sort @{ $self->{$k} } :
-		      $self->{$k} );
+	push @vals,
+            $HTML::Mason::VERSION,
+            ( $spec->{$k}{parse} eq 'code'  ? ( $self->{$k} ? 1 : 0 ) :
+              UNIVERSAL::isa( $self->{$k}, 'HASH' )  ?
+              map { $_ => $self->{$k}{$_} } sort keys %{ $self->{$k} } :
+              UNIVERSAL::isa( $self->{$k}, 'ARRAY' ) ? sort @{ $self->{$k} } :
+              $self->{$k} );
     }
 
     # unpack('%32C*', $x) computes the 32-bit checksum of $x
