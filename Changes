@@ -16,8 +16,8 @@ cache with the new caching system.  This is in HTML::Mason::Devel.
 
 [ BUG FIXES ]
 
-- Fix compilation error in HTML::Mason::Tools that was occuring with
-Perl 5.00503.
+- Fixed a compilation error in HTML::Mason::Tools that was occuring
+with Perl 5.00503.
 - Allow <%method> and <%def> tags to be in any case.
 
 1.12  July 23, 2002
