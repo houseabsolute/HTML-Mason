@@ -138,360 +138,379 @@ value for baz is baz
 EOF
 		    );
 
+# #------------------------------------------------------------
+
+#     $group->add_support ( path => 'support/cache_self',
+# 			  component => <<'EOF',
+# x is <% $x %>
+# <%args>
+# $x
+# </%args>
+# <%init>
+# return if $m->cache_self;
+# </%init>
+# EOF
+# 			);
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'cache_self',
+# 		      description => 'test $m->cache_self',
+# 		      component => <<'EOF',
+# <& support/cache_self, x => 1 &>
+# <& support/cache_self, x => 99 &>
+# EOF
+# 		      expect => <<'EOF',
+# x is 1
+
+# x is 1
+# EOF
+# 		    );
+
+# #------------------------------------------------------------
+
+#     $group->add_support ( path => 'support/cache_self_expires_in',
+# 			  component => <<'EOF',
+# x is <% $x %>
+# <%args>
+# $x
+# </%args>
+# <%init>
+# return if $m->cache_self( expires_in => '1s' );
+# </%init>
+# EOF
+# 			);
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'cache_self_expires_in',
+# 		      description => 'test that $m->cache_self respects expires_in parameter',
+# 		      component => <<'EOF',
+# <& support/cache_self_expires_in, x => 1 &>
+# <& support/cache_self_expires_in, x => 2 &>
+# % sleep 3;
+# <& support/cache_self_expires_in, x => 99 &>
+# EOF
+# 		      expect => <<'EOF',
+# x is 1
+
+# x is 1
+
+# x is 99
+# EOF
+# 		    );
+
+# #------------------------------------------------------------
+
+#     $group->add_support ( path => 'support/cache_self_expire_in',
+# 			  component => <<'EOF',
+# x is <% $x %>
+# <%args>
+# $x
+# </%args>
+# <%init>
+# return if $m->cache_self( expire_in => '1s' );
+# </%init>
+# EOF
+# 			);
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'cache_self_expire_in',
+# 		      description => 'test that $m->cache_self respects expire_in parameter',
+# 		      component => <<'EOF',
+# <& support/cache_self_expire_in, x => 1 &>
+# <& support/cache_self_expire_in, x => 2 &>
+# % sleep 3;
+# <& support/cache_self_expire_in, x => 99 &>
+# EOF
+# 		      expect => <<'EOF',
+# x is 1
+
+# x is 1
+
+# x is 99
+# EOF
+# 		    );
+
+# #------------------------------------------------------------
+
+#     $group->add_support ( path => 'support/cache_self_expire_if',
+# 			  component => <<'EOF',
+# x is <% $x %>
+# <%args>
+# $x
+# </%args>
+# <%init>
+# return if $m->cache_self( expire_if => sub { $x == 3 } );
+# </%init>
+# EOF
+# 			);
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'cache_self_expire_if',
+# 		      description => 'test that $m->cache_self respects expire_if parameter',
+# 		      component => <<'EOF',
+# <& support/cache_self_expire_if, x => 1 &>
+# <& support/cache_self_expire_if, x => 2 &>
+# <& support/cache_self_expire_if, x => 3 &>
+# <& support/cache_self_expire_if, x => 4 &>
+# EOF
+# 		      expect => <<'EOF',
+# x is 1
+
+# x is 1
+
+# x is 3
+
+# x is 3
+# EOF
+# 		    );
+
+# #------------------------------------------------------------
+
+#     $group->add_support ( path => 'support/cache_self_with_key',
+# 			  component => <<'EOF',
+# x is <% $x %>
+# <%args>
+# $x
+# $key
+# </%args>
+# <%init>
+# return if $m->cache_self( key => $key );
+# </%init>
+# EOF
+# 			);
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'cache_self_key',
+# 		      description => 'test $m->cache_self with a key',
+# 		      component => <<'EOF',
+# <& support/cache_self_with_key, x => 1, key => 1 &>
+# <& support/cache_self_with_key, x => 99, key => 99 &>
+# <& support/cache_self_with_key, x => 1000, key => 1 &>
+# EOF
+# 		      expect => <<'EOF',
+# x is 1
+
+# x is 99
+
+# x is 1
+# EOF
+# 		    );
+
+# #------------------------------------------------------------
+
+#     $group->add_support ( path => 'support/cache_self_and_die',
+# 			  component => <<'EOF',
+# <%init>
+# return if $m->cache_self;
+# die "argh!";
+# </%init>
+# EOF
+# 			);
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'cache_self_error',
+# 		      description => 'test $m->cache_self with an error to make sure errors are propogated',
+# 		      component => <<'EOF',
+# <& support/cache_self_and_die, x => 1, key => 1 &>
+# EOF
+# 		      expect_error => qr/argh! at .*/,
+# 		    );
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'cache_self_scomp',
+#                       description => 'make sure that $m->cache_self cooperates with $m->scomp',
+#                       component => <<'EOF',
+# <% $m->scomp( 'support/cache_self', x => 1 ) %>
+# <% $m->scomp( 'support/cache_self', x => 99 ) %>
+# EOF
+#                       expect => <<'EOF',
+# x is 1
+
+# x is 1
+# EOF
+#                     );
+
+# #------------------------------------------------------------
+
+#     $group->add_support ( path => 'support/cache_self_filtered',
+# 			  component => <<'EOF',
+# x is <% $x %>
+# <%args>
+# $x
+# $key => 1
+# </%args>
+# <%init>
+# return if $m->cache_self( key => $key );
+# </%init>
+# <%filter>
+# $_ = uc $_;
+# $_ .= ' filtered';
+# </%filter>
+# EOF
+# 			);
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'cache_self_filtered',
+# 		      description => 'test $m->cache_self with a filter block',
+# 		      component => <<'EOF',
+# <& support/cache_self_filtered, x => 1 &>
+# <& support/cache_self_filtered, x => 99 &>
+# EOF
+# 		      expect => <<'EOF',
+# X IS 1
+#  filtered
+# X IS 1
+#  filtered
+# EOF
+# 		    );
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'cache_self_filtered_scomp',
+# 		      description => 'test $m->cache_self with a filter block callled via $m->scomp',
+# 		      component => <<'EOF',
+# <% $m->scomp( 'support/cache_self_filtered', key => 2, x => 1 ) %>
+# <% $m->scomp( 'support/cache_self_filtered', key => 2, x => 99 ) %>
+# EOF
+# 		      expect => <<'EOF',
+# X IS 1
+#  filtered
+# X IS 1
+#  filtered
+# EOF
+# 		    );
+
+# #------------------------------------------------------------
+
+#     $group->add_support ( path => 'support/cache_self_filtered_2',
+# 			  component => <<'EOF',
+# x is <% $x %>
+# <%args>
+# $x
+# </%args>
+# <%init>
+# return if $m->cache_self;
+# </%init>
+# <%filter>
+# $Global::foo ||= 1;
+# $Global::foo++;
+# $_ .= "global is $Global::foo";
+# </%filter>
+# EOF
+# 			);
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'cache_self_filtered_2',
+# 		      description => 'make sure that results are cached _after_ filtering',
+# 		      component => <<'EOF',
+# <& support/cache_self_filtered_2, x => 1 &>
+# <& support/cache_self_filtered_2, x => 99 &>
+# EOF
+# 		      expect => <<'EOF',
+# x is 1
+# global is 2
+# x is 1
+# global is 2
+# EOF
+# 		    );
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'expire_if',
+# 		      description => 'test expire_if',
+# 		      component => <<'EOF',
+# <% join(', ', $value1 || 'undef', $value2 || 'undef', $value3 || 'undef') %>
+# <%init>
+# my $time = time;
+# my $cache = $m->cache;
+# $cache->set('main', 'gardenia');
+# my $value1 = $cache->get('main', expire_if=>sub { $_[0]->get_created_at <= $time-1 });
+# my $value2 = $cache->get('main', expire_if=>sub { $_[0]->get_created_at >= $time });
+# my $value3 = $cache->get('main');
+# </%init>
+# EOF
+# 		      expect => <<'EOF',
+# gardenia, undef, undef
+# EOF
+# 		    );
+
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'busy_lock',
+# 		      description => 'test busy_lock',
+# 		      component => <<'EOF',
+# <% join(', ', $value1 || 'undef', $value2 || 'undef') %>
+# <%init>
+# my $time = time;
+# my $cache = $m->cache;
+# $cache->set('main', 'gardenia', 0);
+# sleep(1);
+# my $value1 = $cache->get('main', busy_lock=>10);
+# my $value2 = $cache->get('main');
+# </%init>
+# EOF
+# 		      expect => <<'EOF',
+# undef, gardenia
+# EOF
+# 		    );
+
+# #------------------------------------------------------------
+
+#     $group->add_support ( path => 'support/cache_self_die',
+# 			  component => <<'EOF',
+# die
+# <%init>
+# return if $m->cache_self;
+# die 'foo';
+# </%init>
+# EOF
+# 			);
+
+# #------------------------------------------------------------
+
+#     $group->add_test( name => 'cache_self_death',
+# 		      description => 'test $m->cache_self and death',
+# 		      component => <<'EOF',
+# <% $old_stack_size == $new_stack_size ? 'same' : "$old_stack_size != $new_stack_size" %>
+# <%init>
+# my $old_stack_size = scalar $m->buffer_stack;
+# eval { $m->comp( 'support/cache_self_die' ) };
+# my $new_stack_size = scalar $m->buffer_stack;
+# </%init>
+# EOF
+# 		      expect => <<'EOF',
+# same
+# EOF
+# 		    );
+
 #------------------------------------------------------------
 
-    $group->add_support ( path => 'support/cache_self',
-			  component => <<'EOF',
-x is <% $x %>
-<%args>
-$x
-</%args>
-<%init>
-return if $m->cache_self;
-</%init>
+    $group->add_support( path => 'declined/dhandler',
+                         component => <<'EOF',
+decline was called
 EOF
-			);
+                       );
 
-#------------------------------------------------------------
-
-    $group->add_test( name => 'cache_self',
-		      description => 'test $m->cache_self',
-		      component => <<'EOF',
-<& support/cache_self, x => 1 &>
-<& support/cache_self, x => 99 &>
-EOF
-		      expect => <<'EOF',
-x is 1
-
-x is 1
-EOF
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_support ( path => 'support/cache_self_expires_in',
-			  component => <<'EOF',
-x is <% $x %>
-<%args>
-$x
-</%args>
-<%init>
-return if $m->cache_self( expires_in => '1s' );
-</%init>
-EOF
-			);
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'cache_self_expires_in',
-		      description => 'test that $m->cache_self respects expires_in parameter',
-		      component => <<'EOF',
-<& support/cache_self_expires_in, x => 1 &>
-<& support/cache_self_expires_in, x => 2 &>
-% sleep 3;
-<& support/cache_self_expires_in, x => 99 &>
-EOF
-		      expect => <<'EOF',
-x is 1
-
-x is 1
-
-x is 99
-EOF
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_support ( path => 'support/cache_self_expire_in',
-			  component => <<'EOF',
-x is <% $x %>
-<%args>
-$x
-</%args>
-<%init>
-return if $m->cache_self( expire_in => '1s' );
-</%init>
-EOF
-			);
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'cache_self_expire_in',
-		      description => 'test that $m->cache_self respects expire_in parameter',
-		      component => <<'EOF',
-<& support/cache_self_expire_in, x => 1 &>
-<& support/cache_self_expire_in, x => 2 &>
-% sleep 3;
-<& support/cache_self_expire_in, x => 99 &>
-EOF
-		      expect => <<'EOF',
-x is 1
-
-x is 1
-
-x is 99
-EOF
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_support ( path => 'support/cache_self_expire_if',
-			  component => <<'EOF',
-x is <% $x %>
-<%args>
-$x
-</%args>
-<%init>
-return if $m->cache_self( expire_if => sub { $x == 3 } );
-</%init>
-EOF
-			);
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'cache_self_expire_if',
-		      description => 'test that $m->cache_self respects expire_if parameter',
-		      component => <<'EOF',
-<& support/cache_self_expire_if, x => 1 &>
-<& support/cache_self_expire_if, x => 2 &>
-<& support/cache_self_expire_if, x => 3 &>
-<& support/cache_self_expire_if, x => 4 &>
-EOF
-		      expect => <<'EOF',
-x is 1
-
-x is 1
-
-x is 3
-
-x is 3
-EOF
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_support ( path => 'support/cache_self_with_key',
-			  component => <<'EOF',
-x is <% $x %>
-<%args>
-$x
-$key
-</%args>
-<%init>
-return if $m->cache_self( key => $key );
-</%init>
-EOF
-			);
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'cache_self_key',
-		      description => 'test $m->cache_self with a key',
-		      component => <<'EOF',
-<& support/cache_self_with_key, x => 1, key => 1 &>
-<& support/cache_self_with_key, x => 99, key => 99 &>
-<& support/cache_self_with_key, x => 1000, key => 1 &>
-EOF
-		      expect => <<'EOF',
-x is 1
-
-x is 99
-
-x is 1
-EOF
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_support ( path => 'support/cache_self_and_die',
-			  component => <<'EOF',
-<%init>
-return if $m->cache_self;
-die "argh!";
-</%init>
-EOF
-			);
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'cache_self_error',
-		      description => 'test $m->cache_self with an error to make sure errors are propogated',
-		      component => <<'EOF',
-<& support/cache_self_and_die, x => 1, key => 1 &>
-EOF
-		      expect_error => qr/argh! at .*/,
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'cache_self_scomp',
-                      description => 'make sure that $m->cache_self cooperates with $m->scomp',
+    $group->add_test( name => 'declined/cache_self_decline',
+                      description => 'test $m->decline in presence of $m->cache_self',
                       component => <<'EOF',
-<% $m->scomp( 'support/cache_self', x => 1 ) %>
-<% $m->scomp( 'support/cache_self', x => 99 ) %>
+% return if $m->cache_self;
+% $m->decline;
 EOF
                       expect => <<'EOF',
-x is 1
-
-x is 1
+decline was called
 EOF
                     );
-
-#------------------------------------------------------------
-
-    $group->add_support ( path => 'support/cache_self_filtered',
-			  component => <<'EOF',
-x is <% $x %>
-<%args>
-$x
-$key => 1
-</%args>
-<%init>
-return if $m->cache_self( key => $key );
-</%init>
-<%filter>
-$_ = uc $_;
-$_ .= ' filtered';
-</%filter>
-EOF
-			);
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'cache_self_filtered',
-		      description => 'test $m->cache_self with a filter block',
-		      component => <<'EOF',
-<& support/cache_self_filtered, x => 1 &>
-<& support/cache_self_filtered, x => 99 &>
-EOF
-		      expect => <<'EOF',
-X IS 1
- filtered
-X IS 1
- filtered
-EOF
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'cache_self_filtered_scomp',
-		      description => 'test $m->cache_self with a filter block callled via $m->scomp',
-		      component => <<'EOF',
-<% $m->scomp( 'support/cache_self_filtered', key => 2, x => 1 ) %>
-<% $m->scomp( 'support/cache_self_filtered', key => 2, x => 99 ) %>
-EOF
-		      expect => <<'EOF',
-X IS 1
- filtered
-X IS 1
- filtered
-EOF
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_support ( path => 'support/cache_self_filtered_2',
-			  component => <<'EOF',
-x is <% $x %>
-<%args>
-$x
-</%args>
-<%init>
-return if $m->cache_self;
-</%init>
-<%filter>
-$Global::foo ||= 1;
-$Global::foo++;
-$_ .= "global is $Global::foo";
-</%filter>
-EOF
-			);
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'cache_self_filtered_2',
-		      description => 'make sure that results are cached _after_ filtering',
-		      component => <<'EOF',
-<& support/cache_self_filtered_2, x => 1 &>
-<& support/cache_self_filtered_2, x => 99 &>
-EOF
-		      expect => <<'EOF',
-x is 1
-global is 2
-x is 1
-global is 2
-EOF
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'expire_if',
-		      description => 'test expire_if',
-		      component => <<'EOF',
-<% join(', ', $value1 || 'undef', $value2 || 'undef', $value3 || 'undef') %>
-<%init>
-my $time = time;
-my $cache = $m->cache;
-$cache->set('main', 'gardenia');
-my $value1 = $cache->get('main', expire_if=>sub { $_[0]->get_created_at <= $time-1 });
-my $value2 = $cache->get('main', expire_if=>sub { $_[0]->get_created_at >= $time });
-my $value3 = $cache->get('main');
-</%init>
-EOF
-		      expect => <<'EOF',
-gardenia, undef, undef
-EOF
-		    );
-
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'busy_lock',
-		      description => 'test busy_lock',
-		      component => <<'EOF',
-<% join(', ', $value1 || 'undef', $value2 || 'undef') %>
-<%init>
-my $time = time;
-my $cache = $m->cache;
-$cache->set('main', 'gardenia', 0);
-sleep(1);
-my $value1 = $cache->get('main', busy_lock=>10);
-my $value2 = $cache->get('main');
-</%init>
-EOF
-		      expect => <<'EOF',
-undef, gardenia
-EOF
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_support ( path => 'support/cache_self_die',
-			  component => <<'EOF',
-die
-<%init>
-return if $m->cache_self;
-die 'foo';
-</%init>
-EOF
-			);
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'cache_self_death',
-		      description => 'test $m->cache_self and death',
-		      component => <<'EOF',
-<% $old_stack_size == $new_stack_size ? 'same' : "$old_stack_size != $new_stack_size" %>
-<%init>
-my $old_stack_size = scalar $m->buffer_stack;
-eval { $m->comp( 'support/cache_self_die' ) };
-my $new_stack_size = scalar $m->buffer_stack;
-</%init>
-EOF
-		      expect => <<'EOF',
-same
-EOF
-		    );
 
 #------------------------------------------------------------
 
