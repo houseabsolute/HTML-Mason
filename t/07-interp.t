@@ -872,7 +872,7 @@ EOF
 my $ctext = q|
 % my $x = 'Hello, ';
 <% $x %>|;
-my $comp = $m->interp->make_component( comp_text => $ctext );
+my $comp = $m->interp->make_component( comp_source => $ctext );
 </%init>
 % $m->comp($comp);
 World
@@ -888,7 +888,7 @@ EOF
     $group->add_test( name => 'make_component',
 		      description => 'test make_component() with a path',
 		      component => <<'EOF',
-% $m->interp->make_component( comp_text => 'Hello, <% "World" %>', path => '/fooey_comp' );
+% $m->interp->make_component( comp_source => 'Hello, <% "World" %>', path => '/fooey_comp' );
 % $m->comp('/fooey_comp');
 !
 EOF
@@ -906,7 +906,7 @@ EOF
 		      is_virtual => 1,
 
 		      component => <<'EOF',
-% $m->interp->make_component( comp_text => 'Hello, <% "World" %>', path => '/fooey_comp' );
+% $m->interp->make_component( comp_source => 'Hello, <% "World" %>', path => '/fooey_comp' );
 % $m->comp('/fooey_comp');
 !
 EOF
