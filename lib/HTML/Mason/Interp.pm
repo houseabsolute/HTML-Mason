@@ -734,13 +734,12 @@ sub add_escape
     while ( my ($name, $sub) = each %p )
     {
         param_error "Invalid escape name ($name)"
-            unless $name =~ /^\w+$/;
+            unless $name =~ /^[\w+-]$/;
 
         $self->{escapes}{$name} = $sub;
     }
 }
 
-# XXX - not sure this is useful
 sub remove_escape
 {
     my $self = shift;
@@ -755,10 +754,10 @@ sub apply_escapes
 
     foreach my $flag (@_)
     {
-        # XXX - handle missing escape better
-        next unless exists $self->{escapes}{$flag};
+        param_error "Invalid escape flag: $flag"
+            unless exists $self->{escapes}{$flag};
 
-        $text = $self->{escapes}{$flag}->($text);
+        $self->{escapes}{$flag}->(\$text);
     }
 
     return $text;
@@ -948,6 +947,24 @@ for examples.
 
 This method isn't generally useful in a mod_perl environment; see
 L<subrequests|HTML::Mason::Devel/Subrequests> instead.
+
+=for html <a name="item_add_escape"></a>
+
+=item add_escape ($name => \&subroutine)
+
+This method is called to add an escape flag to the list of known
+escapes for the interpreter.  The flag may only consist of the
+characters matching C<\w> and the dash (-).  The code reference passed
+should expect to be given a single scalar reference, which it should
+alter as needed.  Any return value from this subroutine will be
+ignored.
+
+=for html <a name="item_add_escape"></a>
+
+=item remove_escape ($name)
+
+Given an escape name, this removes that escape from the interpreter's
+known escapes.  If the name is not recognized, it is simply ignored.
 
 =for html <a name="item_set_global"></a>
 
