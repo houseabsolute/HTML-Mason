@@ -290,13 +290,13 @@ sub handle_preview_request_1
 	my $startCompHook = sub {
 	    my ($req) = @_;
 	    $content .= "\cAEVENT$eventnum\cA";
-	    my $path = $req->comp->title;
-	    $compEvents[$eventnum++] = {type=>'startComp',path=>$path,comp=>($req->comp)};
+	    my $path = $req->current_comp->title;
+	    $compEvents[$eventnum++] = {type=>'startComp',path=>$path,comp=>($req->current_comp)};
 	};
 	my $endCompHook = sub {
 	    my ($req) = @_;
 	    $content .= "\cAEVENT$eventnum\cA";
-	    my $path = $req->comp->title;
+	    my $path = $req->current_comp->title;
 	    $compEvents[$eventnum++] = {type=>'endComp',path=>$path};
 	};
 	my $startFileHook = sub {

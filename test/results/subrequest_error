@@ -1,17 +1,6 @@
 
 Calling helper
 
-My depth is 2.
-
-The top-level component is /support/subrequest_error_test.
-
-My stack looks like:
------
-/support/display_req_obj
-/support/subrequest_error_test
------
-
-
 Error: error while executing /support/subrequest_error_test:
 whoops! 
 

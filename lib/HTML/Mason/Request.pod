@@ -4,13 +4,13 @@ HTML::Mason::Request - Mason Request Class
 
 =head1 SYNOPSIS
 
-    $REQ->...
+    $m->...
 
 =head1 DESCRIPTION
 
 Mason creates one Request object for every web request (or, in
 stand-alone mode, every C<Interp::exec> call). Inside a component you
-access the current request object via the global C<$REQ>.
+access the current request object via the global C<$m>.
 
 Prior to version 0.7, the only way to access request information was
 through specific mc_ commands. For this reason many of the methods
@@ -51,9 +51,9 @@ component objects, starting with the current component and ending with
 the top-level component. With one numeric argument, returns the
 component object at that index in the list. e.g.
 
-    $REQ->callers(0)      # current component
-    $REQ->callers(1)      # component that called us
-    $REQ->callers(-1)     # top-level component
+    $m->callers(0)      # current component
+    $m->callers(1)      # component that called us
+    $m->callers(-1)     # top-level component
 
 =for html <a name="comp">
 

@@ -74,7 +74,7 @@ my %fields =
      decline_dirs => 1,
      error_mode => undef,
      interp => undef,
-     output_mode => undef,  # deprecated
+     output_mode => undef,    # deprecated - now interp->out_mode
      top_level_predicate => undef,
      debug_mode => 'none',
      debug_perl_binary => '/usr/bin/perl',
@@ -115,9 +115,6 @@ sub _initialize {
 
     my $interp = $self->interp;
 
-    # Handle deprecated out_mode by passing to interpreter.
-    $interp->out_mode($self->out_mode) if (defined($self->out_mode));
-    
     # Add an HTML::Mason menu item to the /perl-status page. Things we report:
     # -- Interp properties
     # -- loaded (cached) components
@@ -198,13 +195,13 @@ sub interp_status
 sub handle_request {
 
     #
-    # Why do we use $req instead of $r here? A scoping bug in certain
+    # Why do we use $apreq instead of $r here? A scoping bug in certain
     # versions of Perl 5.005 was getting confused about $r being used
     # in components, and the easiest workaround was to rename "$r" to
     # something else in this routine.  Go figure...
     # -jswartz 5/23
     #
-    my ($self,$req) = @_;
+    my ($self,$apreq) = @_;
     my ($outsub, $retval);
     my $outbuf = '';
     my $interp = $self->interp;
@@ -214,8 +211,8 @@ sub handle_request {
     # Construct (and truncate if necessary) the request to log at start
     #
     if ($interp->system_log_event_check('REQ_START')) {
-	my $rstring = $req->server->server_hostname . $req->uri;
-	$rstring .= "?".scalar($req->args) if defined(scalar($req->args));
+	my $rstring = $apreq->server->server_hostname . $apreq->uri;
+	$rstring .= "?".scalar($apreq->args) if defined(scalar($apreq->args));
 	$rstring = substr($rstring,0,150).'...' if length($rstring) > 150;
 	$interp->write_system_log('REQ_START', $self->{request_number},
 				  $rstring);
@@ -229,10 +226,10 @@ sub handle_request {
     $debugMode = 'none' if $HTML::Mason::IN_DEBUG_FILE;
 
     #
-    # Capture debug state as early as possible, before we start messing with $req.
+    # Capture debug state as early as possible, before we start messing with $apreq.
     #
     my $debugState;
-    $debugState = $self->capture_debug_state($req)
+    $debugState = $self->capture_debug_state($apreq)
 	if ($debugMode eq 'all' or $debugMode eq 'error');
 
     #
@@ -241,10 +238,10 @@ sub handle_request {
     # because we don't yet have the stdin content.
     #
     my $debugMsg;
-    $debugMsg = $self->write_debug_file($req,$debugState)
-	if ($debugMode eq 'all' && $req->method ne 'POST');
+    $debugMsg = $self->write_debug_file($apreq,$debugState)
+	if ($debugMode eq 'all' && $apreq->method ne 'POST');
 
-    eval { $retval = handle_request_1($self, $req, $debugState) };
+    eval { $retval = handle_request_1($self, $apreq, $debugState) };
     my $err = $@;
     my $err_status = $err ? 1 : 0;
 
@@ -255,25 +252,24 @@ sub handle_request {
 	#
 	$err =~ s@^\[[^\]]*\] \(eval [0-9]+\): @@mg;
 	$err = html_escape($err);
-	my $referer = $req->header_in('Referer') || '<none>';
-	my $agent = $req->header_in('User-Agent') || '';
-	$err = sprintf("while serving %s %s (referer=%s, agent=%s)\n%s",$req->server->server_hostname,$req->uri,$referer,$agent,$err);
+	my $referer = $apreq->header_in('Referer') || '<none>';
+	my $agent = $apreq->header_in('User-Agent') || '';
+	$err = sprintf("while serving %s %s (referer=%s, agent=%s)\n%s",$apreq->server->server_hostname,$apreq->uri,$referer,$agent,$err);
 
 	if ($self->error_mode eq 'fatal') {
 	    die ("System error:\n$err\n");
 	} elsif ($self->error_mode eq 'html') {
-	    if (!http_header_sent($req)) {
-		$req->content_type('text/html');
-		$req->send_http_header();
+	    if (!http_header_sent($apreq)) {
+		$apreq->content_type('text/html');
+		$apreq->send_http_header();
 	    }
 	    print("<h3>System error</h3><p><pre><font size=-1>$err</font></pre>\n");
-	    $debugMsg = $self->write_debug_file($req,$debugState) if ($debugMode eq 'error' || ($debugMode eq 'all' && $req->method eq 'POST'));
+	    $debugMsg = $self->write_debug_file($apreq,$debugState) if ($debugMode eq 'error' || ($debugMode eq 'all' && $apreq->method eq 'POST'));
 	    print("<pre><font size=-1>\n$debugMsg\n</font></pre>\n") if defined($debugMsg);
 	}
     } else {
-	$debugMsg = $self->write_debug_file($req,$debugState) if ($debugMode eq 'all' && $req->method eq 'POST');
-	print("\n<!--\n$debugMsg\n-->\n") if defined($debugMsg) && http_header_sent($req) && !$req->header_only && $req->header_out("Content-type") =~ /text\/html/;
-	print($outbuf) if $self->output_mode eq 'batch';
+	$debugMsg = $self->write_debug_file($apreq,$debugState) if ($debugMode eq 'all' && $apreq->method eq 'POST');
+	print "\n<!--\n$debugMsg\n-->\n" if (defined($debugMsg) && http_header_sent($apreq) && !$apreq->header_only && $apreq->header_out("Content-type") =~ /text\/html/);
     }
 
     $interp->write_system_log('REQ_END', $self->{request_number}, $err_status);
@@ -459,7 +455,7 @@ sub handle_request_1
     #
     # Compute the component path via the resolver.
     #
-    my $compPath = $interp->resolver->file_to_path($r->filename,$interp)
+    my $compPath = $interp->resolver->file_to_path($r->filename,$interp);
     return NOT_FOUND unless $compPath;
 
     $compPath =~ s@/$@@ if $compPath ne '/';
@@ -477,7 +473,6 @@ sub handle_request_1
 	    $r->path_info($pathInfo);
 	    $dhandlerArg = substr($pathInfo,1);
 	} else {
-	    $r->warn("Mason: no component corresponding to filename \"".$r->filename."\", comp path \"$compPath\"; returning 404.");
 	    return NOT_FOUND;
 	}
     }
@@ -546,11 +541,18 @@ sub handle_request_1
     $request->dhandler_arg($dhandlerArg) if (defined($dhandlerArg));
 
     #
+    # Deprecated output_mode parameter - just pass to request out_mode.
+    #
+    if (my $mode = $self->output_mode) {
+	$request->out_mode($mode);
+    }
+    
+    #
     # Set up interpreter global variables.
     #
     $interp->set_global(r=>$r);
     
-    return $interp->exec_request($comp, $request, %args);
+    return $request->exec($comp, %args);
 }
 
 sub simulate_debug_request
@@ -588,13 +590,13 @@ sub http_header_sent
 # Apache-specific Mason commands
 #
 package HTML::Mason::Commands;
-use vars qw($REQ);
+use vars qw($m);
 sub mc_suppress_http_header
 {
     if ($_[0]) {
-	$REQ->suppress_hook(name=>'http_header',type=>'start_primary');
+	$m->suppress_hook(name=>'http_header',type=>'start_primary');
     } else {
-	$REQ->unsuppress_hook(name=>'http_header',type=>'start_primary');
+	$m->unsuppress_hook(name=>'http_header',type=>'start_primary');
     }
 }
 

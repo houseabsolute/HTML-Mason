@@ -1,5 +1,5 @@
 <%def .helper>
-% my $interp = $REQ->interp;
+% my $interp = $m->interp;
 % $interp->exec('/support/subrequest_error_test');
 </%def>
 

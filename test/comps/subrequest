@@ -1,7 +1,11 @@
 <%def .helper>
-% my $interp = $REQ->interp;
+% my $interp = $m->interp;
 Executing subrequest
-% $interp->exec('/support/display_req_obj');
+% # This is still unsupported but will likely be official later
+% my $buf;
+% my $req = new HTML::Mason::Request (interp=>$interp, out_method=>\$buf);
+% $req->exec('/support/display_req_obj');
+<% $buf %>
 </%def>
 
 Calling helper

@@ -701,7 +701,7 @@ variables (especially objects that are expensive to create), declaring
 subroutines (both named and anonymous), and initializing state.
 
 This code does not run inside a request context. You cannot call
-components, use any mc_ commands, or access $REQ from this section.
+components, use any mc_ commands, or access $m from this section.
 
 Normally this code will execute individually from every HTTP child
 that uses the component. However, if the component is preloaded, this
@@ -717,7 +717,7 @@ section:
     </%once>
 
     <%init>
-    if ($REQ->comp->first_time) {
+    if ($m->current_comp->first_time) {
         $dbh = DBI::connect ...
     }
     ...
@@ -1254,7 +1254,7 @@ workings.
 C<HTML::Mason::Request> allows you to query the state of, and perform
 actions on, the current request from inside a component. It provides
 for Mason what Apache::Request provides for the Apache server. Inside a
-component you access the current request object via the global C<$REQ>.
+component you access the current request object via the global C<$m>.
 From this one object you can:
 
 =over 4
@@ -1549,7 +1549,7 @@ to C<$r-E<gt>content> hang the server. This is a mod_perl "feature" that
 may be fixed in an upcoming release. Instead you can access the request
 input via
 
-  $REQ->http_input
+  $m->http_input
 
 For the same reason you should not create a CGI object like
 

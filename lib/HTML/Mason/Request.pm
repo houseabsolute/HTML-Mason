@@ -9,19 +9,25 @@ require Exporter;
 @EXPORT = qw();
 @EXPORT_OK = qw();
 
-use HTML::Mason::Tools qw(is_absolute_path);
+use HTML::Mason::Tools qw(is_absolute_path read_file);
 
+use Carp;
 use strict;
 use vars qw($REQ $REQ_DEPTH %REQ_DEPTHS);
 my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P,$HTML::Mason::Commands::REQ);
 
 my %fields =
-    (interp => undef,
+    (aborted => undef,
+     aborted_value => undef,
+     count => 0,
+     interp => undef,
+     out_method => undef,
+     out_mode => undef,
      );
-# Create accessor routines
+# Create read-only accessor routines
 foreach my $f (keys %fields) {
     no strict 'refs';
-    *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
+    *{$f} = sub {my $s=shift; die "cannot modify request field $f" if @_; return $s->{$f}};
 }
 
 sub new
@@ -30,9 +36,6 @@ sub new
     my $self = {
 	%fields,
 	autohandler_next => undef,
-	abort_flag => undef,
-	abort_retval => undef,
-	count => 0,
 	dhandler_arg => undef,
 	error_flag => undef,
 	out_buffer => '',
@@ -49,13 +52,100 @@ sub new
     bless $self, $class;
 
     my $interp = $self->{interp} or die "HTML::Mason::Request::new: must specify interp";
+
+    # Initialize hooks arrays for fast access
     while (my ($type,$href) = each(%{$interp->{hooks}})) {
 	$self->{"hooks_$type"} = [values(%$href)] if (%$href);
     }
+
+    # Inherit some properties from interp if not otherwise specified
+    $self->{out_method} = $interp->out_method if !defined($self->{out_method});
+    $self->{out_mode} = $interp->out_mode if !defined($self->{out_mode});
+
+    # Allow scalar or code reference as argument to out_method.
+    if (ref(my $ref = $self->{out_method}) eq 'SCALAR') {
+	$self->{out_method} = sub { $$ref .= $_[0] if defined($_[0]) };
+    }
+    
+    # Initialize other properties
     $self->{stack_array} = [];
     $self->{count} = ++($interp->{request_count});
 
     return $self;
+}
+
+sub exec {
+    my ($self, $comp, @args) = @_;
+    my $interp = $self->interp;
+    
+    # Check if reload file has changed.
+    $interp->check_reload_file if ($interp->{use_reload_file});
+    
+    # $comp can be an absolute path or component object.  If a path,
+    # load into object. If not found, check for dhandler.
+    if (!ref($comp) && substr($comp,0,1) eq '/') {
+	my $path = $comp;
+	if (!($comp = $interp->load($path))) {
+	    if (defined($interp->{dhandler_name}) and $comp = $interp->find_comp_upwards($path,$interp->{dhandler_name})) {
+		my $parent = $comp->dir_path;
+		($self->{dhandler_arg} = $path) =~ s{^$parent/}{};
+	    }
+	}
+	die "could not find component for path '$path'\n" if !$comp;
+    } elsif (ref($comp) !~ /Component/) {
+	die "exec: first argument ($comp) must be an absolute component path or a component object";
+    }
+
+    # Check for autohandler.
+    if (defined($interp->{autohandler_name})) {
+	my $parent = $comp->dir_path;
+	my $autocomp;
+	if (!$interp->{allow_recursive_autohandlers}) {
+	    $autocomp = $interp->load("$parent/".$interp->{autohandler_name});
+	} else {
+	    $autocomp = $interp->find_comp_upwards($parent,$interp->{autohandler_name});
+	}
+	if (defined($autocomp)) {
+	    $self->{autohandler_next} = [$comp,\@args];
+	    $comp = $autocomp;
+	}
+    }
+
+    # Call the first component.
+    my ($result, @result);
+    if (wantarray) {
+	local $SIG{'__DIE__'} = sub { confess($_[0]) };
+	@result = eval {$self->comp($comp, @args)};
+    } else {
+	local $SIG{'__DIE__'} = sub { confess($_[0]) };
+	$result = eval {$self->comp($comp, @args)};
+    }
+
+    # If an error occurred...
+    my $err = $@;
+    if ($err and !$self->{aborted}) {
+	my $i = index($err,'HTML::Mason::Interp::exec');
+	$err = substr($err,0,$i) if $i!=-1;
+	$err =~ s/^\s*(HTML::Mason::Commands::__ANON__|HTML::Mason::Request::call).*\n//gm;
+	# Salvage what was left in the request stack for backtrace information
+	if (@{$self->{stack_array}}) {
+	    my @titles = map($_->{comp}->title,@{$self->{stack_array}});
+	    my $errmsg = "error while executing $titles[-1]:\n";
+	    $errmsg .= $err."\n";
+	    $errmsg .= "backtrace: " . join(" <= ",reverse(@titles)) . "\n" if @titles > 1;
+	    die ($errmsg);
+	} else {
+	    die ($err);
+	}
+    }
+
+    # Flush output buffer for batch mode.
+    $self->flush_buffer if $self->out_mode eq 'batch';
+
+    # Handle abort.
+    return $self->{aborted_value} if ($self->{aborted});
+
+    return wantarray ? @result : $result;
 }
 
 #
@@ -64,27 +154,14 @@ sub new
 sub abort
 {
     my ($self) = @_;
-    $self->{abort_flag} = 1;
-    $self->{abort_retval} = $_[1] || $self->{abort_retval} || undef;
+    $self->{aborted} = 1;
+    $self->{aborted_value} = $_[1] || $self->{aborted_value} || undef;
     die "aborted";
-}
-
-#
-#
-#
-sub aborted {
-    my ($self) = @_;
-    return $self->{abort_flag};
-}
-
-sub aborted_value {
-    my ($self) = @_;
-    return $self->{abort_retval};
 }
 
 sub auto_comp {
     my ($self) = @_;
-    my $aref = $self->{autohandler_next};
+    my $aref = $self->{autohandler_next} or die "auto_next: no autohandler invoked";
     return $aref ? $aref->[0] : undef;
 }
 
@@ -93,7 +170,7 @@ sub auto_next {
     my $aref = $self->{autohandler_next} or die "auto_next: no autohandler invoked";
     my ($comp, $args_ref) = @$aref;
     my @args = (@$args_ref,@extra_args);
-    return $self->call($comp, @args);
+    return $self->comp($comp, @args);
 }
 
 sub cache
@@ -136,7 +213,7 @@ sub cache_self
     foreach (qw(key expire_at expire_next expire_in)) {
 	$storeOptions{$_} = $options{$_} if (exists($options{$_}));
     }
-    my $result = mc_cache(action=>'retrieve',%retrieveOptions);
+    my $result = $self->cache(action=>'retrieve',%retrieveOptions);
     my ($output,$retval);
     
     #
@@ -161,7 +238,7 @@ sub cache_self
 	#
 	# Store output and return value as a two-item listref.
 	#
-	mc_cache(action=>'store',value=>[$output,$retval],%storeOptions);
+	$self->cache(action=>'store',value=>[$output,$retval],%storeOptions);
     } else {
 	($output,$retval) = @$result;
 
@@ -174,7 +251,7 @@ sub cache_self
 	    $self->call_hooks('end_primary');
 	}
     }
-    mc_out($output);
+    $self->out($output);
 
     #
     # Return the component return value in case the caller is interested,
@@ -218,7 +295,7 @@ sub call_self
     $lref->{sink} = sub { $content .= $_[0] };
     $lref->{in_call_self_flag} = 1;
     my $sub = $lref->{comp}->{code};
-    my @args = %{$lref->{args}};
+    my @args = @{$lref->{args}};
     if (ref($rref) eq 'SCALAR') {
 	$$rref = &$sub(@args);
     } elsif (ref($rref) eq 'ARRAY') {
@@ -232,17 +309,11 @@ sub call_self
     return 1;
 }
 
-#
-# comp is a synonym for call
-#
-*comp = \&call;
-
 sub comp_exists
 {
-    return $REQ->lookup(shift) ? 1 : 0;
+    my ($self,$path) = @_;
+    return $self->interp->lookup($self->process_comp_path($path)) ? 1 : 0;
 }
-
-sub count { shift->{count} }
 
 #
 # Return the current number of stack levels. 1 means top level, 0
@@ -264,14 +335,14 @@ sub dhandler_arg { shift->{dhandler_arg} }
 sub fetch_comp
 {
     my ($self,$path) = @_;
-    if ($path !~ /\//) {
+    if (defined($path) and $path !~ /\//) {
 	# Check my subcomponents.
-	if (my $comp = $self->comp->subcomps->{$path}) {	
+	if (my $comp = $self->current_comp->subcomps->{$path}) {	
 	    return $comp;
 	}
 	# If I am a subcomponent, also check my parent's subcomponents.
 	# This won't work when we go to multiply embedded subcomponents...
-	if ($self->comp->is_subcomp and my $comp = $self->comp->parent_comp->subcomps->{$path}) {
+	if ($self->current_comp->is_subcomp and my $comp = $self->current_comp->parent_comp->subcomps->{$path}) {
 	    return $comp;
 	}
     }
@@ -306,7 +377,7 @@ sub file_root
 sub out
 {
     my ($self,$text) = @_;
-    $self->sink->($text) if defined($text);
+    $self->current_sink->($text) if defined($text);
 }
 
 sub time
@@ -343,24 +414,24 @@ sub parser
 }
 
 #
-# Execute the next component in this request. call() sets up proper
-# dynamically scoped variables and invokes call1() to do the work.
+# Execute the next component in this request. comp() sets up proper
+# dynamically scoped variables and invokes comp1() to do the work.
 #
-sub call {
+sub comp {
     my $self = shift(@_);
 
-    if (defined($self) and $self eq $self) {
+    if (defined($REQ) and $REQ eq $self) {
 	local $REQ_DEPTH = $REQ_DEPTH;
-	$self->call1(@_);
-    } else {@lst = qw(a b c d e);
+	$self->comp1(@_);
+    } else {
 	local %REQ_DEPTHS = %REQ_DEPTHS;
-	$REQ_DEPTHS{$self} = $REQ_DEPTH if defined($self);
-	local $self = $self;
+	$REQ_DEPTHS{$REQ} = $REQ_DEPTH if defined($REQ);
+	local $REQ = $self;
 	local $REQ_DEPTH = $REQ_DEPTHS{$self} || 0;
-	$self->call1(@_);
+	$self->comp1(@_);
     }
 }
-sub call1 {
+sub comp1 {
     my ($self, $comp, @args) = @_;
     my $interp = $self->{interp};
     my $depth = $REQ_DEPTH;
@@ -375,29 +446,29 @@ sub call1 {
     }
 
     #
-    # $REQ is a dynamically scoped global containing this
+    # $m is a dynamically scoped global containing this
     # request. This needs to be defined in the HTML::Mason::Commands
     # package, as well as the component package if that is different.
     #
-    local $HTML::Mason::Commands::REQ = $self;
-    $interp->set_global(REQ=>$self) if ($interp->parser->{in_package} ne 'HTML::Mason::Commands');
+    local $HTML::Mason::Commands::m = $self;
+    $interp->set_global(m=>$self) if ($interp->parser->{in_package} ne 'HTML::Mason::Commands');
 
     #
     # Determine sink (where output is going). Look for STORE and scalar
     # reference passed as last two arguments.
     #
     my $sink;
-    if ($args[-2] eq 'STORE' and ref($args[-1]) eq 'SCALAR' and @args > 2 and @args % 2 == 0) {
+    if (@args >= 2 and $args[-2] eq 'STORE' and ref($args[-1]) eq 'SCALAR' and @args % 2 == 0) {
 	my $store = $args[-1];
 	$$store = '';
 	$sink = sub { $$store .= $_[0] if defined ($_[0]) };
 	splice(@args,-2);
     } elsif ($depth>0) {
 	$sink = $self->top_stack->{sink};
-    } elsif ($interp->out_mode eq 'batch') {
+    } elsif ($self->out_mode eq 'batch') {
 	$sink = sub { $self->{out_buffer} .= $_[0] if defined ($_[0]) };
     } else {
-	$sink = $interp->{out_method};
+	$sink = $interp->out_method;
     }
 
     #
@@ -425,9 +496,9 @@ sub call1 {
     $comp->{run_count}++;
     my ($result, @result);
     if (wantarray) {
-	@result = $sub->($self,@args);
+	@result = $sub->(@args);
     } else {
-	$result = $sub->($self,@args);
+	$result = $sub->(@args);
     }
 
     #
@@ -500,7 +571,7 @@ sub clear_buffer
 sub flush_buffer
 {
     my ($self, $content) = @_;
-    $self->interp->out_method($self->{out_buffer});
+    $self->out_method->($self->{out_buffer});
     $self->{out_buffer} = '';    
 }
 
@@ -516,9 +587,9 @@ sub debug_hook
 #
 # Accessor methods for top of stack elements.
 #
-sub comp { return $_[0]->top_stack->{comp} }
-sub args { return $_[0]->top_stack->{args} }
-sub sink { return $_[0]->top_stack->{sink} }
+sub current_comp { return $_[0]->top_stack->{comp} }
+sub current_args { return $_[0]->top_stack->{args} }
+sub current_sink { return $_[0]->top_stack->{sink} }
 
 #
 # Return the absolute version of a component path. Handles . and ..
@@ -527,12 +598,13 @@ sub sink { return $_[0]->top_stack->{sink} }
 sub process_comp_path
 {
     my ($self,$compPath) = @_;
+    confess("!") if !defined($compPath);
     if ($compPath !~ /\S/) {
-	return $self->comp->path;
+	return $self->current_comp->path;
     }
     if ($compPath !~ m@^/@) {
-	die "relative component path ($compPath) used from component with no current directory" if !defined($self->comp->dir_path);
-	$compPath = $self->comp->dir_path . "/" . $compPath;
+	die "relative component path ($compPath) used from component with no current directory" if !defined($self->current_comp->dir_path);
+	$compPath = $self->current_comp->dir_path . "/" . $compPath;
     }
     while ($compPath =~ s@/[^/]+/\.\.@@) {}
     while ($compPath =~ s@/\./@/@) {}

@@ -7,17 +7,17 @@ $useless=>17
 </%args>
 </%def>
 
-% my $anon = $REQ->parser->make_component(script=>join("\n",'% my $adj = "flummoxed";','I am a <% $adj %> anonymous component.'));
+% my $anon = $m->parser->make_component(script=>join("\n",'% my $adj = "flummoxed";','I am a <% $adj %> anonymous component.'));
 
 <% '-' x 60 %>
 
 File-based:
-<& /support/display_comp_obj, comp=>$REQ->comp &>
+<& /support/display_comp_obj, comp=>$m->current_comp &>
 
 <% '-' x 60 %>
 
 Subcomponent:
-<& /support/display_comp_obj, comp=>$REQ->fetch_comp('.subcomp')  &>
+<& /support/display_comp_obj, comp=>$m->fetch_comp('.subcomp')  &>
 
 <% '-' x 60 %>
 

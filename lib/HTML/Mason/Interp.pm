@@ -208,80 +208,7 @@ sub reload_file { return shift->data_dir . "/etc/reload.lst" }
 sub exec {
     my $self = shift;
     my $req = new HTML::Mason::Request (interp=>$self);
-    $self->exec_request($req,@_);
-}
-
-sub exec_request {
-    my ($self, $req, $comp, @args) = @_;
-
-    # Check if reload file has changed.
-    $self->check_reload_file if ($self->{use_reload_file});
-    
-    # $comp can be an absolute path or component object.  If a path,
-    # load into object.
-    if (!ref($comp) && substr($comp,0,1) eq '/') {
-	my $path = $comp;
-	if (!($comp = $self->load($path))) {
-	    if (defined($self->{dhandler_name}) and $comp = $self->find_comp_upwards($path,$self->{dhandler_name})) {
-		my $parent = $comp->dir_path;
-		($req->{dhandler_arg} = $path) =~ s{^$parent/}{};
-	    }
-	}
-	die "could not find component for path '$path'\n" if !$comp;
-    } elsif (ref($comp) !~ /Component/) {
-	die "exec: first argument ($comp) must be an absolute component path or a component object";
-    }
-
-    # Check for autohandler.
-    if (defined($self->{autohandler_name})) {
-	my $parent = $comp->dir_path;
-	my $autocomp;
-	if (!$self->{allow_recursive_autohandlers}) {
-	    $autocomp = $self->load("$parent/".$self->{autohandler_name});
-	} else {
-	    $autocomp = $self->find_comp_upwards($parent,$self->{autohandler_name});
-	}
-	if (defined($autocomp)) {
-	    $req->{autohandler_next} = [$comp,@args];
-	    $comp = $autocomp;
-	}
-    }
-
-    # Call the first component.
-    my ($result, @result);
-    if (wantarray) {
-	local $SIG{'__DIE__'} = sub { confess($_[0]) };
-	@result = eval {$req->call($comp, @args)};
-    } else {
-	local $SIG{'__DIE__'} = sub { confess($_[0]) };
-	$result = eval {$req->call($comp, @args)};
-    }
-
-    # If an error occurred...
-    my $err = $@;
-    if ($err and !$req->{abort_flag}) {
-	my $i = index($err,'HTML::Mason::Interp::exec');
-	$err = substr($err,0,$i) if $i!=-1;
-	$err =~ s/^\s*(HTML::Mason::Commands::__ANON__|HTML::Mason::Request::call).*\n//gm;
-	# Salvage what was left in the request stack for backtrace information
-	if (@{$req->{stack_array}}) {
-	    my @titles = map($_->{comp}->title,@{$req->{stack_array}});
-	    my $errmsg = "error while executing $titles[-1]:\n";
-	    $errmsg .= $err."\n";
-	    $errmsg .= "backtrace: " . join(" <= ",reverse(@titles)) . "\n" if @titles > 1;
-	    die ($errmsg);
-	} else {
-	    die ($err);
-	}
-    }
-
-    # Flush output buffer for batch mode.
-    $req->flush_buffer if $interp->out_mode eq 'batch';
-
-    # Handle abort.
-    return $req->{abort_retval} if ($req->{abort_flag});
-
-    return wantarray ? @result : $result;
+    $req->exec(@_);
 }
 
 #
@@ -406,7 +333,7 @@ sub load {
 	    if (!$comp) {
 		# If this is an earlier version object file, replace it.
 		if ($err =~ /object file was created by a pre-0\.7 parser/
-		    or (($err =~ /object file was created by.*version ([\d\.]+) .* you are running parser version ([\d\.]+)/) and $1 < $2)) {
+		    or (($err =~ /object file was created by.*version ([\d\.]+) .* you are running parser version ([\d\.]+)\./) and $1 < $2)) {
 		    $objfilemod = 0;
 		    goto update_object;
 		} else {
@@ -518,7 +445,7 @@ sub out_method
 	} elsif (ref($value) eq 'CODE') {
 	    $self->{out_method} = $value;
 	} else {
-	    die "out_method: argument must be a scalar or code reference";
+	    confess "out_method: argument must be a scalar or code reference";
 	}
     }
     return $self->{out_method};

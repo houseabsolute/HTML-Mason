@@ -7,12 +7,11 @@ package HTML::Mason::Commands;
 use strict;
 use File::Basename;
 use HTML::Mason::Utils;
-use HTML::Mason::Tools qw(read_file chop_slash);
 use HTML::Mason::Config;
 use IO;
 use Time::Local;
 
-use vars qw($REQ @ISA @EXPORT_OK @EXPORT);
+use vars qw($m @ISA @EXPORT_OK @EXPORT);
  
 require Exporter;
 @ISA=qw(Exporter);
@@ -40,50 +39,50 @@ require Exporter;
 
 sub pure_text_handler
 {
-    $REQ->call_hooks('start_primary');
-    $REQ->sink->($REQ->comp->source_ref_text);
-    $REQ->call_hooks('end_primary');
+    $m->call_hooks('start_primary');
+    $m->current_sink->($m->current_comp->source_ref_text);
+    $m->call_hooks('end_primary');
 }
 
 my $no_auto_error = "called when no autohandler invoked";
 
 sub check_request
 {
-    if (!defined($REQ)) {
+    if (!defined($m)) {
 	my ($caller) = ((caller)[3] =~ /[^:]+$/);
 	die "$caller called outside of request environment\n";
     }
 }
 
-sub mc_abort { check_request; $REQ->abort(@_) }
+sub mc_abort { check_request; $m->abort(@_) }
 
 sub mc_auto_comp
 {
     check_request;
-    my $comp = $REQ->auto_comp or die "mc_auto_comp $no_auto_error";
+    my $comp = $m->auto_comp or die "mc_auto_comp $no_auto_error";
     my $path = $comp->path;
     
     # return relative path if possible
-    my $curdir = $REQ->comp->dir_path;
+    my $curdir = $m->current_comp->dir_path;
     $path =~ s{^$curdir/}{};
     return $path;
 }
 
-sub mc_auto_next { check_request; $REQ->auto_next(@_) }
-sub mc_cache { check_request; $REQ->cache(@_) }
-sub mc_cache_self { check_request; $REQ->cache_self(@_) }
-sub mc_caller { check_request; $REQ->caller(@_) }
-sub mc_call_self { check_request; $REQ->call_self(@_) }
-sub mc_call_stack { check_request; map($_->title,$REQ->callers) }
-sub mc_comp { check_request; $REQ->call(@_) }
-sub mc_comp_exists { check_request; $REQ->comp_exists(@_) }
+sub mc_auto_next { check_request; $m->auto_next(@_) }
+sub mc_cache { check_request; $m->cache(@_) }
+sub mc_cache_self { check_request; $m->cache_self(@_) }
+sub mc_caller { check_request; $m->caller->path }
+sub mc_call_self { check_request; $m->call_self(@_) }
+sub mc_call_stack { check_request; map($_->title,$m->callers) }
+sub mc_comp { check_request; $m->comp(@_) }
+sub mc_comp_exists { check_request; $m->comp_exists(@_) }
 sub mc_comp_source { check_request; $m->fetch_comp(shift)->source_file }
-sub mc_comp_stack { check_request; map($_->title,$REQ->callers) }
-sub mc_dhandler_arg { check_request; $REQ->dhandler_arg }
-sub mc_file { check_request; $REQ->file(@_) }
-sub mc_file_root { check_request; $REQ->file_root }
-sub mc_out { check_request; $REQ->out(@_) }
-sub mc_time { check_request; $REQ->time(@_) } 
+sub mc_comp_stack { check_request; map($_->title,$m->callers) }
+sub mc_dhandler_arg { check_request; $m->dhandler_arg }
+sub mc_file { check_request; $m->file(@_) }
+sub mc_file_root { check_request; $m->file_root }
+sub mc_out { check_request; $m->out(@_) }
+sub mc_time { check_request; $m->time(@_) } 
 
 1;
 

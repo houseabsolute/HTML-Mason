@@ -1,23 +1,19 @@
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl test.pl'
-
-######################### We start with some black magic to print on failure.
-
-# Change 1..1 below to 1..last_test_to_print .
-# (It may become useful if the test is moved to ./t subdirectory.)
-
-use HTML::Mason;
-use Cwd;
-use DirHandle;
+#!/usr/bin/perl -w
 use strict;
-
-######################### End of black magic.
+use Cwd;
 
 my $pwd = cwd();
-my $comp_root = "$pwd/test/comps";
-my $data_dir = "$pwd/test/data";
-my $results_dir = "test/results/";
-my $tmp_dir = "test/tmp/";
+my $root = (-f "test-common.pl") ? "$pwd/.." : (-f "t/test-common.pl") ? "$pwd" : die "ERROR: cannot find test-common.pl\n";
+
+unshift(@INC,"$root/lib");
+
+require "$root/t/test-common.pl";
+
+my $comp_root = "$root/test/comps";
+my $data_dir = "$root/test/data";
+my $cache_dir = "$root/test/data/cache";
+my $results_dir = "$root/test/results/";
+my $tmp_dir = "$root/test/tmp/";
 
 my $buf;
 
@@ -25,16 +21,16 @@ my $buf;
 my $pattern = $ARGV[0];
 
 # Read list of test components
-my $listfh = new IO::File "test/comps.lst" or die "cannot read component list";
+my $listfh = new IO::File "$root/test/comps.lst" or die "cannot read component list";
 my @comps = <$listfh>;
 chomp(@comps);
 $listfh->close;
 
 # Clear cache directory
-if (-d 'test/data/cache') {
-    my $d = new DirHandle ('test/data/cache') or die "cannot read directory test/data/cache";
+if (-d $cache_dir) {
+    my $d = new DirHandle ($cache_dir) or die "cannot read directory $cache_dir";
     while (defined (my $file = $d->read)) {
-	unlink("test/data/cache/$file");
+	unlink("$cache_dir/$file");
     }
 }
 
@@ -57,10 +53,10 @@ foreach my $component ( @comps ) {
 	next;
     }
     $component =~ s/\//::/g;
-    open(F, ">$tmp_dir$component");
+    open(F, ">$tmp_dir/$component");
     print F $buf if defined($buf);
     close F;
-    my $diff = compareFiles("$tmp_dir$component", "$results_dir$component");
+    my $diff = compareFiles("$tmp_dir/$component", "$results_dir/$component");
     print ( $diff == 0 ? "ok\n" : "not ok\n" );
 }
 

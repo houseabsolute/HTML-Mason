@@ -1,6 +1,6 @@
 <%def .subcomp>
 % if ($count < 5) {
-<& $REQ->comp, count=>$count+1 &>
+<& $m->current_comp, count=>$count+1 &>
 % } else {
 <& support/display_req_obj &>
 % }

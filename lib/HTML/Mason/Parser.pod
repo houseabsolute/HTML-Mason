@@ -182,7 +182,7 @@ Example of usage:
       or die "error while compiling component: $error";
 
     # Call it from inside another component
-    $REQ->call($comp);
+    $m->comp($comp);
 
 =for html <a name="item_make_dirs">
 

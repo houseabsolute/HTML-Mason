@@ -4,9 +4,9 @@ HTML::Mason::Component - Mason Component Class
 
 =head1 SYNOPSIS
 
-    my $comp1 = $REQ->comp;
-    my $comp2 = $REQ->callers(1);
-    my $comp3 = $REQ->fetch_comp('foo/bar');
+    my $comp1 = $m->current_comp;
+    my $comp2 = $m->callers(1);
+    my $comp3 = $m->fetch_comp('foo/bar');
 
     foreach ($comp1,$comp2,$comp3) {
        print "My name is ".$_->title.".\n";
@@ -52,7 +52,7 @@ new component dynamically.
 
 Similarly, there is no C<execute> or C<call> method, because calling a
 component requires a request. All of the interfaces for calling a
-component (<& &>, C<mc_comp>, C<$interp-E<gt>exec>, C<$REQ-E<gt>call>)
+component (<& &>, C<mc_comp>, C<$interp-E<gt>exec>, C<$m-E<gt>call>)
 which normally take a component path, will also take a component
 object.
 
@@ -105,7 +105,7 @@ Returns true if this is the first time the component has executed,
 false otherwise.  Useful for initializing persistent component
 lexicals:
 
-  if ($REQ->comp->first_time) {
+  if ($m->current_comp->first_time) {
      $dbh = DBI->connect(...);
 
 Note that in a web-based environment, this "first time" will

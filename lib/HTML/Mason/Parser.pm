@@ -216,14 +216,13 @@ sub parse_component
     # Start body of subroutine with user preamble and args declare.
     #
     my $body = $self->preamble();
-    $body .= 'my $m = shift;'."\n";
     $body .= 'my %ARGS;'."\n";
     if ($sectiontext{args}) {
 	$body .= 'if (@_ % 2 == 0) { %ARGS = @_ } else { die "Odd number of parameters passed to component expecting name/value pairs" }'."\n";
     } else {
 	$body .= '%ARGS = @_ unless (@_ % 2);'."\n";
     }
-    $body .= 'my $_out = $m->sink;'."\n";
+    $body .= 'my $_out = $m->current_sink;'."\n";
 
     #
     # Process args section.
@@ -377,8 +376,8 @@ sub parse_component
 		    my $block = substr($text,$b+5,$length);
 		    $perl = '{my $_err;'."\n";
 		    $perl .= sprintf(q{my $_comp = $m->interp->make_component(script=>'%s',error=>\$_err)},$block)."\n";
-		    $perl .= 'die "Error during compilation of anonymous component for <%do> block:\n$_err"; unless $_comp'."\n";
-		    $perl .= '$m->call($_comp);}'."\n";
+		    $perl .= 'die "Error in <%do> block:\n$_err"; unless $_comp'."\n";
+		    $perl .= '$m->comp($_comp);}'."\n";
 		    $curpos = $b+5+$length+6;
 		} else {
 		    #
@@ -423,7 +422,7 @@ sub parse_component
 		    (my $comp = substr($call,0,$comma)) =~ s/\s+$//;
 		    $call = "'$comp'".substr($call,$comma);
 		}
-		$perl = "\$m->call($call);";
+		$perl = "\$m->comp($call);";
 		$curpos = $c+2+$length+2;
 		$pureTextFlag = 0;
 	    } else {
@@ -457,7 +456,7 @@ sub parse_component
     my @alphatexts;
     my $endsec = '';
     if ($useSourceReference) {
-	$body .= 'my $_srctext = $m->comp->source_ref_text;'."\n";
+	$body .= 'my $_srctext = $m->current_comp->source_ref_text;'."\n";
 	my $cur = 0;
 	foreach my $sec (@alphasecs) {
 	    $endsec .= substr($script,$sec->[0],$sec->[1])."\n";
@@ -476,7 +475,7 @@ sub parse_component
     #
     # Insert call to debug hook.
     #
-    $body .= '$m->debug_hook($m->comp->path) if (%DB::);'."\n";
+    $body .= '$m->debug_hook($m->current_comp->path) if (%DB::);'."\n";
     
     #
     # Insert <%filter> section.
@@ -549,7 +548,7 @@ sub parse_component
 	$header .= "package $pkg;\n";
 	$header .= "use strict;\n" if $self->use_strict;
 	if (my @g = @{$self->{'allow_globals'}}) {
-	    $header .= sprintf("use vars qw(%s);\n",join(" ",@g));
+	    $header .= sprintf("use vars qw(%s);\n",join(" ",'$m',@g));
 	}
     }
     $header .= $sectiontext{once}."\n" if $sectiontext{once};
