@@ -95,7 +95,7 @@ sub _init_comp_data
     $data->{subcomponents} = {};
     $data->{methods} = {};
 
-    $data->{args} = {};
+    $data->{args} = [];
     $data->{current_args} = undef;
 
     foreach ( qw( cleanup doc filter init once shared text ) )
@@ -188,11 +188,11 @@ sub variable_declaration
     my $arg = "$p{var_type}$p{name}";
 
     Mason::Exception::Compiler->throw( "$arg already defined" )
-        if $self->{current_comp}{args}{$arg};
+        if grep { $_->{type} eq $p{var_type} && $_->{name} eq $p{name} } @{ $self->{current_comp}{args} };
 
-    $self->{current_comp}{args}{$arg} = { type => $p{var_type},
-					  name => $p{name},
-					  default => $p{default} };
+    push @{ $self->{current_comp}{args} }, { type => $p{var_type},
+					     name => $p{name},
+					     default => $p{default} };
 }
 
 sub key_value_pair
@@ -315,13 +315,13 @@ sub _dump_data
     my $data = shift;
     my $indent = shift || '';
 
-    if ( keys %{ $data->{args} } )
+    if ( @{ $data->{args} } )
     {
 	print "$indent  args\n";
-	while ( my ($k, $v) = each %{ $data->{args} } )
+	foreach ( @{ $data->{args} } )
 	{
-	    print "$indent    $k";
-	    print " => $v->{default}" if defined $v->{default};
+	    print "$indent    $_->{type}$_->{name}";
+	    print " => $_->{default}" if defined $_->{default};
 	    print "\n";
 	}
     }
