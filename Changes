@@ -36,6 +36,7 @@ having been moved to Request class.
 simplified set of options, and returns a component object
 directly. make is now called make_dirs. L{Parser/item_make_component}
 - Fixed mc_auto_comp, which never really worked as documented.
+- Fixed problem with shared data cache locks over NFS
 - Removed obsolete and undocumented Interp::vars and mc_var functions
 
 0.6.1  Tue Jul 27 09:34:31 PDT 1999

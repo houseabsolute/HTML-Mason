@@ -72,7 +72,7 @@ debug, etc), live within the data_dir.
 
 =item dhandler_name
 
-File name used for dhandlers. Default is "autohandler". If
+File name used for dhandlers. Default is "dhandler". If
 undef, Mason will not look for dhandlers.
 
 =item max_recurse
