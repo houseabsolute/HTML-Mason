@@ -178,7 +178,7 @@ sub html_entities_escape
     load_pkg( 'HTML::Entities',
               'HTML escaping requires the HTML::Entities module, available from CPAN.');
 
-    HTML::Entities::encode(${$_[0]});
+    HTML::Entities::encode_entities(${$_[0]});
 }
 
 sub url_escape
