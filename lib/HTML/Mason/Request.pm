@@ -699,10 +699,10 @@ sub call_self
         local $top_stack->{in_call_self} = 1;
 
         my $wantarray =
-            ( defined $retval ?
-              ( UNIVERSAL::isa( $retval, 'ARRAY' ) ? 1 : 0 ) :
-              undef
-            );
+	    ( !defined $retval ? undef :
+	      UNIVERSAL::isa( $retval, 'ARRAY' ) ? 1 :
+	      0
+	    );
 
         eval {
             if ($wantarray) {
