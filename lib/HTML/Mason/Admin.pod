@@ -34,6 +34,7 @@ configuration looks like:
 
     DocumentRoot /usr/local/www/htdocs
     PerlRequire /usr/local/mason/handler.pl
+    DefaultType text/html
     <Location />
         SetHandler perl-script
         PerlHandler HTML::Mason
