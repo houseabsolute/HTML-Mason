@@ -24,9 +24,9 @@ EOF
 
     my $comp = $interp->make_component( comp_source => $source );
 
-    my $req = $interp->make_request;
+    my $req = $interp->make_request(comp=>$comp);
 
-    $req->exec($comp);
+    $req->exec();
 }
 
 # same stuff but with autoflush
@@ -38,9 +38,9 @@ EOF
 
     my $comp = $interp->make_component( comp_source => $source );
 
-    my $req = $interp->make_request( autoflush => 1 );
+    my $req = $interp->make_request( comp=>$comp, autoflush => 1 );
 
-    $req->exec($comp);
+    $req->exec();
 }
 
 {
@@ -53,7 +53,7 @@ EOF
 
     my $comp = $interp->make_component( comp_source => $source );
 
-    my $req = $interp->make_request;
+    my $req = $interp->make_request( comp=>$comp );
 
-    $req->exec($comp);
+    $req->exec();
 }

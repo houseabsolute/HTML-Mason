@@ -145,11 +145,6 @@ $foo is <% $foo %>
 EOF
 	      );
 
-    write_comp( '__top_level_predicate', <<'EOF',
-Shouldn't ever run
-EOF
-	      );
-
     write_comp( 'decline_dirs', <<'EOF',
 decline_dirs is <% $m->ah->decline_dirs %>
 EOF
@@ -434,13 +429,6 @@ EOF
 
     unless ($with_handler)
     {
-	# test that MasonTopLevelPredicate works (testing a code
-	# parameter from httpd.conf)
-	my $response = Apache::test->fetch('/comps/__top_level_predicate');
-	my $actual = filter_response($response, 0);
-	ok( $actual =~ /404 not found/,
-	    'top level predicate should have refused request' );
-
 	$response = Apache::test->fetch('/comps/decline_dirs');
 	$actual = filter_response($response, $with_handler);
 	$success = HTML::Mason::Tests->check_output( actual => $actual,
@@ -545,20 +533,6 @@ Status code: 0
 EOF
 					       );
     ok($success);
-
-    if ($with_handler)
-    {
-	# top_level_predicate should reject this request.
-	$response = Apache::test->fetch( "/ah=2/comps/_underscore" );
-	$actual = filter_response($response, $with_handler);
-	$success = HTML::Mason::Tests->check_output( actual => $actual,
-						     expect => <<'EOF',
-X-Mason-Test: 
-Status code: 404
-EOF
-						   );
-	ok($success);
-    }
 
     $path = '/comps/die';
     $path = "/ah=0$path" if $with_handler;

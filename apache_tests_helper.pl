@@ -115,7 +115,6 @@ EOF
   PerlSetVar  MasonArgsMethod mod_perl
   PerlSetVar  MasonCompRoot "root => $APACHE{comp_root}"
   PerlSetVar  MasonDataDir  "$APACHE{data_dir}"
-  PerlSetVar  MasonTopLevelPredicate "sub { \$_[0] !~ m(/__[^/]+\$) }"
   PerlSetVar  MasonDeclineDirs 0
   SetHandler  perl-script
   PerlModule  HTML::Mason::ApacheHandler
@@ -190,7 +189,6 @@ use HTML::Mason;
 
 my \@params = ( {},
                 { autoflush => 1 },
-                { top_level_predicate => sub { \$_[0] =~ m,/_.*, ? 0 : 1 } },
                 { decline_dirs => 0 },
                 { error_mode => 'fatal' },
               );

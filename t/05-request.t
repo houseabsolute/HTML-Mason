@@ -319,8 +319,8 @@ EOF
 <%def .helper>
 Executing subrequest
 % my $buf;
-% my $req = $m->interp->make_request(out_method => \$buf);
-% $req->exec('/request/support/display_req_obj');
+% my $req = $m->make_subrequest(comp=>'/request/support/display_req_obj', out_method => \$buf);
+% $req->exec();
 <% $buf %>
 </%def>
 
@@ -370,8 +370,8 @@ EOF
 		      component => <<'EOF',
 Executing subrequest
 % my $buf;
-% my $req = $m->interp->make_request(out_method => \$buf);
-% $req->exec('/request/support/dir/comp');
+% my $req = $m->make_subrequest(comp=>'/request/support/dir/comp', out_method => \$buf);
+% $req->exec();
 <% $buf %>
 EOF
 		      expect => <<'EOF',
@@ -390,7 +390,7 @@ EOF
 			  description => 'check error handling for subrequest mechanism',
 			  component => <<'EOF',
 <%def .helper>
-% $m->interp->make_request->exec('/request/support/subrequest_error_test');
+% $m->subexec('/request/support/subrequest_error_test');
 </%def>
 
 Calling helper

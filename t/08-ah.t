@@ -34,8 +34,8 @@ kill_httpd(1);
 test_load_apache();
 
 my $tests = 4; # multi conf tests
-$tests += 44 if my $have_libapreq = have_module('Apache::Request');
-$tests += 33 if my $have_cgi      = have_module('CGI');
+$tests += 43 if my $have_libapreq = have_module('Apache::Request');
+$tests += 32 if my $have_cgi      = have_module('CGI');
 $tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
 print "1..$tests\n";
 
@@ -43,7 +43,7 @@ print STDERR "\n";
 
 write_test_comps();
 
-if ($have_libapreq) {        # 44 tests
+if ($have_libapreq) {        # 43 tests
     cleanup_data_dir();
     apache_request_tests(1); # 19 tests
 
@@ -54,7 +54,7 @@ if ($have_libapreq) {        # 44 tests
     no_config_tests();    # 11 tests
 }
 
-if ($have_cgi) {             # 34 tests
+if ($have_cgi) {             # 32 tests
     cleanup_data_dir();
     cgi_tests(1);            # 20 tests
 
@@ -173,11 +173,6 @@ EOF
 % @bar = ( qw( a b c ) );
 $foo is <% $foo %>
 @bar is <% @bar %>
-EOF
-	      );
-
-    write_comp( '__top_level_predicate', <<'EOF',
-Shouldn't ever run
 EOF
 	      );
 
@@ -339,13 +334,6 @@ EOF
 
     unless ($with_handler)
     {
-	# test that MasonTopLevelPredicate works (testing a code
-	# parameter from httpd.conf)
-	my $response = Apache::test->fetch('/comps/__top_level_predicate');
-	my $actual = filter_response($response, 0);
-	ok( $actual =~ /404 not found/,
-	    'top level predicate should have refused request' );
-
 	$response = Apache::test->fetch('/comps/decline_dirs');
 	$actual = filter_response($response, $with_handler);
 	$success = HTML::Mason::Tests->check_output( actual => $actual,
@@ -466,20 +454,6 @@ Status code: 0
 EOF
 					       );
     ok($success);
-
-    if ($with_handler)
-    {
-	# top_level_predicate should reject this request.
-	$response = Apache::test->fetch( "/ah=2/comps/_underscore" );
-	$actual = filter_response($response, $with_handler);
-	$success = HTML::Mason::Tests->check_output( actual => $actual,
-						     expect => <<'EOF',
-X-Mason-Test: 
-Status code: 404
-EOF
-						   );
-	ok($success);
-    }
 
     $path = '/comps/die';
     $path = "/ah=0$path" if $with_handler;
