@@ -599,7 +599,12 @@ sub new
     if (exists $allowed_params->{data_dir} and not exists $params{data_dir})
     {
 	# constructs path to <server root>/mason
-	my $def = $defaults{data_dir} = Apache->server_root_relative('mason');
+	if (UNIVERSAL::can('Apache::ServerUtil','server_root')) {
+		$defaults{data_dir} = File::Spec->catdir(Apache::ServerUtil::server_root(),'mason');
+	} else {
+		$defaults{data_dir} = Apache->server_root_relative('mason');
+	}
+	my $def = $defaults{data_dir};
 	param_error "Default data_dir (MasonDataDir) '$def' must be an absolute path"
 	    unless File::Spec->file_name_is_absolute($def);
 	  
@@ -647,13 +652,31 @@ sub new
     # If we're running as superuser, change file ownership to http user & group
     if (!($> || $<) && $self->interp->files_written)
     {
-	chown Apache->server->uid, Apache->server->gid, $self->interp->files_written
+	chown $self->get_uid_gid, $self->interp->files_written
 	    or system_error( "Can't change ownership of files written by interp object: $!\n" );
     }
 
     $self->_initialize;
     return $self;
 }
+
+sub get_uid_gid
+{
+	return (Apache->server->uid, Apache->server->gid) unless APACHE2;
+
+	# Apache2 lacks $s->uid.
+	# Workaround by searching the config tree.
+	require Apache::Directive;
+	my $conftree = Apache::Directive->conftree;
+	my $user = $conftree->lookup('User');
+	my $group = $conftree->lookup('Group');
+	$user =~ s/^["'](.*)["']$/$1/;
+	$group =~ s/^["'](.*)["']$/$1/;
+	my $uid = getpwnam($user);
+	my $gid = getgrnam($group);
+	return ($uid,$gid);
+}
+	
 
 sub _initialize {
     my ($self) = @_;
