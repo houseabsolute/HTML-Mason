@@ -28,7 +28,6 @@ BEGIN
 	   'HTML::Mason::Exception::Compilation' =>
 	   { isa => 'HTML::Mason::Exception',
 	     abbr => 'compilation_error',
-	     fields => [qw(filename)],
 	     description => "error thrown in eval of the code for a component" },
 
 	   'HTML::Mason::Exception::Compilation::IncompatibleCompiler' =>
@@ -178,12 +177,6 @@ sub analyze_error
     if ($self->isa('HTML::Mason::Exception::Syntax')) {
 	$file = $self->comp_name;
 	push(@lines, $self->line_number);
-    } elsif ($self->isa('HTML::Mason::Exception::Compilation')) {
-	$file = $self->filename;
-	my $msg = $self->full_message;
-	while ($msg =~ /at .* line (\d+)./g) {
-	    push(@lines, $1);
-	}
     } elsif (@frames) {
 	$file = $frames[0]->filename;
 	@lines = $frames[0]->line;
@@ -331,15 +324,6 @@ sub full_message
     return sprintf("%s at %s line %d", $self->message || '', $self->comp_name || '', $self->line_number);
 }
 
-package HTML::Mason::Exception::Compilation;
-
-sub full_message
-{
-    my $self = shift;
-
-    return sprintf("Error during compilation of %s:\n%s\n", $self->filename || '', $self->message || '');
-}
-
 1;
 
 __END__
@@ -350,10 +334,149 @@ HTML::Mason::Exceptions - Exception objects thrown by Mason
 
 =head1 DESCRIPTION
 
-...
+  use HTML::Mason::Exceptions qw(system_error);
+
+  open FH, 'foo' or system_error "cannot open foo: $!";
+
+=head1 IMPORT
+
+When this module is imported, it is possible to specify a list of
+abbreviated function names that you want to use to throw exceptions.
+In the L<SYNOPSIS|/SYNOPSIS> example, we use the C<system_error>
+function to throw a C<HTML::Mason::Exception::System> exception.
+
+These abbreviated functions do not allow you to set additional fields
+in the exception, only the message.
 
 =head1 EXCEPTIONS
 
-auto-generate from class and description?
+=over
+
+=item HTML::Mason::Exception
+
+This is the parent class for all exceptions thrown by Mason.  Mason
+sometimes throws exceptions in this class when we could not find a
+better category for the message.
+
+Abbreviated as C<error>
+
+=item HTML::Mason::Exception::Abort
+
+The C<< $m->abort >> method was called.
+
+Exceptions in this class contain the field C<aborted_value>.
+
+Abbreviated as C<abort_error>.
+
+=item HTML::Mason::Exception::Compiler
+
+The compiler threw an exception because it received incorrect input.
+For example, this would be thrown if the lexer told the compiler to
+initialize compilation while it was in the middle of compiling another
+component.
+
+Abbreviated as C<compiler_error>.
+
+=item HTML::Mason::Exception::Compilation
+
+An exception occurred when attempting to C<eval> an existing object
+file.
+
+Abbreviated as C<compilation_error>.
+
+=item HTML::Mason::Exception::Compilation::IncompatibleCompiler
+
+A component was compiled by a compiler or lexer with incompatible
+options.  This is used to tell Mason to recompile a component.
+
+Abbreviated as C<wrong_compiler_error>.
+
+=item HTML::Mason::Exception::Params
+
+Invalid parameters were passed to a method or function.
+
+Abbreviated as C<param_error>.
+
+=item HTML::Mason::Exception::Syntax
+
+This exception indicates that a component contained invalid syntax.
+
+Exceptions in this class have the fields C<source_line>, which is the
+actual source where the error was found, C<comp_name>, and
+C<line_number>.
+
+Abbreviated as C<syntax_error>.
+
+=item HTML::Mason::Exception::System
+
+A system call of some sort, such as a file open, failed.
+
+Abbreviated as C<system_error>.
+
+=item HTML::Mason::Exception::TopLevelNotFound
+
+The requested top level component could not be found.
+
+Abbreviated as C<top_level_not_found_error>.
+
+=item HTML::Mason::VirtualMethod
+
+Some piece of code attempted to call a virtual method which was not
+overridden.
+
+Abbreviated as C<virtual_error>
+
+=back
+
+=head1 FIELDS
+
+Some of the exceptions mentioned above have additional fields, which
+are available via accessors.  For example, to get the line number of
+an C<HTML::Mason::Exception::Syntax> exception, you call the
+C<line_number> method on the exception object.
+
+=head1 EXCEPTION METHODS
+
+All of the Mason exceptions implement the following methods:
+
+=over
+
+=item as_brief
+
+This simply returns the exception message, without any trace information.
+
+=item as_line
+
+This returns the exception message and its trace information, all on a
+single line with tabs between the message and each frame of the stack
+trace.
+
+=item as_text
+
+This returns the exception message and stack information, with each
+frame on a separate line.
+
+=item as_html
+
+This returns the exception message and stack as an HTML page.
+
+=back
+
+=head1 EXCEPTION CLASS CHECKING
+
+This module also exports the C<isa_mason_exception> function.  This
+function takes the exception object and an optional string parameter
+indicating what subclass to check for.
+
+So it can be called either as:
+
+  if ( isa_mason_exception($@) ) { ... }
+
+or
+
+  if ( isa_mason_exception($@, 'Syntax') ) { ... }
+
+Note that when specifying a subclass you should not include the
+leading "HTML::Mason::Exception::" portion of the class name.
 
 =cut
