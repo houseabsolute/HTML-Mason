@@ -76,12 +76,6 @@ manually.
 See the L<Devel/sending_http_headers> of the Component Developer's
 Guide for details about the automatic header feature.
 
-=item debug_handler_proc, debug_handler_script, debug_mode, debug_perl_binary
-
-The B<debug_*> parameters control Mason's use of debug files.
-Component L<Admin/debugging> procedures are fully described in the I<Mason
-Administrator's Guide>.
-
 =item decline_dirs
 
 Indicates whether Mason should decline directory requests, leaving
