@@ -192,10 +192,7 @@ sub exec {
     } else {
 	$req = new HTML::Mason::Request (interp=>$self);
     }
-    print STDERR "Request: $req\n";
-    print STDERR "Stack: ".$req->{stack}."\n";
-    print STDERR "Stack size: ".scalar(@{$req->stack})."\n";
-    
+
     # $comp can be an absolute path or component object.  If a path,
     # load into object.
     if (!ref($comp) && substr($comp,0,1) eq '/') {
