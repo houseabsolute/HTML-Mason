@@ -1024,20 +1024,20 @@ visible via Apache::Status.
 
 Method to use for unpacking GET and POST arguments. The valid options
 are 'CGI' and 'mod_perl'; these indicate that a C<CGI.pm> or
-C<Apache::Request> object (respectively) will be created for the purposes
-of argument handling.
+C<Apache::Request> object (respectively) will be created for the
+purposes of argument handling.
 
 'mod_perl' is the default and requires that you have installed the
 C<Apache::Request> package.
-
-If the args_method is 'CGI', the Mason request object (C<$m>) will have a
-method called C<cgi_object> available.  This method returns the CGI
-object used for argument processing.
 
 If args_method is 'mod_perl', the C<$r> global is upgraded to an
 Apache::Request object. This object inherits all Apache methods and
 adds a few of its own, dealing with parameters and file uploads.  See
 C<Apache::Request> for more information.
+
+If the args_method is 'CGI', the Mason request object (C<$m>) will have a
+method called C<cgi_object> available.  This method returns the CGI
+object used for argument processing.
 
 While Mason will load C<Apache::Request> or C<CGI> as needed at runtime, it
 is recommended that you preload the relevant module either in your
