@@ -17,6 +17,7 @@ use HTML::Mason::MethodMaker
                          filter
                          filter_args
 			 ignore_flush
+			 ignore_clear
 		       ) ],
     );
 
@@ -41,15 +42,11 @@ use HTML::Mason::MethodMaker
 sub new
 {
     my $class = shift;
-    my $self = bless { ignore_flush => 0, @_ }, $class;
+    my $self = bless { ignore_flush => 0, ignore_clear => 0, @_ }, $class;
     $self->_initialize;
     return $self;
 }
 
-# we set the {sink_is_scalar} flag as an optimization for sinks which
-# are scalarrefs, the commonest case.  This lets us optimize the
-# receive() method to simply concatenate onto the string rather than
-# always calling a sub reference.
 sub _initialize
 {
     my $self = shift;
@@ -59,7 +56,6 @@ sub _initialize
 	if ( UNIVERSAL::isa( $self->{sink}, 'SCALAR' ) )
 	{
             $self->{buffer} = delete $self->{sink};
-	    $self->{sink_is_scalar} = 1;
 	}
     }
     else
@@ -67,7 +63,6 @@ sub _initialize
 	# create an empty string to use as buffer
 	my $buf = '';
 	$self->{buffer} = \$buf;
-        $self->{sink_is_scalar} = 1;
     }
 
     if ( $self->{filter} &&
@@ -92,7 +87,7 @@ sub receive
 
     return unless @_;
 
-    if ( $self->{sink_is_scalar} )
+    if ( $self->{buffer} )
     {
         # grep { defined } is marginally faster than local $^W;
         ${ $self->{buffer} } .= join '', grep { defined } @_;
@@ -118,6 +113,8 @@ sub flush
 sub clear
 {
     my $self = shift;
+    return if $self->ignore_clear;
+
     return unless exists $self->{buffer};
     ${$self->{buffer}} = '';
 }
@@ -129,13 +126,6 @@ sub output
     my $output = ${$self->{buffer}};
     return $self->{filter}->( $output, @{ $self->{filter_args} } ) if $self->{filter};
     return $output;
-}
-
-sub buffer
-{
-    my $self = shift;
-
-    return $self->{buffer} if $self->{sink_is_scalar};
 }
 
 1;
