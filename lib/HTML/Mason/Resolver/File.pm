@@ -33,6 +33,7 @@ sub new {
     # no comp_root param was provided.
     #
     $self->{allow_relative_path} = ! exists $p{comp_root};
+    $self->{cwd} = cwd;
 
     # Put it through the accessor to ensure proper data structure
     $self->comp_root( $self->{comp_root} ) unless ref $self->{comp_root};
@@ -117,7 +118,7 @@ sub rel2abs {
     my ($self, $path) = @_;
 
     if ($self->{allow_relative_path}) {
-	return join("/", File::Spec->splitdir( File::Spec->rel2abs(cwd) ), $path);
+	return join("/", File::Spec->splitdir( File::Spec->rel2abs( $self->{cwd} ) ), $path);
     } else {
 	return undef;
     }
