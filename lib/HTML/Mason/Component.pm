@@ -179,6 +179,18 @@ sub subcomps {
 }
 
 #
+# Get all methods or particular method by name
+#
+sub methods {
+    my ($self,$key) = @_;
+    if (defined($key)) {
+	return $self->{methods}->{$key};
+    } else {
+	return $self->{methods};
+    }
+}
+
+#
 # Get attribute by name
 #
 sub attr {

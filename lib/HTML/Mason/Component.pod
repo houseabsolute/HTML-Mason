@@ -182,7 +182,14 @@ or undef if no such subcomponent exists. e.g.
         ...
     }
 
-Subcomponents are declared in the C<E<lt>%defE<gt>> section.
+Subcomponents are declared in C<E<lt>%defE<gt>> sections.
+
+=item methods
+
+This method works exactly like the subcomps method, but it returns
+methods, not subcomponents.
+
+Methods are declared in C<E<lt>%methodE<gt>> sections.
 
 =item title
 
