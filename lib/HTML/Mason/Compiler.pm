@@ -284,7 +284,8 @@ sub substitution
     my $text = $p{substitution};
     if ( $p{escape} || $self->default_escape_flags )
     {
-	my %flags = map { $_ => 1 } split //, $p{escape};
+	my %flags;
+	%flags = map { $_ => 1 } split //, $p{escape} if $p{escape};
 	foreach (keys %flags)
 	{
 	    HTML::Mason::Exception::Compiler->throw( error => "invalid <% %> escape flag: '$_'" )
