@@ -249,7 +249,9 @@ sub load {
 	    # values make that happen.
 	    $objfilemod = -f $objfile ? $srcmod : 0;
 	} else {
-	    # Um, what's our plan if it _is not_ a file?!
+	    # If the object file exists, get its modification time.
+	    # Otherwise (it doesn't exist or it is a directory) we
+	    # must create it.
 	    $objfilemod = (defined($objfile) and -f $objfile) ? (stat _)[9] : 0;
 	}
     }
