@@ -79,6 +79,18 @@ object that you can manipulate before deciding to serve a request.
 See the ApacheHandler docs (HTML::Mason::ApacheHandler) for more
 details.
 
+- The ApacheHandler module no longers accepts parameters when
+imported, as in:
+
+  use HTML::Mason::ApacheHandler (args_method => 'mod_perl');
+
+Instead, you specify this via the ApacheHandler constructor, via:
+
+  my $ah = HTML::Mason::ApacheHandler->new(args_method => 'mod_perl');
+
+You should preload the Apache::Request or CGI module in your handler
+or httpd.conf, in order to save memory.
+
 Version 0.85
 
 - Autohandlers are now recursive by default. If your site uses
