@@ -4,7 +4,6 @@ use strict;
 
 use HTML::Mason;
 use CGI;
-use Carp;
 use File::Spec;
 use Params::Validate qw(:all);
 
