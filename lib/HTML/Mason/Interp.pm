@@ -66,6 +66,7 @@ __PACKAGE__->valid_params
 						      sub { $_[0] =~ /^(?:batch|stream)$/ } } },
      max_recurse                  => { parse => 'string',  default => 32, type => SCALAR },
      preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF },
+     request_class                => { parse => 'string', default => 'HTML::Mason::Request', type => SCALAR },
      resolver                     => { isa => 'HTML::Mason::Resolver' },
      static_file_root             => { parse => 'string',  optional => 1, type => SCALAR },
      system_log_events            => { parse => 'string',  optional => 1, type => SCALAR|HASHREF|UNDEF },
@@ -102,7 +103,7 @@ sub new
 		       system_log_fh => undef,
 		       system_log_events_hash => undef,
 		     }, $class;
-    
+
     $self->{autohandler_name} = undef unless $self->{use_autohandlers};
     $self->{dhandler_name} = undef unless $self->{use_dhandlers};
     $self->{die_handler_overridden} = 1 if $self->{die_handler} ne $self->validation_spec->{die_handler}{default}; #Hmm
@@ -196,7 +197,7 @@ sub die_handler {
 #
 sub exec {
     my $self = shift;
-    my $req = HTML::Mason::Request->new(interp=>$self);
+    my $req = $self->{request_class}->new(interp=>$self);
     $req->exec(@_);
 }
 

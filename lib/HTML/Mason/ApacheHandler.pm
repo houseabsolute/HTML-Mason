@@ -135,6 +135,7 @@ my %valid_params =
      multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1 },
      output_mode           => { parse => 'string',  type => SCALAR,       default => 'batch' },
      interp_class          => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason::Interp' },
+     request_class         => { parse => 'string', default => 'HTML::Mason::Request::ApacheHandler', type => SCALAR },
      top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1} },
 
      # the only required param
@@ -382,7 +383,7 @@ sub new
 my $status_name = 'mason0001';
 
 {
-    local $^W; # to avoid subroutine redefined warnings
+    local $^W; # to avoid subroutine redefined warnings - but this doesn't work!
     Apache::Status->menu_item
 	    ($status_name => __PACKAGE__->allowed_params->{apache_status_title}{default},
 	     sub { ["<b>(no interpreters created in this child yet)</b>"] });
@@ -396,12 +397,12 @@ sub _initialize {
 
     if ($self->args_method eq 'mod_perl') {
 	unless (defined $Apache::Request::VERSION) {
-	    warn "Loading Apache::Request at runtime.  You could save some memory by preloading it in your httpd.conf or handler.pl file\n";
+	    warn "Loading Apache::Request at runtime.  You could increase shared memory between Apache processes by preloading it in your httpd.conf or handler.pl file\n";
 	    require Apache::Request;
 	}
     } else {
 	unless (defined $CGI::VERSION) {
-	    warn "Loading CGI at runtime.  You could save some memory by preloading it in your httpd.conf or handler.pl file\n";
+	    warn "Loading CGI at runtime.  You could increase shared memory between Apache processes by preloading it in your httpd.conf or handler.pl file\n";
 
 	    require CGI;
 	}
@@ -523,11 +524,10 @@ sub handle_request {
     #
     # Create an Apache-specific request with additional slots.
     #
-    my $request = new HTML::Mason::Request::ApacheHandler
-	(ah=>$self,
-	 interp=>$interp,
-	 apache_req=>$apreq,
-	 );
+    my $request = $self->{request_class}->new( ah => $self,
+					       interp => $interp,
+					       apache_req => $apreq,
+					     );
     eval { $retval = $self->handle_request_1($apreq, $request) };
     my $err = $@;
     my $err_code = $request->error_code;
