@@ -6,4 +6,8 @@ blah
 % $r->headers_out('X-Mason-Test' => 'New value 3');
 <%init>
 $r->headers_out('X-Mason-Test' => 'New value 1');
+$m->abort if $blank;
 </%init>
+<%args>
+$blank=>0
+</%args>

@@ -543,6 +543,11 @@ sub handle_request_1
     }
 
     #
+    # Set up interpreter global variables.
+    #
+    $interp->set_global(r=>$r);
+
+    #
     # Craft the out method for this request to handle automatic http
     # headers.
     #
@@ -554,9 +559,9 @@ sub handle_request_1
 	    # flag, then via a slightly slower $r test.
 	    unless ($headers_sent) {
 		unless (http_header_sent($r)) {
-		    # If the header has not been sent, buffer initial
-		    # whitespace so as to delay headers.
-		    if ($_[0] !~ /\S/) {
+		    # If in stream mode and header has not been sent,
+		    # buffer initial whitespace so as to delay headers.
+		    if ($_[0] !~ /\S/ and $request->out_mode eq 'stream') {
 			$delay_buf .= $_[0];
 			return;
 		    } else {
@@ -564,7 +569,10 @@ sub handle_request_1
 			$request->abort() if $r->header_only;
 		    }
 		}
-		$interp->out_method->($delay_buf) if $delay_buf ne '';
+		unless ($delay_buf eq '') {
+		    $interp->out_method->($delay_buf);
+		    $delay_buf = '';
+		}
 		$headers_sent = 1;
 	    }
 	    $interp->out_method->($_[0]);
@@ -575,17 +583,20 @@ sub handle_request_1
 	    $request->top_stack->{sink} = $interp->out_method if $request->out_mode eq 'stream' and $request->top_stack->{sink} eq $request->out_method;
 	};
 	$request->{out_method} = $out_method;
-    }
-    
-    #
-    # Set up interpreter global variables.
-    #
-    $interp->set_global(r=>$r);
 
-    #
-    # Finally, execute request.
-    #
-    return $request->exec($comp, %args);
+	my $retval = $request->exec($comp, %args);
+
+	# Send headers and any buffered whitespace if it has not
+	# already been sent (as in a page with just headers).
+	if ($request->out_mode eq 'stream' and !$headers_sent) {
+	    $r->send_http_header() unless http_header_sent($r);
+	    $interp->out_method($delay_buf) unless $delay_buf eq '';
+	}
+
+	return $retval;
+    } else {
+	$request->exec($comp, %args);
+    }
 }
 
 sub simulate_debug_request
