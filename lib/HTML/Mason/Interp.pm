@@ -11,6 +11,7 @@ use File::Basename;
 use File::Path;
 use File::Spec;
 use HTML::Mason;
+use HTML::Mason::Escapes;
 use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
 use HTML::Mason::Tools qw(make_fh read_file taint_is_on load_pkg);
@@ -154,8 +155,8 @@ sub _initialize
     #
     # Add the escape flags (including defaults)
     #
-    foreach ( [ h => \&HTML::Mason::Tools::html_entities_escape ],
-              [ u => \&HTML::Mason::Tools::url_escape ],
+    foreach ( [ h => \&HTML::Mason::Escapes::html_entities_escape ],
+              [ u => \&HTML::Mason::Escapes::url_escape ],
             )
     {
         $self->set_escape(@$_);
@@ -837,6 +838,18 @@ instead of C<FileCache>.
 A hash reference of escape flags to set for this object.  See the
 section on the L<C<set_escape()> method|Interpreter/item_set_scape>
 for more details.
+
+When setting these with C<PerlSetVar> directives in an Apache
+configuration file, you can set them like this:
+
+  PerlSetVar "flag  => \&subroutine"
+  PerlSetVar "uc    => sub { ${$_[0]} = uc ${$_[0]}; }"
+  PerlAddVar "thing => other_thing"
+
+If the right hand side is a bareword (matches C</^\w+%/>), then it is
+assumed to be a subroutine name in the C<HTML::Mason::Escapes> module.
+Otherwise the right hand side is C<eval>'ed, with the expectation that
+it will return a subroutine reference.
 
 =item ignore_warnings_expr
 
