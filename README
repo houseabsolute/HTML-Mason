@@ -21,6 +21,10 @@ Mason requires Perl 5.005 or greater, and the following CPAN modules:
 
 * Params::Validate
 
+* Exception::Class
+
+* Apache::Request
+
 The following CPAN modules are optional for certain features, but not required:
 
 * Time::HiRes
@@ -103,18 +107,6 @@ If you are experiencing test failures, please run the tests like this:
 
 and send the output along with the bug report.  Otherwise we'll just
 ask you to do this before we can do anything.
-
-CONTENT MANAGEMENT
-
-There is a companion content management system for Mason, originally
-developed by Mark Schmick and now maintained by Michael Alan Dorman
-and Jaron Rubenstein.  CM is a web-based interface to your component
-and content files; it allows designers and programmers to work on a
-site remotely without resorting to ftp or telnet. It supports
-staging/production sites, RCS versioning of files, global content
-searching, and a host of other features. CM is written entirely as a
-set of Mason components.  Find out more and download a copy at
-http://mason-cm.sourceforge.net/.
 
 LICENSE
 
