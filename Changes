@@ -23,6 +23,7 @@ system.  Task id #446.
 many cases be quite a bit slower than configuration via a custom
 handler subroutine.  Now configuration via the httpd.conf is much
 faster, and is only about 5% slower than a custom handler subroutine.
+Reported by Jeremy Blain.
 
 - Mason's test harness now gives verbose output when the TEST_VERBOSE
 environment variable is true.  This eliminates the need for setting
@@ -33,14 +34,14 @@ same name in a single component.
 
 [ BUG FIXES ]
 
-- Mason dies if asked to compile a component that evaluates to a false
-value.  Task id #444.  Reported by David Wheeler.
+- Mason would die if asked to compile a component that evaluates
+to a false value.  Task id #444.  Reported by David Wheeler.
 
 - Mason now gives a better error message if you try to call a
 component's methods or subcomponents from its <%shared> block.  Task
 id #448.  Reported by Randy Harmon.
 
-- If in_package was set, Mason Would die if output was generated after
+- If in_package was set, Mason would die if output was generated after
 a subrequest.  Task id #453.  Reported by David R. Baird.
 
 - If a component called $m->cache_self, and then $m->decline, no
