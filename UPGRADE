@@ -110,6 +110,19 @@ up per page). For a short-term fix, place
 in every autohandler. Ideally, in the long-term you'll be able to
 make the autohandlers work well together.
 
+- When calling components, base_comp now gets set to the called
+components, _unless_ you call a component with a component object or
+your component call starts with SELF: or METHOD:.  So a call like
+this:
+
+  <& /some/comp, foo => 1 &>
+
+causes the return value of $m->base_comp to be the "/some/comp"
+component object inside the "/some/comp" component.  But this:
+
+  <& $somp_comp_obj, foo => 1 &>
+
+does not change what $m->base_comp returns.
 
 Version 0.8
 

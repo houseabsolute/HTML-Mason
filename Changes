@@ -62,6 +62,9 @@ constructor, which will create the interp object internally.
 - ** The MasonMultipleConfig httpd.conf parameter has been removed.
 Mason can now figure this out by itself.
 - ** The HTML::Mason::Interp time() method has gone away.
+- ** The base_comp is now changed for each component call, unless that
+component call uses a component object for its first argument, or the
+call starts with SELF: or PARENT:.
 
 [ ENHANCEMENTS AND NEW FEATURES ]
 
