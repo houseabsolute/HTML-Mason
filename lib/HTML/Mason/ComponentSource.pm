@@ -11,6 +11,25 @@ use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
+use Class::Container;
+use base qw(Class::Container);
+
+BEGIN
+{
+    __PACKAGE__->valid_params
+        (
+         comp_id       => { type => SCALAR | UNDEF, public => 0 },
+         friendly_name => { type => SCALAR, public => 0 },
+         last_modified => { type => SCALAR, public => 0 },
+         comp_path     => { type => SCALAR, public => 0 },
+         comp_class    => { isa => 'HTML::Mason::Component',
+                            default => 'HTML::Mason::Component',
+                            public => 0 },
+         extra         => { type => HASHREF, default => {}, public => 0 },
+         source_callback => { type => CODEREF, public => 0 },
+    );
+}
+
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( comp_id
                          friendly_name
@@ -20,29 +39,6 @@ use HTML::Mason::MethodMaker
                          extra
                         ) ],
       );
-
-# XXX Should be a Class::Container
-
-my %valid_params =
-    (
-     comp_id       => { type => SCALAR | UNDEF },
-     friendly_name => { type => SCALAR },
-     last_modified => { type => SCALAR },
-     comp_path     => { type => SCALAR },
-     comp_class    => { isa => 'HTML::Mason::Component', default => 'HTML::Mason::Component' },
-     extra         => { type => HASHREF, default => {} },
-     source_callback => { type => CODEREF },
-    );
-
-sub allowed_params { \%valid_params }
-sub validation_spec { return shift->allowed_params }
-
-sub new
-{
-    my $class = shift;
-
-    return bless { validate( @_, \%valid_params ) }, $class;
-}
 
 sub comp_source
 {
