@@ -8,9 +8,6 @@ use 5.005;
 $HTML::Mason::VERSION = '1.09_01';
 $HTML::Mason::VERSION = eval $HTML::Mason::VERSION
 
-# remember to switch this off later.
-$HTML::Mason::DEBUG = 1;
-
 use HTML::Mason::Interp;
 
 sub version
