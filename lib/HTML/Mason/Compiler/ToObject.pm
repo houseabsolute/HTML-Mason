@@ -16,11 +16,11 @@ BEGIN
     __PACKAGE__->valid_params
 	(
 	 comp_class    => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component',
-			    descr => "The class into which component object should be blessed" },
+			    descr => "The class into which component objects will be blessed" },
 	 subcomp_class => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component::Subcomponent',
-			    descr => "The class into which subcomponent objects should be blessed" },
+			    descr => "The class into which subcomponent objects will be blessed" },
 	 in_package => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Commands',
-			 descr => "The package in which component execution should take place" },
+			 descr => "The package in which component execution will take place" },
 	 preamble   => { parse => 'string',  type => SCALAR, default => '',
 			 descr => "A chunk of Perl code to add to the beginning of each compiled component" },
 	 postamble  => { parse => 'string',  type => SCALAR, default => '',
@@ -76,7 +76,7 @@ sub compiled_component
     my $id = $self->object_id;
     $id =~ s,([\\']),\\$1,g;
     $params->{compiler_id} = "'$id'";
-    $params->{create_time} = time;
+    $params->{load_time} = time;
 
     $params->{subcomps} = '\%_def' if %{ $self->{def} };
     $params->{methods} = '\%_method' if %{ $self->{method} };
