@@ -357,7 +357,7 @@ sub handle_preview_request_1
 			$start += length($nextEventStr);
 			my $length = [stat($path)]->[7];
 			my $fh = do { local *FH; *FH; };
-			open $fh $path or die "Can't open $path: $!";
+			open($fh,$path) or die "Can't open $path: $!";
 			if ($length < 1024) {
 			    local $/ = undef;
 			    my $filetext = <$fh>;
@@ -366,7 +366,7 @@ sub handle_preview_request_1
 			    my $buf;
 			    read($fh,$buf,128);
 			    if ($buf eq substr($content,$start,128)) {
-				seek $fh (-128,2);
+				seek($fh,-128,2);
 				read($fh,$buf,128);
 				$valid = ($buf eq substr($content,$start+$length-128,128));
 			    }
