@@ -588,13 +588,7 @@ sub scomp {
     $self->top_stack->{sink} = $save_sink;
     die $err if $err;
 
-    # In scalar context, just return component output. In list context, return both output
-    # and return value.
-    if (wantarray) {
-	return ($store,$retval);
-    } else {
-	return $store;
-    }
+    return $store;
 }
 
 #

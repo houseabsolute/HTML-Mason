@@ -9,7 +9,7 @@ use strict;
 my ($EXCLUDE, $HELP, $QUIET, $TEST);
 
 my $usage = <<EOF;
-Usage: $0 -hlqtu [-e <regexp>] <directory> [<directory>...]
+Usage: $0 -hqt [-e <regexp>] <directory> [<directory>...]
 -e <regexp>: Exclude paths matching <regexp> case-insensitive. e.g. "(.gif|.jpg)$"
 -h: Display help message and exit
 -q: Quiet mode, do not report normal processing of files

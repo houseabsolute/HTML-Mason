@@ -40,8 +40,8 @@ sub try_parse {
 sub try_exec_with_parser {
     my ($options,$test,$iteration) = @_;
     # Create new parser and interp based on parser options.
-    # Turn off object files and source refs so that we recompile every time.
-    my $parser = new HTML::Mason::Parser (%$options, source_refer_predicate => sub { return 0 });
+    # Turn off object files so that we recompile every time.
+    my $parser = new HTML::Mason::Parser (%$options);
     my $interp = new HTML::Mason::Interp(parser => $parser, comp_root => $comp_root, data_dir => $data_dir, use_object_files => 0);
     try_exec($interp,$test,$iteration);
 }

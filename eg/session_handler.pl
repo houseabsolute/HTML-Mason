@@ -6,7 +6,7 @@
 # *NOTE* There is a bug in perl5.005 that can rear it's head when you die()
 #        within an eval {}.  Unfortunately, Apache::Session expects you to
 #        catch failures by using eval, so you may get bitten.  You can
-#        either hack Apache::Session to change how it returns it's error
+#        either hack Apache::Session to change how it returns its error
 #        conditions, or upgrade to the latest perl development version (or
 #        wait for the release of 5.6)
 

@@ -9,7 +9,7 @@ Price: <%$rec->{price}%><br>
 <& Template,bottom=>1 &>
 
 <%INIT>
-my %cds = %{mc_comp('data/cds')};
+my %cds = %{$m->comp('data/cds')};
 my $rec = $cds{$id};
 </%INIT>
 <%ARGS>

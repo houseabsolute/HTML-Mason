@@ -7,7 +7,7 @@ available at http://www.masonhq.com/changes.html.
 
 0.8
 
-- New integrated request API! $m replaces $REQ as the global variable
+- New integrated request API. $m replaces $REQ as the global variable
 containing the current request object. All mc_ commands have been
 incorporated into $m methods: mc_comp becomes $m->comp, mc_file
 becomes $m->file, etc. The old commands still work for now.
@@ -20,13 +20,25 @@ preparation for a more general component inheritance system.
 convert0.8.pl handles this change. L{Devel/autohandlers}
 - Can now specify multiple component roots in the spirit of @INC.
 (suggested by Ewan Edwards and others) L{Admin/Component roots (multiple)}
-- Output mode parameter was moved from ah->output_mode to
-interp->out_mode, to make it independent of mod_perl.
-ah->output_mode still works. L{Interp/item_out_mode}
 - Simplified HTTP header behavior. Headers are sent at the end of the
 request (in batch mode) or just before the first non-whitespace output
 (in stream mode). suppress_http_header no longer needed.
 L{Devel/sending http headers}
+- ** mc_suppress_http_header command still exists but does nothing.
+In most cases this should not cause a problem. The only
+incompatibility is if you have used mc_suppress_http_header to
+suppress headers completely (i.e. you don't want Mason to send headers
+at all); in this case pass auto_send_headers=>0 to ApacheHandler.
+- Output mode parameter was moved from ah->output_mode to
+interp->out_mode, to make it independent of mod_perl.
+ah->output_mode still works. L{Interp/item_out_mode}
+- New in-memory code cache keeps track of component usage, and
+discards the most infrequently used components as needed.  You can
+specify the cache size with interp->max_code_cache_size.  L{Admin/Code
+cache}
+- ** Eliminated the now unnecessary interp->code_cache_mode.
+- Eliminated the "source references" optimization, a common source of
+bugs, no longer needed with the new code cache.
 - Allow arguments to be accessed via @_ as in regular subroutines; no
 longer required to be in hash form. (suggested by Ken Williams)
 L{Devel/using instead}
@@ -45,7 +57,8 @@ in the stack. (suggested by Lee Semel) L{Request/item_caller_args}
 - Changed data cache filenames from colon-separated to url-encode
 style for Win32 compatibility. (submitted by Ken Williams)
 L{Admin/data_caching}
-- ** mc_date legacy command removed.
+- Added improved, separate session_handler.pl for session handling.
+- ** Rmoved mc_date legacy command.
 - Added warnings about using Mason with mod_perl DSO.
 - Added more site configuration examples to Admin.pod.
 L{Admin/configuring virtual sites} 
@@ -55,16 +68,11 @@ read/write and read-only as appropriate.
 component is caught by another component's eval.
 - Fixed doc_root / comp_root mismatch on case-insensitive O/S.
 (reported by John Arnold)
-- Added use_data_dumper_xs Config.pm item, which checks whether
-Data::Dumper::Dumpxs is available. (reported by Pelle Johnsen)
-
-0.73
-
-- Added "code examples" section to README
-- Fixed handler.pl examples to return status when using sessions
 - Fixed "directory not absolute" warning on "/" (reported by Joe Edmonds)
 - Fixed reload file scanning mechanism (submitted by Brian Holmes)
-- Fixed small suppress_http_header(0) bug
+- Added use_data_dumper_xs Config.pm item, which checks whether
+Data::Dumper::Dumpxs is available. (reported by Pelle Johnsen)
+- Added "code examples" section to README
 
 0.72  Fri Oct 15 08:21:25 PDT 1999
 

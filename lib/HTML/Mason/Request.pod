@@ -281,10 +281,8 @@ Given a I<comp_path>, returns the corresponding absolute component path.
 =item scomp
 
 Like C<$m-E<gt>comp>, but returns the component output as a string
-instead of printing it. (Think sprintf versus printf.) In scalar
-context the component's return value is discarded. In array context
-the component output and return value are both returned in a
-two-item list.
+instead of printing it. (Think sprintf versus printf.) The
+component's return value is discarded.
 
 =item time
 

@@ -20,8 +20,8 @@
 
 <%INIT>
 my ($artistlink);
-my %cds = %{mc_comp('data/cds')};
-my %artists = %{mc_comp('data/artists')};
+my %cds = %{$m->comp('data/cds')};
+my %artists = %{$m->comp('data/artists')};
 </%INIT>
 
 <%ARGS>

@@ -35,6 +35,17 @@ Component Developer's Guide for a discussion of the pros and cons.
 File name used for autohandlers. Default is "autohandler". If
 undef, Mason will not look for autohandlers.
 
+=item code_cache_max_size
+
+Specifies the maximum size, in bytes, of the in-memory code cache
+where components are stored. e.g.
+
+    code_cache_max_size => 20*1024*1024
+    code_cache_max_size => 20_000_000
+
+Default is 10 MB. See the L<Admin/Code Cache> section of the I<Admin Guide>
+for further details.
+
 =item comp_root
 
 The required Mason component root. All components live under the comp_root.

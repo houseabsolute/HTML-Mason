@@ -11,8 +11,8 @@
 <& Template,bottom=>1 &>
 
 <%INIT>
-my %cds = %{mc_comp('data/cds')};
-my %genres = %{mc_comp('data/genres')};
+my %cds = %{$m->comp('data/cds')};
+my %genres = %{$m->comp('data/genres')};
 </%INIT>
 
 <%ARGS>

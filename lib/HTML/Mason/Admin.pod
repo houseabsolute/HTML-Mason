@@ -213,7 +213,7 @@ for details.
 
 =head2 File ownership
 
-Web servers that run on privileged ports like 80 start with a root
+Unix web servers that run on privileged ports like 80 start with a root
 parent process, then spawn children running as the 'User' and 'Group'
 specified in httpd.conf. This difference leads to permission errors
 when child processes try to write files or directories created by the
@@ -232,23 +232,15 @@ end of the startup code in C<handler.pl>:
 With just a few lines in handler.pl you can make a global hash
 (e.g. I<%session>) available to all components containing persistent user
 session data.  If you set a value in the hash, you will see the change
-in future visits by the same user.  The B<Apache::Session> module,
-available from CPAN, provides convenient facilities for this. The
-following lines, commented out in the default handler.pl, implement a
-cookie-based session with user data stored on the filesystem:
+in future visits by the same user.  The key piece is Jeffrey Baker's
+B<Apache::Session> module, available from CPAN.
 
-    my %session;
-    my $cookie = $r->header_in('Cookie');
-    $cookie =~ s/SESSION_ID=(\w*)/$1/;
-    tie %session, 'Apache::Session::File', $cookie, {'Directory' => '/tmp/session'};
-    $r->header_out("Set-Cookie" => "SESSION_ID=$session{_session_id};") if ( !$cookie );
-    local *HTML::Mason::Commands::session = \%session;
+The file F<eg/session_handler.pl> in the distribution contains the
+lines to activate cookie-based sessions using Apache::Session and
+CGI::Cookie. You can use F<eg/session_handler.pl> as your new handler.pl
+base, or just copy out the appropriate pieces to your existing handler.pl.
 
-and then, after C<handle_request>,
-
-    untie %session;
-
-This code is customizable; you can change the user ID location
+The session code is customizable; you can change the user ID location
 (e.g. URL instead of cookie), the user data storage mechanism
 (e.g. DBI database), and the name of the global hash.
 
@@ -580,7 +572,7 @@ C<Config.pm> section.
 B<Sample Log Parser>
 
 Here is a code skeleton for parsing the various events in a log.  You
-can also find this in eg/parselog.pl in the Mason distribution.
+can also find this in F<eg/parselog.pl> in the Mason distribution.
 
    open(LOG,"mason.log");
    while (<LOG>) {
@@ -612,7 +604,7 @@ B<Suggested Uses>
 
 Performance: REQUEST events are useful for analyzing the performance
 of all Mason requests occurring on your site, and identifying the
-slowest requests. eg/perflog.pl in the Mason distribution is a log
+slowest requests. F<eg/perflog.pl> in the Mason distribution is a log
 parser that outputs the average compute time of each unique URL, in
 order from slowest to quickest.
 
@@ -632,21 +624,21 @@ whether to use it at all.
 
 Load frequency: COMP_LOAD events are useful for monitoring your code
 cache. Too many loads may indicate that your code cache is too small.
-Also, if you turn off the code cache temporarily, COMP_LOAD events
-will tell you which components are loaded most often and thus good
-candidates for preloading.
+Also, if you can turn off the code cache for a short time, COMP_LOAD
+events will tell you which components are loaded most often and thus
+good candidates for preloading.
 
 =head1 PERFORMANCE TUNING
 
 This section explains Mason's various performance enhancements and how
 to administer them.
 
-=head2 In-Memory Code Cache
+=head2 Code cache
 
 When Mason loads a component, it places it in a memory cache.
+
 The maximum size of the cache is specified with the
 L<Interp/code_cache_max_size> Interp parameter; default is 10MB.
-
 When the cache fills up, Mason frees up space by discarding a
 number of components. The discard algorithm is least frequently used
 (LFU), with a periodic decay to gradually eliminate old frequency
@@ -657,7 +649,7 @@ would force out too many other components.
 
 Note that the "size" of a component in memory cannot literally be
 measured.  It is estimated by the length of the source text plus some
-overhead.  Do not expect your process growth to match the code cache
+overhead.  Your process growth will not match the code cache
 size exactly.
 
 You can monitor the performance of the memory cache by turning on
@@ -670,10 +662,13 @@ accessed often; see L<Preloading>. Note that preloaded components
 possess no special status in the cache and can be discarded like any
 others.
 
+Naturally, a cache entry is invalidated if the corresponding component
+source file changes.
+
 To turn off caching completely, set L<Interp/code_cache_max_size> to
 0.
 
-=head2 Object Files
+=head2 Object files
 
 The in-memory code cache is only useful on a per-process basis.  Each
 process must build and maintain its own cache. Shared memory caches
@@ -687,23 +682,20 @@ object file and save time on parsing the component source file.  The
 object file is recreated whenever the source file changes.
 
 Besides improving performance, object files are essential for
-debugging and interpretation of compilation errors.  The
-curious-minded can peek inside an object file to see exactly how a
-component is converted into a Perl subroutine.
+debugging and interpretation of errors.  Line numbers in error
+messages are given in terms of the object file. The curious-minded can
+peek inside an object file to see exactly how Mason converted
+a given component to a Perl object.
 
 If for some reason you don't want Mason to create object files, set
 the L<Interp/use_object_files> Interp parameter to 0.
 
-=back
-
-Both entities are recomputed if the component source file changes.
-
 =head2 Preloading
 
 You can tell Mason to preload a set of components in the parent
-process, rather than loading them on demand, using C<interp-E<gt>preloads>.
-Each child server will start with those components loaded in the
-memory cache. The trade-offs are:
+process, rather than loading them on demand, using the
+L<Interp/preloads> Interp parameter.  Each child server will start
+with those components loaded in the memory cache. The trade-offs are:
 
 =over
 
@@ -737,7 +729,7 @@ behavior in two ways:
 1.  Does not check component source files at all, relying solely on
 object files.  This means the developer or an automated system is
 responsible for recompiling any components that change and recreating
-object files, using the Parser L<Parser/make_component> method.
+object files, using the L<Parser/make_component> Parser method.
 
 2.  Rather than continuously checking whether object files have
 changed, Mason monitors a "reload file" containing an ever-growing

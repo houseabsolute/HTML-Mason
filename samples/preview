@@ -34,7 +34,7 @@ $previewServer = $r->server->server_hostname;
 
 </%init>
 
-%if ($mode eq 'home') {
+% if ($mode eq 'home') {
 <html>
 <head>
 <title>Mason Previewer</title>
@@ -108,7 +108,7 @@ $previewServer = $r->server->server_hostname;
 
 <h2>Saved Port Settings</h2>
 
-%if (@settings) {
+% if (@settings) {
 <table border=1>
 <tr>
 <th>&nbsp;</th>
@@ -117,7 +117,7 @@ $previewServer = $r->server->server_hostname;
 <th>Caching</th>
 <th>Other</th>
 </tr>
-%foreach $setting (@settings) {
+% foreach $setting (@settings) {
 <%perl>
 my @other = ();
 if ($setting->{af_referer}) {
@@ -152,11 +152,11 @@ if ($setting->{af_useragent}) {
 </td>
 
 </tr>
-%}
+% }
 </table>
-%} else {
+% } else {
 (none)<br>
-%}
+% }
 
 <hr>
 
@@ -228,14 +228,14 @@ viewWindow = window.open("<%$viewUrl%>","MasonPreviewView<%$windowLetter%>")
 self.history.back()
 //-->
 </script>
-mc_abort();
+$m->abort();
 %}
-<%mc_comp($thisComp,previewPort=>$previewPort,deleted=>($action eq 'Delete settings'))%>
+<% $m->comp($thisComp,previewPort=>$previewPort,deleted=>($action eq 'Delete settings')) %>
 %}
 <%init>
 my ($i,%conf,$href,$query,$viewUrl,$setting,@settings);
 my $userName = $r->connection->user || 'anonymous';
-my $thisComp = (mc_call_stack)[0];
+my $thisComp = $m->current_comp;
 $previewPort = $previewPorts[0] if !defined($previewPort);
 if ($mode eq 'home') {
     $query = new CGI('');
