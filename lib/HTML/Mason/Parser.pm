@@ -563,7 +563,7 @@ sub make {
     }
     
     my $compilesub = sub {
-	my ($srcfile) = @_;
+	my ($srcfile) = $File::Find::name;
 	return if (!-f $srcfile);
 	return if defined($predicate) && !($predicate->($srcfile));
 	my $compPath = substr($srcfile,length($sourceDir));

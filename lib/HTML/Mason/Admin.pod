@@ -147,10 +147,10 @@ this manual.
 =head2 External modules
 
 Components will often need access to external Perl modules. Any such
-modules that export symbols should by listed in handler.pl, rather
+modules that export symbols should be listed in handler.pl, rather
 than the standard practice of using a PerlModule configuration
 directive. This is because components are executed inside the
-B<L<HTML::Mason::Commands>> package, and can only access symbols exported
+B<HTML::Mason::Commands> package, and can only access symbols exported
 to that package. Here's sample module list:
 
     { package HTML::Mason::Commands;
