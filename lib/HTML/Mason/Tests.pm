@@ -433,7 +433,7 @@ sub _run_test
     {
 	$interp = HTML::Mason::Interp->new( comp_root => $self->comp_root,
 					    data_dir  => $self->data_dir,
-					    out_method => \$buf,
+					    out_method => sub { for (@_) { $buf .= $_ if defined $_ } },
 					    compiler => $compiler,
 					    %interp_params,
 					  );
