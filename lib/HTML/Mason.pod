@@ -177,6 +177,8 @@ change your DefaultType:
 
     DefaultType text/html
 
+and make sure mod_mime_magic is not active.
+
 That's it for the Apache configuration. Next you will need to
 configure Mason's C<handler.pl> file, a sample of which is in
 C<eg/handler.pl>. Here you must make some decisions:
