@@ -28,7 +28,7 @@ $useless=>17
 </%args>
 </%def>
 
-% my $anon = $m->interp->make_anonymous_component(comp=>join("\n",'% my $adj = "flummoxed";','I am a <% $adj %> anonymous component.'),name=>'anonymous');
+% my $anon = $m->interp->make_component(comp_text=>join("\n",'% my $adj = "flummoxed";','I am a <% $adj %> anonymous component.'),name=>'anonymous');
 
 <% '-' x 60 %>
 

@@ -941,13 +941,13 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'make_anonymous_component',
-		      description => 'test that the make_anonymous_component method works',
+		      description => 'test make_component() without a path',
 		      component => <<'EOF',
 <%init>
 my $ctext = q|
 % my $x = 'Hello, ';
 <% $x %>|;
-my $comp = $m->interp->make_anonymous_component( comp => $ctext );
+my $comp = $m->interp->make_component( comp_text => $ctext );
 </%init>
 % $m->comp($comp);
 World
@@ -962,20 +962,14 @@ EOF
 
     # This test doesn't pass yet -Ken
     $group->add_test( name => 'make_component',
-                      description => 'test that the make_component() method works',
+		      description => 'test make_component() with a path',
 		      component => <<'EOF',
-<%init>
-my $ctext = q|
-% my $x = 'Hello, ';
-<% $x %>|;
-my $comp = $m->interp->make_component( comp => $ctext, path => '/fooey_comp' );
-</%init>
+% $m->interp->make_component( comp_text => 'Hello, <% "World" %>', path => '/fooey_comp' );
 % $m->comp('/fooey_comp');
-World
+!
 EOF
 		      expect => <<'EOF',
-
-Hello, World
+Hello, World!
 EOF
 		    );
 
