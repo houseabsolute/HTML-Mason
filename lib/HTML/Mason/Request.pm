@@ -1843,11 +1843,12 @@ L<CGIHandler|HTML::Mason::CGIHandler> documentation for more details.
 
 =for html <a name="item_redirect"></a>
 
-=item redirect ($url)
+=item redirect ($url, [$status])
 
 Given a url, this generates a proper HTTP redirect for that URL. It
-uses C<< $m->clear_buffer >> to clear out any previous output, and
-C<< $m->abort >> to abort the request with an appropriate status code.
+uses C<< $m->clear_buffer >> to clear out any previous output, and C<<
+$m->abort >> to abort the request.  By default, the status code used
+is 302, but this can be overridden by the user.
 
 Since this is implemented using C<< $m->abort >>, it will be trapped
 by an C< eval {} > block.  If you are using an C< eval {} > block in
