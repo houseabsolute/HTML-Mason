@@ -584,7 +584,7 @@ sub _cache_1_x
 sub cache_self {
     my ($self, %options) = @_;
 
-    return if $self->top_stack->{in_cache_self};
+    return if $self->top_stack->{in_call_self};
 
     my (%store_options, %retrieve_options);
     my ($expires_in, $key, $cache);
@@ -609,86 +609,29 @@ sub cache_self {
 	$cache = $self->cache(%options);
     }
 
-    # If the top buffer has a filter we need to remove it because
-    # we'll be adding the filter buffer again in a moment in order to
-    # capture the _filtered_ component output for caching.
-    pop @{ $self->{buffer_stack} } if $self->top_stack->{comp}->has_filter;
+    my ($output, @retval);
 
-    my ($output, $retval);
-    eval
-    {
-	my $cached = ($self->data_cache_api eq '1.0') ? $self->cache(%retrieve_options) : $cache->get($key, %retrieve_options);
-        if ($cached) {
-            ($output, $retval) = @$cached;
-        } else {
-            my $top_stack = $self->top_stack;
-            my $comp = $top_stack->{comp};
-            my @args = @{ $top_stack->{args} };
+    my $cached =
+        ( $self->data_cache_api eq '1.0' ?
+          $self->cache(%retrieve_options) :
+          $cache->get($key, %retrieve_options)
+        );
 
-            push @{ $self->{buffer_stack} },
-                $self->top_buffer->new_child( sink => \$output,
-                                              ignore_flush => 1,
-                                              ignore_clear => 1,
-                                            );
-
-            push @{ $self->{buffer_stack} },
-                $self->top_buffer->new_child( filter_from => $comp )
-                    if $comp->has_filter;
-
-            local $top_stack->{in_cache_self} = 1;
-            #
-            # Go back and find the context that the component was first
-            # called in (back up there in the comp method).
-            #
-
-            my $wantarray = (caller(1))[5];
-            my @result;
-            eval {
-                if ($wantarray) {
-                    @result = $comp->run(@args);
-                } elsif (defined $wantarray) {
-                    $result[0] = $comp->run(@args);
-                } else {
-                    $comp->run(@args);
-                }
-            };
-            $retval = \@result;
-
-            #
-            # Whether there was an error or not we need to pop the buffer
-            # stack.
-            #
-            if ( $comp->has_filter )
-            {
-                my $filter = pop @{ $self->{buffer_stack} };
-                $filter->flush;
-            }
-
-            pop @{ $self->{buffer_stack} };
-
-            if ($@) {
-                UNIVERSAL::can($@, 'rethrow') ? $@->rethrow : error $@;
-            }
-
-	    my $value = [$output, $retval];
-            if ($self->data_cache_api eq '1.0') {
-		$self->cache(action=>'store', key=>$key, value=>$value, %store_options);
-	    } else {
-		$cache->set($key, $value, $expires_in);
-	    }
-        }
-    };
-
-    # We can't let the buffer stack grow or shrink inside a call to
-    # ->comp or we end up with a mess.  But we don't want to put pack
-    # the original filtering buffer, or the component output would end
-    # up getting filtered twice.
-    push @{ $self->{buffer_stack} },
-        $self->top_buffer->new_child
+    if ($cached) {
+        $self->top_buffer->remove_filter
             if $self->top_stack->{comp}->has_filter;
 
-    if ($@) {
-        UNIVERSAL::can($@, 'rethrow') ? $@->rethrow : error $@;
+        ($output, my $retval) = @$cached;
+        @retval = @$retval;
+    } else {
+        $self->call_self( \$output, \@retval );
+
+        my $value = [$output, \@retval];
+        if ($self->data_cache_api eq '1.0') {
+            $self->cache(action=>'store', key=>$key, value=>$value, %store_options);
+        } else {
+            $cache->set($key, $value, $expires_in);
+        }
     }
 
     #
@@ -700,8 +643,80 @@ sub cache_self {
     # Return the component return value in case the caller is interested,
     # followed by 1 indicating the cache retrieval success.
     #
-    return (@$retval, 1);
+    return (@retval, 1);
 
+}
+
+my $do_nothing_sub;
+sub call_self
+{
+    my ($self, $output, $retval) = @_;
+
+    return if $self->top_stack->{in_call_self};
+
+    # If the top buffer has a filter we need to remove it because
+    # we'll be adding the filter buffer again in a moment in order to
+    # capture the _filtered_ component output for caching.
+    $self->top_buffer->remove_filter
+        if $self->top_stack->{comp}->has_filter;
+
+    unless (defined $output) {
+        # don't bother accumulating output that will never be seen
+        $output = $do_nothing_sub;
+    }
+
+    eval
+    {
+        my $top_stack = $self->top_stack;
+        my $comp = $top_stack->{comp};
+        my @args = @{ $top_stack->{args} };
+
+        push @{ $self->{buffer_stack} },
+            $self->top_buffer->new_child( sink => $output,
+                                          ignore_flush => 1,
+                                          ignore_clear => 1,
+                                        );
+
+        push @{ $self->{buffer_stack} },
+            $self->top_buffer->new_child( filter_from => $comp )
+                if $comp->has_filter;
+
+        local $top_stack->{in_call_self} = 1;
+
+        my $wantarray =
+            ( defined $retval ?
+              ( UNIVERSAL::isa( $retval, 'ARRAY' ) ? 1 : 0 ) :
+              undef
+            );
+
+        my @result;
+        eval {
+            if ($wantarray) {
+                @$retval = $comp->run(@args);
+            } elsif (defined $wantarray) {
+                $$retval = $comp->run(@args);
+            } else {
+                $comp->run(@args);
+            }
+        };
+
+        #
+        # Whether there was an error or not we need to pop the buffer
+        # stack (twice if we added a filter buffer).
+        #
+        if ( $comp->has_filter ) {
+            my $filter = pop @{ $self->{buffer_stack} };
+            $filter->flush;
+        }
+
+        pop @{ $self->{buffer_stack} };
+
+        rethrow_exception($@);
+    };
+
+    rethrow_exception($@);
+
+    return 1;
 }
 
 sub call_dynamic {
