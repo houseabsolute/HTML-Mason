@@ -25,7 +25,6 @@ use base qw(HTML::Mason::Container);
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code_cache
-			 data_dir
 			 die_handler_overridden
 			 hooks
 			 system_log_file
@@ -37,6 +36,7 @@ use HTML::Mason::MethodMaker
 			  code_cache_max_size
 			  compiler
 			  data_cache_defaults
+			  data_dir
 			  dhandler_name
 		          ignore_warnings_expr
 			  max_recurse

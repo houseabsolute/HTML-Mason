@@ -21,7 +21,7 @@ __PACKAGE__->valid_params
 __PACKAGE__->contained_objects();
 
 use HTML::Mason::MethodMaker
-    ( read_only => ['comp_root'] );
+    ( read_write => ['comp_root'] );
 
 
 sub new {
