@@ -20,7 +20,6 @@ use HTML::Mason::MethodMaker
 my %reqfields =
     (ah => undef,
      apache_req => undef,
-     cgi_object => undef,
      );
 
 sub new
@@ -51,13 +50,14 @@ sub cgi_object
 {
     my ($self) = @_;
 
-    if ($HTML::Mason::ApacheHandler::ARGS_METHOD eq 'CGI')
-    {
-	$self->{cgi_object} ||= CGI->new('');
-    }
-    else
-    {
+    if ($HTML::Mason::ApacheHandler::ARGS_METHOD ne '_cgi_args') {
 	die "Can't call cgi_object method unless CGI.pm was used to handle incoming arguments.\n";
+    } elsif (defined($_[1])) {
+	$self->{cgi_object} = $_[1];
+    } else {
+	# We may not have created a CGI object if, say, request was a
+	# GET with no query string. Create one on the fly if necessary.
+	$self->{cgi_object} ||= CGI->new('');
     }
 
     return $self->{cgi_object};
@@ -95,6 +95,8 @@ use HTML::Mason::MethodMaker
 			  debug_handler_script
 			  debug_perl_binary
 
+                          cgi_object
+
 			  decline_dirs
 			  error_mode
 			  interp
@@ -131,7 +133,6 @@ sub import
     shift; # class not needed
 
     return if $LOADED;
-
     my %params = @_;
 
     # safe default.
@@ -316,7 +317,6 @@ sub handle_request {
 	(ah=>$self,
 	 interp=>$interp,
 	 apache_req=>$apreq,
-	 cgi_object=>$self->{cgi_object},
 	 );
     
     eval { $retval = $self->handle_request_1($apreq, $request, $debug_state) };
@@ -573,7 +573,7 @@ sub handle_request_1
     if ($HTML::Mason::IN_DEBUG_FILE) {
 	%args = %{$r->{args_hash}};
     } else {
-	%args = $self->$ARGS_METHOD(\$r);
+	%args = $self->$ARGS_METHOD(\$r,$request);
     }
     $debug_state->{args_hash} = \%args if $debug_state;
 
@@ -654,32 +654,36 @@ sub handle_request_1
 #
 sub _cgi_args
 {
-    my ($self, $rref) = @_;
+    my ($self, $rref, $request) = @_;
 
     my $r = $$rref;
-    my $q;
-    unless ($r->method eq 'GET' && !scalar($r->args)) {
-        $self->{cgi_object} = CGI->new;
-    }
 
-    return unless exists $self->{cgi_object};
+    if ($r->method eq 'GET' && !scalar($r->args)) {
+	
+	# For optimization, don't bother creating a CGI object if request
+	# is a GET with no query string
+	return ();
+    } else {
+	my $q = CGI->new;
+        $request->cgi_object($q);
 
-    my %args;
-    foreach my $key ( $self->{cgi_object}->param ) {
-	foreach my $value ( $self->{cgi_object}->param($key) ) {
-	    if (exists($args{$key})) {
-		if (ref($args{$key}) eq 'ARRAY') {
-		    push @{ $args{$key} }, $value;
+	my %args;
+	foreach my $key ( $q->param ) {
+	    foreach my $value ( $q->param($key) ) {
+		if (exists($args{$key})) {
+		    if (ref($args{$key}) eq 'ARRAY') {
+			push @{ $args{$key} }, $value;
+		    } else {
+			$args{$key} = [$args{$key}, $value];
+		    }
 		} else {
-		    $args{$key} = [$args{$key}, $value];
+		    $args{$key} = $value;
 		}
-	    } else {
-		$args{$key} = $value;
 	    }
 	}
-    }
 
-    return %args;
+	return %args;
+    }
 }
 
 #
@@ -688,7 +692,7 @@ sub _cgi_args
 #
 sub _mod_perl_args
 {
-    my ($self, $rref) = @_;
+    my ($self, $rref, $request) = @_;
 
     my $apr = Apache::Request->new($$rref);
     $$rref = $apr;
