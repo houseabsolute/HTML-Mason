@@ -378,8 +378,8 @@ if ( $] >= 5.006 )
 }
 else
 {
-    # Anglo-centric
-    $flag = qr/[a-zA-Z_]\w*/;
+    # Like [\a-z\A-Z_] but respects locales
+    $flag = qr/[^\W\d]\w*/;
 }
 
 sub escape_flag_regex { $flag }
