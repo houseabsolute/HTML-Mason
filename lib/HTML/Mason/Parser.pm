@@ -324,7 +324,7 @@ sub parse
 		    my $comma = index($call,',');
 		    $comma = length($call) if ($comma==-1);
 		    (my $comp = substr($call,0,$comma)) =~ s/\s+$//;
-		    $call = "'$comp'";
+		    $call = "'$comp'".substr($call,$comma);
 		}
 		$perl = "mc_comp($call);";
 		$curpos = $c+2+$length+2;

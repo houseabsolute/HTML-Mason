@@ -74,12 +74,6 @@ sub cgi_env {
     return %env;
 }
 
-sub cgi_var {
-    my ($self,$key) = @_;
-    my $value = exists($self->{env}->{$key}) ? $self->{env}->{$key} : $self->{r}->cgi_var($key);
-    return $value;
-}
-
 sub dir_config {
     my ($self,$key) = @_;
     return $self->{dir_config}->{$key};
@@ -330,7 +324,9 @@ sub handle_preview_request_1
 	    my ($trace,$obj);
 	    foreach $obj (@objects) {
 		next if !defined($obj);
-		$trace .= sprintf('%s<a href="%s">%s</a>  %s%s',(' ' x (4-length($obj->{label}))),$obj->{srclink},$obj->{label},$obj->{display});
+		$trace .= sprintf('%s<a href="%s">%s</a>  %s%s',
+				  (' ' x (4-length($obj->{label}))),
+				  $obj->{srclink},$obj->{label},$obj->{display},$obj->{repeat}>1 ? " (repeats ".$obj->{repeat}." times)": "");
 		$trace .= "\n";
 	    }
 	    return $trace;
@@ -396,7 +392,7 @@ sub handle_preview_request_1
 		}
 	    }
 	}
-	
+
 	#
 	# Analyze event information. Create a list of objects
 	# (distinct component and mc_file invocations)
@@ -412,7 +408,6 @@ sub handle_preview_request_1
 		my ($objtext,$objsrclink,$objlabel,$objtype,$objdisplay);
 		$objcount++;
 		if ($type eq 'startComp') {
-		    my $compId = $event->{compId};
 		    $objtext = "$path";
 		    $objlabel = "$objcount";
 		    $objsrclink = "#object$objcount";
@@ -426,8 +421,14 @@ sub handle_preview_request_1
 		    $objsrclink = "#object$objcount";
 		    $objtype = "file";
 		}
-		$objdisplay = ($createObjectLink) ? $createObjectLink->($objtype,$path,scalar(@stack),$objtext) : (('  ' x scalar(@stack)) . $objtext);
-		$objects[$objcount] = {count=>$objcount,text=>$objtext,display=>$objdisplay,label=>$objlabel,color=>'003399',srclink=>$objsrclink,depth=>scalar(@stack)};
+		my $lastobj = $objects[$objcount-1];
+		if ($objtext eq $lastobj->{text} && $objtype eq $lastobj->{type} && scalar(@stack) == $lastobj->{depth}) {
+		    $objcount--;
+		    $objects[$objcount]->{repeat}++;
+		} else {
+		    $objdisplay = ($createObjectLink) ? $createObjectLink->($objtype,$path,scalar(@stack),$objtext) : (('  ' x scalar(@stack)) . $objtext);
+		    $objects[$objcount] = {count=>$objcount,type=>$objtype,text=>$objtext,display=>$objdisplay,label=>$objlabel,color=>'003399',srclink=>$objsrclink,depth=>scalar(@stack),repeat=>1};
+		}
 		push(@stack,$objcount);
 	    } elsif ($type =~ /^(endComp|endFile)$/) {
 		pop(@stack);
@@ -494,7 +495,7 @@ sub handle_preview_request_1
 	my %outHeaders = $r->headers_out();
 	my $gmtdate = gmtime;
 	$pr->print("<li type=circle><b>Date:</b>  $gmtdate\n");
-	my $serverType = $r->cgi_var('SERVER_SOFTWARE') || 'Apache/1.2 mod_perl/1.0'; 
+	my $serverType = $ENV{SERVER_SOFTWARE} || 'Apache/1.2 mod_perl/1.0'; 
 	$pr->print("<li type=circle><b>Server:</b>  $serverType\n");
 	while (($key,$value) = each(%outHeaders)) {
 	    $pr->print("<li type=disc><b>$key:</b>  $value\n");

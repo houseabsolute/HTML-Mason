@@ -100,6 +100,8 @@ sub send_http_header {
 
 sub sent_header { return 1 }
 
+sub module { return 0 }
+
 sub AUTOLOAD {
     my $self = shift;
     my $type = ref($self) or die "autoload error: bad function $AUTOLOAD";

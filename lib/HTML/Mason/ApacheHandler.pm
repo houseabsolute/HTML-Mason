@@ -254,7 +254,7 @@ sub preview_dir { return shift->interp->data_dir . "/preview" }
 sub write_debug_file
 {
     my ($self, $r, $dref) = @_;
-    my $user = $r->cgi_var('REMOTE_USER') || 'anon';
+    my $user = $r->connection->user || 'anon';
     my $outFile = sprintf("%d",int(rand(20))+1);
     my $outDir = $self->debug_dir . "/$user";
     if (!-d $outDir) {
