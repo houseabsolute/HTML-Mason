@@ -257,11 +257,6 @@ sub cache
     return $cache;
 }
 
-#
-# Old synonym for comp.
-#
-sub call { shift->comp(@_) }
-
 sub call_dynamic {
     my ($m, $key, @args) = @_;
     my $comp = ($m->current_comp->is_subcomp) ? $m->current_comp->owner : $m->current_comp;
