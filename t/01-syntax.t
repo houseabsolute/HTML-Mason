@@ -146,5 +146,11 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'fake_percent',
+			  description => 'tests % in text section',
+			  component => 'some text, a %, and some text',
+			  expect =>    'some text, a %, and some text',
+			);
+
     return $group;
 }
