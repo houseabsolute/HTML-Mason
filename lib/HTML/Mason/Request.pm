@@ -1039,7 +1039,7 @@ sub push_filter_buffer
 {
     my $self = shift;
 
-    push @{ $self->{buffer_stack} }, $self->top_buffer->new_child(@_);
+    push @{ $self->{buffer_stack} }, $self->top_buffer->new_child( ignore_flush => 1, @_ );
 }
 
 sub content {
