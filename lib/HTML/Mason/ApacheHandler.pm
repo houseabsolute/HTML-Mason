@@ -191,12 +191,14 @@ sub make_ah
     use vars qw($AH);
     return $AH if $AH && $AH->{last_comp_root} eq $comp_root;
 
-    my %p = $package->get_config($package->allowed_params);
+    my %classes = $package->_get_class_params;
+
+    my %p = $package->get_config( $package->allowed_params(%classes) );
 
     eval "use $p{interp_class}";
     die $@ if $@;
 
-    $AH = $package->new( interp => $package->_make_interp($p{interp_class}),
+    $AH = $package->new( interp => $package->_make_interp($p{interp_class}, %classes),
 			 %p,
 		       );
 
@@ -207,8 +209,8 @@ sub make_ah
 
 sub _make_interp
 {
-    my ($self, $interp_class) = @_;
-    my %p = $self->get_config($interp_class->allowed_params);
+    my ($self, $interp_class, %classes) = @_;
+    my %p = $self->get_config( $interp_class->allowed_params(%classes) );
 
     # comp_root is sort of polymorphic, so fix it up
     if (exists $p{comp_root}) {
@@ -242,6 +244,7 @@ sub _make_interp
 sub calm_form {
     # Transform from StudlyCaps to name_like_this
     my ($self, $string) = @_;
+    $string =~ s/^Mason//;
     $string =~ s/(^|.)([A-Z])/$1 ? "$1\L_$2" : "\L$2"/ge;
     return $string;
 }
@@ -292,6 +295,18 @@ sub get_config {
 	$config{$key} = $value;
     }
     return %config;
+}
+
+sub _get_class_params
+{
+    my $self = shift;
+
+    my $c = Apache->request ? Apache->request : Apache->server;
+
+    my $config = $c->dir_config;
+
+    # Get all params ending with 'Class'
+    return map { $_ =~ /Class$/ ? ( $self->calm_form($_) => $config->{$_} ) : () } keys %$config;
 }
 
 sub _get_string_param
@@ -355,7 +370,7 @@ sub new
 {
     my $class = shift;
 
-    my $self = bless {validate( @_, $class->allowed_params )}, $class;
+    my $self = bless {validate( @_, $class->validation_spec )}, $class;
 
     $self->_initialize;
     return $self;
