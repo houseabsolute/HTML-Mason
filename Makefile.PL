@@ -125,7 +125,7 @@ sub test
     $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE} = \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; $1/;
 
     # This works for newer MakeMakers (5.48_01 +)
-    $test =~ s/(PERL_DL_NONLAZY=1 \$\(FULLPERLRUN\) "-MExtUtils::testlib" "-MExtUtils::Command::MM" "-e" ")(test_harness\(\$\(TEST_VERBOSE\)\)" \$\(TEST_FILES\))/$1 \\\$\$ENV{MASON_VERBOSE} = \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \\\$\$ENV{MASON_VERBOSE}; \\\$\$ENV{PORT}=$port; \\\$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; $2/;
+    $test =~ s/("-MExtUtils::Command::MM" "-e" ")(test_harness\(\$\(TEST_VERBOSE\).*?\)" \$\(TEST_FILES\))/$1 \\\$\$ENV{MASON_VERBOSE} = \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \\\$\$ENV{MASON_VERBOSE}; \\\$\$ENV{PORT}=$port; \\\$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; $2/;
 
     return $test;
 }
