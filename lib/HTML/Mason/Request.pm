@@ -362,7 +362,7 @@ sub cache_self {
     return if $self->top_stack->{in_cache_self};
 
     my $expires_in = delete $options{expires_in} || 'never';
-    my $key = delete $options{key} || '__cache_self__';
+    my $key = delete $options{key} || '__mason_cache_self__';
     my $cache = $self->cache(%options);
 
     my ($output, $retval);
