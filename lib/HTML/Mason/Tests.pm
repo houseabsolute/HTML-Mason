@@ -436,27 +436,25 @@ sub _run_test
 	return;
     }
 
-    if ($self->{create} )
+    if ($self->{create})
     {
 	print "Results for $test->{name}:\n$buf\n";
 	return;
     }
 
-    my $success = $self->_check_output($buf);
+    my $success = $test->{skip_expect} ? 1 : $self->check_output( $buf, $test->{expect} );
 
     $success ? $self->_success : $self->_fail;
 }
 
-sub _check_output
+sub check_output
 {
     my $self = shift;
-    my $buf = shift;
-    my $test = $self->{current_test};
+    my $actual = shift;
+    my $expect = shift;
 
-    return 1 if $test->{skip_expect};
-
-    my @actual = split /\n/, $buf;
-    my @expect = split /\n/, $test->{expect};
+    my @actual = split /\n/, $actual;
+    my @expect = split /\n/, $expect;
 
     my $diff;
     if (@actual > @expect)
@@ -616,7 +614,7 @@ Takes the following parameters:
 
 The name of this test.
 
-=item *description (required)
+=item * description (required)
 
 What this test is testing.
 
