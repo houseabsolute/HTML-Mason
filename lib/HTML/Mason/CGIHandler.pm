@@ -83,15 +83,21 @@ sub new {
 sub header_out {
     my ($self, $header) = (shift, shift);
 
-    return $self->{headers}{$header} = shift if @_;
-    return $self->{headers}{$header};
+    return $self->_set_header($header, shift) if @_;
+    return $self->{ headers }{$header};
 }
 
 sub content_type {
     my $self = shift;
 
-    return $self->{headers}{'Content-type'} = shift if @_;
-    return $self->{headers}{'Content-type'};
+    return $self->_set_header('Content-type', shift) if @_;
+    return $self->{ headers }{'Content-type'};
+}
+
+sub _set_header {
+    my ($self, $header, $value) = @_;
+    delete $self->{$header}, return unless defined $value;
+    return $self->{$header} = $value;
 }
 
 sub http_header {
@@ -106,6 +112,8 @@ sub params {
     foreach (@input) {$_ = $_->[0] if ref($_) and @$_==1}  # Unwrap single-element array refs
     return @input;
 }
+
+sub query { $_[0]->{query} }
 
 1;
 
@@ -196,6 +204,8 @@ accept any parameters.
 This works much like the C<Apache> method of the same name.  When
 passed the name of a header, returns the value of the given outgoing
 header.  When passed a name and a value, sets the value of the header.
+Setting the header to C<undef> will actually I<unset> the header,
+removing it from the table of headers that will be sent to the client.
 
 The headers are eventually passed to the C<CGI> module's C<header()>
 method.
@@ -212,11 +222,23 @@ do a redirect, all you need to do is:
 
 When passed an argument, sets the content type of the current request
 to the value of the argument.  Use this method instead of setting a
-C<Content-Type> header directly with C<header_out()>.
+C<Content-Type> header directly with C<header_out()>.  Like
+C<header_out()>, setting the content type to C<undef> will remove any
+content type set previously.
 
 When called without arguments, returns the value set by a previous
 call to C<content_type()>.  The behavior when C<content_type()> hasn't
 already been set is undefined - currently it returns C<undef>.
+
+If no content type is set during the request, the default MIME type
+C<text/html> will be used.
+
+=item * query()
+
+Returns the C<CGI> query object for the current request.  It's
+inadvisable to over-use the query object directly - if you find
+yourself doing so a lot, it probably means that C<$r> could use some
+extra functionality.
 
 =back
 
