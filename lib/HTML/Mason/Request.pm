@@ -1553,13 +1553,13 @@ by an C< eval {} > block.  If you are using an C< eval {} > block in
 your code to trap errors, you need to make sure to rethrow these
 exceptions, like this:
 
-  use HTML::Mason::Exceptions;
   eval {
       ...
   };
 
-  $@->rethrow
-      if $@ && isa_mason_exception($@, 'Abort');
+  die $@ if $m->aborted;
+
+  # handle other exceptions
 
 =back
 
