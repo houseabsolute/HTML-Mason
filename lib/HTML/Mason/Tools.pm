@@ -66,6 +66,10 @@ sub paths_eq {
     return File::Spec->case_tolerant ? (lc($_[0]) eq lc($_[1])) : $_[0] eq $_[1];
 }
 
+#
+# Compress a component path into a single, filesystem-friendly
+# string. Uses URL-like escaping with + instead of %.
+#
 sub compress_path
 {
     my ($path) = @_;
@@ -76,9 +80,11 @@ sub compress_path
     return $path;
 }
 
+#
+# Makes a few fixes to File::Spec::canonpath. Will go away if/when they
+# accept our patch.
+#
 sub mason_canonpath {
-    # Just like File::Spec::canonpath, but we're having trouble
-    # getting a patch through to them.
     shift;
     my $path = shift;
     $path =~ s|/+|/|g unless($^O eq 'cygwin');       # xx////yy  -> xx/yy
