@@ -1,5 +1,6 @@
 
-% my $text = $m->comp('.subcomp', 1,2,3);
+% my $text = $m->scomp('.subcomp', 1,2,3);
+--------------------
 <% $text %>
 
 <%def .subcomp>
