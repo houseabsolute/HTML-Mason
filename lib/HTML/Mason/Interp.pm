@@ -10,11 +10,10 @@ use Carp;
 use File::Basename;
 use File::Path;
 use File::Spec;
-use HTML::Mason::Parser;
-use HTML::Mason::Tools qw(make_fh);
-use HTML::Mason::Commands qw();
 use HTML::Mason::Config;
+use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
+use HTML::Mason::Tools qw(make_fh read_file taint_is_on);
 use Params::Validate qw(:all);
 
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
@@ -23,6 +22,7 @@ use HTML::Mason::MethodMaker
     ( read_only => [ qw( code_cache
 			 comp_root
 			 data_dir
+			 data_cache_dir
 			 die_handler
 			 die_handler_overridden
 			 hooks
@@ -33,11 +33,12 @@ use HTML::Mason::MethodMaker
       read_write => [ qw( allow_recursive_autohandlers
 			  autohandler_name
 			  code_cache_max_size
+			  compiler
 			  data_cache_defaults
 			  dhandler_name
+		          ignore_warnings_expr
 			  max_recurse
 			  out_mode
-			  parser
 			  resolver
 			  static_file_root
 			  use_object_files
@@ -50,6 +51,7 @@ my %fields =
      allow_recursive_autohandlers => 1,
      autohandler_name => 'autohandler',
      code_cache_max_size => 10*1024*1024,
+     compiler => undef,
      comp_root => undef,
      current_time => 'real',
      data_dir => undef,
@@ -57,11 +59,11 @@ my %fields =
      dhandler_name => 'dhandler',
      die_handler => sub { Carp::confess($_[0]) },
      die_handler_overridden => 0,
+     ignore_warnings_expr => 'Subroutine .* redefined',
      system_log_file => undef,
      system_log_separator => "\cA",
      max_recurse => 32,
      out_mode => 'batch',
-     parser => undef,
      preloads => [],
      resolver => undef,
      static_file_root => undef,
@@ -83,7 +85,7 @@ sub new
 	hooks => {},
 	last_reload_time => 0,
 	last_reload_file_pos => 0,
-	out_method => sub { print $_[0] if defined($_[0]) },
+	out_method => sub { for (@_) { print $_ if defined } },
 	system_log_fh => undef,
 	system_log_events_hash => undef
     };
@@ -99,7 +101,7 @@ sub new
 		out_method => { type => CODEREF | SCALARREF, optional => 1 },
 		out_mode => { type => SCALAR, optional => 1 },
 		max_recurse => { type => SCALAR, optional => 1 },
-		parser => { isa => 'HTML::Mason::Parser', optional => 1 },
+		compiler => { isa => 'HTML::Mason::Compiler', optional => 1 },
 		preloads => { type => ARRAYREF, optional => 1 },
 		static_file_root => { type => SCALAR, optional => 1 },
 		system_log_events => { type => SCALAR | UNDEF, optional => 1 },
@@ -144,12 +146,10 @@ sub _initialize
     $self->{code_cache_current_size} = 0;
     $self->{data_cache_defaults} = {};
 
-    #
-    # Create parser if not provided
-    #
-    unless ($self->{parser}) {
-	my $p = new HTML::Mason::Parser;
-	$self->{parser} = $p;
+    unless ($self->{compiler}) {
+	require HTML::Mason::Compiler::ToObject;
+	require HTML::Mason::Lexer;
+	$self->compiler( HTML::Mason::Compiler::ToObject->new( lexer_class => 'HTML::Mason::Lexer' ) );
     }
 
     #
@@ -236,7 +236,7 @@ sub reload_file { return File::Spec->catfile( shift->data_dir, 'etc', 'reload.ls
 #
 sub exec {
     my $self = shift;
-    my $req = new HTML::Mason::Request (interp=>$self);
+    my $req = HTML::Mason::Request->new(interp=>$self);
     $req->exec(@_);
 }
 
@@ -318,7 +318,7 @@ sub load {
 	return undef unless (-f $objfile);   # component not found
 	
 	$self->write_system_log('COMP_LOAD', $fq_path);	# log the load event
-	my $comp = $self->{parser}->eval_object_text(object_file=>$objfile, error=>\$err)
+	my $comp = $self->eval_object_text(object_file=>$objfile, error=>\$err)
 	    or $self->_compilation_error($objfile, $err);
 	$comp->assign_runtime_properties($self,$fq_path);
 	
@@ -358,7 +358,6 @@ sub load {
 	$self->write_system_log('COMP_LOAD', $fq_path);	# log the load event
 
 	my $comp;
-	my $parser = $self->{parser};
 	if ($objfile) {
 	    #
 	    # We are using object files.  Update object file if necessary
@@ -367,12 +366,12 @@ sub load {
 	    update_object:
 	    if ($objfilemod < $srcmod) {
 		my @newfiles;
-		my @params = $resolver->get_source_params(@lookup_info);
-		my $objText = $parser->parse_component(@params,error=>\$err)
-		    or $self->_compilation_error( $resolver->get_source_description(@lookup_info),$err );
-		$parser->write_object_file(object_text=>$objText, object_file=>$objfile);
+		my %params = $resolver->get_source_params(@lookup_info);
+		my $comp = read_file( $params{script_file} );
+		my $object = $self->compiler->compile( comp => $comp, name => $params{script_file}, comp_class => $params{comp_class} );
+		$self->write_object_file(object_text=>$object, object_file=>$objfile);
 	    }
-	    $comp = $parser->eval_object_text(object_file=>$objfile, error=>\$err);
+	    $comp = $self->eval_object_text(object_file=>$objfile, error=>\$err);
 	    if (!$comp) {
 		# If this is an earlier version object file, replace it.
 		if ($err =~ /object file was created by a pre-0\.7 parser/
@@ -387,9 +386,11 @@ sub load {
 	    #
 	    # No object files. Load component directly into memory.
 	    #
-	    my @params = $resolver->get_source_params(@lookup_info);
-	    $comp = $self->parser->make_component(@params,error=>\$err)
-		or $self->_compilation_error( $resolver->get_source_description(@lookup_info),$err );
+	    my %params = $resolver->get_source_params(@lookup_info);
+
+	    my $object = $self->compiler->compile( comp => $comp, name => $params{script_file}, comp_class => $params{comp_class} );
+	    $self->write_object_file(object_text=>$object, object_file=>$objfile);
+	    $comp = $self->eval_object_text(object_file=>$objfile, error=>\$err);
 	}
 	$comp->assign_runtime_properties($self,$fq_path);
 
@@ -406,13 +407,6 @@ sub load {
 	}
 	return $comp;
     }
-}
-
-sub _compilation_error {
-    my ($self, $filename, $err) = @_;
-
-    my $msg = sprintf("Error during compilation of %s:\n%s\n",$filename, $err);
-    die $msg;
 }
 
 #
@@ -455,7 +449,13 @@ sub purge_code_cache {
 #
 sub make_component {
     my $self = shift;
-    my $comp = $self->parser->make_component(@_);
+    my %p = @_;
+
+    my $err;
+
+    my $object = $self->compiler->compile( comp => ${ $p{object_text} }, name => $p{script_file}, comp_class => $p{comp_class} );
+    $self->write_object_file(object_text=>$object, object_file=>$p{script_file});
+    my $comp = $self->eval_object_text(object_file=>$p{script_file}, error=>\$err);
     $comp->assign_runtime_properties($self) if $comp;
     return $comp;
 }
@@ -480,7 +480,7 @@ sub set_global
     die "Interp::set_global: expects a variable name and one or more values" if !@values;
     my ($prefix, $name) = ($decl =~ /^[\$@%]/) ? (substr($decl,0,1),substr($decl,1)) : ("\$",$decl);
 
-    my $varname = sprintf("%s::%s",$self->{parser}->in_package,$name);
+    my $varname = sprintf("%s::%s",$self->compiler->in_package,$name);
     if ($prefix eq "\$") {
 	no strict 'refs'; $$varname = $values[0];
     } elsif ($prefix eq "\@") {
@@ -530,7 +530,7 @@ sub out_method
     my ($self, $value) = @_;
     if (defined($value)) {
 	if (ref($value) eq 'SCALAR') {
-	    $self->{out_method} = sub { $$value .= $_[0] if defined($_[0]) };
+	    $self->{out_method} = $value;
 	} elsif (ref($value) eq 'CODE') {
 	    $self->{out_method} = $value;
 	} else {
@@ -628,5 +628,135 @@ sub write_system_log {
 sub code_cache_min_size { shift->code_cache_max_size * 0.75 }
 sub code_cache_max_elem { shift->code_cache_max_size * 0.20 }
 sub code_cache_decay_factor { 0.75 }
+
+
+########################################
+# Methods that used to be in Parser.pm.
+# This is a temporary home only.
+# They need to be moved again.
+########################################
+
+#
+# eval_object_text
+#   (object_text, object_file, error)
+# Evaluate an object file or object text.  Return a component object
+# or undef if error.
+#
+# I think this belongs in the resolver (or comp loader) - Dave
+#
+sub eval_object_text
+{
+    my ($self, %options) = @_;
+    my ($object_text,$object_file,$errref) =
+	@options{qw(object_text object_file error)};
+
+    #
+    # Evaluate object file or text with warnings on
+    #
+    my $ignore_expr = $self->ignore_warnings_expr;
+    my ($comp,$err);
+    {
+	my $warnstr = '';
+	local $^W = 1;
+	local $SIG{__WARN__} = $ignore_expr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ } : sub { $warnstr .= $_[0] };
+	# If in taint mode, untaint the object filename or object text
+	if ($object_file) {
+	    ($object_file) = ($object_file =~ /^(.*)$/s) if taint_is_on;
+	    $comp = do($object_file);
+	} else {
+	    ($object_text) = ($object_text =~ /^(.*)$/s) if taint_is_on;
+	    $comp = eval($object_text);
+	}
+	$err = $warnstr . $@;
+
+	#
+	# If no error generated and no component object returned, we
+	# have a prematurely-exited <%once> section or other syntax
+	# accident.
+	#
+	unless (1 or $err or (defined($comp) and (UNIVERSAL::isa($comp, 'HTML::Mason::Component') or ref($comp) eq 'CODE'))) {
+	    $err = "could not generate component object (return() in a <%once> section or extra close brace?)";
+	}
+    }
+
+    #
+    # Detect various forms of older, incompatible object files:
+    #  -- zero-sized files (previously signifying pure text components)
+    #  -- pre-0.7 files that return code refs
+    #  -- valid components but with an earlier parser_version
+    #
+    if ($object_file) {
+	my $parser_version = '0.8';
+	my $incompat = "Incompatible object file ($object_file);\nobject file was created by %s and you are running parser version $parser_version.\nAsk your administrator to clear the object directory.\n";
+	if (-z $object_file) {
+	    $err = sprintf($incompat,"a pre-0.7 parser");
+	} elsif ($comp) {
+	    if (ref($comp) eq 'CODE') {
+		$err = sprintf($incompat,"a pre-0.7 parser");
+	    } elsif ($comp->parser_version != $parser_version) {
+		$err = sprintf($incompat,"parser version ".$comp->parser_version);
+	    }
+	}
+    }
+
+    #
+    # Return component or error
+    #
+    if ($err) {
+	# attempt to stem very long eval errors
+	if ($err =~ /has too many errors\./) {
+	    $err =~ s/has too many errors\..*/has too many errors./s;
+	}
+	$$errref = $err if defined($errref);
+	return undef;
+    } else {
+	return $comp;
+    }
+}
+
+#
+# write_object_file
+#   (object_text=>..., object_file=>..., files_written=>...)
+# Save object text in an object file.
+#
+# We attempt to handle several cases in which a file already exists
+# and we wish to create a directory, or vice versa.  However, not
+# every case is handled; to be complete, mkpath would have to unlink
+# any existing file in its way.
+#
+#
+# I think this belongs in the comp storage mechanism - Dave
+#
+sub write_object_file
+{
+    my ($self, %options) = @_;
+    my ($object_text,$object_file,$files_written) =
+	@options{qw(object_text object_file files_written)};
+    my @newfiles = ($object_file);
+
+    if (!-f $object_file) {
+	my ($dirname) = dirname($object_file);
+	if (!-d $dirname) {
+	    unlink($dirname) if (-e $dirname);
+	    push(@newfiles,mkpath($dirname,0,0775));
+	    die "Couldn't create directory $dirname: $!" if (!-d $dirname);
+	}
+	rmtree($object_file) if (-d $object_file);
+    }
+
+    my $fh = make_fh();
+    open $fh, ">$object_file" or die "Couldn't write object file $object_file: $!";
+    print $fh $object_text;
+    close $fh or die "Couldn't close object file $object_file: $!";
+    @$files_written = @newfiles if (defined($files_written))
+}
+
+sub _compilation_error {
+    my ($self, $filename, $err) = @_;
+
+    my $msg = sprintf("Error during compilation of %s:\n%s\n",$filename, $err);
+    die $msg;
+}
+
 
 1;
