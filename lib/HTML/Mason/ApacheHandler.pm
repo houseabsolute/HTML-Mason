@@ -10,6 +10,8 @@ use strict;
 #
 package HTML::Mason::Request::ApacheHandler;
 
+use Apache::Constants qw( REDIRECT );
+
 use HTML::Mason::Request;
 use HTML::Mason::Container;
 use Params::Validate qw(BOOLEAN);
@@ -147,6 +149,23 @@ sub _handle_error
     }
 }
 
+sub redirect
+{
+    my ($self, $url) = @_;
+
+    $self->clear_buffer;
+
+    $self->apache_req->method('GET');
+    $self->apache_req->headers_in->unset('Content-length');
+
+    $self->apache_req->err_header_out( Location => $url );
+    $self->apache_req->status(REDIRECT);
+
+    $self->apache_req->send_http_header;
+
+    $self->abort;
+}
+
 #----------------------------------------------------------------------
 #
 # APACHE-SPECIFIC FILE RESOLVER OBJECT
@@ -197,6 +216,7 @@ use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
 use Apache;
+use Apache::Constants qw( OK DECLINED NOT_FOUND );
 use Apache::Status;
 
 # Require a reasonably modern mod_perl - should probably be later
@@ -207,10 +227,6 @@ if ( $mod_perl::VERSION < 1.99 )
     die "mod_perl must be compiled with PERL_METHOD_HANDLERS=1 (or EVERYTHING=1) to use ", __PACKAGE__, "\n"
 	unless Apache::perl_hook('MethodHandlers');
 }
-
-use constant OK         => 0;
-use constant DECLINED   => -1;
-use constant NOT_FOUND  => 404;
 
 use vars qw($VERSION);
 
