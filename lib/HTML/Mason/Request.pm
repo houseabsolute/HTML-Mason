@@ -20,6 +20,7 @@ my %fields =
     (aborted => undef,
      aborted_value => undef,
      count => 0,
+     declined => undef,
      interp => undef,
      out_method => undef,
      out_mode => undef,
@@ -50,7 +51,13 @@ sub new
 	}
     }
     bless $self, $class;
+    $self->{count} = ++($interp->{request_count});
+    $self->_initialize;
+    return $self;
+}
 
+sub _initialize {
+    my ($self) = @_;
     my $interp = $self->{interp} or die "HTML::Mason::Request::new: must specify interp";
 
     # Initialize hooks arrays for fast access
@@ -66,12 +73,17 @@ sub new
     if (ref(my $ref = $self->{out_method}) eq 'SCALAR') {
 	$self->{out_method} = sub { $$ref .= $_[0] if defined($_[0]) };
     }
-    
+
     # Initialize other properties
     $self->{stack_array} = [];
-    $self->{count} = ++($interp->{request_count});
+}
 
-    return $self;
+sub _reinitialize {
+    my ($self) = @_;
+    $self->_initialize;
+    foreach my $field (qw(aborted aborted_value autohandler_next declined dhandler_arg error_flag)) {
+	$self->{$field} = undef;
+    }
 }
 
 sub exec {
@@ -80,7 +92,7 @@ sub exec {
     
     # Check if reload file has changed.
     $interp->check_reload_file if ($interp->{use_reload_file});
-    
+
     # $comp can be an absolute path or component object.  If a path,
     # load into object. If not found, check for dhandler.
     if (!ref($comp) && substr($comp,0,1) eq '/') {
@@ -96,6 +108,7 @@ sub exec {
 	die "exec: first argument ($comp) must be an absolute component path or a component object";
     }
 
+    retry:
     # Check for autohandler.
     if (defined($interp->{autohandler_name})) {
 	my $parent = $comp->dir_path;
@@ -120,10 +133,24 @@ sub exec {
 	local $SIG{'__DIE__'} = sub { confess($_[0]) };
 	$result = eval {$self->comp($comp, @args)};
     }
+    my $err = $@;
+
+    # If declined, try to find the next path
+    if ($self->declined) {
+	my $path = $comp->dir_path;
+	$path =~ s/\/[^\/]+$// if ($defined($self->{dhandler_arg}));
+	if (defined($interp->{dhandler_name}) and $comp = $interp->find_comp_upwards($path,$interp->{dhandler_name})) {
+	    my $parent = $comp->dir_path;
+	    ($self->{dhandler_arg} = $path) =~ s{^$parent/}{};
+	    $self->_reinitialize;
+	    goto retry;
+	} else {
+	    die $comp->title . " declined and no other matching component found";
+	}
+    }
 
     # If an error occurred...
-    my $err = $@;
-    if ($err and !$self->{aborted}) {
+    if ($err and !$self->aborted) {
 	my $i = index($err,'HTML::Mason::Interp::exec');
 	$err = substr($err,0,$i) if $i!=-1;
 	$err =~ s/^\s*(HTML::Mason::Commands::__ANON__|HTML::Mason::Request::call).*\n//gm;
@@ -181,7 +208,7 @@ sub cache
     $options{action} = $options{action} || 'retrieve';
     $options{key} = $options{key} || 'main';
     
-    my $comp = $self->callers(0);
+    my $comp = $self->current_comp;
     $options{cache_file} = $comp->cache_file
 	or die "no cache file for component ".$comp->title;
     if ($options{keep_in_memory}) {
@@ -272,11 +299,25 @@ sub caller
 sub callers
 {
     my ($self,$index) = @_;
-    my @callers = reverse(@{$self->stack});
+    my @caller_stack = reverse(@{$self->stack});
     if (defined($index)) {
-	return $callers[$index]->{comp};
+	return $caller_stack[$index]->{comp};
     } else {
-	return map($_->{comp},@callers);
+	return map($_->{comp},@caller_stack);
+    }
+}
+
+#
+# Return a specified argument list from the stack.
+#
+sub caller_args
+{
+    my ($self,$index) = @_;
+    my @caller_stack = reverse(@{$self->stack});
+    if (defined($index)) {
+	return $caller_stack[$index]->{args};
+    } else {
+	die "caller_args expects stack level as argument";
     }
 }
 
@@ -313,6 +354,13 @@ sub comp_exists
 {
     my ($self,$path) = @_;
     return $self->interp->lookup($self->process_comp_path($path)) ? 1 : 0;
+}
+
+sub decline
+{
+    my ($self) = @_;
+    $self->{declined} = 1;
+    die "declined";
 }
 
 #
@@ -357,7 +405,7 @@ sub file
     unless (is_absolute_path($file)) {
 	if ($interp->static_file_root) {
 	    $file = $interp->static_file_root . "/" . $file;
-	} elsif (my $dir_path = $self->callers(0)->dir_path) {
+	} elsif (my $dir_path = $self->current_comp->dir_path) {
 	    $file = $interp->comp_root . $dir_path . "/" . $file;
 	} else {
 	    $file = "/$file";

@@ -5,7 +5,7 @@
 <& support/display_req_obj &>
 % }
 <%args>
-$count=>0
+$count
 </%args>
 </%def>
 
@@ -17,6 +17,6 @@ One level request:
 <% '-' x 60 %>
 
 Many level request:
-<& .subcomp &>
+<& .subcomp, count=>0 &>
 
 <% '-' x 60 %>

@@ -1,5 +1,7 @@
 Caller is /request/various or /request/various.
+The top level component is /request/various.
 The full component stack is /request/support/various_test,/request/various.
+My argument list is (junk,6).
 
 Trying to fetch various_test (full path /request/support/various_test):
 various_test exists with title /request/support/various_test.

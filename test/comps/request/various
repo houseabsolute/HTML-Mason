@@ -1,1 +1,1 @@
-<& support/various_test &>
+<& support/various_test, junk=>6 &>
