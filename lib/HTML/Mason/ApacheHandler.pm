@@ -16,6 +16,8 @@ use base qw(HTML::Mason::Request);
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 
+use constant NOT_FOUND => 404;
+
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( ah apache_req ) ] );
 
@@ -65,6 +67,36 @@ sub cgi_object
     }
 
     return $self->{cgi_object};
+}
+
+#
+# Override this method to return NOT_FOUND when we get a
+# TopLevelNotFound exception. In case of POST we must trick
+# Apache into not reading POST content again. Wish there were
+# a more standardized way to do this...
+#
+sub exec
+{
+    my $self = shift;
+    my $retval;
+    eval { $retval = $self->SUPER::exec(@_) };
+
+    if ($@) {
+	if (isa_mason_exception($@, 'TopLevelNotFound')) {
+	    my $r = $self->apache_req;
+	    if ($r->method eq 'POST') {
+		$r->method('GET');
+		$r->headers_in->unset('Content-length');
+	    }
+	    
+	    # Log the error the same way that Apache does (taken from default_handler in http_core.c)
+	    $r->log_error("[Mason] File does not exist: ", $r->filename . ($r->path_info ? $r->path_info : ""));
+	    return NOT_FOUND;
+	} else {
+	    die $@;
+	}
+    }
+    return $retval;
 }
 
 #
@@ -123,9 +155,6 @@ sub apache_request_to_comp_path {
 #
 package HTML::Mason::ApacheHandler;
 
-sub OK { return 0 }
-sub DECLINED { return -1 }
-sub NOT_FOUND { return 404 }
 use File::Path;
 use File::Spec;
 use HTML::Mason::Exceptions( abbr => [qw(param_error system_error error)] );
@@ -141,6 +170,10 @@ die "mod_perl must be compiled with PERL_METHOD_HANDLERS=1 (or EVERYTHING=1) to 
 
 # Require a reasonably modern mod_perl - should probably be later
 use mod_perl 1.22;
+
+use constant OK         => 0;
+use constant DECLINED   => -1;
+use constant NOT_FOUND  => 404;
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( apache_status_title
@@ -585,58 +618,17 @@ EOF
 }
 
 #
-# Standard entry point for handling request
-#
-sub handle_request {
-
-    #
-    # Why do we use $apreq instead of $r here? A scoping bug in certain
-    # versions of Perl 5.005 was getting confused about $r being used
-    # in components, and the easiest workaround was to rename "$r" to
-    # something else in this routine.  Go figure...
-    # -jswartz 5/23
-    #
-    my ($self, $apreq) = @_;
-    my ($retval);
-    my $interp = $self->interp;
-
-    if (lc($apreq->dir_config('Filter')) eq 'on') {
-	$apreq = $apreq->filter_register;
-    }
-
-    eval { $retval = $self->handle_request_1($apreq) };
-
-    if (my $err = $@) {
-	#
-	# If first component was not found, return NOT_FOUND. In case
-	# of POST we must trick Apache into not reading POST content
-	# again. Wish there were a more standardized way to do this...
-	#
-	if (isa_mason_exception($err, 'TopLevelNotFound')) {
-	    if ($apreq->method eq 'POST') {
-		$apreq->method('GET');
-		$apreq->headers_in->unset('Content-length');
-	    }
-
-	    # Log the error the same way that Apache does (taken from default_handler in http_core.c)
-	    $apreq->log_error("[Mason] File does not exist: ", $apreq->filename . ($apreq->path_info ? $apreq->path_info : ""));
-	    return NOT_FOUND;
-
-	} else {
-	    die $err;
-	}
-    }
-    return defined($retval) ? $retval : &OK;
-}
-
-#
 # Shorthand for various data subdirectories and files.
 #
 sub preview_dir { return shift->interp->data_dir . "/preview" }
 
-sub handle_request_1
+sub handle_request
 {
     my ($self, $r) = @_;
+
+    if (lc($r->dir_config('Filter')) eq 'on') {
+	$r = $r->filter_register;
+    }
 
     my $interp = $self->interp;
 
@@ -752,7 +744,7 @@ sub handle_request_1
     }
     undef $request; # ward off leak
 
-    return $retval;
+    return defined($retval) ? $retval : &OK;
 }
 
 #
