@@ -890,8 +890,9 @@ more information about handling directories with Mason.
 
 =item interp
 
-The only required parameter.  Specifies a Mason interpreter to use for
-handling requests.  The interpreter should be an instance of the
+Specifies a Mason interpreter to use for handling requests.  An
+C<HTML::Mason::Interp> object will be created if you don't specify one
+yourself.  The interpreter should be an instance of the
 C<HTML::Mason::Interp> class, or a subclass thereof.
 
 =back
