@@ -108,8 +108,7 @@ use HTML::Mason::MethodMaker
 			  top_level_predicate ) ]
     );
 
-# use() params. Assign defaults, in case ApacheHandler is only require'd.
-use vars qw($VERSION);
+use vars qw($VERSION $ARGS_METHOD);
 
 $VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
 
@@ -158,33 +157,64 @@ sub valid_params {
 __PACKAGE__->import;
 sub import
 {
-    my $pack = __PACKAGE__;
+    my $pack = shift;
 
-    # can't do this stuff for MultipleConfig cause the classes may
-    # different for each config section
-    if ( $pack->_in_simple_conf_file )
+    return if defined $ARGS_METHOD;
+
+    if ( $pack->_in_conf_file )
     {
-	$pack->make_ah();
-
-	my $interp_class = $pack->get_param('interp_class');
-	foreach ($interp_class)
-	{
-	    eval "use $_";
-	    die $@ if $@;
-	}
-
-        my $compiler_class = $pack->get_param('CompilerClass', $interp_class->valid_params);
-        eval "use $compiler_class";
-	die $@ if $@;
-
-        my $lexer_class = $pack->get_param('LexerClass', $compiler_class->valid_params);
-        eval "use $lexer_class";
-	die $@ if $@;
-
+	# can't do this stuff for MultipleConfig cause the classes may be
+	# different for each config section
 	my $args_method = $pack->get_param('ArgsMethod');
 
-	eval $args_method eq 'mod_perl' ? 'use Apache::Request' : 'use CGI';
+	$pack->_load_args_method( args_method => $args_method );
+
+	$pack->make_ah() if $pack->_in_simple_conf_file;
+
+	return; # all done
     }
+    else
+    {
+	# if we have arguments we were called via a use ... ( args_method => 'foo' ) line
+	$pack->_load_args_method(@_) if @_;
+    }
+}
+
+sub _load_args_method
+{
+    my $self = shift;
+
+    my %p = @_;
+    $ARGS_METHOD = $p{args_method};
+
+    $ARGS_METHOD ||= 'CGI';
+    if ($ARGS_METHOD eq 'CGI')
+    {
+	unless ($CGI::VERSION)
+	{
+	    eval 'use CGI';
+	    die $@ if $@;
+	}
+    }
+    elsif ($ARGS_METHOD eq 'mod_perl')
+    {
+	unless ($Apache::Request::VERSION)
+	{
+	    eval 'use Apache::Request;';
+	    die $@ if $@;
+	}
+    }
+    else
+    {
+	die "Invalid args_method parameter ('$p{args_method}') given to HTML::Mason::ApacheHandler\n";
+    }
+}
+
+sub _in_conf_file
+{
+    my $self = shift;
+
+    return $self->_in_simple_conf_file || $self->_in_complex_conf_file;
 }
 
 #
@@ -197,7 +227,14 @@ sub _in_simple_conf_file
 {
     my $self = shift;
 
-    return $ENV{MOD_PERL} && $self->_get_string_param('CompRoot');
+    return $ENV{MOD_PERL} && $self->_get_string_param('MasonCompRoot');
+}
+
+sub _in_complex_conf_file
+{
+    my $self = shift;
+
+    return $ENV{MOD_PERL} && $self->_get_string_param('MasonMultipleConfig');
 }
 
 sub make_ah
@@ -393,7 +430,6 @@ sub new
     my $class = shift;
 
     my $self = bless {validate( @_, $class->valid_params )}, $class;
-    $self->{request_number} = 0;
 
     $self->_initialize;
     return $self;
@@ -411,6 +447,9 @@ Apache::Status->menu_item
 
 sub _initialize {
     my ($self) = @_;
+
+    $self->{request_number} = 0;
+    $self->{args_method} = $ARGS_METHOD;
 
     # Add an HTML::Mason menu item to the /perl-status page.
     if ($Apache::Status::VERSION) {
@@ -682,7 +721,7 @@ sub handle_request_1
     #
     $interp->set_global(r=>$r);
 
-    $interp->out_method( sub { $r->print( grep {defined} @_ ) } } );
+    $interp->out_method( sub { $r->print( grep {defined} @_ ) } );
 
     #
     # Craft the out method for this request to handle automatic http
