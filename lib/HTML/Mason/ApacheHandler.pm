@@ -310,7 +310,7 @@ use HTML::Mason::MethodMaker
 
 my ($STARTED);
 
-# hack to let the make_params_pod.pl script work
+# The "if Apache->server" bit is a hack to let the make_params_pod.pl script work
 __PACKAGE__->_startup() if Apache->server;
 sub _startup
 {
