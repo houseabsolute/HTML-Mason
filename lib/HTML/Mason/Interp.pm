@@ -277,8 +277,7 @@ sub load {
 	do
 	{
 	    if ($objfilemod < $srcmod) {
-		my $object_code = $source->object_code( compiler => $self->compiler );
-		$self->write_object_file( object_code => \$object_code, object_file => $objfile );
+		$self->compiler->compile_to_file( file => $objfile, source => $source);
 	    }
 	    $comp = eval { $self->eval_object_code( object_file => $objfile ) };
 
@@ -295,7 +294,7 @@ sub load {
 	# Not using object files. Load component directly into memory.
 	#
 	my $object_code = $source->object_code( compiler => $self->compiler );
-	$comp = eval { $self->eval_object_code( object_code => \$object_code ) };
+	$comp = eval { $self->eval_object_code( object_code => $object_code ) };
 	$self->_compilation_error( $source->friendly_name, $@ ) if $@;
     }
     $comp->assign_runtime_properties($self, $source);
@@ -387,7 +386,7 @@ sub make_component {
 
     my $object_code = $source->object_code( compiler => $self->compiler);
 
-    my $comp = eval { $self->eval_object_code( object_code => \$object_code ) };
+    my $comp = eval { $self->eval_object_code( object_code => $object_code ) };
     $self->_compilation_error( $p{name}, $@ ) if $@;
 
     $comp->assign_runtime_properties($self, $source);
@@ -554,56 +553,6 @@ sub _do_or_eval
 
 	return eval ${$p->{object_code}};
     }
-}
-
-#
-# write_object_file
-#   (object_code=>..., object_file=>..., files_written=>...)
-# Save object text in an object file.
-#
-# We attempt to handle several cases in which a file already exists
-# and we wish to create a directory, or vice versa.  However, not
-# every case is handled; to be complete, mkpath would have to unlink
-# any existing file in its way.
-#
-#
-# I think this belongs in the comp storage mechanism - Dave
-#
-sub write_object_file
-{
-    my $self = shift;
-
-    my %p = validate( @_, { object_code => { type => SCALARREF },
-			    object_file => { type => SCALAR },
-			    files_written => { type => ARRAYREF, optional => 1 } },
-		    );
-
-    my ($object_code, $object_file, $files_written) =
-	@p{qw(object_code object_file files_written)};
-
-    my @newfiles = ($object_file);
-
-    if (defined $object_file && !-f $object_file) {
-	my ($dirname) = dirname($object_file);
-	if (!-d $dirname) {
-	    unlink($dirname) if (-e $dirname);
-	    push(@newfiles,mkpath($dirname,0,0775));
-	    system_error "Couldn't create directory $dirname: $!"
-		unless -d $dirname;
-	}
-	rmtree($object_file) if (-d $object_file);
-    }
-
-    ($object_file) = $object_file =~ /^(.*)/s if taint_is_on;
-
-    my $fh = make_fh();
-    open $fh, ">$object_file"
-	or system_error "Couldn't write object file $object_file: $!";
-    print $fh $$object_code
-	or system_error "Couldn't write object file $object_file: $!";
-    close $fh 
-	or system_error "Couldn't close object file $object_file: $!";
-    @$files_written = @newfiles if (defined($files_written))
 }
 
 sub _compilation_error {
