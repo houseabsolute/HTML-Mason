@@ -98,7 +98,7 @@ sub flush
     
     $self->_make_output;
     my $output = $self->{output};
-    return unless defined($$output) and length($$output);
+    return unless $self->{filter_from} or (defined($$output) and length($$output));
     $self->{parent}->receive( $$output ) if $self->{parent};
     
     $self->clear;
