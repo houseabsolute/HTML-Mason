@@ -59,6 +59,11 @@ BEGIN
 
 use Exception::Class (%e);
 
+# Turn on tracing for each exception class.
+foreach my $pkg (keys(%e)) {
+    $pkg->do_trace(1);
+}
+
 if ($HTML::Mason::DEBUG)
 {
     Exception::Class::Base->Trace(1);
