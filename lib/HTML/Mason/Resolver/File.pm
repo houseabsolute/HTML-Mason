@@ -33,7 +33,7 @@ sub lookup_path {
 	my $srcfile = File::Spec->catdir( $comp_root, $path );
 	my @srcstat = stat $srcfile;
 	return (-f _) ? ($path, $srcfile, $srcstat[9]) : undef;
-    } elsif (ref($comp_root) eq 'ARRAY') {
+    } elsif (UNIVERSAL::isa($comp_root, 'ARRAY')) {
 	foreach my $lref (@$comp_root) {
 	    my ($key,$root) = @$lref;
 	    $key = uc($key);   # Always make key uppercase in fqpath
@@ -44,7 +44,7 @@ sub lookup_path {
 	}
 	return undef;
     } else {
-	die "comp_root must be a scalar or listref";
+	HTML::Mason::Exception::Params->throw( error => "comp_root must be a scalar or listref" );
     }
 }
 
@@ -60,7 +60,7 @@ sub glob_path {
     } elsif (ref($comp_root) eq 'ARRAY') {
 	@roots = map($_->[1],@{$comp_root});
     } else {
-	die "comp_root must be a scalar or listref";
+	HTML::Mason::Exception::Params->throw( error => "comp_root must be a scalar or listref" );
     }
     my %path_hash;
     foreach my $root (@roots) {
@@ -89,7 +89,7 @@ sub file_to_path {
     } elsif (ref($comp_root) eq 'ARRAY') {
 	@roots = map($_->[1],@{$comp_root});
     } else {
-	die "comp_root must be a scalar or listref";
+	HTML::Mason::Exception::Params->throw( error => "comp_root must be a scalar or listref" );
     }
     foreach my $root (@roots) {
 	if (paths_eq($root,substr($file,0,length($root)))) {
