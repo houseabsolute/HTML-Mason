@@ -8,7 +8,6 @@ use File::Path;
 use File::Spec;
 
 use HTML::Mason;
-use HTML::Mason::Lexer;
 use HTML::Mason::Compiler::ToObject;
 use HTML::Mason::Tools qw(make_fh);
 
