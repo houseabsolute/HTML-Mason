@@ -21,18 +21,29 @@ BEGIN
 {
     __PACKAGE__->valid_params
 	(
-	 comp_class    => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component',
-			    descr => "The class into which component objects will be blessed" },
-	 subcomp_class => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component::Subcomponent',
-			    descr => "The class into which subcomponent objects will be blessed" },
-	 in_package => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Commands',
-			 descr => "The package in which component execution will take place" },
-	 preamble   => { parse => 'string',  type => SCALAR, default => '',
-			 descr => "A chunk of Perl code to add to the beginning of each compiled component" },
-	 postamble  => { parse => 'string',  type => SCALAR, default => '',
-			 descr => "A chunk of Perl code to add to the end of each compiled component" },
-	 use_strict => { parse => 'boolean', type => SCALAR, default => 1,
-			 descr => "Whether to turn on Perl's 'strict' pragma in components" },
+	 comp_class =>
+         { parse => 'string', type => SCALAR, default => 'HTML::Mason::Component',
+           descr => "The class into which component objects will be blessed" },
+
+	 subcomp_class =>
+         { parse => 'string', type => SCALAR, default => 'HTML::Mason::Component::Subcomponent',
+           descr => "The class into which subcomponent objects will be blessed" },
+
+	 in_package =>
+         { parse => 'string', type => SCALAR, default => 'HTML::Mason::Commands',
+           descr => "The package in which component execution will take place" },
+
+	 preamble =>
+         { parse => 'string', type => SCALAR, default => '',
+           descr => "A chunk of Perl code to add to the beginning of each compiled component" },
+
+	 postamble =>
+         { parse => 'string', type => SCALAR, default => '',
+           descr => "A chunk of Perl code to add to the end of each compiled component" },
+
+	 use_strict =>
+         { parse => 'boolean', type => SCALAR, default => 1,
+           descr => "Whether to turn on Perl's 'strict' pragma in components" },
 	);
 }
 
