@@ -12,7 +12,6 @@ package HTML::Mason::Tools;
 
 use strict;
 
-use IO::File qw(!/^SEEK/);
 use Cwd;
 
 require Exporter;
@@ -30,8 +29,9 @@ sub read_file
     my ($file,$binmode) = @_;
     die "read_file: '$file' does not exist" if (!-e $file);
     die "read_file: '$file' is a directory" if (-d _);
-    my $fh = new IO::File $file;
-    die "read_file: could not open file '$file' for reading\n" if !$fh;
+    my $fh = do { local *FH; *FH; };
+    open $fh, $file
+	or die "read_file: could not open file '$file' for reading: $!";
     binmode $fh if $binmode;
     local $/ = undef;
     my $text = <$fh>;
