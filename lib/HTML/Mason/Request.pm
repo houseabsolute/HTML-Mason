@@ -408,9 +408,9 @@ sub fetch_comp
 	if (my $subcomp = $cur_comp->subcomps->{$path}) {	
 	    return $subcomp;
 	}
-	# If I am a subcomponent, also check my parent's subcomponents.
+	# If I am a subcomponent, also check my owner's subcomponents.
 	# This won't work when we go to multiply embedded subcomponents...
-	if ($cur_comp->is_subcomp and my $subcomp = $cur_comp->parent_comp->subcomps->{$path}) {
+	if ($cur_comp->is_subcomp and my $subcomp = $cur_comp->owner->subcomps->{$path}) {
 	    return $subcomp;
 	}
     }
