@@ -191,7 +191,7 @@ sub exec {
 			($self->{dhandler_arg} = $orig_path) =~ s{^$parent/}{};
 		    }
 		} else {
-		    die $err;
+		    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
 		}
 	    }
 
@@ -211,7 +211,7 @@ sub exec {
 	    }
 	} else {
 	    $self->pop_buffer_stack;
-	    die $err;
+	    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
 	}
     }
 
