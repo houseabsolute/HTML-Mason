@@ -364,7 +364,7 @@ EOF
 
 #------------------------------------------------------------
 
-    if ( 0 && $Config{d_alarm} || $] >= 5.007003 )
+    if ( $Config{d_alarm} || $] >= 5.007003 )
     {
 	$group->add_test( name => 'infinite_loop',
 			  description => 'this code hangs when Interp.pm attempts to eval it.',
