@@ -657,7 +657,8 @@ sub cache_self {
     };
 
     if ($@) {
-        push @{ $self->{buffer_stack} }, $filter;
+        push @{ $self->{buffer_stack} }, $filter
+            if $filter;
         UNIVERSAL::can($@, 'rethrow') ? $@->rethrow : error $@;
     }
 
