@@ -30,7 +30,7 @@ local $| = 1;
 kill_httpd(1);
 test_load_apache();
 
-print "1..3\n";
+print "1..5\n";
 
 print STDERR "\n";
 
@@ -247,6 +247,34 @@ EOF
 
     {
 	my $path = '/comps/print/autoflush';
+	my $response = Apache::test->fetch($path);
+	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
+							expect => <<'EOF',
+This is first.
+This is second.
+This is third.
+EOF
+						      );
+
+	ok($success);
+    }
+
+    {
+	my $path = '/comps/print/handle_component';
+	my $response = Apache::test->fetch($path);
+	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
+							expect => <<'EOF',
+This is first.
+This is second.
+This is third.
+EOF
+						      );
+
+	ok($success);
+    }
+
+    {
+	my $path = '/comps/print/handle_cgi_object';
 	my $response = Apache::test->fetch($path);
 	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
 							expect => <<'EOF',
