@@ -1,8 +1,0 @@
-keys in cache: bar,baz,foo
-value for foo is foo
-value for bar is bar
-value for baz is baz
-expiring foo and bar...
-value for foo is undefined
-value for bar is undefined
-value for baz is baz

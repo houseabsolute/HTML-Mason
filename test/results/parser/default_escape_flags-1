@@ -1,6 +1,0 @@
-Explicitly HTML-escaped: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
-Explicitly HTML-escaped redundantly: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
-Explicitly URL-escaped: %3Cb%3E%3Ci%3EHello%20there%3C%2Fi%3E%3C%2Fb%3E.<p>
-No flags: <b><i>Hello there</i></b>.<p>
-No flags again: <b><i>Hello there</i></b>.<p>
-Explicitly not escaped: <b><i>Hello there</i></b>.<p>
