@@ -652,10 +652,6 @@ foreach my $property (sort keys %$interp) {
 % if ($cache = $interp->code_cache and %$cache) {
 %   foreach my $key (sort keys %$cache) {
       <% $key |h%> (modified <% scalar localtime $cache->{$key}->{lastmod} %>)
-%     if (my $cu = $current_url) {
-%       $cu =~ s,\?,/expire_code_cache=$key?,;
-        <a href="<% $cu %>"><i>expire</i></a>
-%     }
       <br>
 %   }
 % } else {
@@ -667,21 +663,13 @@ foreach my $property (sort keys %$interp) {
 <%args>
  $interp   # The interpreter we'll elucidate
  %valid    # Default values for interp member data
- $current_url => ''
 </%args>
 EOF
-
-    my $current_url = '';
-    if (my $r = eval {Apache->request}) {
-	my $path_info = quotemeta $r->path_info;
-	($current_url = $r->uri) =~ s/$path_info$//;
-	$current_url .= '?' . $r->args;
-    }
 
     my $comp = $self->make_component(comp_source => $comp_source);
     my $out;
 
-    my $args = [interp => $self, valid => $self->validation_spec, current_url => $current_url];
+    my $args = [interp => $self, valid => $self->validation_spec];
     $self->make_request(comp=>$comp, args=>$args, out_method=>\$out, %p)->exec;
 
     return $out;
