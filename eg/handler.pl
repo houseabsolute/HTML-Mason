@@ -44,7 +44,7 @@ sub handler
     # components, activate the following to prevent Mason from
     # evaluating image files as components.
     #
-    #return -1 if $r->content_type && $r->content_type !~ m|^text/|io;
+    #return -1 if $r->content_type && $r->content_type !~ m|^text/|i;
     
     my $status = $ah->handle_request($r);
     

@@ -226,7 +226,7 @@ with a syntax error.
 The simplest remedy is to have Mason decline image and other non-HTML requests, thus
 letting Apache serve them in the normal way.  The following line
 
-    return -1 if $r->content_type && $r->content_type !~ m|^text/|io;
+    return -1 if $r->content_type && $r->content_type !~ m|^text/|i;
 
 declines all requests with a content type not starting with "text/".
 This allows text/html and text/plain to pass through but not much else.
