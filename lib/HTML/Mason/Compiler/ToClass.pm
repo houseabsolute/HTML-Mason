@@ -32,7 +32,6 @@ sub new
     my %p = @_;
 
     my $self = bless {}, $class;
-    $self = $self->SUPER::new(%p);
 
     foreach ( keys %p )
     {
@@ -46,10 +45,12 @@ sub new
 	$self->{$_} ||= $fields{$_};
     }
 
+    $self->_init;
+
     return $self;
 }
 
-sub output
+sub compiled_component
 {
     my $self = shift;
 
