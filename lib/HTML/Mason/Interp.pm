@@ -599,7 +599,7 @@ sub write_system_log {
     my $self = shift;
 
     if ($self->{system_log_fh} && $self->{system_log_events_hash}->{$_[0]}) {
-	my $time = (defined %Time::HiRes::) ? scalar(Time::HiRes::gettimeofday()) : time);
+	my $time = (defined %Time::HiRes:: ? scalar(Time::HiRes::gettimeofday()) : time);
 	my $fh = $self->{system_log_fh};
 	print $fh (join ($self->system_log_separator,
 			 $time,                  # current time
