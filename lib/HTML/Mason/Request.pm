@@ -208,7 +208,7 @@ sub exec {
     eval {
 	# Create initial buffer.
 	my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
-	$self->push_buffer_stack($buffer);
+	push @{ $self->{buffer_stack} }, $buffer;
 
 	# If there was an error during request preparation, throw it now.
 	if (my $err = $self->{prepare_error}) {
@@ -251,7 +251,7 @@ sub exec {
     # Handle errors.
     my $err = $@;
     if ($err and !$self->aborted($err)) {
-	$self->pop_buffer_stack;
+	pop @{ $self->{buffer_stack} };
 	$interp->purge_code_cache;
 	$self->_handle_error($err);
 	return;
@@ -259,7 +259,7 @@ sub exec {
 
     # Flush output buffer.
     $self->flush_buffer;
-    $self->pop_buffer_stack;
+    pop @{ $self->{buffer_stack} };
 
     # Purge code cache if necessary. We do this at the end so as not
     # to affect the response of the request as much.
@@ -388,7 +388,8 @@ sub cache_self {
     } else {
 	local $self->top_stack->{in_cache_self} = 1;
 
-	$self->push_buffer_stack($self->top_buffer->new_child(sink => \$output, ignore_flush => 1));
+	push @{ $self->{buffer_stack} },
+            $self->top_buffer->new_child(sink => \$output, ignore_flush => 1);
 
 	my $comp = $self->top_stack->{comp};
 	my @args = @{ $self->top_stack->{args} };
@@ -414,7 +415,7 @@ sub cache_self {
 	# Whether there was an error or not we need to pop the buffer
 	# stack.
 	#
-	$self->pop_buffer_stack;
+	pop @{ $self->{buffer_stack} };
 	if ($@) {
 	    UNIVERSAL::can($@, 'rethrow') ? $@->rethrow : error $@;
 	}
@@ -510,7 +511,10 @@ sub decline
 sub depth
 {
     my ($self) = @_;
-    return scalar $self->stack;
+
+    # direct access for speed because this method is called on every
+    # call to $m->comp
+    return scalar @{ $self->{stack} };
 }
 
 #
@@ -568,7 +572,8 @@ sub fetch_comp
     #
     # Otherwise pass the absolute path to interp->load.
     #
-    $path = absolute_comp_path($path, $self->current_comp->dir_path)
+    # For speed, don't call ->current_comp, instead access it directly
+    $path = absolute_comp_path($path, $self->{stack}[-1]{comp}->dir_path)
 	unless substr($path, 0, 1) eq '/';
 
     my $comp = $self->interp->load($path);
@@ -697,20 +702,20 @@ sub comp {
     }
 
     # Push new frame onto stack.
-    $self->push_stack( {comp => $comp,
-			args => [@args],
-			base_comp => $base_comp,
-			content => $mods{content},
-		       } );
+    push @{ $self->{stack} }, { comp => $comp,
+                                args => [@args],
+                                base_comp => $base_comp,
+                                content => $mods{content},
+                              };
 
     if ($mods{store}) {
 	# This extra buffer is to catch flushes (in the given scalar ref).
 	# The component's main buffer can then be cleared without
 	# affecting previously flushed output.
-        $self->push_buffer_stack
-            ( $self->top_buffer->new_child( sink => $mods{store}, ignore_flush => 1 ) );
+        push @{ $self->{buffer_stack} },
+            $self->top_buffer->new_child( sink => $mods{store}, ignore_flush => 1 );
     }
-    $self->push_buffer_stack($self->top_buffer->new_child);
+    push @{ $self->{buffer_stack} }, $self->top_buffer->new_child;
 
     my @result;
 
@@ -738,17 +743,17 @@ sub comp {
 	# any unflushed output is at $self->top_buffer->output
 	$self->flush_buffer if $self->aborted;
 
-	$self->pop_stack;
-	$self->pop_buffer_stack;
-	$self->pop_buffer_stack if ($mods{store});
+	pop @{ $self->{stack} };
+	pop @{ $self->{buffer_stack} };
+	pop @{ $self->{buffer_stack} } if ($mods{store});
 
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
     }
 
     $self->top_buffer->flush;
-    $self->pop_stack;
-    $self->pop_buffer_stack;
-    $self->pop_buffer_stack if ($mods{store});
+    pop @{ $self->{stack} };
+    pop @{ $self->{buffer_stack} };
+    pop @{ $self->{buffer_stack} } if ($mods{store});
 
     return wantarray ? @result : $result[0];  # Will return undef in void context (correct)
 }
@@ -769,15 +774,15 @@ sub content {
     return undef unless defined($content);
 
     # make the stack frame look like we are still the previous component
-    my $old_frame = $self->pop_stack;
+    my $old_frame = pop @{ $self->{stack} };
 
-    $self->push_buffer_stack( $self->top_buffer->new_child( ignore_flush => 1 ) );
+    push @{ $self->{buffer_stack} }, $self->top_buffer->new_child( ignore_flush => 1 );
     eval { $content->(); };
     my $err = $@;
 
-    my $buffer = $self->pop_buffer_stack;
+    my $buffer = pop @{ $self->{buffer_stack} };
 
-    $self->push_stack($old_frame);
+    push @{ $self->{stack} }, $old_frame;
 
     if ($err) {
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
@@ -851,16 +856,9 @@ sub top_stack {
     return $self->{stack}->[-1];
 }
 
-sub push_stack {
-    my ($self,$href) = @_;
-    push @{ $self->{stack} }, $href;
-}
-
-sub pop_stack {
-    my ($self) = @_;
-    return pop @{ $self->{stack} };
-}
-
+# These push/pop interfaces are not used internally (for speed) but
+# may be useful externally.  For example, Compiler::ToObject generates
+# code for <%filter> blocks that pushes and pops a buffer object.
 sub push_buffer_stack {
     my $self = shift;
 
@@ -870,6 +868,16 @@ sub push_buffer_stack {
 sub pop_buffer_stack {
     my ($self) = @_;
     return pop @{ $self->{buffer_stack} };
+}
+
+sub push_stack {
+    my ($self,$href) = @_;
+    push @{ $self->{stack} }, $href;
+}
+
+sub pop_stack {
+    my ($self) = @_;
+    return pop @{ $self->{stack} };
 }
 
 sub buffer_stack {
