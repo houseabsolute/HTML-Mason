@@ -429,3 +429,19 @@ sub cgi_headers {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::FakeApache - An Apache object emulator for use with Mason
+
+=head1 SYNOPSIS
+
+See L<HTML::Mason::CGIHandler|HTML::Mason::CGIHandler>.
+
+=head1 DESCRIPTION
+
+This class's API is documented in L<HTML::Mason::CGIHandler|HTML::Mason::CGIHandler>.
+
+=cut
