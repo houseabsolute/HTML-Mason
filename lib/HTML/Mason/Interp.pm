@@ -52,12 +52,6 @@ BEGIN
 					   descr => "A list of components to load immediately when creating the Interpreter" },
 	 resolver                     => { isa => 'HTML::Mason::Resolver',
 					   descr => "A Resolver object for fetching components from storage" },
-	 system_log_events            => { parse => 'string',  optional => 1, type => BOOLEAN|HASHREF,
-					   descr => "An array or |-separated string of Mason events to log" },
-	 system_log_file              => { parse => 'string',  optional => 1, type => SCALAR,
-					   descr => "A filename in which Mason events will be logged" },
-	 system_log_separator         => { parse => 'string',  default => "\cA", type => SCALAR,
-					   descr => "A string to separate entries in the Mason events log" },
 	 use_object_files             => { parse => 'boolean', default => 1, type => BOOLEAN,
 					   descr => "Whether to cache component objects on disk" },
 	);
@@ -73,9 +67,6 @@ BEGIN
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code_cache
-			 hooks
-			 system_log_file
-			 system_log_separator
 			 preloads
                          source_cache ) ],
 
@@ -109,12 +100,8 @@ sub new
 		       code_cache => {},
 		       code_cache_current_size => 0,
 		       files_written => [],
-		       hooks => {},
-		       system_log_fh => undef,
-		       system_log_events_hash => undef,
 		     }, $class;
 
-    $self->system_log_events($self->{system_log_events}) if exists $self->{system_log_events};
     $self->_initialize;
     return $self;
 }
@@ -146,25 +133,6 @@ sub _initialize
 	}
     } else {
 	$self->use_object_files(0);
-    }
-
-    #
-    # Open system log file
-    #
-    if ($self->{system_log_events_hash}) {
-	if (! $self->system_log_file && $self->data_dir) {
-	    # make a default if we have a data_dir
-	    $self->system_log_file( File::Spec->catfile( $self->data_dir, 'etc', 'system.log' ) );
-	}
-	if ($self->system_log_file) {
-	    my $fh = make_fh();
-	    open $fh, ">>".$self->system_log_file
-		or system_error "Couldn't open system log file $self->{system_log_file} for append";
-	    my $oldfh = select $fh;
-	    $| = 1;
-	    select $oldfh;
-	    $self->{system_log_fh} = $fh;
-	}
     }
 
     #
@@ -270,11 +238,6 @@ sub load {
 	    $objfilemod = @stat ? $stat[9] : 0;
 	}
     }
-
-    #
-    # Load the component from source or object file.
-    #
-    $self->write_system_log('COMP_LOAD', $comp_id);	# log the load event
 
     my $comp;
     if ($objfile) {
@@ -425,38 +388,6 @@ sub set_global
     }
 }
 
-#
-# Allow scalar or hash reference as argument to system_log_events.
-#
-sub system_log_events
-{
-    my ($self, $value) = @_;
-    if (defined($value)) {
-	if (!ref($value)) {
-	    $value =~ s/\s//g;
-	    my %opts = map( ($_, 1), split /\|/, $value);
-	    @opts{qw(REQUEST CACHE COMP_LOAD)} = (1,1,1) if $opts{ALL};
-	    @opts{qw(CACHE_READ CACHE_WRITE)} = (1,1) if $opts{CACHE};
-	    @opts{qw(REQ_START REQ_END)} = (1,1) if $opts{REQUEST};
-	    $self->{system_log_events_hash} = \%opts;
-	} elsif (ref($value) eq 'HASH') {
-	    $self->{system_log_events_hash} = $value;
-	} else {
-	    param_error "Interp->system_log_events: argument must be a scalar or hash reference, not '$value'";
-	}
-    }
-    return $self->{system_log_events};
-}
-
-#
-# Determine if the specified event should be logged.
-#
-sub system_log_event_check
-{
-    my ($self,$flag) = @_;
-    return ($self->{system_log_fh} && $self->{system_log_events_hash}->{$flag});
-}
-
 sub comp_root { shift->resolver->comp_root(@_) }
 
 sub files_written
@@ -491,55 +422,6 @@ sub find_comp_upwards
     } while $startpath =~ s{/+[^/]*$}{};
 
     return;  # Nothing found
-}
-
-#
-# Hook functions.
-#
-my @hook_types = qw(start_comp end_comp start_file end_file);
-my %hook_type_map = map(($_,1),@hook_types);
-
-sub add_hook {
-    my $self = shift;
-    my %args = validate( @_, { name => {type => SCALAR},
-			       code => {type => CODEREF},
-			       type => {type => SCALAR,
-					callbacks =>
-					{ 'Must be one of ' . join(",",@hook_types) => sub {exists $hook_type_map{$_[0]}} },
-				       }
-			     } );
-    $self->{hooks}->{$args{type}}->{$args{name}} = $args{code};
-}
-
-sub remove_hook {
-    my $self = shift;
-    my %args = validate( @_, { name => SCALAR,
-			       type => SCALAR });
-
-    delete($self->{hooks}->{$args{type}}->{$args{name}});
-}
-
-#
-# Write a line to the Mason system log.
-# Each line begins with the time, pid, and event name.
-#
-# We only print the line if the log file handle is defined AND the
-# event name is in system_log_events_hash.
-#
-sub write_system_log {
-    my $self = shift;
-
-    if ($self->{system_log_fh} && $self->{system_log_events_hash}->{$_[0]}) {
-	my $time = (load_pkg('Time::HiRes') ? scalar(Time::HiRes::gettimeofday()) : time);
-	my $fh = $self->{system_log_fh};
-	print $fh (join ($self->system_log_separator,
-			 $time,                  # current time
-			 $_[0],                  # event name
-			 $$,                     # pid
-			 @_[1..$#_]              # event-specific fields
-			),"\n")
-	    or param_error "Cannot write to system log: $!";
-    }
 }
 
 # Code cache parameter methods
@@ -874,6 +756,24 @@ C<$m-E<gt>cache> calls.
 
 File name used for dhandlers. Default is "dhandler".
 
+=item fixed_source
+
+True or false, default is false. When false, Mason checks the
+timestamp of the component source file each time the component is used
+to see if it has changed. This provides the instant feedback for
+source changes that is expected for development.  However it does
+entail a file stat for each component executed.
+
+When true, Mason assumes that the component source tree is unchanging:
+it will not check component source files to determine if the memory
+cache or object file has expired.  This can save many file stats per
+request. However, in order to get Mason to recognize a component
+source change, you must remove object files and restart the server (so
+as to clear the memory cache).
+
+Use this feature for live sites where performance is crucial and
+where updates are infrequent and well-controlled.
+
 =item ignore_warnings_expr
 
 Regular expression indicating which warnings to ignore when compiling
@@ -891,8 +791,9 @@ an error when the component is reloaded.
 
 =item max_recurse
 
-The maximum component stack depth the interpreter is allowed to
-descend before signalling an error.  Default is 32.
+The maximum recursion depth for the component stack, for the request
+stack, and for the inheritance stack. An error is signalled if the
+maximum is exceeded.  Default is 32.
 
 =item out_method
 
@@ -921,57 +822,6 @@ be used for components that are frequently viewed and rarely updated.
 See the L<Admin/preloading> section of the I<Admin Guide> for further
 details.
 
-=item system_log_events
-
-A string value indicating one or more events to record in the system
-log, separated by "|".  The following events are available for logging:
-
-=over 4
-
-=item * COMP_LOAD
-
-The loading of a component object file from disk
-
-=item * CACHE_READ
-
-The reading of a cache item
-
-=item * CACHE_WRITE
-
-The writing of a cache item
-
-=item * REQ_START
-
-The start of a Mason request
-
-=item * REQ_END
-
-The end of a Mason request
-
-=item * REQUEST
-
-Shorthand for C<REQ_START|REQ_END>
-
-=item * CACHE
-
-Shorthand for C<CACHE_READ|CACHE_WRITE>
-
-=item * ALL
-
-Shorthand for C<REQUEST|CACHE|COMP_LOAD>
-
-=back
-
-Default is to log nothing.
-
-=item system_log_file
-
-Absolute path of system log.  Default is $data_dir/etc/system.log .
-
-=item system_log_separator
-
-Separator to use between fields on a line in the system log. Default is ctrl-A (C<"\cA">).
-
 =item use_object_files
 
 True or false, default is true.  Specifies whether Mason creates
@@ -991,8 +841,8 @@ sets and returns the value.  For example:
     my $c = $interp->compiler;
     $interp->out_method(\$buf);
 
-The following properties can be queried but not modified: data_dir,
-system_log_file, system_log_separator, preloads.
+The following properties can be queried but not modified: comp_root,
+data_dir, preloads.
 
 =head1 OTHER METHODS
 

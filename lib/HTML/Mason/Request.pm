@@ -120,11 +120,6 @@ sub _initialize {
     };
 
     eval {
-	# Initialize hooks arrays for fast access
-	while (my ($type,$href) = each(%{$interp->{hooks}})) {
-	    $self->{"hooks_$type"} = [values(%$href)] if (%$href);
-	}
-
 	# create base buffer
 	$self->{buffer_stack} = [];
 	$self->{stack} = [];
@@ -593,9 +588,7 @@ sub file
 	    $file = File::Spec->catfile( File::Spec->rootdir, $file );
 	}
     }
-    $self->call_hooks('start_file',$file);
     my $content = read_file($file,1);
-    $self->call_hooks('end_file',$file);
     return $content;
 }
 
@@ -681,9 +674,6 @@ sub comp {
     }
     $self->push_buffer_stack($self->top_buffer->new_child);
 
-    # Call start_comp hooks.
-    $self->call_hooks('start_comp');
-
     my @result;
 
     # The eval block creates a new context so we need to get this
@@ -712,11 +702,6 @@ sub comp {
 	$self->pop_buffer_stack;
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
     }
-
-    #
-    # Call end_comp hooks.
-    #
-    $self->call_hooks('end_comp');
 
     $self->top_buffer->flush;
     $self->pop_stack;
@@ -757,45 +742,6 @@ sub content {
     }
 
     return $buffer->output;
-}
-
-#
-# Call hooks of the specified type, passing along params if any.
-#
-sub call_hooks {
-    my ($self, $type, @params) = @_;
-    if ($self->{"hooks_$type"}) {
-	foreach my $code (@{$self->{"hooks_$type"}}) {
-	    $code->($self, @params);
-	}
-    }
-}
-
-#
-# Cancel a specified hook for the remainder of this request.
-#
-sub suppress_hook {
-    my ($self, %args) = @_;
-    foreach (qw(name type)) {
-	param_error "suppress_hook: must specify $_\n"
-	    unless exists($args{$_});
-    }
-    my $code = $self->interp->hooks->{$args{type}}->{$args{name}};
-    $self->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
-}
-
-#
-# Reinstate a specified hook.
-#
-sub unsuppress_hook {
-    my ($self, %args) = @_;
-    foreach (qw(name type)) {
-	param_error "unsuppress_hook: must specify $_\n"
-	    unless exists($args{$_});
-    }
-    my $code = $self->interp->hooks->{$args{type}}->{$args{name}};
-    $self->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
-    push(@{$self->{"hooks_$args{type}"}},$code);
 }
 
 sub clear_buffer
@@ -954,10 +900,10 @@ method C<instance>.
 
 =head1 COMPONENT PATHS
 
-The methods L<Request/comp>, L<Request/comp_exists>,
-L<Request/fetch_comp>.  Component paths are like URL paths, and always
-use a forward slash (/) as the separator, regardless of what your
-operating system uses.
+The methods L<Request/comp>, L<Request/comp_exists>, and
+L<Request/fetch_comp> take a component path argument.  Component paths
+are like URL paths, and always use a forward slash (/) as the
+separator, regardless of what your operating system uses.
 
 =over
 
@@ -981,13 +927,6 @@ subcomponent takes precedence.
 =head1 METHODS
 
 =over
-
-=for html <a name="item_instance">
-
-=item instance
-
-This class method returns the C<HTML::Mason:::Request> currently in
-use.  If called when no Mason request is active it will return C<undef>.
 
 =for html <a name="item_abort">
 
@@ -1289,6 +1228,17 @@ The default mode within mod_perl and CGI environments is I<output>,
 causing the error will be displayed in HTML form in the browser.
 The default for standalone mode is I<fatal>.
 
+=for html <a name="item_exec">
+
+=item exec (comp, args...)
+
+Starts the request by executing the top-level component and
+arguments. This is normally called for you on the main request, but
+you can use it to execute subrequests.
+
+A request can only be executed once; e.g. it is an error to call this
+recursively on the same request.
+
 =for html <a name="item_fetch_comp">
 
 =item fetch_comp (comp_path)
@@ -1330,6 +1280,13 @@ headers if they haven't been sent and calls C<< $r->rflush >> to flush
 the Apache buffer. Flushing the initial bytes of output can make your
 servers appear more responsive.
 
+=for html <a name="item_instance">
+
+=item instance
+
+This class method returns the C<HTML::Mason:::Request> currently in
+use.  If called when no Mason request is active it will return C<undef>.
+
 =for html <a name="item_interp">
 
 =item interp
@@ -1346,14 +1303,6 @@ values may be overridden by passing parameters to this method.
 
 See the L<Devel/Subrequests> of the Component Developer's Guide for
 more details about the subrequest feature.
-
-=for html <a name="item_exec">
-
-=item exec (comp, args)
-
-This method takes the same arguments as the C<comp> method but will
-use autohandlers and dhandlers if available.  This method should
-B<only> be called on subrequests!
 
 =for html <a name="item_out">
 
@@ -1385,8 +1334,10 @@ component's return value is discarded.
 
 =item subexec (comp, args...)
 
-This method is a convenience that creates a new subrequest object and
-then calls its C<exec> method with the given arguments.
+This method creates a new subrequest with the specified top-level
+component and arguments, and executes it. This is most often used
+to perform an "internal redirect" to a new component such that
+autohandlers and dhandlers take effect.
 
 =for html <a name="item_top_args">
 
