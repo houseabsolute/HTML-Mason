@@ -911,8 +911,14 @@ sub file
     my ($self,$file) = @_;
     my $interp = $self->interp;
     unless ( File::Spec->file_name_is_absolute($file) ) {
-	if ($self->current_comp->is_file_based) {
-	    my $source_dir = $self->current_comp->source_dir;
+        # use owner if current comp is a subcomp
+        my $context_comp =
+            ( $self->current_comp->is_subcomp ?
+              $self->current_comp->owner :
+              $self->current_comp );
+
+	if ($context_comp->is_file_based) {
+	    my $source_dir = $context_comp->source_dir;
 	    $file = File::Spec->catfile( $source_dir, $file );
 	} else {
 	    $file = File::Spec->catfile( File::Spec->rootdir, $file );
