@@ -313,8 +313,9 @@ sub make_ah
 	} else {
 	    foreach my $root (@{$p{comp_root}}) {
 		$root = [ split /\s*=>\s*/, $root, 2 ];
-		param_error "Configuration parameter MasonCompRoot must be either a single string value ".
-			    "or multiple key/value pairs like 'foo => /home/mason/foo'" 
+		param_error "Configuration parameter MasonCompRoot must be either ".
+                            "a single string value or multiple key/value pairs ".
+                            "like 'foo => /home/mason/foo'"
 		    unless defined $root->[1];
 	    }
 	}
@@ -368,10 +369,10 @@ sub _get_mason_params
     }
 
     return ( \%vals,
-	     map { $_ =>
-                   scalar $self->get_param( $_, \%vals, \%candidates, $r )
-	         }
-	     keys %candidates );
+             map { $_ =>
+                       scalar $self->get_param( $_, \%vals, \%candidates, $r )
+                   }
+             keys %candidates );
 }
 
 sub get_param {
@@ -381,7 +382,6 @@ sub get_param {
 
     $key = $self->calm_form($key);
 
-    # If we weren't given a spec, try to locate one in our own class.
     my $spec = $self->allowed_params( $params || {} )->{$key}
         or error "Unknown config item '$key'";
 
@@ -487,25 +487,31 @@ sub new
 
     # Push $r onto default allow_globals
     if (exists $allowed_params->{allow_globals}) {
-	if ( $defaults{allow_globals} ) {
-	    push @{ $defaults{allow_globals} }, '$r';
+	if ( $params{allow_globals} ) {
+	    push @{ $params{allow_globals} }, '$r';
 	} else {
 	    $defaults{allow_globals} = ['$r'];
 	}
     }
 
     # Don't allow resolver to get created without comp_root, if it needs one
-    if ( exists $allowed_params->{comp_root} && !$defaults{comp_root} && !$params{comp_root} ) {
-	die "No comp_root specified and cannot determine DocumentRoot. Please provide comp_root explicitly.";
+    if ( exists $allowed_params->{comp_root} &&
+         ! $defaults{comp_root} &&
+         ! $params{comp_root} )
+    {
+	die "No comp_root specified and cannot determine DocumentRoot." .
+            " Please provide comp_root explicitly.";
     }
 
     my $self = $class->SUPER::new(%defaults, @_);
 
     unless ( $self->interp->resolver->can('resolve_backwards') )
     {
-	error "The resolver class your Interp object uses does not implement the 'resolve_backwards' method.  ".
-	      "This means that ApacheHandler cannot resolve requests.  Are you using a handler.pl file created ".
-	      "before version 1.10?  Please see the handler.pl sample that comes with the latest version of Mason.";
+	error "The resolver class your Interp object uses does not implement " .
+              "the 'resolve_backwards' method.  This means that ApacheHandler " .
+              "cannot resolve requests.  Are you using a handler.pl file created ".
+	      "before version 1.10?  Please see the handler.pl sample " .
+              "that comes with the latest version of Mason.";
     }
 
     # If we're running as superuser, change file ownership to http user & group
@@ -536,12 +542,16 @@ sub _initialize {
 
     if ($self->args_method eq 'mod_perl') {
 	unless (defined $Apache::Request::VERSION) {
-	    warn "Loading Apache::Request at runtime.  You could increase shared memory between Apache processes by preloading it in your httpd.conf or handler.pl file\n";
+	    warn "Loading Apache::Request at runtime.  You could " .
+                 "increase shared memory between Apache processes by ".
+                 "preloading it in your httpd.conf or handler.pl file\n";
 	    require Apache::Request;
 	}
     } else {
 	unless (defined $CGI::VERSION) {
-	    warn "Loading CGI at runtime.  You could increase shared memory between Apache processes by preloading it in your httpd.conf or handler.pl file\n";
+	    warn "Loading CGI at runtime.  You could increase shared ".
+                 "memory between Apache processes by preloading it in ".
+                 "your httpd.conf or handler.pl file\n";
 
 	    require CGI;
 	}
@@ -715,7 +725,8 @@ sub prepare_request
 	my $pathname = $r->filename;
 	$pathname .= $r->path_info unless $is_file;
 
-	$r->warn("[Mason] Cannot resolve file to component: $pathname (is file outside component root?)");
+	$r->warn("[Mason] Cannot resolve file to component: " .
+                 "$pathname (is file outside component root?)");
 	return $self->return_not_found($r);
     }
 
