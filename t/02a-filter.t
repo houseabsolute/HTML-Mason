@@ -307,6 +307,40 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/support/abort_in_shared_with_filter',
+			 component => <<'EOF',
+<%shared>
+$m->abort('dead');
+</%shared>
+
+<%filter>
+$_ = lc $_;
+</%filter>
+EOF
+		       );
+
+    $group->add_test( name => 'abort_in_shared_with_filter',
+                      description => 'Test that abort in a shared block works when component has a filter block',
+                      component => <<'EOF',
+<% $out %>
+<%init>
+eval { $m->comp( 'support/abort_in_shared_with_filter' ) };
+my $e = $@;
+
+my $out = 'no error';
+if ($e)
+{
+    $out = $m->aborted($e) ? $e->aborted_value : "error: $e";
+}
+</%init>
+EOF
+                      expect => <<'EOF',
+dead
+EOF
+                    );
+
+#------------------------------------------------------------
+
         return $group;
 }
 
