@@ -142,3 +142,26 @@ sub make_fh
     return do { local *FH; *FH; };  # double *FH avoids a warning
 }
 
+#
+# Process escape flags in <% %> tags
+#   h - html escape
+#   u - url escape
+#
+my %html_escape = ('&' => '&amp;', '>'=>'&gt;', '<'=>'&lt;', '"'=>'&quot;');
+sub escape_perl_expression
+{
+    my ($expr,@flags) = @_;
+
+    return $expr if grep { $_ eq 'n' } @flags;
+
+    if (defined($expr)) {
+	foreach my $flag (@flags) {
+	    if ($flag eq 'h') {
+		$expr =~ s/([<>&\"])/$html_escape{$1}/mgoe;
+	    } elsif ($flag eq 'u') {
+		$expr =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
+	    }
+	}
+    }
+    return $expr;
+}
