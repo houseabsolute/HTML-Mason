@@ -74,7 +74,7 @@ sub _handler {
 	}
     }
 
-    my $r = $self->create_delayed_object('cgi_request', );
+    my $r = $self->create_delayed_object('cgi_request');
     $self->interp->set_global('$r', $r);
 
     $self->{output} = '';
@@ -91,6 +91,7 @@ sub _handler {
 	$old_datadir = $self->interp->data_dir($local_datadir);
     }
 
+    $self->interp->delayed_object_params('request', cgi_request => $r);
     eval { $self->interp->exec($component, @params) };
     # save it in case setting one of the attributes below uses eval{}
     my $e = $@;
@@ -116,7 +117,7 @@ package HTML::Mason::Request::CGI;
 use HTML::Mason::Request;
 use base qw(HTML::Mason::Request);
 
-#__PACKAGE__->valid_params( cgi_request => {isa => 'HTML::Mason::CGIRequest'} );
+__PACKAGE__->valid_params( cgi_request => {isa => 'HTML::Mason::CGIRequest'} );
 
 sub cgi_object {
     my $self = shift;
@@ -131,6 +132,7 @@ use HTML::Mason::MethodMaker(read_write => [qw(query headers)]);
 
 sub new {
     my $class = shift;
+warn "QS is $ENV{QUERY_STRING}";
     return bless {
 		  query   => new CGI(),
 		  headers => {},

@@ -32,6 +32,7 @@ use CGI qw(-no_debug);  # Prevent "(offline mode: enter name=value pairs on stan
 	
 	#print "Calling $test->{name} test with path: $test->{call_path}\n" if $DEBUG;
 	$test->{pretest_code}->() if $test->{pretest_code};
+	CGI::initialize_globals();     # make sure CGI doesn't cache previous query
 	$ENV{REQUEST_METHOD} = 'GET';  # CGI.pm needs this, or it won't process args
 	$ENV{PATH_INFO} = $test->{call_path};
 	$ENV{QUERY_STRING} = join '=', @{$test->{call_args}};
