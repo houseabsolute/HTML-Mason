@@ -434,6 +434,7 @@ sub new
     if (exists($params{error_mode}) and $params{error_mode} eq 'fatal') {
 	$defaults{error_format} = 'line';
     } else {
+	$defaults{error_mode} = 'output';
 	$defaults{error_format} = 'html';
     }
 

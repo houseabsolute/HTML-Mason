@@ -34,6 +34,8 @@ sub new {
 
     my @my_args = $package->create_contained_objects(comp_root => $ENV{DOCUMENT_ROOT},
 						     request_class => 'HTML::Mason::Request::CGI',
+						     error_mode => 'output',
+						     error_format => 'html',
 						     @_);
 
     my $self = bless { validate @my_args, $package->validation_spec };
