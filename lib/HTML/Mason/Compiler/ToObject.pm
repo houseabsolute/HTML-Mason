@@ -65,7 +65,6 @@ sub compiled_component
     my $header = $self->_make_main_header;
     my $params = $self->_component_params;
 
-    # The '!' char will not appear in a md5 hex checksum
     my $id = $self->object_id;
     $id =~ s,([\\']),\\$1,g;
     $params->{compiler_id} = "'$id'";
