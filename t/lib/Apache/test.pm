@@ -718,7 +718,7 @@ values are all 1.
 =head1 EXAMPLES
 
 No good examples yet.  Example submissions are welcome.  In the meantime, see
-L<http://forum.swarthmore.edu/~ken/modules/Apache-AuthCookie/|http://forum.swarthmore.edu/~ken/modules/Apache-AuthCookie/> , which
+L<http://forum.swarthmore.edu/~ken/modules/Apache-AuthCookie/> , which
 I'm retrofitting to use Apache::test.
 
 =head1 TO DO
