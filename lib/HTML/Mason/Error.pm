@@ -53,10 +53,13 @@ sub error_process {
 	    my ($func, $file, $linenum) =
 		($line =~ /\t(.*) called at (\S*) line (\d*)/);
 
-		# Ignore superfluous call stack entries.
+	    # Ignore superfluous call stack entries.
 	    if (defined $file) {
 		next if $file =~ m#/dev/null#;
 		next if $file =~ m#HTML/Mason/ApacheHandler#;
+	    }
+
+	    if (defined $func) {
 		next if $func =~ m#eval|require 0# and $file =~ m#HTML/Mason/Request#;
 		next if $func =~ m#HTML::Mason::Request::exec#;
 		next if $func =~ m#HTML::Mason::Component::run#;
@@ -67,10 +70,10 @@ sub error_process {
 
 	    if (@callstack)   {
 		my $last = $callstack[ scalar(@callstack) - 1 ];
-		next if ($last && ($last->{'line'} eq $linenum) && ($last->{'file'} eq $file));
+		next if ($last && $last->{'line'} eq $linenum && defined $file && $last->{'file'} eq $file);
 	    }
 
-	    push @callstack, { "function" => $func, "file" => $file || '', "line" => $linenum };
+	    push @callstack, { "function" => $func || '', "file" => $file, "line" => $linenum };
 	}
 
 	# Sometimes the perl warnings span multiple lines. This should do the 
