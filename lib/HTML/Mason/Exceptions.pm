@@ -142,7 +142,8 @@ sub filtered_frames
     while (my $frame = $trace->next_frame)
     {
 	last if ($frame->subroutine eq 'HTML::Mason::Request::exec');
-	unless ($ignore_subs{ $frame->subroutine } or
+	unless ($frame->filename =~ /Mason\/Exceptions\.pm/ or
+		$ignore_subs{ $frame->subroutine } or
 		($frame->subroutine eq 'HTML::Mason::Request::comp' and $frame->filename =~ /Request\.pm/)) {
 	    push(@frames, $frame);
 	}
