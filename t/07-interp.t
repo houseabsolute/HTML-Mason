@@ -940,5 +940,25 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'make_anonymous_component',
+		      description => 'test that the make_anonymous_component method works',
+		      component => <<'EOF',
+<%init>
+my $ctext = q|
+% my $x = 'Hello, ';
+<% $x %>|;
+my $comp = $m->interp->make_anonymous_component( comp => $ctext );
+</%init>
+% $m->comp($comp);
+World
+EOF
+		      expect => <<'EOF',
+
+Hello, World
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
