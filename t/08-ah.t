@@ -43,7 +43,7 @@ test_load_apache();
     my $both_tests = 13;
     my $cgi_only_tests = 1;
     my $apr_only_tests = 1;
-    my $both_no_handler_tests = 8;
+    my $both_no_handler_tests = 9;
     my $cgi_only_no_handler_tests = 1;
     $cgi_only_no_handler_tests++ if $mod_perl::VERSION >= 1.24;
     my $apr_only_no_handler_tests = 3;
