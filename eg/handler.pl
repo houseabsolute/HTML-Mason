@@ -1,4 +1,9 @@
 #!/usr/bin/perl
+#
+# This is a basic, fairly fuctional Mason handler.pl.
+#
+# For something a little more involved, check out session_handler.pl
+
 package HTML::Mason;
 
 #
@@ -14,7 +19,6 @@ use strict;
 # manual for details)
 #{  package HTML::Mason::Commands;
 #   use CGI;
-#   use Apache::Session::File;
 #}
 
 # Create Mason objects
@@ -42,25 +46,8 @@ sub handler
     #
     #return -1 if $r->content_type && $r->content_type !~ m|^text/|io;
     
-    # This block of code can be enabled to create a session-hash that every
-    # component can access.  This is useful for maintaining state across
-    # multiple requests.  The Apache::Session module is required.
-    #
-    #my %session;
-    #my $cookie = $r->header_in('Cookie');
-    #$cookie =~ s/SESSION_ID=(\w*)/$1/;
-    #tie %session, 'Apache::Session::File', $cookie, {'Directory' => '/tmp/session'};
-    #$r->header_out("Set-Cookie" => "SESSION_ID=$session{_session_id};") if ( !$cookie );
-    
-    # This creates a global called %session that is accessible in all components.
-    # Feel free to rename this as needed.
-    #
-    #local *HTML::Mason::Commands::session = \%session;
-    
     my $status = $ah->handle_request($r);
     
-    #untie %HTML::Mason::Commands::session;
-
     return $status;
 }
 
