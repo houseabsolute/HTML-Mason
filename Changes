@@ -40,7 +40,7 @@ constructor.
 - ** The Component's run_count() and first_time() methods have been
 removed.
 - ** The HTML::Mason::Config module is no longer needed, and is no
- longer generated during the installation process.
+longer generated during the installation process.
 - ** The Interp's autohandler_name and dhandler_name params no longer take
 undef as a valid value.
 - ** The Interp's use_autohandlers, use_dhandlers, and
@@ -128,7 +128,8 @@ properties of the Request object.
 
 - Fixed locale parser_version 0,8 problem. (submitted by Louis-David Mitterrand) 
 - Fixed inability to use '/' for comp_root. (reported by Doug Hunt) 
-- Fixed HTML::Mason::Parser::make_dirs dying when reload_file not defined. (reported by Ivan E. Panchenko) 
+- Fixed HTML::Mason::Parser::make_dirs dying when reload_file not
+defined. (reported by Ivan E. Panchenko)
 - Made error_process regexps more specific. (suggested by Vadim Belman) 
 - Fixed $m->count. (reported by David Wheeler) 
 - Fixed writing of object files in taint mode. (submitted by Barrie Slaymaker) 
