@@ -191,7 +191,7 @@ sub access_data_cache
 	#
 	# Validate parameters
 	#
-	if (my @invalids = grep(!/^(memory_cache|cache_file|tie_class)$/,keys(%options))) {
+	if (my @invalids = grep(!/^(action|memory_cache|cache_file|tie_class)$/,keys(%options))) {
 	    die "cache: invalid parameter '$invalids[0]' for action '$action'\n";
 	}
 	
