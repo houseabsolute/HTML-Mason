@@ -1010,7 +1010,7 @@ I<args>, and executes it. The return value is the return value of
 I<comp>, if any.
 
 This is useful for running Mason outside of a web environment.
-See L<HTML::Mason::Admin/Using Mason from a standalone script>
+See L<HTML::Mason::Admin/using Mason from a standalone script>
 for examples.
 
 This method isn't generally useful in a mod_perl environment; see
