@@ -20,9 +20,6 @@ __PACKAGE__->valid_params
      comp_root    => { parse => 'list', type => SCALAR|ARRAYREF },
     );
 
-__PACKAGE__->contained_objects();
-
-
 sub new {
     my $package = shift;
     my $self = $package->SUPER::new(@_);

@@ -31,8 +31,6 @@ __PACKAGE__->valid_params
      use_strict => { parse => 'boolean', type => SCALAR, default => 1 },
     );
 
-__PACKAGE__->contained_objects();
-
 sub compile
 {
     my $self = shift;

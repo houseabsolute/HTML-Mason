@@ -14,10 +14,6 @@ Params::Validate::validation_options( on_fail => sub { param_error join '', @_ }
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
-__PACKAGE__->valid_params();
-__PACKAGE__->contained_objects();
-
-
 sub new
 {
     my $class = shift;

@@ -30,11 +30,6 @@ __PACKAGE__->valid_params
      filter       => { type => CODEREF, optional => 1 },
     );
 
-__PACKAGE__->contained_objects
-    (
-     # None
-    );
-
 sub new
 {
     my $class = shift;

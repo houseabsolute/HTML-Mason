@@ -129,11 +129,12 @@ sub analyze_error
     if ($self->isa('HTML::Mason::Exception::Syntax')) {
 	$file = $self->comp_name;
 	push(@lines, $self->line_number);
-    } else {
+    } elsif (@frames) {
 	$file = $frames[0]->filename;
 	@lines = $frames[0]->line;
     }
-    my @context = $self->get_file_context($file, \@lines);
+    my @context;
+    @context = $self->get_file_context($file, \@lines) if @lines;
 
     return {
 	file    => $file,
