@@ -178,7 +178,7 @@ EOF
 	      );
 
     write_comp( 'decline_dirs', <<'EOF',
-decline_dirs is <% $HTML::Mason::ApacheHandler::AH->decline_dirs %>
+decline_dirs is <% $m->ah->decline_dirs %>
 EOF
 	      );
 
