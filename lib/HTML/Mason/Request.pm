@@ -142,10 +142,10 @@ sub exec {
 	}
 	unless ($comp) {
 	    $self->{error_code} = 'top_not_found';
-	    error( "could not find component for initial path '$path'\n" );
+	    error "could not find component for initial path '$path'\n";
 	}
     } elsif ( ! UNIVERSAL::isa( $comp, 'HTML::Mason::Component' ) ) {
-	param_error( "exec: first argument ($comp) must be an absolute component path or a component object" );
+	param_error "exec: first argument ($comp) must be an absolute component path or a component object";
     }
 
     # This label is for declined requests.
@@ -158,12 +158,13 @@ sub exec {
     {my @wrapper_chain = ($comp);
      for (my $parent = $comp->parent; $parent; $parent = $parent->parent) {
 	 unshift(@wrapper_chain,$parent);
-	 error( "inheritance chain length > 32 (infinite inheritance loop?)" )
+	 error "inheritance chain length > 32 (infinite inheritance loop?)"
 	     if (@wrapper_chain > 32);
      }
      $first_comp = $wrapper_chain[0];
      $self->{wrapper_chain} = [@wrapper_chain];
-     $self->{wrapper_index} = {map(($wrapper_chain[$_]->path => $_),(0..$#wrapper_chain))}; }
+     $self->{wrapper_index} = {map(($wrapper_chain[$_]->path => $_),(0..$#wrapper_chain))};
+    }
 
     # Fill top_level slots for introspection.
     $self->{top_comp} = $comp;
