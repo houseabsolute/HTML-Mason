@@ -185,8 +185,7 @@ C<exec> method will need to preserve that.  Here is a boilerplate:
 Your custom request class will also be used to implement subrequests,
 which are implemented by calling C<exec> just like any other method.
 If you only want to do certain things in C<exec> for the first
-request, you can simply check the value of C<< $self->is_subrequest
->>.
+request, you can simply check the value of C<< $self->is_subrequest >>.
 
 =head2 Examples
 
