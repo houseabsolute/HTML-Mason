@@ -20,7 +20,7 @@ C<perl -MCPAN -e 'install Bundle::HTML::Mason'>
 
 File::Spec  0.8
 
-Params::Validate  0.18
+Params::Validate  0.20
 
 Exception::Class  1.01
 
