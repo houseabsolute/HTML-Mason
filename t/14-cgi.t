@@ -107,13 +107,13 @@ $group->add_test( name => 'fatal_error',
 $group->add_test( name => 'headers',
 		  description => 'Test header generation',
 		  component => q{% $r->header_out('foo' => 'bar');},
-		  expect    => qr/Foo: bar/,
+		  expect    => qr/Foo: bar/i,
 		);
 
 $group->add_test( name => 'redirect_headers',
 		  description => 'Test header generation',
 		  component => q{% $m->redirect('/hello.html');},
-		  expect    => qr/Status: 302\s+Location: \/hello\.html|Location: \/hello\.html\s+Status: 302/,
+		  expect    => qr/Status: 302\s+Location: \/hello\.html|Location: \/hello\.html\s+Status: 302/i,
 		);
 
 #------------------------------------------------------------
