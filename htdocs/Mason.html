@@ -372,7 +372,7 @@ line
 
 <P>
 
-<PRE>    return -1 if $r-&gt;content_type !~ m|^text/|io;
+<PRE>    return -1 if $r-&gt;content_type &amp;&amp; $r-&gt;content_type !~ m|^text/|io;
 </PRE>
 
 <P>
@@ -421,7 +421,8 @@ is in your Apache configuration file, then regenerate the error and check
 the error log for Mason warnings. One situation that will unfortunately
 confuse Mason is if your document or component root goes through a soft
 link. Try specifying your document and component root settings in terms of
-the true path.)
+the true path. On Win32 systems, make sure the document and component roots
+are spelled with the same case.)
 
 
 <P>

@@ -15,33 +15,40 @@
 	<LI><A HREF="#description">DESCRIPTION</A>
 	<LI><A HREF="#what_are_components_">WHAT ARE COMPONENTS?</A>
 	<LI><A HREF="#in_line_perl_sections">IN-LINE PERL SECTIONS </A>
+	<UL>
+
+		<LI><A HREF="#examples_and_recommended_usage">Examples and Recommended Usage</A>
+	</UL>
+
 	<LI><A HREF="#how_components_are_invoked">HOW COMPONENTS ARE INVOKED</A>
 	<UL>
 
 		<LI><A HREF="#top_level_components">Top-level Components</A>
 		<LI><A HREF="#dhandlers">dhandlers</A>
 		<LI><A HREF="#components_as_subroutines">Components as Subroutines</A>
-		<LI><A HREF="#parameter_passing">Parameter Passing</A>
 		<LI><A HREF="#return_values_and_context">Return Values and Context</A>
 	</UL>
 
-	<LI><A HREF="#other_perl_sections">OTHER PERL SECTIONS</A>
-	<LI><A HREF="#examples_and_recommended_usage">EXAMPLES AND RECOMMENDED USAGE</A>
+	<LI><A HREF="#passing_parameters">PASSING PARAMETERS</A>
 	<UL>
 
-		<LI><A HREF="#_lines">% lines</A>
-		<LI><A HREF="#_xxx_"><% xxx %></A>
-		<LI><A HREF="#_perl_xxx_perl_"><%perl> xxx <%/perl></A>
+		<LI><A HREF="#in_component_calls">In Component Calls</A>
+		<LI><A HREF="#in_http_requests">In HTTP requests</A>
+		<LI><A HREF="#accessing_parameters">Accessing Parameters</A>
+		<LI><A HREF="#parameter_passing_examples">Parameter Passing Examples</A>
 	</UL>
 
+	<LI><A HREF="#other_perl_sections">OTHER PERL SECTIONS</A>
 	<LI><A HREF="#data_caching">DATA CACHING</A>
 	<UL>
 
 		<LI><A HREF="#basic_usage">Basic Usage</A>
 		<LI><A HREF="#multiple_keys_values">Multiple Keys/Values</A>
 		<LI><A HREF="#expiration">Expiration</A>
+		<LI><A HREF="#busy_locks">Busy Locks</A>
 		<LI><A HREF="#keeping_in_memory">Keeping In Memory</A>
 		<LI><A HREF="#caching_all_output">Caching All Output </A>
+		<LI><A HREF="#guarantees_or_lack_thereof_">Guarantees (or lack thereof)</A>
 	</UL>
 
 	<LI><A HREF="#accessing_server_internals">ACCESSING SERVER INTERNALS</A>
@@ -269,6 +276,141 @@ The majority of Mason commands are for advanced users, but a few (like <A HREF="
 
 <P>
 <HR>
+<H2><A NAME="examples_and_recommended_usage">Examples and Recommended Usage
+
+</A></H2>
+<STRONG>% lines</STRONG>
+
+
+
+
+<P>
+
+Most useful for conditional and loop structures - if, while, foreach, ,
+etc. - as well as side-effect commands like assignments. Examples:
+
+
+<P>
+
+o Conditional code
+
+
+<P>
+
+<PRE>    % my $ua = $r-&gt;header_in('User-Agent');
+    % if ($ua =~ /msie/i) {
+    Welcome, Internet Explorer users
+    ...
+    % } elsif ($ua =~ /mozilla/i) {
+    Welcome, Netscape users
+    ...
+    % }
+</PRE>
+
+<P>
+
+o HTML list formed from array
+
+
+<P>
+
+<PRE>    &lt;ul&gt;
+    % foreach $item (@list) {
+    &lt;li&gt;&lt;% $item %&gt;
+    % }
+    &lt;/ul&gt;
+</PRE>
+
+<P>
+
+o HTML list formed from hash
+
+
+<P>
+
+<PRE>    &lt;ul&gt;
+    % while (my ($key,$value) = each(%ENV)) {
+    &lt;li&gt;
+    &lt;b&gt;&lt;% $key %&gt;&lt;/b&gt;: &lt;% $value %&gt;
+    % }
+    &lt;/ul&gt;
+</PRE>
+
+<P>
+
+o HTML table formed from list of hashes
+
+
+<P>
+
+<PRE>    &lt;table&gt;
+    &lt;tr&gt;
+    % foreach my $h (@loh) {
+    &lt;td&gt;&lt;% $h-&gt;{foo} %&gt;&lt;/td&gt;
+    &lt;td bgcolor=#ee0000&gt;&lt;% $h-&gt;{bar} %&gt;&lt;/td&gt;
+    &lt;td&gt;&lt;% $h-&gt;{baz} %&gt;&lt;/td&gt;
+    % }
+    &lt;/tr&gt;
+    &lt;/table&gt;
+</PRE>
+
+<P>
+
+For more than three lines of Perl, consider using a &lt;%perl&gt; block.
+
+
+<P>
+
+<STRONG>&lt;% xxx %&gt;</STRONG>
+
+
+
+
+<P>
+
+Most useful for printing out variables, as well as more complex
+expressions. Examples:
+
+
+<P>
+
+<PRE>  Dear &lt;% $name %&gt;: We will come to your house at &lt;% $address %&gt; in the
+  fair city of &lt;% $city %&gt; to deliver your $&lt;% $amount %&gt; dollar prize!
+</PRE>
+
+<P>
+
+<PRE>  The answer is &lt;% ($y+8) % 2 %&gt;.
+</PRE>
+
+<P>
+
+<PRE>  You are &lt;% $age&lt;18 ? 'not' : '' %&gt; permitted to enter this site.
+</PRE>
+
+<P>
+
+For side-effect commands like assignments, consider using a % line or
+&lt;%perl&gt; block instead.
+
+
+<P>
+
+<STRONG>&lt;%perl&gt; xxx &lt;%/perl&gt;</STRONG>
+
+
+
+
+<P>
+
+Useful for Perl blocks of more than a few lines. For a very small block,
+consider using % lines.
+
+
+<P>
+
+<P>
+<HR>
 <H1><A NAME="how_components_are_invoked">HOW COMPONENTS ARE INVOKED
 
 </A></H1>
@@ -276,8 +418,8 @@ Components are invoked in two ways: top-level components respond directly
 to HTTP requests, while other, subordinate components are called more or
 less like subroutines, using Mason's <STRONG>mc_comp</STRONG>
 command. Top-level components must reside within the server's DocumentRoot,
-while other components live within Mason's component root (webmasters
-sometimes equate the two).
+while other components can live anywhere within Mason's component root
+(these may or may not be the same).
 
 
 <P>
@@ -297,41 +439,10 @@ A top-level component is simply one that's called from an URL, such as:
 
 <P>
 
-Here, <CODE>prods.html</CODE> may be nothing more than a static HTML file, since components don't <EM>have</EM> to contain any Mason stuff.
-
-
-<P>
-
-Now consider a CGI-style URL with a few GET parameters attached:
-
-
-<P>
-
-<PRE>    http://www.foo.com/mktg/prods.html?str=dog&amp;lst=2&amp;lst=3&amp;lst=4
-</PRE>
-
-<P>
-
-This component must now contain some Mason elements in order to read the
-query arguments and do something interesting with them. To read the
-arguments, prods.html should contain a <CODE>&lt;%perl_args%&gt;</CODE>
-section (see <EM><A HREF="#parameter_passing">Parameter Passing</A></EM> below) describing the input variables and their data types, in this case a
-scalar (<CODE>$str</CODE>) and a three-element list (<CODE>@lst</CODE>). Thus components are relieved of the form-parsing chores common to CGI
-scripts.
-
-
-<P>
-
-A catch-all <CODE>%ARGS</CODE> hash is also available for components that
-wish to deal with HTTP request arguments directly. <CODE>%ARGS</CODE> is
-defined automatically; components need not list it in a
-<CODE>&lt;%perl_args%&gt;</CODE> section.
-
-
-<P>
-
-These arguments are subsequently available to the component as regular Perl
-variables.
+Apache resolves this URL to a filename, e.g.
+/usr/local/www/htdocs/mktg/prods.html. Mason loads and executes that file
+as a component. It might in turn call other components and execute some
+Perl code, or it might be nothing more than static HTML.
 
 
 <P>
@@ -389,9 +500,8 @@ absolute path returned by <CODE>$r-&gt;path_info</CODE>.
 <H2><A NAME="components_as_subroutines">Components as Subroutines
 
 </A></H2>
-Components typically build themselves up from other components--this is in
-fact the keystone of Mason's component-based approach. Good components
-therefore resemble good subroutines in that they're written for reuse.
+Mason pages often are built not from a single component, but from multiple
+components that call each other in a hierarchical fashion.
 
 
 <P>
@@ -427,14 +537,14 @@ Parameters are passed as one or more name=&gt;value pairs, e.g. <CODE>player=&gt
 <P>
 
 The optional <EM>STORE</EM> parameter takes a scalar reference as an argument, and tells the component
-to direct its output into the named variable instead of standard output
-(programmers: think sprintf vs. printf). For example:
+to direct its output into the named variable instead of standard output.
+This is analogous to the difference between sprintf and printf. For
+example:
 
 
 <P>
 
-<PRE>    &lt;% mc_comp('/shared/mastHead', color=&gt;'salmon',
-                                   STORE=&gt;\$mh_text) %&gt;
+<PRE>    &lt;% mc_comp('/shared/mastHead', color=&gt;'salmon', STORE=&gt;\$mh_text) %&gt;
 </PRE>
 
 <P>
@@ -442,67 +552,14 @@ to direct its output into the named variable instead of standard output
 </DL>
 <P>
 <HR>
-<H2><A NAME="parameter_passing">Parameter Passing
-
-</A></H2>
-Any Perl data type can be passed in an <CODE>mc_comp()</CODE> call:
-
-
-<P>
-
-<PRE>    mc_comp('/mktg/prods.html', s=&gt;'dog', l=&gt;[2,3,4], h=&gt;{a=&gt;7,b=&gt;8});
-</PRE>
-
-<P>
-
-This command passes a scalar ($s), a list (@l), and a hash (%h). The list
-and hash must be passed as references, but in /mktg/prods.html they are
-automatically dereferenced into a local list and hash. While convenient,
-this means that <CODE>@b</CODE> and <CODE>%c</CODE> are copies--changing
-them does not modify the caller's version. To pass a reference, declare it
-as a scalar value.
-
-
-<P>
-
-Unlike Perl subroutines, Mason components <EM>do not</EM> read their parameters from Perl's <CODE>@_</CODE> array. Rather, Mason
-imposes its own typed argument passing protocol in which components define
-a
-<CODE>&lt;%perl_args%&gt;</CODE> section listing parameter names, types, and default values. For example:
-
-
-<P>
-
-<PRE>    &lt;%perl_args&gt;
-    $a
-    @b
-    %c
-    $d=&gt;5
-    @e=&gt;('foo','baz')
-    %f=&gt;(joe=&gt;1,bob=&gt;2)
-    &lt;/%perl_args&gt;
-</PRE>
-
-<P>
-
-Here, $a, @b, and <CODE>%c</CODE> are required arguments; the component
-generates an error if the caller leaves them unspecified. $d, @e, and
-<CODE>%f</CODE> are optional arguments; they are assigned the specified
-default values if unspecified.
-
-
-<P>
-
-<P>
-<HR>
 <H2><A NAME="return_values_and_context">Return Values and Context
 
 </A></H2>
 Components generally fall into one of two categories: HTML generators, and
 functions that compute a value. The latter behave like normal Perl
-functions, while HTML generators (far more common), rarely return
-values--in the name of performance they stream their output immediately to
-the browser.
+functions, while HTML generators (far more common) rarely return values--in
+the name of performance they stream their output immediately to the
+browser.
 
 
 <P>
@@ -538,21 +595,207 @@ with regard to return values and scalar/list context:
 
 <P>
 <HR>
-<H1><A NAME="other_perl_sections">OTHER PERL SECTIONS
+<H1><A NAME="passing_parameters">PASSING PARAMETERS
 
 </A></H1>
-The Perl sections we're about to describe are more specialized than the
-in-line sections described above. Several are tied to phases of the
-component execution sequence, which goes something like this:
+This section describes Mason's facilities for passing parameters to
+components (either from HTTP requests or mc_comp calls) and for accessing
+parameter values inside components.
 
 
 <P>
 
-<PRE>    1. Initialize arguments in HTML::Mason::Commands package
-    2. &lt;%perl_init%&gt; section
+<P>
+<HR>
+<H2><A NAME="in_component_calls">In Component Calls
+
+</A></H2>
+Any Perl data type can be passed in an <CODE>mc_comp()</CODE> call:
+
+
+<P>
+
+<PRE>    mc_comp('/sales/header', s=&gt;'dog', l=&gt;[2,3,4], h=&gt;{a=&gt;7,b=&gt;8});
+</PRE>
+
+<P>
+
+This command passes a scalar ($s), a list (@l), and a hash (%h). The list
+and hash must be passed as references, but they will be automatically
+dereferenced in the called component.
+
+
+<P>
+
+<P>
+<HR>
+<H2><A NAME="in_http_requests">In HTTP requests
+
+</A></H2>
+Consider a CGI-style URL with a query string:
+
+
+<P>
+
+<PRE>    http://www.foo.com/mktg/prods.html?str=dog&amp;lst=2&amp;lst=3&amp;lst=4
+</PRE>
+
+<P>
+
+or an HTTP request with some POST content. Mason automatically parses the
+GET/POST values and makes them available to the component as parameters.
+
+
+<P>
+
+In fact, internally Mason just treats an HTTP request as a first mc_comp
+call! In this case:
+
+
+<P>
+
+<PRE>    mc_comp('/mktg/prods.html',str=&gt;'dog',lst=&gt;[2,3,4])
+</PRE>
+
+<P>
+
+assuming the component and document roots are the same.
+
+
+<P>
+
+<P>
+<HR>
+<H2><A NAME="accessing_parameters">Accessing Parameters
+
+</A></H2>
+Component parameters, whether they come from GET/POST or an mc_comp call,
+can be accessed in two ways.
+
+
+<P>
+
+1. Declared named arguments: Components can define a <CODE>&lt;%perl_args%&gt;</CODE> section listing argument names, types, and default values. For example:
+
+
+<P>
+
+<PRE>    &lt;%perl_args&gt;
+    $a
+    @b
+    %c
+    $d=&gt;5
+    @e=&gt;('foo','baz')
+    %f=&gt;(joe=&gt;1,bob=&gt;2)
+    &lt;/%perl_args&gt;
+</PRE>
+
+<P>
+
+Here, $a, @b, and <CODE>%c</CODE> are required arguments; the component
+generates an error if the caller leaves them unspecified. $d, @e, and
+<CODE>%f</CODE> are optional arguments; they are assigned the specified
+default values if unspecified. All the arguments are available as lexically
+scoped (``my'') variables in the rest of the component.
+
+
+<P>
+
+2. <CODE>%ARGS</CODE> hash: This variable, always available, contains all
+of the parameters passed to the component. It is especially handy when
+there are many parameters or when parameter names are determined at
+run-time. <CODE>%ARGS</CODE> can be used whether or not you have a
+&lt;%perl_args&gt; section.
+
+
+<P>
+
+Here's how to pass all of a component's parameters to another component:
+
+
+<P>
+
+<PRE>    mc_comp (&quot;template&quot;, %ARGS);
+</PRE>
+
+<P>
+
+<P>
+<HR>
+<H2><A NAME="parameter_passing_examples">Parameter Passing Examples
+
+</A></H2>
+The following examples illustrate the different ways to pass and receive
+parameters.
+
+
+<P>
+
+1. Passing a scalar <EM>id</EM> with value 5.
+
+
+<P>
+
+<PRE>  In a URL: /my/URL?id=5
+  In an mc_comp call: mc_comp ('/my/comp', id =&gt; 5)
+  In the called component, if there is a declared argument named...
+    $id, then $id will equal 5
+    @id, then @id will equal (5)
+    %id, then an error occurs
+  In addition, $ARGS{id} will equal 5.
+</PRE>
+
+<P>
+
+2. Passing a list <EM>colors</EM> with values red, blue, and green.
+
+
+<P>
+
+<PRE>  In a URL: /my/URL?colors=red&amp;colors=blue&amp;colors=green
+  In an mc_comp call: mc_comp ('/my/comp', colors =&gt; ['red', 'blue', 'green'])
+  In the called component, if there is a declared argument named...
+    $colors, then $colors will equal ['red', 'blue', 'green']
+    @colors, then @colors will equal ('red', 'blue', 'green')
+    %colors, then an error occurs
+  In addition, $ARGS{colors} will equal ['red', 'blue', 'green'].
+</PRE>
+
+<P>
+
+3. Passing a hash <EM>grades</EM> with pairs Alice =&gt; 92 and Bob =&gt; 87.
+
+
+<P>
+
+<PRE>  In a URL: /my/URL?grades=Alice&amp;grades=92&amp;grades=Bob&amp;grades=87
+  In an mc_comp call: mc_comp ('/my/comp', grades =&gt; {Alice =&gt; 92, Bob =&gt; 87})
+  In the called component, if there is a declared argument named...
+    $grades, then $grades will equal {Alice =&gt; 92, Bob =&gt; 87}
+    @grades, then @grades will equal ('Alice', 92, 'Bob', 87)
+    %grades, then %grades will equal (Alice =&gt; 92, Bob =&gt; 87)
+  In addition, $ARGS {grades} will equal {Alice =&gt; 92, Bob =&gt; 87}.
+</PRE>
+
+<P>
+
+<P>
+<HR>
+<H1><A NAME="other_perl_sections">OTHER PERL SECTIONS
+
+</A></H1>
+In this section we describe other specialized sections you can place in
+your component. Several are tied to phases of the component execution
+sequence, which goes something like this:
+
+
+<P>
+
+<PRE>    1. Initialize arguments
+    2. &lt;%perl_init&gt; section
     3. Output HTTP headers (if not output already)
     4. Primary section (HTML + embedded Perl sections)
-    5. &lt;%perl_cleanup%&gt; section
+    5. &lt;%perl_cleanup&gt; section
 </PRE>
 
 <P>
@@ -663,7 +906,7 @@ blocks, &lt;%perl_cleanup&gt; sections are rarely needed.
 xxx contains a list of argument declarations, one per line. Each
 declaration contains a type character ($, @, or %), a name, and optionally
 '=&gt;' followed by a default value. The default value must be a valid Perl
-expression of matching type (scalar, list, hash).
+expression of matching type (scalar, list, hash). See <A HREF="#accessing_parameters">Accessing Parameters</A> above for usage and examples.
 
 
 <P>
@@ -791,129 +1034,6 @@ This works for almost everything, but doesn't let you output &lt;/%perl_off&gt; 
 <P>
 
 </DL>
-<P>
-<HR>
-<H1><A NAME="examples_and_recommended_usage">EXAMPLES AND RECOMMENDED USAGE
-
-</A></H1>
-<P>
-<HR>
-<H2><A NAME="_lines">% lines
-
-</A></H2>
-Most useful for conditional and loop structures - if, while, foreach, ,
-etc. - as well as side-effect commands like assignments. Examples:
-
-
-<P>
-
-<DL>
-<DT><STRONG><A NAME="item_Conditional_code">Conditional code
-
-</A></STRONG><DD>
-<PRE>    % my $ua = $r-&gt;header_in('User-Agent');
-    % if ($ua =~ /msie/i) {
-    Welcome, Internet Explorer users
-    ...
-    % } elsif ($ua =~ /mozilla/i) {
-    Welcome, Netscape users
-    ...
-    % }
-</PRE>
-
-<P>
-
-<DT><STRONG><A NAME="item_HTML_list_formed_from_array">HTML list formed from array
-
-</A></STRONG><DD>
-<PRE>    &lt;ul&gt;
-    % foreach $item (@list) {
-    &lt;li&gt;&lt;% $item %&gt;
-    % }
-    &lt;/ul&gt;
-</PRE>
-
-<P>
-
-<DT><STRONG><A NAME="item_HTML_list_formed_from_hash">HTML list formed from hash
-
-</A></STRONG><DD>
-<PRE>    &lt;ul&gt;
-    % while (my ($key,$value) = each(%ENV)) {
-    &lt;li&gt;
-    &lt;b&gt;&lt;% $key %&gt;&lt;/b&gt;: &lt;% $value %&gt;
-    % }
-    &lt;/ul&gt;
-</PRE>
-
-<P>
-
-<DT><STRONG><A NAME="item_HTML_table_formed_from_list_of_h">HTML table formed from list of hashes
-
-</A></STRONG><DD>
-<PRE>    &lt;table&gt;
-    &lt;tr&gt;
-    % foreach my $h (@loh) {
-    &lt;td&gt;&lt;% $h-&gt;{foo} %&gt;&lt;/td&gt;
-    &lt;td bgcolor=#ee0000&gt;&lt;% $h-&gt;{bar} %&gt;&lt;/td&gt;
-    &lt;td&gt;&lt;% $h-&gt;{baz} %&gt;&lt;/td&gt;
-    % }
-    &lt;/tr&gt;
-    &lt;/table&gt;
-</PRE>
-
-<P>
-
-For more than three lines of Perl, consider using a &lt;%perl&gt; block.
-
-
-<P>
-
-</DL>
-<P>
-<HR>
-<H2><A NAME="_xxx_"><% xxx %>
-
-</A></H2>
-Most useful for printing out variables, as well as more complex
-expressions. Examples:
-
-
-<P>
-
-<PRE>  Dear &lt;% $name %&gt;: We will come to your house at &lt;% $address %&gt; in the
-  fair city of &lt;% $city %&gt; to deliver your $&lt;% $amount %&gt; dollar prize!
-</PRE>
-
-<P>
-
-<PRE>  The answer is &lt;% ($y+8) % 2 %&gt;.
-</PRE>
-
-<P>
-
-<PRE>  You are &lt;% $age&lt;18 ? 'not' : '' %&gt; permitted to enter this site.
-</PRE>
-
-<P>
-
-For side-effect commands like assignments, consider using a % line or
-&lt;%perl&gt; block instead.
-
-
-<P>
-
-<P>
-<HR>
-<H2><A NAME="_perl_xxx_perl_"><%perl> xxx <%/perl>
-
-</A></H2>
-Useful for Perl blocks of more than a few lines. For a very small block,
-consider using % lines.
-
-
-<P>
-
 <P>
 <HR>
 <H1><A NAME="data_caching">DATA CACHING
@@ -1100,7 +1220,87 @@ are stored and how they are named.
 
 <P>
 
+The 'expire' action can also take multiple keys (as a list reference); this
+can be used in conjunction with the 'keys' action to expire all keys
+matching a particular pattern.
+
+
+<P>
+
+<PRE>    use HTML::Mason::Utils 'access_data_cache';
+    my @keys = access_data_cache (cache_file=&gt;'/usr/local/mason/cache/foo::bar',
+                                  action=&gt;'keys');
+    access_data_cache (cache_file=&gt;'/usr/local/mason/cache/foo::bar',
+                       action=&gt;'expire', key=&gt;[grep(/^sales/,@keys)]);
+</PRE>
+
+<P>
+
 </DL>
+<P>
+<HR>
+<H2><A NAME="busy_locks">Busy Locks
+
+</A></H2>
+The code shown in ``Basic Usage'' above,
+
+
+<P>
+
+<PRE>  my $result = mc_cache(action=&gt;'retrieve');
+  if (!defined($result)) {
+      ... compute $result&gt; ...
+      mc_cache(action=&gt;'store', value=&gt;$result);
+  }
+</PRE>
+
+<P>
+
+can suffer from a kind of race condition for caches that are accessed
+frequently and take a long time to recompute.
+
+
+<P>
+
+Suppose that a particular cache value is accessed five times a second and
+takes three seconds to recompute. When the cache expires, the first process
+comes in, sees that it is expired, and starts to recompute the value. The
+second process comes in and does the same thing. This sequence continues
+until the first process finishes and stores the new value. On average, the
+value will be recomputed and written to the cache 15 times!
+
+
+<P>
+
+The solution here is to have the first process notify the others that it
+has started recomputing. This can be accomplished with the busy_lock flag
+
+
+<P>
+
+<PRE>        mc_cache(action=&gt;'retrieve',busy_lock=&gt;'10sec',...);
+</PRE>
+
+<P>
+
+With this flag, the first process sets a lock in the cache that effectively
+says ``I'm busy recomputing his value, don't bother.'' Subsequent processes
+see the lock and return the old value. The lock is good for 10 seconds (in
+this case) and is ignored after that. Thus the time value you pass to
+busy_lock indicates how long you're willing to allow this component to use
+an expired cache value.
+
+
+<P>
+
+Would some of your caches would benefit from busy locks? One way to find
+out is to turn on cache logging in the Mason system logs. If you see large
+clusters of writes to the same cache in a short time span, then you might
+want to use busy locks when writing to that cache.
+
+
+<P>
+
 <P>
 <HR>
 <H2><A NAME="keeping_in_memory">Keeping In Memory
@@ -1149,8 +1349,7 @@ for a dummy component. It is typically used right at the top of a <CODE>&lt;%per
 
 <P>
 
-<PRE>    ... &lt;primary section, body of page&gt; ...
-    &lt;%perl_init&gt;
+<PRE>    &lt;%perl_init&gt;
         return if mc_cache_self(expire_in=&gt;'3 hours'[, key=&gt;'fookey']);
         ... &lt;rest of perl_init&gt; ...
     &lt;/%perl_init%&gt;
@@ -1159,6 +1358,36 @@ for a dummy component. It is typically used right at the top of a <CODE>&lt;%per
 <P>
 
 <STRONG>mc_cache_self</STRONG> is built on top of <STRONG>mc_cache</STRONG>, so it inherits all the expiration options described earlier.
+
+
+<P>
+
+<P>
+<HR>
+<H2><A NAME="guarantees_or_lack_thereof_">Guarantees (or lack thereof)
+
+</A></H2>
+Mason will make a best effort to cache data until it expires, but will not
+guarantee it. The data cache is not a permanent reliable store in itself;
+you should not place in the cache critical data (e.g. user session
+information) that cannot be regenerated from another source such as a
+database. You should write your code as if the cache might disappear at any
+time. In particular,
+
+
+<P>
+
+o If the 'store' action cannot get a write lock on the cache, it simply
+fails quietly. o Your Mason administrator will be required to remove cache
+files periodically when they get too large; this can happen any time.
+
+
+<P>
+
+On the other hand, expiration in its various forms is guaranteed, because
+Mason does not want you to rely on bad data to generate your content. If
+you use the 'expire' action and it cannot get a write lock, it will repeat
+the attempt several times and finally die with an error.
 
 
 <P>
@@ -1608,7 +1837,7 @@ the object from %ARGS:
 
 <P>
 
-<PRE>  my $query = new CGI (%ARGS);
+<PRE>  my $query = new CGI (\%ARGS);
 </PRE>
 
 <P>

@@ -1,5 +1,5 @@
 .
-/home/swartz/mason/dist/HTML-Mason-0.4/lib/HTML/Mason
+/usr/home/swartz/mason/dist/lib/HTML/Mason
 name ./Components.html
 config.pm ./Admin.html
 mc_caller ./Commands.html
@@ -21,7 +21,6 @@ comp_root ./Interp.html
 mc_file_root ./Commands.html
 do ./Components.html
 source_refer_predicate ./Parser.html
-html ./Components.html
  run the debug file: ./Components.html
 debug_handler_proc ./ApacheHandler.html
 out_method ./Interp.html
@@ -53,7 +52,6 @@ setup ./Admin.html
 code_cache_mode ./Interp.html
 mc_comp_stack ./Commands.html
 component ./Admin.html
-conditional ./Components.html
 use_object_files ./Interp.html
 output_mode ./ApacheHandler.html
 system_log_separator ./Interp.html

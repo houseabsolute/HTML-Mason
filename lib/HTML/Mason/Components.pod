@@ -139,6 +139,77 @@ for advanced users, but a few (like C<mc_comp()>, for calling other
 components) see widespread use. B<L<HTML::Mason::Commands>> is the
 reference for all Mason commands.
 
+=head2 Examples and Recommended Usage
+
+B<% lines>
+
+Most useful for conditional and loop structures - if, while, foreach,
+, etc. - as well as side-effect commands like assignments. Examples:
+
+o Conditional code
+
+    % my $ua = $r->header_in('User-Agent');
+    % if ($ua =~ /msie/i) {
+    Welcome, Internet Explorer users
+    ...
+    % } elsif ($ua =~ /mozilla/i) {
+    Welcome, Netscape users
+    ...
+    % }
+
+o HTML list formed from array
+
+    <ul>
+    % foreach $item (@list) {
+    <li><% $item %>
+    % }
+    </ul>
+
+o HTML list formed from hash
+
+    <ul>
+    % while (my ($key,$value) = each(%ENV)) {
+    <li>
+    <b><% $key %></b>: <% $value %>
+    % }
+    </ul>
+
+o HTML table formed from list of hashes
+
+    <table>
+    <tr>
+    % foreach my $h (@loh) {
+    <td><% $h->{foo} %></td>
+    <td bgcolor=#ee0000><% $h->{bar} %></td>
+    <td><% $h->{baz} %></td>
+    % }
+    </tr>
+    </table>
+
+For more than three lines of Perl, consider using a <%perl> block.
+
+=back
+
+B<&lt;% xxx %&gt;>
+
+Most useful for printing out variables, as well as more complex
+expressions. Examples:
+
+  Dear <% $name %>: We will come to your house at <% $address %> in the
+  fair city of <% $city %> to deliver your $<% $amount %> dollar prize!
+
+  The answer is <% ($y+8) % 2 %>.
+
+  You are <% $age<18 ? 'not' : '' %> permitted to enter this site.
+
+For side-effect commands like assignments, consider using a % line or
+<%perl> block instead.
+
+B<&lt;%perl&gt; xxx &lt;%/perl&gt;>
+
+Useful for Perl blocks of more than a few lines. For a very small
+block, consider using % lines.
+
 =head1 HOW COMPONENTS ARE INVOKED
 
 Components are invoked in two ways: top-level components respond
@@ -244,7 +315,7 @@ context:
 
 =head1 PASSING PARAMETERS
 
-Mason has powerful facilities for passing parameters to components (either from HTTP requests
+This section describes Mason's facilities for passing parameters to components (either from HTTP requests
 or mc_comp calls) and for accessing parameter values inside components.
 
 =head2 In Component Calls
@@ -289,39 +360,24 @@ Component parameters, whether they come from GET/POST or an mc_comp call, can be
 Here, $a, @b, and %c are required arguments; the component generates
 an error if the caller leaves them unspecified. $d, @e, and %f are
 optional arguments; they are assigned the specified default values if
-unspecified.  All the arguments are available as lexical variables in the rest
-of the component.
+unspecified.  All the arguments are available as lexically scoped ("my")
+variables in the rest of the component.
 
 2. %ARGS hash: This variable, always available, contains all of the
 parameters passed to the component.  It is especially handy when
 there are many parameters or when parameter names are determined at
-run-time. %ARGS can be used whether or not you have declared named arguments.
+run-time. %ARGS can be used whether or not you have a <%perl_args>
+section.
 
 Here's how to pass all of a component's parameters to another component:
 
     mc_comp ("template", %ARGS);
 
-=head2 Using @_ instead
-
-If you really don't like named parameters, you can pass a traditional
-list of ordered parameters:
-
-    mc_comp('/mktg/prods.html', 'dog', [2,3,4], {a=>7,b=>8});
-
-and access them as usual through Perl's @_ array:
-
-    my ($scalar, $listref, $hashref) = @_;
-
-In this case no <%perl_args> section is necessary.
-
-However the Mason authors recommend named parameters for the benefits
-of readability, syntax checking, and default value automation.
-
 =head2 Parameter Passing Examples
 
 The following examples illustrate the different ways to pass and receive parameters.
 
-1.  Passing a scalar id with value 5.
+1.  Passing a scalar I<id> with value 5.
 
   In a URL: /my/URL?id=5
   In an mc_comp call: mc_comp ('/my/comp', id => 5)
@@ -331,7 +387,7 @@ The following examples illustrate the different ways to pass and receive paramet
     %id, then an error occurs
   In addition, $ARGS{id} will equal 5.
 
-2.  Passing a list colors with values red, blue, and green.
+2.  Passing a list I<colors> with values red, blue, and green.
 
   In a URL: /my/URL?colors=red&colors=blue&colors=green
   In an mc_comp call: mc_comp ('/my/comp', colors => ['red', 'blue', 'green'])
@@ -341,7 +397,7 @@ The following examples illustrate the different ways to pass and receive paramet
     %colors, then an error occurs
   In addition, $ARGS{colors} will equal ['red', 'blue', 'green'].
 
-3.  Passing a hash grades with pairs Alice => 92 and Bob => 87.
+3.  Passing a hash I<grades> with pairs Alice => 92 and Bob => 87.
 
   In a URL: /my/URL?grades=Alice&grades=92&grades=Bob&grades=87
   In an mc_comp call: mc_comp ('/my/comp', grades => {Alice => 92, Bob => 87})
@@ -349,15 +405,16 @@ The following examples illustrate the different ways to pass and receive paramet
     $grades, then $grades will equal {Alice => 92, Bob => 87}
     @grades, then @grades will equal ('Alice', 92, 'Bob', 87)
     %grades, then %grades will equal (Alice => 92, Bob => 87)
-  In addition, $ARGS {grades} will equal {Alice => 92, Bob => 87}.
-  
+  In addition, $ARGS{grades} will equal {Alice => 92, Bob => 87}.
+
+
 =head1 OTHER PERL SECTIONS
 
-The Perl sections we're about to describe are more specialized than
-the in-line sections described above. Several are tied to phases of
-the component execution sequence, which goes something like this:
+In this section we describe other specialized sections you can place in your component.
+Several are tied to phases of the component execution sequence, which goes
+something like this:
 
-    1. Initialize arguments in HTML::Mason::Commands package
+    1. Initialize arguments
     2. <%perl_init> section
     3. Output HTTP headers (if not output already)
     4. Primary section (HTML + embedded Perl sections)
@@ -434,6 +491,7 @@ xxx contains a list of argument declarations, one per line. Each
 declaration contains a type character ($, @, or %), a name, and
 optionally '=>' followed by a default value. The default value must be
 a valid Perl expression of matching type (scalar, list, hash).
+See L<Accessing Parameters> above for usage and examples.
 
 =item \ at end of line
 
@@ -506,79 +564,6 @@ This works for almost everything, but doesn't let you output
     %mc_out('The tags are <%perl_off> and </%perl_off>.');
 
 =back
-
-=head1 EXAMPLES AND RECOMMENDED USAGE
-
-=head2 % lines
-
-Most useful for conditional and loop structures - if, while, foreach,
-, etc. - as well as side-effect commands like assignments. Examples:
-
-=over
-
-=item Conditional code
-
-    % my $ua = $r->header_in('User-Agent');
-    % if ($ua =~ /msie/i) {
-    Welcome, Internet Explorer users
-    ...
-    % } elsif ($ua =~ /mozilla/i) {
-    Welcome, Netscape users
-    ...
-    % }
-
-=item HTML list formed from array
-
-    <ul>
-    % foreach $item (@list) {
-    <li><% $item %>
-    % }
-    </ul>
-
-=item HTML list formed from hash
-
-    <ul>
-    % while (my ($key,$value) = each(%ENV)) {
-    <li>
-    <b><% $key %></b>: <% $value %>
-    % }
-    </ul>
-
-=item HTML table formed from list of hashes
-
-    <table>
-    <tr>
-    % foreach my $h (@loh) {
-    <td><% $h->{foo} %></td>
-    <td bgcolor=#ee0000><% $h->{bar} %></td>
-    <td><% $h->{baz} %></td>
-    % }
-    </tr>
-    </table>
-
-For more than three lines of Perl, consider using a <%perl> block.
-
-=back
-
-=head2 &lt;% xxx %&gt;
-
-Most useful for printing out variables, as well as more complex
-expressions. Examples:
-
-  Dear <% $name %>: We will come to your house at <% $address %> in the
-  fair city of <% $city %> to deliver your $<% $amount %> dollar prize!
-
-  The answer is <% ($y+8) % 2 %>.
-
-  You are <% $age<18 ? 'not' : '' %> permitted to enter this site.
-
-For side-effect commands like assignments, consider using a % line or
-<%perl> block instead.
-
-=head2 &lt;%perl&gt; xxx &lt;%/perl&gt;
-
-Useful for Perl blocks of more than a few lines. For a very small
-block, consider using % lines.
 
 =head1 DATA CACHING
 

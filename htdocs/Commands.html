@@ -62,59 +62,49 @@ HTTP status code.
 <P>
 
 <DT><STRONG><A NAME="item_mc_cache_action_retrieve_">mc_cache ([action=&gt;'retrieve'], [key=&gt;name],
+B&lt;[keep_in_memory=E&lt;gt&gt;0|1], [expire_if=E&lt;gt&gt;sub])&gt;
 
 </A></STRONG><DD>
-<STRONG>[keep_in_memory=&gt;0|1], [expire_if=&gt;sub])</STRONG>
-
-
-
-
-<P>
-
 <DT><STRONG><A NAME="item_mc_cache_action_store_key_">mc_cache (action=&gt;'store', [key=&gt;name], value=&gt;data,
-[keep_in_memory=&gt;0|1],
+[keep_in_memory=&gt;0|1], B&lt;[expire_at=E&lt;gt&gt;time |
+expire_next=E&lt;gt&gt;'hour'|'day' | expire_in=E&lt;gt&gt;delta])&gt;
 
 </A></STRONG><DD>
-<STRONG>[expire_at=&gt;time | expire_next=&gt;'hour'|'day' |
-expire_in=&gt;delta])</STRONG>
-
-
-
-
-<P>
-
-<DT><STRONG><A NAME="item_mc_cache_self_key_name_kee">mc_cache_self ([key=&gt;name], [keep_in_memory=&gt;0|1],
+<DT><STRONG><A NAME="item_mc_cache_action_expire_key">mc_cache (action=&gt;'expire', [key=&gt;name])
 
 </A></STRONG><DD>
-<STRONG>[expire_if=&gt;sub | expire_at=&gt;time |
-expire_next=&gt;'hour'|'day' | expire_in=&gt;delta])</STRONG>
-
-
-
-
-<P>
-
-<CODE>mc_cache()</CODE> and <CODE>mc_cache_self()</CODE> let you store and
-retrieve the results of computation for improved performance. Each
-component has its own data cache for storing one or more key/value pairs.
-The cache is implemented as a DBM database.
+<CODE>mc_cache()</CODE> lets you store and retrieve the results of
+computation for improved performance. Each component has its own data cache
+for storing one or more key/value pairs. The cache is implemented as a DBM
+database. See the <A HREF="././Components.html#data_caching">data caching</A>
+section of the <EM>Component Developer's Guide</EM> for examples and caching strategies.
 
 
 <P>
 
-The argument to <EM>action</EM> is one of 'retrieve' or 'store'. Default is 'retrieve'.
+The argument to <EM>action</EM> is one of:
 
 
 <P>
 
-The retrieve action returns the cache value if successful, or <CODE>undef</CODE>
+o <EM>retrieve</EM>: returns the cache value if successful, or <CODE>undef</CODE>
 if there was no value or if it has expired.
 
 
 <P>
 
-The store action stores a new cache value, under the given key. The default
-key is 'main'.
+o <EM>store</EM>: stores a new cache value under the given key. Default key is 'main'.
+
+
+<P>
+
+o <EM>expire</EM>: expires a given cache value or values. key may be a single key or a list
+reference. Default key is 'main'.
+
+
+<P>
+
+o <EM>keys</EM>: returns a list of all the keys in the cache.
 
 
 <P>
@@ -162,6 +152,68 @@ at the top of the next hour or day.
 o <EM>expire_if</EM>: calls a given anonymous subroutine and expires if the subroutine returns
 a non-zero value. The subroutine is called with one parameter, the time
 when the cache value was last written.
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_cache_self_key_name_kee">mc_cache_self ([key=&gt;name], [keep_in_memory=&gt;0|1],
+B&lt;[expire_if=E&lt;gt&gt;sub | expire_at=E&lt;gt&gt;time |
+expire_next=E&lt;gt&gt;'hour'|'day' | expire_in=E&lt;gt&gt;delta])&gt;
+
+</A></STRONG><DD>
+Uses mc_cache to cache the entire output of the current component. It is
+typically used right at the top of a <CODE>&lt;%perl_init%&gt;</CODE> section:
+
+
+<P>
+
+<PRE>    &lt;%perl_init&gt;
+        return if mc_cache_self(expire_in=&gt;'3 hours'[, key=&gt;'fookey']);
+        ... &lt;rest of perl_init&gt; ...
+    &lt;/%perl_init%&gt;
+</PRE>
+
+<P>
+
+The ``return if'' is necessary. mc_cache_self handles both the retrieve and
+store, so you can pass both kinds of options to it. See mc_cache for an
+explanation of options.
+
+
+<P>
+
+mc_cache_self uses a bit of magic to accomplish everything in one line. You
+don't really need to understand this, but if you're curious, here's how it
+works:
+
+
+<P>
+
+o A component foo calls mc_cache_self for the first time.
+
+
+<P>
+
+o mc_cache_self sees that the cache is empty and calls foo again
+recursively, with a STORE option to capture its content into a buffer.
+
+
+<P>
+
+o foo again calls mc_cache_self; this time it returns 0 immediately.
+
+
+<P>
+
+o foo goes about its business and generates content into the mc_cache_self
+buffer.
+
+
+<P>
+
+o When control is returned to mc_cache_self, it stores the content in the
+cache and also outputs the content normally. Finally mc_cache_self returns
+1, which in turn causes foo to return immediately.
 
 
 <P>

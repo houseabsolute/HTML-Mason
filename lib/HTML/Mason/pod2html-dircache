@@ -1,27 +1,29 @@
 .
-/home/swartz/mason/dist/HTML-Mason-0.4/lib/HTML/Mason
-ApacheHandler ./ApacheHandler.pm:./ApacheHandler.pod:
+/usr/home/swartz/mason/dist/lib/HTML/Mason
+ApacheHandler ./ApacheHandler.pod:./ApacheHandler.pm:
 HTML::Mason::Components ./Components.pod:
 Preview ./Preview.pm:
 HTML::Mason::Admin ./Admin.pod:
 Components ./Components.pod:
 HTML::Mason ./Mason.pod:
+HTML::Mason::CVS ./CVS:
 HTML::Mason::Parser ./Parser.pm:./Parser.pod:
 Admin ./Admin.pod:
 HTML::Mason::Tools ./Tools.pm:
 HTML::Mason::Utils ./Utils.pm:
+CVS ./CVS:
 HTML::Mason::Commands ./Commands.pm:./Commands.pod:
 HTML::Mason::Interp ./Interp.pm:./Interp.pod:
 Parser ./Parser.pm:./Parser.pod:
-HTML::Mason::Config ./Config.pm:
 Tools ./Tools.pm:
 Utils ./Utils.pm:
+HTML::Mason::Config ./Config.pm:
 Commands ./Commands.pm:./Commands.pod:
 Interp ./Interp.pm:./Interp.pod:
 HTML::Mason::FakeApache ./FakeApache.pm:
 Config ./Config.pm:
 HTML::Mason::Mason ./Mason.pod:
 FakeApache ./FakeApache.pm:
-HTML::Mason::ApacheHandler ./ApacheHandler.pm:./ApacheHandler.pod:
+HTML::Mason::ApacheHandler ./ApacheHandler.pod:./ApacheHandler.pm:
 HTML::Mason::Preview ./Preview.pm:
 Mason ./Mason.pod:
