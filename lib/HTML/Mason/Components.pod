@@ -280,11 +280,40 @@ e.g. S<C<player=E<gt>'M. Jordan'>>.
 The optional I<STORE> parameter takes a scalar reference as an
 argument, and tells the component to direct its output into the named
 variable instead of standard output. This is analogous to the difference between
-sprintf and printf. For example:
-
-    <& /shared/masthead, color=>'salmon', STORE=>\$mh_text &>
+sprintf and printf.
 
 =back
+
+Mason uses a bit of magic parsing to eliminate the need for quotes
+around the component path in common cases. If the first character is
+one of [A-Za-z0-9/_.], the component path is assumed to be a literal
+string running up to the first comma or &>. Otherwise, the
+component path is evaluated as an expression.
+
+Here are some examples:
+
+    # relative component paths
+    <& topimage &>
+    <& tools/searchbox &>
+
+    # absolute component path
+    <& /shared/masthead, color=>'salmon' &>
+
+    # use STORE option to place output in variable
+    <& /shared/masthead, color=>'salmon', STORE=>\$mh_text &>
+
+    # this component path MUST have quotes because it contains a comma
+    <& "sugar,eggs", mix=>1 &>
+
+    # variable component path
+    <& $comp &>
+    
+    # variable component and arguments
+    <& $comp, %args &>
+
+    # you can use arbitrary expression for component path, but it cannot
+    # begin with a letter or number; delimit with () to remedy this
+    <& (rand(2) ? 'thiscomp' : 'thatcomp'), id=>123 &>
 
 =head2 Return Values and Context
 
@@ -314,11 +343,12 @@ provide an empty default return value. To return your own value from a
 component, you I<must> use an explicit C<return> statement.
 
 Generally components are divided into two types: those that output
-HTML, and those that return a value.  There is very little reason for
-a component to do both.  For example, it would not be very friendly
+HTML, and those that return a value. There is very little reason for
+a component to do both. For example, it would not be very friendly
 for C<isNetscape> to output "hi Mom" while it was computing its value,
-thereby surprising the C<if> statement! Conversely, anything returned
-by C</shared/masthead> above would be ignored by the <& &> tag.
+thereby surprising the C<if> statement! Conversely, any value returned
+by an HTML component would typically be discarded by the <& &> tag
+that invoked it.
 
 Prior to version 0.6, mc_comp was the only way to call components even
 for outputting HTML:
@@ -356,10 +386,11 @@ the GET/POST values and makes them available to the component as
 parameters.
 
 In fact, internally Mason just treats an HTTP request as a first
-component call! In this case, assuming the component and document
-roots are the same:
+component call! The URL above is effectively translated to:
 
-    <& /mktg/prods.html, str=>'dog', lst=>[2,3,4] &>
+    mc_comp('/mktg/prods.html', str=>'dog', lst=>[2,3,4])
+
+assuming that component root = document root.
 
 =head2 Accessing Parameters
 

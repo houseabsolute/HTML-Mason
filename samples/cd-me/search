@@ -1,4 +1,4 @@
-<%mc_comp('Template',top=>1)%>
+<& Template,top=>1 &>
 
 Search by one of the following methods:<br>
 
@@ -14,5 +14,5 @@ Search by one of the following methods:<br>
 <input type="submit" value="by title">
 </form>
 
-<%mc_comp('Template',bottom=>1)%>
+<& Template,bottom=>1 &>
 

@@ -6,14 +6,14 @@ use Getopt::Std;
 use IO::File;
 use strict;
 
-my ($LOWER, $QUIET, $TEST, $UPPER);
+my ($HELP, $LOWER, $QUIET, $TEST, $UPPER);
 
 sub convert
 {
-    my ($file) = @_;
+    my ($file,$path) = @_;
     my $buf;
     my $infh = new IO::File $file;
-    if (!$infh) { warn "cannot read $file: $!"; return }
+    if (!$infh) { warn "cannot read $path: $!"; return }
     { local $/ = undef; $buf = <$infh> }
 
     my $c = 0;
@@ -42,36 +42,63 @@ sub convert
     # Convert <% mc_comp ... %> to <& ... &>
     #
     if (!$TEST) {
-	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*\'([^\']+)\'\s*(.*?)\s*\)%>} {<& $1$2 &>}g);
-	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*\"([^\"]+)\"\s*(.*?)\s*\)%>} {<& $1$2 &>}g);
+	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*\'([^\']+)\'\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g);
+	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*\"([^\"]+)\"\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g);
+	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g);
     } else {
-	while ($buf =~ m{(<%\s*mc_comp\s*\(\s*\'([^\']+)\'\s*(.*?)\s*\)%>)}g) {
+	while ($buf =~ m{(<%\s*mc_comp\s*\(\s*\'([^\']+)\'\s*(.*?)\s*\)\s*%>)}g) {
 	    $report->($1,"<& $2$3 &>");
 	}
-	while ($buf =~ m{(<%\s*mc_comp\s*\(\s*\"([^\"]+)\"\s*(.*?)\s*\)%>)}g) {
+	while ($buf =~ m{(<%\s*mc_comp\s*\(\s*\"([^\"]+)\"\s*(.*?)\s*\)\s*%>)}g) {
 	    $report->($1,"<& $2$3 &>");
+	}
+        while ($buf =~ m{(<%\s*mc_comp\s*\((.*?)\s*\)\s*%>)}g) {
+	    $report->($1,"<& $2 &>");
 	}
     }
 
     if (@changes) {
-	print scalar(@changes)." substitutions in $file:\n";
+	print scalar(@changes)." substitutions in $path:\n";
 	print join("\n",@changes)."\n\n";
     }
     
     if ($c) {
-	print "$c substitutions in $file\n" if !$QUIET;
+	print "$c substitutions in $path\n" if !$QUIET;
 	my $outfh = new IO::File ">$file";
-	if (!$outfh) { warn "cannot write $file: $!"; return }
+	if (!$outfh) { warn "cannot write $path: $!"; return }
 	$outfh->print($buf);
     }
 }
 
 my $usage = <<EOF;
-Usage: $0 -lqtu dir...
+Usage: $0 -hlqtu <directory> [<directory>...]
+-h: Display help message and exit
 -l: Write all section names as lowercase (<%init>, etc.)
 -q: Quiet mode, do not report normal processing of files
--t: Do not actually change files, just summarize what changes would be made
+-t: Do not actually change files, just report what changes would be made
 -u: Write all section names as uppercase (<%INIT>, etc.)
+EOF
+
+my $helpmsg = <<EOF;
+This utility converts existing components to use two new syntactic
+constructs introduced in Mason 0.6.
+
+1.  Long section names (<%perl_init>, <%perl_args>, etc.) are
+converted to short names (<%init>, <%args>, etc.) You have the option
+of also standardizing to uppercase (with -u) or lowercase (with -l);
+by default the case will be kept the same.
+
+2. Component calls of the form
+    <% mc_comp('path', args...) %>
+are converted to
+    <& path, args... &>
+We try to recognize the most common variations; less common ones will
+need to be converted manually.
+
+All directories will be traversed recursively.  We STRONGLY recommend
+that you backup your components, and/or use the -t flag to preview,
+before running this program for real.  Files are modified
+destructively and no automatic backups are created.
 EOF
 
 sub usage
@@ -83,11 +110,13 @@ sub usage
 sub main
 {
     my (%opts);
-    getopts('lqtu',\%opts);
-    ($LOWER, $QUIET, $TEST, $UPPER) = @opts{qw(l q t u)};
+    getopts('hlqtu',\%opts);
+    ($HELP, $LOWER, $QUIET, $TEST, $UPPER) = @opts{qw(h l q t u)};
+    if ($HELP) { print "$helpmsg\n$usage"; exit }
+    if (!@ARGV) { print "$usage"; exit }
     my @dirs = @ARGV;
     my $sub = sub {
-	if (-f $_) { convert("$File::Find::dir/$_") }
+	if (-f $_) { convert($_,"$File::Find::dir/$_") }
     };
     find($sub,@dirs);
 }

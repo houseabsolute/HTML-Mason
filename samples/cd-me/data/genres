@@ -1,4 +1,4 @@
-<%PERL_INIT>
+<%INIT>
 return {
           'country' => [
                          1130764,
@@ -173,4 +173,4 @@ return {
                       1023910
                     ]
         };
-</%PERL_INIT>
+</%INIT>

@@ -1,4 +1,4 @@
-<%PERL_INIT>
+<%INIT>
 return {
           1131119 => {
                        'genre' => 'jazz',
@@ -1149,4 +1149,4 @@ return {
                        'artist' => 'Kathy Mattea'
                      }
         };
-</%PERL_INIT>
+</%INIT>

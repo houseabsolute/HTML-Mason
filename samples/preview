@@ -1,4 +1,4 @@
-<%perl_init>
+<%init>
 #
 # Main previewer interface. See admin manual for details on setting up previewer.
 #
@@ -42,7 +42,7 @@ my %versionsMap;
 foreach (@versions) { $versionsMap{$_->{name}} = $_ }
 
 
-</%perl_init>
+</%init>
 
 %if ($mode eq 'home') {
 <html>
@@ -228,7 +228,7 @@ mc_abort();
 %}
 <%mc_comp($thisComp,previewPort=>$previewPort)%>
 %}
-<%perl_init>
+<%init>
 my ($i,%conf,$href,$query,$viewUrl,$setting,@settings);
 my $userName = $r->connection->user || 'anonymous';
 my $thisComp = (mc_call_stack)[0];
@@ -360,10 +360,10 @@ if ($mode eq 'save') {
 	}
     }
 }
-</%perl_init>
-<%perl_args>
+</%init>
+<%args>
 $previewPort=>undef
 $mode=>'home'
 $action=>undef
 $initialUri=>undef
-</%perl_args>
+</%args>

@@ -3,7 +3,7 @@ package HTML::Mason;
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
-$HTML::Mason::VERSION = '0.5.1';
+$HTML::Mason::VERSION = '0.6';
 
 use HTML::Mason::Parser;
 use HTML::Mason::Interp;

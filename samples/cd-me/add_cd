@@ -1,4 +1,4 @@
-<%mc_comp('Template',top=>1)%>
+<& Template,top=>1 &>
 
 You have selected:<br>
 <%$rec->{title}%>, by <%$rec->{artist}%><br>
@@ -6,12 +6,12 @@ Genre: <%$rec->{genre}%><br>
 Price: <%$rec->{price}%><br>
 <a href="kart?action=add&id=<%$id%>">Add to your Shopping Kart</a><P>
 
-<%mc_comp('Template',bottom=>1)%>
+<& Template,bottom=>1 &>
 
-<%PERL_INIT>
+<%INIT>
 my %cds = %{mc_comp('data/cds')};
 my $rec = $cds{$id};
-</%PERL_INIT>
-<%PERL_ARGS>
+</%INIT>
+<%ARGS>
 $id
-</%PERL_ARGS>
+</%ARGS>

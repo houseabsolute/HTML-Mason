@@ -1,4 +1,4 @@
-<%mc_comp('Template',top=>1)%>
+<& Template,top=>1 &>
 
 <b>Searching by <%$mode%></b><P>
 
@@ -11,15 +11,15 @@
 % } elsif ($mode eq "title" && scalar @found > 0) {
 <table border=1><tr><th>Artist</th><th>Title</th><th>Price</th></tr>
 % foreach my $id (@found) {
-<%mc_comp('tools/cd_details',id=>$id,cds=>\%cds,table=>1)%>
+<& tools/cd_details,id=>$id,cds=>\%cds,table=>1 &>
 % }
 </table>
 % } else {
 <em>Sorry, but no results were found</em><p>
 % }
-<%mc_comp('Template',bottom=>1)%>
+<& Template,bottom=>1 &>
 
-<%PERL_INIT>
+<%INIT>
 my (@found);
 my %cds = %{mc_comp('data/cds')};
 my %artists = %{mc_comp('data/artists')};
@@ -32,11 +32,11 @@ if ($mode eq "title") {
 } else {
 
 }
-</%PERL_INIT>
+</%INIT>
 
-<%PERL_ARGS>
+<%ARGS>
 $sstring=>undef
 $genre=>undef
 $mode=>undef
-</%PERL_ARGS>
+</%ARGS>
 

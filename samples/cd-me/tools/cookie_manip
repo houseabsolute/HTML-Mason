@@ -1,4 +1,4 @@
-<%PERL_INIT>
+<%INIT>
 my ($cookie,$new_cookie_header,$new_cookie);
 # getting current cookie value
 my $cookie_header = $r->header_in('Cookie');
@@ -23,10 +23,10 @@ if ($add) {
 $new_cookie_header = "CD-ME=$new_cookie;path=/;expires=Wednesday, 09-Nov-99 23:12:40 GMT";
 $r->header_out('Set-cookie'=>$new_cookie_header);
 
-</%PERL_INIT>
-<%PERL_ARGS>
+</%INIT>
+<%ARGS>
 $add=>undef
 $remove=>undef
 $retrieve=>undef
 $purge=>undef
-</%PERL_ARGS>
+</%ARGS>

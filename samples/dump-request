@@ -137,13 +137,13 @@ pairs are returned, i.e. it can be used like this:
    $query = $r->args;
    %in    = $r->args;
 </pre>
-<%perl_doc>
+<%doc>
 <a name="headers_in">
 $r->headers_in 
 The $r->headers_in method will return a %hash of client request headers. This can be used to initialize
 a perl hash, or one could use the $r->header_in() method (described below) to retrieve a specific
 header value directly. 
-</%perl_doc>
+</%doc>
 
 <a name="header_in">
 $r->header_in( $header_name, [$value] )

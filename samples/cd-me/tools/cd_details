@@ -4,12 +4,12 @@
 <%$rec->{artist}%>: <%$rec->{title}%> for $<%$rec->{price}%>
 %}
 
-<%PERL_ARGS>
+<%ARGS>
 $id
 %cds
 $table=>undef
-</%PERL_ARGS>
-<%PERL_INIT>
+</%ARGS>
+<%INIT>
 my $rec = $cds{$id};
-</%PERL_INIT>
+</%INIT>
 

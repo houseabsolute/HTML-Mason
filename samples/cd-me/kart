@@ -1,4 +1,4 @@
-<%mc_comp('Template',top=>1)%>
+<& Template,top=>1 &>
 
 % if ($action eq "add") {
 
@@ -32,9 +32,9 @@ You have deleted the following CD from your Shopping Kart:<P>
     <h3>Shopping Kart Reset to 0 items</h3>
 % }
 
-<%mc_comp('Template',bottom=>1)%>
+<& Template,bottom=>1 &>
 
-<%PERL_INIT>
+<%INIT>
 my ($cookie,@ids);
 my %cds = %{mc_comp('data/cds')};
 if ($action eq "add") {
@@ -48,8 +48,8 @@ if ($action eq "add") {
    mc_comp('tools/cookie_manip',purge=>1);
 }
 
-</%PERL_INIT>
-<%PERL_ARGS>
+</%INIT>
+<%ARGS>
 $id=>undef
 $action=>undef
-</%PERL_ARGS>
+</%ARGS>

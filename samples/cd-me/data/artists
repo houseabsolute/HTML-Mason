@@ -1,4 +1,4 @@
-<%PERL_INIT>
+<%INIT>
 return {
           'Ornette Coleman' => [
                                  2073435,
@@ -367,4 +367,4 @@ return {
                          1602291
                        ]
         };
-</%PERL_INIT>
+</%INIT>

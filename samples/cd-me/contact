@@ -1,4 +1,4 @@
-<%mc_comp('Template',top=>1)%>
+<& Template,top=>1 &>
 
 <h3>Contact:</h3>
 <PRE>
@@ -8,4 +8,4 @@
     Email: fbar@cd-me.com
 
 </PRE>
-<%mc_comp('Template',bottom=>1)%>
+<& Template,bottom=>1 &>

@@ -1,10 +1,10 @@
-<%mc_comp('Template',top=>1)%>
+<& Template,top=>1 &>
 <table border=1><tr><th>Artist</th><th>Title</th><th>Price</th></tr>
 % if ($artist) {
 % $artist=~s/_/ /g;
 % my @ids = @{ $artists{$artist} };
 %  foreach my $id (@ids) {
-<%mc_comp('tools/cd_details',id=>$id,cds=>\%cds,table=>1)%> 
+<& tools/cd_details,id=>$id,cds=>\%cds,table=>1 &> 
 %  }
 </table>
 
@@ -16,14 +16,14 @@
 %   }
 % }
 
-<%mc_comp('Template',bottom=>1)%>
+<& Template,bottom=>1 &>
 
-<%PERL_INIT>
+<%INIT>
 my ($artistlink);
 my %cds = %{mc_comp('data/cds')};
 my %artists = %{mc_comp('data/artists')};
-</%PERL_INIT>
+</%INIT>
 
-<%PERL_ARGS>
+<%ARGS>
 $artist=>undef
-</%PERL_ARGS>
+</%ARGS>
