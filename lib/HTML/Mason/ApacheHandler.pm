@@ -154,17 +154,20 @@ sub valid_params {
 # We try to create the objects as soon as possible, before Apache
 # forks.  This leads to a memory savings as the objects (or parts of
 # them) may stay in shared memory.
+
 __PACKAGE__->import;
 sub import
 {
     my $pack = __PACKAGE__;
 
-    if ( $pack->_in_apache_conf_file )
+    # can't do this stuff for MultipleConfig cause the classes may
+    # different for each config section
+    if ( $pack->_in_simple_conf_file )
     {
-	$pack->make_ah() unless $pack->get_param('MultipleConfig');
+	$pack->make_ah();
 
 	my $interp_class = $pack->get_param('interp_class');
-	foreach ( $interp_class, $pack->get_param('compiler_class') )
+	foreach ($interp_class)
 	{
 	    eval "use $_";
 	    die $@ if $@;
@@ -184,18 +187,17 @@ sub import
     }
 }
 
-# This is my best guess as to whether we are being configured via the
-# conf file or not.  Without a comp root it will blow up sooner or
-# later anyway.  This may not be the case in the future though.
 #
-# If there is no comp root but MultipleConfig is set, then the comp
-# roots are being set per section (Directory, Location, etc).
-sub _in_apache_conf_file
+# This is my best guess as to whether we are being configured via the
+# conf file without MultipleConfig set.  Without a comp root it will
+# blow up sooner or later anyway.  This may not be the case in the
+# future though.
+#
+sub _in_simple_conf_file
 {
     my $self = shift;
 
-    return $ENV{MOD_PERL} && ( $self->_get_string_param('CompRoot') ||
-			       $self->get_param('MultipleConfig') );
+    return $ENV{MOD_PERL} && $self->_get_string_param('CompRoot');
 }
 
 sub make_ah
@@ -206,6 +208,12 @@ sub make_ah
     return $AH if $AH && ! $package->get_param('MultipleConfig');
 
     my %p = $package->get_config($package->valid_params);
+
+    eval "use $p{interp_class}";
+    die $@ if $@;
+
+    eval "use $p{compiler_class}";
+    die $@ if $@;
 
     $AH = $package->new( interp => $package->_make_interp($p{interp_class}, $p{compiler_class}),
 			 %p,
