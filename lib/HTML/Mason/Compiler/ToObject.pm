@@ -6,7 +6,7 @@ package HTML::Mason::Compiler::ToObject;
 
 use strict;
 
-require HTML::Mason::Compiler;
+use HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
 use Params::Validate qw( :all );
 
@@ -30,10 +30,11 @@ my %valid_params =
      use_strict => { parse => 'boolean', type => SCALAR, default => 1 },
     );
 
-sub valid_params {
+sub allowed_params {
     my $self = shift;
-    return { %{$self->SUPER::valid_params}, %valid_params };  # Hmmm
+    return { %{$self->SUPER::allowed_params}, %valid_params };  # Hmmm
 }
+sub validation_spec { return shift->allowed_params }
 
 sub compile
 {

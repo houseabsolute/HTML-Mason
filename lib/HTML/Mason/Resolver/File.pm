@@ -18,10 +18,11 @@ my %valid_params =
     (
      comp_root    => { parse => 'list', type => SCALAR|ARRAYREF },
     );
-sub valid_params {
+sub allowed_params {
     my $self = shift;
-    return {%{$self->SUPER::valid_params}, %valid_params};
+    return {%{$self->SUPER::allowed_params}, %valid_params};
 }
+sub validation_spec { return shift->allowed_params }
 
 # For subobject auto-creation
 my %creates_objects = ();

@@ -48,9 +48,12 @@ sub create_subobjects
 	next if exists $args{$name};
 	
 	# Else, extract the parameters for its creation, then create it
-	my $c_package = delete $args{"${name}_package"} || $default_pack;
+	my $c_package = delete $args{"${name}_class"} || $default_pack;
 	next unless $c_package;  # might be optional
 	#warn "---- going to create '$c_package'\n";
+
+	eval "use $c_package";
+	die $@ if $@;
 
 	# Extract from %args the parameters for creating a $c_package
 	my %these_args = get_subargs($c_package, \%args);
@@ -71,8 +74,8 @@ sub get_subargs {
 	if (exists $superargs->{$name}) {  # Not creating it, so don't accept its params
 	    $subargs{$name} = $superargs->{$name};
 
-	} elsif (exists $superargs->{"${name}_package"}) { # Accept all its params
-	    %subargs = (%subargs, get_subargs($superargs->{"${name}_package"}, $superargs));
+	} elsif (exists $superargs->{"${name}_class"}) { # Accept all its params
+	    %subargs = (%subargs, get_subargs($superargs->{"${name}_class"}, $superargs));
 
 	} elsif ($default) { # Accept params for default package
 	    %subargs = (%subargs, get_subargs($default, $superargs));
@@ -80,7 +83,7 @@ sub get_subargs {
     }
 
     # Finally, accept our own parameters too.
-    foreach my $key (keys %{$package->valid_params}) {
+    foreach my $key (keys %{$package->validation_spec}) {
 	$subargs{$key} = $superargs->{$key} if exists $superargs->{$key};
     }
 

@@ -47,7 +47,8 @@ my %valid_params =
      source_ref_start   => {type => SCALAR,  optional => 1},   # legacy, left in for pre-0.8 obj files
     );
 
-sub valid_params { \%valid_params }
+sub allowed_params { \%valid_params }
+sub validation_spec { return shift->allowed_params }
 
 my $comp_count = 0;
 
@@ -55,7 +56,7 @@ sub new
 {
     my $class = shift;
     my $self = bless {
-		      validate(@_, $class->valid_params),
+		      validate(@_, $class->validation_spec),
 		      designator => undef,
 		     }, $class;
 

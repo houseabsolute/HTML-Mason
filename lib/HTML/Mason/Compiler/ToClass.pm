@@ -27,10 +27,11 @@ my %valid_params =
      comp_class    => { parse => 'string', type => SCALAR,   default => 'HTML::Mason::Component' },
     );
 
-sub valid_params {
+sub allowed_params {
     my $self = shift;
     return { %{$self->SUPER::valid_params}, %valid_params };  # Hmmm
 }
+sub validation_spec { return shift->allowed_params }
 
 sub compiled_component
 {

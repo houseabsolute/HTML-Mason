@@ -29,12 +29,13 @@ my %valid_params =
      filter => { type => CODEREF, optional => 1 },
     );
 
-sub valid_params { \%valid_params }
+sub allowed_params { \%valid_params }
+sub validation_spec { return shift->allowed_params }
 
 sub new
 {
     my $class = shift;
-    my $self = bless { validate( @_, $class->valid_params ) }, $class;
+    my $self = bless { validate( @_, $class->validation_spec ) }, $class;
 
     bless $self, $class;
     $self->_initialize;

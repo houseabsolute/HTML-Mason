@@ -29,12 +29,14 @@ my %valid_params =
     (
      allowed_globals      => { parse => 'list',   type => ARRAYREF, default => [] },
      default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
-     lexer                => { isa => 'HTML::Mason::Lexer' },
+     lexer                => { isa => 'HTML::Mason::Lexer', optional => 1 },
+     lexer_class          => { parse => 'string', type => SCALAR,   default => 'HTML::Mason::Lexer' },
      preprocess           => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_perl     => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1 },
     );
-sub valid_params { \%valid_params }
+sub allowed_params { \%valid_params }
+sub validation_spec { return shift->allowed_params }
 
 # For subobject auto-creation
 my %creates_objects = ( lexer => 'HTML::Mason::Lexer' ); # Default class
@@ -46,7 +48,7 @@ sub new
 
     # Must assign to an actual array for validate() to work
     my @args = create_subobjects($class, @_);
-    my $self = bless {validate(@args, $class->valid_params)}, $class;
+    my $self = bless {validate(@args, $class->validation_spec)}, $class;
 
     $self->set_allowed_globals( @{$self->{allowed_globals}} );
 

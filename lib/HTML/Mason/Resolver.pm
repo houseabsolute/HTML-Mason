@@ -10,7 +10,8 @@ use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
 my %valid_params = ();
-sub valid_params { \%valid_params }
+sub allowed_params { \%valid_params }
+sub validation_spec { return shift->allowed_params }
 
 #my %creates_objects = ();
 #sub creates_objects { \%creates_objects }
@@ -18,7 +19,7 @@ sub valid_params { \%valid_params }
 sub new
 {
     my $class = shift;
-    return bless {validate(@_, $class->valid_params)}, $class;
+    return bless {validate(@_, $class->validation_spec)}, $class;
 }
 
 sub resolve {
