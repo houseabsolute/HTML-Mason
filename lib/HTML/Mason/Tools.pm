@@ -183,6 +183,7 @@ sub load_pkg {
 
 sub taint_is_on
 {
+    local $^W;
     return not eval { "$0$^X" && kill 0; 1 };
 }
 
