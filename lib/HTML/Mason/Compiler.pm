@@ -193,8 +193,6 @@ sub text
     my $self = shift;
     my %p = @_;
 
-    $p{text} =~ s/\\\n//g;
-
     $self->postprocess_text->(\$p{text}) if $self->postprocess_text;
 
     $p{text} =~ s,(['\\]),\\$1,g;
@@ -389,11 +387,13 @@ sub perl_line
 sub _add_body_code
 {
     my $self = shift;
+    my $code = shift;
 
     my $line = $self->lexer->line_count;
     my $file = $self->lexer->name;
+    my $comment = "#line $line $file\n";
 
-    $self->{current_comp}{body} .= join '', "#line $line $file\n", shift;
+    $self->{current_comp}{body} .= join '', $comment, $code;
 }
 
 sub dump
