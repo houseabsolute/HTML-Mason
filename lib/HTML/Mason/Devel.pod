@@ -968,7 +968,7 @@ that uses the component. However, if the component is preloaded, this
 code will only execute once in the parent.  Unless you have total control
 over what components will be preloaded, it is safest to avoid
 initializing variables that can't survive a fork(), e.g. DBI handles.
-Use code like this to initialize such variables in the C<< <%init> >>
+Use code like this to declare such variables in the C<< <%init> >>
 section:
 
     <%once>
