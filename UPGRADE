@@ -134,9 +134,9 @@ instructions on how to replace access_data_cache.
 
 Semantics
 
-- In older versions of Mason, calls to $m->flush_buffer when output
-needed to go through a <%filter>.  In 1.1x, the filter may be called
-multiple times, each time with new output.
+- In older versions of Mason, calls to $m->flush_buffer were
+ineffective when output needed to go through a <%filter>.  In 1.1x,
+the filter may be called multiple times, each time with new output.
 
 
 Component Syntax
@@ -152,9 +152,9 @@ bin/convert0.6.pl can help with this.
 - The |h escape flag now uses HTML::Entities::encode instead of just
 encoding <, >, ", and &.  This module escapes control and high-ascii
 characters properly for ISO-8859-1 pages. However, it will wreak
-havoc with different encodings. You can get the 1.0x behavior by
-setting the html_escaping parameter to 'lite'; you can also define
-your own arbitrary escaping behavior using $interp->set_escape.
+havoc with different encodings. You can get the 1.0x behavior with
+
+   $ah->interp->set_escape( h => \&HTML::Mason::Escapes::basic_html_escape );
 
 - The run_count and first_time component object methods have been
 deprecated, as they cannot be implemented reliably (see bug #209).
@@ -170,9 +170,6 @@ deprecated but will continue to work for a while.
 
 - The Interp class's time method and current_time parameters are
 deprecated but will continue to work for a while.
-
-- The probably-little-used $m->call_self no longer exists. It may be
-brought back in an upcoming release if it can be supported cleanly.
 
 VERSION 0.85
 
