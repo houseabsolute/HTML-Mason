@@ -1,202 +1,29 @@
 use strict;
-use 5.005;
 
-use ExtUtils::MakeMaker;
-use Getopt::Long;
+unless (eval "use Module::Build::Compat 0.02; use Module::Build 0.20; 1" ) {
+    print "This module requires Module::Build 0.20 to install itself.\n";
 
-use vars qw(%APACHE);
+    require ExtUtils::MakeMaker;
+    my $yn = ExtUtils::MakeMaker::prompt
+        ('  Install Module::Build from CPAN?', 'y');
 
-my %opts;
-GetOptions( \%opts, 'no-prompts' );
+    if ($yn =~ /^y/i) {
+        require Cwd;
+        require File::Spec;
+        require CPAN;
 
-require 'install/apache_tests_helper.pl';
-require 'install/assisted_install_helper.pl';
+        # Save this 'cause CPAN will chdir all over the place.
+        my $cwd = Cwd::cwd();
+        my $makefile = File::Spec->rel2abs($0);
 
-eval { require HTML::Mason };
+        CPAN::Shell->install('Module::Build::Compat');
 
-unless ($@)
-{
-    if ( $HTML::Mason::VERSION < 1.09 )
-    {
-	print <<"EOF";
-
-It looks like you have an older version of Mason already installed on
-your machine (version $HTML::Mason::VERSION).  This version is not backwards
-compatible with versions of Mason before version 1.10.
-Please read the UPGRADE document before continuing with this
-installation.
-
-EOF
-
-	unless ( $opts{'no-prompts'} )
-	{
-	    my $yn = prompt('Continue with installation?', 'N');
-
-	    exit unless $yn =~ /y(?:es)?/i;
-	}
+        chdir $cwd or die "Cannot chdir() back to $cwd: $!";
+        exec $^X, $makefile, @ARGV;  # Redo now that we have Module::Build
+    } else {
+        warn " *** Cannot install without Module::Build.  Exiting ...\n";
+        exit 1;
     }
 }
-
-# These are required modules.
-my %prereq = ( 'File::Spec' => {version => 0.8,
-				where => "CPAN/modules/by-module/File/File-Spec-x.x.tar.gz"},
-	       'Params::Validate' => {version => 0.59,
-				      where => "CPAN/modules/by-authors/id/D/DR/DROLSKY/Params-Validate-x.x.tar.gz"},
-	       'Exception::Class' => {version => 1.14,
-				      where => "CPAN/modules/by-module/Exception/Exception-Class-x.x.tar.gz"},
-	       'Cache::Cache' => {version => 1.00,
-				  where => "CPAN/modules/by-authors/id/D/DC/DCLINTON/Cache-Cache-x.x.tar.gz"},
-               'Class::Container' => {version => 0.07,
-				      where => "CPAN/modules/by-authors/id/K/KW/KWILLIAMS/Class-Container-x.x.tar.gz"},
-               'Scalar::Util' => {version => 1.01,
-                                  where => "CPAN/modules/by-authors/id/G/GB/GBARR/Scalar-List-Utils-x.x.tar.gz"},
-               'CGI' => {version => 2.46,
-                         where => "CPAN/modules/by-authors/id/G/GB/GBARR/CGI.pm-x.x.tar.gz"},
-	     );
-
-foreach (keys %prereq) {
-    chk_version($_ => $prereq{$_}{version}) or
-	warn  "\n"
-	    . "*** Mason requires version $prereq{$_}{version} or later of $_\n"
-	    . "    from $prereq{$_}{where}\n\n";
-    $prereq{$_} = $prereq{$_}{version};
-}
-
-eval { require mod_perl };
-my $has_only_mp2 = $@ && eval { require Apache2 };
-
-unless ( ( $@ || $^O =~ /mac|darwin/ ) || $has_only_mp2 )
-{
-    chk_version('Apache::Request' => '0.32') or
-	warn  "\n"
-	    . "*** If you plan to use Mason with mod_perl,\n"
-	    . "    Mason requires version 0.32, or later, of Apache::Request\n"
-	    . "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
-
-    $prereq{'Apache::Request'} = 0.32;
-}
-
-eval { require Apache::Filter };
-
-unless ( $@ || $Apache::Filter::VERSION >= 1.021 )
-{
-    warn  "\n"
-        . "*** If you plan to use Mason with Apache::Filter \n"
-        . "    you will need to install Apache::Filter 1.021 or newer.\n";
-
-    $prereq{'Apache::Filter'} = 1.021;
-}
-
-setup_mod_perl_tests() if is_maintainer() && ! $opts{'no-prompts'};
-assisted_install_config() unless $opts{'no-prompts'};
-
-# Get these into the MY namespace for the MY::test method
-%MY::APACHE = %APACHE;
-
-# Be very careful about removing these files - otherwise, if
-# apache_dir isn't set, we're removing things like /httpd and /mason !
-my $more_clean_files = ($APACHE{apache_dir} 
-			? join(' ', map "$APACHE{apache_dir}/$_", 
-			       qw(httpd.conf error_log httpd httpd.pid
-                                  mason_handler_CGI.pl mason_handler_mod_perl.pl 
-                                  CGIHandler.cgi mason)
-			      )
-			: '');
-  
-
-WriteMakefile(
-    'NAME'    => 'HTML::Mason',
-    'VERSION_FROM' => 'lib/HTML/Mason.pm',
-    'PREREQ_PM' => \%prereq,
-
-    # %APACHE is created when setup_mod_perl_tests() is called.  The
-    # code that does this creation is in apache_tests_helper.pl.
-    clean => {
-	'FILES' => "apache_install.txt lib/HTML/Mason/Config.pm mason_tests $APACHE{comp_root} $APACHE{data_dir} $more_clean_files",
-    }
-);
-
-sub chk_version
-{
-    my ($pkg, $wanted, $msg) = @_;
-
-    local $| = 1;
-    print "Checking for $pkg...";
-
-    eval { eval "require $pkg" };
-
-    my $vstr;
-    my $vnum;
-    {
-	no strict 'refs';
-	$vstr = ${"${pkg}::VERSION"} ? "found v" . ${"${pkg}::VERSION"}	: "not found";
-	$vnum = ${"${pkg}::VERSION"} || 0;
-    }
-
-    print $vnum >= $wanted ? "ok\n" : " " . $vstr . "\n";
-
-    $vnum >= $wanted;
-}
-
-sub is_maintainer
-{
-    return $ENV{MASON_MAINTAINER} if exists $ENV{MASON_MAINTAINER};
-
-    return -d 'CVS' ? 1 : 0;
-}
-
-package MY;
-
-sub install
-{
-    my $self = shift;
-
-    my $install = $self->SUPER::install(@_);
-
-    $install =~ s/install :: all pure_install doc_install/install :: all pure_install doc_install delete_old_docs configure_apache/;
-
-    $install .= "\nconfigure_apache :\n\t\$(PERL) install/configure_apache.pl\n";
-
-    $install .= "\ndelete_old_docs :\n\t\$(PERL) install/delete_old_pods.pl\n";
-
-    return $install;
-}
-
-sub test
-{
-    my $self = shift;
-
-    my $test = $self->SUPER::test(@_);
-
-    # %MY::APACHE is set in makeconfig.pl.
-    # If we are not going to test with Apache there is no harm in
-    # setting this anyway.
-
-    # The PORT env var is used by Apache::test.  Don't delete it!
-    my $port = $MY::APACHE{port} || 8228;
-    $MY::APACHE{apache_dir} ||= '';
-
-    my $is_maintainer = main::is_maintainer();
-
-    # This works for older MakeMakers
-    $test =~ s/(runtests \@ARGV;)/\$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; \$\$ENV{MASON_MAINTAINER}=$is_maintainer; $1/;
-
-    my $bs = $^O =~ /Win32/i ? '' : '\\';
-
-    # This works for newer MakeMakers (5.48_01 +)
-    $test =~ s/("-MExtUtils::Command::MM" "-e" ")(test_harness\(\$\(TEST_VERBOSE\).*?\)" \$\(TEST_FILES\))/$1 $bs\$\$ENV{PORT}=$port; $bs\$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; $bs\$\$ENV{MASON_MAINTAINER}=$is_maintainer; $2/;
-
-    return $test;
-}
-
-# prevents the Makefile from trying to process the Build.PL file into
-# Build
-sub processPL { '' }
-
-sub libscan
-{
-    my $self = shift;
-    my $file = shift;
-
-    return $file =~ /\.pl$/ ? 0 : $self->SUPER::libscan($file);
-}
+Module::Build::Compat->run_build_pl(args => \@ARGV);
+Module::Build::Compat->write_makefile();
