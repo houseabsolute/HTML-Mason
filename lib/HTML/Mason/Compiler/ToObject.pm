@@ -220,8 +220,12 @@ sub _component_params
     my %params = ( code => join ( '', "sub {\n", $self->_body, "}" ),
 		 );
 
-    $params{flags} = join '', "{\n", $self->_flags, "\n}" if keys %{ $self->{current_comp}{flags} };
-    $params{attr}  = join '', "{\n", $self->_attr, "\n}" if keys %{ $self->{current_comp}{attr} };
+    $params{flags} = join '', "{\n", $self->_flags, "\n}"
+        if keys %{ $self->{current_comp}{flags} };
+
+    $params{attr}  = join '', "{\n", $self->_attr, "\n}"
+        if keys %{ $self->{current_comp}{attr} };
+
     $params{declared_args} = join '', "{\n", $self->_declared_args, "\n}"
 	if @{ $self->{current_comp}{args} };
 
@@ -354,7 +358,7 @@ sub _flags_or_attr
     my $self = shift;
     my $type = shift;
 
-    return join ",\n", ( map { "$_ => $self->{current_comp}{$type}{$_}" }
+    return join "\n,", ( map { "$_ => $self->{current_comp}{$type}{$_}" }
 			 keys %{ $self->{current_comp}{$type} } );
 }
 
