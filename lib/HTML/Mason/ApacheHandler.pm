@@ -1029,7 +1029,7 @@ object.  For example:
 =item request_args ($r)
 
 Given an Apache request object, this method returns a three item list.
-The first item, is a hash reference containing the arguments passed by
+The first item is a hash reference containing the arguments passed by
 the client's request.
 
 The second is an Apache request object, possibly the one originally
