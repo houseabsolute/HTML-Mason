@@ -1,4 +1,41 @@
-CREDITS for Mason
+Credits for Mason, most recent contributions first.
+
+(November '00)
+
+Dave Rolsky (autarch@urth.org) was the first new member to the
+development team since Mason's inception. Before joining Dave revamped
+the parser module, answered numerous queries on the user's list and
+initiated discussions on Mason's future.
+
+Ken Williams (ken@forum.swarthmore.edu) was the second new member to
+the development team. Before joining Ken submitted a variety of code
+cleanups/speedups and hosted the first mailing list archive at the
+math forum.
+
+Michael Dorman (mdorman-perl.mason@debian.org), Ken Miller
+(millerk@mail.husky-oil.com) and Ken Williams currently administer the
+mailing lists.
+
+Thanks to Hank Leininger (hlein@progressive-comp.com) and the folks
+at MARC for their excellent mail archive interface, on which all of
+Mason's lists are archived.
+
+(July '99)
+
+Matt Jalbert (mjalbert@exuberance.com) lent his artistic flair to
+the MasonHQ web site design.
+
+(February '99)
+
+Patrick Kane (modus@pr.es.to) was an early Mason adopter providing
+useful feedback from the beginning.  He acted briefly as FAQ
+maintainer and contributed the first session-related examples. Patrick
+now hosts the Mason site and core development server.
+
+Kirrily 'Skud' Robert (skud@netizen.com.au) started the Mason mailing
+list despite my foot-dragging, and I'm eternally grateful.
+
+(October '98)
 
 The original idea for Mason was inspired by the component system used
 by NetGuide Live at CMP Media in 1996.  HTML++ lives on!
@@ -26,16 +63,7 @@ created the CD-ME example.
 
 Mark Schmick (mark@webz.com) wrote all of the original Mason
 documentation and helped greatly in getting the first release out the
-door.  He also created the Mason Content Management system.  Mark is a
-fellow Perl-worshipper and my programming alter ego if there ever was
-one.
-
-Patrick Kane (modus@pr.es.to) was an early Mason adopter providing
-useful feedback from the beginning.  He has suggested and implemented
-numerous features.
-
-Kirrily 'Skud' Robert (skud@netizen.com.au) started the Mason mailing
-list despite my foot-dragging, and I'm eternally grateful.
+door.  He also created the Mason Content Management system.
 
 Matt Jalbert (mjalbert@exuberance.com) lent his artistic flair to
 the MasonHQ web site design.
@@ -47,15 +75,16 @@ and many code snippets.
 The Internet technology team at CMP was supportive and patient with me
 as I brought down the systems with my periodic Mason "improvements".
 
-The following people have contributed suggestions or patches, as
-listed in the Changes file:
+-----
+
+Besides those mentioned above, the following people have contributed
+suggestions or patches, as listed in the Changes file:
 
 John Arnold (John_Arnold@dtc.org)
 Oleg Bartunov (oleg@sai.msu.su)
 John BEPPU <beppu@lineo.com>
 Sean Cazzell (cazzell@eng.usf.edu)
 Caleb Crome <ccrome@yahoo.com>
-Michael Alan Dorman (mdorman-perl.mason@debian.org)
 Joe Edmonds (jedmonds@stamps.com)
 Ewan Edwards (eskwayrd@csp.net)
 Pascal Eeftinck (arcade@xs4all.nl)
@@ -71,7 +100,6 @@ Dirk Koopman (djk@tobit.co.uk)
 Fen Lebalme (fen@lumeria.com)
 Jim Mortko (jskills@goofball.com)
 Chuck O'Donnell (cao@milf18.bus.net)
-Dave Rolsky (autarch@urth.org)
 Aaron Ross (ross@forum.swarthmore.edu)
 Paul Schilling (pfschill@bigfoot.com)
 Randal Schwartz (merlyn@stonehenge.com)
@@ -79,17 +107,17 @@ Michael Abraham Shulman (mas@kurukshetra.cjb.net)
 Jeremy Taylor (jtaylor@brite.net)
 John Tobey (john.tobey@isay.com)
 Renzo Toma (renzo.toma@veronica.nl)
+Denis Shaposhnikov <dsh@neva.vlink.ru>
 Lee Semel (lsemel@igicom.com)
 Michael Shulman (viritrilbia@kurukshetra.cjb.net)
 Scott Straley (scott@straley.net)
 Jeremy Taylor (jtaylor@brite.net)
+John Tobey (john.tobey@isay.com)
 Rafael Weinstein (rafael@avantgo.com)
-Ken Williams (ken@forum.swarthmore.edu)
 Mikhail Zabaluev (mookid@sigent.ru)
 
 
 Thanks y'all!
 Jonathan Swartz
-swartz@transbay.net
-Last updated September 14, 1999
+swartz@pobox.com
 
