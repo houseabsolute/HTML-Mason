@@ -611,7 +611,7 @@ sub test_load_apache
 	$x++;
 	if ( $x > 10 )
 	{
-	    die "No t/httpd.pid file has appeared after 10 seconds.  Exiting.";
+	    die "No t/httpd.pid file has appeared after 10 seconds.  There is probably a problem with the configuration file that was generated for these tests.";
 	}
     }
 
@@ -664,7 +664,7 @@ sub kill_httpd
 	    $x++;
 	    if ( $x > 10 )
 	    {
-		die "$ENV{APACHE_DIR}t/httpd.pid file still exists after 10 seconds.  Exiting.";
+		die "$ENV{APACHE_DIR}/httpd.pid file still exists after 10 seconds.  Exiting.";
 	    }
 	}
     }
