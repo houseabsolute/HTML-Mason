@@ -282,7 +282,19 @@ sub parse
 	    my $a = index($text,"\n%",$curpos);
 	    my $b = index($text,$perlbeginmark,$curpos);
 	    my $c = index($text,"<%",$curpos);
-	    if ($a>-1 && ($b==-1 || $a<$b) && ($c==-1 || $a<$c)) {
+            my $d = index($text,$perloffbeginmark,$curpos);
+            if ( $d>-1 && ($a==-1 || $d<$a) && ($b==-1 || $d<=$b) && ($c==-1 || $d<=$c) ) {
+		my $i = index($text,$perloffendmark,$d+11);
+		if ($i==-1) {
+		    $err = "<%PERL_OFF> with no matching </%PERL_OFF>";
+		    $errpos = $segbegin + $d;
+		    goto parse_error;
+		}
+		push(@alphasecs,[$curpos, $d-$curpos]); # Nasty, but necessary?
+		my $length = $i-($d+11);
+		$alpha = [$d+11,$length];
+		$curpos = $d+11+$length+12;
+	    } elsif ($a>-1 && ($b==-1 || $a<$b) && ($c==-1 || $a<$c) && ($d==-1 || $a<$d)) {
 		# Line beginning with %
 		my $beginline = $a+1;
 		$alpha = [$curpos,$beginline-$curpos];
@@ -293,7 +305,7 @@ sub parse
 		$curpos = $endline+1;
 		$startline = 1;
 		$pureTextFlag = 0;
-	    } elsif ($b>-1 && ($a==-1 || $b<$a) && ($c==-1 || $b<=$c)) {
+	    } elsif ($b>-1 && ($a==-1 || $b<$a) && ($c==-1 || $b<=$c) && ($d==-1 || $b<$d)) {
 		# Text delimited by <%PERL> </%PERL>
 		$alpha = [$curpos,$b-$curpos];
 		my $i = index($text,$perlendmark,$b+7);
@@ -306,7 +318,7 @@ sub parse
 		$perl = substr($text,$b+7,$length);
 		$curpos = $b+7+$length+8;
 		$pureTextFlag = 0;
-	    } elsif ($c>-1 && ($a==-1 || $c<$a) && ($b==-1 || $c<$b)) {
+	    } elsif ($c>-1 && ($a==-1 || $c<$a) && ($b==-1 || $c<$b) && ($d==-1 || $c<$d)) {
 		# Text delimited by <% %>
 		$alpha = [$curpos,$c-$curpos];
 		# See if this is a mistaken <%xxx> command
