@@ -351,6 +351,7 @@ return if $m->cache_self( key => $key );
 </%init>
 <%filter>
 $_ = uc $_;
+$_ .= ' filtered';
 </%filter>
 EOF
 			);
@@ -365,8 +366,9 @@ EOF
 EOF
 		      expect => <<'EOF',
 X IS 1
-
+ filtered
 X IS 1
+ filtered
 EOF
 		    );
 
@@ -380,8 +382,9 @@ EOF
 EOF
 		      expect => <<'EOF',
 X IS 1
-
+ filtered
 X IS 1
+ filtered
 EOF
 		    );
 
