@@ -545,7 +545,8 @@ sub find_comp_upwards
     # the native filesystem way
     my @p = split /\//, $startpath;
 
-    while (!($comp = $self->load( File::Spec->catfile( @p, $name ) )) && @p) {
+    # Don't use File::Spec here, this is a URL path.
+    while ( ! ( $comp = $self->load( '/' . join '/', @p, $name ) ) && @p ) {
 	pop @p;
     }
     return $comp;
