@@ -109,6 +109,11 @@ BEGIN
          { parse => 'code',type => CODEREF|SCALARREF,
            default => sub { print STDOUT grep {defined} @_ },
            descr => "A subroutine or scalar reference through which all output will pass" },
+
+ 	 plugins => { type => ARRAYREF, default => [], parse => 'list',
+ 		      descr => "Classes or objects to run event hooks around Mason actions",
+ 		    },
+
         );
 
     __PACKAGE__->contained_objects
@@ -133,6 +138,8 @@ use HTML::Mason::MethodMaker
 			 dhandler_arg
 			 interp
 			 parent_request
+                         plugins
+                         plugin_objects
 			 request_depth
 			 request_comp ) ],
 
@@ -227,6 +234,18 @@ sub _initialize {
 	} elsif ( ! UNIVERSAL::isa( $request_comp, 'HTML::Mason::Component' ) ) {
 	    param_error "comp ($request_comp) must be a component path or a component object";
 	}
+
+ 	# construct a plugin object for each plugin class in each request.
+ 	$self->{plugin_objects} = [];
+ 	foreach my $plugin (@{$self->plugins}) {
+ 	    my $plugin_object = $plugin;
+ 	    if (! ref $plugin) {
+ 	        eval "use $plugin;";
+ 	        $plugin_object = $plugin->new();
+ 	    }
+ 	    push @{$self->{plugin_objects}}, $plugin_object;
+ 	}
+
     };
 
     # Handle errors.
@@ -332,6 +351,21 @@ sub exec {
 	    tie *SELECTED, 'Tie::Handle::Mason';
 
 	    my $old = select SELECTED;
+
+ 	    eval {
+ 	      foreach my $plugin (@{$self->plugin_objects}) {
+ 		$plugin->start_request({
+ 					request => $self,
+ 					args => $request_args,
+ 					wantarray => $wantarray
+ 				       });
+ 	      }
+ 	    };
+ 	    if ($@) {
+ 	      select $old;
+ 	      rethrow_exception $@;
+ 	    }
+
 	    if ($wantarray) {
 		@result = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @$request_args)};
 	    } elsif (defined($wantarray)) {
@@ -339,8 +373,28 @@ sub exec {
 	    } else {
 		eval {$self->comp({base_comp=>$request_comp}, $first_comp, @$request_args)};
 	    }
+ 
+ 	    my $error = $@;
+ 	    
+ 	    # plugins called in reverse order when exiting.
+ 	    eval { 
+ 	      foreach my $plugin (reverse @{$self->plugin_objects}) {
+ 		$plugin->end_request({
+ 				      request => $self,
+ 				      args => $request_args,
+ 				      wantarray => $wantarray,
+ 				      error => \$error,
+ 				      return_value => \@result
+ 				     });
+ 	      }
+ 	    };
+ 	    if ($@) {
+ 	      # plugin errors take precedence over component errors
+ 	      $error = $@;
+ 	    }
+ 
 	    select $old;
-	    rethrow_exception $@;
+	    rethrow_exception $error;
 	}
     };
 
@@ -1067,6 +1121,17 @@ sub comp {
     # here.
     my $wantarray = wantarray;
 
+    # plugins can modify the arguments before the component sees them!
+    foreach my $plugin (@{$self->plugin_objects}) {
+        $plugin->start_component({ 
+				  comp => $comp,       
+				  args => \@_,
+				  request => $self,
+				  wantarray => $wantarray,
+				 }
+				);
+    }
+
     #
     # Finally, call component subroutine.
     #
@@ -1081,6 +1146,19 @@ sub comp {
     };
 
     my $err = $@;
+ 
+    # reverse order for the end hooks.
+    foreach my $plugin (reverse @{$self->plugin_objects}) {
+      $plugin->end_component({ comp => $comp,       
+			       args => \@_,
+			       request => $self,
+			       wantarray => $wantarray,
+			       error => \$err,
+			       return_value => \@result
+			     }
+			    );
+    }
+
 
     if ( $comp->has_filter )
     {
