@@ -385,7 +385,7 @@ sub handle_request_1
 
     #
     # Try to load the component; if not found, try dhandlers
-    # ("default handlers"); otherwise returned not found.
+    # ("default handlers"); otherwise return not found.
     #
     my @info;
     if (!(@info = $interp->load($compPath))) {
@@ -393,6 +393,7 @@ sub handle_request_1
 	my $pathInfo = $r->path_info;
 	while (!(@info = $interp->load("$p/dhandler")) && $p) {
 	    my ($basename,$dirname) = fileparse($p);
+	    $dirname =~ s/^\.//;    # certain versions leave ./ in $dirname
 	    $pathInfo = "/$basename$pathInfo";
 	    $p = substr($dirname,0,-1);
 	}
