@@ -131,7 +131,7 @@ sub _initialize {
 	$self->{top_path} = $path = $top_comp;
 
         # until it is a component _object_
-	do
+        until ( ref $top_comp )
 	{
 	    $top_comp = $self->interp->load($path);
 
@@ -156,7 +156,7 @@ sub _initialize {
 		    undef $top_comp;
 		}
 	    }
-	} until (ref $top_comp);
+        }
 
 	$self->{top_comp} = $top_comp;
     } elsif ( ! UNIVERSAL::isa( $top_comp, 'HTML::Mason::Component' ) ) {
