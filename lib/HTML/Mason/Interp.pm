@@ -62,7 +62,8 @@ BEGIN
 }
 
 use HTML::Mason::MethodMaker
-    ( read_only => [ qw( code_cache
+    ( read_only => [ qw( autohandler_name
+                         code_cache
                          compiler
 			 data_dir
 			 preloads
@@ -74,15 +75,14 @@ use HTML::Mason::MethodMaker
 
       read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
 		      qw( code_cache_max_size
-			  dhandler_name
 			  ignore_warnings_expr
                          )
 		    ],
 
       read_write_contained => { request =>
 				[ [ autoflush => { type => BOOLEAN } ],
-				  [ autohandler_name => { type => SCALAR } ],
 				  [ data_cache_defaults => { type => HASHREF } ],
+				  [ dhandler_name => { type => SCALAR } ],
 				  [ max_recurse => { type => SCALAR } ],
 				  [ out_method => { type => SCALARREF | CODEREF } ],
 				]
