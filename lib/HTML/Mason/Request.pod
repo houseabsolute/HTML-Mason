@@ -79,8 +79,8 @@ The argument to I<action> is one of:
 o I<retrieve>: returns the cache value if successful, or C<undef>
 if there was no value or if it has expired.
 
-o I<store>: stores a new cache value under the given key.
-Default key is 'main'.
+o I<store>: stores a new cache value under the given key.  Default key
+is 'main'.  Returns the value being stored if successful.
 
 o I<expire>: expires a given cache value or values.
 key may be a single key or a list reference. Default key is 'main'.
