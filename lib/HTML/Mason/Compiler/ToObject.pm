@@ -7,9 +7,12 @@ package HTML::Mason::Compiler::ToObject;
 use strict;
 
 use Params::Validate qw(SCALAR);
+use HTML::Mason::Tools qw(make_fh);
 
 use HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
+
+use HTML::Mason::Exceptions( abbr => [qw(wrong_compiler_error)] );
 
 BEGIN
 {
@@ -122,16 +125,39 @@ sub compiled_component
     # then delete $self->{current_comp}, then return the string.
     
     return +(join('',
+		  "# MASON COMPILER ID: $id\n",
 		  $header,
 		  $self->_subcomponents_footer,
 		  $self->_methods_footer,
 		  $self->_constructor( $self->comp_class,
 				       $params ),
 		  ';',
-		  "\n\n# MASON COMPILER ID: $id\n",
 		 ),
 	     $self->{current_comp} = undef,
 	    )[0];
+}
+
+sub assert_creatorship
+{
+    my ($self, $p) = @_;
+    my $id;
+    if ($p->{object_code}) {
+	# Read the object code as a string
+
+	($id) = ${$p->{object_code}} =~ /\A# MASON COMPILER ID: (\S+)$/m
+	    or wrong_compiler_error "Couldn't find a Compiler ID in compiled code.";
+    } else {
+	# Open the object file and read its first line
+
+	my $fh = make_fh();
+	open $fh, $p->{object_file} or die "Can't read $p->{object_file}: $!";
+	($id) = <$fh> =~ /\A# MASON COMPILER ID: (\S+)$/m
+	    or wrong_compiler_error "Couldn't find a Compiler ID in $p->{object_file}.";
+	close $fh;
+    }
+    
+    wrong_compiler_error 'This object file was created by an incompatible Compiler or Lexer.  Please remove the component files in your object directory.'
+	unless $id eq $self->object_id;
 }
 
 sub _compile_subcomponents
