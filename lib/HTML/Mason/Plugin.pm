@@ -87,7 +87,7 @@ and a context object with various methods.
 C<start_request_hook> is called before the Mason request begins
 execution.  Its context has the following read-only methods:
 
-    request # the current request
+    request # the current request ($m)
     args    # arguments the request was called with
 
 When called in scalar context, I<args> returns a list reference which
@@ -112,7 +112,7 @@ subrequests by checking C<is_subrequest> on I<request>. e.g.
 C<end_request_hook> is called before the Mason request
 exits. Its context has the following read-only methods:
 
-    request     # the current request
+    request     # the current request ($m)
     args        # arguments the request was called with
     output      # reference to the contents of the output buffer
     wantarray   # value of wantarray the request was called with
@@ -133,7 +133,7 @@ I<result> and I<error> to affect what the request returns.
 C<start_component_hook> is called before a component begins
 executing. Its context has the following read-only methods:
 
-    request     # the current request
+    request     # the current request ($m)
     comp        # the component object
     args        # arrayref of arguments the component was called with
 
@@ -144,7 +144,7 @@ The plugin may NOT modify I<args> currently.
 C<end_component_hook()> is called after a component has
 completed. Its context has the following read-only methods:
 
-    request     # the current request
+    request     # the current request ($m)
     comp        # the component object
     args        # arrayref of arguments the component was called with
     wantarray   # value of wantarray the component was called with
