@@ -627,7 +627,47 @@ sub file
 sub print
 {
     my $self = shift;
-    $self->top_buffer->receive(@_);
+
+    # So what's going on here, you might ask?
+    # Isn't Dave always babbling on about encapsulation?
+    #
+    # Here's the deal.  In benchmarks, I found that breaking this
+    # little teeny bit of encapsulation led to to a 33% reduction in
+    # execution time for a program that simply made an interp object
+    # and executed the same component 50 times in a row.
+    #
+    # 33%!  That's nothing to sneeze at.  This is because this method
+    # gets called a _lot_ for any component with a reasonable mix of
+    # text and substitution tags.  In the above-mentioned profiling
+    # test, the component called this method 526 times per execution.
+    # That may be a bit on the high side but isn't unrealstic for a
+    # component that does something like generate a large HTML table.
+    #
+    # So this is a _good_ hack, but please be careful about making
+    # sure it continues to work!
+    #
+
+    #
+    # This is more or less HTML::Mason::Buffer->receive inlined.  If
+    # someone subclasses the buffer class this might break.  Possible
+    # solutions include:
+    #
+    # - don't encourage them to do this!
+    #
+    # - document sink_is_scalar, buffer, & sink methods, and explain
+    # their importance.
+    #
+    my $buffer = $self->{buffer_stack}[-1];
+    if ( $buffer->sink_is_scalar )
+    {
+        local $^W; # ignore undef values
+        ${ $buffer->buffer } .= join '', @_;
+    }
+    else
+    {
+        $buffer->sink->(@_);
+    }
+
     $self->flush_buffer if $self->autoflush;
 }
 
@@ -645,8 +685,7 @@ sub comp {
     %mods = (%{shift()},%mods) while ref($_[0]) eq 'HASH';
 
     my ($comp,@args) = @_;
-    my $interp = $self->interp;
-    my $depth = $self->depth;
+
     param_error "comp: requires path or component as first argument"
 	unless defined($comp);
 
@@ -664,6 +703,7 @@ sub comp {
     #
     # Check for maximum recursion.
     #
+    my $depth = $self->depth;
     error "$depth levels deep in component stack (infinite recursive call?)\n"
         if ($depth >= $self->max_recurse);
 
@@ -673,7 +713,9 @@ sub comp {
     # package, as well as the component package if that is different.
     #
     local $HTML::Mason::Commands::m = $self;
-    $interp->set_global('m'=>$self) if ($interp->compiler->in_package ne 'HTML::Mason::Commands');
+    my $interp = $self->interp;
+    $interp->set_global('m'=>$self)
+        if ($interp->compiler->in_package ne 'HTML::Mason::Commands');
 
     #
     # Determine base_comp (base component for method and attribute inheritance)
@@ -702,7 +744,8 @@ sub comp {
 	# This extra buffer is to catch flushes (in the given scalar ref).
 	# The component's main buffer can then be cleared without
 	# affecting previously flushed output.
-        $self->push_buffer_stack($self->top_buffer->new_child( sink => $mods{store}, ignore_flush => 1 ));
+        $self->push_buffer_stack
+            ( $self->top_buffer->new_child( sink => $mods{store}, ignore_flush => 1 ) );
     }
     $self->push_buffer_stack($self->top_buffer->new_child);
 
@@ -716,13 +759,13 @@ sub comp {
     # Finally, call component subroutine.
     #
     eval {
-	if ($wantarray) {
-	    @result = $comp->run(@args);
-	} elsif (defined $wantarray) {
-	    $result[0] = $comp->run(@args);
-	} else {
-	    $comp->run(@args);
-	}
+        if ($wantarray) {
+            @result = $comp->run(@args);
+        } elsif (defined $wantarray) {
+            $result[0] = $comp->run(@args);
+        } else {
+            $comp->run(@args);
+        }
     };
 
     #
