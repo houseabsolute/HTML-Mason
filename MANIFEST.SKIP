@@ -33,3 +33,5 @@ Events.pm$
 ^src
 
 samples/cd-me.*
+
+Build.PL
