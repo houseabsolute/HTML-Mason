@@ -42,7 +42,8 @@ foreach my $test ( @{ $opts{test} } )
 
 my $interp =
     HTML::Mason::Interp->new( comp_root => File::Spec->rel2abs(cwd),
-                              data_dir  => '/tmp/mason-benchmarks',
+                              data_dir  =>
+                              File::Spec->rel2abs( File::Spec->catdir( cwd, 'mason-data' ) ),
                             );
 
 print "\n";
