@@ -150,10 +150,17 @@ HTML::Mason::CGIHandler - Use Mason in a CGI environment
 
 In httpd.conf or .htaccess:
 
-   Action html-mason /cgi-bin/mason_handler.cgi
-   <LocationMatch "\.html$">
-    SetHandler html-mason
-   </LocationMatch>
+    <LocationMatch "\.html$">
+        Action html-mason /cgi-bin/mason_handler.cgi
+        AddHandler html-mason .html
+    </LocationMatch>
+    <LocationMatch "^/cgi-bin/">
+        RemoveHandler .html
+    </LocationMatch>
+    <FilesMatch "(autohandler|dhandler)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
 
 A script at /cgi-bin/mason_handler.pl :
 

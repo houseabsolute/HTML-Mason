@@ -1035,13 +1035,28 @@ The relevant portions of the F<httpd.conf> file look like:
     DocumentRoot /path/to/comp/root
     ScriptAlias /cgi-bin/ /path/to/cgi-bin/
 
-    Action html-mason /cgi-bin/mason_handler.cgi
     <LocationMatch "\.html$">
-      SetHandler html-mason
+       Action html-mason /cgi-bin/mason_handler.cgi
+       AddHandler html-mason .html
     </LocationMatch>
+    <LocationMatch "^/cgi-bin/">
+        RemoveHandler .html
+    </LocationMatch>
+    <FilesMatch "(autohandler|dhandler)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
 
 This simply causes Apache to call the mason_handler.cgi script every
 time a URL ending in ".html" under the component root is requested.
+
+To exclude certian directories from being under Mason control, you can
+use something like the following:
+
+    <LocationMatch "^/(dir1|dir2|dir3)/">
+        RemoveHandler .html
+    </LocationMatch>
+
 This script uses the L<CGIHandler class|HTML::Mason::CGIHandler> to do
 most of the heavy lifting.  See that class's documentation for more
 details.
