@@ -130,7 +130,7 @@ sub AUTOLOAD {
     } elsif ($name =~ /^(last|soft_timeout|kill_timeout|lookup_file|lookup_uri|main|prev|next|handler|hard_timeout|reset_timeout|internal_redirect|internal_redirect_handler)$/) {
 	die "FakeApache is unable to simulate the `$name' method.  You'll need to temporarily remove or comment out that method call to use debug files.\n";
     } else {
-        &warn "FakeApache does not know about the `$name' method; returning undef.\n";
+        CORE::warn("FakeApache does not know about the `$name' method; returning undef.\n");
 	return undef;
     }
 }

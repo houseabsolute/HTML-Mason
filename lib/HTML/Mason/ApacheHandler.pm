@@ -220,7 +220,7 @@ sub handle_request {
     }
 
     $interp->write_system_log('REQ_END', $self->{request_number}, $err_status);
-    return ($err) ? &OK : $retval;
+    return ($err) ? &OK : (defined($retval)) ? $retval : &OK;
 }
 
 #
