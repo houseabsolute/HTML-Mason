@@ -583,11 +583,11 @@ basis; see L<HTML::Mason::Devel/escaping_expressions>.
 =item lexer
 
 The Lexer object to associate with this Compiler. By default a new
-object of class L<lexer_class> will be created.
+object of class P<lexer_class> will be created.
 
 =item lexer_class
 
-The class to use when creating a lexer. Defaults to C<HTML::Mason::Lexer>.
+The class to use when creating a lexer. Defaults to L<HTML::Mason::Lexer>.
 
 =item preprocess
 

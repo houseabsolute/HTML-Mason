@@ -770,7 +770,7 @@ further details.
 =item compiler
 
 The Compiler object to associate with this Interpreter.  By default
-a new object of class L<compiler_class> will be created.
+a new object of class P<compiler_class> will be created.
 
 =item compiler_class
 
@@ -833,12 +833,12 @@ The class to use when creating requests. Defaults to L<HTML::Mason::Request>.
 =item resolver
 
 The Resolver object to associate with this Compiler. By default a new
-object of class L<resolver_class> will be created.
+object of class P<resolver_class> will be created.
 
 =item resolver_class
 
 The class to use when creating a resolver. Defaults to
-C<HTML::Mason::Resolver::File>.
+L<HTML::Mason::Resolver::File>.
 
 =item static_source
 

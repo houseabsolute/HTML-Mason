@@ -1001,12 +1001,12 @@ more information about handling directories with Mason.
 =item interp
 
 The Interp object to associate with this Compiler. By default a new
-object of class L<interp_class> will be created.
+object of class P<interp_class> will be created.
 
 =item interp_class
 
 The class to use when creating a interpreter. Defaults to
-C<HTML::Mason::Interp>.
+L<HTML::Mason::Interp>.
 
 =back
 

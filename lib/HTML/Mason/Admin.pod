@@ -457,12 +457,12 @@ external options are available:
 
 =over
 
-=item
+=item *
 
 HTML::Mason::Request::WithApacheSession, available from CPAN,
 adds a cookie-based session to every request.
 
-=item
+=item *
 
 Apache::Session, available from CPAN, can be integrated with about a
 page of code in a handler.pl. This is more complex but more flexible
