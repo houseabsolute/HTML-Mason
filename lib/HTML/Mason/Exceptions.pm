@@ -341,3 +341,19 @@ sub full_message
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::Exceptions - Exception objects thrown by Mason
+
+=head1 DESCRIPTION
+
+...
+
+=head1 EXCEPTIONS
+
+auto-generate from class and description?
+
+=cut
