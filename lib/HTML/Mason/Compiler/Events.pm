@@ -37,6 +37,8 @@ sub end_component
     print "ending component\n";
 }
 
+sub compiled_component { '' }
+
 sub text
 {
     my $self = shift;
