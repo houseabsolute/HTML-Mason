@@ -9,6 +9,23 @@ available at http://www.masonhq.com/changes.html.
 
 [ BUG FIXES ]
 
+- When running under mod_perl, a warning was issued from
+HTML::Mason::Request::ApacheHandler's exec() method.  Reported by
+Marius Feraru.
+- The request wrapper code did not work with anonymous component.
+Reported by Bob McElrath.
+- Mason 1.10-1.12 did not cooperate with Apache::Filter, or any other
+Apache subclass that overrode the print() method.  Reported by Mark
+Moseley.
+- If an object blessed into Apache::Request was provided to
+ApacheHandler's handle_request method, and you were using the
+args_method parameter was set to "mod_perl" (the default), then
+ApacheHandler would die.  This was a bug introduced in 1.12 as a
+result of fixing the memory leaks in 1.11.  Reported by Autrijus Tang.
+- Configuring multiple component roots via the httpd.conf file failed.
+Reported and patched by Alexei V. Barantsev.
+- $interp->exec and $m->exec were not respecting wantarray.  Reported
+by David Bushong.
 - Suppress a "subroutine redefined" warning from
 HTML::Mason::Request::Apachehandler's exec() method.  Reported by
 Marius Feraru.
@@ -18,6 +35,17 @@ Reported by Calle Dybedahl.
 installed.  Now they will be skipped if necessary.
 - Tests 75 & 99 for 08-ah.t depended on hash key ordering and would
 fail with Perl 5.8.0.  Submitted by Michael Gray
+- Fixed a number of cases where the lexer/compiler's behavior differed
+from Mason 1.05 in unintended ways.
+-- Dashes were not being allowed in subcomponent and method names,
+even though this is documented as being allowed.
+-- Space between a method or subcomponent name and the '>' at the end
+of the tag was not being allowed.  It should be noted that this is not
+documented as being allowed in the docs, and so may change in the
+future.  But for now, we'd rather be compatible with 1.05.
+-- Comments were not being allowed after flag and attribute
+assignments.  Again, this is not documented as being allowed.
+
 
 1.1201  July 24, 2002
 
