@@ -422,7 +422,7 @@ EOF
     $group->add_test( name => 'fetch_next',
 		      path => '/autohandler_test2/dir1/fetch_next',
 		      call_path => '/autohandler_test2/dir1/fetch_next',
-		      description => 'Test $m->fetch_next',
+		      description => 'Test $m->fetch_next and $m->fetch_next_all',
 		      component => <<'EOF',
 This is the main component (called by level <% $ARGS{level} %>)
 Remaining chain: <% join(',',map($_->title,$m->fetch_next_all)) %>
