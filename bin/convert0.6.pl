@@ -8,6 +8,57 @@ use strict;
 
 my ($HELP, $LOWER, $QUIET, $TEST, $UPPER);
 
+my $usage = <<EOF;
+Usage: $0 -hlqtu <directory> [<directory>...]
+-h: Display help message and exit
+-l: Write all section names as lowercase (<%init>, etc.)
+-q: Quiet mode, do not report normal processing of files
+-t: Do not actually change files, just report what changes would be made
+-u: Write all section names as uppercase (<%INIT>, etc.)
+EOF
+
+my $helpmsg = <<EOF;
+This utility converts existing components to use two new syntactic
+constructs introduced in Mason 0.6.
+
+1.  Long section names (<%perl_init>, <%perl_args>, etc.) are
+converted to short names (<%init>, <%args>, etc.) You have the option
+of also standardizing to uppercase (with -u) or lowercase (with -l);
+by default the case will be kept the same.
+
+2. Component calls of the form
+    <% mc_comp('path', args...) %>
+are converted to
+    <& path, args... &>
+We try to recognize the most common variations; less common ones will
+need to be converted manually.
+
+All directories will be traversed recursively.  We STRONGLY recommend
+that you backup your components, and/or use the -t flag to preview,
+before running this program for real.  Files are modified
+destructively and no automatic backups are created.
+EOF
+
+sub usage
+{
+    print $usage;
+    exit;
+}
+
+sub main
+{
+    my (%opts);
+    getopts('hlqtu',\%opts);
+    ($HELP, $LOWER, $QUIET, $TEST, $UPPER) = @opts{qw(h l q t u)};
+    if ($HELP) { print "$helpmsg\n$usage"; exit }
+    if (!@ARGV) { print "$usage"; exit }
+    my @dirs = @ARGV;
+    my $sub = sub {
+	if (-f $_) { convert($_,"$File::Find::dir/$_") }
+    };
+    find($sub,@dirs);
+}
+
 sub convert
 {
     my ($file,$path) = @_;
@@ -70,55 +121,5 @@ sub convert
     }
 }
 
-my $usage = <<EOF;
-Usage: $0 -hlqtu <directory> [<directory>...]
--h: Display help message and exit
--l: Write all section names as lowercase (<%init>, etc.)
--q: Quiet mode, do not report normal processing of files
--t: Do not actually change files, just report what changes would be made
--u: Write all section names as uppercase (<%INIT>, etc.)
-EOF
-
-my $helpmsg = <<EOF;
-This utility converts existing components to use two new syntactic
-constructs introduced in Mason 0.6.
-
-1.  Long section names (<%perl_init>, <%perl_args>, etc.) are
-converted to short names (<%init>, <%args>, etc.) You have the option
-of also standardizing to uppercase (with -u) or lowercase (with -l);
-by default the case will be kept the same.
-
-2. Component calls of the form
-    <% mc_comp('path', args...) %>
-are converted to
-    <& path, args... &>
-We try to recognize the most common variations; less common ones will
-need to be converted manually.
-
-All directories will be traversed recursively.  We STRONGLY recommend
-that you backup your components, and/or use the -t flag to preview,
-before running this program for real.  Files are modified
-destructively and no automatic backups are created.
-EOF
-
-sub usage
-{
-    print $usage;
-    exit;
-}
-
-sub main
-{
-    my (%opts);
-    getopts('hlqtu',\%opts);
-    ($HELP, $LOWER, $QUIET, $TEST, $UPPER) = @opts{qw(h l q t u)};
-    if ($HELP) { print "$helpmsg\n$usage"; exit }
-    if (!@ARGV) { print "$usage"; exit }
-    my @dirs = @ARGV;
-    my $sub = sub {
-	if (-f $_) { convert($_,"$File::Find::dir/$_") }
-    };
-    find($sub,@dirs);
-}
 
 main();
