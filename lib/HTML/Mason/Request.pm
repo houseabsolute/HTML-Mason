@@ -1231,11 +1231,17 @@ servers appear more responsive.
 
 Returns the Interp object associated with this request.
 
+=for html <a name="item_out">
+
+=item out (string)
+
+A synonym for C<$m-E<gt>print>.
+
 =for html <a name="item_print">
 
 =item print (string)
 
-Print the given I<string>. Rarely needed, since normally all HTML is just
+Print the given I<string>. Rarely needed, since normally all text is just
 placed in the component body and output implicitly. C<$m-E<gt>print> is useful
 if you need to output something in the middle of a Perl block.
 
