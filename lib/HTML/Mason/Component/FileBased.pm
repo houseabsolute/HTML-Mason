@@ -14,8 +14,8 @@ use strict;
 
 sub is_file_based { 1 }
 sub persistent { 1 }
-sub path { return $_[0]->{path} }
-sub source_file { return $_[0]->{source_file} }
+sub path { return $_[0]->{'path'} }
+sub source_file { return $_[0]->{'source_file'} }
 sub title {
     my ($self) = @_;
     return $self->path . ($self->{source_root_key} ? " [".$self->{source_root_key}."]" : "");
@@ -35,9 +35,9 @@ sub assign_runtime_properties {
     my $comp_root = $interp->comp_root;    
     if (!ref($comp_root)) {
 	$self->{source_root} = $comp_root;
-	$self->{path} = $fq_path;
+	$self->{'path'} = $fq_path;
     } else {
-	($self->{source_root_key},$self->{path}) = ($fq_path =~ m{ ^/([^/]+)(/.*)$ }x)
+	($self->{source_root_key},$self->{'path'}) = ($fq_path =~ m{ ^/([^/]+)(/.*)$ }x)
 	    or die "Assert error: could not split FQ path ($fq_path) as expected";
 	foreach my $lref (@$comp_root) {
 	    my ($key,$root) = @$lref;
@@ -47,7 +47,7 @@ sub assign_runtime_properties {
 	}
 	die "Assert error: FQ path ($fq_path) contained unknown source root key" unless $self->{source_root};
     }
-    $self->{source_file} = $self->{source_root} . $fq_path;
+    $self->{'source_file'} = $self->{source_root} . $fq_path;
 }
 
 1;

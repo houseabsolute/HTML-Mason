@@ -51,6 +51,7 @@ sub new
 	}
     }
     bless $self, $class;
+    my $interp = $self->{interp} or die "HTML::Mason::Request::new: must specify interp";
     $self->{count} = ++($interp->{request_count});
     $self->_initialize;
     return $self;
@@ -58,7 +59,7 @@ sub new
 
 sub _initialize {
     my ($self) = @_;
-    my $interp = $self->{interp} or die "HTML::Mason::Request::new: must specify interp";
+    my $interp = $self->interp;
 
     # Initialize hooks arrays for fast access
     while (my ($type,$href) = each(%{$interp->{hooks}})) {
@@ -95,8 +96,9 @@ sub exec {
 
     # $comp can be an absolute path or component object.  If a path,
     # load into object. If not found, check for dhandler.
+    my ($path, $orig_path);
     if (!ref($comp) && substr($comp,0,1) eq '/') {
-	my $path = $comp;
+	$orig_path = $path = $comp;
 	if (!($comp = $interp->load($path))) {
 	    if (defined($interp->{dhandler_name}) and $comp = $interp->find_comp_upwards($path,$interp->{dhandler_name})) {
 		my $parent = $comp->dir_path;
@@ -108,7 +110,9 @@ sub exec {
 	die "exec: first argument ($comp) must be an absolute component path or a component object";
     }
 
+    # This label is for declined requests.
     retry:
+    
     # Check for autohandler.
     if (defined($interp->{autohandler_name})) {
 	my $parent = $comp->dir_path;
@@ -135,17 +139,15 @@ sub exec {
     }
     my $err = $@;
 
-    # If declined, try to find the next path
-    if ($self->declined) {
-	my $path = $comp->dir_path;
-	$path =~ s/\/[^\/]+$// if ($defined($self->{dhandler_arg}));
-	if (defined($interp->{dhandler_name}) and $comp = $interp->find_comp_upwards($path,$interp->{dhandler_name})) {
+    # If declined, try to find the next dhandler.
+    if ($self->declined and $path) {
+	$path =~ s/\/[^\/]+$// if defined($self->{dhandler_arg});
+	if (defined($interp->{dhandler_name}) and my $next_comp = $interp->find_comp_upwards($path,$interp->{dhandler_name})) {
+	    $comp = $next_comp;
 	    my $parent = $comp->dir_path;
-	    ($self->{dhandler_arg} = $path) =~ s{^$parent/}{};
 	    $self->_reinitialize;
+	    ($self->{dhandler_arg} = $orig_path) =~ s{^$parent/}{};
 	    goto retry;
-	} else {
-	    die $comp->title . " declined and no other matching component found";
 	}
     }
 
@@ -183,7 +185,7 @@ sub abort
     my ($self) = @_;
     $self->{aborted} = 1;
     $self->{aborted_value} = $_[1] || $self->{aborted_value} || undef;
-    die "aborted";
+    croak "abort() called";
 }
 
 sub auto_comp {
@@ -360,7 +362,7 @@ sub decline
 {
     my ($self) = @_;
     $self->{declined} = 1;
-    die "declined";
+    croak "decline() called (and not caught)";
 }
 
 #
@@ -499,7 +501,7 @@ sub comp1 {
     # package, as well as the component package if that is different.
     #
     local $HTML::Mason::Commands::m = $self;
-    $interp->set_global(m=>$self) if ($interp->parser->{in_package} ne 'HTML::Mason::Commands');
+    $interp->set_global('m'=>$self) if ($interp->parser->{in_package} ne 'HTML::Mason::Commands');
 
     #
     # Determine sink (where output is going). Look for STORE and scalar
@@ -526,7 +528,7 @@ sub comp1 {
 
     # Push new frame onto stack and increment (localized) depth.
     my $stack = $self->stack;
-    push(@$stack,{comp=>$comp,args=>[@args],sink=>$sink});
+    push(@$stack,{'comp'=>$comp,args=>[@args],sink=>$sink});
     $REQ_DEPTH++;
 
     # Call start_comp hooks.
@@ -635,7 +637,7 @@ sub debug_hook
 #
 # Accessor methods for top of stack elements.
 #
-sub current_comp { return $_[0]->top_stack->{comp} }
+sub current_comp { return $_[0]->top_stack->{'comp'} }
 sub current_args { return $_[0]->top_stack->{args} }
 sub current_sink { return $_[0]->top_stack->{sink} }
 

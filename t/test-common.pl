@@ -29,7 +29,7 @@ sub try_exec_all
     my @comps;
     if (-f $listfile) {
 	my $listfh = new IO::File $listfile or die "cannot read $listfile: $!";
-	chomp(@comps = <$listfh>);
+	chomp(@comps = grep(/\S/,<$listfh>));
     } else {
 	my $dir = "$root/test/comps/$branch";
 	my $dh = new DirHandle $dir or die "cannot read $dir: $!";
