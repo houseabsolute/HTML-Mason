@@ -206,6 +206,38 @@ sub _initialize {
     $self->{prepare_error} = $@ if $@;
 }
 
+sub new_superclass
+{
+    my $self = shift;
+    my $new_super = shift;
+
+    my $isa_ref;
+    {
+        no strict 'refs';
+        $isa_ref = \@{ref $self . '::ISA'};
+    }
+
+    # handles multiple inheritance properly and preserve
+    # inheritance order
+    for ( my $x = 0; $x <= $#{$isa_ref} ; $x++ )
+    {
+        if ( $isa_ref->[$x]->isa('HTML::Mason::Request') )
+        {
+            my $old_super = $isa_ref->[$x];
+
+            if ( $old_super ne $new_super )
+            {
+                $isa_ref->[$x] = $new_super;
+
+                my $class = ref $self;
+                $class->valid_params( %{ $class->original_validation_spec } );
+            }
+
+            last;
+        }
+    }
+}
+
 sub exec {
     my ($self) = @_;
     my $interp = $self->interp;
