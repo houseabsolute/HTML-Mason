@@ -136,7 +136,9 @@ EOF
 
     write_comp( 'multiconf1/foo', <<'EOF',
 I am foo in multiconf1
-comp root is <% $m->interp->resolver->comp_root =~ m,/comps/multiconf1$, ? 'multiconf1' : $m->interp->resolver->comp_root %>
+% my $root = $m->interp->resolver->comp_root;
+% $root = ref($root) ? $root->[0][1] : $root;
+comp root is <% $root =~ m,/comps/multiconf1$, ? 'multiconf1' : $root %>
 EOF
 	      );
 
@@ -156,7 +158,9 @@ EOF
 
     write_comp( 'multiconf2/foo', <<'EOF',
 I am foo in multiconf2
-comp root is <% $m->interp->resolver->comp_root =~ m,/comps/multiconf2$, ? 'multiconf2' : $m->interp->resolver->comp_root %>
+% my $root = $m->interp->resolver->comp_root;
+% $root = ref($root) ? $root->[0][1] : $root;
+comp root is <% $root =~ m,/comps/multiconf2$, ? 'multiconf2' : $root %>
 EOF
 	      );
 
