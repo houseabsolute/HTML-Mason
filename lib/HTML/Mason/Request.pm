@@ -205,7 +205,7 @@ sub exec {
 	if (UNIVERSAL::isa($err, 'HTML::Mason::Exception') and $error_mode =~ /^(text|html)$/) {
 	    $self->clear_buffer;
 	    if ($error_mode eq 'text') {
-		$self->out($err->as_text);
+		$self->out($err->as_string);
 	    } elsif ($error_mode eq 'html') {
 		$self->out($err->as_html);
 	    }
