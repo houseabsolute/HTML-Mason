@@ -7,7 +7,7 @@ package HTML::Mason::ComponentInfo;
 use strict;
 use File::Basename;
 use File::Spec;
-use HTML::Mason::Exceptions( abbr => [qw(param_error)] );
+use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
@@ -16,6 +16,7 @@ use HTML::Mason::MethodMaker
                          friendly_name
                          last_modified
                          comp_path
+                         comp_class
                          extra
                         ) ],
       );
@@ -26,6 +27,7 @@ my %valid_params =
      friendly_name => { type => SCALAR },
      last_modified => { type => SCALAR },
      comp_path     => { type => SCALAR },
+     comp_class    => { isa => 'HTML::Mason::Component' },
      extra         => { type => HASHREF, default => {} },
      source_callback => { type => CODEREF },
     );
@@ -40,9 +42,35 @@ sub new
     return bless { validate( @_, \%valid_params ) }, $class;
 }
 
-sub source
+sub comp_source
 {
-    return $_[0]->{source_callback}->();
+    my $self = shift;
+
+    return $self->{source} if exists $self->{source};
+
+    $self->{source} = eval { $self->{source_callback}->() };
+
+    if (my $err = @_)
+    {
+	UNIVERSAL::can( $err, 'rethrow' ) ? $err->rethrow : error $err;
+    }
+
+    unless ( defined $self->{source} )
+    {
+	error "source callback returned no source for $self->{friendly_name} component";
+    }
+
+    return $self->{source};
+}
+
+sub object_code
+{
+    my $self = shift;
+    my %p = validate( @_, { compiler => { isa => 'HTML::Mason::Compiler' } } );
+
+    return $p{compiler}->compile( comp_source => $self->comp_source,
+				  name => $self->friendly_name,
+				  comp_class => $self->comp_class );
 }
 
 1;

@@ -31,10 +31,6 @@ sub glob_path {
     shift->_virtual;
 }
 
-sub comp_class {
-    shift->_virtual;
-}
-
 sub apache_request_to_comp_path {
     shift->_virtual;
 }
@@ -117,12 +113,6 @@ list of component paths for components which match this glob pattern.
 For example, the filesystem resolver simply appends this pattern to
 each component root in turn and calls the Perl C<glob()> function to
 find matching files on the filesystem.
-
-=item comp_class
-
-This method needs to return the class that component objects should
-use.  If you do not want to create a custom component class, you can
-simply use "HTML::Mason::Component".
 
 =back
 

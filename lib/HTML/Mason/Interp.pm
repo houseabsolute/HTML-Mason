@@ -254,16 +254,17 @@ sub load {
 	return undef unless (-f $objfile);   # component not found
 
 	$self->write_system_log('COMP_LOAD', $comp_id);	# log the load event
-	my $object ||= read_file($objfile);
-	my $comp = eval { $self->eval_object_text( object => $object ) };
+	my $object_code ||= read_file($objfile);
+	my $comp = eval { $self->eval_object_code( object_code => $object_code ) };
 	$self->_compilation_error($objfile, $@) if $@;
 
 	# I think this is broken.  It should also be assigning things
-	# like disk_path (for disk-based comps), comp_root, etc.
+	# like comp_root, etc.
 	my $info = HTML::Mason::ComponentInfo->new( friendly_name => $path,
 						    comp_path => $path,
 						    comp_id => $comp_id,
 						    last_modified => time,
+						    comp_class => 'HTML::Mason::Component',
 						    source_callback => sub { },
 						  );
 	$comp->assign_runtime_properties($self, $info);
@@ -281,13 +282,13 @@ sub load {
     # Use resolver to look up component and get fully-qualified path.
     # Return undef if component not found.
     #
-    my $info = $resolver->get_info($path) or return;
-    my $comp_id = $info->comp_id;
+    my $source = $resolver->get_info($path) or return;
+    my $comp_id = $source->comp_id;
 
     #
     # Get last modified time of source.
     #
-    my $srcmod = $info->last_modified;
+    my $srcmod = $source->last_modified;
 
     if ($self->{use_object_files}) {
 	$objfile = $self->comp_id_to_objfile($comp_id);
@@ -314,37 +315,35 @@ sub load {
 	    # We are using object files.  Update object file if necessary
 	    # and load component from there.
 	    #
-	    my $object;
+	    my $object_code;
 	    do
 	    {
-		my $comp_source = $info->source;
 		if ($objfilemod < $srcmod) {
-		    $object = $self->compiler->compile( comp_source => $comp_source, name => $info->friendly_name, comp_class => $resolver->comp_class );
-		    $self->write_object_file(object_text=>$object, object_file=>$objfile);
+		    $object_code = $source->object_code( compiler => $self->compiler );
+		    $self->write_object_file( object_code => $object_code, object_file => $objfile );
 		}
 		# read the existing object file
-		$object ||= read_file($objfile);
-		$comp = eval { $self->eval_object_text( object => $object ) };
+		$object_code ||= read_file($objfile);
+		$comp = eval { $self->eval_object_code( object_code => $object_code ) };
 
 		if ($@) {
 		    if (UNIVERSAL::isa($@, 'HTML::Mason::Exception::Compilation::IncompatibleCompiler')) {
 			$objfilemod = 0;
-			undef $object;
+			undef $object_code;
 		    } else {
-			$self->_compilation_error( $info->friendly_name, $@ );
+			$self->_compilation_error( $source->friendly_name, $@ );
 		    }
 		}
-	    } until ($object);
+	    } until ($object_code);
 	} else {
 	    #
 	    # No object files. Load component directly into memory.
 	    #
-	    my $comp_source = $info->source;
-	    my $object = $self->compiler->compile( comp_source => $comp_source, name => $info->friendly_name, comp_class => $resolver->comp_class );
-	    $comp = eval { $self->eval_object_text( object => $object ) };
-	    $self->_compilation_error( $info->friendly_name, $@ ) if $@;
+	    my $object_code = $source->object_code( compiler => $self->compiler );
+	    $comp = eval { $self->eval_object_code( object_code => $object_code ) };
+	    $self->_compilation_error( $source->friendly_name, $@ ) if $@;
 	}
-	$comp->assign_runtime_properties($self, $info);
+	$comp->assign_runtime_properties($self, $source);
 
 	#
 	# Delete any stale cached version of this component, then
@@ -423,32 +422,30 @@ sub make_component {
     param_error "Must specify either 'comp_source' or 'comp_file' parameter to 'make_component()'"
 	unless $p{comp_source};
 
-    # The compiler expects 'comp_source' and 'name'
     $p{name} ||= $p{path} ? $p{path} : '<anonymous component>';
-    my $object = $self->compiler->compile( %p );
+
+    my $source = HTML::Mason::ComponentInfo->new( friendly_name => $p{path} || $p{name},
+						  comp_path => $p{name} || $p{path},
+						  comp_id => undef,
+						  last_modified => time,
+						  comp_class => 'HTML::Mason::Component',
+						  source_callback => sub { $p{comp_source} },
+						);
+
+    my $object_code = $source->object_code( compiler => $self->compiler);
 
     if ($p{path}) {
 	my $object_file = File::Spec->catfile( $self->object_dir, $p{path} );
-	$self->write_object_file(object_text=>$object, object_file=>$object_file);
+	$self->write_object_file( object_code => $object_code, object_file => $object_file );
     }
 
-    my $comp = eval { $self->eval_object_text( object => $object ) };
+    my $comp = eval { $self->eval_object_code( object_code => $object_code ) };
     $self->_compilation_error( $p{name}, $@ ) if $@;
 
-    if ($comp)
-    {
-	my $info = HTML::Mason::ComponentInfo->new( friendly_name => $p{path} || $p{name},
-						    comp_path => $p{path} || $p{name},
-						    comp_id => undef,
-						    last_modified => time,
-						    source_callback => sub { },
-						  );
-
-	$comp->assign_runtime_properties($self, $info);
-    }
+    $comp->assign_runtime_properties($self, $source);
 
     if ($p{path}) {
-	$self->code_cache->{$p{path}} = {lastmod=>time(), comp=>$comp, type=>'virtual'};
+	$self->code_cache->{$p{path}} = {lastmod => time(), comp => $comp, type => 'virtual'};
     }
 
     return $comp;
@@ -615,27 +612,27 @@ sub code_cache_decay_factor { 0.75 }
 
 
 ###################################################################
-# The eval_object_text & write_object_file methods used to be in
+# The eval_object_code & write_object_file methods used to be in
 # Parser.pm.  This is a temporary home only.  They need to be moved
 # again at some point in the future (during some sort of interp
 # re-architecting.
 ###################################################################
 
 #
-# eval_object_text
-#   (object_text, object_file, error)
+# eval_object_code
+#   (object_code, object_file, error)
 # Evaluate an object file or object text.  Return a component object
 # or undef if error.
 #
 # I think this belongs in the resolver (or comp loader) - Dave
 #
-sub eval_object_text
+sub eval_object_code
 {
-    my ($self, %options) = @_;
-    my $object = $options{object};
+    my ($self, %p) = @_;
+    my $object_code = $p{object_code};
 
     # If in taint mode, untaint the object text
-    ($object) = ($object =~ /^(.*)/s) if taint_is_on;
+    ($object_code) = ($object_code =~ /^(.*)/s) if taint_is_on;
 
     #
     # Evaluate object file or text with warnings on
@@ -648,7 +645,7 @@ sub eval_object_text
 	local $^W = 1;
 	local $SIG{__WARN__} = $ignore_expr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ } : sub { $warnstr .= $_[0] };
 
-	$comp = eval $object;
+	$comp = eval $object_code;
     }
 
     $err = $warnstr . $@;
@@ -691,7 +688,7 @@ sub eval_object_text
 
 #
 # write_object_file
-#   (object_text=>..., object_file=>..., files_written=>...)
+#   (object_code=>..., object_file=>..., files_written=>...)
 # Save object text in an object file.
 #
 # We attempt to handle several cases in which a file already exists
@@ -705,8 +702,8 @@ sub eval_object_text
 sub write_object_file
 {
     my ($self, %options) = @_;
-    my ($object_text,$object_file,$files_written) =
-	@options{qw(object_text object_file files_written)};
+    my ($object_code,$object_file,$files_written) =
+	@options{qw(object_code object_file files_written)};
     my @newfiles = ($object_file);
 
     if (defined $object_file && !-f $object_file) {
@@ -725,7 +722,7 @@ sub write_object_file
     my $fh = make_fh();
     open $fh, ">$object_file"
 	or system_error "Couldn't write object file $object_file: $!";
-    print $fh $object_text
+    print $fh $object_code
 	or system_error "Couldn't write object file $object_file: $!";
     close $fh 
 	or system_error "Couldn't close object file $object_file: $!";

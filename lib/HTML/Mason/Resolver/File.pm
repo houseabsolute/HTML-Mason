@@ -77,15 +77,12 @@ sub get_info {
 						comp_id => "$base$path",
 						last_modified => $modified,
 						comp_path => $path,
+						comp_class => 'HTML::Mason::Component::FileBased',
 						extra => { comp_root => $key },
 						source_callback => sub { read_file($srcfile) },
 					      );
     }
     return;
-}
-
-sub comp_class {
-    return 'HTML::Mason::Component::FileBased';
 }
 
 #
