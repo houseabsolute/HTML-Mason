@@ -400,9 +400,7 @@ $x
 return if $m->cache_self;
 </%init>
 <%filter>
-$Global::foo ||= 1;
-$Global::foo++;
-$_ .= "global is $Global::foo";
+s/(\d+)/$1+1/ge;
 </%filter>
 EOF
 			);
@@ -410,16 +408,15 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'cache_self_filtered_2',
-		      description => 'make sure that results are cached _after_ filtering',
+		      description => 'make sure that results are only filtered once',
 		      component => <<'EOF',
 <& support/cache_self_filtered_2, x => 1 &>
 <& support/cache_self_filtered_2, x => 99 &>
 EOF
 		      expect => <<'EOF',
-x is 1
-global is 2
-x is 1
-global is 2
+x is 2
+
+x is 2
 EOF
 		    );
 
@@ -495,22 +492,75 @@ die 'foo';
 EOF
 			);
 
-#------------------------------------------------------------
-
     $group->add_test( name => 'cache_self_death',
 		      description => 'test $m->cache_self and death',
 		      component => <<'EOF',
-<% $old_stack_size == $new_stack_size ? 'same' : "$old_stack_size != $new_stack_size" %>
 <%init>
-my $old_stack_size = scalar $m->buffer_stack;
-eval { $m->comp( 'support/cache_self_die' ) };
-my $new_stack_size = scalar $m->buffer_stack;
+$m->comp( 'support/cache_self_die' );
 </%init>
 EOF
-		      expect => <<'EOF',
-same
+		      expect_error => qr/foo at/,
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_support ( path => 'support/cache_self_abort2',
+			  component => <<'EOF',
+going to abort, a = <% $ARGS{a} %>
+% $m->abort();
+EOF
+			);
+
+    $group->add_support( path => 'support/cache_self_abort',
+			 component => <<'EOF',
+<%init>
+return if $m->cache_self;
+$m->comp( 'cache_self_abort2', a=>5 );
+</%init>
+EOF
+		       );
+
+    $group->add_test( name => 'cache_self_abort',
+		      description => 'test $m->cache_self and abort',
+		      component => <<'EOF',
+<%init>
+eval { $m->comp( 'support/cache_self_abort', a=>5 ) };
+eval { $m->comp( 'support/cache_self_abort', a=>10 ) };
+</%init>
+EOF
+		      expect => <<'EOF'
+going to abort, a = 5
+going to abort, a = 5
 EOF
 		    );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => 'support/cache_self_with_subexec2',
+                         component => <<'EOF',
+This is the subrequest, a = <% $ARGS{a} %>
+EOF
+                       );
+
+    $group->add_support( path => 'support/cache_self_with_subexec',
+                         component => <<'EOF',
+% return if $m->cache_self;
+% $m->subexec('cache_self_with_subexec2', a=>$ARGS{a});
+EOF
+	               );
+
+    $group->add_test( name => 'cache_self_with_subexec',
+                      description => 'test $m->subexec in presence of $m->cache_self',
+                      component => <<'EOF',
+<& support/cache_self_with_subexec, a=>5 &>
+<& support/cache_self_with_subexec, a=>10 &>
+EOF
+                         expect => <<'EOF',
+This is the subrequest, a = 5
+
+This is the subrequest, a = 5
+EOF
+                    );
 
 #------------------------------------------------------------
 

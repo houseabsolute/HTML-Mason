@@ -7,16 +7,51 @@ available at http://www.masonhq.com/code/history.html.
 
 1.3x
 
-[ BACKWARDS INCOMPATIBILITIES ]
+[ INCOMPATIBLE CHANGES ]
 
+- ** Mason now requires Perl 5.6.0 or later. However, because 5.6.0
+has so many problems, it cannot be officially supported; we strongly
+recommend upgrading to at least 5.6.1.
 - ** Mason now requires version 1.24 of mod_perl in the ApacheHandler
 module.
+- ** Autoflush mode will not work unless the enable_autoflush
+parameter is turned on.
+- ** max_code_cache_size is now kept in terms of number of components,
+not bytes, and its default value is 'unlimited'.
+- ** Components with a <%filter> and a cache_self are no longer cached
+in their filtered state. Performance-related code simplifications made
+this behavior difficult to maintain. Long term this would be
+easier to implement with a cache_self component <%flag>.
+- ** The current_time method, deprecated in 1.1x, has been removed.
+- ** The behaviors of $m->flush_buffer and $m->clear_buffer have been
+simplified. $m->flush_buffer only acts on the top-level output buffer;
+$m->clear_buffer clears all output buffers. Task id #554.
+
+[ ENHANCEMENTS ]
+
+- Significantly improved performance in component execution,
+especially in static_source mode.
+- Added a plugin architecture. Plugin classes can perform actions at
+key points, e.g. before and after each request and each component
+call.  See HTML::Mason::Plugin for documentation.
+- Added the ability to change component root(s) on the fly if the
+dynamic_comp_root parameter is turned on.
+- Moved the notion of component roots (single and multiple) from the
+Resolver to the Interpreter. This improved the performance of multiple
+component roots in conjunction with static source mode. Any resolver,
+file-based or otherwise, can benefit from component root settings or
+choose to ignore them.
+- Added an official comment syntax, <% # ... %>, and documented
+the various comment markers in the developer's manual. Task id #566.
+- Added buffer_preallocate_size parameter, which allows you to
+potentially reduce buffer reallocations.
+- The 'could not find component' error message now includes the
+component root(s). Task id #562.
 
 [ BUG FIXES ]
 
 - Mason now throws an error if the path specified in a component's
 'inherit' flag cannot be found. Task id #480.
-
 
 1.24  November 12, 2003
 

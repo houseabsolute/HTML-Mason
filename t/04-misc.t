@@ -244,24 +244,10 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'dhandler7',
-		      description => 'test that $m->decline does not leak buffer objects',
-		      call_path => '/dhandler_test/buff/buffers',
-		      component => <<'EOF',
-% $m->decline;
-I'm buffers
-EOF
-		      expect => <<'EOF',
-Buffer stack size: 2
-EOF
-		    );
-
-#------------------------------------------------------------
-
     $group->add_test( name => 'accessor_validate',
 		      description => 'test accessor parameter validation',
 		      component => <<'EOF',
-% $m->interp->code_cache_max_size([1]);
+% $m->interp->ignore_warnings_expr([1]);
 EOF
 		      expect_error => qr/Parameter #1.*to .*? was an 'arrayref'/,
 		    );

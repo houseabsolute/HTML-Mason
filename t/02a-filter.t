@@ -88,6 +88,25 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'filter_and_args_error',
+                      description =>
+                      'args error should not present a problem for <%filter>',
+                      component => <<'EOF',
+<%args>
+$required
+</%args>
+
+foo
+
+<%filter>
+s/foo/bar/g;
+</%filter>
+EOF
+                      expect_error => qr/no value sent for required parameter/,
+                    );
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/support/has_filter',
 			 component => <<'EOF',
 lower case
@@ -185,18 +204,18 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'filter_and_flush',
-                      description => 'test that flush is respected with filter present',
+                      description => 'test that filter still occurs in presence of flush',
                       component => <<'EOF',
-foo
+hello
 % $m->flush_buffer;
-bar
+goodbye
 <%filter>
-s/(foo)\s+(\S+)/$2$1/;
+tr/a-z/A-Z/
 </%filter>
 EOF
                       expect => <<'EOF',
-foo
-bar
+HELLO
+GOODBYE
 EOF
                     );
 

@@ -947,14 +947,33 @@ EOF
 	$group->add_test( name => 'comment_in_sub',
 			  description => 'test a substitution that only contains a comment',
 			  component => <<'EOF',
-<% # foo %>
-bar
+0
+<% # a one-line comment %>
+1
+<%
+   # a multiline
+  
+   # comment
+%>
+2
+<% # a multiline
+   # comment %>
+3
+<% %>
+4
+
 EOF
                           expect => <<'EOF',
+0
 
-bar
+1
+
+2
+
+3
+
+4
 EOF
-                          todo   => 'not sure this can/should be fixed',
                         );
 
 #------------------------------------------------------------

@@ -29,6 +29,10 @@ BEGIN
          { parse => 'string', type => SCALAR|ARRAYREF, default => [],
            descr => "Escape flags that will apply by default to all Mason tag output" },
 
+	 enable_autoflush =>
+	 { parse => 'boolean', type => SCALAR, default => 0,
+	   descr => "Whether to include support for autoflush when compiling components" },
+
 	 lexer =>
          { isa => 'HTML::Mason::Lexer',
            descr => "A Lexer object that will scan component text during compilation" },
@@ -54,16 +58,28 @@ BEGIN
         ( lexer => { class => 'HTML::Mason::Lexer',
                      descr => "This class generates compiler events based on the components source" },
         );
+
+    # Define an IN_PERL_DB compile-time constant indicating whether we are
+    # in the Perl debugger. This is used in the object file to
+    # determine whether to call $m->debug_hook.
+    #
+    if (defined($DB::sub)) {
+	*IN_PERL_DB = sub () { 1 };
+    } else {
+	*IN_PERL_DB = sub () { 0 };
+    }
 }
 
 use HTML::Mason::MethodMaker
     ( read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
-                      qw( lexer
-                          preprocess
-                          postprocess_perl
-                          postprocess_text
-			  use_source_line_numbers
-                        )
+                      qw(
+			 enable_autoflush
+			 lexer
+			 preprocess
+			 postprocess_perl
+			 postprocess_text
+			 use_source_line_numbers
+			 )
 		    ],
     );
 
@@ -320,9 +336,13 @@ sub text
     eval { $self->postprocess_text->($tref) } if $self->postprocess_text;
     compiler_error $@ if $@;
 
-    $$tref =~ s,(['\\]),\\$1,g;
+    $$tref =~ s,([\'\\]),\\$1,g;
 
-    $self->_add_body_code("\$m->print( '", $$tref, "' );\n");
+    if ($self->enable_autoflush) {
+	$self->_add_body_code("\$m->print( '", $$tref, "' );\n");
+    } else {
+        $self->_add_body_code("\$\$_outbuf .= '", $$tref, "';\n");
+    }
 
     $self->{current_compile}{last_body_code_type} = 'text';
 }
@@ -434,6 +454,20 @@ sub substitution
 
     my $text = $p{substitution};
 
+    # This is a comment tag if all lines of text contain only whitespace
+    # or start with whitespace and a comment marker, e.g.
+    #
+    #   <%
+    #     #
+    #     # foo
+    #   %>
+    #
+    my @lines = split(/\n/, $text);
+    unless (grep { /^\s*[^\s\#]/ } @lines) {
+	$self->{current_compile}{last_body_code_type} = 'substitution';
+	return;
+    }
+
     if ( ( exists $p{escape} && defined $p{escape} ) ||
          @{ $self->{default_escape_flags} }
        )
@@ -469,7 +503,15 @@ sub substitution
         $text = "\$m->interp->apply_escapes( (join '', ($text)), $flags )" if $flags;
     }
 
-    my $code = "\$m->print( $text );\n";
+    my $code;
+
+    # Make sure to allow lists within <% %> tags.
+    #
+    if ($self->enable_autoflush) {
+	$code = "\$m->print( $text );\n";
+    } else {
+	$code = "for ($text) { \$\$_outbuf .= \$_ }\n";
+    }
 
     eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
     compiler_error $@ if $@;
@@ -514,6 +556,7 @@ sub component_content_call
     push @{ $c->{comp_with_content_stack} }, $call;
 
     my $code = "\$m->comp( { content => sub {\n";
+    $code .= $self->_set_buffer();
 
     eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
     compiler_error $@ if $@;
@@ -692,6 +735,12 @@ basis; see DEVEL<escaping expressions>.
 
 If you want to set I<multiple> flags as the default, this should be
 given as a reference to an array of flags.
+
+=item enable_autoflush
+
+True or false, default is false. This flag must be set to true in
+order for P<autoflush> to work. The component can be compiled to a
+more efficient form if it does not have to check for autoflush mode.
 
 =item lexer
 

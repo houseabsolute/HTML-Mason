@@ -82,6 +82,8 @@ EOF
               component => <<'EOF',
 My depth is <% $m->depth %>.
 
+I <% $m->is_subrequest ? 'am' : 'am not' %> a subrequest.
+
 The top-level component is <% $m->request_comp->title %>.
 
 My stack looks like:
@@ -128,7 +130,12 @@ if (defined($cmd_options{tests_class})) {
 my %tests_to_run;
 if ($cmd_options{tests_to_run}) {
     for ($cmd_options{tests_to_run}) { s/^\s+//; s/\s+$// }
-    my @tests_to_run = sort { $a <=> $b } split(/\s*,\s*/, $cmd_options{tests_to_run});
+    my @tests_to_run = split(/\s*,\s*/, $cmd_options{tests_to_run});
+    if (grep { /[^0-9]/ } @tests_to_run) {
+	@tests_to_run = sort { $a cmp $b } @tests_to_run;
+    } else {
+	@tests_to_run = sort { $a <=> $b } @tests_to_run;
+    }
     %tests_to_run = map { ($_, 1) } @tests_to_run;
     $Test->diag(sprintf("Running only test%s %s\n", @tests_to_run == 1 ? "" : "s", join(", ", @tests_to_run)))
 }
@@ -499,7 +506,13 @@ sub _run_test
     my $interp = $self->_make_main_interp;
     $interp->out_method( sub { for (@_) { $self->{buffer} .= $_ if defined $_ } } );
 
-    eval { $self->_execute($interp) };
+    eval {
+	# Run pre_code if test has it - pass in interp
+	if ($test->{pre_code}) {
+	    $test->{pre_code}->($interp);
+	}
+	$self->_execute($interp);
+    };
 
     return $self->check_result($@);
 }

@@ -208,9 +208,6 @@ sub compiled_component
 
 
 
-    $params->{object_size} = 0;
-    $params->{object_size} += length for ($header, %$params);
-
     $self->_output_chunk($p{fh}, \$obj_text,
 			 $self->_constructor( $self->comp_class,
 					      $params ),
@@ -356,14 +353,22 @@ sub _body
 
     return join '', ( $self->preamble,
                       $self->_set_request,
+		      $self->_set_buffer,
 		      $self->_arg_declarations,
                       $self->_filter,
-		      "\$m->debug_hook( \$m->current_comp->path ) if ( \%DB:: );\n\n",
+		      "\$m->debug_hook( \$m->current_comp->path ) if ( HTML::Mason::Compiler::IN_PERL_DB() );\n\n",
 		      $self->_blocks('init'),
+
+		      # don't show warnings when appending undefined value to $_outbuf
+		      "\n{ no warnings 'uninitialized';\n",
 		      $self->{current_compile}{body},
+		      "\n}\n",
+
 		      $self->_blocks('cleanup'),
 		      $self->postamble,
-		      "return undef;\n",
+
+		      # don't return values implicitly
+		      "return;\n",
 		    );
 }
 
@@ -374,6 +379,17 @@ sub _set_request
     return if $self->in_package eq 'HTML::Mason::Commands';
 
     return 'local $' . $self->in_package . '::m = $HTML::Mason::Commands::m;' . "\n";
+}
+
+sub _set_buffer
+{
+    my $self = shift;
+
+    if ($self->enable_autoflush) {
+	return;
+    } else {
+	return 'my $_outbuf = $m->{top_stack}->[HTML::Mason::Request::STACK_BUFFER];' . "\n";
+    }
 }
 
 my %coercion_funcs = ( '@' => 'HTML::Mason::Tools::coerce_to_array',

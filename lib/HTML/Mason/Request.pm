@@ -35,12 +35,20 @@ package HTML::Mason::Request;
 use strict;
 
 use File::Spec;
-use HTML::Mason::Tools qw(read_file compress_path load_pkg pkg_loaded absolute_comp_path);
+use HTML::Mason::Tools qw(can_weaken read_file compress_path load_pkg pkg_loaded absolute_comp_path);
 use HTML::Mason::Utils;
-use HTML::Mason::Buffer;
-
 use Class::Container;
 use base qw(Class::Container);
+
+# Stack frame constants
+use constant STACK_COMP      	=> 0;
+use constant STACK_ARGS      	=> 1;
+use constant STACK_BUFFER    	=> 2;
+use constant STACK_MODS      	=> 3;
+use constant STACK_PATH      	=> 4;
+use constant STACK_DEPTH     	=> 5;
+use constant STACK_BASE_COMP 	=> 6;
+use constant STACK_IN_CALL_SELF => 7;
 
 # HTML::Mason::Exceptions always exports rethrow_exception() and isa_mason_exception()
 use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error
@@ -107,53 +115,52 @@ BEGIN
 
 	 out_method =>
          { parse => 'code',type => CODEREF|SCALARREF,
-           default => sub { print STDOUT grep {defined} @_ },
+           default => sub { print STDOUT $_[0] },
            descr => "A subroutine or scalar reference through which all output will pass" },
 
- 	 plugins => { type => ARRAYREF, default => [], parse => 'list',
- 		      descr => "Classes or objects to run event hooks around Mason actions",
- 		    },
-
-         # The next two are only used when creating subrequests
+         # Only used when creating subrequests
 	 parent_request =>
          { isa => __PACKAGE__,
            default => undef,
            public  => 0,
          },
 
+ 	 plugins =>
+         { parse => 'arrayref', default => [],
+ 	   descr => 'List of plugin classes or objects to run hooks around components and requests' },
+
+         # Only used when creating subrequests
 	 request_depth =>
          { type => SCALAR,
-           default => 0,
+           default => 1,
            public  => 0,
          },
 
         );
-
-    __PACKAGE__->contained_objects
-	(
-	 buffer     => { class => 'HTML::Mason::Buffer',
-			 delayed => 1,
-			 descr => "This class receives component output and dispatches it appropriately" },
-	);
 }
 
 my @read_write_params;
-BEGIN { @read_write_params = qw( autoflush
-				 data_cache_api
-				 data_cache_defaults
-				 dhandler_name
-				 error_format
-				 error_mode
-                                 max_recurse
-                                 out_method ); }
+BEGIN { @read_write_params = qw(
+				autoflush
+				data_cache_api
+				data_cache_defaults
+				dhandler_name
+				error_format
+				error_mode
+				max_recurse
+				out_method
+				); }
+
 use HTML::Mason::MethodMaker
-    ( read_only => [ qw( count
-			 dhandler_arg
-			 interp
-			 parent_request
-                         plugin_things
-			 request_depth
-			 request_comp ) ],
+    ( read_only => [ qw(
+			count
+			dhandler_arg
+			interp
+			parent_request
+			plugin_instances
+			request_depth
+			request_comp
+			) ],
 
       read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
                       @read_write_params ]
@@ -166,15 +173,17 @@ sub new
     my $class = shift;
     my $self = $class->SUPER::new(@_);
 
-    %$self = (%$self, buffer_stack => undef,
-		      count => 0,
-		      dhandler_arg => undef,
-	              execd => 0,
-		      stack => undef,
-		      wrapper_chain => undef,
-		      wrapper_index => undef,
-		      notes => {},
-	     );
+    # These are mandatory values for all requests.
+    #
+    %$self = (%$self,
+	      dhandler_arg   => undef,
+	      execd 	     => 0,
+	      stack 	     => [],
+	      top_stack      => undef,
+	      wrapper_chain  => undef,
+	      wrapper_index  => undef,
+	      notes 	     => {},
+	      );
 
     $self->{request_comp} = delete($self->{comp});
     $self->{request_args} = delete($self->{args});
@@ -182,6 +191,12 @@ sub new
 	$self->{request_args} = [%{$self->{request_args}}];
     }
     $self->{count} = ++$self->{interp}{request_count};
+    if (ref($self->{out_method}) eq 'SCALAR') {
+	my $bufref = $self->{out_method};
+	$self->{out_method} = sub { $$bufref .= $_[0] };
+    }
+    $self->{use_internal_component_caches} =
+	$self->{interp}->use_internal_component_caches;
     $self->_initialize;
 
     return $self;
@@ -193,6 +208,9 @@ sub instance {
     return $HTML::Mason::Commands::m; #; this comment fixes a parsing bug in Emacs cperl-mode
 }
 
+# Attempt to load each plugin module once per process
+my %plugin_loaded;
+
 sub _initialize {
     my ($self) = @_;
     my $interp = $self->interp;
@@ -200,9 +218,6 @@ sub _initialize {
     local $SIG{'__DIE__'} = \&rethrow_exception;
 
     eval {
-	$self->{buffer_stack} = [];
-	$self->{stack} = [];
-
 	# request_comp can be an absolute path or component object.  If a path,
 	# load into object.
 	my $request_comp = $self->{request_comp};
@@ -239,23 +254,48 @@ sub _initialize {
 	    }
 
 	    unless ($self->{request_comp} = $request_comp) {
-		top_level_not_found_error "could not find component for initial path '$self->{top_path}'\n";
+		top_level_not_found_error "could not find component for initial path '$self->{top_path}' " .
+		    "(component roots are: " .
+	            join(", ", map { "'" . $_->[1] . "'" } $self->{interp}->comp_root_array) .
+	            ")";
 	    }
 
 	} elsif ( ! UNIVERSAL::isa( $request_comp, 'HTML::Mason::Component' ) ) {
 	    param_error "comp ($request_comp) must be a component path or a component object";
 	}
 
-        $self->{plugin_things} = [];
- 	# construct a plugin object for each plugin class in each request.
+ 	# Construct a plugin instance for each plugin class in each request.
+	#
+        $self->{plugin_instances} = [];
  	foreach my $plugin (@{ delete $self->{plugins} }) {
- 	    my $plugin_thing = $plugin;
+ 	    my $plugin_instance = $plugin;
  	    unless (ref $plugin) {
- 	        eval "use $plugin;";
- 	        $plugin_thing = $plugin->can('new') ? $plugin->new() : $plugin;
+
+		# Load information about each plugin class once per
+		# process.  Right now the only information we need is
+		# whether there is a new() method.
+		#
+		unless ($plugin_loaded{$plugin}) {
+		    # Load plugin package if it isn't already loaded.
+		    #
+		    { no strict 'refs';
+		      unless (defined(%{$plugin . "::"})) {
+			  eval "use $plugin;";
+			  die $@ if $@;
+		      }}
+		    $plugin_loaded{$plugin} = 1;
+		}
+ 	        $plugin_instance = $plugin->new();
  	    }
- 	    push @{$self->{plugin_things}}, $plugin_thing;
+ 	    push @{$self->{plugin_instances}}, $plugin_instance;
  	}
+	$self->{plugin_instances_reverse} = [reverse(@{$self->{plugin_instances}})];
+
+	# Check for autoflush and !enable_autoflush
+	#
+	if ($self->{autoflush} && !$self->interp->compiler->enable_autoflush) {
+	    die "Cannot use autoflush unless enable_autoflush is set";
+	}
 
     };
 
@@ -308,13 +348,23 @@ sub exec {
     my ($self) = @_;
     my $interp = $self->interp;
 
+    # All errors returned from this routine will be in exception form.
+    local $SIG{'__DIE__'} = \&rethrow_exception;
+
     # Cheap way to prevent users from executing the same request twice.
+    #
     if ($self->{execd}++) {
 	error "Can only call exec() once for a given request object. Did you want to use a subrequest?";
     }
 
-    # All errors returned from this routine will be in exception form.
-    local $SIG{'__DIE__'} = \&rethrow_exception;
+    # Check for infinite subrequest loop.
+    #
+    error "subrequest depth > " . $self->max_recurse . " (infinite subrequest loop?)"
+	if $self->request_depth > $self->max_recurse;
+
+    # Check the static_source touch file, if it exists.
+    #
+    $self->interp->check_static_source_touch_file();
 
     #
     # $m is a dynamically scoped global containing this
@@ -323,15 +373,21 @@ sub exec {
     #
     local $HTML::Mason::Commands::m = $self;
 
+    # Dynamically scoped global pointing at the top of the request stack.
+    #
+    $self->{top_stack} = undef;
+
     # Save context of subroutine for use inside eval.
     my $wantarray = wantarray;
     my @result;
-    eval {
-	# Create base buffer.
-	my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
-	push @{ $self->{buffer_stack} }, $buffer;
-        push @{ $self->{buffer_stack} }, $buffer->new_child;
 
+    # Initialize output buffer to interpreter's preallocated buffer
+    # before clearing, to reduce memory reallocations.
+    #
+    $self->{request_buffer} = $self->interp->preallocated_output_buffer;
+    $self->{request_buffer} = '';
+
+    eval {
 	# Build wrapper chain and index.
 	my $request_comp = $self->request_comp;
 	my $first_comp;
@@ -359,68 +415,56 @@ sub exec {
 	    tie *SELECTED, 'Tie::Handle::Mason';
 
 	    my $old = select SELECTED;
+	    my $mods = {base_comp=>$request_comp, store=>\ ($self->{request_buffer})};
 
  	    eval {
- 	      foreach my $plugin (@{$self->plugin_things}) {
- 		$plugin->start_request( request => $self,
-                                        args => $request_args,
-                                        wantarray => $wantarray
-                                      );
- 	      }
+		foreach my $plugin_instance (@{$self->plugin_instances}) {
+		    $plugin_instance->start_request( $self, $request_args );
+		}
  	    };
  	    if ($@) {
- 	      select $old;
- 	      rethrow_exception $@;
+		select $old;
+		rethrow_exception $@;
  	    }
 
 	    if ($wantarray) {
-		@result = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @$request_args)};
+		@result = eval {$self->comp($mods, $first_comp, @$request_args)};
 	    } elsif (defined($wantarray)) {
-		$result[0] = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @$request_args)};
+		$result[0] = eval {$self->comp($mods, $first_comp, @$request_args)};
 	    } else {
-		eval {$self->comp({base_comp=>$request_comp}, $first_comp, @$request_args)};
+		eval {$self->comp($mods, $first_comp, @$request_args)};
 	    }
  
  	    my $error = $@;
  	    
  	    # plugins called in reverse order when exiting.
  	    eval {
- 	      foreach my $plugin (reverse @{$self->plugin_things}) {
- 		$plugin->end_request( request => $self,
-                                      args => $request_args,
-                                      wantarray => $wantarray,
-                                      error => \$error,
-                                      return_value => \@result
-                                    );
- 	      }
+		foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {
+		    $plugin_instance->end_request( $self, $request_args, $wantarray, \@result, \$error );
+		}
  	    };
  	    if ($@) {
- 	      # plugin errors take precedence over component errors
- 	      $error = $@;
+		# plugin errors take precedence over component errors
+		$error = $@;
  	    }
- 
+	    
 	    select $old;
 	    rethrow_exception $error;
 	}
     };
 
+    # Purge code cache if necessary.
+    $interp->purge_code_cache;
+
     # Handle errors.
     my $err = $@;
     if ($err and !$self->_aborted_or_declined($err)) {
-	pop @{ $self->{buffer_stack} };
-	pop @{ $self->{buffer_stack} };
 	$self->_handle_error($err);
 	return;
     }
 
-    # Flush output buffer.
-    $self->flush_buffer;
-    pop @{ $self->{buffer_stack} };
-    pop @{ $self->{buffer_stack} };
-
-    # Purge code cache if necessary. We do this at the end so as not
-    # to affect the response of the request as much.
-    $interp->purge_code_cache;
+    # Send output buffer to out_method.
+    $self->out_method->($self->{request_buffer});
 
     # Return aborted value or result.
     @result = ($err->aborted_value) if $self->aborted($err);
@@ -476,7 +520,9 @@ sub make_subrequest
 
     unless ( $params{out_method} )
     {
-	$defaults{out_method} = sub { $self->top_buffer->receive(@_) };
+	$defaults{out_method} = sub {
+	    $self->print($_[0]);
+	};
     }
 
     # Make subrequest, and set parent_request and request_depth appropriately.
@@ -484,9 +530,6 @@ sub make_subrequest
         $interp->make_request(%defaults, %params,
                               parent_request => $self,
                               request_depth => $self->request_depth + 1);
-
-    error "subrequest depth > " . $self->max_recurse . " (infinite subrequest loop?)"
-	if $subreq->request_depth > $self->max_recurse;
 
     return $subreq;
 }
@@ -674,7 +717,7 @@ sub _cache_1_x
 sub cache_self {
     my ($self, %options) = @_;
 
-    return if $self->top_stack->{in_call_self};
+    return if $self->{top_stack}->[STACK_IN_CALL_SELF]->{'CACHE_SELF'};
 
     my (%store_options, %retrieve_options);
     my ($expires_in, $key, $cache);
@@ -699,7 +742,7 @@ sub cache_self {
 	$cache = $self->cache(%options);
     }
 
-    my ($output, @retval);
+    my ($output, @retval, $error);
 
     my $cached =
         ( $self->data_cache_api eq '1.0' ?
@@ -708,13 +751,16 @@ sub cache_self {
         );
 
     if ($cached) {
-        $self->top_buffer->remove_filter
-            if $self->top_stack->{comp}->has_filter;
-
         ($output, my $retval) = @$cached;
         @retval = @$retval;
     } else {
-        $self->call_self( \$output, \@retval );
+        $self->call_self( \$output, \@retval, \$error, 'CACHE_SELF' );
+
+	# If user aborted or declined, store in cache and print output
+	# before repropagating.
+	#
+	rethrow_exception $error
+	    unless ($self->_aborted_or_declined($error));
 
         my $value = [$output, \@retval];
         if ($self->data_cache_api eq '1.0') {
@@ -730,82 +776,73 @@ sub cache_self {
     $self->print($output);
 
     #
+    # Rethrow abort/decline exception if any.
+    #
+    rethrow_exception $error;
+
+    #
     # Return the component return value in case the caller is interested,
     # followed by 1 indicating the cache retrieval success.
     #
     return (@retval, 1);
-
 }
 
-my $do_nothing = sub {};
 sub call_self
 {
-    my ($self, $output, $retval) = @_;
+    my ($self, $output, $retval, $error, $tag) = @_;
 
-    return if $self->top_stack->{in_call_self};
+    # Keep track of each individual invocation of call_self in the
+    # component, via $tag.  $tag is 'CACHE_SELF' or 'FILTER' when used
+    # by $m->cache_self and <%filter> sections respectively.
+    #
+    $tag ||= 'DEFAULT';
+    my $top_stack = $self->{top_stack};
+    $top_stack->[STACK_IN_CALL_SELF] ||= {};
+    return if $top_stack->[STACK_IN_CALL_SELF]->{$tag};
+    local $top_stack->[STACK_IN_CALL_SELF]->{$tag} = 1;
 
-    # If the top buffer has a filter we need to remove it because
-    # we'll be adding the filter buffer again in a moment.  This is
-    # done because we might have been called via cache_self, and we
-    # want to capture the _filtered_ component ou caching.
-    $self->top_buffer->remove_filter
-        if $self->top_stack->{comp}->has_filter;
+    # Determine wantarray based on retval reference
+    my $wantarray =
+	( defined $retval ?
+	  ( UNIVERSAL::isa( $retval, 'ARRAY' ) ? 1 : 0 ) :
+	  undef
+	  );
 
-    unless (defined $output) {
-        # don't bother accumulating output that will never be seen
-        $output = $do_nothing;
+    # If output or retval references were left undefined, just point
+    # them to a dummy variable.
+    #
+    my $dummy;
+    $output ||= \$dummy;
+    $retval ||= \$dummy;
+
+    # Temporarily put $output in place of the current top buffer.
+    local $top_stack->[STACK_BUFFER] = $output;
+
+    # Call the component again, capturing output, return value and
+    # error. Don't catch errors unless the error reference was specified.
+    #
+    my $comp = $top_stack->[STACK_COMP];
+    my $args = $top_stack->[STACK_ARGS];
+    my @result;
+    eval {
+	if ($wantarray) {
+	    @$retval = $comp->run(@$args);
+	} elsif (defined $wantarray) {
+	    $$retval = $comp->run(@$args);
+	} else {
+	    $comp->run(@$args);
+	}
+    };
+    if ($@) {
+	if ($error) {
+	    $$error = $@;
+	} else {
+	    die $@;
+	}
     }
 
-    eval
-    {
-        my $top_stack = $self->top_stack;
-        my $comp = $top_stack->{comp};
-        my @args = @{ $top_stack->{args} };
-
-        push @{ $self->{buffer_stack} },
-            $self->top_buffer->new_child( sink => $output,
-                                          ignore_flush => 1,
-                                          ignore_clear => 1,
-                                        );
-
-        push @{ $self->{buffer_stack} },
-            $self->top_buffer->new_child( filter_from => $comp )
-                if $comp->has_filter;
-
-        local $top_stack->{in_call_self} = 1;
-
-        my $wantarray =
-	    ( !defined $retval ? undef :
-	      UNIVERSAL::isa( $retval, 'ARRAY' ) ? 1 :
-	      0
-	    );
-
-        eval {
-            if ($wantarray) {
-                @$retval = $comp->run(@args);
-            } elsif (defined $wantarray) {
-                $$retval = $comp->run(@args);
-            } else {
-                $comp->run(@args);
-            }
-        };
-
-        #
-        # Whether there was an error or not we need to pop the buffer
-        # stack (twice if we added a filter buffer).
-        #
-        if ( $comp->has_filter ) {
-            my $filter = pop @{ $self->{buffer_stack} };
-            $filter->flush;
-        }
-
-        pop @{ $self->{buffer_stack} };
-
-        rethrow_exception $@;
-    };
-
-    rethrow_exception $@ unless $self->declined;
-
+    # Return 1, indicating that this invocation of call_self is done.
+    #
     return 1;
 }
 
@@ -840,11 +877,12 @@ sub callers
 {
     my ($self, $levels_back) = @_;
     if (defined($levels_back)) {
-	my $entry = $self->stack_entry($levels_back);
-	return unless defined $entry;
-	return $entry->{comp};
+	my $frame = $self->stack_frame($levels_back);
+	return unless defined $frame;
+	return $frame->[STACK_COMP];
     } else {
-	return map($_->{comp}, reverse $self->stack);
+	my $depth = $self->depth;
+	return map($_->[STACK_COMP], $self->stack_frames);
     }
 }
 
@@ -856,9 +894,9 @@ sub caller_args
     my ($self, $levels_back) = @_;
     param_error "caller_args expects stack level as argument" unless defined $levels_back;
 
-    my $entry = $self->stack_entry($levels_back);
-    return unless $entry;
-    my $args = $entry->{args};
+    my $frame = $self->stack_frame($levels_back);
+    return unless $frame;
+    my $args = $frame->[STACK_ARGS];
     return wantarray ? @$args : { @$args };
 }
 
@@ -891,7 +929,7 @@ sub depth
 
     # direct access for speed because this method is called on every
     # call to $m->comp
-    return scalar @{ $self->{stack} };
+    return $self->{top_stack}->[STACK_DEPTH];
 }
 
 #
@@ -899,19 +937,54 @@ sub depth
 # Handles SELF, PARENT, REQUEST, comp:method, relative->absolute
 # conversion, and local subcomponents.
 #
+# fetch_comp handles caching if use_internal_component_caches is on.
+# fetch_comp_ does the real work.
+#
 sub fetch_comp
 {
-    my ($self,$path) = @_;
-    param_error "fetch_comp: requires path as first argument" unless defined($path);
+    my ($self, $path, $current_comp) = @_;
+
+    $current_comp ||= $self->{top_stack}->[STACK_COMP];
+    if ($self->{use_internal_component_caches}) {
+	my $fetch_comp_cache = $current_comp->{fetch_comp_cache};
+	unless (exists($fetch_comp_cache->{$path})) {
+
+	    # Cache the component objects associated with
+	    # uncanonicalized paths like ../foo/bar.html.  SELF and
+	    # REQUEST are dynamic and cannot be cached. Weaken the
+	    # references in this cache so that we don't hang on to the
+	    # coponent if it disappears from the main code cache.
+	    #
+	    # See Interp::_initialize for the definition of
+	    # use_internal_component_caches and the conditions under
+	    # which we can create this cache safely.
+	    #
+	    if ($path =~ /^(?:SELF|REQUEST)/) {
+		return $self->fetch_comp_($path, $current_comp);
+	    } else {
+		$fetch_comp_cache->{$path} =
+		    $self->fetch_comp_($path, $current_comp);
+		Scalar::Util::weaken($fetch_comp_cache->{$path}) if can_weaken;
+	    }
+	}
+	return $fetch_comp_cache->{$path};
+    } else {
+	return $self->fetch_comp_($path, $current_comp);
+    }
+}
+
+sub fetch_comp_
+{
+    my ($self, $path, $current_comp) = @_;
 
     #
-    # Handle paths SELF and PARENT
+    # Handle paths SELF, PARENT, and REQUEST
     #
     if ($path eq 'SELF') {
 	return $self->base_comp;
     }
     if ($path eq 'PARENT') {
-	my $c = $self->current_comp->parent
+	my $c = $current_comp->parent
 	    or error "PARENT designator used from component with no parent";
 	return $c;
     }
@@ -937,14 +1010,13 @@ sub fetch_comp
     # current component first.
     #
     if ($path !~ /\//) {
-	my $cur_comp = $self->current_comp;
 	# Check my subcomponents.
-	if (my $subcomp = $cur_comp->subcomps($path)) {
+	if (my $subcomp = $current_comp->subcomps($path)) {
 	    return $subcomp;
 	}
 	# If I am a subcomponent, also check my owner's subcomponents.
 	# This won't work when we go to multiply embedded subcomponents...
-	if ($cur_comp->is_subcomp and my $subcomp = $cur_comp->owner->subcomps($path)) {
+	if ($current_comp->is_subcomp and my $subcomp = $current_comp->owner->subcomps($path)) {
 	    return $subcomp;
 	}
     }
@@ -952,8 +1024,7 @@ sub fetch_comp
     #
     # Otherwise pass the absolute path to interp->load.
     #
-    # For speed, don't call ->current_comp, instead access it directly
-    $path = absolute_comp_path($path, $self->{stack}[-1]{comp}->dir_path)
+    $path = absolute_comp_path($path, $current_comp->dir_path)
 	unless substr($path, 0, 1) eq '/';
 
     my $comp = $self->interp->load($path);
@@ -1028,10 +1099,12 @@ sub print
 {
     my $self = shift;
 
-    # direct access for optimization cause $m->print is called a lot
-    $self->{buffer_stack}[-1]->receive(@_);
-
-    # ditto
+    my $bufref = defined($self->{top_stack}) ?
+	$self->{top_stack}->[STACK_BUFFER] :
+	    \($self->{request_buffer});
+    foreach my $text (@_) {
+	$$bufref .= $text if defined($text);
+    }
     $self->flush_buffer if $self->{autoflush};
 }
 
@@ -1042,21 +1115,17 @@ sub print
 #
 sub comp {
     my $self = shift;
+    my $top_stack = $self->{top_stack};
 
     # Get modifiers: optional hash reference passed in as first argument.
-    # merge multiple hash references to simplify user and internal usage.
-    my %mods = ();
-    %mods = (%{shift()},%mods) while ref($_[0]) eq 'HASH';
+    # Merge multiple hash references to simplify user and internal usage.
+    #
+    my %mods;
+    %mods = (%{shift()}, %mods) while ref($_[0]) eq 'HASH';
 
+    # Get component path or object. If a path, load into object.
+    #
     my $comp = shift;
-
-    param_error "comp: requires path or component as first argument"
-	unless defined($comp);
-
-    #
-    # $comp can be an absolute path or component object.  If a path,
-    # load into object.
-    #
     my $path;
     if (!ref($comp)) {
 	$path = $comp;
@@ -1064,132 +1133,78 @@ sub comp {
 	    or error "could not find component for path '$path'\n";
     }
 
+    # Increment depth and check for maximum recursion. Depth starts at 1.
     #
-    # Check for maximum recursion.
-    #
-    my $depth = $self->depth;
-    error "$depth levels deep in component stack (infinite recursive call?)\n"
-        if ($depth >= $self->max_recurse);
+    my $depth = defined($top_stack) ? $top_stack->[STACK_DEPTH] + 1 : 1;
+    error ($depth-1 . " levels deep in component stack (infinite recursive call?)\n")
+        if ($depth > $self->{max_recurse});
 
+    # Keep the same output buffer unless store modifier was passed. If we have
+    # a filter, put the filter buffer on the stack instead of the regular buffer.
     #
-    # Determine base_comp (base component for method and attribute inheritance)
-    # User may override with { base_comp => $compref }
-    # Don't change on SELF:x and PARENT:x calls
-    # Assume they know what they are doing if a component ref is passed in
-    #
-    my $base_comp =
-        ( exists($mods{base_comp}) ?
-          $mods{base_comp} :
-          # access data structure directly to optimize common case
-          $self->{stack}[-1]{base_comp}
-        );
+    my $filter_buffer = '';
+    my $top_buffer = defined($mods{store}) ? $mods{store} : $top_stack->[STACK_BUFFER];
+    my $stack_buffer = $comp->{has_filter} ? \$filter_buffer : $top_buffer;
 
-    unless ( $mods{base_comp} ||	# base_comp override
-	     !$path || 		# path is undef if $comp is a reference
-	     ($comp->is_subcomp && ! $comp->is_method) ||
-	     $path =~ m/^(?:SELF|PARENT|REQUEST)(?:\:..*)?$/ ) {
-	$base_comp = ( $path =~ m/(.*):/ ?
-		       $self->fetch_comp($1) :
-		       $comp );
-	$base_comp = $base_comp->owner if $base_comp->is_subcomp;
+    # Add new stack frame and point dynamically scoped $self->{top_stack} at it.
+    local $self->{top_stack} = $self->{stack}->[$depth-1] =
+	[
+	 $comp,          # STACK_COMP
+	 \@_,            # STACK_ARGS
+	 $stack_buffer,  # STACK_BUFFER
+	 \%mods,         # STACK_MODS
+	 $path,          # STACK_PATH
+	 $depth,         # STACK_DEPTH
+	 undef,          # STACK_BASE_COMP
+	 undef,          # STACK_IN_CALL_SELF
+	 ];
+
+    # Run start_component hooks for each plugin.
+    #
+    foreach my $plugin_instance (@{$self->{plugin_instances}}) {
+	$plugin_instance->start_component($self, $comp, \@_);
     }
 
-    # Push new frame onto stack.
-    push @{ $self->{stack} }, { comp => $comp,
-                                args => \@_,
-                                base_comp => $base_comp,
-                                content => $mods{content},
-                              };
-
-    if ($mods{store}) {
-	# This extra buffer is to catch flushes (in the given scalar ref).
-	# The component's main buffer can then be cleared without
-	# affecting previously flushed output.
-        push @{ $self->{buffer_stack} },
-            $self->top_buffer->new_child( sink => $mods{store},
-                                          ignore_flush => 1,
-                                          ignore_clear => 1,
-                                        );
-
-        # This extra buffer is here so that flushes get passed through
-        # to the parent (storing buffer) but clears can be handled
-        # properly as well.
-        push @{ $self->{buffer_stack} }, $self->{buffer_stack}[-1]->new_child;
-    }
-
-    if ( $comp->has_filter )
-    {
-        push @{ $self->{buffer_stack} },
-            $self->{buffer_stack}[-1]->new_child( filter_from => $comp );
-    }
-
-    my @result;
-
-    # The eval block creates a new context so we need to get this
-    # here.
+    # Finally, call the component.
+    #
     my $wantarray = wantarray;
-
-    # plugins can modify the arguments before the component sees them!
-    foreach my $plugin (@{$self->plugin_things}) {
-        $plugin->start_component( comp => $comp,
-                                  args => \@_,
-                                  request => $self,
-                                  wantarray => $wantarray,
-				);
-    }
-
-    #
-    # Finally, call component subroutine.
-    #
+    my @result;
+    
     eval {
-        if ($wantarray) {
-            @result = $comp->run(@_);
-        } elsif (defined $wantarray) {
-            $result[0] = $comp->run(@_);
-        } else {
-            $comp->run(@_);
-        }
+	if ($wantarray) {
+	    @result = $comp->run(@_);
+	} elsif (defined $wantarray) {
+	    $result[0] = $comp->run(@_);
+	} else {
+	    $comp->run(@_);
+	}
     };
+    my $error = $@;
 
-    my $err = $@;
-
-    # reverse order for the end hooks.
-    foreach my $plugin (reverse @{$self->plugin_things}) {
-      $plugin->end_component( comp => $comp,
-                              args => \@_,
-                              request => $self,
-                              wantarray => $wantarray,
-                              error => \$err,
-                              return_value => \@result
-			    );
+    # Run component's filter if there is one, and restore true top buffer
+    # (e.g. in case a plugin prints something).
+    #
+    if ($comp->{has_filter}) {
+	# We have to check $comp->filter because abort or error may
+	# occur before filter gets defined in component. In such cases
+	# there should be no output, but should look into this more.
+	#
+	if (defined($comp->filter)) {
+	    $$top_buffer .= $comp->filter->($filter_buffer);
+	}
+	$self->{top_stack}->[STACK_BUFFER] = $top_buffer;
     }
 
-
-    if ( $comp->has_filter )
-    {
-        my $buffer = pop @{ $self->{buffer_stack} };
-
-        # we don't want to send output if there was a real error
-        unless ( $err && ! $self->aborted )
-        {
-            # have to catch errors from filter code too
-            $self->print( $buffer->output );
-        }
+    # Run end_component hooks for each plugin, in reverse order.
+    #
+    foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {
+	$plugin_instance->end_component($self, $comp, \@_, $wantarray, \@result, \$error);
     }
 
-    pop @{ $self->{stack} };
-
-    if ( $mods{store} )
-    {
-        $self->flush_buffer;
-
-        pop @{ $self->{buffer_stack} };
-        pop @{ $self->{buffer_stack} };
-    }
-
-    rethrow_exception $err;
-
-    return wantarray ? @result : $result[0];  # Will return undef in void context (correct)
+    # Repropagate error if one occurred, otherwise return result.
+    # 
+    rethrow_exception $error if $error;
+    return $wantarray ? @result : $result[0];
 }
 
 #
@@ -1204,28 +1219,27 @@ sub scomp {
 
 sub has_content {
     my $self = shift;
-    return defined($self->top_stack->{content});
+    return defined($self->{top_stack}->[STACK_MODS]->{content});
 }
 
 sub content {
     my $self = shift;
-    my $content = $self->top_stack->{content};
+    my $content = $self->{top_stack}->[STACK_MODS]->{content};
     return undef unless defined($content);
 
-    # make the stack frame look like we are still the previous component
-    my $old_frame = pop @{ $self->{stack} };
+    # Run the content routine with the previous stack frame active and
+    # with output going to a new buffer.
+    #
+    my $buffer;
+    my $save_frame = $self->{top_stack};
+    { local $self->{top_stack} = $self->{stack}->[$self->{top_stack}->[STACK_DEPTH]-2];
+      local $self->{top_stack}->[STACK_BUFFER] = \$buffer;
+      $content->(); }
+    $self->{top_stack} = $save_frame;
 
-    push @{ $self->{buffer_stack} }, $self->top_buffer->new_child( ignore_flush => 1 );
-    eval { $content->(); };
-    my $err = $@;
-
-    my $buffer = pop @{ $self->{buffer_stack} };
-
-    push @{ $self->{stack} }, $old_frame;
-
-    rethrow_exception $err;
-
-    return $buffer->output;
+    # Return the output from the content routine.
+    #
+    return $buffer;
 }
 
 sub notes {
@@ -1242,16 +1256,18 @@ sub clear_buffer
 {
     my $self = shift;
 
-    $_->clear for $self->buffer_stack;
+    foreach my $frame (@{$self->{stack}}) {
+	my $bufref = $frame->[STACK_BUFFER];
+	$$bufref = '';
+    }
 }
 
 sub flush_buffer
 {
     my $self = shift;
-    for ($self->buffer_stack) {
-	last if $_->ignore_flush;
-	$_->flush;
-    }
+
+    $self->out_method->($self->{request_buffer});
+    $self->{request_buffer} = '';
 }
 
 sub request_args
@@ -1291,64 +1307,70 @@ sub debug_hook
 # stack handling
 #
 
-# Return the current stack as an array.
-sub stack {
+# Return the stack frame $levels down from the top of the stack.
+# If $levels is negative, count from the bottom of the stack.
+# 
+sub stack_frame {
+    my ($self, $levels) = @_;
+    my $depth = $self->{top_stack}->[STACK_DEPTH];
+    my $index;
+    if ($levels < 0) {
+	$index = (-1 * $levels) - 1;
+    } else {
+	$index = $depth-1 - $levels;
+    }
+    return if $index < 0 or $index >= $depth;
+    return $self->{stack}->[$index];
+}
+
+# Return all stack frames, in order from the top of the stack to the
+# initial frame.
+sub stack_frames {
     my ($self) = @_;
-    return @{ $self->{stack} };
+    my $depth = $self->{top_stack}->[STACK_DEPTH];
+    return reverse map { $self->{stack}->[$_] } (0..$depth-1);
 }
-
-# Return the stack entry 'i' slots from the /back/ of the array
-sub stack_entry {
-    my ($self, $i) = @_;
-    return $self->{stack}->[-1 - $i];
-}
-
-# Set or retrieve the hashref at the top of the stack.
-sub top_stack {
-    my ($self,$href) = @_;
-    error "top_stack: nothing on component stack"
-	unless $self->depth > 0;
-    $self->{stack}->[-1] = $href if defined($href);
-    return $self->{stack}->[-1];
-}
-
-# These push/pop interfaces are not used internally (for speed) but
-# may be useful externally.  For example, Component.pm pushes and pops
-# a buffer object.
-sub push_buffer_stack {
-    my $self = shift;
-
-    push @{ $self->{buffer_stack} }, shift;
-}
-
-sub pop_buffer_stack {
-    my ($self) = @_;
-    return pop @{ $self->{buffer_stack} };
-}
-
-sub push_stack {
-    my ($self,$href) = @_;
-    push @{ $self->{stack} }, $href;
-}
-
-sub pop_stack {
-    my ($self) = @_;
-    return pop @{ $self->{stack} };
-}
-
-sub buffer_stack {
-    my ($self) = @_;
-    return wantarray ? reverse @{ $self->{buffer_stack} } : @{ $self->{buffer_stack} };
-}
-
 
 #
 # Accessor methods for top of stack elements.
 #
-sub current_comp { return $_[0]->top_stack->{comp} }
-sub current_args { return $_[0]->top_stack->{args} }
-sub top_buffer { return $_[0]->{buffer_stack}->[-1] }
-sub base_comp { return $_[0]->top_stack->{base_comp} }
+sub current_comp { return $_[0]->{top_stack}->[STACK_COMP] }
+sub current_args { return $_[0]->{top_stack}->[STACK_ARGS] }
+
+sub base_comp {
+    my ($self) = @_;
+    unless (defined($self->{top_stack}->[STACK_BASE_COMP])) {
+	return $self->compute_base_comp_for_frame_($self->{top_stack}->[STACK_DEPTH] - 1);
+    }
+    return $self->{top_stack}->[STACK_BASE_COMP];
+}
+
+sub compute_base_comp_for_frame_ {
+    my ($self, $frame_num) = @_;
+    my $frame = $self->{stack}->[$frame_num];
+
+    unless (defined($frame->[STACK_BASE_COMP])) {
+	my $mods = $frame->[STACK_MODS];
+	my $path = $frame->[STACK_PATH];
+	my $comp = $frame->[STACK_COMP];
+	
+	my $base_comp;
+	if (exists($mods->{base_comp})) {
+	    $base_comp = $mods->{base_comp};
+	} elsif (!$path ||
+		 $path =~ m/^(?:SELF|PARENT|REQUEST)(?:\:..*)?$/ ||
+		 ($comp->is_subcomp && !$comp->is_method)) {
+	    $base_comp = $self->compute_base_comp_for_frame_($frame_num-1);
+	} elsif ($path =~ m/(.*):/) {
+	    my $calling_comp = $self->{stack}->[$frame_num-1]->[STACK_COMP];
+	    $base_comp = $self->fetch_comp($1, $calling_comp);
+	} else {
+	    $base_comp = $comp;
+	}
+	$frame->[STACK_BASE_COMP] = $base_comp;
+    }
+    return $frame->[STACK_BASE_COMP];
+}
 
 package Tie::Handle::Mason;
 
@@ -1436,14 +1458,16 @@ subcomponent takes precedence.
 
 =item autoflush
 
-True or false, default is false. Indicates whether to flush the output buffer
-after every string is output. Turn on autoflush if you need to send partial
-output to the client, for example in a progress meter.
+True or false, default is false. Indicates whether to flush the output
+buffer (C<$m-E<gt>flush_buffer>) after every string is output. Turn on
+autoflush if you need to send partial output to the client, for
+example in a progress meter.
 
-=item buffer_class
-
-The class to use when creating buffers. Defaults to
-L<HTML::Mason::Buffer|HTML::Mason::Buffer>.
+As of Mason 1.3, autoflush will only work if P<enable_autoflush> has been set.
+This is because components can be compiled more efficiently if they don't
+have to check for autoflush. Before enabling autoflush you might consider
+whether a few manual C<$m-E<gt>flush_buffer> calls would work nearly
+as well.
 
 =item data_cache_api
 
@@ -1553,8 +1577,6 @@ sets and returns the value.  For example:
 
     my $max_recurse_level = $m->max_recurse;
     $m->autoflush(1);
-
-=back
 
 =head1 OTHER METHODS
 
@@ -1770,26 +1792,35 @@ augment and override (in case of conflict) the original
 arguments. Works like C<$m-E<gt>comp> in terms of return value and
 scalar/list context.  See DEVEL<autohandlers> for examples.
 
-=item call_self (output, return)
-
-=for html <a name="item_call_self"></a>
+=item call_self (output, return, error, tag)
 
 This method allows a component to call itself so that it can filter
 both its output and return values.  It is fairly advanced; for most
 purposes the C<< <%filter> >> tag will be sufficient and simpler.
 
-C<< $m->call_self >> takes two arguments.  The first is a scalar
-reference and will be populated with the component output.  The second
-is either a scalar or list reference and will be populated with the
-component return value; the type of reference determines whether the
-component will be called in scalar or list context.  Both of these
-arguments are optional; you may pass undef for either of them.
+C<< $m->call_self >> takes four arguments, all of them optional.
+
+=over
+
+=item output - scalar reference that will be populated with the
+component output.
+
+=item return - scalar reference that will be populated with the
+component return value.
+
+=item error - scalar reference that will be populated with the error
+thrown by the component, if any. If this parameter is not defined,
+then call_self will not catch errors.
+
+=item tag - a name for this call_self invocation; can almost always be omitted.
+
+=back
 
 C<< $m->call_self >> acts like a C<fork()> in the sense that it will
 return twice with different values.  When it returns 0, you allow
 control to pass through to the rest of your component.  When it
-returns 1, that means the component has finished and you can begin
-filtering the output and/or return value. (Don't worry, it doesn't
+returns 1, that means the component has finished and you can
+examine the output, return value and error. (Don't worry, it doesn't
 really do a fork! See next section for explanation.)
 
 The following examples would generally appear at the top of a C<<
@@ -1808,26 +1839,28 @@ Here is a simple output filter that makes the output all uppercase.
 Note that we ignore both the original and the final return value.
 
     <%init>
-    my $output;
+    my ($output, $error);
     if ($m->call_self(\$output, undef)) {
         $m->print(uc $output);
         return;
     }
     ...
 
-Here is a piece of code that traps all errors occuring anywhere in the
+Here is a piece of code that traps all errors occuring anywhere in a
 component or its children, e.g. for the purpose of handling
 application-specific exceptions. This is difficult to do with a manual
 C<eval> because it would have to span multiple code sections and the
 main component body.
 
     <%init>
-    # Run this component with an eval around it
-    my $in_parent = eval { $m->call_self() };
-    if ($@) {
-        # check $@ and do something with it
+    my ($output, undef, $error);
+    if ($m->call_self(\$output, undef, \$error)) {
+        if ($error) {
+            # check $error and do something with it
+        }
+        $m->print($output);
+        return;
     }
-    return if $in_parent;
     ...
 
 =item clear_buffer
@@ -2090,6 +2123,15 @@ Returns the component originally called in the request. Without
 autohandlers, this is the same as the first component executed.  With
 autohandlers, this is the component at the end of the
 C<$m-E<gt>call_next> chain.
+
+=item request_depth
+
+=for html <a name="request_depth"></a>
+
+Returns the current size of the request/subrequest stack.  The lowest
+possible value is 1, which indicates we are in the top-level request.
+A value of 2 indicates we are inside a subrequest of the top-level request,
+and so on.
 
 =item scomp (comp, args...)
 

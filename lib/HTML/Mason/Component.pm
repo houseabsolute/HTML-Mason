@@ -7,23 +7,9 @@ package HTML::Mason::Component;
 use strict;
 use File::Spec;
 use HTML::Mason::Exceptions( abbr => [qw(param_error)] );
-use HTML::Mason::Tools qw(absolute_comp_path);
+use HTML::Mason::Tools qw(absolute_comp_path can_weaken);
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
-
-# for weakrefs
-BEGIN
-{
-    my $can_weaken = 0;
-    if ( $] >= 5.006 )
-    {
-        require Scalar::Util;
-
-        $can_weaken = defined &Scalar::Util::weaken;
-    }
-
-    sub CAN_WEAKEN () { $can_weaken }
-}
 
 use HTML::Mason::Exceptions( abbr => ['error'] );
 use HTML::Mason::MethodMaker
@@ -35,7 +21,6 @@ use HTML::Mason::MethodMaker
 			 inherit_start_path
                          has_filter
 			 load_time
-			 object_size
                        ) ],
 
       read_write => [ [ dynamic_subs_request => { isa => 'HTML::Mason::Request' } ],
@@ -57,7 +42,6 @@ use HTML::Mason::MethodMaker
 #      comp_id            => {type => SCALAR,  optional => 1, public => 0},
 #      methods            => {type => HASHREF, default => {}, public => 0},
 #      mfu_count          => {type => SCALAR,  default => 0, public => 0},
-#      object_size        => {type => SCALAR,  default => 0, public => 0},
 #      parser_version     => {type => SCALAR,  optional => 1, public => 0}, # allows older components to be instantied
 #      compiler_id        => {type => SCALAR,  optional => 1, public => 0},
 #      subcomps           => {type => HASHREF, default => {}, public => 0},
@@ -70,7 +54,6 @@ my %defaults = ( attr              => {},
                  flags             => {},
                  methods           => {},
                  mfu_count         => 0,
-                 object_size       => 0,
                  subcomps          => {},
                );
 sub new
@@ -82,11 +65,11 @@ sub new
     # is_method flag.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
 	$c->assign_subcomponent_properties($self,$name,0);
-	Scalar::Util::weaken($c->{owner}) if CAN_WEAKEN;
+	Scalar::Util::weaken($c->{owner}) if can_weaken;
     }
     while (my ($name,$c) = each(%{$self->{methods}})) {
 	$c->assign_subcomponent_properties($self,$name,1);
-	Scalar::Util::weaken($c->{owner}) if CAN_WEAKEN;
+	Scalar::Util::weaken($c->{owner}) if can_weaken;
     }
 
     return $self;
@@ -105,8 +88,22 @@ sub assign_runtime_properties {
     foreach my $c (values(%{$self->{subcomps}}), values(%{$self->{methods}})) {
 	$c->assign_runtime_properties($interp, $source);
     }
+
+    # Cache of uncanonicalized call paths appearing in the
+    # component. Used in $m->fetch_comp.
+    #
+    if ($interp->use_internal_component_caches) {
+	$self->{fetch_comp_cache} = {};
+    }
 }
 
+sub flush_internal_caches
+{
+    my ($self) = @_;
+
+    $self->{fetch_comp_cache} = {};
+}
+ 
 sub _determine_inheritance {
     my $self = shift;
 
@@ -133,7 +130,7 @@ sub run {
 
     $self->{mfu_count}++;
 
-    return $self->{code}->(@_);
+    $self->{code}->(@_);
 }
 
 sub dynamic_subs_init {
@@ -341,7 +338,7 @@ sub interp {
 
         $self->{interp} = $_[0];
 
-        Scalar::Util::weaken( $self->{interp} ) if CAN_WEAKEN;
+        Scalar::Util::weaken( $self->{interp} ) if can_weaken;
     } elsif ( ! defined $self->{interp} ) {
         die "The Interp object that this object contains has gone out of scope.\n";
     }

@@ -210,19 +210,6 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'current_time',
-		      description => 'test current_time interp param',
-		      interp_params => { current_time => 945526402 },
-		      component => <<'EOF',
-<% $m->time %>
-EOF
-		      expect => <<'EOF',
-945526402
-EOF
-		    );
-
-#------------------------------------------------------------
-
     $group->add_support( path => 'support/recurse_test',
 			 component => <<'EOF',
 Entering <% $count %><p>
@@ -272,7 +259,7 @@ EOF
 
     $group->add_test( name => 'max_recurse_2',
 		      description => 'Test that recursion is stopped after 32 levels',
-		      interp_params => { autoflush => 1 },
+		      interp_params => { autoflush => 1, enable_autoflush => 1  },
 		      component => '<& support/recurse_test, max=>48 &>',
 		      expect_error => qr{32 levels deep in component stack \(infinite recursive call\?\)},
 		    );
@@ -285,7 +272,8 @@ EOF
 		      interp_params => { max_recurse => 50 },
 		      component => <<'EOF',
 % eval { $m->comp('support/recurse_test', max=>48) };
-<& /shared/check_error, error=>$@ &>
+
+<% $@ ? "Error" : "No error" %>
 EOF
 		      expect => <<'EOF',
 Entering 0<p>
@@ -385,231 +373,68 @@ Exiting 4<p>
 Exiting 3<p>
 Exiting 2<p>
 Exiting 1<p>
-Exiting 0<p>No error!?
-
+Exiting 0<p>
+No error
 EOF
 		    );
 
 
 #------------------------------------------------------------
 
-=pod
-
-    $group->add_support( path => 'code_cache_test/show_code_cache',
+    $group->add_support( path => '/support/code_cache/show_code_cache',
 			 component => <<'EOF',
-Code cache contains these plain components:
-% my %c = %{$m->interp->{code_cache}};
-% foreach ( sort grep { /plain/ } keys %c ) {
-<% $_ %>
-% }
-% if ( ! grep { /plain/ } keys %c ) {
-Code cache contains no files matching /plain/
-% }
+% $m->interp->purge_code_cache();
+% my $code_cache = $m->interp->{code_cache};
+% my @plain_comp_names = sort grep { /^plain/ } map { $_->{comp}->name } values(%$code_cache);
+Code cache contains: <% join(", ", @plain_comp_names) %>
 EOF
 		       );
 
 
 #------------------------------------------------------------
 
-    $group->add_support( path => 'code_cache_test/plain1',
-			 component => <<'EOF'
-plain1
-%#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-%#BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-%#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-%#DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-EOF
-		       );
+    foreach my $i (1..7) {
+        $group->add_support( path => "/support/code_cache/plain$i",
+			     component => "",
+		           );
+    }
 
-
-#------------------------------------------------------------
-
-    $group->add_support( path => 'code_cache_test/plain2',
-			 component => <<'EOF'
-plain2
-%#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-%#BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-%#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-%#DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-EOF
-		       );
-
-
-#------------------------------------------------------------
-
-    $group->add_support( path => 'code_cache_test/plain3',
-			 component => <<'EOF'
-plain3
-%#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-%#BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-%#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-%#DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-EOF
-		       );
-
-
-#------------------------------------------------------------
-
-    $group->add_support( path => 'code_cache_test/plain4',
-			 component => <<'EOF'
-plain4
-%#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-%#BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-%#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-%#DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-%#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-%#BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-%#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-%#DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-%#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-%#BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-%#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-%#DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-%#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-%#BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-%#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-%#DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-EOF
-		       );
-
-
-#------------------------------------------------------------
-
-    $group->add_support( path => 'code_cache_test/plain5',
-			 component => <<'EOF'
-plain5
-%#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-%#BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-%#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-%#DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-EOF
-		       );
-
-
-#------------------------------------------------------------
-
-    $group->add_support( path => 'code_cache_test/plain6',
-			 component => <<'EOF'
-plain6
-%#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-%#BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-%#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-%#DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-EOF
-		       );
-
-
-#------------------------------------------------------------
-
-    $group->add_support( path => 'code_cache_test/plain7',
-			 component => <<'EOF'
-plain7
-%#AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-%#BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-%#CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-%#DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-EOF
-		       );
-
-#------------------------------------------------------------
-
-    my $interp = HTML::Mason::Tests->tests_class->_make_interp
-	( data_dir => $group->data_dir,
-	  comp_root => $group->comp_root,
-	  code_cache_max_size => 9400 );
-
-    $group->add_test( name => 'code_cache_test/code_cache_1',
-		      description => 'Run in order to load up code cache',
-		      interp => $interp,
-		      component => <<'EOF',
-<& plain1 &><& plain1 &><& plain1 &><& plain2 &><& plain2 &><& plain2 &><& plain3 &><& plain4 &><& plain2 &><& plain2 &><& plain1 &><& plain5 &><& plain2 &><& plain4 &><& plain4 &><& plain5 &><& plain5 &>
-
-EOF
-		      skip_expect => 1
-		    );
-
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'code_cache_test/show_code_cache_1',
-		      description => 'Show code cache size after first usage',
-		      interp => $interp,
-		      component => <<'EOF',
-<& show_code_cache &>
-EOF
-		      expect => <<'EOF',
-Code cache contains these plain components:
-/interp/code_cache_test/plain1
-/interp/code_cache_test/plain2
-/interp/code_cache_test/plain3
-/interp/code_cache_test/plain5
-EOF
-		    );
-
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'code_cache_test/code_cache_2',
-		      description => 'Run in order to load up code cache',
-		      interp => $interp,
-		      component => <<'EOF',
+    $group->add_support( path => "/support/code_cache/call_plain_comps",
+			 component => <<'EOF',
+<& plain1 &><& plain1 &><& plain1 &><& plain1 &><& plain1 &><& plain1 &><& plain1 &>
+<& plain2 &><& plain2 &><& plain2 &><& plain2 &><& plain2 &>
+<& plain3 &><& plain3 &><& plain3 &>
+<& plain4 &>
+<& plain5 &><& plain5 &>
 <& plain6 &><& plain6 &><& plain6 &><& plain6 &>
+<& plain7 &><& plain7 &><& plain7 &><& plain7 &><& plain7 &><& plain7 &>
 EOF
-		      skip_expect => 1
-		    );
-
+		       );
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'code_cache_test/show_code_cache_2',
-		      description => 'Show code cache size after second usage',
-		      interp => $interp,
-		      component => <<'EOF',
-<& show_code_cache &>
+    my $create_code_cache_test = sub {
+	my ($max_size, $expected) = @_;
+	$group->add_test( name => "code_cache_$max_size",
+			  interp_params => { code_cache_max_size => $max_size },
+			  description => "code cache: max_size = $max_size",
+			  component => <<'EOF',
+<%init>
+$m->scomp('support/code_cache/call_plain_comps');
+$m->scomp('support/code_cache/call_plain_comps');
+$m->comp('support/code_cache/show_code_cache');
+</%init>
 EOF
-		      expect => <<'EOF',
-Code cache contains these plain components:
-/interp/code_cache_test/plain1
-/interp/code_cache_test/plain2
-/interp/code_cache_test/plain3
-/interp/code_cache_test/plain5
-/interp/code_cache_test/plain6
+			  expect => <<"EOF",
+Code cache contains: $expected
 EOF
-		    );
+			  );
+    };
 
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'code_cache_test/code_cache_3',
-		      description => 'Run in order to load up code cache',
-		      interp => $interp,
-		      component => <<'EOF',
-<& plain7 &><& plain7 &><& plain7 &>
-EOF
-		      skip_expect => 1
-		    );
-
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'code_cache_test/show_code_cache_3',
-		      description => 'Show code cache size after second usage',
-		      interp => $interp,
-		      component => <<'EOF',
-<& show_code_cache &>
-EOF
-		      expect => <<'EOF',
-Code cache contains these plain components:
-/interp/code_cache_test/plain1
-/interp/code_cache_test/plain2
-/interp/code_cache_test/plain5
-/interp/code_cache_test/plain6
-/interp/code_cache_test/plain7
-EOF
-		    );
-
-
-=cut
+    $create_code_cache_test->('unlimited', 'plain1, plain2, plain3, plain4, plain5, plain6, plain7');
+    $create_code_cache_test->(0, '');
+    $create_code_cache_test->(4, 'plain1, plain2, plain7');
+    $create_code_cache_test->(8, 'plain1, plain2, plain3, plain5, plain6, plain7');
 
 #------------------------------------------------------------
 
@@ -687,7 +512,7 @@ EOF
 
     $group->add_test( name => 'autoflush_mode',
 		      description => 'Test that autoflush setting works',
-		      interp_params => { autoflush => 1 },
+		      interp_params => { autoflush => 1, enable_autoflush => 1 },
 		      component => <<'EOF',
 <& mode_test &>
 EOF
@@ -917,6 +742,7 @@ EOF
 
     $group->add_test( name => 'read_write_contained',
 		      description => 'test that we can read/write contained object params',
+                      interp_params => { enable_autoflush => 1 },
 		      component => <<'EOF',
 % $m->autoflush(1);
 % my $req = $m->make_subrequest(comp=>($m->interp->make_component(comp_source => 'hi')));
@@ -925,37 +751,6 @@ autoflush for new request is <% $req->autoflush %>
 EOF
 		      expect => <<'EOF',
 autoflush for new request is 1
-EOF
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_support( path => '/support/static_source',
-		         component => <<'EOF',
-STATIC 1
-EOF
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'static_source',
-		      description => 'test that static_source option works',
-                      interp_params => { static_source => 1 },
-		      component => <<'EOF',
-<& support/static_source &>\
-<%perl>
-local *F;
-my $comp_root = $m->interp->resolver->comp_root;
-my $file = "$comp_root/interp/support/static_source";
-open F, ">$file" or die "Cannot write to $file: $!";
-print F "STATIC 2\n";
-close F;
-</%perl>
-<& support/static_source &>
-EOF
-		      expect => <<'EOF',
-STATIC 1
-STATIC 1
 EOF
 		    );
 

@@ -18,6 +18,7 @@ my $tests = HTML::Mason::Tests->tests_class->new( name => 'print',
 my $interp = HTML::Mason::Tests->tests_class->_make_interp
     ( comp_root => $comp_root,
       data_dir => $data_dir,
+      enable_autoflush => 1
       );
 
 {

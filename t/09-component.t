@@ -166,14 +166,14 @@ Scalar:\
 <& .subcomp &>
 
 <%def .subcomp>
-% $m->print( wantarray ? ('an','array') : 'scalar' );
+% $m->print( wantarray ? 'array' : 'scalar' );
 </%def>
 EOF
 		      expect => <<'EOF',
 Context checking:
 
 List:
-anarray
+array
 
 Scalar:
 scalar
@@ -274,7 +274,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'flush_clear_scomp',
-		      description => 'Flush then clear inside scomp',
+		      description => 'Flush then clear inside scomp - flush only affects top buffer',
 		      component => <<'EOF',
 <%method s>
 Foo
@@ -291,8 +291,9 @@ This is scomp-ed output:
 This is me again
 EOF
 		      expect => <<'EOF',
-
-Foo
+This is me
+----------
+This is scomp-ed output:
 Baz
 
 ----------

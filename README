@@ -17,7 +17,7 @@ http://www.masonhq.com/ for more information.
 
 PREREQUISITES
 
-Mason requires Perl 5.005 or greater, and the following CPAN modules:
+Mason requires Perl 5.6.0 or greater, and the following CPAN modules:
 
 * Params::Validate
 

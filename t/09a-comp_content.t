@@ -217,7 +217,7 @@ EOF
 <% $m->current_comp->name %>
 <&| echo &>
 <% $m->current_comp->name %>
-<% $m->caller_args(0) %>
+<% join(", ", $m->caller_args(0)) %>
 </&>
 </&>
 EOF
@@ -227,7 +227,7 @@ test6
 test6
 
 test6
-arg1
+arg, 1
 EOF
 		);
 

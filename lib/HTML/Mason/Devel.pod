@@ -163,7 +163,8 @@ another.
 B<% lines>
 
 Most useful for conditional and loop structures - if, while, foreach,
-, etc. - as well as side-effect commands like assignments. Examples:
+, etc. - as well as side-effect commands like assignments. To improve
+readability, always put a space after the '%'. Examples:
 
 o Conditional code
 
@@ -208,7 +209,8 @@ o HTML table formed from list of hashes
 B<< <% xxx %> >>
 
 Most useful for printing out variables, as well as more complex
-expressions. Examples:
+expressions. To improve readability, always separate the tag
+and expression with spaces. Examples:
 
   Dear <% $name %>: We will come to your house at <% $address %> in the
   fair city of <% $city %> to deliver your $<% $amount %> dollar prize!
@@ -1228,7 +1230,10 @@ You can use L<Component Calls with Content|"Component Calls with
 Content"> if you want to filter specific parts of a component rather
 than the entire component.
 
-=head1 OTHER SYNTAX
+=head1 COMMENT MARKERS
+
+There are several ways to place comments in components, i.e. arbitrary
+text that is ignored by the parser.
 
 =head2 <%doc>
 
@@ -1237,19 +1242,69 @@ for a component's main documentation.  One can easily write a program
 to sift through a set of components and pull out their C<< <%doc> >>
 blocks to form a reference page.
 
-Can also be used for in-line comments, though it is an admittedly
-cumbersome comment marker.  Another option is '%#':
+=head2 <% # comment... %>
 
-    %# this is a comment
+A C<< <% %> >> tag is considered a comment if all of its lines are
+either whitespace, or begin with a '#' optionally preceded by
+whitespace. For example,
 
-These comments differ from HTML comments in that they do not appear in
-the HTML.
+    <% # This is a single-line comment %>
+
+    <%
+       # This is a
+       # multi-line comment
+    %>
+
+=head2 %# comment
+
+Because a line beginning with C<%> is treated as Perl, C<%#>
+automatically works as a comment. However we prefer the C<< <% #
+comment %> >> form over C<< %# >>, because it stands out a little more
+as a comment and because it is more flexible with regards to preceding
+whitespace.
+
+=head2 % if (0) { }
+
+Anything between these two lines
+
+   % if (0) {
+   ...
+   % }
+
+will be skipped by Mason, including component calls.  While we don't
+recomend this for comments per se, it is a useful notation for
+"commenting out" code that you don't want to run.
+
+=head2 HTML/XML/... comments
+
+HTML and other markup languages will have their own comment markers, for example
+C<< <!-- --> >>. Note two important differences with these comments versus the
+above comments:
+
+=over
+
+=item *
+
+They will be sent to the client and appear in the source of the page.
+
+=item *
+
+They do not block component calls and other code from running,
+so don't try to use them to comment out code!
+
+   <!-- Oops, the code below will still run
+      <& /shared/expensive.mhtml &>
+   -->
+
+=back
+
+=head1 OTHER SYNTAX
 
 =head2 <%text>
 
-Text in this section is passed through unmodified by Mason.  Any Mason
-syntax inside it is ignored.  This is useful, for example, when
-documenting Mason itself from a component:
+Text in this section is printed as-is with all Mason syntax ignored.
+This is useful, for example, when documenting Mason itself from a
+component:
 
     <%text>
     % This is an example of a Perl line.

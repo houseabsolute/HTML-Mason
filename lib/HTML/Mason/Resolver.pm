@@ -84,17 +84,18 @@ will need to override it in your subclass.
 
 =item get_info
 
-Given an absolute component path, returns a new
+Takes three arguments: an absolute component path, a component root key,
+and a component root path. Returns a new
 L<HTML::Mason::ComponentSource|HTML::Mason::ComponentSource> object.
 
 =item glob_path
 
-The only argument to this method is a path glob pattern, something
-like "/foo/*" or "/foo/*/bar".  Given this path, it should return a
-list of component paths for components which match this glob pattern.
+Takes two arguments: a path glob pattern, something
+like "/foo/*" or "/foo/*/bar", and a component root path. Returns
+a list of component paths for components which match this glob pattern.
 
 For example, the filesystem resolver simply appends this pattern to
-each component root in turn and calls the Perl C<glob()> function to
+the component root path and calls the Perl C<glob()> function to
 find matching files on the filesystem.
 
 =back

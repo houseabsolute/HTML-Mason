@@ -21,7 +21,22 @@ require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(read_file read_file_ref url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on load_pkg pkg_loaded absolute_comp_path);
+@EXPORT_OK = qw(can_weaken read_file read_file_ref url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on load_pkg pkg_loaded absolute_comp_path);
+
+# Is weaken available? Even under 5.6+, it might not be available on systems w/o a compiler.
+#
+BEGIN
+{
+    my $can_weaken = 0;
+    if ( $] >= 5.006 )
+    {
+        require Scalar::Util;
+
+        $can_weaken = defined &Scalar::Util::weaken;
+    }
+
+    sub can_weaken () { $can_weaken }
+}
 
 # read_file($file, $binmode)
 # Return contents of file. If $binmode is 1, read in binary mode.

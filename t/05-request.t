@@ -41,7 +41,7 @@ EOF
 
     $group->add_support( path => '/support/various_test',
 			 component => <<'EOF',
-Caller is <% $m->caller->title %> or <% $m->callers(1)->title %>.
+Caller is <% $m->caller->title %> or <% $m->callers(1)->title %> or <% $m->callers(-2)->title %>.
 The top level component is <% $m->callers(-1)->title %> or <% $m->request_comp->title %>.
 The full component stack is <% join(",",map($_->title,$m->callers)) %>.
 My argument list is (<% join(",",$m->caller_args(0)) %>).
@@ -80,7 +80,7 @@ EOF
 
     $group->add_test( name => 'abort',
 		      description => 'test $m->abort method (autoflush on)',
-		      interp_params => { autoflush => 1 },
+		      interp_params => { autoflush => 1, enable_autoflush => 1 },
 
 		      component => <<'EOF',
 Some text
@@ -219,6 +219,8 @@ Sending list of arguments:
 
 <%perl>
  $m->print(3,4,5);
+ my @lst = (7,8,9);
+ $m->print(@lst);
 </%perl>
 EOF
 		      expect => <<'EOF',
@@ -226,7 +228,7 @@ Sending list of arguments:
 
 blahboombah
 
-345
+345789
 EOF
 		    );
 
@@ -266,6 +268,8 @@ EOF
 One level request:
 My depth is 2.
 
+I am not a subrequest.
+
 The top-level component is /request/req_obj.
 
 My stack looks like:
@@ -286,6 +290,8 @@ Many level request:
 
 
 My depth is 8.
+
+I am not a subrequest.
 
 The top-level component is /request/req_obj.
 
@@ -323,7 +329,7 @@ EOF
 <& various_helper, junk=>$ARGS{junk}+1 &>
 EOF
 		      expect => <<'EOF',
-Caller is /request/various_helper or /request/various_helper.
+Caller is /request/various_helper or /request/various_helper or /request/various_helper.
 The top level component is /request/various or /request/various.
 The full component stack is /request/support/various_test,/request/various_helper,/request/various.
 My argument list is (junk,6).
@@ -429,7 +435,7 @@ EOF
 
     $group->add_test( name => 'autoflush_print',
 		      description => 'Test print function from a component with autoflush on',
-		      interp_params => { autoflush => 1 },
+		      interp_params => { autoflush => 1, enable_autoflush => 1 },
 		      component => <<'EOF',
 This is first.
 % print "This is second.\n";
@@ -446,7 +452,7 @@ EOF
 
     $group->add_test( name => 'autoflush_printf',
 		      description => 'Test printf function from a component with autoflush on',
-		      interp_params => { autoflush => 1 },
+		      interp_params => { autoflush => 1, enable_autoflush => 1 },
 		      component => <<'EOF',
 This is first.
 % printf '%s', "This is second.\n";
@@ -480,7 +486,7 @@ EOF
 
     $group->add_test( name => 'flush_print_autoflush',
 		      description => 'Test print function from a component with autoflush on in conjunction with $m->flush_buffer call',
-		      interp_params => { autoflush => 1 },
+		      interp_params => { autoflush => 1, enable_autoflush => 1 },
 		      component => <<'EOF',
 This is first.
 % print "This is second.\n";
@@ -626,6 +632,50 @@ EOF
 caller is undefined
 callers(5) is undefined
 caller_args(7) is undefined
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/support/callers_out_of_bounds2',
+			 component => <<'EOF',
+hi
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/support/callers_out_of_bounds1',
+			 component => <<'EOF',
+<& callers_out_of_bounds2 &>
+% foreach my $i (-4 .. 4) {
+callers(<% $i %>) is <% defined($m->callers($i)) ? $m->callers($i)->title : 'not defined' %>
+% }
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'callers_out_of_bounds',
+		      description => 'tests $m->callers() for out of bounds indexes',
+		      component => <<'EOF',
+<& support/callers_out_of_bounds1 &>
+EOF
+		      expect => <<'EOF',
+hi
+
+callers(-4) is not defined
+callers(-3) is not defined
+callers(-2) is /request/support/callers_out_of_bounds1
+callers(-1) is /request/callers_out_of_bounds
+callers(0) is /request/support/callers_out_of_bounds1
+callers(1) is /request/callers_out_of_bounds
+callers(2) is not defined
+callers(3) is not defined
+callers(4) is not defined
 EOF
 		    );
 

@@ -9,6 +9,15 @@ use HTML::Mason::Tools qw(load_pkg);
 my $tests = make_tests();
 $tests->run;
 
+# Using this as an error_format with error_mode='output' causes just
+# the error string to be output
+sub HTML::Mason::Exception::as_munged
+{
+    my $err = shift->error;
+    
+    return $err =~ /^(.+?) at/ ? $1 : $err;
+}
+
 sub make_tests
 {
     my $group = HTML::Mason::Tests->tests_class->new( name => 'errors',
@@ -134,13 +143,21 @@ EOF
 
 #------------------------------------------------------------
 
-    # this is easy to check for as an exact string
-    sub HTML::Mason::Exception::as_munged
-    {
-        my $err = shift->error;
+    $group->add_test( name => 'error_mode_output',
+		      description => 'Make sure that existing output is cleared when an error occurs in error_mode=output',
+                      interp_params => { error_format => 'munged',
+                                         error_mode => 'output',
+                                       },
+		      component => <<'EOF',
+Should not appear in output!
+% $m->comp( '/errors/support/error1' );
+EOF
+                      expect => <<'EOF',
+terrible error
+EOF
+		    );
 
-        return $err =~ /^(.+?) at/ ? $1 : $err;
-    }
+#------------------------------------------------------------
 
     $group->add_test( name => 'error_in_subrequest',
 		      description => 'Make sure that an error in a subrequest is propogated back to the main request',

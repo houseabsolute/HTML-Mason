@@ -11,6 +11,7 @@ use strict;
 use File::Basename;
 use File::Path;
 use File::Spec;
+use File::Temp;
 use HTML::Mason;
 use HTML::Mason::Escapes;
 use HTML::Mason::Request;
@@ -34,29 +35,35 @@ BEGIN
          { parse => 'string',  default => 'autohandler', type => SCALAR,
            descr => "The filename to use for Mason's 'autohandler' capability" },
 
+	 buffer_preallocate_size =>
+	 { parse => 'string', default => 0, type => SCALAR,
+	   descr => "Number of bytes to preallocate in request buffer" },
+	 
 	 code_cache_max_size =>
-         { parse => 'string',  default => 10*1024*1024, type => SCALAR,  # 10M
-           descr => "The maximum size of the component code cache, in bytes" },
+         { parse => 'string',  default => 'unlimited', type => SCALAR,
+           descr => "The maximum number of components in the code cache" },
+
+ 	 comp_root =>
+         { parse => 'list',
+ 	   type => SCALAR|ARRAYREF,
+ 	   default => File::Spec->rel2abs( Cwd::cwd ),
+ 	   descr => "A string or array of arrays indicating the search path for component calls" },
 
 	 compiler =>
          { isa => 'HTML::Mason::Compiler',
            descr => "A Compiler object for compiling components" },
 
-	 current_time =>
-         { parse => 'string', default => 'real', optional => 1,
-           type => SCALAR, descr => "Current time (deprecated)" },
-
 	 data_dir =>
          { parse => 'string', optional => 1, type => SCALAR,
            descr => "A directory for storing cache files and other state information" },
 
+	 dynamic_comp_root =>
+         { parse => 'boolean', default => 0, type => BOOLEAN,
+           descr => "Indicates whether the comp_root may be changed between requests" },
+
          escape_flags =>
          { parse => 'hash_list', optional => 1, type => HASHREF,
            descr => "A list of escape flags to set (as if calling the set_escape() method" },
-
-	 static_source =>
-         { parse => 'boolean', default => 0, type => BOOLEAN,
-           descr => "When true, we only compile source files once" },
 
 	 # OBJECT cause qr// returns an object
 	 ignore_warnings_expr =>
@@ -70,6 +77,14 @@ BEGIN
 	 resolver =>
          { isa => 'HTML::Mason::Resolver',
            descr => "A Resolver object for fetching components from storage" },
+
+	 static_source =>
+         { parse => 'boolean', default => 0, type => BOOLEAN,
+           descr => "When true, we only compile source files once" },
+
+	 static_source_touch_file =>
+	 { parse => 'string', optional => 1, type => SCALAR, 
+	   descr => "A file that, when touched, causes Mason to clear its component caches" },
 
 	 use_object_files =>
          { parse => 'boolean', default => 1, type => BOOLEAN,
@@ -90,19 +105,25 @@ BEGIN
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( autohandler_name
+			 buffer_preallocate_size
                          code_cache
+			 code_cache_min_size
+			 code_cache_max_size
                          compiler
 			 data_dir
+			 dynamic_comp_root
+			 preallocated_output_buffer
 			 preloads
-                         static_source
                          resolver
                          source_cache
+                         static_source
+			 static_source_touch_file
+			 use_internal_component_caches
 			 use_object_files
                         ) ],
 
       read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
-		      qw( code_cache_max_size
-			  ignore_warnings_expr
+		      qw( ignore_warnings_expr
                          )
 		    ],
 
@@ -115,6 +136,7 @@ use HTML::Mason::MethodMaker
 				  [ error_mode => { type => SCALAR } ],
 				  [ max_recurse => { type => SCALAR } ],
 				  [ out_method => { type => SCALARREF | CODEREF } ],
+				  [ plugins => { type => ARRAYREF } ],
 				]
 			      },
       );
@@ -132,9 +154,15 @@ sub _initialize
 {
     my ($self) = shift;
     $self->{code_cache} = {};
-    $self->{code_cache_current_size} = 0;
+    $self->{source_cache} = {};
     $self->{files_written} = [];
+    $self->{static_source_touch_file_lastmod} = 0;
 
+    #
+    # Process initial comp_root setting.
+    #
+    $self->assign_comp_root_($self->{comp_root});
+ 
     #
     # Check that data_dir is absolute.
     #
@@ -148,38 +176,10 @@ sub _initialize
     # Create data subdirectories if necessary. mkpath will die on error.
     #
     if ($self->data_dir) {
-	foreach my $subdir ( qw(obj cache) ) {
-	    my $makedir = File::Spec->catdir( $self->data_dir, $subdir );
-	    my @newdirs = eval { mkpath( $makedir, 0, 0775 ) };
-	    if ($@) {
-		my $user  = getpwuid($<);
-		my $group = getgrgid($();
-		my $data_dir = $self->data_dir;
-		error "Cannot create directory $makedir. " .
-		      "Perhaps you need to create or set permissions on your data_dir. " .
-		      "e.g. 'chown $user.$group $data_dir'";
-	    }
-	    $self->push_files_written(@newdirs);
-	}
+	$self->make_object_dir_;
+	$self->make_cache_dir_;
     } else {
 	$self->{use_object_files} = 0;
-    }
-
-    #
-    # Preloads
-    #
-    if ($self->preloads) {
-	foreach my $pattern (@{$self->preloads}) {
-	    error "preload pattern '$pattern' must be an absolute path"
-		unless File::Spec->file_name_is_absolute($pattern);
-	    my @paths = $self->resolver->glob_path($pattern)
-		or warn "Didn't find any components for preload pattern '$pattern'";
-	    foreach (@paths)
-            {
-                $self->load($_)
-                    or error "Cannot preload component $_, found via pattern $pattern";
-            }
-	}
     }
 
     #
@@ -199,13 +199,113 @@ sub _initialize
             $self->set_escape( $flag => $code );
         }
     }
+
+    #
+    # Create preallocated buffer for requests.
+    #
+    $self->{preallocated_output_buffer} = ' ' x $self->buffer_preallocate_size;
+
+    #
+    # Check for unlimited code cache, or compute code_cache parameters.
+    #
+    $self->{unlimited_code_cache} = ($self->{code_cache_max_size} eq 'unlimited');
+    unless ($self->{unlimited_code_cache}) {
+	$self->{code_cache_min_size} = $self->{code_cache_max_size} * 0.75;
+    }
+
+    #
+    # If static_source=1, unlimited_code_cache=1, and
+    # dynamic_comp_root=0, we can safely cache component objects keyed
+    # on path throughout the framework (e.g. within other component
+    # objects). These internal caches can be cleared in
+    # $interp->flush_code_cache (the only legimiate place for a
+    # component to be eliminated from the cache), eliminating any
+    # chance for leaked objects.
+    #
+    # static_source has to be on or else we might keep around
+    # old versions of components that have changed.
+    #
+    # unlimited_code_cache has to be on or else we might leak
+    # components when we discard.
+    #
+    # dynamic_comp_root has to be 0 because the cache would not be
+    # valid for different combinations of component root across
+    # different requests.
+    #
+    $self->{use_internal_component_caches} =
+	($self->{static_source} &&
+	 $self->{unlimited_code_cache} &&
+	 !$self->{dynamic_comp_root});
+
+    #
+    # Preloads
+    #
+    if ($self->preloads) {
+	foreach my $pattern (@{$self->preloads}) {
+	    error "preload pattern '$pattern' must be an absolute path"
+		unless File::Spec->file_name_is_absolute($pattern);
+	    my %path_hash;
+	    foreach my $pair ($self->comp_root_array) {
+		my $root = $pair->[1];
+		foreach my $path ($self->resolver->glob_path($pattern, $root)) {
+		    $path_hash{$path}++;
+		}
+	    }
+	    my @paths = keys(%path_hash);
+	    warn "Didn't find any components for preload pattern '$pattern'"
+		unless @paths;
+	    foreach (@paths)
+            {
+                $self->load($_)
+                    or error "Cannot load component $_, found via pattern $pattern";
+            }
+	}
+    }
 }
 
 #
-# Shorthand for various data subdirectories and files.
+# Functions for retrieving and creating data subdirectories.
 #
 sub object_dir { my $self = shift; return $self->data_dir ? File::Spec->catdir( $self->data_dir, 'obj' ) : ''; }
+sub object_create_marker_file { my $self = shift; return $self->object_dir ? File::Spec->catfile($self->object_dir, '.__obj_create_marker') : ''; }
 sub cache_dir  { my $self = shift; return $self->data_dir ? File::Spec->catdir( $self->data_dir, 'cache' ) : ''; }
+
+sub make_data_subdir_
+{
+    my ($self, $dir) = @_;
+
+    unless (-d $dir) {
+	my @newdirs = eval { mkpath( $dir, 0, 0775 ) };
+	if ($@) {
+	    my $user  = getpwuid($<);
+	    my $group = getgrgid($();
+	    my $data_dir = $self->data_dir;
+	    error "Cannot create directory '$dir' ($@) for user '$user', group '$group'. " .
+		"Perhaps you need to create or set permissions on your data_dir ('$data_dir'). ";
+	}
+	$self->push_files_written(@newdirs);
+    }
+}
+
+sub make_object_dir_
+{
+    my ($self) = @_;
+
+    my $object_dir = $self->object_dir;
+    $self->make_data_subdir_($object_dir);
+    my $object_create_marker_file = $self->object_create_marker_file;
+    my $fh = make_fh();
+    open($fh, ">$object_create_marker_file")
+	or system_error "Could not create '$object_create_marker_file': $!";
+}
+
+sub make_cache_dir_
+{
+    my ($self) = @_;
+
+    my $cache_dir = $self->cache_dir;
+    $self->make_data_subdir_($cache_dir);
+}
 
 #
 # exec is the initial entry point for executing a component
@@ -225,7 +325,7 @@ sub make_request {
 
 sub comp_exists {
     my ($self, $path) = @_;
-    return $self->resolver->get_info($path);
+    return $self->resolve_comp_path_to_source($path);
 }
 
 #
@@ -236,7 +336,7 @@ sub comp_exists {
 sub load {
     my ($self, $path) = @_;
     my ($maxfilemod, $objfile, $objfilemod);
-    my $code_cache = $self->code_cache;
+    my $code_cache = $self->{code_cache};
     my $resolver = $self->{resolver};
 
     #
@@ -247,17 +347,9 @@ sub load {
     }
 
     #
-    # Get source info from resolver. Cache the results in static_source mode.
+    # Get source info from resolver.
     #
-    my $source;
-    if ($self->static_source) {
-	unless (exists($self->{source_cache}{$path})) {
-	    $self->{source_cache}{$path} = $resolver->get_info($path);
-	}
-	$source = $self->{source_cache}{$path};
-    } else {
-	$source = $resolver->get_info($path);
-    }
+    my $source = $self->resolve_comp_path_to_source($path);
 
     # No component matches this path.
     return unless defined $source;
@@ -340,26 +432,21 @@ sub load {
 
     #
     # Delete any stale cached version of this component, then
-    # cache it if it's small enough.
+    # cache it.
     #
     $self->delete_from_code_cache($comp_id);
+    $code_cache->{$comp_id} = { lastmod => $srcmod, comp => $comp };
 
-    if ($comp->object_size <= $self->code_cache_max_elem) {
-	$code_cache->{$comp_id} = { lastmod => $srcmod, comp => $comp };
-	$self->{code_cache_current_size} += $comp->object_size;
-    }
     return $comp;
 }
 
 sub delete_from_code_cache {
-    my ($self, $comp) = @_;
-    return unless exists $self->{code_cache}{$comp};
+    my ($self, $comp_id) = @_;
+    return unless defined $self->{code_cache}{$comp_id}{comp};
 
-    $self->{code_cache_current_size} -= $self->{code_cache}{$comp}{comp}->object_size;
-    delete $self->{code_cache}{$comp};
+    delete $self->{code_cache}{$comp_id};
     return;
 }
-
 
 sub comp_id_to_objfile {
     my ($self, $comp_id) = @_;
@@ -367,12 +454,21 @@ sub comp_id_to_objfile {
     return File::Spec->catfile( $self->object_dir, split /\//, $comp_id );
 }
 
-# User method for emptying code cache - useful for preventing memory leak
+#
+# Empty in-memory code cache.
+#
 sub flush_code_cache {
     my $self = shift;
 
+    # Necessary for preventing memory leaks
+    if ($self->use_internal_component_caches) {
+	foreach my $entry (values %{$self->{code_cache}}) {
+	    my $comp = $entry->{comp};
+#	    $comp->flush_internal_caches;
+	}
+    }
     $self->{code_cache} = {};
-    $self->{code_cache_current_size} = 0;
+    $self->{source_cache} = {};
 }
 
 #
@@ -382,18 +478,21 @@ sub flush_code_cache {
 sub purge_code_cache {
     my ($self) = @_;
 
-    if ($self->{code_cache_current_size} > $self->code_cache_max_size) {
+    return if $self->{unlimited_code_cache};
+    my $current_size = scalar(keys(%{$self->{code_cache}}));
+    if ($current_size > $self->code_cache_max_size) {
 	my $code_cache = $self->{code_cache};
 	my $min_size = $self->code_cache_min_size;
-	my $decay_factor = $self->code_cache_decay_factor;
+	my $decay_factor = 0.75;
 
 	my @elems;
 	while (my ($path,$href) = each(%{$code_cache})) {
 	    push(@elems,[$path,$href->{comp}->mfu_count,$href->{comp}]);
 	}
 	@elems = sort { $a->[1] <=> $b->[1] } @elems;
-	while (($self->{code_cache_current_size} > $min_size) and @elems) {
+	while (($current_size > $min_size) and @elems) {
 	    $self->delete_from_code_cache(shift(@elems)->[0]);
+	    $current_size--;
 	}
 
 	#
@@ -402,6 +501,72 @@ sub purge_code_cache {
 	#
 	foreach my $elem (@elems) {
 	    $elem->[2]->mfu_count( $elem->[2]->mfu_count * $decay_factor );
+	}
+    }
+}
+
+#
+# Clear the object directory of all current files and subdirectories.
+# Do this by renaming the object directory to a temporary name,
+# immediately recreating an empty object directory, then removing
+# the empty object directory. If another process tries to write
+# the object file in between these steps, it'll create the top
+# object directory instead.
+#
+# Would be nice to fork off a separate process to do the removing so
+# that it doesn't affect a request's response time, but difficult to
+# do this in an environment-generic way.
+#
+sub remove_object_files
+{
+    my $self = shift;
+
+    my $object_dir = $self->object_dir;
+    if (-d $object_dir) {
+	my $temp_dir = File::Temp::tempdir(DIR => $self->data_dir);
+	rename($object_dir, $temp_dir)
+	    or die "could not rename '$object_dir' to '$temp_dir': $@";
+	$self->make_object_dir_();
+	rmtree($temp_dir);
+    } else {
+	$self->make_object_dir_();
+    }
+}
+
+#
+# Check the static_source_touch_file, if one exists, to see if it has
+# changed since we last checked. If it has, clear the code cache and
+# object files if appropriate.
+#
+sub check_static_source_touch_file
+{
+    my $self = shift;
+
+    if (my $touch_file = $self->static_source_touch_file) {
+	return unless -f $touch_file;
+	my $touch_file_lastmod = (stat($touch_file))[9];
+	if ($touch_file_lastmod > $self->{static_source_touch_file_lastmod}) {
+
+	    # File has been touched since we last checked.  First,
+	    # clear the object file directory if the last mod of
+	    # its ._object_create_marker is earlier than the touch file,
+	    # or if the marker doesn't exist.
+	    #
+	    if ($self->use_object_files) {
+		my $object_create_marker_file = $self->object_create_marker_file;
+		if (!-e $object_create_marker_file ||
+		    (stat($object_create_marker_file))[9] < $touch_file_lastmod) {
+		    $self->remove_object_files;
+		}
+	    }
+
+	    # Next, clear the in-memory component cache.
+	    #
+	    $self->flush_code_cache;
+
+	    # Reset lastmod value.
+	    #
+	    $self->{static_source_touch_file_lastmod} = $touch_file_lastmod;
 	}
     }
 }
@@ -459,7 +624,89 @@ sub set_global
     }
 }
 
-sub comp_root { shift->resolver->comp_root(@_) }
+sub comp_root
+{
+    my $self = shift;
+    
+    if (my $new_comp_root = shift) {
+	die "cannot assign new comp_root unless dynamic_comp_root parameter is set"
+	  unless $self->dynamic_comp_root;
+	$self->assign_comp_root_($new_comp_root);
+    }
+    if (@{$self->{comp_root}} == 1 and $self->{comp_root}[0][0] eq 'MAIN') {
+	return $self->{comp_root}[0][1];
+    } else {
+	return $self->{comp_root};
+    }
+}
+
+sub comp_root_array
+{
+    return @{ $_[0]->{comp_root} };
+}
+
+sub assign_comp_root_
+{
+    my ($self, $new_comp_root) = @_;
+
+    # Force into lol format.
+    if (!ref($new_comp_root)) {
+	$new_comp_root = [[ MAIN => $new_comp_root ]];
+    } elsif (ref($new_comp_root) ne 'ARRAY') {
+	die "Component root $new_comp_root must be a scalar or array reference";
+    }
+
+    # Validate key/path pairs, and check to see if any of them
+    # conflict with old pairs.
+    my $comp_root_key_map = $self->{comp_root_key_map} ||= {};
+    foreach my $pair (@$new_comp_root) {
+	param_error "Multiple-path component root must consist of a list of two-element lists"
+	  if ref($pair) ne 'ARRAY';
+	param_error "Component root key '$pair->[0]' cannot contain slash"
+	  if $pair->[0] =~ /\//;
+	$pair->[1] = File::Spec->canonpath( $pair->[1] );
+	param_error "comp_root path '$pair->[1]' is not an absolute directory"
+	  unless File::Spec->file_name_is_absolute( $pair->[1] );
+	    
+	my ($key, $path) = @$pair;
+	if (my $orig_path = $comp_root_key_map->{$key}) {
+	    if ($path ne $orig_path) {
+		die "comp_root key '$key' was originally associated with '$path', cannot change to '$orig_path'";
+	    }
+	} else {
+	    $comp_root_key_map->{$key} = $path;
+	}
+    }
+    $self->{comp_root} = $new_comp_root;
+}
+
+sub resolve_comp_path_to_source
+{
+    my ($self, $path) = @_;
+    
+    my $source;
+    if ($self->{static_source}) {
+	# Maintain a separate source_cache for each component root,
+	# because the set of active component roots can change
+	# from request to request.
+	#
+	my $source_cache = $self->{source_cache};
+	foreach my $pair (@{$self->{comp_root}}) {
+	    my $source_cache_for_root = $source_cache->{$pair->[0]} ||= {};
+	    unless (exists($source_cache_for_root->{$path})) {
+		$source_cache_for_root->{$path}
+		  = $self->{resolver}->get_info($path, @$pair);
+	    }
+	    last if $source = $source_cache_for_root->{$path};
+	}
+    } else {
+	my $resolver = $self->{resolver};
+	foreach my $pair ($self->comp_root_array) {
+	    last if $source = $resolver->get_info($path, @$pair);
+	}
+    }
+    return $source;
+}
 
 sub files_written
 {
@@ -494,13 +741,6 @@ sub find_comp_upwards
 
     return;  # Nothing found
 }
-
-# Code cache parameter methods
-
-sub code_cache_min_size { shift->code_cache_max_size * 0.75 }
-sub code_cache_max_elem { shift->code_cache_max_size * 0.20 }
-sub code_cache_decay_factor { 0.75 }
-
 
 ###################################################################
 # The eval_object_code & write_object_file methods used to be in
@@ -763,20 +1003,6 @@ sub apply_escapes
     return $text;
 }
 
-#
-# Set or fetch the current time value (deprecated in 1.1x).
-#
-sub current_time {
-    my $self = shift;
-    if (@_) {
-	my $newtime = shift;
-	param_error "Interp::current_time: invalid value '$newtime' - must be 'real' or a numeric time value" if $newtime ne 'real' && $newtime !~ /^[0-9]+$/;
-	return $self->{current_time} = $newtime;
-    } else {
-	return $self->{current_time};
-    }
-}
-
 1;
 
 __END__
@@ -788,8 +1014,8 @@ HTML::Mason::Interp - Mason Component Interpreter
 =head1 SYNOPSIS
 
     my $i = HTML::Mason::Interp->new (data_dir=>'/usr/local/mason',
-                                     comp_root=>'/usr/local/www/htdocs/',
-                                     ...other params...);
+                                      comp_root=>'/usr/local/www/htdocs/',
+                                      ...other params...);
 
 =head1 DESCRIPTION
 
@@ -810,11 +1036,88 @@ L<autohandlers|HTML::Mason::Devel/autohandlers>. Default is
 "autohandler".  If this is set to an empty string ("") then
 autohandlers are turned off entirely.
 
+=item buffer_preallocate_size
+
+=for html <a name="item_buffer_preallocate_size"></a>
+
+Number of bytes to preallocate in the output buffer for each request.
+Defaults to 0. Setting this to, say, your maximum page size (or close
+to it) can reduce the number of reallocations Perl performs as
+components add to the output buffer.
+
 =item code_cache_max_size
 
-Specifies the maximum size, in bytes, of the in-memory code cache
-where components are stored. Default is 10 MB. See ADMIN<code cache>
-for further details.
+=for html <a name="item_code_cache_max_size"></a>
+
+Specifies the maximum number of components that should be held in the
+in-memory code cache. The default is 'unlimited', meaning no
+components will ever be discarded; Mason can perform certain
+optimizations in this mode. Setting this to zero disables the code
+cache entirely. See the L<code cache|HTML::Mason::Admin/code cache>
+section of the administrator's manual for further details.
+
+=item comp_root
+
+=for html <a name="item_comp_root"></a>
+
+The component root marks the top of your component hierarchy and
+defines how component paths are translated into real file paths. For
+example, if your component root is F</usr/local/httpd/docs>, a component
+path of F</products/index.html> translates to the file
+F</usr/local/httpd/docs/products/index.html>.
+
+Under L<Apache|HTML::Mason::ApacheHandler> and
+L<CGI|HTML::Mason::CGIHandler>, comp_root defaults to the server's
+document root. In standalone mode comp_root defaults to the current
+working directory.
+
+This parameter may be either a scalar or an array reference.  If it is
+a scalar, it should be a filesystem path indicating the component
+root. If it is an array reference, it should be of the following form:
+
+ [ [ foo => '/usr/local/foo' ],
+   [ bar => '/usr/local/bar' ] ]
+
+This is an array of two-element array references, not a hash.  The
+"keys" for each path must be unique and their "values" must be
+filesystem paths.  These paths will be searched in the provided order
+whenever a component path is resolved. For example, given the above
+component roots and a component path of F</products/index.html>, Mason
+would search first for F</usr/local/foo/products/index.html>, then for
+F</usr/local/bar/products/index.html>.
+
+The keys are used in several ways. They help to distinguish component
+caches and object files between different component roots, and they
+appear in the C<title()> of a component.
+
+When you specify a single path for a component root, this is actually
+translated into
+
+  [ [ MAIN => path ] ]
+
+If you have turned on P<dynamic_comp_root>, you may modify the
+component root(s) of an interpreter between requests by calling
+C<$interp-E<gt>comp_root> with a value. However, the path associated
+with any given key may not change between requests. For example,
+if the initial component root is
+
+ [ [ foo => '/usr/local/foo' ],
+   [ bar => '/usr/local/bar' ], ]
+
+then it may not be changed to
+
+ [ [ foo => '/usr/local/bar' ],
+   [ bar => '/usr/local/baz' ],
+
+but it may be changed to
+
+ [ [ foo   => '/usr/local/foo' ],
+   [ blarg => '/usr/local/blarg' ] ]
+
+In other words, you may add or remove key/path pairs but not modify an
+already-used key/path pair. The reason for this restriction is that
+the interpreter maintains a component cache per key that would become
+invalid if the associated paths were to change.
 
 =item compiler
 
@@ -825,10 +1128,6 @@ new object of class P<compiler_class> will be created.
 
 The class to use when creating a compiler. Defaults to
 L<HTML::Mason::Compiler|HTML::Mason::Compiler>.
-
-=item current_time
-
-Interpreter's notion of the current time (deprecated).
 
 =item data_dir
 
@@ -846,6 +1145,13 @@ In non-Apache environments, data_dir has no default. If it is left
 unspecified, Mason will not use L<object files|HTML::Mason::Admin/object files>, and the default
 L<data cache class|HTML::Mason::Request/item_cache> will be
 C<MemoryCache> instead of C<FileCache>.
+
+=item dynamic_comp_root
+
+True or false, defaults to false. Indicates whether the P<comp_root>
+can be modified on this interpreter between requests. Mason can
+perform a few optimizations with a fixed component root, so you
+should only set this to true if you actually need it.
 
 =item escape_flags
 
@@ -913,11 +1219,24 @@ When true, Mason assumes that the component source tree is unchanging:
 it will not check component source files to determine if the memory
 cache or object file has expired.  This can save many file stats per
 request. However, in order to get Mason to recognize a component
-source change, you must remove object files and restart the server (so
-as to clear the memory cache).
+source change, you must flush the memory cache and remove object files.
+See P<static_source_touch_file> for one easy way to arrange this.
 
-Use this feature for live sites where performance is crucial and
-where updates are infrequent and well-controlled.
+We recommend turning this mode on in your production sites if
+possible, if performance is of any concern.
+
+=item static_source_touch_file
+
+Specifies a filename that Mason will check once at the beginning of
+of every request. When the file timestamp changes, Mason will (1) clear
+its in-memory component cache, and (2) remove object files if
+they have not already been deleted by another process.
+
+This provides a convenient way to implement P<static_source> mode.
+All you need to do is make sure that a single file gets touched
+whenever components change. For Mason's part, checking a single
+file at the beginning of a request is much cheaper than checking
+every component file when static_source=0.
 
 =item use_object_files
 
@@ -931,15 +1250,8 @@ should be left alone.
 =head1 ACCESSOR METHODS
 
 All of the above properties have standard accessor methods of the same
-name. In general, no arguments retrieves the value, and one argument
-sets and returns the value.  For example:
-
-    my $interp = HTML::Mason::Interp->new (...);
-    my $c = $interp->compiler;
-    $interp->code_cache_max_size(20 * 1024 * 1024);
-
-The following properties can be queried but not modified: data_dir,
-preloads.
+name. Only comp_root and ignore_warnings_expr can be modified in an
+existing interpreter; the rest are read-only.
 
 =head1 ESCAPE FLAG METHODS
 
@@ -997,14 +1309,9 @@ configuration file, you can set them like this:
 Given an I<absolute> component path, this method returns a boolean
 value indicating whether or not a component exists for that path.
 
-=item comp_root (comp_root)
+=over
 
-=for html <a name="item_comp_root"></a>
-
-This is a convenience method which simply calls the C<comp_root>
-method in the resolver object.  Obviously, if you are using a custom
-resolver class which does not have a C<comp_root> method, then this
-convenience method will not work.
+=item * as a way to distinguish component caches between different component roots
 
 =item exec (comp, args...)
 
@@ -1112,20 +1419,6 @@ P<allow_globals> parameter; otherwise you'll get warnings from
 C<strict>.
 
 =back
-
-=head1 MEMORY LEAK WARNING
-
-When using Perl 5.00503 or earlier, using the code cache creates a
-circular reference between Interp and component objects.  This means
-that Interp objects will not be destroyed unless you call
-L<flush_code_cache|HTML::Mason::Interp/flush_code_cache>.  If you are
-using Perl 5.6.0 or greater, and you have the XS version of
-Scalar::Util installed, Mason uses weak references to prevent this
-problem.
-
-Win32 users should note that as of this writing, ActiveState's PPD for
-Scalar-List-Utils only includes the pure Perl version of these
-modules, which don't include the weak references functionality.
 
 =head1 SEE ALSO
 
