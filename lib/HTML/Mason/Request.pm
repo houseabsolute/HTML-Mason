@@ -35,6 +35,7 @@ package HTML::Mason::Request;
 use strict;
 
 use File::Spec;
+use HTML::Mason::Plugin::Context;
 use HTML::Mason::Tools qw(can_weaken read_file compress_path load_pkg pkg_loaded absolute_comp_path);
 use HTML::Mason::Utils;
 use Class::Container;
@@ -266,8 +267,10 @@ sub _initialize {
 
  	# Construct a plugin instance for each plugin class in each request.
 	#
+	$self->{has_plugins} = 0;
         $self->{plugin_instances} = [];
  	foreach my $plugin (@{ delete $self->{plugins} }) {
+	    $self->{has_plugins} = 1;
  	    my $plugin_instance = $plugin;
  	    unless (ref $plugin) {
 
@@ -417,15 +420,20 @@ sub exec {
 	    my $old = select SELECTED;
 	    my $mods = {base_comp=>$request_comp, store=>\ ($self->{request_buffer})};
 
- 	    eval {
-		foreach my $plugin_instance (@{$self->plugin_instances}) {
-		    $plugin_instance->start_request( $self, $request_args );
+	    if ($self->{has_plugins}) {
+		my $context = bless
+		    [$self, $request_args],
+		    'HTML::Mason::Plugin::Context::StartRequest';
+		eval {
+		    foreach my $plugin_instance (@{$self->plugin_instances}) {
+			$plugin_instance->start_request( $context );
+		    }
+		};
+		if ($@) {
+		    select $old;
+		    rethrow_exception $@;
 		}
- 	    };
- 	    if ($@) {
-		select $old;
-		rethrow_exception $@;
- 	    }
+	    }
 
 	    if ($wantarray) {
 		@result = eval {$self->comp($mods, $first_comp, @$request_args)};
@@ -436,17 +444,22 @@ sub exec {
 	    }
  
  	    my $error = $@;
- 	    
- 	    # plugins called in reverse order when exiting.
- 	    eval {
-		foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {
-		    $plugin_instance->end_request( $self, $request_args, $wantarray, \@result, \$error );
+
+	    if ($self->{has_plugins}) {
+		# plugins called in reverse order when exiting.
+		my $context = bless
+		    [$self, $request_args, $wantarray, \@result, \$error],
+		    'HTML::Mason::Plugin::Context::EndRequest';
+		eval {
+		    foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {
+			$plugin_instance->end_request( $context );
+		    }
+		};
+		if ($@) {
+		    # plugin errors take precedence over component errors
+		    $error = $@;
 		}
- 	    };
- 	    if ($@) {
-		# plugin errors take precedence over component errors
-		$error = $@;
- 	    }
+	    }
 	    
 	    select $old;
 	    rethrow_exception $error;
@@ -1163,8 +1176,14 @@ sub comp {
 
     # Run start_component hooks for each plugin.
     #
-    foreach my $plugin_instance (@{$self->{plugin_instances}}) {
-	$plugin_instance->start_component($self, $comp, \@_);
+    if ($self->{has_plugins}) {
+	my $context = bless
+	    [$self, $comp, \@_],
+	    'HTML::Mason::Plugin::Context::StartComponent';
+	
+	foreach my $plugin_instance (@{$self->{plugin_instances}}) {
+	    $plugin_instance->start_component( $context );
+	}
     }
 
     # Finally, call the component.
@@ -1199,8 +1218,14 @@ sub comp {
 
     # Run end_component hooks for each plugin, in reverse order.
     #
-    foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {
-	$plugin_instance->end_component($self, $comp, \@_, $wantarray, \@result, \$error);
+    if ($self->{has_plugins}) {
+	my $context = bless
+	    [$self, $comp, \@_, $wantarray, \@result, \$error],
+	    'HTML::Mason::Plugin::Context::EndComponent';
+	
+	foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {
+	    $plugin_instance->end_component( $context );
+	}
     }
 
     # Repropagate error if one occurred, otherwise return result.

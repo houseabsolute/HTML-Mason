@@ -3,121 +3,109 @@
 use strict;
 use HTML::Mason::Tests;
 
-  # a sample plugin
-{
-  package HTML::Mason::Plugin::TestBeforeAndAfterRequest;
-  use base qw(HTML::Mason::Plugin);
-  sub start_request {
+package HTML::Mason::Plugin::TestBeforeAndAfterRequest;
+use base qw(HTML::Mason::Plugin);
+sub start_request {
+    my ($self, $context) = @_;
     print "Before Request\n";
-  }
-  sub end_request {
+}
+sub end_request {
     print "After Request\n";
-  }
 }
 
-{
-  package HTML::Mason::Plugin::TestBeforeAndAfterComponent;
-  use base qw(HTML::Mason::Plugin);
-  sub start_component {
-    my ($self, $request, $comp, $args) = @_;
-    print "Before Component " . $comp->title . "\n";
-  }
-  sub end_component {
-    my ($self, $request, $comp, $args) = @_;
-    print "After Component " . $comp->title . "\n";
-  }
+package HTML::Mason::Plugin::TestBeforeAndAfterComponent;
+use base qw(HTML::Mason::Plugin);
+sub start_component {
+    my ($self, $context) = @_;
+    print "Before Component " . $context->comp->title . "\n";
+}
+sub end_component {
+    my ($self, $context) = @_;
+    print "After Component " . $context->comp->title . "\n";
 }
 
-{ 
-  # test the ordering of plugin calls
-  package HTML::Mason::Plugin::TestAllCalls;
-  use base qw(HTML::Mason::Plugin);
-  sub start_request {
-    my ($self, $request, $request_args) = @_;
-    my $rcomp = $request->request_comp()->title;
+# test the ordering of plugin calls
+package HTML::Mason::Plugin::TestAllCalls;
+use base qw(HTML::Mason::Plugin);
+sub start_request {
+    my ($self, $context) = @_;
+    my $rcomp = $context->request->request_comp()->title;
     print "AllCalls Request Start on: $rcomp\n";
-  }
-  sub end_request {
-    my ($self, $request, $request_args) = @_;
-    my $rcomp = $request->request_comp()->title;
+}
+sub end_request {
+    my ($self, $context) = @_;
+    my $rcomp = $context->request->request_comp()->title;
     print "AllCalls Request Finish on: $rcomp\n";
-  }
-  sub start_component {
-    my ($self, $request, $comp, $args) = @_;
-    print "AllCalls Before Component " . $comp->title . "\n";
-  }
-  sub end_component {
-    my ($self, $request, $comp, $args) = @_;
-    print "AllCalls After Component " . $comp->title . "\n";
-  }
-}  
+}
+sub start_component {
+    my ($self, $context) = @_;
+    print "AllCalls Before Component " . $context->comp->title . "\n";
+}
+sub end_component {
+    my ($self, $context) = @_;
+    print "AllCalls After Component " . $context->comp->title . "\n";
+}
 
-{
-  package HTML::Mason::Plugin::TestResetEachRequest;
-  use base qw(HTML::Mason::Plugin);
-   sub start_request {
-    my ($self, $request, $request_args) = @_;
-    my $rcomp = $request->request_comp->title();
+package HTML::Mason::Plugin::TestResetEachRequest;
+use base qw(HTML::Mason::Plugin);
+sub start_request {
+    my ($self, $context) = @_;
+    my $rcomp = $context->request->request_comp->title();
     print "PreRequest: " . ++ $self->{count} . " : $rcomp\n";
-  }
-  sub end_request {
-    my ($self, $request, $request_args) = @_;
-    my $rcomp = $request->request_comp->title();
+}
+sub end_request {
+    my ($self, $context) = @_;
+    my $rcomp = $context->request->request_comp->title();
     print "PostRequest: " . ++ $self->{count} . " : $rcomp\n";
-  }
-  sub start_component {
-    my ($self, $request, $comp, $args) = @_;
-    print "PreComponent: " . ++ $self->{count} . " : " . $comp->title() ."\n";
-  }
-  sub end_component {
-    my ($self, $request, $comp, $args) = @_;
-    print "PostComponent: " . ++ $self->{count} . " : " . $comp->title() ."\n";
-  }
 }
-{
-  package HTML::Mason::Plugin::TestErrorStartRequest;
-  use base qw(HTML::Mason::Plugin);
-  sub start_request {
-    my ($self, $request, $request_args) = @_;
-    die("plugin error on start request " . $request->request_comp->title);
-  }
+sub start_component {
+    my ($self, $context) = @_;
+    print "PreComponent: " . ++ $self->{count} . " : " . $context->comp->title() ."\n";
 }
-{
-  package HTML::Mason::Plugin::TestErrorEndRequest;
-  use base qw(HTML::Mason::Plugin);
-  sub end_request {
-    my ($self, $request, $request_args) = @_;
-    die("plugin error on end request " . $request->request_comp->title);
-  }
+sub end_component {
+    my ($self, $context) = @_;
+    print "PostComponent: " . ++ $self->{count} . " : " . $context->comp->title() ."\n";
 }
-{
-  package HTML::Mason::Plugin::TestErrorStartComponent;
-  use base qw(HTML::Mason::Plugin);
-  sub start_component {
-    my ($self, $request, $comp, $args) = @_;
-    die("plugin error on start component " . $comp->title);
-  }
-  
+
+package HTML::Mason::Plugin::TestErrorStartRequest;
+use base qw(HTML::Mason::Plugin);
+sub start_request {
+    my ($self, $context) = @_;
+    die("plugin error on start request " . $context->request->request_comp->title);
 }
-{
-  package HTML::Mason::Plugin::TestErrorEndComponent;
-  use base qw(HTML::Mason::Plugin);
-  sub end_component {
-    my ($self, $request, $comp, $args) = @_;
-    die("plugin error on end component " . $comp->title);
-  }
-} 
-{
-  package HTML::Mason::Plugin::TestCatchError;
-  use base qw(HTML::Mason::Plugin);
-  sub end_component {
-    my ($self, $request, $comp, $args, $wantarray, $result, $error) = @_;
+
+package HTML::Mason::Plugin::TestErrorEndRequest;
+use base qw(HTML::Mason::Plugin);
+sub end_request {
+    my ($self, $context) = @_;
+    die("plugin error on end request " . $context->request->request_comp->title);
+}
+
+package HTML::Mason::Plugin::TestErrorStartComponent;
+use base qw(HTML::Mason::Plugin);
+sub start_component {
+    my ($self, $context) = @_;
+    die("plugin error on start component " . $context->comp->title);
+}
+
+package HTML::Mason::Plugin::TestErrorEndComponent;
+use base qw(HTML::Mason::Plugin);
+sub end_component {
+    my ($self, $context) = @_;
+    die("plugin error on end component " . $context->comp->title);
+}
+
+package HTML::Mason::Plugin::TestCatchError;
+use base qw(HTML::Mason::Plugin);
+sub end_component {
+    my ($self, $context) = @_;
+    my $error = $context->error;
     if (defined($$error)) {
-      print "Caught error " . $$error . " and trapping it.\n";
-      $$error = undef;
+	print "Caught error " . $$error . " and trapping it.\n";
+	$$error = undef;
     }
-  }
 }
+
 package main;
 
 my $tests = make_tests();
