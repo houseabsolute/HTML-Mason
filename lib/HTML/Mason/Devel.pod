@@ -27,14 +27,21 @@ non-optimal order for beginners.
 If you are just learning Mason and want to get started quickly, I
 recommend the following sections:
 
-WHAT ARE COMPONENTS?
-IN-LINE PERL SECTIONS
-CALLING COMPONENTS
-PASSING PARAMETERS
-INITIALIZATION/CLEANUP (<%init> and <%cleanup> only)
-DATA CACHING
-SENDING HTTP HEADERS
-COMMON TRAPS
+o L<What Are Components?>
+
+o L<In-Line Perl Sections>
+
+o L<Calling Components>
+
+o L<Passing Parameters>
+
+o L<Initialization and Cleanup> (mainly <%init>)
+
+o L<Data Caching>
+
+o L<Sending HTTP Headers>
+
+o L<Common Traps>
 
 =head1 WHAT ARE COMPONENTS?
 
@@ -498,8 +505,8 @@ e.g. if you want to suppress some original arguments or if you want to
 use C<$m-E<gt>scomp> to store and process the output.
 
 What happens if more than one autohandler applies to a page? Prior to
-version 0.82, only the most specific autohandler would execute.  In
-0.82 and beyond each autohandler gets a chance to run.  The top-most
+version 0.85, only the most specific autohandler would execute.  In
+0.85 and beyond each autohandler gets a chance to run.  The top-most
 autohandler runs first; each $m->call_next transfers control to the
 next autohandler and finally to the originally called component. This
 allows you, for example, to combine general site-wide templates and
@@ -644,7 +651,7 @@ readability, syntax checking, and default value automation.  However
 using @_ may be convenient for very small components, especially
 subcomponents created with <%def>.
 
-=head1 INITIALIZATION/CLEANUP
+=head1 INITIALIZATION AND CLEANUP
 
 The following sections contain blocks of Perl to execute at specific
 times.
@@ -745,13 +752,14 @@ code runs once per request (whenever the component is used) and its
 variables last only til the end of the request.
 
 Useful for initializing variables needed in, say, the main body and
-one more methods. See L<Devel/Object-Oriented Techniques> for an
-example of usage.
+one more subcomponents or methods. See L<Devel/Object-Oriented
+Techniques> for an example of usage.
 
 Avoid using <%shared> for side-effect code that needs to run at a
-predictable time during page generation. Assume only that <%shared>
-runs just before the first code that needs it and at most once
-per request. <%init> offers more a predictable execution time.
+predictable time during page generation. You may assume only that
+<%shared> runs just before the first code that needs it and runs at
+most once per request. <%init> offers more a predictable execution
+time.
 
 Any component with a <%shared> section incurs an extra performance
 penalty, because (as currently implemented) Mason must recreate its
@@ -761,52 +769,18 @@ applications will be unnoticeable. However, one should avoid using
 <%shared> when patently unnecessary, e.g. when an <%init> would work
 as well.
 
-=head1 COMMENTS/PLAIN TEXT
-
-=head2 E<lt>%docE<gt>
-
-Text in this section is treated as a comment and ignored. Most useful
-for a component's main documentation.  One can easily write a program
-to sift through a set of components and pull out their E<lt>%docE<gt>
-blocks to form a reference page.
-
-Can also be used for in-line comments, though it is an admittedly
-cumbersome comment marker.  Another option is '%#':
-
-    %# this is a comment
-
-These comments differ from HTML comments in that they do not appear in
-the HTML.
-
-=head2 E<lt>%textE<gt>
-
-Text in this section is passed through unmodified by Mason. Any Mason
-syntax inside it is ignored.  Useful, for example, when documenting
-Mason itself from a component:
-
-    <%text>
-    % This is an example of a Perl line.
-    <% This is an example of an expression block. %>
-    </%text>
-
-This works for almost everything, but doesn't let you output
-E<lt>/%textE<gt> itself! When all else fails, use C<$m-E<gt>out>:
-
-    %$m->out('The tags are <%text> and </%text>.');
-
-=head1 SUBCOMPONENTS/METHODS
+=head1 EMBEDDED COMPONENTS
 
 =head2 E<lt>%def I<name>E<gt>
 
-Each instance of this section creates a <i>subcomponent</i> embedded
-inside the current component. Inside you may place almost anything
-that a regular component contains -- embedded Perl, <%init> and <%args>
-sections, etc.  The prohibited tags are <%def>, <%method>, <%once>,
-and <%shared>.
+Each instance of this section creates a I<subcomponent> embedded
+inside the current component. Inside you may place anything that a
+regular component contains, with the exception of <%def>, <%method>,
+<%once>, and <%shared> tags.
 
 The I<name> consists of characters in the set C<[A-Za-z0-9._-]>. To
 call a subcomponent simply use its name in <& &> or C<$m-E<gt>comp>. A
-subcomponent can only be seen from its parent component.
+subcomponent can only be seen from the surrounding component.
 
 If you define a subcomponent with the same name as a file-based
 component in the current directory, the subcomponent takes
@@ -820,10 +794,10 @@ While inside a subcomponent, you may use absolute or relative paths to
 call file-based components and also call any of your "sibling"
 subcomponents.
 
-The scope of a subcomponent is outside the parent component subroutine,
-so you cannot refer to arguments or C<my> variables declared in the
-parent component.  However a subcomponent can declare its own C<E<lt>%argsE<gt>>
-section and have relevant values passed in.
+The lexical scope of a subcomponent is separate from the main
+component.  However a subcomponent can declare its own <%args> section
+and have relevant values passed in.  You can also use a <%shared>
+section to declare variables visible from both scopes.
 
 In the following example, we create a ".link" subcomponent to produce a
 standardized hyperlink:
@@ -847,7 +821,7 @@ standardized hyperlink:
 
 =head2 E<lt>%method I<name>E<gt>
 
-Each instance of this section creates a <i>method</i> embedded inside
+Each instance of this section creates a I<method> embedded inside
 the current component. Methods resemble subcomponents in terms of
 naming, contents, and scope. However, while subcomponents can only be
 seen from the parent component, methods are meant to be called from
@@ -870,7 +844,7 @@ Methods are commonly used in conjunction with autohandlers to make
 templates more flexible. See L<Devel/Object-Oriented Techniques> for
 more information.
 
-=head1 FLAGS/ATTRIBUTES
+=head1 FLAGS AND ATTRIBUTES
 
 The E<lt>%flagsE<gt> and E<lt>%attrE<gt> sections consist of key/value
 pairs, one per line, joined by '=>'.  The key and value in each pair
@@ -1029,7 +1003,38 @@ o foo goes about its business and generates content into the C<$m-E<gt>call_self
 o When control is returned to C<$m-E<gt>call_self>, it places the content
 and return value in the references provided, and returns 1.
 
-=head1 MISCELLANEOUS SYNTAX
+=head1 OTHER SYNTAX
+
+=head2 E<lt>%docE<gt>
+
+Text in this section is treated as a comment and ignored. Most useful
+for a component's main documentation.  One can easily write a program
+to sift through a set of components and pull out their E<lt>%docE<gt>
+blocks to form a reference page.
+
+Can also be used for in-line comments, though it is an admittedly
+cumbersome comment marker.  Another option is '%#':
+
+    %# this is a comment
+
+These comments differ from HTML comments in that they do not appear in
+the HTML.
+
+=head2 E<lt>%textE<gt>
+
+Text in this section is passed through unmodified by Mason. Any Mason
+syntax inside it is ignored.  Useful, for example, when documenting
+Mason itself from a component:
+
+    <%text>
+    % This is an example of a Perl line.
+    <% This is an example of an expression block. %>
+    </%text>
+
+This works for almost everything, but doesn't let you output
+E<lt>/%textE<gt> itself! When all else fails, use C<$m-E<gt>out>:
+
+    %$m->out('The tags are <%text> and </%text>.');
 
 =head2 Escaping expressions
 
@@ -1635,7 +1640,7 @@ subsections to use a different template, or to ignore templates
 entirely.
 
 These issues can be addressed with the object-oriented style
-primitives introduced in Mason 0.82.
+primitives introduced in Mason 0.85.
 
 Note: we use the term object-oriented loosely. Mason borrows concepts
 like inheritance, methods, and attributes from object methodology but
