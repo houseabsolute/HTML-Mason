@@ -110,7 +110,7 @@ sub exec
         # no need to go through all the rigamorale below for
         # subrequests, and it may even break things to do so, since
         # $r's print should only be redefined once.
-	eval { $retval = $self->SUPER::exec(@_) };
+	$retval = $self->SUPER::exec(@_);
     }
     else
     {
@@ -131,17 +131,7 @@ sub exec
 	    return $self->print(@_) if $local_r eq $r;
 	    return $local_r->$real_apache_print(@_);
 	};
-	eval { $retval = $self->SUPER::exec(@_) };
-    }
-
-    if ($@) {
-	if (isa_mason_exception($@, 'TopLevelNotFound')) {
-	    # Log the error the same way that Apache does (taken from default_handler in http_core.c)
-	    $r->log_error("[Mason] File does not exist: ", $r->filename . ($r->path_info ? $r->path_info : ""));
-	    return $self->ah->return_not_found($r);
-	} else {
-	    rethrow_exception $@;
-	}
+	$retval = $self->SUPER::exec(@_);
     }
 
     # On a success code, send headers if they have not been sent and
