@@ -50,13 +50,25 @@ sub write_httpd_conf {
     my %args = (conf_file => 't/httpd.conf', @_);
     my $DIR = `pwd`; chomp $DIR;
 
+    # Apache2 tweaks
+    my $Port = 'Port';
+    my $AccessConfig = 'AccessConfig /dev/null';
+    my $ResourceConfig = 'ResourceConfig /dev/null';
+    my $ScoreBoardFile = 'ScoreBoardFile /dev/null';
+    if ($args{version} =~ m/^2\./) {
+	$Port = 'Listen';
+	$AccessConfig = '';
+	$ResourceConfig = '';
+	$ScoreBoardFile = '';
+    }
+
     local *CONF;
     open CONF, ">$args{conf_file}" or die "Can't create $args{conf_file}: $!";
     print CONF <<EOF;
 
-Port $args{port}
+$Port $args{port}
 User $args{user}
-Group $args{group}
+Group "$args{group}"
 ServerName localhost
 DocumentRoot $DIR/t
 
@@ -64,20 +76,14 @@ $args{modules}
 
 ErrorLog $DIR/t/error_log
 PidFile $DIR/t/httpd.pid
-AccessConfig /dev/null
-ResourceConfig /dev/null
+$AccessConfig
+$ResourceConfig
 LockFile $DIR/t/httpd.lock
 TypesConfig /dev/null
 TransferLog /dev/null
-ScoreBoardFile /dev/null
+$ScoreBoardFile
 
 AddType text/html .html
-
-# Look in ./blib/lib
-#PerlModule ExtUtils::testlib
-<Perl>
- use lib "$DIR/blib/lib", "$DIR/t/lib";
-</Perl>
 
 $args{include}
 EOF
@@ -135,6 +141,7 @@ sub get_test_params {
     if (lc _ask("Search existing config file for dynamic module dependencies?", $default) eq 'y') {
 	my %compiled = $pkg->get_compilation_params('t/httpd');
 
+	$conf{version} = $compiled{SERVER_VERSION};
 	$conf{config_file} = _ask("  Config file", $compiled{SERVER_CONFIG_FILE}, 1);
 	$conf{modules} = $pkg->_read_existing_conf($conf{config_file});
     }
@@ -159,6 +166,9 @@ sub get_compilation_params {
 	if (/([\w]+)="(.*)"/) {
 	    $compiled{$1} = $2;
 	}
+	if (/Server version: .*?([\d\.]+)/i) {
+	    $compiled{SERVER_VERSION} = $1;
+	}
     }
     $compiled{SERVER_CONFIG_FILE} =~ s,^,$compiled{HTTPD_ROOT}/,
 	unless $compiled{SERVER_CONFIG_FILE} =~ m,^/,;
@@ -175,42 +185,38 @@ sub _read_existing_conf {
     my @lines = grep {!m/^\s*\#/} <SERVER_CONF>;
     close SERVER_CONF;
 
-    my @includes;
-    foreach my $include (grep /^\s*Include\s+\S+/, @lines) {
-	my ($file) = $include =~ /^\s*Include\s+(\S+)/;
-	$file =~ s/^"//;
-	$file =~ s/"//;
-	push @includes, $file;
-	warn "ADDED INC $file\n";
-    }
-
-    my @modules       =   grep /^\s*(Add|Load|Clear)Module/, @lines;
-
     my ($server_root) = (map /^\s*ServerRoot\s*(\S+)/, @lines);
     $server_root =~ s/^"//;
     $server_root =~ s/"$//;
 
     $server_root ||= $default_root;
 
+    my @includes;
+    foreach my $include (grep /^\s*Include\s+\S+/, @lines) {
+	my ($file) = $include =~ /^\s*Include\s+(\S+)/;
+	$file =~ s/^"//;
+	$file =~ s/"//;
+	$file =~ s!^([^/])!$server_root/$1!;  # absolute path
+
+	if ($file =~ m/\*/) {
+	    # expand wildcard includes (used in Fedora Core 1 default config)
+	    my @add = glob $file;
+	    unless ($Apache::test::quiet) {
+		warn "expanding wildcard Include $file\n";
+		warn "ADDED INC $_\n" for @add;
+	    }
+	    push @includes, @add;
+	} else {
+	    push @includes, $file;
+	    warn "ADDED INC $file\n" unless $Apache::test::quiet;
+	}
+    }
+
+    my @modules = grep /^\s*(Add|Load|Clear)Module/, @lines;
+
     # Rewrite all modules to load from an absolute path.
     foreach (@modules) {
 	s!(\s)([^/\s]\S+/)!$1$server_root/$2!;
-    }
-    # And do the same for includes.
-    foreach (@includes) {
-	s!^([^/])!$server_root/$1!;
-	warn "$_\n";
-    }
-
-    my $static_mods = $self->static_modules('t/httpd');
-    
-    my @load;
-    # Have to make sure that dir, autoindex and perl are loaded.
-    foreach my $module (qw(dir autoindex perl)) {
-       unless ($static_mods->{"mod_$module"} or grep /$module/i, @modules) {
-           warn "Will attempt to load mod_$module dynamically.\n";
-	    push @load, $module;
-	}
     }
 
     # Follow each include recursively to find needed modules
@@ -219,6 +225,17 @@ sub _read_existing_conf {
     }
     # The last bits only need to be done once.
     return @modules if $is_include;
+
+    my $static_mods = $self->static_modules('t/httpd');
+    
+    my @load;
+    # Have to make sure that dir, autoindex and perl are loaded.
+    foreach my $module (qw(dir autoindex perl)) {
+       unless ($static_mods->{"mod_$module"} or grep /$module/i, @modules) {
+           warn "Will attempt to load mod_$module dynamically.\n" unless $Apache::test::quiet;
+	    push @load, $module;
+	}
+    }
 
     # Directories where apache DSOs live.
     my @module_dirs = map {m,(/\S*)/,} @modules;
@@ -233,12 +250,14 @@ sub _read_existing_conf {
                }
 	    }
 	}
-       warn "Warning: couldn't find anything to load for 'mod_$module'.\n";
+       warn "Warning: couldn't find anything to load for 'mod_$module'.\n" unless $Apache::test::quiet;
     }
 
-    print "Adding the following dynamic config lines: \n";
-    print join '', @modules;
-    print "\n\n";
+    unless ($Apache::test::quiet) {
+	print "Adding the following dynamic config lines: \n";
+	print join '', @modules;
+	print "\n\n";
+    }
     return join '', @modules;
 }
 
@@ -275,12 +294,13 @@ sub _httpd_has_mod_perl {
 
     my %compiled = $self->get_compilation_params($httpd);
 
-    if ($compiled{SERVER_CONFIG_FILE}) {
-	local *SERVER_CONF;
-	open SERVER_CONF, $compiled{SERVER_CONFIG_FILE} or die "Couldn't open $compiled{SERVER_CONFIG_FILE}: $!";
-	my @lines = grep {!m/^\s*\#/} <SERVER_CONF>;
-	close SERVER_CONF;
+    if ($compiled{SERVER_VERSION} =~ m/^2\./) {
+	warn("Apache $compiled{SERVER_VERSION} detected. WARNING: Apache2 support is still experimental!\n");
+    }
 
+    if ($compiled{SERVER_CONFIG_FILE}) {
+	local $Apache::test::quiet = 1;
+	my @lines = $self->_read_existing_conf($compiled{SERVER_CONFIG_FILE},$compiled{HTTPD_ROOT});
 	return 1 if grep { /mod_perl/ } grep /^\s*(Add|Load)Module/, @lines;
     }
 
