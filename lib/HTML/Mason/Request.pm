@@ -311,7 +311,7 @@ sub abort
     my ($self) = @_;
     $self->{aborted} = 1;
     $self->{aborted_value} = defined $_[1] ? $_[1] : $self->{aborted_value};
-    HTML::Mason::Exception::Abort( error => 'Request->abort was called', aborted_value => $self->{aborted_value} );
+    HTML::Mason::Exception::Abort->throw( error => 'Request->abort was called', aborted_value => $self->{aborted_value} );
 }
 
 #
