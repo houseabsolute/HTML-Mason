@@ -7,7 +7,6 @@ package HTML::Mason::Utils;
 use strict;
 
 use IO::File qw(!/^SEEK/);
-use POSIX;
 use Fcntl qw(:flock);
 use File::Basename;
 use File::Path;
