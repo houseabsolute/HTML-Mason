@@ -79,13 +79,13 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'keys',
-		      description => q|test multiple keys and $m->cache->get_identifiers|,
+		      description => q|test multiple keys and $m->cache->get_keys|,
 		      component => <<'EOF',
 <%init>
 foreach my $key (qw(foo bar baz)) {
     $m->cache->set($key, $key);
 }
-my @keys = sort $m->cache->get_identifiers;
+my @keys = sort $m->cache->get_keys;
 $m->out("keys in cache: ".join(",",@keys)."\n");
 foreach my $key (qw(foo bar baz)) {
     my $value = $m->cache->get($key) || "undefined";
