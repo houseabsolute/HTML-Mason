@@ -1506,9 +1506,9 @@ returning C<undef>.  This tells the first process to compute the new
 value while causing subsequent processes to use the old value for 30
 seconds. 
 
-Should the 30 seconds expire, a second process will start computing
-the new value while setting the expiration time yet another 30 seconds
-in the future, and so on.
+Should the 30 seconds expire before the first process is done, a second
+process will start computing the new value while setting the expiration
+time yet another 30 seconds in the future, and so on.
 
 =head2 Caching All Output
 
