@@ -223,18 +223,7 @@ sub exec {
     my $err = $@;
     if ($err and !$self->aborted) {
 	$self->pop_buffer_stack;
-
-	# Set error format for when error is stringified.
-	if (UNIVERSAL::can($err, 'format')) {
-	    $err->format($self->error_format);
-	}
-
-	# In fatal mode, die with error. In display mode, output stringified error.
-	if ($self->error_mode eq 'fatal') {
-	    die $err;
-	} else {
-	    $self->out_method->("$err");
-	}
+	$self->_handle_error($err);
 	return;
     }
 
@@ -248,6 +237,26 @@ sub exec {
 
     # Return aborted value or result.
     return ($self->aborted ? $self->aborted_value : (wantarray ? @result : $result[0]));
+}
+
+#
+# Display or die with error as dictated by error_mode and error_format.
+#
+sub _handle_error
+{
+    my ($self, $err) = @_;
+    
+    # Set error format for when error is stringified.
+    if (UNIVERSAL::can($err, 'format')) {
+	$err->format($self->error_format);
+    }
+
+    # In fatal mode, die with error. In display mode, output stringified error.
+    if ($self->error_mode eq 'fatal') {
+	die $err;
+    } else {
+	$self->out_method->("$err");
+    }
 }
 
 #
