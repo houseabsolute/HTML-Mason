@@ -221,6 +221,7 @@ sub _init_comp_data
     my $data = shift;
 
     $data->{body} = '';
+    $data->{last_body_code_type} = '';
 
     foreach ( qw( def method ) )
     {
@@ -296,6 +297,8 @@ sub perl_block
     my %p = @_;
 
     $self->_add_body_code( $p{block} );
+
+    $self->{current_comp}{last_body_code_type} = 'perl_block';
 }
 
 sub text
@@ -309,6 +312,8 @@ sub text
     $$tref =~ s,(['\\]),\\$1,g;
 
     $self->_add_body_code("\$m->print( '", $$tref, "' );\n");
+
+    $self->{current_comp}{last_body_code_type} = 'text';
 }
 
 sub text_block
@@ -441,6 +446,8 @@ sub substitution
     compiler_error $@ if $@;
 
     $self->_add_body_code($code);
+
+    $self->{current_comp}{last_body_code_type} = 'substitution';
 }
 
 sub component_call
@@ -463,6 +470,8 @@ sub component_call
     compiler_error $@ if $@;
 
     $self->_add_body_code($code);
+
+    $self->{current_comp}{last_body_code_type} = 'component_call';
 }
 
 sub component_content_call
@@ -480,6 +489,8 @@ sub component_content_call
     compiler_error $@ if $@;
 
     $self->_add_body_code($code);
+
+    $self->{current_comp}{last_body_code_type} = 'component_content_call';
 }
 
 sub component_content_call_end
@@ -505,6 +516,8 @@ sub component_content_call_end
     compiler_error $@ if $@;
 
     $self->_add_body_code($code);
+
+    $self->{current_comp}{last_body_code_type} = 'component_content_call_end';
 }
 
 sub perl_line
@@ -518,13 +531,21 @@ sub perl_line
     compiler_error $@ if $@;
 
     $self->_add_body_code($code);
+
+    $self->{current_comp}{last_body_code_type} = 'perl_line';
 }
 
 sub _add_body_code
 {
     my $self = shift;
 
-    if ( $self->lexer->line_number )
+    # We know a perl-line is always _one_ line, so we know that the
+    # line numbers are going to match up as long as the first line in
+    # a series has a line number comment before it.  Adding a comment
+    # can break certain constructs like qw() list that spans multiple
+    # perl-lines.
+    if ( $self->lexer->line_number &&
+         $self->{current_comp}{last_body_code_type} ne 'perl_line' )
     {
 	my $line = $self->lexer->line_number;
 	my $file = $self->lexer->name;
