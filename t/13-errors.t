@@ -335,6 +335,23 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'error_during_compilation',
+		      description => "Make sure compiler errors work in output mode",
+                      interp_params => {
+					 error_format => 'text',
+					 error_mode => 'output',
+                                       },
+		      component => <<'EOF',
+% my $x = 
+EOF
+			# match "Error during compilation" followed by 
+			# exactly one occurance of "Stack:"
+			# (Mason should stop after the first error)
+		      expect => qr/Error during compilation((?!Stack:).)*Stack:((?!Stack:).)*$/s,
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
