@@ -204,7 +204,7 @@ expressions. Examples:
 
   You are <% $age<18 ? 'not' : '' %> permitted to enter this site.
 
-B<E<lt>%perlE<gt> xxx E<lt>%/perlE<gt>>
+B<E<lt>%perlE<gt> xxx E<lt>/%perlE<gt>>
 
 Useful for Perl blocks of more than a few lines.
 
