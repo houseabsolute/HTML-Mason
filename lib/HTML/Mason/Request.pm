@@ -323,7 +323,7 @@ sub exec {
 
 	{
 	    local *SELECTED;
-	    tie *SELECTED, 'Tie::Handle::Mason', $self;
+	    tie *SELECTED, 'Tie::Handle::Mason';
 
 	    my $old = select SELECTED;
 	    if ($wantarray) {
@@ -1250,9 +1250,8 @@ sub TIEHANDLE
 {
     my $class = shift;
 
-    my $req = shift;
 
-    return bless { request => $req }, $class;
+    return bless {}, $class;
 }
 
 sub PRINT
@@ -1260,8 +1259,7 @@ sub PRINT
     my $self = shift;
 
     my $old = select STDOUT;
-
-    $self->{request}->print(@_);
+    HTML::Mason::Request->instance->print(@_);
 
     select $old;
 }
