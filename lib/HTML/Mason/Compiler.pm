@@ -495,3 +495,11 @@ sub _blocks
 
 1;
 
+__END__
+
+=head1 NAME
+
+HTML::Mason::Compiler - Compile Mason component source
+
+... Ken will be adding these docs (from Appendix A of the book) as
+soon as the text has been looked at a little bit.
