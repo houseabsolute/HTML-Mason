@@ -281,7 +281,7 @@ sub load {
     # Use resolver to look up component and get fully-qualified path.
     # Return undef if component not found.
     #
-    my $info = $resolver->get_info($path) or return undef;
+    my $info = $resolver->get_info($path) or return;
     my $comp_id = $info->comp_id;
 
     #
@@ -541,10 +541,6 @@ sub push_files_written
 #
 # Look for component <$name> starting in <$startpath> and moving upwards
 # to the root. Return component object or undef.
-#
-# I think this is a potential waste of time.  The ->load method does
-# lots of work but we only need to call it for the _last_ component
-# found.  Can we use ->comp_exists?  Must research.  -dave
 #
 sub find_comp_upwards
 {
