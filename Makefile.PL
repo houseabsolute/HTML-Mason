@@ -103,9 +103,11 @@ sub install
 
     my $install = $self->SUPER::install(@_);
 
-    $install =~ s/install :: all pure_install doc_install/install :: all pure_install doc_install configure_apache/;
+    $install =~ s/install :: all pure_install doc_install/install :: all pure_install doc_install delete_old_docs configure_apache/;
 
     $install .= "\nconfigure_apache :\n\t\$(PERL) install/configure_apache.pl\n";
+
+    $install .= "\ndelete_old_docs :\n\t\$(PERL) install/delete_old_pods.pl \$(INSTALLSITELIB)\n";
 
     return $install;
 }
