@@ -5,6 +5,18 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.22
+
+[ BUG FIXES ]
+
+- Removed the use of alarm() and SIG{ALRM} to trap rare infinite loops
+inside the compilation of components. It interfered with Mason
+environments that use alarm() for their own purposes, and the
+associated test would crash in certain Perl environments. If you find
+that Mason sometimes enters an infinite loop, see the
+"Hanging Processes: Detection and Diagnostics" section of the mod_perl
+guide for hints on diagnosing the problem.
+
 1.21  June 4, 2003
 
 [ INCOMPATIBLE CHANGES ]
