@@ -169,7 +169,7 @@ package HTML::Mason;
 
 $libs
 
-use HTML::Mason::ApacheHandler ( args_method => '$args_method' );
+use HTML::Mason::ApacheHandler;
 use HTML::Mason;
 
 my \$interp = HTML::Mason::Interp->new( comp_root => '$APACHE{comp_root}',
@@ -177,16 +177,21 @@ my \$interp = HTML::Mason::Interp->new( comp_root => '$APACHE{comp_root}',
 chown Apache->server->uid, Apache->server->gid, \$interp->files_written;
 
 my \@ah = ( HTML::Mason::ApacheHandler->new( interp => \$interp,
+                                            args_method => '$args_method',
                                             output_mode => 'batch' ),
            HTML::Mason::ApacheHandler->new( interp => \$interp,
+                                            args_method => '$args_method',
                                             output_mode => 'stream' ),
 	   HTML::Mason::ApacheHandler->new( interp => \$interp,
+                                            args_method => '$args_method',
 					    top_level_predicate => sub { \$_[0] =~ m,/_.*, ? 0 : 1 },
                                             output_mode => 'batch' ),
 	   HTML::Mason::ApacheHandler->new( interp => \$interp,
+                                            args_method => '$args_method',
                                             decline_dirs => 0,
                                             output_mode => 'batch' ),
 	   HTML::Mason::ApacheHandler->new( interp => \$interp,
+                                            args_method => '$args_method',
                                             error_mode => 'fatal',
                                             output_mode => 'batch' ),
 	 );
