@@ -399,16 +399,6 @@ sub _make_interp
 				     );
 }
 
-sub _execute
-{
-    my ($self, $interp) = @_;
-    my $test = $self->{current_test};
-
-    print "Calling $test->{name} test with path: $test->{call_path}\n" if $DEBUG;
-    $test->{pretest_code}->() if $test->{pretest_code};
-    $interp->exec( $test->{call_path}, @{$test->{call_args}} );
-}
-
 sub _run_test
 {
     my $self = shift;
@@ -421,6 +411,16 @@ sub _run_test
     eval { $self->_execute($interp) };
 
     return $self->check_result($@);
+}
+
+sub _execute
+{
+    my ($self, $interp) = @_;
+    my $test = $self->{current_test};
+
+    print "Calling $test->{name} test with path: $test->{call_path}\n" if $DEBUG;
+    $test->{pretest_code}->() if $test->{pretest_code};
+    $interp->exec( $test->{call_path}, @{$test->{call_args}} );
 }
 
 sub check_result {
