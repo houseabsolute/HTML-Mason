@@ -29,7 +29,6 @@ require Exporter;
 	mc_file 
 	mc_file_root 
 	mc_out 
-	mc_suppress_hooks
 	mc_time
 );
 
@@ -110,11 +109,8 @@ sub mc_cache_self
 	$INTERP->{stack}->[0] = {%saveLocals};
 	mc_cache(action=>'store',value=>$result,%storeOptions);
     } else {
-	#
-	# Hack! http header is technically a side-effect, so we must
-	# call it explicitly.
-	#
-	$INTERP->call_hooks(name=>'http_header');
+	$INTERP->call_hooks('start_primary');
+	$INTERP->call_hooks('end_primary');
     }
     mc_out($result);
     return 1;
@@ -224,9 +220,9 @@ sub mc_file ($)
     unless ($file =~ /^([A-Za-z]:)?\//) {
 	$file = $INTERP->static_file_root . "/" . $file;
     }
-    $INTERP->call_hooks(type=>'start_file',params=>[$file]);
+    $INTERP->call_hooks('start_file',$file);
     my $content = read_file($file);
-    $INTERP->call_hooks(type=>'end_file',params=>[$file]);
+    $INTERP->call_hooks('end_file',$file);
     return $content;
 }
 
@@ -238,13 +234,6 @@ sub mc_file_root ()
 sub mc_out ($)
 {
     $INTERP->locals->{sink}->($_[0]);
-}
-
-sub mc_suppress_hooks ($)
-{
-    foreach my $hookname (@_) {
-	$INTERP->suppress_hooks(name=>$hookname);
-    }
 }
 
 sub mc_time

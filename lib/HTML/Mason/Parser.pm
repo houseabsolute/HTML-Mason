@@ -397,7 +397,7 @@ sub parse
     #
     # Call start_primary hooks.
     #
-    $body .= "\$INTERP->call_hooks(type=>'start_primary');\n";
+    $body .= "\$INTERP->call_hooks('start_primary');\n";
     
     #
     # Postprocess the alphabetical and Perl stuff separately
@@ -429,7 +429,7 @@ sub parse
     #
     # Call end_primary hooks.
     #
-    $body .= "\$INTERP->call_hooks(type=>'end_primary');\n";
+    $body .= "\$INTERP->call_hooks('end_primary');\n";
     
     #
     # Insert end section.

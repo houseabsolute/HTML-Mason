@@ -23,6 +23,7 @@ use HTML::Mason::Config;
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 
 use vars qw($AUTOLOAD $_SUB %_ARGS);
+my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P);
 
 my %fields =
     (alternate_sources => undef,
@@ -58,8 +59,7 @@ sub new
 	data_cache_store => {},
         code_cache => {},
 	files_written => [],
-	hooks => [],
-	hook_index => {},
+	hooks => {},
 	last_reload_time => 0,
 	last_reload_file_pos => 0,
 	out_method => sub { print $_[0] },
@@ -192,12 +192,14 @@ sub exec {
 
     $self->{stack} = [];
     $self->{exec_state} = {
-	suppressed_hooks => {},
 	abort_flag => 0,
 	abort_retval => undef,
 	error_flag => 0,
 	request_code_cache => {}
     };
+    while (my ($type,$href) = each(%{$self->{hooks}})) {
+	$self->{exec_state}->{"hooks_$type"} = [values(%$href)] if (%$href);
+    }
     $self->check_reload_file if ($self->use_reload_file);
     return $self->exec_next($callPath,%args);
 }
@@ -331,7 +333,7 @@ sub exec_next {
     #
     # Call start_comp hooks.
     #
-    $self->call_hooks(type=>'start_comp');
+    $self->call_hooks('start_comp');
 
     #
     # CODEREF_NAME maps component coderefs to component names (for profiling)
@@ -398,7 +400,7 @@ sub exec_next {
     #
     # Call end_comp hooks.
     #
-    $self->call_hooks(type=>'end_comp');
+    $self->call_hooks('end_comp');
 
     #
     # Pop stack and return.
@@ -418,11 +420,11 @@ sub debug_hook
 sub pure_text_handler
 {
     my $interp = $HTML::Mason::Commands::INTERP;
-    $interp->call_hooks(type=>'start_primary');
+    $interp->call_hooks('start_primary');
     my $srcfile = $interp->locals->{sourceFile};
     my $srctext = read_file($srcfile);
     $interp->locals->{sink}->($srctext);
-    $interp->call_hooks(type=>'end_primary');
+    $interp->call_hooks('end_primary');
     return undef;
 }
 
@@ -710,80 +712,41 @@ sub push_files_written
 #
 # Hook functions.
 #
+my @hookTypes = qw(start_comp start_primary end_primary end_comp start_file end_file);
+my %hookTypeMap = map(($_,1),@hookTypes);
+
 sub add_hook {
     my ($self, %args) = @_;
-    my @validTypes = qw(start_comp start_primary end_primary end_comp start_file end_file);
     foreach (qw(name type code)) {
 	die "add_hook: must specify $_\n" if !exists($args{$_});
     }
-    die "add_hook: type must be one of ".join(",",@validTypes)."\n" if !grep($_ eq $args{type},@validTypes);
+    die "add_hook: type must be one of ".join(",",@hookTypes)."\n" if !$hookTypeMap{$args{type}};
     die "add_hook: code must be a code reference\n" if ref($args{code}) ne 'CODE';
-    $args{order} = 50 if !exists($args{order});
-    push(@{$self->{hooks}},{%args});
-    $self->index_hooks();
+    $self->{hooks}->{$args{type}}->{$args{name}} = $args{code};
 }
 
-sub index_hooks {
-    my ($self) = @_;
-    my %hookindex;
-    foreach my $hook (@{$self->{hooks}}) {
-	my $name = $hook->{name};
-	my $type = $hook->{type};
-	push(@{$hookindex{"$name\cA$type"}},$hook);
-	push(@{$hookindex{"*\cA$type"}},$hook);
-	push(@{$hookindex{"$name\cA*"}},$hook);
-    }
-    my @keys = keys(%hookindex);
-    foreach my $key (@keys) {
-	my @hooklst = sort {$a->{order} <=> $b->{order}} @{$hookindex{$key}};
-	$hookindex{$key} = [@hooklst];
-    }
-    $self->{hook_index} = {%hookindex};
-}
-
-sub find_hooks {
+sub remove_hook {
     my ($self, %args) = @_;
-    my $name = $args{name} || '*';
-    my $type = $args{type} || '*';
-    my $lref = $self->{hook_index}->{"$name\cA$type"};
-    return $lref ? @$lref : ();
-}
-
-sub remove_hooks {
-    my ($self, %args) = @_;
-    my @matchhooks = $self->find_hooks(%args);
-    my %remhash;
-    foreach (@matchhooks) { $remhash{$_}=1 }
-    my @keephooks = grep(!$remhash{$_},@{$self->{hooks}});
-    $self->{hooks} = [@keephooks];
-    $self->index_hooks();
-}
-
-sub suppress_hooks {
-    my ($self, %args) = @_;
-    my @matchhooks = $self->find_hooks(%args);
-    foreach my $hook (@matchhooks) {
-	$self->{exec_state}->{suppressed_hooks}->{$hook} = 1;
+    foreach (qw(name type)) {
+	die "remove_hook: must specify $_\n" if !exists($args{$_});
     }
+    delete($self->{hooks}->{$args{type}}->{$args{name}});
 }
 
-sub unsuppress_hooks {
+sub suppress_hook {
     my ($self, %args) = @_;
-    my @matchhooks = $self->find_hooks(%args);
-    foreach my $hook (@matchhooks) {
-	delete($self->{exec_state}->{suppressed_hooks}->{$hook});
+    foreach (qw(name type)) {
+	die "suppress_hook: must specify $_\n" if !exists($args{$_});
     }
+    my $code = $self->{hooks}->{$args{type}}->{$args{name}};
+    $self->{exec_state}->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
 }
 
 sub call_hooks {
-    my ($self, %args) = @_;
-    my @matchhooks = $self->find_hooks(%args);
-    my @params;
-    @params = @{$args{params}} if (defined($args{params}));
-
-    foreach my $hook (@matchhooks) {
-	if (!$self->{exec_state}->{suppressed_hooks}->{$hook}) {
-	    $hook->{code}->($self,@params);
+    my ($self, $type, @params) = @_;
+    if ($self->{exec_state}->{"hooks_$type"}) {
+	foreach my $code (@{$self->{exec_state}->{"hooks_$type"}}) {
+	    $code->($self, @params);
 	}
     }
 }

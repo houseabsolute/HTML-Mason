@@ -88,20 +88,18 @@ sub _initialize {
         $title=$name;
         $name=~s/\W/_/g;
     }
-    Apache::Status->menu_item(
-        $name=>$title,
-	    sub {
-            my($r,$q) = @_; #request and CGI objects
-            my(@strings);
 
-            push (@strings,
-                    qq(<FONT size="+2"><B>$self->{apache_status}</B></FONT><BR><BR>),
-                    $self->interp_status);
+    my $statsub = sub {
+	my($r,$q) = @_; #request and CGI objects
+	my(@strings);
 
-            return \@strings;     #return an array ref
-        }
-    ) if $Apache::Status::VERSION; #only if Apache::Status is loaded
+	push (@strings,
+	      qq(<FONT size="+2"><B>$self->{apache_status}</B></FONT><BR><BR>),
+	      $self->interp_status);
 
+	return \@strings;     #return an array ref
+    };
+    Apache::Status->menu_item ($name,$title,$statsub) if $Apache::Status::VERSION;
     
     #
     # Create data subdirectories if necessary. mkpath will die on error.
@@ -110,12 +108,6 @@ sub _initialize {
 	my @newdirs = mkpath($interp->data_dir."/$subdir",0,0775);
 	$interp->push_files_written(@newdirs);
     }
-    
-    #
-    # Send HTTP headers when the primary section is reached.
-    #
-    $interp->remove_hooks(name=>'http_header');
-    $interp->add_hook(name=>'http_header',type=>'start_primary',order=>75,code=>\&send_http_header_hook);
 
     #
     # Allow global $r in components
@@ -157,14 +149,6 @@ sub interp_status
     push @strings, '</DL>';
     return @strings;
 }         
-
-sub send_http_header_hook
-{
-    my ($interp) = @_;
-    my $r = $interp->vars('server');
-    $r->send_http_header if (!http_header_sent($r));
-    $interp->suppress_hooks(name=>'http_header');
-}
 
 #
 # Standard entry point for handling request
@@ -484,6 +468,16 @@ sub handle_request_1
     $argString = '' if !defined($argString);
 
     #
+    # Send HTTP headers when the primary section is reached.
+    #
+    my $hdrsub = sub {
+	my ($interp) = @_;
+	$r->send_http_header if (!http_header_sent($r));
+	$interp->suppress_hook(name=>'http_header',type=>'start_primary');
+    };
+    $interp->add_hook(name=>'http_header',type=>'start_primary',code=>$hdrsub);
+
+    #
     # Set up interpreter global variables.
     #
     $interp->vars(http_input=>$argString);
@@ -551,9 +545,9 @@ sub mc_dhandler_arg ()
 sub mc_suppress_http_header
 {
     if ($_[0]) {
-	$INTERP->suppress_hooks(name=>'http_header');
+	$INTERP->suppress_hook(name=>'http_header',type=>'start_primary');
     } else {
-	$INTERP->unsuppress_hooks(name=>'http_header');
+	$INTERP->unsuppress_hook(name=>'http_header',type=>'start_primary');
     }
 }
 
