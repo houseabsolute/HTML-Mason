@@ -332,6 +332,12 @@ sub object_file {
     return $self->interp->object_file($self);
 }
 
+# For backwards compatibility with 1.0x
+sub create_time {
+    my $self = shift;
+    return $self->load_time(@_);
+}
+
 1;
 
 __END__
