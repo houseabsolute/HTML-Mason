@@ -24,7 +24,7 @@ sub new
     my ($class,%options) = @_;
     my $interp = $options{interp} or die "HTML::Mason::Request::ApacheHandler::new: must specify interp\n";
     delete $options{interp};
-    my $self = HTML::Mason::Request::new($class,interp=>$interp);
+    my $self = $class->SUPER::new(interp=>$interp);
     while (my ($key,$value) = each(%options)) {
 	if (exists($reqfields{$key})) {
 	    $self->{$key} = $value;
@@ -221,11 +221,11 @@ sub interp_status
     push @strings, '</DL>',
             '<DL><DT><FONT SIZE="+1"><B>Cached components</B></FONT><DD>';
 
-    if(%{$interp->{code_cache}})
+    if(my $cache = $interp->code_cache)
     {
 	my $string;
-	foreach my $key (sort keys %{$interp->{code_cache}}) {
-	    $string .= sprintf("<TT>%s (%s)</TT><BR>\n",$key,scalar(localtime($interp->{code_cache}->{$key}->{lastmod})));
+	foreach my $key (sort keys %$cache) {
+	    $string .= sprintf("<TT>%s (%s)</TT><BR>\n",$key,scalar(localtime($cache->{$key}->{lastmod})));
 	}
 	push (@strings, $string);
     } else {
@@ -287,9 +287,9 @@ sub handle_request {
 	 apache_req=>$apreq
 	 );
     
-    eval { $retval = handle_request_1($self, $apreq, $request, $debugState) };
+    eval { $retval = $self->handle_request_1($apreq, $request, $debugState) };
     my $err = $@;
-    my $err_code = $request->{error_code};
+    my $err_code = $request->error_code;
     undef $request;  # ward off memory leak
     my $err_status = $err ? 1 : 0;
 
@@ -544,7 +544,7 @@ sub handle_request_1
     # Deprecated output_mode parameter - just pass to request out_mode.
     #
     if (my $mode = $self->output_mode) {
-	$request->{out_mode} = $mode;
+	$request->out_mode($mode);
     }
 
     #
@@ -594,7 +594,7 @@ sub handle_request_1
 	    # remainder of this component and its children.
 	    $request->top_stack->{sink} = $interp->out_method if $request->out_mode eq 'stream' and $request->top_stack->{sink} eq $request->out_method;
 	};
-	$request->{out_method} = $out_method;
+	$request->out_method($out_method);
 
 	$retval = $request->exec($comp_path, %args);
 
