@@ -760,18 +760,18 @@ of argument handling.
 Apache::Request is the default and requires that you have installed
 this package.
 
-When specifying args_method='CGI', the Mason request object ($m)
-will have a method called C<cgi_object> available.  This method
-returns the CGI object used in the ApacheHandler code.
+If the args_method is 'CGI', the Mason request object ($m) will have a
+method called C<cgi_object> available.  This method returns the CGI
+object used in the ApacheHandler code.
 
-When specifying args_method='mod_perl', the $r global is upgraded
-to an Apache::Request object. This object inherits all Apache
-methods and adds a few of its own, dealing with parameters and
-file uploads.  See L<Apache::Request> for more information.
+If args_method is 'mod_perl', the $r global is upgraded to an
+Apache::Request object. This object inherits all Apache methods and
+adds a few of its own, dealing with parameters and file uploads.  See
+L<Apache::Request> for more information.
 
 While Mason will load Apache::Request or CGI as needed at runtime, it
 is recommended that you preload the relevant module either in your
-httpd.conf or handler.pl file as this will save some memory.
+httpd.conf or handler.pl file, as this will save some memory.
 
 =item auto_send_headers
 
