@@ -1,5 +1,7 @@
 #!/usr/bin/perl -w
 
+use strict;
+
 use Module::Build;
 
 my $notes = Module::Build->instance->notes;
@@ -14,8 +16,6 @@ unless ( $notes->{test_data}{is_maintainer} &&
     print "1..0\n";
     exit;
 }
-
-use strict;
 
 use File::Spec;
 use HTML::Mason::Tests;
