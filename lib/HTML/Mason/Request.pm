@@ -28,12 +28,14 @@ use HTML::Mason::MethodMaker
 			 interp
 			 top_comp ) ],
 
-      read_write => [ qw( data_cache_defaults
+      read_write => [ qw( autoflush
+                          data_cache_defaults
 			  out_method ) ],
     );
 
 __PACKAGE__->valid_params
     (
+     autoflush  => { parse => 'string', default => 0, type => SCALAR },
      interp     => { isa => 'HTML::Mason::Interp' },
      time       => { parse => 'string',  default => 'real', type => SCALAR,
 		     callbacks => {"must be either 'real' or a numeric value" =>
@@ -512,6 +514,7 @@ sub print
 {
     my $self = shift;
     $self->top_buffer->receive(@_);
+    $self->flush_buffer if $self->autoflush;
 }
 
 *out = \&print;
@@ -703,7 +706,9 @@ sub content {
 
     $self->push_stack($old_frame);
 
-    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
+    if ($err) {
+	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
+    }
 
     return $buffer->output;
 }
