@@ -67,10 +67,10 @@ the section on L<User-defined Escapes in the Developer's
 Manual|HTML::Mason::Devel/User-defined Escapes> for more details on
 how to do this.
 
-=item uri_escape
+=item url_escape
 
 This takes a scalar reference and replaces any text it contains
-matching C<[^a-zA-Z0-9_.-]> with the URI-escaped equivalent, a percent
+matching C<[^a-zA-Z0-9_.-]> with the URL-escaped equivalent, a percent
 sign (%) followed by the hexadecimal number of that character.
 
 =item basic_html_escape
