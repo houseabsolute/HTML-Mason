@@ -309,7 +309,7 @@ sub exec {
 	    } else {
 		eval {$self->comp({base_comp=>$request_comp}, $first_comp, @request_args)};
 	    }
-	    select STDOUT;
+	    select $old;
 	    die $@ if $@;
 	}
     };
