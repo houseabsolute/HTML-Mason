@@ -742,6 +742,34 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'double_pipe_or_2',
+			  description => 'Make sure || works in a substitution (again)',
+			  component => <<'EOF',
+<%once>
+sub foo { 'foo!' }
+sub bar { 'bar!' }
+</%once>
+<% foo || bar %>
+EOF
+                          expect => <<'EOF',
+foo!
+EOF
+                        );
+
+#------------------------------------------------------------
+
+	$group->add_test( name => 'flags_regex',
+			  description => 'Make sure flags must start with alpha or underscore',
+			  component => <<'EOF',
+<% 1 | 1 %>
+EOF
+                          expect => <<'EOF',
+1
+EOF
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
