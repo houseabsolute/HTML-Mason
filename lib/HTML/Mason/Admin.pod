@@ -622,68 +622,50 @@ administer them.
 
 =head2 Data caching
 
+Data caching is implemented with DeWitt Clinton's C<Cache::Cache>
+module.  For full understanding of this section you should read the
+documentation for C<Cache::Cache> as well as for relevant subclasses
+(e.g. C<Cache::FileCache>).
+
 =over
 
-=item Setup
+=item Cache files
 
-Cache files are implemented using B<MLDBM>, an interface for storing
-persistent multi-level data structures. B<MLDBM>, in turn, uses one of
-several DBM packages (B<DB_File>, B<GDBM>) and one of several
-serialization mechanisms (B<Data::Dumper>, B<FreezeThaw> or
-B<Storable>). Mason's Config.pm controls which packages are used.
+By default, C<Cache::FileCache> is the subclass used for data caching,
+although this may be overriden by the developer. C<Cache::FileCache>
+creates a separate subdirectory for every component that uses caching,
+and one file some number of levels underneath that subdirectory for
+each cached item.  The root of the cache tree is
+C<data_dir/cache>. The name of the cache subdirectory for a component
+is determined by the function C<HTML::Mason::Utils::data_cache_namespace>.
 
-The most important task is selecting a good DBM package.  Most
-standard DBM packages (B<SDBM>, B<ODBM>, B<NDBM>) are unsuitable for
-data caching due to significant limitations on the size of keys and
-values. Perl only comes with B<SDBM>, so you'll need to obtain a
-good-quality package if you haven't already. At this time the best
-options are Berkeley DB (B<DB_File>) version 2.x, available at
-www.sleepycat.com, and GNU's gdbm (B<GDBM>), available at GNU mirror
-sites everywhere. Stay away from Berkeley DB version 1.x on Linux
-which has a serious memory leak (and is unfortunately pre-installed on
-many distributions).
+=item Default constructor options
 
-As far as the serialization methods, all of them should work
-fine. B<Data::Dumper> is probably simplest: it comes with the latest
-versions of Perl, is required by Mason anyway, and produces readable
-output (possibly useful for debugging cache files).  On the other hand
-B<Storable> is significantly faster than the other options according
-to the MLDBM documentation.
+Ordinarily, when C<$m-E<gt>cache> is called, Mason passes to the cache
+constructor the C<namespace>, C<username>, and C<cache_root>
+options, along with any other options given in the C<$m-E<gt>cache>
+method.
 
-Data caching will not work on systems lacking flock(), such as Windows
-95 and 98.
+You may specify other default constructor options with
+the L<Interp/data_cache_defaults> Interp parameter.  For example,
 
-=item Administration
+    my $interp = new HTML::Mason::Interp (
+       ...
+       data_cache_defaults =>
+          { cache_class => 'SizeAwareFileCache',
+            cache_depth=>2,
+            default_expires_in=>'1 hour' }
+    );
 
-Once set up, data caching requires little administration. When a
-component calls C<$m-E<gt>cache> or C<$m-E<gt>cache_self> for the first time,
-Mason automatically creates a new cache file under C<data_dir/cache>.
-The name of the file is determined by encoding the path as follows:
+The options passed to individual C<$m-E<gt>cache> calls override these
+defaults.
 
-    s/([^\w\.\-\~])/sprintf('+%02x', ord $1)/eg;
+=item Disabling data caching
 
-like URL encoding with a '+' escape character. For example, the
-cache file for component C</foo/bar> is C<data_dir/cache/foo+2fbar>.
-
-Currently Mason never deletes cache files, not even when the
-associated component file is modified.  (This may change in the near future.)
-Thus cache files hang around and grow indefinitely.  You may want to
-use a cron job or similar mechanism to delete cache files that get too
-large or too old.  For example:
-
-    # Shoot cache files more than 30 days old
-    foreach (<data_dir/cache>) {    # path to cache directory
-        unlink $_ if (-M >= 30);
-    }
-
-In general you can feel free to delete cache files periodically and
-without warning, because the data cache mechanism is explicitly not
-guaranteed -- developers are warned that cached data may disappear
-anytime and components must still function.
-
-If some reason you want to disable data caching, specify
-C<use_data_cache>=>0 to the Interp object. This will cause all C<$m-E<gt>cache>
-calls to return undef without doing anything.
+If for some reason you want to disable data caching entirely, set
+C<Interp/use_data_cache> to false. This causes all C<$m-E<gt>cache>
+calls to return a C<Cache::NullCache> object, which correctly
+implements the API but never stores data.
 
 =back
 
