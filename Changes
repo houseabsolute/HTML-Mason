@@ -25,6 +25,8 @@ This was only noticeable if you attempted to provide a subclass of one
 of Mason's classes (like your own Request class) that took its own
 parameters.  Mason was not recognizing those additional parameters as
 valid.
+- Mason automatically calls $m->clear_buffer when $m->decline is
+called.
 
 1.09_02  June 4, 2002
 
