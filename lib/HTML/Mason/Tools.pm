@@ -202,3 +202,15 @@ sub escape_perl_expression
 
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::Tools - Functions used from various places in Mason
+
+=head1 DESCRIPTION
+
+=head1 FUNCTIONS
+
+=cut
