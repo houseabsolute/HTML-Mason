@@ -34,8 +34,8 @@ kill_httpd(1);
 test_load_apache();
 
 my $tests = 4;
-$tests += 31 if my $have_libapreq = have_module('Apache::Request');
-$tests += 31 if my $have_cgi      = have_module('CGI');
+$tests += 33 if my $have_libapreq = have_module('Apache::Request');
+$tests += 33 if my $have_cgi      = have_module('CGI');
 $tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
 print "1..$tests\n";
 
