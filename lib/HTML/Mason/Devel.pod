@@ -1260,7 +1260,7 @@ but skips many options and features.
 
 =head2 Basic Usage
 
-The C<< <$m->cache >> method returns an object representing the cache
+The C<< $m->cache >> method returns an object representing the cache
 for this component. Here's the typical usage of C<< $m->cache >>:
 
     my $result = $m->cache->get('key');
@@ -1269,7 +1269,7 @@ for this component. Here's the typical usage of C<< $m->cache >>:
         $m->cache->set('key', $result);
     }
 
-C<< $m->>cache->get >> attempts to retrieve this component's cache
+C<< $m->cache->get >> attempts to retrieve this component's cache
 value. If the value is available it is placed in C<$result>. If the
 value is not available, C<$result> is computed and stored in the
 cache by C<< $m->cache->set >>.

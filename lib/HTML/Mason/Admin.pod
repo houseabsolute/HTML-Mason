@@ -276,6 +276,8 @@ In a handler.pl:
 
 Each method has its own trade-offs:
 
+=over
+
 =item *
 
 The first and third method ensure that the module will be loaded by
