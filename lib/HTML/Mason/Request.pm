@@ -11,6 +11,9 @@ use HTML::Mason::Tools qw(read_file compress_path);
 use HTML::Mason::Utils;
 use HTML::Mason::Buffer;
 
+use HTML::Mason::Container;
+use base qw(HTML::Mason::Container);
+
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
@@ -27,34 +30,34 @@ use HTML::Mason::MethodMaker
 			  out_mode ) ],
     );
 
-my %fields =
-    (aborted => undef,
-     aborted_value => undef,
-     count => 0,
-     declined => undef,
-     error_code => undef,
-     interp => undef,
-     out_method => undef,
-     out_mode => undef
-     );
+__PACKAGE__->valid_params
+    (
+     interp     => { isa => 'HTML::Mason::Interp' },
+     time       => { parse => 'string',  default => 'real', type => SCALAR,
+		     callbacks => {"must be either 'real' or a numeric value" =>
+				   sub { $_[0] =~ /^(?:real|\d+)$/ }} },
+     out_method => { type => SCALARREF | CODEREF, optional => 1 },
+     out_mode   => { type => SCALAR, optional => 1 },
+    );
+
+__PACKAGE__->contained_objects
+    (
+     buffer     => { class => 'HTML::Mason::Buffer',
+		     delayed => 1 },
+    );
 
 sub new
 {
     my $class = shift;
 
-    my %options = validate( @_,
-	      { interp => { isa => 'HTML::Mason::Interp' },
-		time => { parse => 'string',  default => 'real', type => SCALAR,
-			  callbacks => {"must be either 'real' or a numeric value" =>
-					sub { $_[0] =~ /^(?:real|\d+)$/ }} },
-		out_method => { type => SCALARREF | CODEREF, optional => 1 },
-		out_mode => { type => SCALAR, optional => 1 },
-	      }
-	    );
+    my @args = $class->create_contained_objects(@_);
 
-    my $self = bless {
-		      %fields,
-		      %options,
+    my $self = bless {validate( @args, $class->validation_spec ),
+		      aborted => undef,
+		      aborted_value => undef,
+		      count => 0,
+		      declined => undef,
+		      error_code => undef,
 		      dhandler_arg => undef,
 		      buffer_stack => undef,
 		      stack => undef,
@@ -142,7 +145,8 @@ sub exec {
 
     # This label is for declined requests.
     retry:
-    $self->push_buffer_stack( HTML::Mason::Buffer->new( sink => $self->out_method, mode => $self->out_mode ) );
+    my $buffer = $self->create_delayed_object('buffer', sink => $self->out_method, mode => $self->out_mode );
+    $self->push_buffer_stack($buffer);
 
     # Build wrapper chain and index.
     my $first_comp;

@@ -6,6 +6,9 @@ package HTML::Mason::Buffer;
 
 use strict;
 
+use HTML::Mason::Container;
+use base qw(HTML::Mason::Container);
+
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
@@ -18,7 +21,7 @@ use HTML::Mason::MethodMaker
 		       ) ],
     );
 
-my %valid_params =
+__PACKAGE__->valid_params
     (
      sink => { type => SCALARREF | CODEREF, optional => 1 },
      parent => { isa => 'HTML::Mason::Buffer', optional => 1 },
@@ -29,15 +32,18 @@ my %valid_params =
      filter => { type => CODEREF, optional => 1 },
     );
 
-sub allowed_params { \%valid_params }
-sub validation_spec { return shift->allowed_params }
+__PACKAGE__->contained_objects
+    (
+     # None
+    );
 
 sub new
 {
     my $class = shift;
-    my $self = bless { validate( @_, $class->validation_spec ) }, $class;
+    my @args = $class->create_contained_objects(@_);
 
-    bless $self, $class;
+    my $self = bless { validate( @args, $class->validation_spec ) }, $class;
+
     $self->_initialize;
     return $self;
 }
@@ -95,7 +101,7 @@ sub _initialize
 sub new_child
 {
     my $self = shift;
-    return HTML::Mason::Buffer->new( parent => $self, @_ );
+    return __PACKAGE__->new( parent => $self, @_ );
 }
 
 sub receive
