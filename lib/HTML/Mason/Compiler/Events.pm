@@ -8,13 +8,18 @@ use strict;
 
 use base qw( HTML::Mason::Compiler );
 
-
 sub new
 {
     my $proto = shift;
     my $class = ref $proto || $proto;
 
-    return bless {}, $class;
+    my %p = @_;
+
+    my $self = bless {}, $class;
+
+    $self->_init(%p);
+
+    return $self;
 }
 
 sub start_component
@@ -236,6 +241,19 @@ sub component_call
     my %p = @_;
 
     print "CALL: $p{call}\n";
+}
+
+sub component_content_call
+{
+    my $self = shift;
+    my %p = @_;
+
+    print "CALL WITH CONTENT: $p{call}\n";
+}
+
+sub component_content_call_end
+{
+    print "/CALL WITH CONTENT\n";
 }
 
 sub perl_line
