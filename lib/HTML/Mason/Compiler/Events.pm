@@ -6,6 +6,7 @@ package HTML::Mason::Compiler::Events;
 
 use strict;
 
+require HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
 
 sub new

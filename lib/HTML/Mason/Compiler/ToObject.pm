@@ -6,6 +6,7 @@ package HTML::Mason::Compiler::ToObject;
 
 use strict;
 
+require HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
 
 use HTML::Mason::Exceptions;
