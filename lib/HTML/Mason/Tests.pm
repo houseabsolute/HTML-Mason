@@ -561,7 +561,7 @@ sub check_result {
     }
     elsif ( $test->{expect_error} )
     {
-	$Test->diag( "Expected an error matching '$test->{expect_error}' but no error occurred\n" ) if $VERBOSE;
+	$Test->diag( "Expected an error matching '$test->{expect_error}' but no error occurred - got successful output:\n$self->{buffer}\n" ) if $VERBOSE;
 	return $self->_fail;
     }
 
