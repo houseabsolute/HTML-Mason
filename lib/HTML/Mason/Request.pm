@@ -289,7 +289,10 @@ sub exec {
 
 	    $first_comp = $wrapper_chain[0];
 	    $self->{wrapper_chain} = [@wrapper_chain];
-	    $self->{wrapper_index} = {map((($wrapper_chain[$_]->path || '') => $_),(0..$#wrapper_chain))};
+	    $self->{wrapper_index} = { map
+                                       { $wrapper_chain[$_]->comp_id => $_ }
+                                       (0..$#wrapper_chain)
+                                     };
 	}
 
 	{
@@ -684,12 +687,12 @@ sub fetch_comp
 #
 sub _fetch_next_helper {
     my ($self) = @_;
-    my $index = $self->{wrapper_index}->{$self->current_comp->path};
+    my $index = $self->{wrapper_index}->{$self->current_comp->comp_id};
     unless (defined($index)) {
 	my @callers = $self->callers;
 	shift(@callers);
 	while (my $comp = shift(@callers) and !defined($index)) {
-	    $index = $self->{wrapper_index}->{$comp->path};
+	    $index = $self->{wrapper_index}->{$comp->comp_id};
 	}
     }
     return $index;
