@@ -14,7 +14,7 @@ use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
 
 use HTML::Mason::MethodMaker
-    ( read_write => [ qw( allow_globals
+    ( read_write => [ qw( default_escape_flags
                           lexer
                           lexer_class
                           preprocess
@@ -25,7 +25,7 @@ use HTML::Mason::MethodMaker
     );
 
 my %fields =
-    ( allow_globals => '',
+    ( default_escape_flags => '',
       lexer_class => 'HTML::Mason::Lexer',
       preprocess => undef,
       postprocess_perl => undef,
@@ -33,20 +33,56 @@ my %fields =
     );
 
 my %top_level_only_block = map { $_ => 1 } qw( cleanup once shared );
+my %valid_comp_flag = map { $_ => 1 } qw( inherit );
+my %valid_escape_flag = map { $_ => 1 } qw( h n u );
 
 # called from subclasses to set defaults and to make the lexer object
 sub _init
 {
     my $self = shift;
-
     my %p = @_;
 
     foreach ( keys %fields )
     {
-	$self->$_( $p{$_} || $fields{$_} ) unless $self->$_();
+	$self->$_( exists $p{$_} ? $p{$_} : $fields{$_} ) unless $self->$_();
     }
 
-    $self->lexer( $self->lexer_class->new( compiler => $self ) );
+    $self->set_allowed_globals( exists $p{allowed_globals} ? @{ $p{allowed_globals} } : () );
+
+    require HTML::Mason::Lexer unless $p{lexer_class};
+
+    #
+    # I want the compiler class to be the sole interface to compiling.
+    # The lexer class should be as hidden as possible.  This means
+    # that parameters intended for the compiler and/or lexer all go to
+    # the compiler and get filtered here.
+    #
+    my %lexer_params;
+    foreach ( $self->lexer_class->parameters )
+    {
+	$lexer_params{$_} = delete $p{$_} if exists $p{$_};
+    }
+
+    $self->lexer( $self->lexer_class->new( compiler => $self,
+					   %lexer_params ) );
+}
+
+sub set_allowed_globals
+{
+    my $self = shift;
+    my @globals = @_;
+
+    if ( my @bad = grep { ! /^[\$@%]/ } @globals )
+    {
+	HTML::Mason::Exception::Params->throw( error => "allowed_globals: bad parameters '@bad', must begin with one of $, @, %\n" );
+    }
+
+    $self->{allowed_globals} = [ keys %{ { map { $_ => 1 } @globals } } ];
+}
+
+sub allowed_globals
+{
+    return @{ shift->{allowed_globals} };
 }
 
 sub compile
@@ -62,7 +98,7 @@ sub compile
     # reference to the entire script.
     if ($self->preprocess)
     {
-	eval { $self->preprocess->( \$self->{comp} ) };
+	eval { $self->preprocess->( \$p{comp} ) };
 	HTML::Mason::Exception::Compiler->throw( error => "Error during custom preprocess step: $@" )
 	    if $@;
     }
@@ -99,6 +135,8 @@ sub _init_comp_data
     }
 
     $data->{args} = [];
+    $data->{flags} = {};
+    $data->{attr} = {};
 
     foreach ( $self->lexer->simple_block_types )
     {
@@ -153,7 +191,7 @@ sub text
 
     $p{text} =~ s/\\\n//g;
 
-    1 if $self->postprocess_text;
+    $self->postprocess_text->(\$p{text}) if $self->postprocess_text;
 
     $p{text} =~ s,(['\\]),\\$1,g;
 
@@ -243,15 +281,26 @@ sub substitution
     my $self = shift;
     my %p = @_;
 
-    1 if $self->postprocess_perl;
-
     my $text = $p{substitution};
+    $p{escape} .= $self->default_escape_flags;
     if ( $p{escape} )
     {
-	$text = "\$_escape( $text, '$p{escape}' )";
+	my @flags = keys %{ { map { $_ => 1 } split //, $p{escape} } };
+	foreach (@flags)
+	{
+	    HTML::Mason::Exception::Compiler->throw( error => "invalid <% %> escape flag: '$_'" )
+		unless $valid_escape_flag{$_};
+	    @flags = () if $_ eq 'n';
+	}
+	my $flags = join ', ', map { "'$_'" } @flags;
+	$text = "\$_escape->( $text, $flags )";
     }
 
-    $self->_add_body_code( "\$_out->( $text );\n" );
+    my $code = "\$_out->( $text );\n";
+
+    $self->postprocess_perl->(\$code) if $self->postprocess_perl;
+
+    $self->_add_body_code($code);
 }
 
 sub component_call
@@ -269,9 +318,10 @@ sub component_call
 	$call = "'$comp'" . substr($call, $comma);
     }
 
-    1 if $self->postprocess_perl;
+    my $code = "\$m->comp( $call );\n";
+    $self->postprocess_perl->(\$code) if $self->postprocess_perl;
 
-    $self->_add_body_code( "\$m->comp( $call );\n" );
+    $self->_add_body_code($code);
 }
 
 sub perl_line
@@ -279,9 +329,11 @@ sub perl_line
     my $self = shift;
     my %p = @_;
 
-    1 if $self->postprocess_perl;
+    my $code = "$p{line}\n";
 
-    $self->_add_body_code( "$p{line}\n" );
+    $self->postprocess_perl->(\$code) if $self->postprocess_perl;
+
+    $self->_add_body_code($code);
 }
 
 sub _add_body_code
@@ -344,3 +396,6 @@ sub _blocks
 }
 
 1;
+
+
+
