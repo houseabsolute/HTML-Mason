@@ -36,8 +36,7 @@ sub is_initial_req {1}
 # sub allowed {}
 
 sub method {
-    shift->query->request_method;
-#    return $ENV{REQUEST_METHOD};
+    $_[0]->query->request_method;
 }
 
 # There mut be a mapping for this.
@@ -50,24 +49,28 @@ sub method {
 sub the_request {
     my $self = shift;
     $self->{the_request} ||= join ' ', $self->method,
-      ($ENV{QUERY_STRING} ? $self->uri . "?$ENV{QUERY_STRING}" : $self->uri),
-      $ENV{SERVER_PROTOCOL} || 'HTTP/1.0';
+      ( $self->{query}->query_string
+        ? $self->uri . '?' . $self->{query}->query_string
+        : $self->uri ),
+      $self->{query}->server_protocol;
 }
 
 # Is CGI ever a proxy request?
 # sub proxy_req {}
 
-sub header_only { $ENV{REQUEST_METHOD} eq 'HEAD' }
+sub header_only { $_[0]->method eq 'HEAD' }
 
 sub protocol { $ENV{SERVER_PROTOCOL} || 'HTTP/1.0' }
 
-sub hostname { $ENV{HTTP_HOST} }
+sub hostname { $_[0]->{query}->server_name }
 
 # Fake it by just giving the current time.
 sub request_time { time }
 
 sub uri {
-    shift->{uri} ||= $ENV{SCRIPT_NAME} . $ENV{PATH_INFO} || '';
+    my $self = shift;
+
+    $self->{uri} ||= $self->script_name . $self->path_info || '';
 }
 
 # Is this available in CGI?
@@ -78,14 +81,14 @@ sub uri {
 # is being called." This is irrelevant, I think.
 # sub location {}
 
-sub path_info { $ENV{PATH_INFO} }
+sub path_info { $_[0]->path_info }
 
 sub args {
     my $self = shift;
     if (@_) {
         # Assign args here.
     }
-    return $ENV{QUERY_STRING} unless wantarray;
+    return $self->{query}->Vars unless wantarray;
     # Do more here to return key => arg values.
 }
 
@@ -95,17 +98,22 @@ sub headers_in {
     # Create the headers table if necessary. Decided how to build it based on
     # information here:
     # http://cgi-spec.golux.com/draft-coar-cgi-v11-03-clean.html#6.1
+    #
+    # Try to get as much info as possible from CGI.pm, which has
+    # workarounds for things like the IIS PATH_INFO bug.
+    #
     $self->{headers_in} ||= HTML::Mason::FakeTable->new
-      ( 'Authorization'       => $ENV{AUTH_TYPE}, # No credentials though.
+      ( 'Authorization'       => $self->{query}->auth_type, # No credentials though.
         'Content-Length'      => $ENV{CONTENT_LENGTH},
-        'Content-Type'        => $ENV{CONTENT_TYPE},
+        'Content-Type'        => $self->{query}->content_type,
         # Convert HTTP environment variables back into their header names.
         map {
             my $k = ucfirst lc;
             $k =~ s/_(.)/-\u$1/g;
-            ( $k => $ENV{"HTTP_$_"} )
+            ( $k => $self->{query}->http($_) )
         } grep { s/^HTTP_// } keys %ENV
       );
+
 
     # Give 'em the hash list of the hash table.
     return wantarray ? %{$self->{headers_in}} : $self->{headers_in};
