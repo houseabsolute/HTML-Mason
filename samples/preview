@@ -27,20 +27,10 @@ $previewDir = "<data_dir>/preview";
 #
 $previewServer = $r->server->server_hostname;
 
-#
-# Ports that users commonly visit on your site.  For a standard site
-# generally visited on port 80, leave this line alone.
-#
-@sitePorts = ('80');
-
 
 # END CONFIGURATION
 #
 ####################################################################### 
-
-my %versionsMap;
-foreach (@versions) { $versionsMap{$_->{name}} = $_ }
-
 
 </%init>
 
@@ -58,50 +48,51 @@ foreach (@versions) { $versionsMap{$_->{name}} = $_ }
 <td colspan=5 bgcolor="003399">&nbsp;<font size="4" color="FFFFF0"><b>Mason Previewer</b></font></td>
 </tr>
 
-<tr><td>&nbsp;</td></tr>
+<!--
+% if ($userName eq 'anonymous') {
+<tr><td colspan=7>
+<font color="#FF0000"><b>No user name! Using anonymous settings.</b></font>
+</td></tr>
+% }
+-->
+
+% if ($deleted) {
+<tr><td colspan=7>
+<font color="#FF0000"><b>Settings for port <% $previewPort %> deleted. Press Save now to restore.</b></font>
+</td></tr>
+% }
 
 <tr>
-%if (@versions) {
-<td>
-<tt><font color="#FF0000">Version</font></tt>
-<br>
-<%$query->popup_menu(name=>'b_version','values'=>[keys(%versionsMap)],default=>$conf{b_version})%>
-</td>
-%}
-
-<td>
-<tt><font color="#FF0000">Port</font></tt>
-<br>
-<%$query->popup_menu(name=>'b_port','values'=>[@sitePorts,'Other...'],default=>$conf{b_port})%>
-</td>
 
 <td>
 <tt><font color="#FF0000">Time</font></tt><br>
 <%$query->popup_menu(name=>'b_time','values'=>['Real','+1 hour','+4 hours','+1 day','+2 days','+3 days','+4 days','+5 days','Other...'],default=>$conf{b_time})%>
 </td>
-</tr>
 
-<tr><td>&nbsp;</td></tr>
+<td>&nbsp;</td>
 
-<tr>
 <td>
 <tt><font color="#FF0000">Display</font></tt><br>
 <%$query->popup_menu(name=>'outputtype','values'=>['HTML','Debug'],default=>$conf{outputtype})%>
 </td>
 
+<td>&nbsp;</td>
+
 <td>
-<tt><font color="#FF0000">Preview port</font></tt><br>
+<tt><font color="#FF0000">Port</font></tt><br>
 <%$query->popup_menu(name=>'previewPort','values'=>\@previewPorts,default=>$previewPort)%>
 </td>
-<td>
-<input type=submit name=action value="Save settings">
-</td>
+
 </tr>
 </table>
 
-<p><br>
+<br>
+<input type=submit name=action value="Save settings">&nbsp;
+<input type=submit name=action value="Delete settings">
 
-<tt><font color=#ff0000>View:</font></tt>
+<p>
+
+<tt><font color=#ff0000>View port <% $previewPort %>:</font></tt>
 &nbsp;
 <input type=submit name=action value="This window">
 &nbsp;
@@ -121,14 +112,22 @@ foreach (@versions) { $versionsMap{$_->{name}} = $_ }
 <table border=1>
 <tr>
 <th>&nbsp;</th>
-<th>Port</th>
-%if (@versions) {
-<th>Version</th>
-%}
 <th>Time</th>
 <th>Display</th>
+<th>Caching</th>
+<th>Other</th>
 </tr>
 %foreach $setting (@settings) {
+<%perl>
+my @other = ();
+if ($setting->{af_referer}) {
+  push(@other, sprintf('Referer="%s"',$setting->{a_referer}));
+}
+if ($setting->{af_useragent}) {
+  push(@other, sprintf('User Agent="%s/%s/%s"',$setting->{a_os},$setting->{a_browser},$setting->{a_browserVersion}));
+}
+</%perl>
+
 <tr>
 <td>
 <a href="<%$r->uri%>?previewPort=<%$setting->{previewPort}%>">
@@ -136,19 +135,22 @@ foreach (@versions) { $versionsMap{$_->{name}} = $_ }
 </a>
 </td>
 <td>
-<%$setting->{request}->{env}->{SERVER_PORT}%>
-</td>
-%if (@versions) {
-<td>
-<%$setting->{b_version}%>
-</td>
-%}
-<td>
 <%$setting->{timestr}%>
 </td>
 <td>
 <%$setting->{outputtype}%>
 </td>
+<td>
+<% $setting->{af_data_cache} ? 'Yes' : 'No' %>
+</td>
+<td>
+% if (@other) {
+<% join("; ",@other) %>
+% } else {
+&nbsp;
+% }
+</td>
+
 </tr>
 %}
 </table>
@@ -202,12 +204,14 @@ To activate these options, check the boxes.<p>
 <input type="checkbox" name=af_useragent value=1 <%$conf{af_useragent} ? 'checked' : ''%>>&nbsp;<tt><font color="#FF0000">User agent</font></tt><br>
 <%$spacer%>OS: <%$query->popup_menu(name=>'a_os','values'=>[qw(win95 win31 winnt mac unix)],labels=>{win95=>'Windows 95',win31=>'Windows 3.1',winnt=>'Windows NT',mac=>'Macintosh',unix=>'Unix'},default=>$conf{a_os})%>
 &nbsp;Browser: <%$query->popup_menu(name=>'a_browser','values'=>[qw(netscape msie aol robot)],labels=>{netscape=>'Netscape',msie=>'Internet Explorer',aol=>'AOL',robot=>'Robot'},default=>$conf{a_browser})%>
-<%$query->popup_menu(name=>'a_browserVersion','values'=>[qw(2.0 3.0 4.0)],default=>$conf{a_browserVersion})%>    
+<%$query->popup_menu(name=>'a_browserVersion','values'=>[qw(2.0 3.0 4.0 5.0)],default=>$conf{a_browserVersion})%>    
 <p>
 
 <input type="checkbox" name=af_referer value=1 <%$conf{af_referer} ? 'checked' : ''%>>&nbsp;<tt><font color="#FF0000">Referer</font></tt><br>
 <%$spacer%>Url: <input type="text" name="a_referer" value="<%$conf{a_referer}%>" size=25>
 <p>
+
+<input type=submit name=action value="Save settings">&nbsp;
 
 </form>
 
@@ -226,7 +230,7 @@ self.history.back()
 </script>
 mc_abort();
 %}
-<%mc_comp($thisComp,previewPort=>$previewPort)%>
+<%mc_comp($thisComp,previewPort=>$previewPort,deleted=>($action eq 'Delete settings'))%>
 %}
 <%init>
 my ($i,%conf,$href,$query,$viewUrl,$setting,@settings);
@@ -241,6 +245,7 @@ if ($mode eq 'home') {
 	if (defined($in->{$p})) {
 	    my %c = %{$in->{$p}};
 	    %conf = %c if $previewPort eq $p;
+	    next if $in->{$p}->{deleted};
 	    $c{previewPort} = $p;
 	    my $timeconf = $c{request}->{'time'};
 	    for ($timeconf->{type}) {
@@ -258,7 +263,7 @@ if ($mode eq 'home') {
 	%conf =
 	    (
 	     b_port => $previewPorts[0],
-	     b_version => (@versions ? $versions[0]->{name} : undef),
+
 	     b_time => 'Real',
 	     outputtype => 'HTML',
 	     a_port => '',
@@ -267,14 +272,21 @@ if ($mode eq 'home') {
 	     a_timetype => 'relative',
 	     a_reltimenum => '',
 	     a_reltimeunit => 'h',
-	     a_reltimedirection => 'future'
+	     a_reltimedirection => 'future',
+	     af_data_cache => 1
 	     );
         
         my ($sec,$min,$hour,$mday,$mon,$year) = localtime(time);
 	($conf{a_abstimemonth},$conf{a_abstimeday},$conf{a_abstimeyear},$conf{a_abstimehour},$conf{a_abstimeampm}) = ($mon,$mday,$year,$hour%12+1,($hour <= 11 ? 'am' : 'pm'));
     }
 }
-if ($mode eq 'save') {
+if ($mode eq 'save' && $action eq 'Delete settings') {
+    my $out = HTML::Mason::Preview::open_preview_settings($previewDir,$userName,1);
+    my %options = %{$out->{$previewPort}};
+    $options{deleted} = 1;
+    $out->{$previewPort} = \%options;
+    untie (%$out);
+} elsif ($mode eq 'save') {
     my %options = %ARGS;
     foreach (qw(previewPort initialUri action)) {
 	delete($options{$_});
@@ -291,15 +303,6 @@ if ($mode eq 'save') {
 	$port = 80;
     }
     $request{env}->{SERVER_PORT} = $port;
-
-    # Version
-    if (@versions) {
-	my $v = $versionsMap{$options{b_version}};
-	foreach my $field (qw(comp_root data_dir static_file_root)) {
-	    $request{interp}->{$field} = $v->{$field} if defined($v->{$field});
-	}
-	$request{alternate_source} = $v->{alternate_source};
-    }
 
     # Time
     # - time->type (real, relative, or absolute)
@@ -366,4 +369,5 @@ $previewPort=>undef
 $mode=>'home'
 $action=>undef
 $initialUri=>undef
+$deleted=>0
 </%args>
