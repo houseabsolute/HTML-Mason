@@ -33,6 +33,11 @@ my %blocks = ( args    => 'variable_list_block',
 	       text    => 'text_block',
 	     );
 
+sub block_names
+{
+    return keys %blocks;
+}
+
 sub block_body_method
 {
     return $blocks{ $_[1] };
@@ -41,7 +46,7 @@ sub block_body_method
 {
     my $blocks_re;
 
-    my $re = join '|', keys %blocks;
+    my $re = join '|', __PACKAGE__->block_names;
     $blocks_re = qr/$re/i;
 
     sub blocks_regex
@@ -144,7 +149,7 @@ sub start
 	     $self->{current}{comp_source} =~ /\G\z/ )
 	{
 	    my $type = $self->{current}{in_def} ? 'def' : 'method';
-	    $self->throw_syntax_error("Component source ending in the middle of $type block");
+	    $self->throw_syntax_error("Missing closing </%$type> tag");
 	}
 
 	# We should never get here - if we do, we're in an infinite loop.
@@ -218,8 +223,7 @@ sub doc_block
 
 sub variable_list_block
 {
-    my $self = shift;
-    my %p = @_;
+    my ($self, %p) = @_;
 
     while ( $self->{current}{comp_source} =~ m,
                        \G               # last pos matched
@@ -269,8 +273,7 @@ sub variable_list_block
 
 sub key_val_block
 {
-    my $self = shift;
-    my %p = @_;
+    my ($self, %p) = @_;
 
     while ( $self->{current}{comp_source} =~ /
                       \G
@@ -303,8 +306,7 @@ sub key_val_block
 
 sub match_block_end
 {
-    my $self = shift;
-    my %p = @_;
+    my ($self, %p) = @_;
 
     my $re = $p{allow_text} ? qr,\G(.*?)</%\Q$p{block_type}\E>(\n?),is
                             : qr,\G()\s*</%\Q$p{block_type}\E>(\n?),is;
@@ -320,8 +322,7 @@ sub match_block_end
 
 sub match_named_block
 {
-    my $self = shift;
-    my %p = @_;
+    my ($self, %p) = @_;
 
     if ( $self->{current}{comp_source} =~ /\G<%(def|method)\s+([^\n]+?)>/igcs )
     {
