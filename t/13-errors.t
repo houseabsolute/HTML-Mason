@@ -188,6 +188,23 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'check_error_format_brief',
+		      description => 'Make sure setting error_format => "brief" works',
+		      interp_params => { error_format => 'brief',
+					 error_mode => 'output',
+				       },
+		      component => <<'EOF',
+<%def .foo>
+% die("Horrible death");
+</%def>
+% eval { $m->comp('.foo') };
+<% $@ %>
+EOF
+		      expect => qr{^Horrible death at .*check_error_format_brief line \d+\.$}s,
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
