@@ -192,6 +192,15 @@ The <& &> tag provides a convenient shortcut for C<$m-E<gt>comp>.
 
 Returns 1 if I<comp_path> is the path of an existing component, 0 otherwise. 
 
+=for html <a name="content">
+
+=item content
+
+Evaluates the content (passed between <&| comp &> and </&> tags) of the 
+current component, and returns the resulting text.
+
+Returns undef if there is no content.
+
 =for html <a name="item_count">
 
 =item count
