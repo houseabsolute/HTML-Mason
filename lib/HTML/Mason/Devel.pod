@@ -1214,6 +1214,9 @@ You can fetch all the identifiers in a cache with
 
     my @idents = $m->cache->get_identifiers;
 
+It should be noted that Mason reserves all identifiers beginning with
+I<__cache_self__> for its own use.
+
 =head2 Expiration
 
 You may pass an optional third argument to C<$m-E<gt>cache-E<gt>set>
@@ -1228,6 +1231,27 @@ C<$m-E<gt>cache-E<gt>remove>.
 
 You can also expire a cache item from an external script; see
 L<Accessing a Cache Externally> below.
+
+=head2 Caching All Output
+
+Occasionally you will need to cache the complete output of a
+component.  For this purpose, Mason offers the C<< $m->cache_self >
+method.  This method causes Mason to check to see if this component
+has already been run and its output cached.  If this is the case, this
+output is simply sent as output.  Otherwise, the component run
+normally and its output and return value cached.
+
+It is typically used right at the top of a <%init%> section:
+
+    <%init>
+    return if $m->cache_self(expire_in => '3 hours' [, key => 'fookey' ]);
+     ... <rest of init> ...
+    </%init>
+
+C<< $m->cache_self >> is built on top of C<< $m->cache >>, so it
+accepts all of the cache options described earlier.  C<<
+$m->cache_self >> can also cache a component's return value; see the
+reference for details.
 
 =head2 Cache Object Meta-data
 

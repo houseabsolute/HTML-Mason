@@ -257,6 +257,73 @@ sub cache
     return $cache;
 }
 
+sub cache_self {
+    my ($self, %options) = @_;
+
+    return if $self->{in_cache_self};
+
+    my $expire = delete $options{expire_in};
+    my $key = '__cache_self__';
+    $key .= delete $options{key} if exists $options{key};
+
+    my $cache = $self->cache(%options);
+
+    my ($output, $retval);
+    if (my $cached = $cache->get($key)) {
+	($output, $retval) = @$cached;
+    } else {
+	local $self->{in_cache_self} = 1;
+
+	$self->push_buffer_stack($self->top_buffer->new_child(sink => \$output, ignore_flush => 1));
+
+	my $comp = $self->top_stack->{comp};
+	my @args = @{ $self->top_stack->{args} };
+
+	#
+	# Because this method should always be called in a scalar
+	# context we need to go back and find the context that the
+	# component was first called in (back up there in the comp
+	# method).
+	#
+	my $wantarray = (caller(1))[5];
+
+	my @result;
+
+	eval {
+	    if ($wantarray) {
+		@result = $comp->run(@args);
+	    } elsif (defined $wantarray) {
+		@result = scalar $comp->run(@args);
+	    } else {
+		$comp->run(@args);
+	    }
+	};
+
+	#
+	# Whether there was an error or not we need to pop the buffer
+	# stack.
+	#
+	my $buffer = $self->pop_buffer_stack;
+
+	if (my $err = $@) {
+	    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : HTML::Mason::Exception->throw( error => $err );
+	}
+
+	$retval = \@result;
+
+	$cache->set($key => [$output, $retval], $expire ? $expire : ());
+    }
+
+    $self->out($output);
+
+    #
+    # Return the component return value in case the caller is interested,
+    # followed by 1 indicating the cache retrieval success.
+    #
+    return (@$retval, 1);
+
+}
+
 sub call_dynamic {
     my ($m, $key, @args) = @_;
     my $comp = ($m->current_comp->is_subcomp) ? $m->current_comp->owner : $m->current_comp;
@@ -959,6 +1026,45 @@ expires_in, max_size, and cache_depth.
 See the L<Devel/data caching> section of the I<Component Developer's
 Guide> for examples and caching strategies. See the Cache::Cache
 documentation for a complete list of options and methods.
+
+=for html <a name="item_cache_self">
+
+=item cache_self (expire_in => '...', key => '...', [cache_options])
+
+This method is called by a component when it wants to cache its entire
+output.
+
+It takes all of the options which can be passed to the cache method.
+
+In addition, it takes two additional options.  The first,
+I<expire_in>, will be passed to the caching object.  See the
+Cache::Cache documentation for details on what formats it accepts.
+
+The second, I<key> is an identifier used to uniquely identify the
+cache results.  This means that you can call cache_self with different
+keys and the component will be executed once for each key.  If no key
+option is provided than a default key is used.
+
+To cache the component's output:
+
+    <%init>
+    return if $m->cache_self(expire_in => '3 hours'[, key => 'fookey']);
+    ... <rest of init> ...
+    </%init>
+
+To cache the component's return value:
+
+    <%init>
+    my (@retval) = $m->cache_self(expire_in => '3 hours'[, key => 'fookey']);
+
+    return @retval if pop @retval;
+    ... <rest of init> ...
+    </%init>
+
+The reason that we call C<pop> on C<@retval> is that the return value
+from C<< $m->cache_self >> is a list made up of the return value of
+the component followed by a 1.  This is to ensure that $m->cache_self
+always returns a true value when returning cached results.
 
 =for html <a name="item_caller_args">
 

@@ -114,6 +114,98 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support ( path => 'support/cache_self',
+			  component => <<'EOF',
+x is <% $x %>
+<%args>
+$x
+</%args>
+<%init>
+return if $m->cache_self;
+</%init>
+EOF
+			);
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'cache_self',
+		      description => 'test $m->cache_self',
+		      component => <<'EOF',
+<& support/cache_self, x => 1 &>
+<& support/cache_self, x => 99 &>
+EOF
+		      expect => <<'EOF',
+x is 1
+
+x is 1
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_support ( path => 'support/cache_self_expires',
+			  component => <<'EOF',
+x is <% $x %>
+<%args>
+$x
+</%args>
+<%init>
+return if $m->cache_self( expire_in => '1s' );
+</%init>
+EOF
+			);
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'cache_self_expiration',
+		      description => 'test that $m->cache_self respects expires_in parameter',
+		      component => <<'EOF',
+<& support/cache_self_expires, x => 1 &>
+% sleep 3;
+<& support/cache_self_expires, x => 99 &>
+EOF
+		      expect => <<'EOF',
+x is 1
+
+x is 99
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_support ( path => 'support/cache_self_with_key',
+			  component => <<'EOF',
+x is <% $x %>
+<%args>
+$x
+$key
+</%args>
+<%init>
+return if $m->cache_self( key => $key );
+</%init>
+EOF
+			);
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'cache_self_key',
+		      description => 'test $m->cache_self with a key',
+		      component => <<'EOF',
+<& support/cache_self_with_key, x => 1, key => 1 &>
+<& support/cache_self_with_key, x => 99, key => 99 &>
+<& support/cache_self_with_key, x => 1000, key => 1 &>
+EOF
+		      expect => <<'EOF',
+x is 1
+
+x is 99
+
+x is 1
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
