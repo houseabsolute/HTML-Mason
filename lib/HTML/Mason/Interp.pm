@@ -10,6 +10,7 @@ use Config;
 use File::Basename;
 use File::Path;
 use File::Spec;
+use HTML::Mason;
 use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
 use HTML::Mason::Tools qw(make_fh read_file taint_is_on load_pkg);
