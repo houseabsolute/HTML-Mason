@@ -51,17 +51,25 @@ sub exec {
 
 sub handle_request {
     my $self = shift;
-    $self->_handler($ENV{PATH_INFO}, @_);
+    $self->_handler( { comp_path => $ENV{PATH_INFO} }, @_ );
 }
 
-sub handle_cgi {
+sub handle_component {
     my ($self, $component) = (shift, shift);
-    $self->_handler($component, @_);
+    $self->_handler( { comp_path => $component }, @_ );
+}
+
+sub handle_cgi_object {
+    my ($self, $cgi) = (shift, shift);
+    $self->_handler( { comp_path => $cgi->path_info,
+		       cgi       => $cgi },
+		     @_);
 }
 
 sub _handler {
-    my ($self, $component) = (shift, shift);
-    
+    my ($self, $p) = (shift, shift);
+
+    my $component = $p->{comp_path};
     my ($local_root, $local_datadir);
     if ($self->{dev_dirs}) {
 	foreach my $dir (@{$self->{dev_dirs}}) {
@@ -73,7 +81,7 @@ sub _handler {
 	}
     }
 
-    my $r = $self->create_delayed_object('cgi_request');
+    my $r = $self->create_delayed_object('cgi_request', cgi => $p->{cgi});
     $self->interp->set_global('$r', $r);
 
     $self->{output} = '';
@@ -131,8 +139,10 @@ use HTML::Mason::MethodMaker(read_write => [qw(query headers)]);
 
 sub new {
     my $class = shift;
+    my %p = @_;
+
     return bless {
-		  query   => new CGI(),
+		  query   => $p{cgi} || new CGI(),
 		  headers => {},
 		 }, $class;
 }
@@ -255,18 +265,27 @@ or C<STDIN> and sending headers and component output to C<STDOUT>.
 This method doesn't accept any parameters.  The initial component
 will be the one specified in C<$ENV{PATH_INFO}>.
 
-=item * handle_cgi()
+=item * handle_component()
 
 Like C<handle_request()>, but the first (only) parameter is a
 component path or component object.  This is useful within a
 traditional CGI environment, in which you're essentially using Mason
 as a templating language but not an application server.
 
-C<handle_cgi()> will create a CGI query object, parse the query
+C<handle_component()> will create a CGI query object, parse the query
 parameters, and send the HTTP header and component output to STDOUT.
 If you want to handle those parts yourself, see L<Using Mason from a
 standalone script in HTML::Mason::Interp|HTML::Mason::Interp/"Using
 Mason from a standalone script">.
+
+=item * handle_cgi_object()
+
+Also like C<handle_request()>, but this method takes only a CGI object
+as its parameter.  This can be quite useful if you want to use this
+module with CGI::Fast.
+
+The component path will be the value of the CGI object's
+C<path_info()> method.
 
 =item * interp()
 
