@@ -21,13 +21,43 @@ require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(read_file url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on load_pkg pkg_loaded absolute_comp_path);
+@EXPORT_OK = qw(read_file read_file_ref url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on load_pkg pkg_loaded absolute_comp_path);
 
-#
+# read_file($file, $binmode)
 # Return contents of file. If $binmode is 1, read in binary mode.
 #
 sub read_file
 {
+    my $fh = _get_reading_handle(@_);
+    return do {local $/; scalar <$fh>};
+}
+
+
+# This routine is just like read_file, except more memory-efficient
+# and better for large files.  Probably not quite as fast.
+#
+# Using read_file_ref(), I have verified (in 5.6.1, anyway) that
+# reading a file consumes only about as much memory as the size of the
+# file.  Using read_file() uses 2x the size of the file.
+#
+# Don't go using read() willy-nilly, though, it's usually not worth
+# the potential bugs.  It's easy to mess up the logic.
+
+sub read_file_ref
+{
+    my $fh = _get_reading_handle(@_);
+    my ($buffer, $retval) = ('');
+    while (1) {
+	# Important to read in chunks
+	$retval = read $fh, $buffer, 1000, length($buffer);
+	system_error "read_file_ref: Couldn't read from '$_[0]': $!"
+	    unless defined $retval;
+	last if !$retval;
+    }
+    return \$buffer;
+}
+
+sub _get_reading_handle {
     my ($file,$binmode) = @_;
     error "read_file: '$file' does not exist" unless -e $file;
     error "read_file: '$file' is a directory" if (-d _);
@@ -35,9 +65,8 @@ sub read_file
     open $fh, "< $file"
 	or system_error "read_file: could not open file '$file' for reading: $!";
     binmode $fh if $binmode;
-    return do { local $/; scalar <$fh> };
+    return $fh;
 }
-
 
 #
 # Determines whether two paths are equal, taking into account
