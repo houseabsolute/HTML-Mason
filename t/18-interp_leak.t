@@ -14,56 +14,26 @@ BEGIN
 }
 
 use HTML::Mason::Interp;
-use HTML::Mason::Tests;
-
-my $destroy_count = 0;
-
-sub HTML::Mason::Interp::DESTROY { $destroy_count++ }
-
-# this object is just used for convenience in order to find a proper
-# comp root, write comps, etc.  It won't actually run any tests
-my $group = HTML::Mason::Tests->new( name => 'interp_leaks',
-                                     description => '',
-                                   );
-
-$group->add_support( path => '/test_comp',
-                     component => <<'EOF',
-Content is irrelevant
-EOF
-                   );
-
-# I am evil
-$group->_write_support_comps;
 
 {
-    # don't sent output to STDOUT
-    my $buf;
-    my $interp = HTML::Mason::Interp->new( data_dir => $group->data_dir,
-                                           comp_root => $group->comp_root,
-                                           out_method => \$buf,
-                                         );
-
-    $interp->exec('/interp_leaks/test_comp');
-
-    undef $interp;
+    package InterpWatcher;
+    my $destroy_count = 0;
+    
+    use base qw(HTML::Mason::Interp);
+    sub DESTROY { $destroy_count++ }
+    sub count   { $destroy_count   }
 }
 
-ok $destroy_count, 1;
 
+my $comp;
+{
+    my $interp = InterpWatcher->new();
+    $comp = $interp->make_component( comp_source => 'foo' );
+}
+ok( InterpWatcher->count, 1 );
 
 {
-    my $buf;
-    my $interp = HTML::Mason::Interp->new( data_dir => $group->data_dir,
-                                           comp_root => $group->comp_root,
-                                           out_method => \$buf,
-                                         );
-
-    $interp->exec('/interp_leaks/test_comp');
-
-    undef $interp;
+    my $interp = InterpWatcher->new();
+    $comp = $interp->make_component( comp_source => 'foo' );
 }
-
-ok $destroy_count, 2;
-
-# I am very evil
-$group->_cleanup unless $ENV{MASON_NO_CLEANUP};
+ok( InterpWatcher->count, 2 );
