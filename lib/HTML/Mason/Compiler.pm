@@ -332,7 +332,7 @@ sub start_named_block
 	    unless $self->{in_main};
 
     $self->lexer->throw_syntax_error("Invalid $p{block_type} name: $p{name}")
-	if $p{name} =~ /[^.\w]/;
+	if $p{name} =~ /[^.\w-]/;
 
     $self->{in_main}--;
 
