@@ -750,5 +750,51 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/support/return/scalar',
+			 component => <<'EOF',
+% return 'foo';
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'return_scalar',
+		      description => 'tests that exec returns scalar return value of top component',
+		      component => <<'EOF',
+% my $req = $m->make_subrequest(comp=>'/request/support/return/scalar');
+% my $value = $req->exec();
+return value is <% $value %>
+EOF
+		      expect => <<'EOF',
+return value is foo
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/support/return/list',
+			 component => <<'EOF',
+% return (1, 2, 3);
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'return_list',
+		      description => 'tests that exec returns list return value of top component',
+		      component => <<'EOF',
+% my $req = $m->make_subrequest(comp=>'/request/support/return/list');
+% my @value = $req->exec();
+return value is <% join(",", @value) %>
+EOF
+		      expect => <<'EOF',
+return value is 1,2,3
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     return $group;
 }
