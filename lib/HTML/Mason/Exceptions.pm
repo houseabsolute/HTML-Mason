@@ -99,9 +99,11 @@ sub import
 sub isa_mason_exception
 {
     my ($err, $name) = @_;
+    return unless defined $err;
 
     if ($name) {
 	my $class = "HTML::Mason::Exception::$name";
+	no strict 'refs';
 	die "no such exception class $class" unless defined(${"${class}::VERSION"});
 	return UNIVERSAL::isa($err, "HTML::Mason::Exception::$name");
     } else {
