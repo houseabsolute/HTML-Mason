@@ -156,7 +156,6 @@ sub handle_preview_request_1
     my ($r, $ah, %options) = @_;
     my (%simhdr);
     my $cm_home = $options{cm_home};
-    my $settings_file = $options{settings_file};
     
     #
     # Determine user name and port.
@@ -164,13 +163,16 @@ sub handle_preview_request_1
     my $userName = $r->connection->user || 'anonymous';
     my $host = $r->header_in('Host');
     my ($port) = ($host =~ /:([0-9]+)/);
-    die "cannot detect port" if !defined($port);
+    $port ||= 80;
 
     #
-    # Find configuration for user & port.
+    # Find configuration from 'settings' option, 'settings_file'
+    # option, or user & port.
     #
     my $href;
-    if ($settings_file) {
+    if (my $settings = $options{settings}) {
+	$href = {request=>$settings};
+    } elsif (my $settings_file = $options{settings_file}) {
 	my $in = open_preview_settings_file($settings_file,0);
 	$href = $in->{$port};
 	die "Cannot find preview configuration for port $port in settings file '$settings_file'." if (!$href);

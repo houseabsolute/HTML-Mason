@@ -148,7 +148,7 @@ sub _initialize {
 
 	return \@strings;     #return an array ref
     };
-    Apache::Status->menu_item ($name,$title,$statsub);
+    Apache::Status->menu_item ($name,$title,$statsub) if $Apache::Status::VERSION;
     
     #
     # Create data subdirectories if necessary. mkpath will die on error.

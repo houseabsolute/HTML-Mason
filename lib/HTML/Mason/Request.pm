@@ -14,7 +14,7 @@ use HTML::Mason::Tools qw(is_absolute_path read_file);
 use Carp;
 use strict;
 use vars qw($REQ $REQ_DEPTH %REQ_DEPTHS);
-my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P,$HTML::Mason::Commands::REQ);
+my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P,$HTML::Mason::Commands::m);
 
 my %fields =
     (aborted => undef,
@@ -39,8 +39,10 @@ sub new
 	autohandler_next => undef,
 	dhandler_arg => undef,
 	error_flag => undef,
+	inherit_chain => undef,
 	out_buffer => '',
 	stack_array => undef,
+	wrapper_chain => undef
     };
     my (%options) = @_;
     while (my ($key,$value) = each(%options)) {
@@ -117,20 +119,42 @@ sub exec {
     # This label is for declined requests.
     retry:
     
-    # Check for autohandler.
-    if (defined($interp->{autohandler_name})) {
-	my $parent = $comp->dir_path;
-	my $autocomp;
-	if (!$interp->{allow_recursive_autohandlers}) {
-	    $autocomp = $interp->load("$parent/".$interp->{autohandler_name});
-	} else {
-	    $autocomp = $interp->find_comp_upwards($parent,$interp->{autohandler_name});
+    # Build inheritance chain.
+    my @inherit_chain = ($comp);
+    while (1) {
+	my $inherit;
+	my $dir_path = $comp->dir_path;
+	if (exists($comp->flags->{inherit})) {
+	    my $inherit_path = $comp->flags->{inherit};
+	    if ($inherit_path =~ /\S/) {
+		$inherit = $interp->load($self->process_comp_path($inherit_path,$dir_path));
+	    }
+	} elsif (defined($interp->{autohandler_name})) {
+	    # Look for autohandler, making sure that autohandler doesn't inherit
+	    # from itself.
+	    my $comp_is_autohandler = ($comp->name eq $interp->{autohandler_name});
+	    if ($interp->{allow_recursive_autohandlers}) {
+		if ($comp_is_autohandler) {
+		    last if ($dir_path eq '/');
+		    $dir_path =~ s/\/[^\/]*$//;
+		    $dir_path = '/' if !$dir_path;
+		}
+		$inherit = $interp->find_comp_upwards($dir_path,$interp->{autohandler_name});
+	    } else {
+		$inherit = $interp->load("$dir_path/".$interp->{autohandler_name}) unless $comp_is_autohandler;
+	    }
 	}
-	if (defined($autocomp)) {
-	    $self->{autohandler_next} = [$comp,\@args];
-	    $comp = $autocomp;
+	if (defined($inherit)) {
+	    push(@inherit_chain,$inherit);
+	    $comp = $inherit;
+	    die "assert error: inherit chain length > 32 (infinite loop?)" if (@inherit_chain > 32);
+	} else {
+	    last;
 	}
     }
+    $self->{inherit_chain} = \@inherit_chain;
+    $self->{wrapper_chain} = [reverse(@inherit_chain)];
+    shift(@{$self->{wrapper_chain}});
 
     # Call the first component.
     my ($result, @result);
@@ -281,9 +305,8 @@ sub call { shift->comp(@_) }
 
 sub call_next {
     my ($self,@extra_args) = @_;
-    my $aref = $self->{autohandler_next} or die "call_next: no autohandler invoked";
-    my ($comp, $args_ref) = @$aref;
-    my @args = (@$args_ref,@extra_args);
+    my $comp = shift(@{$self->{wrapper_chain}}) or die "call_next: no next component to invoke";
+    my @args = (@{$self->current_args},@extra_args);
     return $self->comp($comp, @args);
 }
 
@@ -385,26 +408,64 @@ sub fetch_comp
     my ($self,$path) = @_;
     die "fetch_comp: requires path as first argument" unless defined($path);
 
+    #
+    # If path contains a colon, interpret as <comp>:<subcomp>.
+    # SELF means search all components in inherit chain.
+    # SUPER means search all components above current component in inherit chain.
+    #
+    if (index($path,':')!=-1) {
+	my @search_list;
+	my ($main_path,$sub_path) = split(':',$path,2);
+	if ($main_path eq 'SELF') {
+	    @search_list = @{$self->{inherit_chain}};
+	} elsif ($main_path eq 'SUPER') {
+	    # Call the "superclass" method. We start searching in the inheritance chain
+	    # past the current component or the current subcomponent's parent.
+	    # This won't work when we go to multiply embedded subcomponents...
+	    @search_list = @{$self->{inherit_chain}};
+	    my $cur_comp = $self->current_comp;
+	    while (my $next = shift(@search_list)) {
+		last if $next eq $cur_comp or ($cur_comp->is_subcomp and $next eq $cur_comp->parent_comp);
+	    }
+	    return undef unless @search_list;
+	} else {
+	    my $main_comp = $self->fetch_comp($main_path);
+	    return undef unless $main_comp;
+	    @search_list = ($main_comp);
+	}
+	foreach my $main_comp (@search_list) {
+	    if (my $subcomp = $main_comp->subcomps->{$sub_path}) {
+		return $subcomp;
+	    }
+	}
+	return undef;
+    }
+
+    #
+    # If path does not contain a slash, check for a subcomponent in the
+    # current component first.
+    #
     if ($path !~ /\//) {
+	my $cur_comp = $self->current_comp;
 	# Check my subcomponents.
-	if (my $comp = $self->current_comp->subcomps->{$path}) {	
-	    return $comp;
+	if (my $subcomp = $cur_comp->subcomps->{$path}) {	
+	    return $subcomp;
 	}
 	# If I am a subcomponent, also check my parent's subcomponents.
 	# This won't work when we go to multiply embedded subcomponents...
-	if ($self->current_comp->is_subcomp and my $comp = $self->current_comp->parent_comp->subcomps->{$path}) {
-	    return $comp;
+	if ($cur_comp->is_subcomp and my $subcomp = $cur_comp->parent_comp->subcomps->{$path}) {
+	    return $subcomp;
 	}
     }
+
+    #
+    # Otherwise pass the absolute path to interp->load.
+    #
     $path = $self->process_comp_path($path);
     return $self->{interp}->load($path);
 }
 
-sub fetch_next {
-    my ($self) = @_;
-    my $aref = $self->{autohandler_next} or die "fetch_next: no autohandler invoked";
-    return $aref ? $aref->[0] : undef;
-}
+sub fetch_next { return shift->{wrapper_chain}->[0] }
 
 sub file
 {
@@ -659,21 +720,23 @@ sub current_sink { return $_[0]->top_stack->{sink} }
 
 #
 # Return the absolute version of a component path. Handles . and ..
-# Empty string resolves to current component path.
+# Empty string resolves to current component path. Optional second
+# argument is directory path to resolve relative paths against.
 #
 sub process_comp_path
 {
-    my ($self,$compPath) = @_;
-    if ($compPath !~ /\S/) {
+    my ($self,$comp_path,$dir_path) = @_;
+    if ($comp_path !~ /\S/) {
 	return $self->current_comp->path;
     }
-    if ($compPath !~ m@^/@) {
-	die "relative component path ($compPath) used from component with no current directory" if !defined($self->current_comp->dir_path);
-	$compPath = $self->current_comp->dir_path . "/" . $compPath;
+    if ($comp_path !~ m@^/@) {
+	$dir_path = $self->current_comp->dir_path unless defined($dir_path);
+	die "relative component path ($comp_path) used from component with no current directory" unless $dir_path;
+	$comp_path = $dir_path . "/" . $comp_path;
     }
-    while ($compPath =~ s@/[^/]+/\.\.@@) {}
-    while ($compPath =~ s@/\./@/@) {}
-    return $compPath;    
+    while ($comp_path =~ s@/[^/]+/\.\.@@) {}
+    while ($comp_path =~ s@/\./@/@) {}
+    return $comp_path;    
 }
 
 1;

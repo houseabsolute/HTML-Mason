@@ -150,12 +150,12 @@ sub parse_component
     # at the beginning of a line. This becomes important later,
     # when looking for %-lines.
     #
-    my %sectiontext = (map(($_,''),qw(args cleanup doc filter init once)));
+    my %sectiontext = (map(($_,''),qw(args cleanup doc filter flags init once)));
     my $curpos = 0;
     my $startline = 1;
     my (@textsegs,%subcomps);
     my $scriptlength = length($script);
-    while ($script =~ /(<%(?:perl_)?(args|cleanup|def[ \t]+([^>\n]+)|doc|filter|init|once|text)>)/ig) {
+    while ($script =~ /(<%(?:perl_)?(args|cleanup|def[ \t]+([^>\n]+)|doc|filter|flags|init|once|text)>)/ig) {
 	my ($begintag,$beginfield,$beginarg) = ($1,lc($2),$3);
 	$beginfield = 'def' if (substr($beginfield,0,3) eq 'def');
 	my $beginmark = pos($script)-length($begintag);
@@ -513,6 +513,11 @@ sub parse_component
 	for ($argsDump) { s/\$VAR1\s*=//g; s/;\s*$// }
 	push(@cparams,"'declared_args'=>$argsDump");
     }
+    if (my $flags_text = $sectiontext{flags}) {
+ 	my $flags_hash = join(",",grep(/\S/,split("\n",$flags_text)));
+ 	push(@cparams,"'flags'=>{$flags_hash}");
+    }
+
     push(@cparams,"'code'=>sub {\n$body\n}");
     push(@cparams,sprintf("'object_size'=>%d",length($header)+length(join("",@cparams))));
 

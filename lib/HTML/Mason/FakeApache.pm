@@ -45,13 +45,13 @@ sub access_hash {
 
 sub access_table {
     my ($self,$field,$key,$value) = @_;
-    if (wantarray) {
+    if (@_==3) {
+	return $self->{$field}->{$key};
+    } elsif (wantarray) {
 	return %{$self->{$field}};
     } elsif (@_==2) {
 	return $self->{$field};
 	# die "FakeApache is unable to simulate the Apache::Table class for the `$field' method called in scalar context.  You'll need to temporarily remove or comment out that method call to use debug files.\n";
-    } elsif (@_==3) {
-	return $self->{$field}->{$key};
     } else {
 	return ($self->{$field}->{$key} = $value);
     }

@@ -18,6 +18,7 @@ my %fields =
      code => undef,
      create_time => undef,
      declared_args => undef,
+     flags => undef,
      fq_path => undef,
      interp => undef,
      mfu_count => 0,
@@ -31,7 +32,7 @@ my %fields =
 # Create accessor routines
 foreach my $f (keys %fields) {
     no strict 'refs';
-    next if ($f =~ /^subcomps$/);
+    next if ($f =~ /^subcomps|flags$/);
     *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
 }
 
@@ -58,6 +59,7 @@ sub new
     $self->{designator} = "[anon ". ++$compCount . "]" if !defined($self->{fq_path});
     $self->{declared_args} = {} if !defined($self->{declared_args});
     $self->{subcomps} = {} if !defined($self->{subcomps});
+    $self->{flags} = {} if !defined($self->{flags});
     
     # Initialize subcomponent properties.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
@@ -120,6 +122,18 @@ sub subcomps {
 	return $self->{subcomps}->{$key};
     } else {
 	return $self->{subcomps};
+    }    
+}
+
+#
+# Get all flags or particular flag by name
+#
+sub flags {
+    my ($self,$key) = @_;
+    if (defined($key)) {
+	return $self->{flags}->{$key};
+    } else {
+	return $self->{flags};
     }    
 }
 

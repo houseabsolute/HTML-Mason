@@ -50,7 +50,7 @@ sub assign_runtime_properties {
 	}
 	die "Assert error: FQ path ($fq_path) contained unknown source root key" unless $self->{source_root};
     }
-    $self->{'source_file'} = $self->{source_root} . $fq_path;
+    $self->{'source_file'} = $self->{source_root} . $self->{'path'};
 }
 
 1;
