@@ -332,7 +332,7 @@ before printing:
 
     my $masthead = $m->scomp('/shared/masthead', color=>'salmon');
     $masthead =~ ...;
-    $m->out($masthead);
+    $m->print($masthead);
 
 =head2 Components that Filter Content
 
