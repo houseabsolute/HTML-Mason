@@ -114,6 +114,24 @@ your server through the debugger.
 internals that were changed. It will hopefully return better and
 stronger in a future release.
 
+
+Data Caching
+
+Data caching has been completely rebuilt on top of Cache::Cache.
+This means:
+
+- The syntax of $m->cache and $m->cache_self have changed.  However,
+the original API can still be used for a while by setting
+data_cache_api to '1.0'.
+
+- Cache files have a different pathname and format; old cache files
+can be removed.
+
+- The access_data_cache utility is no longer supported. See
+"Accessing a Cache Externally" in the Developer's manual for
+instructions on how to replace access_data_cache.
+
+
 Component Syntax
 
 - The "mc_" style commands, deprecated in 0.8, are no longer supported.
@@ -123,12 +141,6 @@ can help with this.
 - The "perl_" prefix for Mason tags (like <%perl_args>), deprecated in 0.6,
 is no longer supported. You will need to remove this prefix. The utility
 bin/convert0.6.pl can help with this.
-
-- The MLDBM-based data caching facility has been replaced with a
-Cache::Cache-based facility, and the syntax of $m->cache and
-$m->cache_self have changed completely. However, the 1.0x cache API
-can still be used for a while by setting data_cache_api to '1.0'; all
-cache options with the exception of tie_class should work as before.
 
 - The run_count and first_time component object methods have been
 deprecated, as they cannot be implemented reliably (see bug #209).
