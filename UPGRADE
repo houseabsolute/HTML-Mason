@@ -91,6 +91,25 @@ Instead, you specify this via the ApacheHandler constructor, via:
 You should preload the Apache::Request or CGI module in your handler
 or httpd.conf, in order to save memory.
 
+- The ApacheHandler module now uses Apache::Request by default instead
+of CGI.pm.
+
+- The ApacheHandler module now requires a minimum of mod_perl 1.22
+(though using something more up to date is highly recommended).
+
+- The MasonMultipleConfig parameter is no longer needed, and will
+cause an error if given.  Mason can now figure out for itself whether
+or not multiple ApacheHandler objects should be created.
+
+- The Interp class's time method is gone.
+
+- The Component class's create_time method has been renamed to
+load_time, which better reflects its semantics.
+
+- The debug file feature has been removed.
+
+- The Previewer has been removed.
+
 Version 0.85
 
 - Autohandlers are now recursive by default. If your site uses
