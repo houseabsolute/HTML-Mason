@@ -179,12 +179,12 @@ sub test
     my $is_maintainer = main::is_maintainer();
 
     # This works for older MakeMakers
-    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE} == \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; \$\$ENV{MASON_MAINTAINER}=$is_maintainer; $1/;
+    $test =~ s/(runtests \@ARGV;)/\$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; \$\$ENV{MASON_MAINTAINER}=$is_maintainer; $1/;
 
     my $bs = $^O =~ /Win32/i ? '' : '\\';
 
     # This works for newer MakeMakers (5.48_01 +)
-    $test =~ s/("-MExtUtils::Command::MM" "-e" ")(test_harness\(\$\(TEST_VERBOSE\).*?\)" \$\(TEST_FILES\))/$1 $bs\$\$ENV{MASON_VERBOSE} == \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : $bs\$\$ENV{MASON_VERBOSE}; $bs\$\$ENV{PORT}=$port; $bs\$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; $bs\$\$ENV{MASON_MAINTAINER}=$is_maintainer; $2/;
+    $test =~ s/("-MExtUtils::Command::MM" "-e" ")(test_harness\(\$\(TEST_VERBOSE\).*?\)" \$\(TEST_FILES\))/$1 $bs\$\$ENV{PORT}=$port; $bs\$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; $bs\$\$ENV{MASON_MAINTAINER}=$is_maintainer; $2/;
 
     return $test;
 }
