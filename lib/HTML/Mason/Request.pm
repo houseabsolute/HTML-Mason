@@ -24,7 +24,7 @@ BEGIN
 {
     __PACKAGE__->valid_params
 	(
-	 args  => { type => ARRAYREF, optional => 1, default => [],
+	 args  => { type => ARRAYREF, default => [],
 		    descr => "Array of arguments to initial component",
 		    public => 0 },
 	 autoflush  => { parse => 'boolean', default => 0, type => SCALAR,
