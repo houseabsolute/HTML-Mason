@@ -789,7 +789,10 @@ the only user method is the new() constructor.
 
 =item autohandler_name
 
-File name used for L<autohandlers|HTML::Mason::Devel/autohandlers>. Default is "autohandler".
+File name used for
+L<autohandlers|HTML::Mason::Devel/autohandlers>. Default is
+"autohandler".  If this is set to an empty string ("") then
+autohandlers are turned off entirely.
 
 =item code_cache_max_size
 

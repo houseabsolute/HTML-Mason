@@ -41,6 +41,20 @@ Hello World!
 EOF
 		    );
 
+#------------------------------------------------------------
+
+    $group->add_test( name => 'no autohandlers',
+		      description => 'tests turning off autohandlers by setting name to ""',
+		      call_path => '/autohandler_test/subdir/hello',
+		      interp_params => { autohandler_name => '' },
+		      component => <<'EOF',
+Hello World!
+EOF
+		      expect => <<'EOF',
+Hello World!
+EOF
+		    );
+
 
 #------------------------------------------------------------
 

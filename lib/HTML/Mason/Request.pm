@@ -1376,7 +1376,9 @@ C<$m-E<gt>cache> calls.
 
 =item dhandler_name
 
-File name used for L<dhandlers|HTML::Mason::Devel/dhandlers>. Default is "dhandler".
+File name used for L<dhandlers|HTML::Mason::Devel/dhandlers>. Default
+is "dhandler".  If this is set to an empty string ("") then dhandlers
+are turned off entirely.
 
 =item error_format
 
