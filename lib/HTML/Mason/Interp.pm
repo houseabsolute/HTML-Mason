@@ -238,15 +238,13 @@ sub load {
 
     #
     # If code cache contains an up to date entry for this path, use
-    # the cached sub.  Always use the cached sub in static_source mode.
+    # the cached comp.  Always use the cached comp in static_source
+    # mode.
     #
     if ( exists $code_cache->{$comp_id} &&
-         ( $self->static_source || $code_cache->{$comp_id}->{lastmod} >= $srcmod ) )
-    {
-        my $comp = HTML::Mason::Component->from_cache_copy( $code_cache->{$comp_id}->{comp} );
-        $comp->interp($self);
-
-        return $comp;
+         ( $self->static_source || $code_cache->{$comp_id}->{lastmod} >= $srcmod )
+       ) {
+        return $code_cache->{$comp_id}->{comp};
     }
 
     if ($self->{use_object_files}) {
@@ -308,7 +306,7 @@ sub load {
     $self->delete_from_code_cache($comp_id);
 
     if ($comp->object_size <= $self->code_cache_max_elem) {
-	$code_cache->{$comp_id} = { lastmod => $srcmod, comp => $comp->copy_for_cache };
+	$code_cache->{$comp_id} = { lastmod => $srcmod, comp => $comp };
 	$self->{code_cache_current_size} += $comp->object_size;
     }
     return $comp;
