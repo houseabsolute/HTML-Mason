@@ -381,9 +381,12 @@ sub new
 
 my $status_name = 'mason0001';
 
-Apache::Status->menu_item
-    ($status_name => __PACKAGE__->allowed_params->{apache_status_title}{default},
-     sub { ["<b>(no interpreters created in this child yet)</b>"] });
+{
+    local $^W; # to avoid subroutine redefined warnings
+    Apache::Status->menu_item
+	    ($status_name => __PACKAGE__->allowed_params->{apache_status_title}{default},
+	     sub { ["<b>(no interpreters created in this child yet)</b>"] });
+}
 
 
 sub _initialize {
