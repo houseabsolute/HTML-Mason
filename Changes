@@ -7,6 +7,17 @@ available at http://www.masonhq.com/code/history.html.
 
 1.21
 
+[ INCOMPATIBLE CHANGES ]
+
+** The semantics of @_ for components now match Perl subroutines: @_
+contains aliases to the caller's arguments, instead of copies.  For
+example, if a component updates $_[0], the corresponding argument is
+updated (or an error occurs if it is not updatable). The only users
+that will notice this are those that update elements of @_ in
+components and do not expect those changes to affect the caller. If
+you have any doubts, grep your component tree for '\$_\[' and look for
+assignment statements.
+
 [ ENHANCEMENTS ]
 
 - Cache the result of taint_is_on() for performance.
@@ -15,6 +26,9 @@ available at http://www.masonhq.com/code/history.html.
 
 - Now assigning runtime properties (such as interp) to method
 component objects as well as subcomponent objects. Task id #462.
+- Mason was copying arguments several times for a request, and
+several more times for each component call. The unnecessary
+copies have been eliminated.
 
 1.20  May 1, 2003 (May Day)
 

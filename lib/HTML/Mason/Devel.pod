@@ -885,6 +885,18 @@ readability, syntax checking, and default value automation.  However
 using C<@_> may be convenient for very small components, especially
 subcomponents created with C<< <%def> >>.
 
+Before Mason 1.21, @_ contained I<copies> of the caller's arguments.
+In Mason 1.21 and beyond, this unnecessary copying was eliminated and
+@_ now contains I<aliases> to the caller's arguments, just as with
+regular Perl subroutines. For example, if a component updates $_[0],
+the corresponding argument is updated (or an error occurs if it is not
+updatable).
+
+Most users won't notice this change because <%args> variables and the
+%ARGS hash always contain copies of arguments.
+
+See perlsub for more information on @_ aliasing.
+
 =head1 INITIALIZATION AND CLEANUP
 
 The following sections contain blocks of Perl to execute at specific

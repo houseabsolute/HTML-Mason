@@ -401,6 +401,83 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => 'args_copying_helper',
+			 component => <<'EOF',
+<%init>
+$_[1] = 4;
+$b = 5;
+$ARGS{'c'} = 6;
+</%init>
+
+<%args>
+$a
+$b
+</%args>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'component_args_copying',
+		      description => 'Test that @_ contains aliases, <%args> and %ARGS contain copies after comp',
+		      component => <<'EOF',
+$a is <% $a %>
+$b is <% $b %>
+$c is <% $c %>
+
+<%init>;
+my $a = 1;
+my $b = 2;
+my $c = 3;
+$m->comp('args_copying_helper', a=>$a, b=>$b, c=>$c);
+</%init>
+EOF
+		      expect => <<'EOF',
+
+$a is 4
+$b is 2
+$c is 3
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'subrequest_args_copying',
+		      description => 'Test that @_ contains aliases, <%args> and %ARGS contain copies after subrequest',
+		      component => <<'EOF',
+$a is <% $a %>
+$b is <% $b %>
+$c is <% $c %>
+
+<%init>;
+my $a = 1;
+my $b = 2;
+my $c = 3;
+$m->subexec('/component/args_copying_helper', a=>$a, b=>$b, c=>$c);
+</%init>
+EOF
+		      expect => <<'EOF',
+
+$a is 4
+$b is 2
+$c is 3
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'modification_read_only_arg',
+		      description => 'Test that read-only argument cannot be modified through @_',
+		      component => <<'EOF',
+<%init>;
+$m->comp('args_copying_helper', a=>1, b=>2, c=>3);
+</%init>
+EOF
+		      expect_error => 'Modification of a read-only value',
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 

@@ -302,7 +302,6 @@ sub exec {
 
 	# Build wrapper chain and index.
 	my $request_comp = $self->request_comp;
-        my @request_args = $self->request_args;
 	my $first_comp;
 	{
 	    my @wrapper_chain = ($request_comp);
@@ -321,17 +320,19 @@ sub exec {
                                      };
 	}
 
+	# Get original request_args array reference to avoid copying.
+        my $request_args = $self->{request_args};
 	{
 	    local *SELECTED;
 	    tie *SELECTED, 'Tie::Handle::Mason';
 
 	    my $old = select SELECTED;
 	    if ($wantarray) {
-		@result = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @request_args)};
+		@result = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @$request_args)};
 	    } elsif (defined($wantarray)) {
-		$result[0] = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @request_args)};
+		$result[0] = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @$request_args)};
 	    } else {
-		eval {$self->comp({base_comp=>$request_comp}, $first_comp, @request_args)};
+		eval {$self->comp({base_comp=>$request_comp}, $first_comp, @$request_args)};
 	    }
 	    select $old;
 	    die $@ if $@;
@@ -387,9 +388,10 @@ sub _handle_error
 
 sub subexec
 {
-    my ($self, $comp, @args) = @_;
+    my $self = shift;
+    my $comp = shift;
 
-    $self->make_subrequest(comp=>$comp, args=>\@args)->exec;
+    $self->make_subrequest(comp=>$comp, args=>\@_)->exec;
 }
 
 sub make_subrequest
@@ -790,7 +792,7 @@ sub decline
     $self->clear_buffer;
     my $subreq = $self->make_subrequest
 	(comp => $self->{top_path},
-	 args => [$self->request_args],
+	 args => $self->{request_args},
 	 declined_comps => {$self->request_comp->comp_id, 1, %{$self->{declined_comps}}});
     my $retval = $subreq->exec;
     HTML::Mason::Exception::Decline->throw( error => 'Request->decline was called', declined_value => $retval );
@@ -963,7 +965,7 @@ sub comp {
     my %mods = ();
     %mods = (%{shift()},%mods) while ref($_[0]) eq 'HASH';
 
-    my ($comp,@args) = @_;
+    my $comp = shift;
 
     param_error "comp: requires path or component as first argument"
 	unless defined($comp);
@@ -1011,7 +1013,7 @@ sub comp {
 
     # Push new frame onto stack.
     push @{ $self->{stack} }, { comp => $comp,
-                                args => [@args],
+                                args => \@_,
                                 base_comp => $base_comp,
                                 content => $mods{content},
                               };
@@ -1049,11 +1051,11 @@ sub comp {
     #
     eval {
         if ($wantarray) {
-            @result = $comp->run(@args);
+            @result = $comp->run(@_);
         } elsif (defined $wantarray) {
-            $result[0] = $comp->run(@args);
+            $result[0] = $comp->run(@_);
         } else {
-            $comp->run(@args);
+            $comp->run(@_);
         }
     };
 
@@ -1259,7 +1261,8 @@ sub PRINT
     my $self = shift;
 
     my $old = select STDOUT;
-    HTML::Mason::Request->instance->print(@_);
+    # Use direct $m access instead of Request->instance() to optimize common case
+    $HTML::Mason::Commands::m->print(@_);
 
     select $old;
 }

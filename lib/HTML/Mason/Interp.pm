@@ -220,8 +220,9 @@ sub cache_dir  { my $self = shift; return $self->data_dir ? File::Spec->catdir( 
 # in a new request.
 #
 sub exec {
-    my ($self, $comp, @args) = @_;
-    $self->make_request(comp=>$comp, args=>\@args)->exec;
+    my $self = shift;
+    my $comp = shift;
+    $self->make_request(comp=>$comp, args=>\@_)->exec;
 }
 
 sub make_request {
