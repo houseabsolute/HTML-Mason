@@ -242,6 +242,54 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support ( path => 'support/cache_self_filtered',
+			  component => <<'EOF',
+x is <% $x %>
+<%args>
+$x
+$key => 1
+</%args>
+<%init>
+return if $m->cache_self( key => $key );
+</%init>
+<%filter>
+$_ = uc $_;
+</%filter>
+EOF
+			);
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'cache_self_filtered',
+		      description => 'test $m->cache_self with a filter block',
+		      component => <<'EOF',
+<& support/cache_self_filtered, x => 1 &>
+<& support/cache_self_filtered, x => 99 &>
+EOF
+		      expect => <<'EOF',
+X IS 1
+
+X IS 1
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'cache_self_filtered_scomp',
+		      description => 'test $m->cache_self with a filter block callled via $m->scomp',
+		      component => <<'EOF',
+<% $m->scomp( 'support/cache_self_filtered', key => 2, x => 1 ) %>
+<% $m->scomp( 'support/cache_self_filtered', key => 2, x => 99 ) %>
+EOF
+		      expect => <<'EOF',
+X IS 1
+
+X IS 1
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
