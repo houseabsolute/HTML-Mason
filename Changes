@@ -33,6 +33,9 @@ modified.
 backwards compatibility layer is used.  AFAICT, the CVS version is
 close enough to what will be released as 2.0 that few, if any, changes
 should be required once 2.0 is out.
+- When running Mason with the ApacheHandler or CGIHandler modules, the
+Mason request object ($m) now has a "redirect" method, which can be
+used to send an HTTP redirect to the client.  L{Request/redirect}
 
 [ BUG FIXES ]
 
