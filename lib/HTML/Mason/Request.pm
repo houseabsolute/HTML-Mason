@@ -390,8 +390,8 @@ sub caller_args
 
 sub comp_exists
 {
-    my ($self,$path) = @_;
-    return $self->interp->lookup(absolute_comp_path($path, $self->current_comp->dir_path)) ? 1 : 0;
+    my ($self, $path) = @_;
+    return $self->interp->comp_exists(absolute_comp_path($path, $self->current_comp->dir_path)) ? 1 : 0;
 }
 
 sub decline
@@ -1095,7 +1095,9 @@ The <& &> tag provides a convenient shortcut for C<$m-E<gt>comp>.
 
 =item comp_exists (comp_path)
 
-Returns 1 if I<comp_path> is the path of an existing component, 0 otherwise. 
+Returns 1 if I<comp_path> is the path of an existing component, 0
+otherwise.  That path given may be relative, in which case the current
+component's directory path will be prepended.
 
 =for html <a name="content">
 

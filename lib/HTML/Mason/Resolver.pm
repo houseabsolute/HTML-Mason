@@ -11,6 +11,8 @@ use HTML::Mason::Exceptions( abbr => ['param_error', 'virtual_error'] );
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
 
+use HTML::Mason::ComponentInfo;
+
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
@@ -20,8 +22,8 @@ sub new
     return bless {validate(@_, $class->validation_spec)}, $class;
 }
 
-# Returns all info about a component including its source.
-sub resolve {
+# Returns HTML::Mason::ComponentInfo object
+sub get_info {
     shift->_virtual;
 }
 
@@ -30,16 +32,6 @@ sub glob_path {
 }
 
 sub comp_class {
-    shift->_virtual;
-}
-
-# Gets just the source of the component as a string.
-sub get_source {
-    shift->_virtual;
-}
-
-# Returns all info about a component, but not its source.
-sub get_info {
     shift->_virtual;
 }
 
@@ -113,62 +105,8 @@ will need to override it in your subclass.
 
 =item get_info
 
-Give a component path, this method is expected to return a hash with
-the following keys.
-
-=over 4
-
-=item * url_path
-
-This is the same as incoming path parameter.
-
-=item * last_modified
-
-This is the last modificatoin time for the component, in Unix time
-(seconds since the epoch).
-
-=item * comp_id
-
-This is a unique id for the component used to distinguish two
-components with the same name in different component
-roots.
-
-If your resolver does not support multiple component roots, this can
-simply be the same as the "url_path" key or it can be any other id you
-wish.
-
-This value will be used when constructing filesystem paths so it needs
-to be something that works on different filesystems.  If it contains
-forward slashes, these will be converted to the appropriate
-filesystem-specific path separator.
-
-In fact, we encourage you to make sure that your component ids have
-some forward slashes in them or also B<all> of your generated object
-files will end up in a single directory, which could affect
-performance.
-
-=back
-
-This method may also return any other keys it wishes.  These keys will
-be passed to the component class's constructor.  This can be handy if
-you are using a custom component class in addition to a custom
-resolver.
-
-=item get_source
-
-This method should expect to receive the hash returned by the
-C<get_info> method.
-
-It should return a single scalar containing the source of the
-component.
-
-=item resolve
-
-This method should expect to receive a single argument, a component
-path, just like the C<get_info> method.  It should return a hash
-containing all of the information returned by the C<get_info> method,
-in addition to a key called "comp_text" which should contain the
-component source.
+Given a component path, returns a new L<C<HTML::Mason::ComponentInfo>>
+object.
 
 =item glob_path
 

@@ -62,15 +62,6 @@ sub comp_root
     return $self->{comp_root};
 }
 
-#  get_info() returns a hash:
-#  (
-#   url_path => same as incoming path parameter
-#   disk_path => where this component is stored on the filesystem
-#   comp_id   => combination of comp_root and url_path: "$comp_root:$url_path"
-#   comp_root => name of component root we found the component in
-#   last_modified => time of last modification, in seconds
-#  );
-
 sub get_info {
     my ($self, $path) = @_;
 
@@ -81,25 +72,16 @@ sub get_info {
 	my $modified = (stat _)[9];
 	my $base = $key eq 'MAIN' ? '' : "/$key";
 	$key = undef if $key eq 'MAIN';
-	return ( url_path => $path, disk_path => $srcfile, comp_id => "$base$path",
-		 comp_root => $key, last_modified => $modified );
+
+	return HTML::Mason::ComponentInfo->new( friendly_name => $srcfile,
+						comp_id => "$base$path",
+						last_modified => $modified,
+						comp_path => $path,
+						extra => { comp_root => $key },
+						source_callback => sub { read_file($srcfile) },
+					      );
     }
     return;
-}
-
-# If the caller has already done get_info(), they can pass that hash to get_source()
-# and obtain the source.  resolve() will do everything in one step.
-sub get_source {
-    my ($self, %info) = @_;
-    return read_file $info{disk_path};
-}
-
-# Returns everything get_info() returns, plus the component source in a 'comp_text' entry.
-sub resolve {
-    my ($self, $path) = @_;
-
-    my %info = $self->get_info($path) or return;
-    return ( %info, comp_text => read_file($info{disk_path}) );
 }
 
 sub comp_class {

@@ -7,8 +7,10 @@ package HTML::Mason::Component;
 use strict;
 use File::Basename;
 use File::Spec;
+use HTML::Mason::Exceptions( abbr => [qw(param_error)] );
 use HTML::Mason::Tools qw(absolute_comp_path);
 use Params::Validate qw(:all);
+Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
 use HTML::Mason::Exceptions( abbr => ['error'] );
 use HTML::Mason::MethodMaker
@@ -77,12 +79,12 @@ sub new
 #
 # Ends up assigning $self->{interp, comp_id, inherit_path, inherit_start_path}
 sub assign_runtime_properties {
-    my ($self, $interp, %info) = @_;
+    my ($self, $interp, $info) = @_;
     $self->{interp} = $interp;
-    $self->{comp_id} = $info{comp_id};
+    $self->{comp_id} = $info->comp_id if defined $info->comp_id;
 
     foreach my $c (values(%{$self->{subcomps}})) {
-	$c->assign_runtime_properties($interp);
+	$c->assign_runtime_properties($interp, $info);
     }
 
     # Assign inheritance properties

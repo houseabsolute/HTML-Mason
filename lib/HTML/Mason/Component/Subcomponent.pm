@@ -24,6 +24,7 @@ sub assign_subcomponent_properties {
 
 sub cache_file { return $_[0]->owner->cache_file }
 sub create_time { return $_[0]->owner->create_time }
+sub comp_id { undef }
 sub compiler_id { return $_[0]->owner->compilation_params }
 sub dir_path { return $_[0]->owner->dir_path }
 sub is_subcomp { 1 }

@@ -232,14 +232,9 @@ sub check_reload_file {
     }
 }
 
-#
-# Look up <$path> as a component path. Return fully qualified path or
-# or undef if it does not exist.
-#
-sub lookup {
-    my ($self,$path) = @_;
-    my %info = $self->resolver->get_info($path) or return;
-    return $info{comp_id};
+sub comp_exists {
+    my ($self, $path) = @_;
+    return $self->resolver->get_info($path);
 }
 
 #
@@ -287,13 +282,13 @@ sub load {
     # Use resolver to look up component and get fully-qualified path.
     # Return undef if component not found.
     #
-    my %lookup_info = $resolver->get_info($path) or return undef;
-    my $comp_id = $lookup_info{comp_id};
+    my $info = $resolver->get_info($path) or return undef;
+    my $comp_id = $info->comp_id;
 
     #
     # Get last modified time of source.
     #
-    my $srcmod = $lookup_info{last_modified};
+    my $srcmod = $info->last_modified;
 
     if ($self->{use_object_files}) {
 	$objfile = $self->comp_id_to_objfile($comp_id);
@@ -323,9 +318,9 @@ sub load {
 	    my $object;
 	    do
 	    {
-		my $comp_text = $resolver->get_source(%lookup_info);
+		my $comp_text = $info->source;
 		if ($objfilemod < $srcmod) {
-		    $object = $self->compiler->compile( comp_text => $comp_text, name => ($lookup_info{disk_path} || $lookup_info{url_path}), comp_class => $resolver->comp_class );
+		    $object = $self->compiler->compile( comp_text => $comp_text, name => $info->friendly_name, comp_class => $resolver->comp_class );
 		    $self->write_object_file(object_text=>$object, object_file=>$objfile);
 		}
 		# read the existing object file
@@ -337,7 +332,7 @@ sub load {
 			$objfilemod = 0;
 			undef $object;
 		    } else {
-			$self->_compilation_error( $lookup_info{disk_path}, $@ );
+			$self->_compilation_error( $info->friendly_name, $@ );
 		    }
 		}
 	    } until ($object);
@@ -345,13 +340,12 @@ sub load {
 	    #
 	    # No object files. Load component directly into memory.
 	    #
-	    my $comp_text = $resolver->get_source(%lookup_info);
-# XXX 'description' isn't known
-	    my $object = $self->compiler->compile( comp_text => $comp_text, name => ($lookup_info{disk_path} || $lookup_info{url_path}), comp_class => $resolver->comp_class );
+	    my $comp_text = $info->source;
+	    my $object = $self->compiler->compile( comp_text => $comp_text, name => $info->friendly_name, comp_class => $resolver->comp_class );
 	    $comp = eval { $self->eval_object_text( object => $object ) };
-	    $self->_compilation_error( $lookup_info{disk_path}, $@ ) if $@;
+	    $self->_compilation_error( $info->friendly_name, $@ ) if $@;
 	}
-	$comp->assign_runtime_properties($self, %lookup_info);
+	$comp->assign_runtime_properties($self, $info);
 
 	#
 	# Delete any stale cached version of this component, then
@@ -442,7 +436,18 @@ sub make_component {
     my $comp = eval { $self->eval_object_text( object => $object ) };
     $self->_compilation_error( $p{name}, $@ ) if $@;
 
-    $comp->assign_runtime_properties($self, url_path => $p{path}) if $comp;
+    if ($comp)
+    {
+	my $info = HTML::Mason::ComponentInfo->new( friendly_name => $p{path} || $p{name},
+						    comp_path => $p{path} || $p{name},
+						    comp_id => undef,
+						    last_modified => time,
+						    source_callback => sub { },
+						  );
+
+	$comp->assign_runtime_properties($self, $info);
+    }
+
     if ($p{path}) {
 	$self->code_cache->{$p{path}} = {lastmod=>time(), comp=>$comp, type=>'virtual'};
     }
@@ -1134,6 +1139,15 @@ assuming that C<in_package> has not been changed.
 Any global that you set should also be registered with the Compiler
 parameter L<Compiler/allow_globals>; otherwise you'll get warnings
 from C<strict>.
+
+=for html <a name="item_comp_exists">
+
+=item comp_exists (path)
+
+Given an I<absolute> component path, this method returns a boolean
+value indicating whether or not a component exists for that path.
+
+=for html <a name="item_make_component">
 
 =item make_component (comp_text=>... [, path=>...])
 
