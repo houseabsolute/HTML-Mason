@@ -133,7 +133,7 @@ sub open_preview_settings
 
 sub handle_preview_request
 {
-    my $result = eval('handle_preview_request_1(@_)');
+    my $result = eval { handle_preview_request_1(@_) };
     my $err = $@;
     if ($err) {
 	my ($r) = @_;

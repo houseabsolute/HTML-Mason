@@ -254,7 +254,7 @@ sub handle_request {
 	if ($debugMode eq 'all' or $debugMode eq 'error');
     $debugMsg = $self->write_debug_file($req,$debugState) if ($debugMode eq 'all');
 
-    eval('$retval = handle_request_1($self, $req, $argString, $q)');
+    eval { $retval = handle_request_1($self, $req, $argString, $q) };
     my $err = $@;
     my $err_status = $err ? 1 : 0;
 
