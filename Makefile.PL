@@ -45,7 +45,10 @@ setup_mod_perl_tests() unless $opts{'no-prompts'};
 WriteMakefile(
     'NAME'    => 'HTML::Mason',
     'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
-    'PREREQ_PM' => { 'Data::Dumper' => 2.08, 'File::Spec' => 0.8, 'Params::Validate' => 0.04, 'Apache::Request' => 0.31 },
+    'PREREQ_PM' => { 'Data::Dumper' => 2.08, 'File::Spec' => 0.8, 'Params::Validate' => 0.04, 
+		     'Apache::Request' => 0.31,
+		     'Exception::Class' => 0,
+		     },
 
     # %APACHE is created when setup_mod_perl_tests() is called.  The
     # code that does this creation is in makeconfig.pl.
@@ -69,7 +72,7 @@ sub test
     # The PORT env var is used by Apache::test.  Don't delete it!
     my $port = $MY::APACHE{port} || 8228;
     $MY::APACHE{apache_dir} ||= '';
-    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE} = \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; \$\$ENV{PORT}=$port; \$\$ENV{MY::APACHE_DIR}=q^$MY::APACHE{apache_dir}^; $1/;
+    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE} = \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; $1/;
 
     return $test;
 }
