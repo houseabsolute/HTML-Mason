@@ -31,10 +31,8 @@ __PACKAGE__->contained_objects
 
 sub new {
     my $package = shift;
-    
-    # If no comp_root given, use DOCUMENT_ROOT
-    my @my_args = $package->create_contained_objects(comp_root => $ENV{DOCUMENT_ROOT}, 
-						     request_class => 'HTML::Mason::Request::CGI',
+
+    my @my_args = $package->create_contained_objects(request_class => 'HTML::Mason::Request::CGI',
 						     @_);
 
     my $self = bless { validate @my_args, $package->validation_spec };
