@@ -7,7 +7,7 @@ require 5.004;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw();
-@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs pkg_loaded);
+@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs pkg_loaded pkg_installed);
 
 use strict;
 use IO::File qw(!/^SEEK/);
@@ -100,6 +100,22 @@ sub date_delta_to_secs
 }
 
 no strict 'refs';
+
+#
+# Determine if package is installed without loading it, by checking
+# the INC path.
+#
+sub pkg_installed
+{
+    my ($pkg) = @_;
+
+    (my $pkgfile = "$pkg.pm") =~ s{::}{/}g;
+    return grep(-f "$_/$pkgfile",@INC);
+}
+
+#
+# Determined if package is loaded by checking for its version.
+#
 sub pkg_loaded
 {
     my ($pkg) = @_;
@@ -107,3 +123,4 @@ sub pkg_loaded
     my $varname = "${pkg}::VERSION";
     return $$varname ? 1 : 0;
 }
+

@@ -23,7 +23,7 @@ use File::Path;
 use HTML::Mason::Interp;
 use HTML::Mason::Commands;
 use HTML::Mason::FakeApache;
-use HTML::Mason::Tools qw(html_escape url_unescape);
+use HTML::Mason::Tools qw(html_escape url_unescape pkg_installed);
 use HTML::Mason::Utils;
 use Apache::Status;
 use CGI qw(-private_tempfiles);
@@ -325,7 +325,7 @@ PERL
     $o .= "my ";
     $o .= $d->Dumpxs;
     $o .= 'my $r = HTML::Mason::ApacheHandler::simulate_debug_request($dref);'."\n";
-    $o .= 'local %ENV = %{$dref->{ENV}};'."\n";
+    $o .= 'local %ENV = (%ENV,%{$dref->{ENV}});'."\n";
     $o .= 'my $status = '.$self->debug_handler_proc."(\$r);\n";
     $o .= 'print "return status: $status\n";'."\n}\n\n";
     $o .= <<'PERL';
@@ -353,9 +353,23 @@ sub capture_debug_state
 	$expr .= "\$d{$field} = \$r->$field;\n";
     }
     eval($expr);
-
     warn "error creating debug file: $@\n" if $@;
+
+    if (pkg_installed('Apache::Table')) {
+	$expr = "my \$href;\n";
+	foreach my $field (qw(headers_in headers_out err_headers_out notes dir_config subprocess_env)) {
+	    $expr .= "\$href = scalar(\$r->$field); \$d{$field} = {\%\$href};\n";
+	}
+	eval($expr);
+	warn "error creating debug file: $@\n" if $@;
+    } else {
+	foreach my $field (qw(headers_in headers_out err_headers_out notes dir_config subprocess_env)) {
+	    $d{$field} = {};
+	}
+    }
+    
     $d{'args@'} = [$r->args];
+    
     $d{'args$'} = scalar($r->args);
     
     if ($r->method eq 'POST') {

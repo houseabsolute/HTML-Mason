@@ -13,12 +13,7 @@ use mod_perl;
 
 sub new {
     my $class = shift;
-    my $self = {
-	headers_in=>{},
-	headers_out=>{},
-	dir_config=>{},
-	cgi_env=>{}
-    };
+    my $self = {};
     $self->{connection} = new HTML::Mason::FakeApache::Connection;
     $self->{server} = new HTML::Mason::FakeApache::Server;
     bless $self, $class;
@@ -51,7 +46,8 @@ sub access_table {
     if (wantarray) {
 	return %{$self->{$field}};
     } elsif (@_==2) {
-	die "FakeApache is unable to simulate the Apache::Table class for the `$field' method called in scalar context.  You'll need to temporarily remove or comment out that method call to use debug files.\n";
+	return $self->{$field};
+	# die "FakeApache is unable to simulate the Apache::Table class for the `$field' method called in scalar context.  You'll need to temporarily remove or comment out that method call to use debug files.\n";
     } elsif (@_==3) {
 	return $self->{$key};
     } else {
@@ -65,14 +61,6 @@ sub args {
 
 sub get_basic_auth_pw {
     return @{$self->{get_basic_auth_pw}};
-}
-
-sub cgi_env {
-    if (@_ >= 2) {
-	return access_hash(@_);
-    } else {
-	return %{$self->{cgi_env}};
-    }
 }
 
 sub print {
@@ -99,11 +87,13 @@ sub warn {
 sub send_http_header {
     my $self = shift;
     $self->content_type('text/plain') if !$self->content_type;
-    print "Server: ".$self->cgi_var('SERVER_SOFTWARE')."\n" if $self->cgi_var('SERVER_SOFTWARE');
+    print "Server: ".$ENV{'SERVER_SOFTWARE'}."\n" if $ENV{'SERVER_SOFTWARE'};
     print "Content-type: ".$self->content_type."\n";
-    my %headers = %{$self->{headers_out}};
-    while (my ($key,$value) = each(%headers)) {
-	print "$key: $value\n";
+    my $href = $self->headers_out;
+    if (ref($href) eq 'HASH') {
+	while (my ($key,$value) = each(%{$href})) {
+	    print "$key: $value\n";
+	}
     }
     print "\n";
 }
@@ -124,8 +114,8 @@ sub AUTOLOAD {
 	$self->read_scalar($name,@_);
     } elsif ($name =~ /^(dir_config|headers_in|headers_out|err_headers_out|notes|subprocess_env)$/) {
 	$self->access_table($name,@_);	
-    } elsif ($name =~ /^(cgi_var|cgi_env|header_in|header_out|err_header_out|notes)$/) {
-	my $h = {header_in=>'headers_in',header_out=>'headers_out',err_header_out=>'err_headers_out','cgi_env'=>'cgi_env','cgi_var'=>'cgi_env'}->{$name};
+    } elsif ($name =~ /^(header_in|header_out|err_header_out|notes)$/) {
+	my $h = {header_in=>'headers_in',header_out=>'headers_out',err_header_out=>'err_headers_out'}->{$name};
 	$self->access_hash($h,@_);
     } elsif ($name =~ /^(log_error|log_reason|post_connection|note_basic_auth_failure|register_cleanup|send_cgi_header|custom_response|rflush|cgi_header_out)$/) {
 	# do nothing and hope it's okay

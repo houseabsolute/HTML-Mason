@@ -224,7 +224,7 @@ sub access_data_cache
 			$entryLastModified > $mem->{lastUpdated}) {
 		$mem->{contents} = $in{"$key.contents"};
 		$mem->{expires} = $in{"$key.expires"};
-		$mem->{lastModified} = $in{"$key.lastmod"};
+		$mem->{lastModified} = $entryLastModified;
 		$mem->{busyLock} = $in{"$key.busylock"} if $options{busy_lock};
 		$mem->{lastUpdated} = $time;
 	    }
