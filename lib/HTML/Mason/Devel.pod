@@ -386,10 +386,15 @@ Here is the F</i18n/itext> component:
    my ($text) = m{<$lang>(.*?)</$lang>};
    </%init>
 
-If a filter component is called like a normal component (e.g. <& itext
-&>), C<< $m->content >> will return undef.  If a normal component
-which does not call C<< $m->content >> is called with content, the
-content will not be output.
+You can explicitly check whether a component has passed content by
+checking the boolean C<< $m->has_content >>.  This allows you to write
+a component that will do different things depending on whether it was
+passed content. However, before overloading a component in this way,
+consider whether splitting the behavior into two distinct components
+would work as well.
+
+If a normal component which does not call C<< $m->content >> is called
+with content, the content will not be output.
 
 If you wrap a filtering component call around the entire component,
 the result will be functionally similar to a C<< <%filter> >> section.
