@@ -518,6 +518,10 @@ sub check_result {
     my ($self, $error) = @_;
     my $test = $self->{current_test};
 
+    local $HTML::Mason::Tests::TODO = $self->{current_test}{todo}
+        if exists $self->{current_test}{todo};
+    $Test->todo if exists $self->{current_test}{todo};
+
     if ($error)
     {
 	if ( $test->{expect_error} )
@@ -785,6 +789,11 @@ method.
 =item * interp
 
 Provide an HTML::Mason::Interp object to be used for the test.
+
+=item * todo
+
+If this is given, the test will be treated as a todo test, so it will
+be expected to fail.  This should be a string.
 
 =back
 
