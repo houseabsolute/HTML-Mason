@@ -7,12 +7,12 @@
 # (It may become useful if the test is moved to ./t subdirectory.)
 
 use HTML::Mason;
-use strict;
 use Cwd;
+use strict;
 
 ######################### End of black magic.
 
-my $pwd = cwd();
+my $pwd = Cwd::cwd();
 my $comp_root = "$pwd/test/comps";
 my $data_dir = "$pwd/test/data";
 my $results_dir = "test/results/";
