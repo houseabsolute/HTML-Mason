@@ -129,12 +129,10 @@ EOF
 shared in the main component root.
 Declared args:
 
-This is my first time.
 I am not a subcomponent.
 I am file-based.
 My short name is shared.
 My directory is /interp/comp_root_test.
-I have run 1 time(s).
 I have 0 subcomponent(s).
 My title is /interp/comp_root_test/shared [main].
 
@@ -165,12 +163,10 @@ EOF
 private1 in the main component root.
 Declared args:
 
-This is my first time.
 I am not a subcomponent.
 I am file-based.
 My short name is private1.
 My directory is /interp/comp_root_test.
-I have run 1 time(s).
 I have 0 subcomponent(s).
 My title is /interp/comp_root_test/private1 [main].
 
@@ -201,12 +197,10 @@ EOF
 private2 in the alternate component root.
 Declared args:
 
-This is my first time.
 I am not a subcomponent.
 I am file-based.
 My short name is private2.
 My directory is /interp/comp_root_test.
-I have run 1 time(s).
 I have 0 subcomponent(s).
 My title is /interp/comp_root_test/private2 [alt].
 

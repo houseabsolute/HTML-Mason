@@ -60,12 +60,10 @@ File-based:
 Declared args:
 @animals=>('lions','tigers')
 
-This is my first time.
 I am not a subcomponent.
 I am file-based.
 My short name is comp_obj.
 My directory is /component/comp_obj_test.
-I have run 1 time(s).
 I have 1 subcomponent(s).
 Including one called .subcomp.
 My title is /component/comp_obj_test/comp_obj.
@@ -86,13 +84,11 @@ Declared args:
 $crucial
 $useless=>17
 
-This is my first time.
 I am a subcomponent.
 I am not file-based.
 My short name is .subcomp.
 My parent component is /component/comp_obj_test/comp_obj.
 My directory is /component/comp_obj_test.
-I have run 0 time(s).
 I have 0 subcomponent(s).
 My title is /component/comp_obj_test/comp_obj:.subcomp.
 
@@ -109,11 +105,9 @@ I am a flummoxed anonymous component.
 I am a flummoxed anonymous component.
 Declared args:
 
-This is not my first time.
 I am not a subcomponent.
 I am not file-based.
 My short name is [anon something].
-I have run 2 time(s).
 I have 0 subcomponent(s).
 My title is [anon something].
 
