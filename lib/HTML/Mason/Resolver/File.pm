@@ -11,6 +11,7 @@ use File::Spec;
 use HTML::Mason::Tools qw(read_file);
 use Params::Validate qw(:all);
 
+use HTML::Mason::ComponentSource;
 use HTML::Mason::Resolver;
 use base qw(HTML::Mason::Resolver);
 
