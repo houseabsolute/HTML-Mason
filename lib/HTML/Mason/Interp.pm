@@ -720,7 +720,7 @@ Guide>|HTML::Mason::Admin/"Code Cache"> for further details.
 
 =item compiler
 
-Compiler object for compiling components on the fly.  If none is
+The Compiler object to associate with this Interpreter.  If none is
 provided a default compiler using the
 C<HTML::Mason::Compiler::ToObject> and C<HTML::Mason::Lexer> classes
 will be created.
@@ -800,6 +800,11 @@ Default is the empty list.  For maximum performance, this should only
 be used for components that are frequently viewed and rarely updated.
 See the L<preloading section in the I<Admin
 Guide>|HTML::Mason::Admin/preloading> for further details.
+
+=item resolver
+
+The Resolver object to associate with this Interpreter.  If none is
+provided, a default Resolver will be created.
 
 =item use_object_files
 
