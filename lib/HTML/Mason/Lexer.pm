@@ -225,6 +225,7 @@ sub variable_list_block
 {
     my ($self, %p) = @_;
 
+    my $ending = qr/ \n | <\/%\Q$p{block_type}\E> /x;
     while ( $self->{current}{comp_source} =~ m,
                        \G               # last pos matched
                        (?:
@@ -234,22 +235,25 @@ sub variable_list_block
                         [ \t]*
 			(?:             # this entire entire piece is optional
 			 =>
-                         ( [^\n]+ )     # default value
+                         ( [^\n]+? )     # default value
 		        )?
                         (?:             # an optional comment
                          [ \t]*
                          \#
                          [^\n]*
                         )?
+                        (?= $ending )
                         |
                         [ \t]*          # a comment line
                         \#
                         [^\n]*
+                        (?= $ending )
                         |
                         [ \t]*          # just space
                        )
-                       \n
-                      ,xgcs
+                       (?:\n |          # newline or
+                          (?= <\/%\Q$p{block_type}\E> ) )   # end of block (don't consume it)
+                      ,xgc
 	  )
     {
 	if ( defined $1 && defined $2 && length $1 && length $2 )
@@ -275,16 +279,23 @@ sub key_val_block
 {
     my ($self, %p) = @_;
 
+    my $ending = qr, (?: \n |           # newline or
+                         (?= </%\Q$p{block_type}\E> ) )   # end of block (don't consume it)
+                   ,x;
+
     while ( $self->{current}{comp_source} =~ /
                       \G
                       [ \t]*
                       ([\w_]+)          # identifier
                       [ \t]*=>[ \t]*    # separator
-                      (\S[^\n]*)        # value ( must start with a non-space char)
-                      \n
+                      (\S[^\n]*?)        # value ( must start with a non-space char)
+                      $ending
                       |
-                      \G[ \t]*\n
-                     /gcx )
+                      \G\n
+                      |
+                      \G[ \t]+?
+                      $ending
+                     /xgc )
     {
 	if ( defined $1 && defined $2 && length $1 && length $2 )
 	{
