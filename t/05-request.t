@@ -530,6 +530,28 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'abort_and_filter_2',
+		      description => 'Test that $m->aborted can be checked in a filter section',
+		      component => <<'EOF',
+filter
+
+% $m->abort;
+<%filter>
+unless ( $m->aborted )
+{
+    $_ = uc $_;
+    $_ =~ s/\s+$//;
+    $_ .= "\nfilter ran once";
+}
+</%filter>
+EOF
+		      expect => <<'EOF',
+filter
+EOF
+		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'abort_and_store',
 		      description => 'Test that an abort in a store\'d component still generates _some_ output',
 		      component => <<'EOF',
