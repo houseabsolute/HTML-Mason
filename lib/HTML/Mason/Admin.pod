@@ -48,14 +48,14 @@ The absolutely most minimal configuration looks like this:
 
     PerlModule HTML::Mason::ApacheHandler
 
-    <FilesMatch "\.html$">
+    <LocationMatch "\.html$">
         SetHandler perl-script
         PerlHandler HTML::Mason::ApacheHandler
-    </FilesMatch>
+    </LocationMatch>
 
-This configuration tells Apache to serve all .html files under your
-document root through Mason.  The PerlModule line tells mod_perl to
-load Mason once at startup time, saving time and memory.
+This configuration tells Apache to serve all URLs ending in ".html"
+with Mason.  The PerlModule line tells mod_perl to load Mason once at
+startup time, saving time and memory.
 
 =head2 CONFIGURATION VIA httpd.conf DIRECTIVES
 
@@ -161,10 +161,10 @@ following into your httpd.conf:
 
     PerlRequire conf/handler.pl
 
-    <FilesMatch "\.html$">
+    <LocationMatch "\.html$">
         SetHandler perl-script
         PerlHandler MyMason::MyApp    # notice - no ::ApacheHandler!
-    </FilesMatch>
+    </LocationMatch>
 
 replacing MyMason::MyApp with a package name of your choosing. 
 
@@ -773,9 +773,9 @@ The relevant portions of the httpd.conf file look like:
     ScriptAlias /cgi-bin/ /path/to/cgi-bin/
 
     Action html-mason /cgi-bin/mason_handler.cgi
-    <FilesMatch "\.html$">
+    <LocationMatch "\.html$">
      SetHandler html-mason
-    </FilesMatch>
+    </LocationMatch>
 
 This simply causes Apache to call the mason_handler.cgi script every
 time a file under the component root is requested.  This script uses
