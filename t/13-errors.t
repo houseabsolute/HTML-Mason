@@ -2,6 +2,7 @@
 
 use strict;
 
+use File::Spec;
 use HTML::Mason::Tests;
 
 my $tests = make_tests();
@@ -35,7 +36,7 @@ EOF
 
     $group->add_support( path => '/support/error2',
 			 component => <<'EOF',
-% die "horrible error";			 
+% die "horrible error";
 EOF
 		       );
 
@@ -61,6 +62,28 @@ $m->comp('support/error_helper');
 </%init>
 EOF
 		      expect_error => q|horrible error.*|
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/support/unreadable',
+			 component => <<'EOF',
+unreadable
+EOF
+		       );
+
+    my $file = File::Spec->catfile( $group->comp_root, 'errors', 'support', 'unreadable' );
+
+    $group->add_test( name => 'cannot_read_source',
+		      description => 'Make sure that Mason throws a useful error when it cannot read a source file',
+		      component => <<"EOF",
+<%init>
+chmod 0222, '$file'
+    or die "Cannot chmod $file to 0222: \$!";
+\$m->comp('support/unreadable');
+</%init>
+EOF
+		      expect_error => q|Permission denied|
 		    );
 
 #------------------------------------------------------------
