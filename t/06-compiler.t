@@ -41,8 +41,7 @@ EOF
 
     $group->add_test( name => 'allowed_globals',
 		      description => 'test that declared globals are allows',
-		      compiler_params => { allowed_globals => ['$global'] },
-		      interp_params => { use_object_files => 0 },
+		      interp_params => { use_object_files => 0, allowed_globals => ['$global'] },
 		      component => <<'EOF',
 <% $global = 1 %>
 EOF
@@ -83,8 +82,7 @@ EOF
 
     $group->add_test( name => 'default_escape_flags_2',
 		      description => 'test that turning on default escaping works',
-		      interp_params => { use_object_files => 0 },
-		      compiler_params => { default_escape_flags => 'h' },
+		      interp_params => { use_object_files => 0, default_escape_flags => 'h' },
 		      component => <<'EOF',
 Explicitly HTML-escaped: <% $expr |h %><p>
 Explicitly HTML-escaped redundantly: <% $expr |hh %><p>
@@ -112,8 +110,7 @@ EOF
 
     $group->add_test( name => 'globals_in_default_package',
 		      description => 'tests that components are executed in HTML::Mason::Commands package by default',
-		      interp_params => { use_object_files => 0 },
-		      compiler_params => { allowed_globals => ['$packvar'] },
+		      interp_params => { use_object_files => 0, allowed_globals => ['$packvar'] },
 		      component => <<'EOF',
 <% $packvar %>
 <%init>
@@ -131,8 +128,7 @@ EOF
 
     $group->add_test( name => 'globals_in_different_package',
 		      description => 'tests in_package compiler parameter',
-		      interp_params => { use_object_files => 0 },
-		      compiler_params => { allowed_globals => ['$packvar'],
+		      interp_params => { use_object_files => 0, allowed_globals => ['$packvar'],
 					 in_package => 'HTML::Mason::NewPackage' },
 		      component => <<'EOF',
 <% $packvar %>
@@ -151,7 +147,7 @@ EOF
 
     $group->add_test( name => 'preamble',
 		      description => 'tests preamble compiler parameter',
-		      compiler_params => { preamble => 'my $msg = "This is the preamble.\n"; $m->out($msg);
+		      interp_params => { preamble => 'my $msg = "This is the preamble.\n"; $m->out($msg);
 '},
 		      component => <<'EOF',
 This is the body.
@@ -167,7 +163,7 @@ EOF
 
     $group->add_test( name => 'postamble',
 		      description => 'tests postamble compiler parameter',
-		      compiler_params => { postamble => 'my $msg = "This is the postamble.\n"; $m->out($msg);
+		      interp_params => { postamble => 'my $msg = "This is the postamble.\n"; $m->out($msg);
 '},
 		      component => <<'EOF',
 This is the body.
@@ -183,7 +179,7 @@ EOF
 
     $group->add_test( name => 'preprocess',
 		      description => 'test preprocess compiler parameter',
-		      compiler_params => { preprocess => \&brackets_to_lt_gt },
+		      interp_params => { preprocess => \&brackets_to_lt_gt },
 		      component => <<'EOF',
 [% 'foo' %]
 bar
@@ -199,7 +195,7 @@ EOF
 
     $group->add_test( name => 'postprocess1',
 		      description => 'test postprocess compiler parameter (alpha blocks)',
-		      compiler_params => { postprocess_text => \&uc_alpha },
+		      interp_params => { postprocess_text => \&uc_alpha },
 		      component => <<'EOF',
 <% 'foo' %>
 bar
@@ -215,7 +211,7 @@ EOF
 
     $group->add_test( name => 'postprocess2',
 		      description => 'test postprocess compiler parameter (perl blocks)',
-		      compiler_params => { postprocess_perl => \&add_foo_to_perl },
+		      interp_params => { postprocess_perl => \&add_foo_to_perl },
 		      component => <<'EOF',
 <% 'foo' %>
 bar
