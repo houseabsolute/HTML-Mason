@@ -20,6 +20,9 @@ not bytes, and its default value is 'unlimited'.
 in their filtered state. Performance-related code simplifications made
 this behavior difficult to maintain. Long term this would be
 easier to implement with a cache_self component <%flag>.
+- ** All compiler properties are now read-only. If you need to change
+compiler properties on a per-request basis, you'll need to create
+multiple compiler and interpreter objects.
 - ** The current_time method, deprecated in 1.1x, has been removed.
 - ** The behaviors of $m->flush_buffer and $m->clear_buffer have been
 simplified. $m->flush_buffer only acts on the top-level output buffer;
@@ -43,6 +46,11 @@ Resolver to the Interpreter. This improved the performance of multiple
 component roots in conjunction with static source mode. Any resolver,
 file-based or otherwise, can benefit from component root settings or
 choose to ignore them.
+- Added the compiler object_id to the object file path, so that
+multiple versions of Mason do not collide in the same object
+directory. Task #569.
+- Added .obj (or a configurable extension) to object filenames.
+Task #152.
 - Added an official comment syntax, <% # ... %>, and documented
 the various comment markers in the developer's manual. Task id #566.
 - Added buffer_preallocate_size parameter, which allows you to
