@@ -726,7 +726,31 @@ sub set_escape
         param_error "Invalid escape name ($name)"
             if $name !~ /^[\w-]+$/ || $name =~ /^n$/;
 
-        $self->{escapes}{$name} = $sub;
+        my $coderef;
+        if ( ref $sub )
+        {
+            $coderef = $sub;
+        }
+        else
+        {
+            if ( $sub =~ /^\w+$/ )
+            {
+                no strict 'refs';
+                unless ( defined &{"HTML::Mason::Escapes::$sub"} )
+                {
+                    param_error "Invalid escape: $sub (no matching subroutine in HTML::Mason::Escapes";
+                }
+
+                $coderef = \&{"HTML::Mason::Escapes::$sub"};
+            }
+            else
+            {
+                $coderef = eval $sub;
+                param_error "Invalid escape: $sub ($@)" if $@;
+            }
+        }
+
+        $self->{escapes}{$name} = $coderef;
     }
 }
 
@@ -839,18 +863,6 @@ A hash reference of escape flags to set for this object.  See the
 section on the L<C<set_escape()> method|Interpreter/item_set_scape>
 for more details.
 
-When setting these with C<PerlSetVar> directives in an Apache
-configuration file, you can set them like this:
-
-  PerlSetVar "flag  => \&subroutine"
-  PerlSetVar "uc    => sub { ${$_[0]} = uc ${$_[0]}; }"
-  PerlAddVar "thing => other_thing"
-
-If the right hand side is a bareword (matches C</^\w+%/>), then it is
-assumed to be a subroutine name in the C<HTML::Mason::Escapes> module.
-Otherwise the right hand side is C<eval>'ed, with the expectation that
-it will return a subroutine reference.
-
 =item ignore_warnings_expr
 
 Regular expression indicating which warnings to ignore when loading
@@ -958,14 +970,25 @@ L<subrequests|HTML::Mason::Devel/Subrequests> instead.
 
 =for html <a name="item_set_escape"></a>
 
-=item set_escape ($name => \&subroutine)
+=item set_escape ($name => see below])
 
 This method is called to add an escape flag to the list of known
 escapes for the interpreter.  The flag may only consist of the
-characters matching C<\w> and the dash (-).  The code reference passed
-should expect to be given a single scalar reference, which it should
-alter as needed.  Any return value from this subroutine will be
-ignored.
+characters matching C<\w> and the dash (-).
+
+The right hand side may be one of several things.  It can be a
+subroutine reference.  It can also be a string match C</^\w+$/>, in
+which case it is assumed to be the name of a subroutine in the
+C<HTML::Mason::Escapes> module.  Finally, if it is a string that does
+not match the above regex, then it is assumed to be C<eval>able code,
+which will return a subroutine reference.
+
+When setting these with C<PerlSetVar> directives in an Apache
+configuration file, you can set them like this:
+
+  PerlSetVar  MasonEscapeFlags  "flag  => \&subroutine"
+  PerlSetVar  MasonEscapeFlags  "uc    => sub { ${$_[0]} = uc ${$_[0]}; }"
+  PerlAddVar  MasonEscapeFlags  "thing => other_thing"
 
 =for html <a name="item_set_escape"></a>
 
