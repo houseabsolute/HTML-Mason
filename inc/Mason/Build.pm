@@ -10,6 +10,7 @@ use base 'Module::Build';
 use lib 't/lib';
 
 use Apache::test;
+use ExtUtils::Manifest ();
 use File::Basename ();
 use File::Path ();
 use File::Spec;
@@ -972,6 +973,18 @@ sub _make_writeable
 sub ACTION_dist
 {
     my $self = shift;
+
+    unless ( defined &ExtUtils::Manifest::maniadd )
+    {
+	warn <<'EOF';
+
+The dist action requires a recent version of ExtUtils::Manifest.
+Please upgrade your installed version of the ExtUtils::MakeMaker
+distribution.
+
+EOF
+	exit;
+    }
 
     $self->depends_on('params_pod');
     $self->depends_on('manifest');
