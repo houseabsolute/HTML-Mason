@@ -104,7 +104,7 @@ sub flush
     my $output = $self->output;
     return unless defined $output && $output ne '';
 
-    $self->parent->receive( $output ) if $self->parent;
+    $self->{parent}->receive( $output ) if $self->{parent};
     $self->clear;
 }
 
@@ -120,8 +120,15 @@ sub output
     my $self = shift;
     return unless exists $self->{buffer};
     my $output = ${$self->{buffer}};
-    return $self->filter->( $output ) if $self->filter;
+    return $self->{filter}->( $output ) if $self->{filter};
     return $output;
+}
+
+sub buffer
+{
+    my $self = shift;
+
+    return $self->{buffer} if $self->{sink_is_scalar};
 }
 
 1;
