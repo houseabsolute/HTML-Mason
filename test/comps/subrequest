@@ -1,0 +1,8 @@
+<%def .helper>
+% my $interp = $REQ->interp;
+Executing subrequest
+% $interp->exec('/support/display_req_obj');
+</%def>
+
+Calling helper
+<& .helper &>

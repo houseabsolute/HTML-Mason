@@ -22,4 +22,6 @@ recurse
 recurse_max
 replace
 req_obj
+subrequest
+subrequest_error
 text

@@ -1,3 +1,17 @@
-ERROR:
-error while executing /support/recurse_test:
-16 levels deep in component stack (infinite recursive call?)
+Entering 0<p>
+Entering 1<p>
+Entering 2<p>
+Entering 3<p>
+Entering 4<p>
+Entering 5<p>
+Entering 6<p>
+Entering 7<p>
+Entering 8<p>
+Entering 9<p>
+Entering 10<p>
+Entering 11<p>
+Entering 12<p>
+Entering 13<p>
+Entering 14<p>
+Error: 16 levels deep in component stack (infinite recursive call?)
+

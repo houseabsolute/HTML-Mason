@@ -1,0 +1,12 @@
+<% ($error) ? "Error: $error" : "No error!?" %>
+<%init>
+if (defined($error)) {
+  my @lines = split("\n",$error);
+  $error = join("\n",@lines[0..$lines-1]);
+  $error =~ s{at /.*}{}g;
+}
+</%init>
+<%args>
+$error
+$lines=>1
+</%args>
