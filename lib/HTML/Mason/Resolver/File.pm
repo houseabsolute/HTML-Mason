@@ -83,6 +83,14 @@ sub get_info {
                       source_callback => sub { read_file($srcfile) },
                     );
     }
+
+    # convert path to real filesystem path
+    my $fs_path = File::Spec->catfile( split /\//, $path );
+    if ( -e $path )
+    {
+        warn "Your component path ($path) matches a real file on disk ($fs_path).  Have you read about the component root in the Admin guide (HTML::Mason::Admin)?";
+    }
+
     return;
 }
 
