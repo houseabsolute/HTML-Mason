@@ -13,7 +13,7 @@ use strict;
 use Carp;
 use File::Path;
 use File::Basename;
-use File::Recurse;
+use File::Find;
 use IO::File;
 use IO::Seekable;
 use HTML::Mason::Parser;
@@ -134,11 +134,12 @@ sub _initialize
 	    my $fullPath = $self->comp_root . $p;
 	    $fullPath =~ s@/$@@g;
 	    if (-d $fullPath) {
-		recurse {
-		    if (-f $_) {
-			my $compPath = substr($_,$slen);
+		find {
+		    if (-f) {
+			my $file = $_;
+			$file =~ s/^\./$fullPath/;
+			my $compPath = substr($file,$slen);
 			$self->load($compPath);
-			return 0;
 		    }
 		} $fullPath;
 	    } elsif (-f $fullPath) {

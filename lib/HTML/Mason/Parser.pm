@@ -12,7 +12,7 @@ require Exporter;
 use strict;
 use File::Path;
 use File::Basename;
-use File::Recurse;
+use File::Find;
 use Safe;
 use HTML::Mason::Tools qw(read_file);
 use vars qw($AUTOLOAD);
@@ -563,7 +563,7 @@ sub make {
 	if (-f $fullpath) {
 	    $compilesub->($fullpath);
 	} elsif (-d $fullpath) {
-	    recurse {$compilesub->($_)} $fullpath;
+	    find {$compilesub->($_) if -f} $fullpath;
 	} else {
 	    die "make: no such file or directory '$fullpath'\n";
 	}
