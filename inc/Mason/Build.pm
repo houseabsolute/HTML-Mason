@@ -363,7 +363,7 @@ sub _setup_handler
     print F <<"EOF";
 package My::Resolver;
 \$My::Resolver::VERSION = '0.01';
-\@My::Resolver::ISA = 'HTML::Mason::Resolver::File::ApacheHandler';
+\@My::Resolver::ISA = 'HTML::Mason::Resolver::File';
 
 
 package My::Interp;
@@ -431,7 +431,7 @@ my \@ah;
 		error_mode => 'fatal',
 		error_format => 'line',
 		#res_params
-		resolver => My::Resolver->new( comp_root => '$conf->{comp_root}'),
+		resolver => My::Resolver->new(),
 		comp_root => '$conf->{comp_root}',
 	);
 

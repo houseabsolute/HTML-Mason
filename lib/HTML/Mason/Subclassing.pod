@@ -294,7 +294,6 @@ For example:
   my $interp =
       My::Interp->new
           ( request_class  => 'HTML::Mason::Request::ApacheHandler',
-            resolver_class => 'HTML::Mason::Resolver::File::ApacheHandler',
             my_new_interp_param => 42,
           );
 

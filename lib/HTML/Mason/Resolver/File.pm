@@ -42,6 +42,7 @@ sub get_info {
 
 #
 # Return all existing url_paths matching the given glob pattern underneath the given root.
+# glob_path is required for using the "preloads" parameter.
 #
 sub glob_path {
     my ($self, $pattern, $comp_root_path) = @_;
@@ -58,6 +59,37 @@ sub glob_path {
     return @paths;
 }
 
+#
+# Given an apache request object and a list of component root pairs,
+# return the associated component path or undef if none exists. This
+# is called for top-level web requests that resolve to a particular
+# file.
+# apache_request_to_comp_path is required for running Mason under mod_perl.
+#
+sub apache_request_to_comp_path {
+    my ($self, $r, @comp_root_array) = @_;
+
+    my $file = $r->filename;
+    $file .= $r->path_info unless -f $file;
+
+    # Clear up any weirdness here so that paths_eq compares two
+    # 'canonical' paths (canonpath is called on comp roots when
+    # resolver object is created.  Seems to be needed on Win32 (see
+    # bug #356).
+    $file = File::Spec->canonpath($file);
+
+    foreach my $root (map $_->[1], @comp_root_array) {
+	if (paths_eq($root, substr($file, 0, length($root)))) {
+	    my $path = substr($file, length $root);
+            $path = length $path ? join '/', File::Spec->splitdir($path) : '/';
+            chop $path if $path ne '/' && substr($path, -1) eq '/';
+
+            return $path;
+	}
+    }
+    return undef;
+}
+
 
 1;
 
@@ -72,7 +104,6 @@ HTML::Mason::Resolver::File - Component path resolver for file-based components
   my $resolver = HTML::Mason::Resolver::File->new();
 
   my $info = $resolver->get_info('/some/comp.html');
-  my $comp_root = $resolver->comp_root;
 
 =head1 DESCRIPTION
 

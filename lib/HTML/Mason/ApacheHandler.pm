@@ -176,62 +176,6 @@ sub redirect
 
 #----------------------------------------------------------------------
 #
-# APACHE-SPECIFIC FILE RESOLVER OBJECT
-#
-package HTML::Mason::Resolver::File::ApacheHandler;
-
-use strict;
-
-use HTML::Mason::Tools qw(paths_eq);
-
-use HTML::Mason::Resolver::File;
-use base qw(HTML::Mason::Resolver::File);
-use Params::Validate qw(SCALAR ARRAYREF);
-
-BEGIN
-{
-    __PACKAGE__->valid_params
-	(
-	 comp_root =>   # This is optional in superclass, but required for us.
-	 { parse => 'list',
-	   type => SCALAR|ARRAYREF,
-	   descr => "A string or array of arrays indicating the search path for component calls" },
-	);
-}
-
-#
-# Given an apache request object and a list of component root pairs,
-# return the associated component path or undef if none exists. This
-# is called for top-level web requests that resolve to a particular
-# file.
-#
-sub apache_request_to_comp_path {
-    my ($self, $r, $comp_root_array) = @_;
-
-    my $file = $r->filename;
-    $file .= $r->path_info unless -f $file;
-
-    # Clear up any weirdness here so that paths_eq compares two
-    # 'canonical' paths (canonpath is called on comp roots when
-    # resolver object is created.  Seems to be needed on Win32 (see
-    # bug #356).
-    $file = File::Spec->canonpath($file);
-
-    foreach my $root (map $_->[1], $comp_root_array) {
-	if (paths_eq($root, substr($file, 0, length($root)))) {
-	    my $path = substr($file, length $root);
-            $path = length $path ? join '/', File::Spec->splitdir($path) : '/';
-            chop $path if $path ne '/' && substr($path, -1) eq '/';
-
-            return $path;
-	}
-    }
-    return undef;
-}
-
-
-#----------------------------------------------------------------------
-#
 # APACHEHANDLER OBJECT
 #
 package HTML::Mason::ApacheHandler;
@@ -586,8 +530,6 @@ sub new
     my %defaults;
     $defaults{request_class}  = 'HTML::Mason::Request::ApacheHandler'
         unless exists $params{request};
-    $defaults{resolver_class} = 'HTML::Mason::Resolver::File::ApacheHandler'
-        unless exists $params{resolver};
 
     my $allowed_params = $class->allowed_params(%defaults, %params);
 

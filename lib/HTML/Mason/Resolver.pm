@@ -104,14 +104,14 @@ find matching files on the filesystem.
 
 If you are creating a new resolver that you intend to use with the
 L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler> module, then
-you must implement the following method as well, possibly in a
-different subclass.
+you must implement the following method as well.
 
 =over 4
 
-=item apache_request_to_comp_path ($r)
+=item apache_request_to_comp_path ($r, @comp_root_array)
 
-This method, given an Apache object, should return a component path.
+This method, given an Apache object and a list of component root pairs,
+should return a component path or undef if none exists.
 This method is used by the
 L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler> class to
 translate web requests into component paths.  You can omit this method
@@ -119,12 +119,6 @@ if your resolver subclass will never be used in conjunction with
 L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>.
 
 =back
-
-For example, Mason includes the
-L<HTML::Mason::Resolver::File|HTML::Mason::Resolver::File> and
-HTML::Mason::Resolver::File::ApacheHandler classes.  The latter simply
-adds an implementation of the C<apache_request_to_comp_path> method
-for file based components.
 
 =head1 SEE ALSO
 
