@@ -150,7 +150,7 @@ sub exec {
 
     # This label is for declined requests.
     retry:
-    my $buffer = $self->create_delayed_object('buffer', sink => $self->out_method, mode => $self->out_mode );
+    my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method, mode => $self->out_mode );
     $self->push_buffer_stack($buffer);
 
     # Build wrapper chain and index.
