@@ -128,7 +128,7 @@ EOF
   <Location /comps/multiconf1>
     PerlSetVar  MasonCompRoot "$APACHE{comp_root}/multiconf1"
     PerlSetVar  MasonDataDir  "$APACHE{data_dir}/multiconf1"
-    PerlSetVar  MasonUseAutohandlers 0
+    PerlSetVar  MasonAutohandlerName no_such_file
     SetHandler  perl-script
     PerlModule  HTML::Mason::ApacheHandler
     PerlHandler HTML::Mason::ApacheHandler
@@ -137,7 +137,7 @@ EOF
   <Location /comps/multiconf2>
     PerlSetVar  MasonCompRoot "$APACHE{comp_root}/multiconf2"
     PerlSetVar  MasonDataDir  "$APACHE{data_dir}/multiconf2"
-    PerlSetVar  MasonUseDhandlers 0
+    PerlSetVar  MasonDhandlerName no_such_file
     SetHandler  perl-script
     PerlModule  HTML::Mason::ApacheHandler
     PerlHandler HTML::Mason::ApacheHandler
