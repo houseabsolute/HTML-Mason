@@ -1490,6 +1490,15 @@ See the L<Sending HTTP Headers section of the I<Component Developer's
 Guide>|HTML::Mason::Devel/"Sending HTTP Headers> for details about the
 automatic header feature.
 
+=back
+
+=head1 APACHE- OR CGI-ONLY METHOD
+
+This method is available when Mason is running under either the
+ApacheHandler or CGIHandle rmodules.
+
+=over 4
+
 =for html <a name="item_cgi_object">
 
 =item cgi_object
@@ -1498,8 +1507,9 @@ Returns the CGI object used to parse any CGI parameters submitted to
 the component, assuming that you have not changed the default value of
 the ApacheHandler C<args_method> parameter.  If you are using the
 'mod_perl' args method, then calling this method is a fatal error.
-See the L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>
-documentation for more details.
+See the L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler> and
+L<HTML::Mason::CGIHandler|HTML::Mason::CGIHandler> documentation for
+more details.
 
 =back
 
