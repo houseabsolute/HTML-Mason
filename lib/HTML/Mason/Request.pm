@@ -614,8 +614,12 @@ sub comp {
     # Finally, call component subroutine.
     #
     my ($result, @result);
+
+    # The eval block creates a new context so we need to get this
+    # here.
+    my $wantarray = wantarray;
     eval {
-	if (wantarray) {
+	if ($wantarray) {
 	    @result = $comp->run(@args);
 	} elsif (defined wantarray) {
 	    $result = $comp->run(@args);
