@@ -31,19 +31,11 @@ sub import
 	    {
 		my ($name, $spec) = @$rw;
 		no strict 'refs';
-
-		#
-		# copying to @args seems to be necessary to satisfy
-		# the prototype for validate_pos.  Perl's prototype
-		# stuff is a little wacky.  I just do what it makes me
-		# do.
-		#
 		*{"$caller\::$name"} =
 		    sub { my $s = shift;
-			  my @args = @_;
-			  if (@args)
+			  if (@_)
 			  {
-			      validate_pos(@args, $spec);
+			      validate_pos(@_, $spec);
 			      $s->{$name} = shift;
 			  }
 			  return $s->{$name};
@@ -69,12 +61,11 @@ sub import
 		    no strict 'refs';
 		    *{"$caller\::$name"} =
 			sub { my $s = shift;
-			      my @args = @_;
 			      my %new;
-			      if (@args)
+			      if (@_)
 			      {
-				  validate_pos(@args, $spec);
-				  %new = ( $name => $args[0] );
+				  validate_pos(@_, $spec);
+				  %new = ( $name => $_[0] );
 			      }
 			      my %args = $s->delayed_object_params( $object,
 								    %new );
