@@ -74,8 +74,8 @@ string. For example, to send output to a file called "mason.out":
     ...
     out_method => sub { $fh->print($_[0]) }
 
-In standalone mode, out_method prints to standard output. In a web
-environment, out_method defaults to using C<$r->print>.
+By default, out_method prints to standard output. (In a mod_perl
+environment this is automatically redirected to the HTTP client.)
 
 =item parser
 

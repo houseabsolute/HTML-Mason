@@ -144,7 +144,7 @@ sub handle_preview_request
 	$r->content_type('text/html');
 	$r->header_out(Pragma=>'no-cache');
 	$r->send_http_header();
-	$r->print("<h2>Previewer Error</h2>\n<pre>\n$err\n</pre>\n");
+	print("<h2>Previewer Error</h2>\n<pre>\n$err\n</pre>\n");
 	return;
     }
     return $result;

@@ -161,7 +161,7 @@ sub handle_request {
         $outsub = sub { $outbuf .= $_[0] if defined($_[0]) };
 	$interp->out_method($outsub);
     } elsif ($self->output_mode eq 'stream') {
-	$outsub = sub { $r->print($_[0]) };
+	$outsub = sub { print($_[0]) };
 	$interp->out_method($outsub);
     }
 
@@ -202,13 +202,13 @@ sub handle_request {
 		$r->content_type('text/html');
 		$r->send_http_header();
 	    }
-	    $r->print("<h3>System error</h3><p><pre><font size=-1>$err</font></pre>\n");
+	    print("<h3>System error</h3><p><pre><font size=-1>$err</font></pre>\n");
 	    $debugMsg = $self->write_debug_file($r,$debugState) if ($debugMode eq 'error');
-	    $r->print("<pre><font size=-1>\n$debugMsg\n</font></pre>\n") if defined($debugMsg);
+	    print("<pre><font size=-1>\n$debugMsg\n</font></pre>\n") if defined($debugMsg);
 	}
     } else {
-	$r->print("\n<!--\n$debugMsg\n-->\n") if defined($debugMsg) && http_header_sent($r) && $r->header_out("Content-type") =~ /text\/html/;
-	$r->print($outbuf) if $self->output_mode eq 'batch';
+	print("\n<!--\n$debugMsg\n-->\n") if defined($debugMsg) && http_header_sent($r) && $r->header_out("Content-type") =~ /text\/html/;
+	print($outbuf) if $self->output_mode eq 'batch';
     }
 
     $interp->write_system_log('REQ_END', $self->{request_number}, $err_status);

@@ -488,9 +488,9 @@ statements.  For example, the following component:
 translates to something like:
 
     my $name = "Jon";
-    $r->print("Hello ");
-    $r->print($name);
-    $r->print(", how are you?");
+    print("Hello ");
+    print($name);
+    print(", how are you?");
 
 The amount of memory taken up by a compiled component is therefore at
 least as large as the combined size of its HTML blocks.  If a
@@ -510,10 +510,10 @@ component:
 translates to something like:
 
     my $_srctext = mc_file('/usr/local/www/htdocs/foo/bar');
-    $r->print(mc_comp('top'));
-    $r->print(substr($_srctext,18,20498));
-    $r->print(mc_comp('center'));
-    $r->print(substr($_srctext,20520,30720));
+    print(mc_comp('top'));
+    print(substr($_srctext,18,20498));
+    print(mc_comp('center'));
+    print(substr($_srctext,20520,30720));
 
 The resulting code is a bit slower but more memory efficient. Mason
 decides whether to use these "source references" by first measuring
