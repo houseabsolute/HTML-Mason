@@ -31,14 +31,13 @@ use HTML::Mason::MethodMaker
       read_write => [ qw( allow_recursive_autohandlers
 			  autohandler_name
 			  code_cache_max_size
-			  data_cache_dir
+			  data_cache_defaults
 			  dhandler_name
 			  max_recurse
 			  out_mode
 			  parser
 			  resolver
 			  static_file_root
-			  use_data_cache
 			  use_object_files
 			  use_reload_file
 			  verbose_compile_error ) ],
@@ -52,8 +51,8 @@ my %fields =
      code_cache_max_size => 10*1024*1024,
      comp_root => undef,
      current_time => 'real',
-     data_cache_dir => '',
      data_dir => undef,
+     data_cache_defaults => undef,
      dhandler_name => 'dhandler',
      die_handler => sub { confess($_[0]) },
      die_handler_overridden => 0,
@@ -65,7 +64,6 @@ my %fields =
      preloads => [],
      resolver => undef,     
      static_file_root => undef,
-     use_data_cache => 1,
      use_object_files => 1,
      use_reload_file => 0,
      verbose_compile_error => 0
@@ -76,7 +74,6 @@ sub new
     my $class = shift;
     my $self = {
 	%fields,
-	data_cache_store => {},
         code_cache => {},
         code_cache_current_size => 0,
 	files_written => [],
@@ -99,7 +96,6 @@ sub new
     $self->{die_handler_overridden} = 1 if exists $options{die_handler};
 
     die "HTML::Mason::Interp::new: must specify value for data_dir\n" if !$self->{data_dir};
-    $self->{data_cache_dir} ||= File::Spec->catdir( $self->{data_dir}, 'cache' );
     bless $self, $class;
     $self->out_method($options{out_method}) if (exists($options{out_method}));
     $self->system_log_events($options{system_log_events}) if (exists($options{system_log_events}));
@@ -112,7 +108,7 @@ sub _initialize
     my ($self) = shift;
     $self->{code_cache} = {};
     $self->{code_cache_current_size} = 0;
-    $self->{data_cache_store} = {};
+    $self->{data_cache_defaults} = {};
 
     #
     # Create parser if not provided
@@ -134,7 +130,7 @@ sub _initialize
     #
     # Check that directories are absolute.
     #
-    foreach my $field (qw(comp_root data_dir data_cache_dir)) {
+    foreach my $field (qw(comp_root data_dir)) {
 	next if $field eq 'comp_root' and ref($self->{$field}) eq 'ARRAY';
 	$self->{$field} = File::Spec->canonpath( $self->{$field} );
  	die "$field ('".$self->{$field}."') must be an absolute directory" unless File::Spec->file_name_is_absolute( $self->{$field} );

@@ -211,85 +211,31 @@ sub abort
     croak "abort() called";
 }
 
+#
+# Return a new cache object specific to this component.
+#
 sub cache
 {
-    my ($self,%options) = @_;
-    my $interp = $self->interp;
-    return undef unless $interp->use_data_cache;
-    $options{action} = $options{action} || 'retrieve';
-    
-    my $comp = $self->current_comp;
-    $options{cache_file} = $comp->cache_file
-	or die "no cache file for component ".$comp->title;
-    if ($options{keep_in_memory}) {
-	$options{memory_cache} = $interp->{data_cache_store};
-	delete($options{keep_in_memory});
+    my ($self, %options) = @_;
+
+    if (%{$self->interp->data_cache_defaults}) {
+	%options = (%{$self->interp->data_cache_defaults},%options);
+    }
+    $options{namespace}   ||= compress_path($self->current_comp->fq_path);
+    $options{cache_root}  ||= File::Spec->catdir($self->interp->data_dir,"cache");
+    $options{username}      = "mason";
+
+    my $cache_class = 'Cache::FileCache';
+    if ($options{cache_class}) {
+	$cache_class = $options{cache_class};
+	$cache_class = "Cache::$cache_class" unless $cache_class =~ /::/;
+	delete($options{cache_class});
     }
 
-    if ($options{action} eq 'retrieve' or $options{action} eq 'store') {
-	my $results = HTML::Mason::Utils::access_data_cache(%options);
-	if ($options{action} eq 'retrieve') {
-	    $interp->write_system_log('CACHE_READ',$comp->title,$options{key} || 'main',
-				      defined $results ? 1 : 0);
-	} elsif ($options{action} eq 'store') {
-	    $interp->write_system_log('CACHE_WRITE',$comp->title,$options{key} || 'main');
-	}
-	return $results;
-    } else {
-	return HTML::Mason::Utils::access_data_cache(%options);
-    }
+    my $cache = $cache_class->new (\%options)
+	or die "could not create cache object";
 
-}
-
-sub cache_self
-{
-    my ($self,%options) = @_;
-
-    my $interp = $self->interp;
-    return undef unless $interp->use_data_cache;
-    return undef if $self->top_stack->{in_cache_self_flag};
-    my (%retrieve_options,%store_options);
-    foreach (qw(key expire_if keep_in_memory busy_lock)) {
-	$retrieve_options{$_} = $options{$_} if (exists($options{$_}));
-    }
-    foreach (qw(key expire_at expire_next expire_in)) {
-	$store_options{$_} = $options{$_} if (exists($options{$_}));
-    }
-    my $result = $self->cache(action=>'retrieve',%retrieve_options);
-    my ($output,$retval);
-    
-    #
-    # See if our result is cached. Older versions of Mason only stored
-    # output, so if we get something that isn't a two-item listref,
-    # recompute anyway.
-    #
-    unless (defined($result) and ref($result) eq 'ARRAY' and @$result == 2) {
-	#
-	# Reinvoke the component. Collect output ($output) and return
-	# value ($retval).
-	#
-	my $lref = $self->top_stack;
-	my %save_locals = %$lref;
-	$lref->{sink} = $self->_new_sink(\$output);
-	$lref->{in_cache_self_flag} = 1;
-
-	$retval = $lref->{comp}->run( @{ $lref->{args} } );
-	$self->top_stack({%save_locals});
-
-	#
-	# Store output and return value as a two-item listref.
-	#
-	$self->cache(action=>'store',value=>[$output,$retval],%store_options);
-    } else {
-	($output,$retval) = @$result;
-    }
-    $self->out($output);
-
-    #
-    # Return the component return value in case the caller is interested,
-    # followed by 1 indicating the cache retrieval success.
-    #
-    return ($retval,1);
+    return $cache;
 }
 
 #

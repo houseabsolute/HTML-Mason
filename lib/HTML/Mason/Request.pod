@@ -90,103 +90,22 @@ Techniques> for examples of usage.
 
 =for html <a name="item_cache">
 
-=item cache ([action=>'retrieve|store|expire|keys'], [key=>name],
-[value=>data], [keep_in_memory=>0|1], [expire options...])
+=item cache (cache_class=>'...', [cache_options])
 
-C<$m-E<gt>cache> lets you store and retrieve the results
-of computation for improved performance. Each component has its own
-data cache for storing one or more key/value pairs. The cache is
-implemented as a DBM database. See the L<Devel/data caching>
-section of the I<Component Developer's Guide> for examples
-and caching strategies.
+C<$m-E<gt>cache> returns a new cache object with a namespace specific
+to this component.
 
-The argument to I<action> is one of:
+I<cache_class> specifies the class of cache object to create. It
+defaults to Cache::FileCache and must be a subclass of Cache::Cache.
+If I<cache_class> does not contain a "::", the prefix "Cache::" is
+automatically prepended.
 
-o I<retrieve>: returns the cache value if successful, or C<undef>
-if there was no value or if it has expired.
+I<cache_options> may include any valid options to the new() method of
+the cache class. e.g. for Cache::FileCache, valid options include
+expires_in, max_size, and cache_depth.
 
-o I<store>: stores a new cache value under the given key.  Default key
-is 'main'.  Returns the value being stored if successful.
-
-o I<expire>: expires a given cache value or values.
-key may be a single key or a list reference. Default key is 'main'.
-
-o I<keys>: returns a list of all the keys in the cache.
-
-I<value> defines what to store. It can be a scalar or a reference to
-an arbitrary data structure. The allowable size depends on your DBM
-implementation.
-
-I<keep_in_memory> indicates whether to save the value in memory once it is
-retrieved. Default is 0, meaning that the value will be retrieved from
-the cache file each time. If 1, each child server that retrieves this
-value will save its own copy, which can result in substantial memory
-usage for larger values. Use sparingly.
-
-The various expiration options are:
-
-o I<expire_at>: takes an absolute expiration time, in Perl time() format
-(number of seconds since the epoch)
-
-o I<expire_in>: takes a relative expiration time of the form
-"<num><unit>", where <num> is a positive number and <unit> is one of
-seconds, minutes, hours, days, or weeks, or any abbreviation thereof.
-E.g. "10min", "30m", "1hour".
-
-o I<expire_next>: takes a string, either 'hour' or 'day'. It indicates
-an expiration time at the top of the next hour or day.
-
-o I<expire_if>: calls a given anonymous subroutine and expires if the
-subroutine returns a non-zero value. The subroutine is called with one
-parameter, the time when the cache value was last written.
-
-=for html <a name="item_cache_self">
-
-=item cache_self (... same as cache options...)
-
-Uses C<$m-E<gt>cache> to cache the entire output and/or the return value of
-the current component.  It is typically used right at the top of an
-C<E<lt>%init%E<gt>> section.
-
-To cache the component's output:
-
-    <%init>
-        return if $m->cache_self(expire_in=>'3 hours'[, key=>'fookey']);
-        ... <rest of init> ...
-    </%init>
-
-To cache the component's return value:
-
-    <%init>
-        my ($retval,$cached) = $m->cache_self
-            (expire_in=>'3 hours'[, key=>'fookey']);
-        return $retval if $cached;
-        ... <rest of init> ...
-    </%init>
-
-This only works with scalar and reference return values.
-
-C<$m-E<gt>cache_self> handles both the retrieve and store, so you can pass
-both kinds of options to it. See C<$m-E<gt>cache> for an explanation of
-options.
-
-C<$m-E<gt>cache_self> uses a bit of magic to accomplish everything in one
-line.  You can use it without understanding it, but if you're
-curious, here's how it works:
-
-o A component foo calls C<$m-E<gt>cache_self> for the first time.
-
-o C<$m-E<gt>cache_self> sees that the cache is empty and calls foo again
-recursively, with a STORE option to capture its content into a buffer.
-
-o foo again calls C<$m-E<gt>cache_self> which immediately returns 0 this time.
-
-o foo goes about its business and generates content into the C<$m-E<gt>cache_self> buffer.
-
-o When control is returned to C<$m-E<gt>cache_self>, it stores the content and
-return value in the cache and also outputs the content normally.
-Finally C<$m-E<gt>cache_self> returns the list (retval,1) which in turn
-causes foo to return immediately.
+See the L<Devel/data caching> section of the I<Component Developer's
+Guide> for examples and caching strategies.
 
 =for html <a name="item_caller_args">
 

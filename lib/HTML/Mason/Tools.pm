@@ -51,34 +51,6 @@ sub html_escape
 }
 
 #
-# Convert a "date delta string" (e.g. 1sec, 3min, 2h) to a number of
-# seconds. Based on Date::Manip date delta concept.
-#
-my %date_delta = ('y'=>31557600, yr=>31557600, year=>31557600, years=>31557600,
-		  'm'=>2592000, mon=>2592000, month=>2592000, months=>2592000,
-		  'w'=>604800, wk=>604800, ws=>604800, wks=>604800, week=>604800, weeks=>604800,
-		  'd'=>86400, day=>86400, days=>86400,
-		  'h'=>3600, hr=>3600, hour=>3600, hours=>3600,
-		  mn=>60, min=>60, minute=>60, minutes=>60,
-		  's'=>1, sec=>1, second=>1, seconds=>1
-		 );
-sub date_delta_to_secs
-{
-    my ($delta) = @_;
-    my $usage = "date_delta_to_secs: invalid argument '$delta'";
-    my ($num,$unit,$sign);
-    if ($delta =~ /^([-+]?)\s*([0-9]+)\s*([a-zA-Z]*)\s*$/) {
-	($sign,$num,$unit) = ($1,$2,lc($3));
-    } else {
-	die $usage;
-    }
-    $unit = "s" if !$unit;
-    my $mult = $date_delta{$unit};
-    die $usage if !$mult;
-    return $num * $mult * ($sign eq '-' ? -1 : 1);
-}
-
-#
 # Call the XS or normal version of Data::Dumper::Dump depending on what's installed.
 #
 sub dumper_method {
