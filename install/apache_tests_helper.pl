@@ -200,7 +200,7 @@ $filter_handler
   PerlHandler HTML::Mason::ApacheHandler FilterTest
 </IfDefine>
 EOF
-    }
+    } # matches 'if ( load_pkg('Apache::Filter') )'
 
     local $^W;
     Apache::test->write_httpd_conf
@@ -379,14 +379,14 @@ sub load_pkg {
     if ($@) {
 	if ($@ =~ /^Can\'t locate .* in \@INC/) {
 	    if (defined($nf_error)) {
-		error sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
-			      $pkg, $nf_error, join(" ", @INC));
+		die sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
+			    $pkg, $nf_error, "@INC");
 	    } else {
 		undef $@;
 		return 0;
 	    }
 	} else {
-	    error $@;
+	    die $@;
 	}
     }
     return 1;
