@@ -21,16 +21,7 @@ sub basic_interp {
     return (new HTML::Mason::Interp(comp_root => $comp_root, data_dir => $data_dir, @_));
 }
 
-print "1..20\n";
-
-# system_log_xxx
-my $log_file = "$root/test/data/etc/system.log";
-unlink($log_file);
-{my $interp = basic_interp(system_log_events=>'COMP_LOAD',system_log_separator=>'||',out_method=>sub {});
- $interp->exec('/interp/autohandler_test/subdir/hello');
- $interp->exec('/interp/max_recurse_8');}
-try_exec_with_interp({},'system_log');
-exit;
+print "1..21\n";
 
 # autohandler_name/allow_recursive_autohandlers
 try_exec_with_interp({},'autohandler_test/subdir/hello',1);
@@ -80,5 +71,13 @@ try_exec_with_interp({preloads=>['/interp/preloads_test/*']},'preloads_test/show
  $interp->parser->allow_globals(qw($global));
  $interp->set_global(global=>'parsimmon');
  try_exec($interp,'set_global');}
+
+# system_log_xxx
+my $log_file = "$root/test/data/etc/system.log";
+unlink($log_file);
+{my $interp = basic_interp(system_log_events=>'COMP_LOAD',system_log_separator=>'||',out_method=>sub {});
+ $interp->exec('/interp/autohandler_test/subdir/hello');
+ $interp->exec('/interp/max_recurse_8');}
+try_exec_with_interp({},'system_log');
 
 1;

@@ -5,6 +5,12 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+0.81
+
+- Now sends headers even when content is blank or all whitespace.
+- Fixed default system log, broken in 0.8. (reported by Renzo Toma)
+- Updated cookie expiration in CD-ME example. (reported by Renzo Toma)
+
 0.8  Sun Jan 23 16:48:46 PST 2000
 
 - New integrated request API. $m replaces $REQ as the global variable
@@ -65,6 +71,7 @@ L{Admin/data_caching}
 - Added improved, separate session_handler.pl for session handling.
 - ** mc_comp_source no longer works for non-existent components.
 - ** Removed mc_date legacy command.
+- Many new test scripts.
 - Added warnings about using Mason with mod_perl DSO.
 - Added more site configuration examples to Admin.pod.
 L{Admin/configuring virtual sites} 
