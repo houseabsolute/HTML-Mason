@@ -112,6 +112,8 @@ sub compare_files
 	return "\nError in line $linenum\nExpected: $line1\nGot: $line2\n";
     };
     
+    # Uncomment to test files as big chunks:
+    # local $/;
     while (defined (my $line1 = <$fh1>)) {
 	$linenum++;
 	if (defined (my $line2 = <$fh2>)) {
