@@ -734,7 +734,7 @@ sub add_escape
     while ( my ($name, $sub) = each %p )
     {
         param_error "Invalid escape name ($name)"
-            unless $name =~ /^[\w+-]$/;
+            unless $name =~ /^[\w-]+$/;
 
         $self->{escapes}{$name} = $sub;
     }
