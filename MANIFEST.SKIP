@@ -1,16 +1,30 @@
-.*CVS.*
-\.cvsignore$
-t/.*\.pl
-t/.*\.cgi
-t/httpd.*
+# Stuff we're not ready to release
+ToClass.pm$
+Events.pm$
+
+# Stuff we create during the build process
+^t/.*\.pl
+^t/.*\.cgi
+^t/httpd.*
+^t/mason
+^htdocs
+
+# Backup files, etc.
 ~$
-^#
-^\.
+(^|/)#
+(^|/)\.
 \.bak$
-MANIFEST.SKIP
-.*\.tar\.gz
+\.tar\.gz$
+
+# CVS cruft
+(^|/)CVS$
+\.cvsignore$
+
+# MakeMaker cruft
+^MANIFEST.SKIP$
 ^Makefile$
-ToClass.pm
-Events.pm
-blib
-htdocs
+^blib
+
+# Module::Build [en]cruft[ed jewels]
+^Build$
+^_build
