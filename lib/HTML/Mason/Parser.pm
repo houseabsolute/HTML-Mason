@@ -538,19 +538,19 @@ sub parse_component
     #
     # Assemble parameters for component.
     #
-    my @cparams = ("parser_version=>$parserVersion","create_time=>".time());
-    push(@cparams,"source_ref_start=>0000000") if $useSourceReference;
-    push(@cparams,"subcomps=>{%_subcomps}") if (%subcomps);
+    my @cparams = ("'parser_version'=>$parserVersion","'create_time'=>".time());
+    push(@cparams,"'source_ref_start'=>0000000") if $useSourceReference;
+    push(@cparams,"'subcomps'=>{%_subcomps}") if (%subcomps);
     if (%declaredArgs) {
 	my $d = new Data::Dumper ([\%declaredArgs]);
 	my $argsDump = $d->Dumpxs;
 	for ($argsDump) { s/\$VAR1\s*=//g; s/;\s*$// }
-	push(@cparams,"declared_args=>$argsDump");
+	push(@cparams,"'declared_args'=>$argsDump");
     }
     if ($pureTextFlag && $fileBased) {
-	push(@cparams,"code=>\\&HTML::Mason::Commands::pure_text_handler");
+	push(@cparams,"'code'=>\\&HTML::Mason::Commands::pure_text_handler");
     } else {
-	push(@cparams,"code=>sub {\n$body\n}");
+	push(@cparams,"'code'=>sub {\n$body\n}");
     }
     my $cparamstr = join(",\n",@cparams);
     
@@ -566,7 +566,7 @@ sub parse_component
     if ($useSourceReference) {
 	$body .= "\n__END__\n";
 	my $srcstart = sprintf("%7d",length($body));
-	$body =~ s/source_ref_start=>0000000,/source_ref_start=>$srcstart,/;
+	$body =~ s/'source_ref_start'=>0000000,/'source_ref_start'=>$srcstart,/;
 	$body .= $endsec;
     }    
     
