@@ -171,11 +171,15 @@ sub import
 # This is my best guess as to whether we are being configured via the
 # conf file or not.  Without a comp root it will blow up sooner or
 # later anyway.  This may not be the case in the future though.
+#
+# If there is no comp root but MultipleConfig is set, then the comp
+# roots are being set per section (Directory, Location, etc).
 sub _in_apache_conf_file
 {
     my $self = shift;
     my $interp_class = $self->get_param('InterpClass');
-    return $ENV{MOD_PERL} && $self->get_param('CompRoot', $interp_class->valid_params);
+    return $ENV{MOD_PERL} && ( $self->get_param('CompRoot', $interp_class->valid_params) ||
+			       $self->get_param('MultipleConfig') );
 }
 
 sub make_ah
