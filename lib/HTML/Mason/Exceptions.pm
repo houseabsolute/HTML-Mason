@@ -178,6 +178,12 @@ sub analyze_error
     if ($self->isa('HTML::Mason::Exception::Syntax')) {
 	$file = $self->comp_name;
 	push(@lines, $self->line_number);
+    } elsif ($self->isa('HTML::Mason::Exception::Compilation')) {
+	$file = $self->filename;
+	my $msg = $self->full_message;
+	while ($msg =~ /at .* line (\d+)./g) {
+	    push(@lines, $1);
+	}
     } elsif (@frames) {
 	$file = $frames[0]->filename;
 	@lines = $frames[0]->line;
