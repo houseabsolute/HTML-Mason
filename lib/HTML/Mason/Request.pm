@@ -1298,6 +1298,6 @@ Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams
 
 =head1 SEE ALSO
 
+L<HTML::Mason>,
+L<HTML::Mason::Devel>,
 L<HTML::Mason::Component>
-L<HTML::Mason::Devel>
-L<HTML::Mason::ApacheHandler>

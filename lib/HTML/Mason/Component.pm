@@ -532,6 +532,8 @@ Returns the directory of the source filename for this component.
 
 =head1 SEE ALSO
 
+L<HTML::Mason>,
+L<HTML::Mason::Devel>,
 L<HTML::Mason::Request>
 
 =cut

@@ -1285,7 +1285,7 @@ course more complexity).
 =head1 SEE ALSO
 
 L<HTML::Mason>,
-L<HTML::Mason::ApacheHandler>,
-L<HTML::Mason::Admin>
+L<HTML::Mason::Admin>,
+L<HTML::Mason::ApacheHandler>
 
 =cut

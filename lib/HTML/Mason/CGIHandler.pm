@@ -341,7 +341,7 @@ equally well under CGIHandler and ApacheHandler.
 =head1 SEE ALSO
 
 L<HTML::Mason>,
-L<HTML::Mason::ApacheHandler>,
+L<HTML::Mason::Admin>,
+L<HTML::Mason::ApacheHandler>
 
 =cut
-

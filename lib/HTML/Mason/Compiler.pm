@@ -527,3 +527,9 @@ HTML::Mason::Compiler - Compile Mason component source
 
 ... Ken will be adding these docs (from Appendix A of the book) as
 soon as the text has been looked at a little bit.
+
+=head1 SEE ALSO
+
+L<HTML::Mason>,
+L<HTML::Mason::Admin>,
+L<HTML::Mason::Interp>

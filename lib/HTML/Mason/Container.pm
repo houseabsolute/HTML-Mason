@@ -425,4 +425,8 @@ C<contained_objects> method.  Whee, magic!)  Don't worry about it too
 much as long as you can see the pattern here.), etc. Apache
 configuration parameters.
 
+=head1 SEE ALSO
+
+L<HTML::Mason>
+
 =cut

@@ -928,9 +928,7 @@ For example:
 =head1 SEE ALSO
 
 L<HTML::Mason>,
-L<HTML::Mason::Lexer>,
-L<HTML::Mason::Compiler>,
-L<HTML::Mason::Interp>,
-L<HTML::Mason::Admin>
+L<HTML::Mason::Admin>,
+L<HTML::Mason::Interp>
 
 =cut

@@ -160,4 +160,8 @@ or an array reference, as documented in L<CONSTRUCTOR|CONSTRUCTOR>.
 
 =back
 
+=head1 SEE ALSO
+
+L<HTML::Mason>
+
 =cut

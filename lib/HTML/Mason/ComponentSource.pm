@@ -190,4 +190,8 @@ component.
 
 =back
 
+L<HTML::Mason>,
+L<HTML::Mason::Admin>,
+L<HTML::Mason::Component>
+
 =cut
