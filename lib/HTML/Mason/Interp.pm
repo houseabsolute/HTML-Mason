@@ -10,6 +10,7 @@ use Carp;
 use File::Basename;
 use File::Path;
 use File::Spec;
+use HTML::Mason::Exceptions( abbr => [qw(error)] );
 use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
 use HTML::Mason::Tools qw(make_fh read_file taint_is_on load_pkg);
@@ -45,6 +46,11 @@ use HTML::Mason::MethodMaker
 			  use_reload_file ) ],
       );
 
+sub default_die_handler {
+    my $err = $_[0];
+    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
+}
+
 # Fields that can be set in new method, with defaults
 __PACKAGE__->valid_params
     (
@@ -53,7 +59,7 @@ __PACKAGE__->valid_params
      code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR }, #10M
      compiler                     => { isa => 'HTML::Mason::Compiler' },
      dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR|UNDEF },
-     die_handler                  => { parse => 'code',    default => \&Carp::confess, type => CODEREF|SCALAR|UNDEF },
+     die_handler                  => { parse => 'code',    default => \&default_die_handler, type => CODEREF|SCALAR|UNDEF },
      # Object cause qr// returns an object
      ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
 				       default => qr/Subroutine .* redefined/i },
