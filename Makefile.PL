@@ -70,7 +70,7 @@ unless ( $@ || $^O =~ /mac|darwin/ )
     $prereq{'Apache::Request'} = 0.31;
 }
 
-setup_mod_perl_tests() if -d 'CVS' && ! $opts{'no-prompts'};
+setup_mod_perl_tests() if is_maintainer() && ! $opts{'no-prompts'};
 assisted_install_config() unless $opts{'no-prompts'};
 
 # Get these into the MY namespace for the MY::test method
@@ -121,6 +121,13 @@ sub chk_version
     $vnum >= $wanted;
 }
 
+sub is_maintainer
+{
+    return $ENV{MASON_MAINTAINER} if exists $ENV{MASON_MAINTAINER};
+
+    return -d 'CVS';
+}
+
 package MY;
 
 sub install
@@ -152,10 +159,10 @@ sub test
     my $port = $MY::APACHE{port} || 8228;
     $MY::APACHE{apache_dir} ||= '';
 
-    my $is_maintainer = -d 'CVS' ? 1 : 0;
+    my $is_maintainer = main::is_maintainer();
 
     # This works for older MakeMakers
-    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE} == \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; \$\$ENV{MASON_MAINTAINER}=$is_maintainer; $1/;
+    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE} == \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; \$\$ENV{MASON_MAINTAINER}=exists \$ENV{MASON_MAINTAINER} ? \$ENV{MASON_MAINTAINER} : $is_maintainer; $1/;
 
     # This works for newer MakeMakers (5.48_01 +)
     $test =~ s/("-MExtUtils::Command::MM" "-e" ")(test_harness\(\$\(TEST_VERBOSE\).*?\)" \$\(TEST_FILES\))/$1 \\\$\$ENV{MASON_VERBOSE} == \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \\\$\$ENV{MASON_VERBOSE}; \\\$\$ENV{PORT}=$port; \\\$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; \\\$\$ENV{MASON_MAINTAINER}=$is_maintainer; $2/;
