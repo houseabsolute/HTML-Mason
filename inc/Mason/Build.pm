@@ -20,9 +20,12 @@ sub create_build_script
 
     $self->_check_for_old_mason;
 
-    $self->_apache_test_config;
+    unless ( exists $self->{args}{noprompts} )
+    {
+	$self->_apache_test_config;
 
-    $self->_assisted_install_config;
+	$self->_assisted_install_config;
+    }
 
     $self->add_to_cleanup('mason_tests');
 
@@ -52,7 +55,7 @@ installation.
 
 EOF
 
-	unless ( exists $self->{args}{'noprompts'} )
+	unless ( exists $self->{args}{noprompts} )
 	{
 	    my $yn = Module::Build->prompt('Continue with installation?', 'N');
 
@@ -1151,8 +1154,10 @@ sub ACTION_test
 {
     my $self = shift;
 
-    $self->notes( test_data => { apache_dir => $self->{args}{apache}{apache_dir},
-                                 port       => $self->{args}{apache}{port},
+    my $conf = $self->notes('apache_test_conf');
+
+    $self->notes( test_data => { apache_dir => $conf->{apache_dir},
+                                 port       => $conf->{port},
                                  is_maintainer => -d 'CVS' ? 1 : 0,
                                } );
 
