@@ -154,6 +154,7 @@ already.
 has been split between the Lexer and Compiler objects.  L{Compiler}
 - ** The debug file feature has been removed.
 - ** The previewer has been removed.
+- ** The system log feature has been removed.
 - ** The Interp use_reload_files parameter has been removed.  The new
 static_source parameter provides a useful, and conceptually simpler,
 replacement.  L{Interp/static_source}
