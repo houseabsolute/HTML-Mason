@@ -36,30 +36,13 @@ sub dir_path {
 
 # Ends up setting $self->{path, source_root_key, source_file} and a few in the parent class
 sub assign_runtime_properties {
-    my ($self,$interp,$fq_path) = @_;
+    my ($self, $interp, %info) = @_;
 
-    # XXX I don't think the Component should be poking around in
-    # comp_root.  That's the resolver's territory. -Ken
-    my $comp_root = $interp->resolver->comp_root;    
-    my $source_root;
-    if (!ref($comp_root)) {
-	$source_root = $comp_root;
-	$self->{'path'} = $fq_path;
-    } else {
-	($self->{source_root_key},$self->{'path'}) = ($fq_path =~ m{ ^/([^/]+)(/.*)$ }x)
-	    or error "could not split FQ path ($fq_path) as expected";
-	foreach my $lref (@$comp_root) {
-	    my ($key,$root) = @$lref;
-	    if ($self->{source_root_key} eq uc($key)) {
-		$source_root = $root;
-		last;
-	    }
-	}
-	error "FQ path ($fq_path) contained unknown source root key"
-	    unless $source_root;
-    }
-    $self->{'source_file'} = File::Spec->canonpath( File::Spec->catfile( $source_root, $self->{'path'} ) );
-    $self->SUPER::assign_runtime_properties($interp,$fq_path);
+    $self->{path} = $info{url_path};
+    $self->{source_file} = $info{disk_path};
+    $self->{source_root_key} = $info{comp_root};
+
+    $self->SUPER::assign_runtime_properties($interp, %info);
 }
 
 1;

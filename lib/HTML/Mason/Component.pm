@@ -77,9 +77,10 @@ sub new
 #
 # Ends up assigning $self->{interp, fq_path, inherit_path, inherit_start_path}
 sub assign_runtime_properties {
-    my ($self,$interp,$fq_path) = @_;
+    my ($self, $interp, %info) = @_;
     $self->{interp} = $interp;
-    $self->{fq_path} = $fq_path if $fq_path;
+    $self->{fq_path} = $info{fq_path};
+
     foreach my $c (values(%{$self->{subcomps}})) {
 	$c->assign_runtime_properties($interp);
     }
