@@ -800,7 +800,7 @@ sub depth
 
 #
 # Given a component path (absolute or relative), returns a component.
-# Handles SELF and PARENT, comp:method, relative->absolute
+# Handles SELF, PARENT, REQUEST, comp:method, relative->absolute
 # conversion, and local subcomponents.
 #
 sub fetch_comp
@@ -818,6 +818,9 @@ sub fetch_comp
 	my $c = $self->current_comp->parent
 	    or error "PARENT designator used from component with no parent";
 	return $c;
+    }
+    if ($path eq 'REQUEST') {
+        return $self->request_comp;
     }
 
     #
@@ -982,7 +985,7 @@ sub comp {
     unless ( $mods{base_comp} ||	# base_comp override
 	     !$path || 		# path is undef if $comp is a reference
 	     ($comp->is_subcomp && ! $comp->is_method) ||
-	     $path =~ m/^(?:SELF|PARENT)(?:\:..*)?$/ ) {
+	     $path =~ m/^(?:SELF|PARENT|REQUEST)(?:\:..*)?$/ ) {
 	$base_comp = ( $path =~ m/(.*):/ ?
 		       $self->fetch_comp($1) :
 		       $comp );
@@ -1449,7 +1452,7 @@ Initially, the base component is the same as the requested component
 (returned by C<< $m->request_comp >>.  However, whenever a component
 call is made, the base component changes to the called component,
 unless the component call was made uses a component object for its
-first argument, or the call starts with SELF: or PARENT:.
+first argument, or the call starts with SELF:, PARENT:, or REQUEST.
 
 =for html <a name="item_cache"></a>
 

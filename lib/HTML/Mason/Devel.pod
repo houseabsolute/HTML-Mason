@@ -1790,8 +1790,8 @@ for example:
 
 =item *
 
-A method is called via the use of C<SELF:> or C<PARENT:>.  These are
-covered in more detail below.
+A method is called via the use of C<SELF:>, C<PARENT:>, or
+C<REQUEST:>.  These are covered in more detail below.
 
 =back
 
@@ -1816,6 +1816,10 @@ in the current component's parent for the named method.
 
 In the context of a component path, PARENT is shorthand for
 C<< $m->current_comp->parent >>.
+
+If the call path begins with C<REQUEST:>, then Mason looks for the
+method in the requested component.  REQUEST is shorthand for C<<
+$m->request_comp >>.
 
 The rules for attributes are similar. To access an attribute for the
 page, use C<attr>:
