@@ -330,167 +330,6 @@ the proper permissions to create the data directories.
 
 =back
 
-=head1 CONFIGURING MASON VIA A HANDLER SCRIPT
-
-For maximum flexibility, you may choose to write a custom script to
-create your Mason objects and handle requests. In our documentation
-and examples we call this script handler.pl, though you may name it
-whatever you like.
-
-The handler.pl file is responsible for creating the three Mason
-objects and supplying the many parameters that control how your
-components are parsed and executed. It also provides the opportunity
-to execute arbitrary code at three important junctures: the server
-initialization, the beginning of a request, and the end of a request.
-A wide set of behaviors can be implemented with a mere few lines of
-well-placed Perl in your handler.pl.  In this section we present the
-basics of setting up handler.pl as well as some ideas for more
-advanced applications.
-
-=over 4
-
-=item * MasonDataCacheDir - string
-
-Corresponds to the C<data_cache_dir> parameter.
-
-=item * MasonDieHandler - code or 0
-
-Corresponds to the C<die_handler> parameter.
-
-=item * MasonMaxRecurse - string
-
-Corresponds to the C<max_recurse> parameter.
-
-=item * MasonOutMethod - code
-
-Corresponds to the C<out_method> parameter.
-
-=item * MasonOutMode - string
-
-Corresponds to the C<out_mode> parameter.
-
-=item * MasonPreloads - list
-
-Corresponds to the C<preloads> parameter.
-
-=item * MasonStaticFileRoot - string
-
-Corresponds to the C<static_file_root> parameter.
-
-=item * MasonSystemLogEvents - string
-
-Corresponds to the C<system_log_events> parameter.
-
-=item * MasonSystemLogFile - string
-
-Corresponds to the C<system_log_file> parameter.
-
-=item * MasonSystemLogSeparator - string
-
-Corresponds to the C<system_log_separator> parameter.
-
-=item * MasonUseAutohandlers - boolean
-
-Corresponds to the C<use_autohandlers> parameter.
-
-=item * MasonUseDataCache - boolean
-
-Corresponds to the C<use_data_cache> parameter.
-
-=item * MasonUseDhandlers - boolean
-
-Corresponds to the C<use_dhandlers> parameter.
-
-=item * MasonUseObjectFiles - boolean
-
-Corresponds to the C<use_object_files> parameter.
-
-=item * MasonUseReloadFile - boolean
-
-Corresponds to the C<use_reload_file> parameter.
-
-=back
-
-=head2 ApacheHandler Parameters
-
-=over 4
-
-=item * MasonApacheStatusTitle - string
-
-Correponds to the C<apache_status_title> parameter.
-
-=item * MasonAutoSendHeaders - boolean
-
-Correponds to the C<auto_send_headers> parameter.
-
-=item * MasonDebugHandlerProc - string
-
-Correponds to the C<debug_handler_proc> parameter.
-
-=item * MasonDebugHandlerScript - string
-
-Correponds to the C<debug_handler_script> parameter.
-
-=item * MasonDebugMode - string
-
-Correponds to the C<debug_mode> parameter.
-
-=item * MasonDebugPerlBinary - string
-
-Correponds to the C<debug_perl_binary> parameter.
-
-=item * MasonErrorMode - string
-
-Correponds to the C<error_mode> parameter.
-
-=item * MasonTopLevelPredicate - code
-
-Correponds to the C<top_level_predicate> parameter.
-
-=back
-
-=head2 Special Parameters
-
-These are the only parameters that do I<not> correspond to new() parameters.
-
-=over 4
-
-=item * MasonArgsMethod - string
-
-Valid values for this parameter are C<CGI> or C<mod_perl>.  This
-determines whether to use the C<CGI> or C<Apache::Request> module for
-argument handling.  Please see L<HTML::Mason::ApacheHandler/PARAMETERS TO THE use() DECLARATION>
-for more details.
-
-This can only be set once, regardless of how you set
-MasonMultipleConfig.
-
-Defaults to C<CGI>.
-
-=item * MasonMultipleConfig - boolean
-
-If this parameter is true, Mason assumes that you may have multiple
-sets of configuration directives defined, perhaps for multiple
-locations or virtual hosts.  This means that Mason will create a new
-set of parser/interp/handler objects for every request.  If this
-parameter is false, Mason simply creates a single set at server
-startup to maximize shared memory. Defaults to false.
-
-If you set this option, the Apache child processes will need
-the proper permissions to create the data directories.
-
-=back
-
-=head2 Memory Usage
-
-To maximize shared memory, you should put your Mason configuration
-directives in the configuration file B<before> you load the
-C<HTML::Mason::ApacheHandler> module via a C<PerlModule> directive.
-
-Because certain features were not available in mod_perl before
-1.21_01, Mason will be less memory efficient when using those older
-versions.
-
 =head1 CONFIGURING VIA A HANDLER SCRIPT
 
 For maximum flexibility, you may choose to write a custom script to
@@ -508,7 +347,6 @@ well-placed Perl in your C<handler.pl>.  In this section we present the
 basics of setting up C<handler.pl> as well as some ideas for more
 advanced applications.
 
->>>>>>> 1.35.4.2.2.28
 =head2 Creating the Mason objects
 
 C<handler.pl> creates three Mason objects: the Parser, Interpreter,
@@ -809,7 +647,7 @@ module.  For full understanding of this section you should read the
 documentation for C<Cache::Cache> as well as for relevant subclasses
 (e.g. C<Cache::FileCache>).
 
-=over
+=over 4
 
 =item Cache files
 
@@ -855,7 +693,7 @@ implements the API but never stores data.
 
 The previewer is a web based utility that allows site developers to:
 
-=over
+=over 4
 
 =item 1.
 
