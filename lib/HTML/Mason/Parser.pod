@@ -15,6 +15,18 @@ are typically embedded within (and used by) Interp objects.
 
 =over
 
+=item allow_globals
+
+List of variable names, complete with prefix (C<$@%>), that you intend
+to use as globals in components.  Normally global variables are
+forbidden by C<strict>, but any variable mentioned in this list is
+granted a reprieve via a "use vars" statement. For example:
+
+    allow_globals => [qw($DBH %session)]
+
+In a mod_perl environment, C<$r> (the request object) is automatically
+added to this list.
+
 =item ignore_warnings_expr
 
 Regular expression indicating which warnings to
@@ -27,6 +39,43 @@ example:
 
 Undefined by default, meaning that all warnings are fatal. 
 
+=item in_package
+
+Indicates the name of the package you wish your components to run in.
+This way different applications or virtual hosts can be run in
+different name spaces.  Default is C<HTML::Mason::Commands>.
+
+You will have to explicitly import the mc_* commands from C<HTML::Mason::Commands>
+into your package. Ideally you will put this in your C<handler.pl>:
+
+    { package MyPackage;
+    use HTML::Mason::Commands; }
+
+This will bring in all of the mc_ commands. If you want to save some
+space on imported symbols, specify just the commands you want:
+
+    { package MyPackage;
+    use HTML::Mason::Commands qw(mc_comp mc_file mc_cache); }
+
+=item postamble
+
+A piece of Perl code to insert at the end of every
+compiled subroutine. Blank by default. See L<Parser/preamble>.
+
+=item postprocess
+
+Sub reference that is called to postprocess the code and text portions
+of a compiled component, just before it is assembled into its final
+subroutine form.  The sub is called with two parameters, a scalar
+reference to the script and a string containing either "perl" or
+"alpha" depending on whether the string is code or text respectively.
+The sub is expected to process the string in-place. It will be called
+multiple times, once for each piece of code and text.
+
+This is the ideal place to translate accents into HTML entities.  It
+could also be used to strip out comments that you have in your HTML
+files that you don't want the end user to see. See L<Parser/preprocess>.
+
 =item preamble
 
 A piece of Perl code to insert at the beginning of
@@ -36,12 +85,14 @@ adds the line
     use vars qw($r);
 
 to suppress strict warnings about uses of global $r (the Apache
-request object).
+request object). See L<Parser/postamble>.
 
-=item postamble
+=item preprocess
 
-A piece of Perl code to insert at the end of every
-compiled subroutine. Blank by default.
+Sub reference that is called to preprocess each component before Parser does
+it's magic.  The sub is called with a single parameter, a scalar reference
+to the script.  The sub is expected to process the script in-place.   This is
+one way to extend the HTML::Mason syntax with new tags, etc. See L<Parser/postprocess>.
 
 =item source_refer_predicate
 
@@ -82,6 +133,30 @@ sophisticated to allow stricter checks. Default is false.
 
 Indicates whether to use strict in compiled subroutines.
 Default is true.
+
+=back
+
+=head1 ACCESSOR METHODS
+
+Most of the above properties have standard accessor methods of the
+same name: no arguments retrieves the value, and one argument sets it.
+For example:
+
+    my $parser = new HTML::Mason::Parser;
+    my $strictmode = $parser->use_strict;
+    $parser->use_strict(1);
+
+The only exception is L<Parser/allow_globals>, which works a bit differently.
+
+=head1 OTHER METHODS
+
+=over
+
+=item allow_globals (varnames)
+
+Called with no arguments, this returns the value of allow_globals as a
+list.  Called with one or more variable names, it appends the names to
+the existing list, removing duplicates if any.
 
 =back
 

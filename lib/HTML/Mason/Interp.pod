@@ -6,7 +6,7 @@ HTML::Mason::Interp - Mason Component Interpreter
 
     my $i = new HTML::Mason::Interp (data_dir=>'/usr/local/mason',
                                      comp_root=>'/usr/local/www/htdocs/',
-                                     < other params >);
+                                     ...other params...);
 
 =head1 DESCRIPTION
 
@@ -134,6 +134,64 @@ explicitly updated L<Admin/reload file>.
 True or undef, default is undef. If true, component compile errors are
 followed with the full component source, annotated with line numbers,
 to better interpret the error message. Does not affect runtime errors.
+
+=back
+
+=head1 ACCESSOR METHODS
+
+All of the above properties have standard accessor methods of the
+same name: no arguments retrieves the value, and one argument sets it.
+For example:
+
+    my $interp = new HTML::Mason::Interp (...);
+    my $p = $interp->parser;
+    my $comproot = $interp->comp_root;
+    $interp->out_method(\$buf);
+
+The following properties can be queried but should not be modified:
+
+o comp_root, data_dir: these are too integral to the interpreter
+to reliably change on-the-fly. Better to create multiple interpreters.
+
+o preloads: changing this is ineffective since preloading happens
+when the interpreter is created
+
+o system_log_file: changing this is ineffective since a persistent
+log file handle is opened when the interpreter is created
+
+=head1 OTHER METHODS
+
+=over
+
+=for html <a name="item_set_global">
+
+=item set_global ($varname, [values...])
+
+This method sets a global to be used in components. C<varname> is a
+variable name, optionally preceded with a prefix (C<$>, C<@>, or
+C<%>); if the prefix is omitted then C<$> is assumed. C<varname> is
+followed by a value, in the case of a scalar, or by one or more values
+in the case of a list or hash.  For example:
+
+    # Set a global variable $dbh containing the database handle
+    $interp->set_global(dbh => DBI->connect(...));
+
+    # Set a global hash %session from a local hash
+    $interp->set_global('%session', %s);
+
+The global is set in the package that components run in: usually
+C<HTML::Mason::Commands>, although this can be overridden via the
+Parser parameter L<Parser/in_package>.  The lines above, for example,
+are equivalent to:
+
+    $HTML::Mason::Commands::dbh = DBI->connect(...);
+    %HTML::Mason::Commands::session = %s;
+
+assuming that C<in_package> has not been changed.
+
+Any global that you set should also be registered with the Parser
+parameter L<Parser/allow_globals>; otherwise you'll get warnings from
+C<strict>.
 
 =back
 

@@ -12,7 +12,28 @@ use HTML::Mason::Config;
 use IO;
 use Time::Local;
 
-use vars qw($INTERP);
+use vars qw($INTERP @ISA @EXPORT_OK @EXPORT);
+ 
+require Exporter;
+@ISA=qw(Exporter);
+@EXPORT=qw(
+	mc_abort
+	mc_cache
+	mc_cache_self
+	mc_caller 
+	mc_comp
+	mc_comp_exists
+	mc_comp_source
+	mc_comp_stack
+	mc_date 
+	mc_file 
+	mc_file_root 
+	mc_out 
+	mc_suppress_hooks
+	mc_time
+);
+
+@EXPORT_OK=@EXPORT;
 
 #
 # Convert relative paths to absolute, handle . and ..

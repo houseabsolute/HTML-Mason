@@ -49,7 +49,7 @@ sub access_table {
     if (wantarray) {
 	return %{$self->{$field}};
     } elsif (@_==2) {
-	die "FakeApache is unable to simulate the Apache::Table class for the `$name' method called in scalar context.  You'll need to temporarily remove or comment out that method call to use debug files.\n";
+	die "FakeApache is unable to simulate the Apache::Table class for the `$field' method called in scalar context.  You'll need to temporarily remove or comment out that method call to use debug files.\n";
     } elsif (@_==3) {
 	return $self->{$key};
     } else {
@@ -99,7 +99,7 @@ sub send_http_header {
     $self->content_type('text/plain') if !$self->content_type;
     print "Server: ".$self->cgi_var('SERVER_SOFTWARE')."\n" if $self->cgi_var('SERVER_SOFTWARE');
     print "Content-type: ".$self->content_type."\n";
-    my %headers = %{$self->headers_out};
+    my %headers = %{$self->{headers_out}};
     while (my ($key,$value) = each(%headers)) {
 	print "$key: $value\n";
     }

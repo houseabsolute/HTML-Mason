@@ -28,8 +28,6 @@ use HTML::Mason::Tools qw(html_escape url_unescape);
 use HTML::Mason::Utils;
 use Apache::Status;
 
-my @used = ($HTML::Mason::Commands::r);
-
 my %fields =
     (
      interp => undef,
@@ -90,12 +88,12 @@ sub _initialize {
 		'<DL><DT><FONT SIZE="+1"><B>Interp object properties (startup options)</B></FONT><DD>',
 		map("$_ = ".$interp->{$_}."<BR>\n", grep (ref $interp->{$_} eq '', sort keys %{$interp->{_permitted}})),
 		'</DL>');
-	     
+
 	     push (@strings,
 		'<DL><DT><FONT SIZE="+1"><B>Cached components</B></FONT><DD>',
 		map("$_<BR>\n", sort keys %{$interp->{code_cache}}),
 		'</DL>');
-	     
+
 	     return \@strings;     #return an array ref
 	 }
     ) if $Apache::Status::VERSION; #only if Apache::Status is loaded
@@ -118,10 +116,7 @@ sub _initialize {
     #
     # Allow global $r in components
     #
-    my $line = "use vars qw(\$r);\n";
-    my $pre = $interp->parser->preamble;
-    $pre =~ s/$line//g;
-    $interp->parser->preamble($pre."use vars qw(\$r);\n");
+    $interp->parser->allow_globals(qw($r));
 }
 
 sub send_http_header_hook
@@ -329,9 +324,9 @@ sub capture_debug_state
     foreach my $field (qw(allow_options auth_name auth_type bytes_sent no_cache content content_encoding content_languages content_type document_root filename header_only method method_number path_info protocol proxyreq requires status status_line the_request uri as_string get_remote_host get_remote_logname get_server_port is_initial_req is_main)) {
 	$expr .= "\$d{$field} = \$r->$field;\n";
     }
-    foreach my $field (qw(dir_config headers_in headers_out err_headers_out notes subprocess_env cgi_env)) {
-	$expr .= "{ my \%h = \$r->$field; \$d{$field} = {\%h} }\n";
-    }
+#    foreach my $field (qw(dir_config headers_in headers_out err_headers_out notes subprocess_env cgi_env)) {
+#	$expr .= "{ my \%h = \$r->$field; \$d{$field} = {\%h} }\n";
+#    }
     eval($expr);
     warn "error creating debug file: $@\n" if $@;
     $d{'args@'} = [$r->args];
@@ -451,7 +446,7 @@ sub handle_request_1
     #
     $interp->vars(http_input=>$argString);
     $interp->vars(server=>$r);
-    local $HTML::Mason::Commands::r = $r;
+    $interp->set_global(r=>$r);
     
     return $interp->exec($compPath,%args);
 }

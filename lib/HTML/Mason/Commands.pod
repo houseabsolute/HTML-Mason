@@ -109,10 +109,6 @@ the cache and also outputs the content normally.  Finally
 mc_cache_self returns 1, which in turn causes foo to return
 immediately.
 
-
-
-
-
 =item mc_caller ()
 
 Returns the full path of the component that called this component, or

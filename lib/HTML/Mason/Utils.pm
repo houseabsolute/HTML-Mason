@@ -102,9 +102,9 @@ sub access_data_cache
 	    $out{"$key.contents"} = $options{value};
 	    $out{"$key.expires"} = $expireTime;
 	    $out{"$key.lastmod"} = $time;
-	}
+	};
 	if (my $err = $@) {
-	    $msg = "An error occurred while storing to the cache file '$physFile'.\n";
+	    my $msg = "An error occurred while storing to the cache file '$physFile'.\n";
 	    if ($tieClass eq 'MLDBM' && $HTML::Mason::Config{mldbm_use_db} =~ /^(SDBM|ODBM|NDBM)/) {
 		$msg .= "One likely reason is that you are using the '$HTML::Mason::Config{mldbm_use_db}'\n";
 		$msg .= "package which is inadequate for storing large data.  Try switching to DB_File\n";

@@ -22,7 +22,6 @@ use HTML::Mason::Config;
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 
 use vars qw($AUTOLOAD $_SUB %_ARGS);
-my @used = ($HTML::Mason::Commands::INTERP);
 
 my %fields =
     (alternate_sources => undef,
@@ -45,7 +44,7 @@ my %fields =
      );
 # Minor speedup: create anon. subs to reduce AUTOLOAD calls
 foreach my $f (keys %fields) {
-    next if $f eq 'current_time';  # don't overwrite real sub.
+    next if $f =~ /^current_time|system_log_events$/;  # don't overwrite real sub.
     no strict 'refs';
     *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
 }
@@ -289,10 +288,12 @@ sub exec_next {
     unshift(@{$self->{stack}},{});
     
     #
-    # $INTERP is a dynamically scoped global containing this
-    # interpreter.
+    # $INTERP is a global containing this interpreter. This needs to
+    # be defined in the HTML::Mason::Commands package, as well
+    # as the component package if that is different.
     #
     local $HTML::Mason::Commands::INTERP = $self;
+    $self->set_global(INTERP=>$self) if ($self->{parser}->{in_package} ne 'HTML::Mason::Commands');
 
     #
     # Check for maximum recursion.
@@ -523,6 +524,7 @@ sub load {
 	} else {
 	    my ($script,$objtext,$errmsg,$pureTextFlag);
 	    my $success = $self->parser->parse(script_file=>$srcfile,
+					       comp_path=>$path,
 					       result_text=>\$objtext,
 					       error=>\$errmsg,
 					       result_code=>\$sub,
@@ -621,6 +623,21 @@ sub vars
         return $self->{vars}->{$field} = $value;
     } else {
         return $self->{vars}->{$field};
+    }
+}
+
+sub set_global
+{
+    my ($self, $decl, @values) = @_;
+    my ($prefix, $name) = ($decl =~ /^[\$@%]/) ? (substr($decl,0,1),substr($decl,1)) : ("\$",$decl);
+
+    my $varname = sprintf("%s::%s",$self->{parser}->{in_package},$name);
+    if ($prefix eq "\$") {
+	no strict 'refs'; $$varname = $values[0];
+    } elsif ($prefix eq "\@") {
+	no strict 'refs'; @$varname = @values;
+    } else {
+	no strict 'refs'; %$varname = @values;
     }
 }
 
