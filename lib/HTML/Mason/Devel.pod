@@ -196,13 +196,13 @@ o HTML list formed from hash
 o HTML table formed from list of hashes
 
     <table>
-    <tr>
     % foreach my $h (@loh) {
+    <tr>
     <td><% $h->{foo} %></td>
     <td bgcolor=#ee0000><% $h->{bar} %></td>
     <td><% $h->{baz} %></td>
-    % }
     </tr>
+    % }
     </table>
 
 B<< <% xxx %> >>
