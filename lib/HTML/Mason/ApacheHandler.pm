@@ -712,10 +712,10 @@ sub handle_request_1
 
     #
     # Why this strangeness with taking a reference to Apache::print?
-    # See HTML::Mason::ApacheHandler::Request where much strangeness
-    # is done to catch calls to print and $r->print inside components.
-    # Without this, calling $m->flush_buffer can lead to a loop where
-    # the content disappears.
+    # See below, where a bit of funkiness is done to catch calls to
+    # print and $r->print inside components.  Without this, calling
+    # $m->flush_buffer can lead to a loop where the content
+    # disappears.
     #
     # By using the reference to the original function we ensure that
     # we call the version of the sub that sends its output to the
