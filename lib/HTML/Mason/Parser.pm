@@ -253,10 +253,11 @@ sub parse_component
 				    section_start => $section_start,
 				  );
 		} else {
-		    if ( $state->{ lc $section_name } ) {
-			die $self->_make_error( error => "repeated <%$section_name> section",
-						errpos => $section_tag_pos );
-		    }
+		    # For now at least, allow repeated sections
+		    #if ( $state->{ lc $section_name } ) {
+		    #    die $self->_make_error( error => "repeated <%$section_name> section",
+		    #  		errpos => $section_tag_pos );
+		    #}
 		    if ( $state->{embedded} and ($section_name eq 'shared' or $section_name eq 'once') ) {
 			die $self->_make_error( error => "<%$section_name> not allowed inside <%def> or <%method>",
 						errpos => $section_tag_pos );
@@ -448,7 +449,7 @@ sub _parse_init_section
 
     my $state = $self->{parser_state};
 
-    $state->{init} = $params{section}."\n";
+    $state->{init} .= $params{section}."\n";
 }
 
 sub _parse_cleanup_section
@@ -458,7 +459,7 @@ sub _parse_cleanup_section
 
     my $state = $self->{parser_state};
 
-    $state->{cleanup} = $params{section}."\n";
+    $state->{cleanup} .= $params{section}."\n";
 }
 
 
@@ -469,7 +470,7 @@ sub _parse_once_section
 
     my $state = $self->{parser_state};
 
-    $state->{once} = $params{section}."\n";
+    $state->{once} .= $params{section}."\n";
 }
 
 sub _parse_shared_section
@@ -479,7 +480,7 @@ sub _parse_shared_section
 
     my $state = $self->{parser_state};
 
-    $state->{shared} = $params{section}."\n";
+    $state->{shared} .= $params{section}."\n";
 }
 
 sub _parse_flags_section
@@ -494,7 +495,8 @@ sub _parse_flags_section
 	die $self->_make_error( error => "invalid flag '$key'" ) unless $valid_comp_flags{$key};
     }
 
-    $state->{flags} = $hash;
+    $state->{flags} .= "," if $state->{flags} =~ /\S/;
+    $state->{flags} .= $hash;
 }
 
 sub _parse_attr_section
@@ -506,7 +508,8 @@ sub _parse_attr_section
 
     my ($hash) = $self->_parse_hash_pairs($params{section});
 
-    $state->{attr} = $hash;
+    $state->{attr} .= "," if $state->{attr} =~ /\S/;
+    $state->{attr} .= $hash;
 }
 
 # used for attr & flags sections
@@ -527,7 +530,7 @@ sub _parse_hash_pairs
     
     my $hash = join ",\n", @lines;
 
-    return ("{ $hash }",@keys);
+    return ($hash,@keys);
 }
 
 sub _parse_doc_section
@@ -944,8 +947,8 @@ sub _build_params
 	$cparams{'declared_args'} = $dump;
     }
 
-    $cparams{'flags'} = $state->{flags} if $state->{flags};
-    $cparams{'attr'} = $state->{attr} if $state->{attr};
+    $cparams{'flags'} = "{".$state->{flags}."}" if $state->{flags};
+    $cparams{'attr'} = "{".$state->{attr}."}" if $state->{attr};
 
     $cparams{'code'} = "sub {\n$body\n}";
 
