@@ -437,9 +437,8 @@ sub make_component {
 	$self->write_object_file(object_text=>$object, object_file=>$object_file);
     }
 
-    my $err;
     my $comp = eval { $self->eval_object_text( object => $object ) };
-    $self->_compilation_error( '<anonymous component>', $@ ) if $@;
+    $self->_compilation_error( $p{name}, $@ ) if $@;
 
     $comp->assign_runtime_properties($self) if $comp;
     if ($p{path}) {
