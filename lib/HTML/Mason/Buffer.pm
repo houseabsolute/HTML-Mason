@@ -6,9 +6,6 @@ package HTML::Mason::Buffer;
 
 use strict;
 
-use Class::Container;
-use base qw(Class::Container);
-
 use HTML::Mason::Exceptions( abbr => ['param_error'] );
 
 use Params::Validate qw(:all);
@@ -21,6 +18,10 @@ use HTML::Mason::MethodMaker
 			 ignore_flush
 		       ) ],
     );
+
+=pod
+
+=begin for later reference
 
 __PACKAGE__->valid_params
     (
@@ -38,10 +39,14 @@ __PACKAGE__->valid_params
 		       public => 0 },
     );
 
+=end
+
+=cut
+
 sub new
 {
     my $class = shift;
-    my $self = $class->SUPER::new(@_);
+    my $self = bless { ignore_flush => 0, @_ }, $class;
     $self->_initialize;
     return $self;
 }
