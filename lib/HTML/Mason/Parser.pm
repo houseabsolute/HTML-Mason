@@ -198,6 +198,9 @@ sub parse_component
 		       doc filter flags
 		       init once shared text );
 
+	# These cannot occur inside a subcomponent.
+	my @non_embedded_tags = qw( once shared def method );
+	
 	foreach my $t (@tags)
 	{
 	    $state->{$t} = '';
@@ -229,6 +232,11 @@ sub parse_component
 		for ($subcomp_name) { s/^\s+//; s/\s+$//; }
 	    }
 
+	    if ($state->{embedded} && grep { $section_name eq $_ } @non_embedded_tags ) {
+		die $self->_make_error( error => "<%$section_name> not allowed inside <%def> or <%method>",
+					errpos => $section_tag_pos );
+	    }
+
 	    $self->_parse_textseg( segbegin => $curpos,
 				   length => $section_tag_pos - $curpos,
 				   startline => $startline )
@@ -238,6 +246,7 @@ sub parse_component
 		my $ending_tag = $1;
 		my $section_end = pos($state->{script}) - length($ending_tag);
 		my $section = substr($state->{script}, $section_start, $section_end - $section_start);
+		my $method = '_parse_' . lc $section_name . '_section';
 		if ($section_name eq 'text') {
 		    # Special case for <%text> sections: add a special
 		    # segment that won't get parsed
@@ -246,11 +255,6 @@ sub parse_component
 					   startline => 0,
 					   noparse => 1 );
 		} elsif ( $section_name eq 'def' || $section_name eq 'method' ) {
-		    if ($state->{embedded}) {
-			die $self->_make_error( error => "<%$section_name> not allowed inside <%def> or <%method>",
-						errpos => $section_tag_pos );
-		    }
-		    my $method = '_parse_' . lc $section_name . '_section';
 		    $self->$method( name => $subcomp_name,
 				    section => $section,
 				    section_start => $section_start,
@@ -261,11 +265,6 @@ sub parse_component
 		    #    die $self->_make_error( error => "repeated <%$section_name> section",
 		    #  		errpos => $section_tag_pos );
 		    #}
-		    if ( $state->{embedded} and ($section_name eq 'shared' or $section_name eq 'once') ) {
-			die $self->_make_error( error => "<%$section_name> not allowed inside <%def> or <%method>",
-						errpos => $section_tag_pos );
-		    }
-		    my $method = '_parse_' . lc $section_name . '_section';
 		    $self->$method( section => $section );
 		}
 		$curpos = pos($state->{script});
