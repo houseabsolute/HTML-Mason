@@ -69,19 +69,31 @@ sub _handler {
 	}
     }
 
-    
-    # Encapsulation be damned!
-    # Actually, the 'dev_dirs' stuff won't work properly unless comp_root and data_dir can
-    # be changed on the fly.
-    local $self->interp->{comp_root} = $local_root    if $local_root;
-    local $self->interp->{data_dir}  = $local_datadir if $local_datadir;
-
     my $r = 'HTML::Mason::CGIRequest'->new();
     $self->interp->set_global('$r', $r);
-    
+
     $self->{output} = '';
     my @params = $self->{exec_args} ? @{$self->{exec_args}} : $r->params;
-    $self->interp->exec($component, @params);
+
+    my $old_root;
+    if ($local_root) {
+	$old_root = $self->interp->resolver->comp_root;
+	$self->interp->resolver->comp_root($local_root);
+    }
+
+    my $old_datadir;
+    if ($local_datadir) {
+	$old_datadir = $self->interp->data_dir($local_datadir);
+    }
+
+    eval { $self->interp->exec($component, @params) };
+    # save it in case setting one of the attributes below uses eval{}
+    my $e = $@;
+
+    $self->interp->resolver->comp_root($old_root) if $old_root;
+    $self->interp->data_dir($old_datadir) if $old_datadir;
+
+    die $e if $e;
 
     if (@_) {
 	# This is a secret feature, and should stay secret (or go away) because it's just a hack for the test suite.
