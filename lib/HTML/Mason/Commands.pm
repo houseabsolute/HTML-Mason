@@ -40,7 +40,7 @@ require Exporter;
 sub pure_text_handler
 {
     $REQ->call_hooks('start_primary');
-    $REQ->topstack->{sink}->($REQ->comp->source_ref_text);
+    $REQ->sink->($REQ->comp->source_ref_text);
     $REQ->call_hooks('end_primary');
 }
 
@@ -307,7 +307,7 @@ sub mc_file_root ()
 sub mc_out ($)
 {
     check_request;
-    $REQ->{sink}->($_[0]) if defined($_[0]);
+    $REQ->sink->($_[0]) if defined($_[0]);
 }
 
 sub mc_time

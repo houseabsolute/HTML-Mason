@@ -289,7 +289,7 @@ sub load {
     # have a cached subroutine or object file.
     #
     if ($self->{use_reload_file}) {
-	return @{$codeCache->{$path}->{comp}} if exists($codeCache->{$path});
+	return $codeCache->{$path}->{comp} if exists($codeCache->{$path});
 
 	$objfile = $self->object_dir . substr($srcfile,length($compRoot));
 	return undef unless (-f $objfile);   # component not found
@@ -335,7 +335,7 @@ sub load {
     if (exists($codeCache->{$path})                    and
 	$codeCache->{$path}->{lastmod} >= $srcfilemod  and
 	$codeCache->{$path}->{comp}->source_file eq $srcfile) {
-	return @{$codeCache->{$path}->{comp}};
+	return $codeCache->{$path}->{comp};
     } else {
 	$objfilemod = (defined($objfile) and $objisfile) ? $objstat[9] : 0;
 	

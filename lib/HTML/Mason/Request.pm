@@ -206,12 +206,11 @@ sub topstack
 }
 
 #
-# Return component at top of stack.
+# Accessor methods for top of stack elements.
 #
-sub comp
-{
-    return $_[0]->{stack}->[0]->{comp};
-}
+sub comp { return $_[0]->{stack}->[0]->{comp} }
+sub args { return $_[0]->{stack}->[0]->{args} }
+sub sink { return $_[0]->{stack}->[0]->{sink} }
 
 #
 # Abort out of current execution.

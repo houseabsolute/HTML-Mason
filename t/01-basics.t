@@ -35,9 +35,11 @@ foreach my $component ( @comps ) {
     undef $buf;
     my $result;
     eval { $interp->exec("/$component"); };
+    my $err = $@;
+    print STDERR "-----\nERROR during '$component' test\n$err-----\n" if $err;
 
     open(F, ">$tmp_dir$component");
-    print F $buf;
+    print F $buf if defined($buf);
     close F;
     my $error = compareFiles("$tmp_dir$component", "$results_dir$component");
     print ( $error == 0 ? "ok\n" : "not ok\n" );
