@@ -343,7 +343,7 @@ sub _get_val
     param_error( "Only a single value is allowed for configuration parameter '$p'\n" )
 	if @val > 1 && ! $wantarray;
 
-    $vals->{$p} = join '', @val;
+    $vals->{$p} = join '', @val if $vals;
 
     return ($p, $wantarray ? @val : $val[0]);
 }
