@@ -19,6 +19,9 @@ in 1.09_02, as a deprecated method.
 
 [ ENHANCEMENTS ]
 
+- Implemented the long requested user-defined escapes feature.  It is
+not possible to define your own escape flags, as well as overriding
+Mason's own 'h' and 'u' flags. L{Devel/Escaping expressions}
 - Implemented expire_if and busy_lock options in new $m->cache->get
 API. These retain the essence of the 1.0x options although both
 work a little differently. L{Devel/Data Caching}
@@ -27,9 +30,21 @@ HTML::Mason::Cache::BaseCache, with accompanying documentation.
 - Enhanced Params.pod with TOC and full descriptions of all
 parameters.  Standardized rest of documentation to link to Params.pod
 when referring to a parameter.
+- When a component path is not found, but that path matches a file on
+disk, we now print an extra warning, because this indicates that the
+user does not understand the distinction between component paths and
+filesystem paths.
 
 [ BUG FIXES ]
 
+- The documentation incorrectly indicated that you could create an
+ApacheHandler object during server startup without providing a
+component root.  This will also shown incorrectly in the sample
+handler.pl in the eg/ directory.
+- Reduced Mason's memory usage when compiling components.  This is
+particularly noticeable with very large components (1-2MB or greater).
+Work on this will continue for future versions.  (reported by Todd
+Holbrook)
 - %ARGS and <%shared> variables could not be accessed from <%filter>.
 (reported by Adam Roth)
 - Switch.pm did not work in file-based components. (reported by Gert
@@ -38,6 +53,9 @@ Thiel)
 Voytovich)
 - $m->clear_buffer (and $m->redirect) did not work inside a component
 call with content. (reported by Manuel Capinha)
+- Some tests were failing on Windows, because they assumed Unix style
+filesystem paths.  This was a problem with the tests, not the core
+code, but still worth fixing.  (reported by Adam Rinehart).
 
 1.13  August 26, 2002 (Taiwan time)
 
@@ -53,44 +71,45 @@ Concurrent Recomputations}
 [ BUG FIXES ]
 
 - When running under mod_perl, a warning was issued from
-HTML::Mason::Request::ApacheHandler's exec() method.  Reported by
-Marius Feraru.
+HTML::Mason::Request::ApacheHandler's exec() method.  (reported by
+Marius Feraru)
 - The request wrapper code did not work with anonymous component.
-Reported by Bob McElrath.
+(reported by Bob McElrath)
 - Mason 1.10-1.12 did not cooperate with Apache::Filter, or any other
-Apache subclass that overrode the print() method.  Reported by Mark
-Moseley.
+Apache subclass that overrode the print() method.  (reported by Mark
+Moseley)
 - If an object blessed into Apache::Request was provided to
 ApacheHandler's handle_request method, and you were using the
 args_method parameter was set to "mod_perl" (the default), then
 ApacheHandler would die.  This was a bug introduced in 1.12 as a
-result of fixing the memory leaks in 1.11.  Reported by Autrijus Tang.
+result of fixing the memory leaks in 1.11.  (reported by Autrijus
+Tang)
 - Configuring multiple component roots via the httpd.conf file failed.
-Reported and patched by Alexei V. Barantsev.
-- $interp->exec and $m->exec were not respecting wantarray.  Reported
-by David Bushong.
+(reported and patched by Alexei V. Barantsev)
+- $interp->exec and $m->exec were not respecting wantarray.  (reported
+by David Bushong)
 - Suppress a "subroutine redefined" warning from
-HTML::Mason::Request::Apachehandler's exec() method.  Reported by
-Marius Feraru.
+HTML::Mason::Request::Apachehandler's exec() method.  (reported by
+Marius Feraru)
 - Combining cache_self, <%filter> blocks, and $m->scomp did not work.
-Reported by Calle Dybedahl.
+(reported by Calle Dybedahl)
 - Tests 4 & 5 for 06-compiler.t would fail if HTML::Entities was not
 installed.  Now they will be skipped if necessary.
 - Tests 75 & 99 for 08-ah.t depended on hash key ordering and would
-fail with Perl 5.8.0.  Submitted by Michael Gray
+fail with Perl 5.8.0.  (submitted by Michael Gray)
 - Fixed a number of cases where the lexer/compiler's behavior differed
 from Mason 1.05 in unintended ways.
 -- Dashes were not being allowed in subcomponent and method names,
-even though this is documented as being allowed.  Reported by Ken
-Miller.
+even though this is documented as being allowed.  (reported by Ken
+Miller)
 -- Space between a method or subcomponent name and the '>' at the end
 of the tag was not being allowed.  It should be noted that this is not
 documented as being allowed in the docs, and so may change in the
-future.  But for now, we'd rather be compatible with 1.05.  Reported
-by Chris Hutchinson.
+future.  But for now, we'd rather be compatible with 1.05.  (reported
+by Chris Hutchinson)
 -- Comments were not being allowed after flag and attribute
 assignments.  Again, this is not documented as being allowed.
-Reported by Chris Hutchinson.
+(reported by Chris Hutchinson)
 - CPAN thought that version 1.68 of HTML::Mason::ApacheHandler (part
 of the 1.05 release), was newer than version 1.242 (part of the 1.1201
 release).  This is what we get for using CVS to set verson numbers.
@@ -147,17 +166,17 @@ was not a Mason bug, but a bug in the test code itself.
 - ApacheHandler did not work Perl 5.005.
 - Even if ApacheHandler was given an Apache::Request object to
 handle_request() or prepare_request(), it was still calling
-Apache::Request->new.  Reported by Ray Zimmerman.
-- Fixed incorrect $m->make_subrequest documentation.  Reported by Ray
-Zimmerman.
+Apache::Request->new.  (reported by Ray Zimmerman)
+- Fixed incorrect $m->make_subrequest documentation.  (reported by Ray
+Zimmerman)
 - Added some incompatibilities in 1.10 to the UPGRADE document that
 were left out in previous versions.
 - HTML error output could be sent as plain text or some other content
 type depending on your Apache config and the file extension of the
 requested component.  Now we explicitly set $r->content_type before
 sending HTML error output.
-- Fix failures of Resolver::File::glob_path() with Win32.  Reported by
-Adam Reinhart.
+- Fix failures of Resolver::File::glob_path() with Win32.  (reported
+by Adam Reinhart)
 
 1.10  June 25, 2002
 
