@@ -5,6 +5,13 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.15
+
+[ BUG FIXES ]
+
+- Fix some buglets in the POD and HTML versions of the docs.
+
+
 1.14  October 7, 2002
 
 [ BACKWARDS COMPATIBILITY ]
