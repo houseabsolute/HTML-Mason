@@ -9,6 +9,16 @@ $root = (-f "test-common.pl") ? "$pwd/.." : (-f "t/test-common.pl") ? "$pwd" : d
 unshift(@INC,"$root/lib");
 
 require "$root/t/test-common.pl";
+
+# Skip test if no mod_perl
+eval { require mod_perl };
+my @use = ($mod_perl::VERSION);
+unless ($mod_perl::VERSION) {
+    print "1..0";
+    die "";
+}
+require HTML::Mason::ApacheHandler;
+
 init();
 
 sub fake_apache {

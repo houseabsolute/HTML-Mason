@@ -2,7 +2,6 @@ BEGIN { $HTML::Mason::IN_DEBUG_FILE = 1 if !$HTML::Mason::IN_DEBUG_FILE }
 use Data::Dumper;
 use DirHandle;
 use HTML::Mason;
-use HTML::Mason::ApacheHandler;
 use Getopt::Std;
 use strict;
 
