@@ -942,7 +942,7 @@ Example:
 
     # expire the cache if 'myfile' is newer
     mc_cache(action => 'retrieve',
-          expire_if => sub { [stat 'myfile']->[9] > $_[0] });
+          expire_if => sub { (stat 'myfile')[9] > $_[0] });
 
 =item By Explicit Action
 
