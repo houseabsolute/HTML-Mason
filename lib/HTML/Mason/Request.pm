@@ -130,11 +130,9 @@ sub _initialize {
 	$top_comp =~ s{/+}{/}g;
 	$self->{top_path} = $path = $top_comp;
 
-        # until it is a component _object_
-        until ( ref $top_comp )
-	{
+        search: {
 	    $top_comp = $self->interp->load($path);
-
+	    
 	    # If path was not found, check for dhandler.
 	    unless ($top_comp) {
 		if ( $top_comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
@@ -142,9 +140,7 @@ sub _initialize {
 		    ($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
 		}
 	    }
-
-	    last unless $top_comp;
-
+	    
 	    # If the component was declined previously in this request,
 	    # look for the next dhandler up the tree.
 	    if ($top_comp and $self->{declined_comps}->{$top_comp->comp_id}) {
@@ -153,8 +149,8 @@ sub _initialize {
 		    if ($top_comp->name eq $interp->dhandler_name) {
 			$path =~ s{/[^\/]+$}{};
 		    }
-		    undef $top_comp;
 		}
+		redo search;
 	    }
         }
 
