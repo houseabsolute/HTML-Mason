@@ -8,7 +8,7 @@ use strict;
 
 use base qw( HTML::Mason::Compiler );
 
-use Exception::Class qw( Mason::Exception::Compiler );
+use HTML::Mason::Exceptions;
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( comp_class
@@ -31,17 +31,14 @@ sub new
 {
     my $proto = shift;
     my $class = ref $proto || $proto;
+
     my %p = @_;
 
     my $self = bless {}, $class;
 
-    foreach ( keys %p )
-    {
-	$self->{$_} = $p{$_};
-    }
     foreach ( keys %fields )
     {
-	$self->{$_} ||= $fields{$_};
+	$self->$_( $p{$_} || $fields{$_} ) unless $self->$_();
     }
 
     $self->_init;
@@ -55,15 +52,15 @@ sub compile
     my %p = @_;
 
     $self->comp_class( $p{comp_class} || 'HTML::Mason::Component' );
-    return $self->SUPER::compile(%p);
+    return $self->SUPER::compile( comp => $p{comp}, name => $p{name} );
 }
 
 sub compiled_component
 {
     my $self = shift;
 
-    $self->{compiled_subcomponents} = $self->_compile_subcomponents;
-    $self->{compiled_methods} = $self->_compile_methods;
+    $self->{compiled_def} = $self->_compile_subcomponents if %{ $self->{def} };
+    $self->{compiled_method} = $self->_compile_methods if %{ $self->{method} };
 
     $self->{current_comp} = $self;
 
@@ -74,19 +71,19 @@ sub compiled_component
     $params->{parser_version} = "'0.8'";
     $params->{create_time} = time;
 
-    $params->{subcomps} = '\%_subcomponents' if %{ $self->{subcomponents} };
-    $params->{methods} = '\%_methods' if %{ $self->{methods} };
+    $params->{subcomps} = '\%_def' if %{ $self->{def} };
+    $params->{methods} = '\%_method' if %{ $self->{method} };
 
     if ( $self->_blocks('shared') )
     {
 	my %subs;
-	while ( my ($name, $pref) = each %{ $self->{compiled_subcomponents} } )
+	while ( my ($name, $pref) = each %{ $self->{compiled_def} } )
 	{
 	    my $key = "subcomponent_$name";
 	    $subs{$key} = $pref->{code};
 	    $pref->{code} = "sub {\n\$m->call_dynamic('$key',\@_)\n}";
 	}
-	while (my ($name, $pref) = each %{ $self->{compiled_methods} } )
+	while (my ($name, $pref) = each %{ $self->{compiled_method} } )
 	{
 	    my $key = "method_$name";
 	    $subs{$key} = $pref->{code};
@@ -113,7 +110,6 @@ sub compiled_component
 						 $params ),
 			    ';',
 			  );
-    $object .= ';';
 
     $self->{current_comp} = undef;
 
@@ -124,22 +120,20 @@ sub _compile_subcomponents
 {
     my $self = shift;
 
-    return $self->_compile_subcomponents_or_methods('subcomponents');
+    return $self->_compile_subcomponents_or_methods('def');
 }
 
 sub _compile_methods
 {
     my $self = shift;
 
-    return $self->_compile_subcomponents_or_methods('methods');
+    return $self->_compile_subcomponents_or_methods('method');
 }
 
 sub _compile_subcomponents_or_methods
 {
     my $self = shift;
     my $type = shift;
-
-    return unless %{ $self->{$type} };
 
     my %compiled;
     foreach ( keys %{ $self->{$type} } )
@@ -169,14 +163,14 @@ sub _subcomponents_footer
 {
     my $self = shift;
 
-    return $self->_subcomponent_or_method_footer('subcomponents');
+    return $self->_subcomponent_or_method_footer('def');
 }
 
 sub _methods_footer
 {
     my $self = shift;
 
-    return $self->_subcomponent_or_method_footer('methods');
+    return $self->_subcomponent_or_method_footer('method');
 }
 
 sub _subcomponent_or_method_footer
@@ -248,30 +242,39 @@ EOF
     return join '', ( $self->preamble,
 		      "my \%ARGS;\n",
 		      @args,
+		      $self->_filter_code,
 		      "my \$_out = \$m->current_sink;\n",
-		      $self->_add_filter,
 		      "\$m->debug_hook( \$m->current_comp->path ) if ( \%DB:: );\n\n",
 		      $self->_blocks('init'),
 		      $self->{current_comp}{body},
 		      $self->_blocks('cleanup'),
 		      $self->postamble,
+		      $self->_finish_filter,
 		      "return undef;\n",
 		    );
 }
 
-sub _add_filter
+sub _filter_code
 {
     my $self = shift;
     return unless $self->_blocks('filter');
 
-    return ( "{ my (\$_c,\$_r);\n",
-	     "if (\$m->call_self(\\\$_c,\\\$_r)) {\n",
-	     "for (\$_c) {\n",
-	     $self->_blocks('filter'),
-	     "}\n",
-	     "\$m->out(\$_c);\n",
-	     "return \$_r }\n",
+    return ( "my \$filter = sub { local \$_ = shift;\n",
+	     ( join ";\n", $self->_blocks('filter') ),
+	     ";\n",
+	     "return \$_;\n",
 	     "};\n",
+	     "\$m->push_buffer_stack( \$m->top_buffer->new_child( mode => 'batch', filter => \$filter ) );\n",
+	   );
+}
+
+sub _finish_filter
+{
+    my $self = shift;
+    return unless $self->_blocks('filter');
+
+    return ( "\$m->top_buffer->flush;\n",
+	     "\$m->pop_buffer_stack;\n",
 	   );
 }
 
@@ -353,7 +356,7 @@ sub _declared_args
 	$def =~ s,([\\']),\\$1,g;
 	$def = "'$def'" unless $def eq 'undef';
 
-	push @args, "'$arg->{type}$arg->{name}' => { default => $def }";
+	push @args, "  '$arg->{type}$arg->{name}' => { default => $def }";
     }
 
     return join ",\n", @args;
