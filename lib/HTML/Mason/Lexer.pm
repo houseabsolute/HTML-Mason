@@ -37,6 +37,34 @@ my %blocks = ( args    => 'variable_list_block',
 	       text    => 'text_block',
 	     );
 
+#
+# ATTENTION!
+#
+# If you are thinking of altering this code you'll notice a strange
+# this.  The text of a component is stored in
+# $self->{current}{comp_text}.  However, when we go to do a regex
+# against that text we always do this:
+#
+#    my $text = $self->{current}{comp_text};
+#    pos($text) = $self->{current}{pos};
+#
+# Then we do a match (containing \G and with the /gc modifiers).
+# After the match we do this:
+#
+#    $self->{current}{pos} = pos($text);
+#
+# The reason for all this bullshit is that some versions of Perl
+# (including 5.00503 and 5.6.1) have a very weird bug.  When running
+# under taint mode, a regex containing "\G", matching against text
+# that is a value in hash, will never update the "last match" position
+# in the text, even after a successful match.  That same text, in a
+# plain scalar, will work.
+#
+# Thus the above workaround.  Do not deviate from this pattern or the
+# code will go into an infinite loop in taint mode.  That is a bad
+# thing.
+#
+
 sub block_body_method
 {
     return $blocks{ $_[1] };
@@ -76,7 +104,7 @@ sub lex
 {
     my $self = shift;
     my %p = validate(@_,
-		     {comp_text => SCALAR, 
+		     {comp_text => SCALAR,
 		      name => SCALAR,
 		      compiler => {isa => 'HTML::Mason::Compiler'}}
 		    );
@@ -135,7 +163,7 @@ sub start
     my $self = shift;
 
     my $end;
-    while ( defined  $self->{current}{pos} ? $self->{current}{pos} < length $self->{current}{comp_text} : 1 )
+    while ( defined $self->{current}{pos} ? $self->{current}{pos} < length $self->{current}{comp_text} : 1 )
     {
 	last if $end = $self->match_end;
 
@@ -174,13 +202,14 @@ sub match_block
 {
     my $self = shift;
 
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
+    my $text = $self->{current}{comp_text};
+    pos($text) = $self->{current}{pos};
 
     my $blocks_re = $self->blocks_regex;
 
-    if ( $self->{current}{comp_text} =~ /\G<%($blocks_re)>/igcs )
+    if ( $text =~ /\G<%($blocks_re)>/igcs )
     {
-	$self->{current}{pos} = pos($self->{current}{comp_text});
+	$self->{current}{pos} = pos($text);
 
 	my $type = lc $1;
 	$self->{current}{compiler}->start_block( block_type => $type );
@@ -196,8 +225,6 @@ sub generic_block
 {
     my $self = shift;
     my %p = @_;
-
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
 
     my ($block, $nl) = $self->match_block_end( block_type => $p{block_type},
 					       allow_text => 1 );
@@ -235,8 +262,10 @@ sub variable_list_block
     my $self = shift;
     my %p = @_;
 
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
-    while ( $self->{current}{comp_text} =~ m,\G               # last pos matched
+    my $text = $self->{current}{comp_text};
+    pos($text) = $self->{current}{pos};
+
+    while ( $text =~ m,\G               # last pos matched
                        (?:
                         [ \t]*
                         ( [\$\@\%] )    # variable type
@@ -262,7 +291,7 @@ sub variable_list_block
                       ,xgcs
 	  )
     {
-	$self->{current}{pos} = pos($self->{current}{comp_text});
+	$self->{current}{pos} = pos($text);
 
 	if ( length $1 && length $2 )
 	{
@@ -288,8 +317,10 @@ sub key_val_block
     my $self = shift;
     my %p = @_;
 
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
-    while ( $self->{current}{comp_text} =~ /\G
+    my $text = $self->{current}{comp_text};
+    pos($text) = $self->{current}{pos};
+
+    while ( $text =~ /\G
                       [ \t]*
                       ([\w_]+)          # identifier
                       [ \t]*=>[ \t]*    # separator
@@ -299,7 +330,7 @@ sub key_val_block
                       \G[ \t]*\n
                      /gcx )
     {
-	$self->{current}{pos} = pos($self->{current}{comp_text});
+	$self->{current}{pos} = pos($text);
 
 	if ( length $1 && length $2 )
 	{
@@ -324,12 +355,13 @@ sub match_block_end
     my $self = shift;
     my %p = @_;
 
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
+    my $text = $self->{current}{comp_text};
+    pos($text) = $self->{current}{pos};
 
     my $re = $p{allow_text} ? qr,\G(.*?)</%\Q$p{block_type}\E>(\n?),is : qr,\G()</%\Q$p{block_type}\E>(\n?),is;
-    if ( $self->{current}{comp_text} =~ /$re/gc )
+    if ( $text =~ /$re/gc )
     {
-	$self->{current}{pos} = pos($self->{current}{comp_text});
+	$self->{current}{pos} = pos($text);
 
 	return $p{allow_text} ? ($1, $2) : $2;
     }
@@ -345,10 +377,12 @@ sub match_named_block
     my $self = shift;
     my %p = @_;
 
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
-    if ( $self->{current}{comp_text} =~ /\G<%(def|method)\s+([^\n]+?)>/igcs )
+    my $text = $self->{current}{comp_text};
+    pos($text) = $self->{current}{pos};
+
+    if ( $text =~ /\G<%(def|method)\s+([^\n]+?)>/igcs )
     {
-	$self->{current}{pos} = pos($self->{current}{comp_text});
+	$self->{current}{pos} = pos($text);
 	my ($type, $name) = ($1, $2);
 	$self->{current}{compiler}->start_named_block( block_type => $type,
 						       name => $name );
@@ -371,13 +405,14 @@ sub match_substitute
 {
     my $self = shift;
 
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
-    if ( $self->{current}{comp_text} =~ /\G<%/gcs )
+    my $text = $self->{current}{comp_text};
+    pos($text) = $self->{current}{pos};
+
+    if ( $text =~ /\G<%/gcs )
     {
-	$self->{current}{pos} = pos($self->{current}{comp_text});
-	if ( $self->{current}{comp_text} =~ /\G(.+?)(\s*\|\s*([a-z]+)?\s*)?%>/igcs )
+	if ( $text =~ /\G(.+?)(\s*\|\s*([a-z]+)?\s*)?%>/igcs )
 	{
-	    $self->{current}{pos} = pos($self->{current}{comp_text});
+	    $self->{current}{pos} = pos($text);
 	    my ($sub, $escape) = ($1, $3);
 	    $self->{current}{compiler}->substitution( substitution => $sub,
 						      escape => $escape );
@@ -400,13 +435,14 @@ sub match_comp_call
 {
     my $self = shift;
 
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
-    if ( $self->{current}{comp_text} =~ /\G<&(?!\|)/gcs )
+    my $text = $self->{current}{comp_text};
+    pos($text) = $self->{current}{pos};
+
+    if ( $text =~ /\G<&(?!\|)/gcs )
     {
-	$self->{current}{pos} = pos($self->{current}{comp_text});
-	if ( $self->{current}{comp_text} =~ /\G(.*?)&>/gcs )
+	if ( $text =~ /\G(.*?)&>/gcs )
 	{
-	    $self->{current}{pos} = pos($self->{current}{comp_text});
+	    $self->{current}{pos} = pos($text);
 
 	    my $call = $1;
 	    $self->{current}{compiler}->component_call( call => $call );
@@ -427,13 +463,14 @@ sub match_comp_content_call
 {
     my $self = shift;
 
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
-    if ( $self->{current}{comp_text} =~ /\G<&\|/gcs )
+    my $text = $self->{current}{comp_text};
+    pos($text) = $self->{current}{pos};
+
+    if ( $text =~ /\G<&\|/gcs )
     {
-	$self->{current}{pos} = pos($self->{current}{comp_text});
-	if ( $self->{current}{comp_text} =~ /\G(.*?)&>/gcs )
+	if ( $text =~ /\G(.*?)&>/gcs )
 	{
-	    $self->{current}{pos} = pos($self->{current}{comp_text});
+	    $self->{current}{pos} = pos($text);
 
 	    my $call = $1;
 	    $self->{current}{compiler}->component_content_call( call => $call );
@@ -453,11 +490,12 @@ sub match_comp_content_call_end
 {
     my $self = shift;
 
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
+    my $text = $self->{current}{comp_text};
+    pos($text) = $self->{current}{pos};
 
-    if ( $self->{current}{comp_text} =~ m,\G</&>,gc )
+    if ( $text =~ m,\G</&>,gc )
     {
-        $self->{current}{pos} = pos($self->{current}{comp_text});
+        $self->{current}{pos} = pos($text);
 
         $self->{current}{compiler}->component_content_call_end;
 
@@ -469,10 +507,12 @@ sub match_perl_line
 {
     my $self = shift;
 
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
-    if ( $self->{current}{comp_text} =~ /\G%([^\n]*)(?:\n|\z)/gcs )
+    my $text = $self->{current}{comp_text};
+    pos($text) = $self->{current}{pos};
+
+    if ( $text =~ /\G%([^\n]*)(?:\n|\z)/gcs )
     {
-	$self->{current}{pos} = pos($self->{current}{comp_text});
+	$self->{current}{pos} = pos($text);
 
 	$self->{current}{compiler}->perl_line( line => $1 );
 	$self->{current}{lines}++;
@@ -485,8 +525,10 @@ sub match_text
 {
     my $self = shift;
 
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
-    if ( $self->{current}{comp_text} =~ m,\G
+    my $text = $self->{current}{comp_text};
+    pos($text) = $self->{current}{pos};
+
+    if ( $text =~ m,\G
                     (.*?)       # anything
 		    (           # followed by
                      (?<=\n)(?=%) # an eval line - consume the \n
@@ -502,7 +544,7 @@ sub match_text
                    ,gcsx
        )
     {
-	$self->{current}{pos} = pos($self->{current}{comp_text});
+	$self->{current}{pos} = pos($text);
 
 	my $consumed = "$1$2";
 	return 0 unless length $consumed;
@@ -518,12 +560,14 @@ sub match_end
 {
     my $self = shift;
 
+    my $text = $self->{current}{comp_text};
+    pos($text) = $self->{current}{pos};
+
     # $self->{current}{ending} is a qr// 'string'.  No need to escape.  It will
     # also include the needed \G marker
-    pos($self->{current}{comp_text}) = $self->{current}{pos};
-    if ( $self->{current}{comp_text} =~ /($self->{current}{ending})/gcs )
+    if ( $text =~ /($self->{current}{ending})/gcs )
     {
-	$self->{current}{pos} = pos($self->{current}{comp_text});
+	$self->{current}{pos} = pos($text);
 
 	my $text = $1;
 	if (defined $text)
