@@ -39,6 +39,12 @@ EOF
 
 # These are required modules.
 
+my %prereq = ( 'File::Spec' => 0.8,
+	       'Params::Validate' => 0.16,
+	       'Exception::Class' => 1.01,
+	       'Cache::Cache' => 1.00,
+	     );
+
 chk_version('File::Spec' => '0.8') or
     warn  "\n"
 	. "*** Mason requires version 0.8, or later, of File::Spec\n"
@@ -50,13 +56,15 @@ chk_version('Params::Validate' => '0.16') or
 	. "    from CPAN/modules/by-authors/id/D/DR/DROLSKY/Params-Validate-x.x.tar.gz\n\n";
 
 eval { require mod_perl };
-unless ($@)
+unless ( $@ || $^O =~ /mac|darwin/ )
 {
     chk_version('Apache::Request' => '0.31') or
 	warn  "\n"
 	    . "*** If you plan to use Mason with mod_perl,\n"
 	    . "    Mason requires version 0.31, or later, of Apache::Request\n"
 	    . "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
+
+    $prereq{'Apache::Request'} = 0.31;
 }
 
 chk_version('Exception::Class' => '1.01') or
@@ -76,18 +84,10 @@ assisted_install_config() unless $opts{'no-prompts'};
 # Get these into the MY namespace for the MY::test method
 %MY::APACHE = %APACHE;
 
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
 WriteMakefile(
     'NAME'    => 'HTML::Mason',
-    'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
-    'PREREQ_PM' => { 'Data::Dumper' => 2.08,
-		     'File::Spec' => 0.8,
-		     'Params::Validate' => 0.16,
-		     'Apache::Request' => 0.31,
-		     'Exception::Class' => 1.01,
-		     'Cache::Cache' => 0.99,
-		   },
+    'VERSION_FROM' => 'lib/HTML/Mason.pm',
+    'PREREQ_PM' => \%prereq,
 
     # %APACHE is created when setup_mod_perl_tests() is called.  The
     # code that does this creation is in apache_tests_helper.pl.
@@ -103,7 +103,7 @@ sub chk_version
     local $| = 1;
     print "Checking for $pkg...";
 
-    eval { my $p; ($p = $pkg . ".pm") =~ s#::#/#g; require $p; };
+    eval { eval "require $pkg" };
 
     my $vstr;
     my $vnum;
