@@ -304,8 +304,8 @@ sub handle_request {
     #
     # Capture debug state as early as possible, before we start messing with $apreq.
     #
-    my $debugState;
-    $debugState = $self->capture_debug_state($apreq)
+    my $debug_state;
+    $debug_state = $self->capture_debug_state($apreq)
 	if ($debugMode eq 'all' or $debugMode eq 'error');
 
     #
@@ -318,7 +318,7 @@ sub handle_request {
 	 cgi_object=>$self->{cgi_object},
 	 );
     
-    eval { $retval = $self->handle_request_1($apreq, $request, $debugState) };
+    eval { $retval = $self->handle_request_1($apreq, $request, $debug_state) };
     my $err = $@;
     my $err_code = $request->error_code;
     undef $request;  # ward off memory leak
@@ -357,14 +357,14 @@ sub handle_request {
 	    }
 	    print("<h3>System error</h3><p><pre><font size=-1>$err</font></pre>\n");
 	    if ($debugMode eq 'error' or $debugMode eq 'all') {
-		my $debugMsg = $self->write_debug_file($apreq,$debugState);
-		print("<pre><font size=-1>\n$debugMsg\n</font></pre>\n");
+		my $debug_msg = $self->write_debug_file($apreq,$debug_state);
+		print("<pre><font size=-1>\n$debug_msg\n</font></pre>\n");
 	    }
 	}
     } else {
 	if ($debugMode eq 'all') {
-	    my $debugMsg = $self->write_debug_file($apreq,$debugState);
-	    print "\n<!--\n$debugMsg\n-->\n" if (http_header_sent($apreq) && !$apreq->header_only && $apreq->header_out("Content-type") =~ /text\/html/);
+	    my $debug_msg = $self->write_debug_file($apreq,$debug_state);
+	    print "\n<!--\n$debug_msg\n-->\n" if (http_header_sent($apreq) && !$apreq->header_only && $apreq->header_out("Content-type") =~ /text\/html/);
 	}
     }
 
@@ -412,7 +412,8 @@ BEGIN {
     if ($opt_p) {
 	print STDERR "Profiling request ...";
 	# re-enter with different option (no inf. loops, please)
-	system ("perl", "-d:DProf", $0, "-P", "-r$opt_r");
+	system ("perl", "-d:DProf", $0, "-P", "-r$opt_r")
+            or die "Can't execute perl: $!";
     
 # -----------------------------
 # When done, merge named coderefs in tmon.mason with those in tmon.out,
@@ -431,7 +432,7 @@ BEGIN {
 	$regex =~ s/\\\|/|/g;   #un-quote the pipe chars
 	while (<$tmonout>) {
 	    s/HTML::Mason::Commands::($regex)/$::CODEREF_NAME{$1}/;
-	    print $tmontmp $_
+	    print $tmontmp $_;
 	}
 	close $tmonout or die "can't close file: tmon.out: $!";
         close $tmontmp or die "can't close file: tmon.tmp: $!";
@@ -446,8 +447,8 @@ PERL
     $o .= "BEGIN { \$HTML::Mason::IN_DEBUG_FILE = 1; require '".$self->debug_handler_script."' }\n\n";
     $o .= <<'PERL';
 if ($opt_P) {
-    open SAVEOUT, ">&STDOUT";    # stifle component output while profiling
-    open STDOUT, ">/dev/null";
+    open SAVEOUT, ">&STDOUT" or die "Can't open &STDOUT: $!";    # stifle component output while profiling
+    open STDOUT, ">/dev/null" or die "Can't write to /dev/null: $!";
 }
 for (1 .. $opt_r) {
 print STDERR '.' if ($opt_P and $opt_r > 1);
@@ -470,8 +471,8 @@ PERL
     close $outfh or die "can't close file: $out_path: $!";
     chmod(0775,$out_path) or die "can't chmod file to 0775: $out_path: $!";
 
-    my $debugMsg = "Debug file is '$outFile'.\nFull debug path is '$out_path'.\n";
-    return $debugMsg;
+    my $debug_msg = "Debug file is '$outFile'.\nFull debug path is '$out_path'.\n";
+    return $debug_msg;
 }
 
 sub capture_debug_state
@@ -523,7 +524,7 @@ sub capture_debug_state
 
 sub handle_request_1
 {
-    my ($self,$r,$request,$debugState) = @_;
+    my ($self,$r,$request,$debug_state) = @_;
     my $interp = $self->interp;
 
     #
@@ -573,7 +574,7 @@ sub handle_request_1
     } else {
 	%args = $self->$ARGS_METHOD(\$r);
     }
-    $debugState->{args_hash} = \%args if $debugState;
+    $debug_state->{args_hash} = \%args if $debug_state;
 
     #
     # Deprecated output_mode parameter - just pass to request out_mode.
