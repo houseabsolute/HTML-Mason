@@ -31,7 +31,7 @@ __PACKAGE__->valid_params
     (
      allow_globals        => { parse => 'list',   type => ARRAYREF, default => [] },
      default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
-     lexer                => { isa => 'HTML::Mason::Lexer' },
+     lexer                => { can => [ 'lex', 'object_id' ] },
      preprocess           => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_perl     => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1 },
@@ -61,7 +61,7 @@ sub object_id
     # time the program is loaded, whether they are a reference to the
     # same object or not.
     my $spec = $self->validation_spec;
-    my @id_keys = grep { ! exists $spec->{$_}{isa} } keys %$spec;
+    my @id_keys = grep { ! exists $spec->{$_}{isa} && ! exists $spec->{$_}{can} } keys %$spec;
 
     my @vals;
     foreach my $k ( @id_keys )
