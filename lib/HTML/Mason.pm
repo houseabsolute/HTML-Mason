@@ -7,8 +7,9 @@ use 5.005;
 
 $HTML::Mason::VERSION = '1.1';
 
-use HTML::Mason::Parser;
 use HTML::Mason::Interp;
+
+use constant DEBUG => 1;
 
 sub version
 {
