@@ -6,6 +6,7 @@ package HTML::Mason::Resolver::File;
 
 use strict;
 
+use Cwd qw(cwd);
 use File::Spec;
 use HTML::Mason::Tools qw(read_file);
 use Params::Validate qw(:all);
@@ -17,7 +18,7 @@ use HTML::Mason::Exceptions (abbr => ['param_error']);
 
 __PACKAGE__->valid_params
     (
-     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF,
+     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF, optional=>1,
 		       descr => "A string or array of arrays indicating the search path for component calls" },
     );
 
@@ -45,8 +46,11 @@ sub new {
 
 sub comp_root_array
 {
-    return () unless $_[0]->{comp_root};
-    return @{ $_[0]->{comp_root} };
+    if ($_[0]->{comp_root}) {
+	return @{ $_[0]->{comp_root} };
+    } else {
+	return ([MAIN => '/']);
+    }
 }
 
 sub comp_root
@@ -102,6 +106,15 @@ sub glob_path {
 	}
     }
     return keys(%path_hash);
+}
+
+sub default_root_path {
+    my ($self) = shift;
+    if ($self->{comp_root}) {
+	return undef;
+    } else {
+	return "/" . join("/", grep { $_ =~ /\S/ } File::Spec->splitdir(cwd));
+    }
 }
 
 1;

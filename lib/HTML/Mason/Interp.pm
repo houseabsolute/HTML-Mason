@@ -212,11 +212,20 @@ sub comp_exists {
 # component was not found.
 #
 sub load {
-    my ($self,$path) = @_;
+    my ($self, $path) = @_;
     my ($maxfilemod, $objfile, $objfilemod);
     my $code_cache = $self->code_cache;
     my $resolver = $self->{resolver};
 
+    # If path is not absolute, prepand default_root_path.
+    unless (substr($path, 0, 1) eq '/') {
+	if (my $default_root_path = $resolver->default_root_path) {
+	    $path = join("/", $default_root_path, $path);
+	} else {
+	    error "initial component path must be absolute";
+	}
+    }
+    
     #
     # Get source info from resolver. Cache the results in fixed_source mode.
     #

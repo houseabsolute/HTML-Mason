@@ -126,7 +126,7 @@ sub _initialize {
     # load into object.
     my $top_comp = $self->{top_comp};
     my ($path);
-    if (!ref($top_comp) && substr($top_comp, 0, 1) eq '/') {
+    if (!ref($top_comp)) {
 	$top_comp =~ s{/+}{/}g;
 	$self->{top_path} = $path = $top_comp;
 
@@ -156,7 +156,7 @@ sub _initialize {
 
 	$self->{top_comp} = $top_comp;
     } elsif ( ! UNIVERSAL::isa( $top_comp, 'HTML::Mason::Component' ) ) {
-	param_error "comp ($top_comp) must be an absolute component path or a component object";
+	param_error "comp ($top_comp) must be a component path or a component object";
     }
 }
 

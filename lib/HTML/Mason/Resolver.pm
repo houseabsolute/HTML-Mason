@@ -31,6 +31,10 @@ sub glob_path {
     shift->_virtual;
 }
 
+sub default_root_path {
+    return undef;
+}
+
 sub _virtual
 {
     my $self = shift;
