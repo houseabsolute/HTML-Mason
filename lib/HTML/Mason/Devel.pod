@@ -1212,6 +1212,9 @@ different chunks of output.  This can happen if autoflush is on, or if
 a filter-containing component, or the components it calls, call the
 C<< $m->flush_buffer() >> method.
 
+You should never call Perl's C<return()> function inside a filter
+section, or you will not see any output at all.
+
 You can use L<Component Calls with Content|"Component Calls with
 Content"> if you want to filter specific parts of a component rather
 than the entire component.
@@ -1675,6 +1678,18 @@ or the status will not make it out:
           # deal with non-abort exceptions
       }
    }
+
+=head3 Filters and $m->abort
+
+A filter section will still be called after a component aborts with
+C<< $m->abort >>.  You can always check C<< $m->aborted >> in your C<<
+<%filter> >> block if you don't want to run the filter after an abort.
+
+  <%filter>
+  unless ( $m->aborted ) {
+      $_ .= ' filter stuff';
+  }
+  </%filter>
 
 =head2 External Redirects
 
