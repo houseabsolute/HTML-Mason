@@ -99,6 +99,7 @@ The required Mason data directory. Mason's various data directories
 A hash reference of default options to use for the C<$m-E<gt>cache>
 command.
 
+=item die_handler
 
 Specifies a subroutine reference to be used to override $SIG{__DIE__}
 when components are being executed.  If this parameter is specified
