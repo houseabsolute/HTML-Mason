@@ -554,6 +554,57 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/base3/autohandler',
+			 component => <<'EOF',
+<%flags>
+inherit => undef
+</%flags>
+<%method x>
+This is X in base autohandler
+</%method>
+<& .foo &>
+<%def .foo>
+% $m->call_next;
+</%def>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    # Remarks: this used to work in older versions of Mason.  It's not
+    # *quite* surprising that it fails, because the call to <& .foo &>
+    # is a "normal" call and thus changes base_comp.  But since .foo
+    # can't actually function usefully as a base_comp (as far as I
+    # know), it would be possible to not change base_comp while
+    # calling subcomponents.  Currently base_comp changes to the
+    # autohandler in this situation, which seems odd.
+    #
+    # Current workaround is <& {base_comp => $m->request_comp}, $m->fetch_next, $m->caller_args(1) &>
+    #
+    #   -Ken
+
+    $group->add_test( 	name => 'call_next_in_def',
+			path => '/base3/call_next_in_def',
+			call_path => '/base3/call_next_in_def',
+			description => 'Test call_next() inside a subcomponent',
+			component => <<'EOF',
+<%method x>
+This is method X in BASE
+</%method>
+This is BASE
+base_comp is <% $m->base_comp->name %>
+<& SELF:x &>
+EOF
+		      expect => <<'EOF',
+This is BASE
+base_comp is call_next_in_def
+
+This is method X in BASE
+EOF
+		       );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
