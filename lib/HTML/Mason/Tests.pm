@@ -29,7 +29,7 @@ BEGIN
 if ($error) {
   my @lines = split("\n",$error);
   $error = join("\n",@lines[0..$lines-1]);
-  $error =~ s{ at .*}{ }g;
+  $error =~ s{\s+at .*}{}g;
 }
 </%init>
 <%args>
@@ -367,7 +367,7 @@ sub _run_tests
     }
 }
 
-sub _make_component 
+sub _make_component
 {
     my $self = shift;
     my $test = $self->{current_test};
