@@ -201,11 +201,6 @@ sub load {
     my $code_cache = $self->code_cache;
     my $resolver = $self->{resolver};
 
-    if (exists $code_cache->{$path} and $code_cache->{$path}{type} eq 'virtual') {
-	# Don't look for this in the component root
-	return $code_cache->{$path}{comp};
-    }
-
     #
     # Get source info from resolver. Cache the results in fixed_source mode.
     #
