@@ -875,26 +875,16 @@ EOF
 
 #------------------------------------------------------------
 
-        # for some reason this seems to just die and not get caught
-        # under 5.00503 & 5.6.1.  I suspect it's a problem with the
-        # test, not Mason, but I can't figure out what the problem is.
-        # The test passes under 5.8.0, which tells me that the the
-        # %ARGS hash is indeed not defined.
-        if ( $] >= 5.008 )
-        {
-	    $group->add_test( name => 'define_args_hash_never',
-                              description => 'test setting define_args_hash to never',
-                              interp_params => { define_args_hash => 'never' },
-                              component => <<'EOF',
-% my $args = 'AR' . 'GS';
-% eval { eval "\$$args" . "{'foo'} = 1" };
-% die $@ if $@;
+	$group->add_test( name => 'define_args_hash_never',
+                          description => 'test setting define_args_hash to never',
+                          interp_params => { define_args_hash => 'never' },
+                          component => <<'EOF',
+% $ARGS{foo} = 1;
 no error?
 EOF
 
-                              expect_error => qr/Global symbol.*%ARGS/
-                            );
-        }
+                          expect_error => qr/Global symbol.*%ARGS/
+                        );
 
 #------------------------------------------------------------
 
@@ -902,8 +892,7 @@ EOF
 			  description => 'test setting define_args_hash to always',
 		          interp_params => { define_args_hash => 'always' },
 			  component => <<'EOF',
-% my $args = 'AR' . 'GS';
-% eval "\$$args" . "{'foo'} = 1";
+% eval '$AR' . 'GS{foo} = 1';
 <% $@ ? $@ : 'no error' %>
 EOF
                           expect => <<'EOF',
