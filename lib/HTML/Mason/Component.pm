@@ -196,6 +196,14 @@ sub attr {
     }
 }
 
+sub attr_if_exists {
+    my ($self,$name) = @_;
+    my $value;
+    if ($self->_locate_inherited('attr',$name,\$value)) {
+	return $value;
+    }
+}
+
 #
 # Determine if particular attribute exists
 #
@@ -367,6 +375,11 @@ object.
 Looks for the specified attribute in this component and its parents,
 returning the first value found. Dies with an error if not
 found. Attributes are declared in the C<E<lt>%attrE<gt>> section.
+
+=item attr_if_exists (name)
+
+This method works exactly like the one above but returns undef if the
+attribute does not exist.
 
 =item attr_exists (name)
 
