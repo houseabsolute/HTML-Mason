@@ -25,30 +25,38 @@ use HTML::Mason::Tests;
 
 use lib 'lib', 't/lib';
 
-use Apache::test qw(skip_test have_httpd);
+use Apache::test qw(skip_test have_httpd have_module);
 skip_test unless have_httpd;
 
 local $| = 1;
 
+kill_httpd(1);
 test_load_apache();
 
-print "1..63\n";
+my $tests = 4;
+$tests += 30 if my $have_libapreq = have_module('Apache::Request');
+$tests += 29 if my $have_cgi      = have_module('CGI');
+print "1..$tests\n";
 
 print STDERR "\n";
 
 write_test_comps();
 
-cleanup_data_dir();
-apache_request_tests(1);
+if ($have_libapreq) {        # 30 tests
+    cleanup_data_dir();
+    apache_request_tests(1); # 17 tests
+    
+    cleanup_data_dir();
+    apache_request_tests(0); # 13 tests
+}
 
-cleanup_data_dir();
-apache_request_tests(0);
-
-cleanup_data_dir();
-cgi_tests(1);
-
-cleanup_data_dir();
-cgi_tests(0);
+if ($have_cgi) {             # 29 tests
+    cleanup_data_dir();
+    cgi_tests(1);            # 17 tests
+    
+    cleanup_data_dir();
+    cgi_tests(0);            # 12 tests
+}
 
 cleanup_data_dir();
 
@@ -60,7 +68,7 @@ if ( $> == 0 || $< == 0 )
 {
     chmod 0777, "$ENV{APACHE_DIR}/data";
 }
-multi_conf_tests();
+multi_conf_tests();     # 4 tests
 
 sub write_test_comps
 {
@@ -641,36 +649,29 @@ sub filter_response
     return $actual;
 }
 
+sub get_pid {
+    local *PID;
+    open PID, "$ENV{APACHE_DIR}/httpd.pid"
+	or die "Can't open '$ENV{APACHE_DIR}/httpd.pid': $!";
+    my $pid = <PID>;
+    close PID;
+    chomp $pid;
+    return $pid;
+}
+
 sub test_load_apache
 {
     print STDERR "\nTesting whether Apache can be started\n";
-    if ( system ("$ENV{APACHE_DIR}/httpd -f $ENV{APACHE_DIR}/httpd.conf") )
-    {
-	print STDERR "Error loading Apache.  This probably indicates a misconfiguration in the $ENV{APACHE_DIR}/httpd.conf file.  We will skip all the live Apache tests.";
-	print "1..0\n";
-	exit;
-    }
-
-    my $x = 0;
-    print STDERR "Waiting for httpd to start.\n";
-    until ( -e 't/httpd.pid' )
-    {
-	sleep (1);
-	$x++;
-	if ( $x > 10 )
-	{
-	    die "No t/httpd.pid file has appeared after 10 seconds.  There is probably a problem with the configuration file that was generated for these tests.";
-	}
-    }
-
+    start_httpd('');
     kill_httpd(1);
 }
 
 sub start_httpd
 {
     my $def = shift;
+    $def = "-D$def" if $def;
 
-    my $cmd ="$ENV{APACHE_DIR}/httpd -D$def -f $ENV{APACHE_DIR}/httpd.conf";
+    my $cmd ="$ENV{APACHE_DIR}/httpd $def -f $ENV{APACHE_DIR}/httpd.conf";
     print STDERR "Executing $cmd\n";
     system ($cmd)
 	and die "Can't start httpd server as '$cmd': $!";
@@ -683,7 +684,8 @@ sub start_httpd
 	$x++;
 	if ( $x > 10 )
 	{
-	    die "No t/httpd.pid file has appeared after 10 seconds.  Exiting.";
+	    die "No t/httpd.pid file has appeared after 10 seconds.  ",
+		"There is probably a problem with the configuration file that was generated for these tests.";
 	}
     }
 }
@@ -691,20 +693,21 @@ sub start_httpd
 sub kill_httpd
 {
     my $wait = shift;
-
-    open PID, "$ENV{APACHE_DIR}/httpd.pid"
-	or die "Can't open '$ENV{APACHE_DIR}/httpd.pid': $!";
-    my $pid = <PID>;
-    close PID;
-    chomp $pid;
+    return unless -e "$ENV{APACHE_DIR}/httpd.pid";
+    my $pid = get_pid();
 
     print STDERR "Killing httpd process ($pid)\n";
-    kill 'TERM', $pid
-	or die "Can't kill process $pid: $!";
+    my $result = kill 'TERM', $pid;
+    if (!$result and $! =~ /no such proc/i) {
+	# Looks like apache wasn't running, so we're done
+	unlink "$ENV{APACHE_DIR}/httpd.pid" or warn "Couldn't remove '$ENV{APACHE_DIR}/httpd.pid': $!";
+	return;
+    }
+    die "Can't kill process $pid: $!" if !$result;
 
     if ($wait)
     {
-	print STDERR "Waiting for previous httpd to shut down\n";
+	print STDERR "Waiting for httpd to shut down\n";
 	my $x = 0;
 	while ( -e "$ENV{APACHE_DIR}/httpd.pid" )
 	{
