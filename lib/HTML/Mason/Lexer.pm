@@ -389,7 +389,7 @@ sub match_comp_content_call
 
     my $comp = $self->{comp};
     pos($comp) = $self->{pos};
-    if ( $comp =~ /\G(<&\|)/gcs )
+    if ( $comp =~ /\G<&\|/gcs )
     {
 	$self->{pos} = pos($comp);
 	if ( $comp =~ /\G(.*?)&>/gcs )
