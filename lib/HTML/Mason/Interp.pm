@@ -21,6 +21,7 @@ Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::P
 # If this fails we can live with that.
 eval { require Time::HiRes };
 
+use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
 use HTML::Mason::MethodMaker

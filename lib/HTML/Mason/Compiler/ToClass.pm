@@ -6,6 +6,7 @@ package HTML::Mason::Compiler::ToClass;
 
 use strict;
 
+use HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
 
 use Exception::Class qw( Mason::Exception::Compiler );

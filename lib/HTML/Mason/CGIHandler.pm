@@ -7,6 +7,8 @@ use CGI;
 use Carp;
 use Params::Validate qw(:all);
 
+use HTML::Mason::Container;
+use HTML::Mason::Request;
 use base qw(HTML::Mason::Container HTML::Mason::Request);
 
 __PACKAGE__->valid_params

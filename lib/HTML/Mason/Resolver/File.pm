@@ -11,7 +11,8 @@ use HTML::Mason::Resolver;
 use HTML::Mason::Tools qw(paths_eq read_file);
 use Params::Validate qw(:all);
 
-use base qw(HTML::Mason::Resolver HTML::Mason::Container);
+use HTML::Mason::Resolver;
+use base qw(HTML::Mason::Resolver);
 
 __PACKAGE__->valid_params
     (

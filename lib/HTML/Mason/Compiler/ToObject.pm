@@ -6,8 +6,10 @@ package HTML::Mason::Compiler::ToObject;
 
 use strict;
 
-use base qw( HTML::Mason::Compiler HTML::Mason::Container );
 use Params::Validate qw( :all );
+
+use HTML::Mason::Compiler;
+use base qw( HTML::Mason::Compiler );
 
 use HTML::Mason::Exceptions;
 
