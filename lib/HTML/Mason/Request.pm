@@ -33,7 +33,7 @@ package HTML::Mason::Request;
 use strict;
 
 use File::Spec;
-use HTML::Mason::Tools qw(read_file compress_path load_pkg absolute_comp_path);
+use HTML::Mason::Tools qw(read_file compress_path load_pkg pkg_loaded absolute_comp_path);
 use HTML::Mason::Utils;
 use HTML::Mason::Buffer;
 
@@ -58,6 +58,10 @@ BEGIN
 	 comp  => { type => SCALAR | HASHREF, optional => 0,
 		    descr => "Initial component, either an absolute path or a component object",
 		    public => 0 },
+         data_cache_api => { parse => 'string', default => '1.1', type => SCALAR,
+			     callbacks => { "must be one of '1.0' or '1.1'" =>
+				sub { $_[0] eq '1.0' or $_[0] eq '1.1'; } },
+                             descr => "Data cache API to use: 1.0 or 1.1" },
 	 data_cache_defaults => { type => HASHREF|UNDEF, optional => 1,
 				  descr => "A hash of default parameters for Cache::Cache" },
 	 declined_comps => { type => HASHREF, optional=>1,
@@ -93,6 +97,7 @@ BEGIN
 
 my @read_write_params;
 BEGIN { @read_write_params = qw( autoflush
+				 data_cache_api
 				 data_cache_defaults
 				 dhandler_name
 				 error_format
@@ -418,6 +423,13 @@ sub cache
 {
     my ($self, %options) = @_;
 
+    # If using 1.0x cache API, save off options for end of routine.
+    my %old_cache_options;
+    if ($self->data_cache_api eq '1.0') {
+	%old_cache_options = %options;
+	%options = ();
+    }
+
     if ($self->data_cache_defaults) {
 	%options = (%{$self->data_cache_defaults}, %options);
     }
@@ -431,13 +443,106 @@ sub cache
 	$cache_class = "Cache::$cache_class" unless $cache_class =~ /::/;
 	delete($options{cache_class});
     }
-    load_pkg('Cache::Cache', '$m->cache requires the Cache::Cache module, available from CPAN.');
-    load_pkg($cache_class, 'Fix your Cache::Cache installation or choose another cache class.');
+    my $mason_cache_class = "HTML::Mason::$cache_class";
+    unless (pkg_loaded($mason_cache_class)) {
+	load_pkg('Cache::Cache', '$m->cache requires the Cache::Cache module, available from CPAN.');
+	load_pkg($cache_class, 'Fix your Cache::Cache installation or choose another cache class.');
+	eval sprintf('package %s; use base qw(HTML::Mason::Cache::BaseCache %s); use vars qw($VERSION); $VERSION = 1.0',
+		     $mason_cache_class, $cache_class);
+	die "Error constructing mason cache class $mason_cache_class: $@" if $@;
+    }
 
-    my $cache = $cache_class->new (\%options)
+    my $cache = $mason_cache_class->new (\%options)
 	or error "could not create cache object";
 
-    return $cache;
+    # Implement 1.0x cache API or just return cache object.
+    if ($self->data_cache_api eq '1.0') {
+	return $self->_cache_1_x($cache, %old_cache_options);
+    } else {
+	return $cache;
+    }
+}
+
+#
+# Implement 1.0x cache API in terms of Cache::Cache.
+# Supported: action, busy_lock, expire_at, expire_if, expire_in, expire_next, key, value
+# Silently not supported: keep_in_memory, tie_class
+#
+sub _cache_1_x
+{
+    my ($self, $cache, %options) = @_;
+
+    my $action = $options{action} || 'retrieve';
+    my $key = $options{key} || 'main';
+    
+    if ($action eq 'retrieve') {
+	
+	# Validate parameters.
+	if (my @invalids = grep(!/^(expire_if|action|key|busy_lock|keep_in_memory|tie_class)$/, keys(%options))) {
+	    die "cache: invalid parameter '$invalids[0]' for action '$action'\n";
+	}
+
+	# Handle expire_if.
+	if (my $sub = $options{expire_if}) {
+	    if (my $obj = $cache->get_object($key)) {
+		if ($sub->($obj->get_created_at)) {
+		    $cache->expire($key);
+		}
+	    }
+	}
+
+	# Return the value or undef, handling busy_lock.
+	if (my $result = $cache->get($key, ($options{busy_lock} ? (busy_lock=>$options{busy_lock}) : ()))) {
+	    return $result;
+	} else {
+	    return undef;
+	}
+
+    } elsif ($action eq 'store') {
+
+	# Validate parameters	
+	if (my @invalids = grep(!/^(expire_(at|next|in)|action|key|value|keep_in_memory|tie_class)$/, keys(%options))) {
+	    die "cache: invalid parameter '$invalids[0]' for action '$action'\n";
+	}
+	die "cache: no store value provided" unless exists($options{value});
+
+	# Determine $expires_in if expire flag given. For the "next"
+	# options, we're jumping through hoops to find the *top* of
+	# the next hour or day.
+	#
+	my $expires_in;
+	my $time = time;
+	if (exists($options{expire_at})) {
+	    die "cache: invalid expire_at value '$options{expire_at}' - must be a numeric time value\n" if $options{expire_at} !~ /^[0-9]+$/;
+	    $expires_in = $options{expire_at} - $time;
+	} elsif (exists($options{expire_next})) {
+            my $term = $options{expire_next};
+            my ($sec, $min, $hour) = localtime($time);
+            if ($term eq 'hour') {
+		$expires_in = 60*(59-$min)+(60-$sec);
+            } elsif ($term eq 'day') {
+		$expires_in = 3600*(23-$hour)+60*(59-$min)+(60-$sec);
+            } else {
+                die "cache: invalid expire_next value '$term' - must be 'hour' or 'day'\n";
+            }
+	} elsif (exists($options{expire_in})) {
+	    $expires_in = $options{expire_in};
+	}
+
+	# Set and return the value.
+	my $value = $options{value};
+	$cache->set($key, $value, $expires_in);
+	return $value;
+
+    } elsif ($action eq 'expire') {
+	my @keys = (ref($key) eq 'ARRAY') ? @$key : ($key);
+	foreach my $key (@keys) {
+	    $cache->expire($key);
+	}
+
+    } elsif ($action eq 'keys') {
+	return $cache->get_keys;
+    }
 }
 
 sub cache_self {
@@ -445,13 +550,28 @@ sub cache_self {
 
     return if $self->top_stack->{in_cache_self};
 
-    # Allow expire_in for token backward compatibility with 1.0x
-    if (exists($options{expire_in})) {
-	$options{expires_in} = delete($options{expire_in});
+    my (%store_options, %retrieve_options);
+    my ($expires_in, $key, $cache);
+    if ($self->data_cache_api eq '1.0') {
+	foreach (qw(key expire_if busy_lock)) {
+	    $retrieve_options{$_} = $options{$_} if (exists($options{$_}));
+	}
+	foreach (qw(key expire_at expire_next expire_in)) {
+	    $store_options{$_} = $options{$_} if (exists($options{$_}));
+	}
+    } else {
+	#
+	# key, expires_in/expire_in, expire_if and busy_lock go into
+	# the set and get methods as appropriate. All other options
+	# are passed into $self->cache.
+	#
+	foreach (qw(expire_if busy_lock)) {
+	    $retrieve_options{$_} = delete($options{$_}) if (exists($options{$_}));
+	}
+	$expires_in = delete $options{expires_in} || delete $options{expire_in} || 'never';
+	$key = delete $options{key} || '__mason_cache_self__';
+	$cache = $self->cache(%options);
     }
-    my $expires_in = delete $options{expires_in} || 'never';
-    my $key = delete $options{key} || '__mason_cache_self__';
-    my $cache = $self->cache(%options);
 
     # If the top buffer has a filter we need to remove it because
     # either:
@@ -476,7 +596,8 @@ sub cache_self {
     my ($output, $retval);
     eval
     {
-        if (my $cached = $cache->get($key)) {
+	my $cached = ($self->data_cache_api eq '1.0') ? $self->cache(%retrieve_options) : $cache->get($key, %retrieve_options);
+        if ($cached) {
             ($output, $retval) = @$cached;
         } else {
             my $top_stack = $self->top_stack;
@@ -519,7 +640,12 @@ sub cache_self {
                 UNIVERSAL::can($@, 'rethrow') ? $@->rethrow : error $@;
             }
 
-            $cache->set($key, [$output, $retval], $expires_in);
+	    my $value = [$output, $retval];
+            if ($self->data_cache_api eq '1.0') {
+		$self->cache(action=>'store', key=>$key, value=>$value, %store_options);
+	    } else {
+		$cache->set($key, $value, $expires_in);
+	    }
         }
     };
 
@@ -948,6 +1074,15 @@ sub request_args
 *top_args = \&request_args;
 *top_comp = \&request_comp;
 
+# deprecated in 1.1x
+sub time
+{
+    my ($self) = @_;
+    my $time = $self->interp->current_time;
+    $time = time() if $time eq 'real';
+    return $time;
+}
+
 #
 # Subroutine called by every component while in debug mode, convenient
 # for breakpointing.
@@ -1109,11 +1244,21 @@ subcomponent takes precedence.
 =item autoflush
 
 Indicates whether or not to delay sending output until all output has
-been generated.
+been generated. Default is true.
+
+=item data_cache_api
+
+The $m-E<gt>cache API to use. '1.1', the default, indicates the newer
+API L<documented in this
+manual|HTML::Mason::Request/item_cache>. '1.0' indicates the old API
+documented in 1.0x and earlier. This compatibility layer is provided
+as a convenience for users upgrading from older versions of Mason, but
+will not be supported indefinitely.
 
 =item data_cache_defaults
 
-The default parameters used when $m->cache is called.
+The default parameters used when $m-E<gt>cache creates a cache object;
+see the Cache::Cache documentation for a list of allowable parameters.
 
 =item dhandler_name
 
@@ -1227,23 +1372,35 @@ Guide>|HTML::Mason::Devel/"data caching"> for examples and caching
 strategies. See the Cache::Cache documentation for a complete list of
 options and methods.
 
+Note: users upgrading from 1.0x and earlier can continue to use the
+old C<$m-E<gt>cache> API by setting
+L<data_cache_api|HTML::Mason::Request/data_cache_api> to '1.0'.
+This support will be removed at a later date.
+
 =for html <a name="item_cache_self"></a>
 
-=item cache_self (expires_in => '...', key => '...', [cache_options])
+=item cache_self ([expires_in => '...'], [key => '...'], [get_options], [cache_options])
 
 C<$m-E<gt>cache_self> caches the entire output and return result of a
 component.
 
-It takes all of the options which can be passed to the cache method,
-plus two additional options:
+C<cache_self> either returns undef, or a list containing the
+return value of the component followed by '1'. You should return
+immediately upon getting the latter result, as this indicates
+that you are inside the second invocation of the component.
+
+C<cache_self> takes any of parameters to C<$m->cache>
+(e.g. C<cache_depth>), any of the optional parameters to
+C<$m->cache->get> (C<expire_if>, C<busy_lock>), and two additional
+options:
 
 =over
 
 =item *
 
-I<expires_in>: Indicates when the cache expires - it is passed as the
-third argument to $cache-E<gt>set.  See the Cache::Cache documentation
-for details on what formats it accepts.
+I<expire_in> or I<expires_in>: Indicates when the cache expires - it
+is passed as the third argument to $cache-E<gt>set. e.g. '10 sec',
+'5 min', '2 hours'.
 
 =item *
 
@@ -1253,22 +1410,17 @@ $cache-E<gt>set.  The default key is '__mason_cache_self__'.
 
 =back
 
-C<cache_self> either returns undef, or a list containing the
-return value of the component followed by '1'. You should return
-immediately upon getting the latter result, as this indicates
-that you are inside the second invocation of the component.
-
 To cache the component's output:
 
     <%init>
-    return if $m->cache_self(expires_in => '3 hours'[, key => 'fookey']);
+    return if $m->cache_self(expire_in => '10 sec'[, key => 'fookey']);
     ... <rest of init> ...
     </%init>
 
 To cache the component's scalar return value:
 
     <%init>
-    my ($result, $cached) = $m->cache_self(expires_in => '3 hours'[, key => 'fookey']);
+    my ($result, $cached) = $m->cache_self(expire_in => '5 min'[, key => 'fookey']);
 
     return $result if $cached;
     ... <rest of init> ...
@@ -1277,7 +1429,7 @@ To cache the component's scalar return value:
 To cache the component's list return value:
 
     <%init>
-    my (@retval) = $m->cache_self(expires_in => '3 hours'[, key => 'fookey']);
+    my (@retval) = $m->cache_self(expire_in => '3 hours'[, key => 'fookey']);
 
     return @retval if pop @retval;
     ... <rest of init> ...
@@ -1285,6 +1437,11 @@ To cache the component's list return value:
 
 We call C<pop> on C<@retval> to remove the mandatory '1' at the end of
 the list.
+
+Note: users upgrading from 1.0x and earlier can continue to use the
+old C<$m-E<gt>cache_self> API by setting
+L<data_cache_api|HTML::Mason::Request/data_cache_api> to '1.0'.
+This support will be removed at a later date.
 
 =for html <a name="item_caller_args"></a>
 
