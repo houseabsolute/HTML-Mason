@@ -551,17 +551,21 @@ sub new
 	$defaults{comp_root} = $req->document_root;
     }
 
-    if (exists $allowed_params->{data_dir})
+    my %params = @_;
+
+    if (exists $allowed_params->{data_dir} and not exists $params{data_dir})
     {
 	# constructs path to <server root>/mason
-	$defaults{data_dir} = Apache->server_root_relative('mason');
-	if ($defaults{data_dir} =~ m|^/[^/]+/mason$|) {
-	    die "cannot default data directory to $defaults{data_dir}; must provide data_dir (MasonDataDir) on this system";
-	}
+	my $def = $defaults{data_dir} = Apache->server_root_relative('mason');
+	die "Default data_dir (MasonDataDir) '$def' must be an absolute path"
+	    unless File::Spec->file_name_is_absolute($def);
+	  
+	my @levels = File::Spec->splitdir($def);
+	die "Default data_dir (MasonDataDir) '$def' must be more than two levels deep (or must be set explicitly)"
+	    if @levels <= 3;
     }
 
     # Set default error_format based on error_mode
-    my %params = @_;
     if (exists($params{error_mode}) and $params{error_mode} eq 'fatal') {
 	$defaults{error_format} = 'line';
     } else {
