@@ -1440,7 +1440,7 @@ arbitrary complex list or hash reference:
 
     $m->cache->set(name => $string);
     $m->cache->set(friends => \@list);
-    $m->cache->set(map => %hash);
+    $m->cache->set(map => \%hash);
 
 You can fetch all the keys in a cache with
 
