@@ -315,7 +315,7 @@ Interpreter lasts for the entire lifetime of the handler.
 
 =back
 
-=head2 C<$r> Methods
+=head2 $r Methods
 
 =over 4
 
