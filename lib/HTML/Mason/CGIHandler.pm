@@ -105,7 +105,7 @@ sub cgi_object {
 sub redirect {
     my $self = shift;
     my $url = shift;
-    my $status = = shift || 302;
+    my $status = shift || 302;
 
     $self->clear_buffer;
 
