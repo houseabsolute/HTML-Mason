@@ -73,26 +73,40 @@ sub initialize
 {
     my $self = shift;
 
-    if ( defined $self->{sink} ) {
+    if ( defined $self->{sink} )
+    {
 	# user-defined sink
-	if ( UNIVERSAL::isa( $self->{sink}, 'CODE' ) ) {
+	if ( UNIVERSAL::isa( $self->{sink}, 'CODE' ) )
+	{
 	    $self->{mode} ||= 'stream';
-	} elsif ( UNIVERSAL::isa( $self->{sink}, 'SCALAR' ) ) {
+	}
+	elsif ( UNIVERSAL::isa( $self->{sink}, 'SCALAR' ) )
+	{
 	    $self->{mode} ||= 'batch';
 	    # convert scalarref to a coderef for efficiency
 	    $self->{buffer} = $self->{sink};
 	    $self->{sink} = sub { for (@_) { ${ $self->{buffer} } .= $_ if defined } };
-	} else {
+	}
+	else
+	{
 	    HTML::Mason::Exception::Params->throw( error => "Sink must be a coderef or a scalarref." );
 	}
-    } else {
-	# use the parent's coderef or a new scalarref
+
+    }
+    else
+    {
+	# If we have no sink we must have a parent whose sink we can use
 	HTML::Mason::Exception::Params->throw( error => "Buffering to default sink requires a parent buffer." )
 	    unless $self->{parent};
+
 	$self->{mode} ||= $self->{parent}->mode;
-	if ($self->{mode} eq 'stream') {
+
+	if ($self->{mode} eq 'stream')
+	{
 	    $self->{sink} = $self->{parent}->sink;
-	} else {
+	}
+	else
+	{
 	    $self->{buffer} = '';
 	    $self->{sink} = sub { for (@_) { $self->{buffer} .= $_ if defined } };
 	}
@@ -139,7 +153,7 @@ sub output
     return $output;
 }
 
-sub destroy
+sub dispose
 {
     my $self = shift;
     foreach ( qw( parent sink ) )
