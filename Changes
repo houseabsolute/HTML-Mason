@@ -7,11 +7,15 @@ available at http://www.masonhq.com/changes.html.
 
 1.10
 
+This is a big release and there are a number of backwards
+incompatibilities with version 1.05 and earlier.  Please make sure to
+read the UPGRADE document, which covers these in more detail.
+
 [ ENHANCEMENTS ]
 
-- Mason can detect always detect when an object file was compiled with
-an incompatible compiler/lexer, even if the object file contains
-syntax errors.
+- Mason can always detect when an object file was compiled with an
+incompatible compiler/lexer, even if the object file contains syntax
+errors.
 - Method and subcomponent blocks with no name (<%method>) were caught
 as an error, but the error message was very confusing.  This has been
 fixed.
@@ -24,7 +28,7 @@ called.
 
 [ BUG FIXES ]
 
-- Fix a bug in the lexer that made it think it had found a Perl-line
+- Fixed a bug in the lexer that made it think it had found a Perl-line
 where none existed.
 - Fixed a bug related to handling of parameters in httpd.conf files.
 This was only noticeable if you attempted to provide a subclass of one
@@ -96,12 +100,7 @@ to lower case in order to avoid having duplicates.
 - Mason only requires Apache::Request if you have mod_perl installed
 already.
 
-
 1.09_01  April 4, 2002
-
-This is a big release and there are a lot of backwards
-incompatibilities.  Please make sure to read the UPGRADE document,
-which covers these in more detail.
 
 [ INCOMPATIBLE CHANGES ]
 
@@ -148,9 +147,6 @@ constructor, which will create the interp object internally.
 - ** The MasonMultipleConfig httpd.conf parameter has been removed.
 Mason can now figure this out by itself.
 - ** The HTML::Mason::Interp time() method has gone away.
-- ** The base_comp is now changed for each component call, unless that
-component call uses a component object for its first argument, or the
-call starts with SELF: or PARENT:.
 
 [ ENHANCEMENTS AND NEW FEATURES ]
 
