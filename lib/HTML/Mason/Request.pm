@@ -231,7 +231,7 @@ sub alter_superclass
             {
                 $isa_ref->[$x] = $new_super;
 
-                $class->valid_params( %{ $class->original_validation_spec } );
+                $class->valid_params( %{ $class->valid_params } );
             }
 
             last;
