@@ -5,7 +5,7 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
-1.17
+1.17  January 17, 2003
 
 [ ENHANCEMENTS ]
 
@@ -24,10 +24,10 @@ attributes inherited from a parent.  Suggested by Matti Makitalo.
 the output would be cached _before_ filtering, and filtered every time
 it was retrieved from the cache.  This has been fixed, and the
 documentation now specifies that the filtered output is cached.
-- May have fixed failure of 12-taint.t #7 on Win32 boxes.  Reported by
-Randy Kobes.
-- Without HTML::Entities installed, 13-errors.t #7 fails.  Reported by
-Sam Kington.
+- Fixed failure of 12-taint.t #7 on Win32 boxes.  Reported by Randy
+Kobes.
+- Without HTML::Entities installed, 13-errors.t #7 failed.  Reported
+by Sam Kington.
 - $m->file did not handle relative paths properly when called from a
 subcomponent or method.  Reported by Chris Hutchinson.
 - If $m->abort was called in the shared block of a component that had
@@ -46,6 +46,8 @@ Landrum.
 - Subclassing a subclass of HTML::Mason::Request broke when the class
 between HTML::Mason::Request and your own class called
 alter_superclass.
+- Under mod_perl 2.0, when ApacheHandler could't resolve a filename to
+a component, it would die instead of returning a not found status.
 
 [ INCOMPATIBLE CHANGES ]
 
