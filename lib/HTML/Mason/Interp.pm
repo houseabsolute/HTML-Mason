@@ -6,6 +6,8 @@ package HTML::Mason::Interp;
 
 use strict;
 
+use vars qw( @ISA %VALID_PARAMS %CONTAINED_OBJECTS );
+
 use Carp;
 use File::Basename;
 use File::Path;
@@ -19,6 +21,10 @@ use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
+
+use HTML::Mason::Container;
+
+@ISA = 'HTML::Mason::Container';
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code_cache
@@ -46,7 +52,7 @@ use HTML::Mason::MethodMaker
       );
 
 # Fields that can be set in new method, with defaults
-my %valid_params =
+%VALID_PARAMS =
     (
      allow_recursive_autohandlers => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
      autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR|UNDEF },
@@ -76,23 +82,23 @@ my %valid_params =
      use_dhandlers                => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
      use_object_files             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
      use_reload_file              => { parse => 'boolean', default => 0, type => SCALAR|UNDEF },
-	    
+
      data_dir                     => { parse => 'string', type => SCALAR },
     );
 
-sub valid_params { \%valid_params }
+sub validation_spec { \%VALID_PARAMS }
 
 # For subobject auto-creation
-my %creates_objects = ('resolver' => 'HTML::Mason::Resolver::File',
-		       'compiler' => 'HTML::Mason::Compiler::ToObject');
-sub creates_objects { \%creates_objects }
+%CONTAINED_OBJECTS = ('resolver' => 'HTML::Mason::Resolver::File',
+		      'compiler' => 'HTML::Mason::Compiler::ToObject');
 
 sub new
 {
     my $class = shift;
-    my @args = create_subobjects($class, @_);
 
-    my $self = bless { validate( @args, $class->valid_params ),
+    my @args = $class->create_contained_objects(@_);
+
+    my $self = bless { validate( @args, $class->validation_spec ),
 		       code_cache => {},
 		       code_cache_current_size => 0,
 		       files_written => [],
@@ -105,7 +111,7 @@ sub new
     
     $self->{autohandler_name} = undef unless $self->{use_autohandlers};
     $self->{dhandler_name} = undef unless $self->{use_dhandlers};
-    $self->{die_handler_overridden} = 1 if $self->{die_handler} ne $self->valid_params->{die_handler}{default}; #Hmm
+    $self->{die_handler_overridden} = 1 if $self->{die_handler} ne $self->validation_spec->{die_handler}{default}; #Hmm
 
     $self->{data_cache_dir} ||= ($self->{data_dir} . "/cache");
 
@@ -820,7 +826,7 @@ EOF
     my $comp = $self->make_anonymous_component(comp => $comp_text);
     my $out;
     local $self->{out_method} = \$out;
-    $self->exec($comp, interp => $self, valid => $self->valid_params, current_url => $current_url);
+    $self->exec($comp, interp => $self, valid => $self->validation_spec, current_url => $current_url);
     return $out;
 }         
 
