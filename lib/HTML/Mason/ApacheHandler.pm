@@ -715,23 +715,6 @@ sub handle_request
     $req->exec;
 }
 
-sub request_args
-{
-    my ($self, $r) = @_;
-    #
-    # Get arguments from Apache::Request or CGI.
-    #
-    my (%args, $cgi_object);
-    if ($self->args_method eq 'mod_perl') {
-	$r = Apache::Request->new($r) unless UNIVERSAL::isa($r, 'Apache::Request');
-	%args = $self->_mod_perl_args($r);
-    } else {
-	$cgi_object = CGI->new;
-	%args = $self->_cgi_args($r, $cgi_object);
-    }
-    return (\%args, $r, $cgi_object);
-}
-
 sub prepare_request
 {
     my ($self, $r) = @_;
@@ -777,12 +760,15 @@ sub prepare_request
 	return $self->return_not_found($r);
     }
 
-    (my $args, $r, my $cgi_object) = $self->request_args($r);
+    # Assigning $r to a new variable here is _crucial_ to avoid a
+    # memory leak if we create an Apache::Request object in
+    # request_args().
+    my ($args, $new_r, $cgi_object) = $self->request_args($r);
 
     #
     # Set up interpreter global variables.
     #
-    $interp->set_global(r=>$r);
+    $interp->set_global( r => $new_r );
 
     # If someone is using a custom request class that doesn't accept
     # 'ah' and 'apache_req' that's their problem.
@@ -790,7 +776,7 @@ sub prepare_request
     my $request = $interp->make_request( comp => $comp_path,
 					 args => [%$args],
 					 ah => $self,
-					 apache_req => $r,
+					 apache_req => $new_r,
 				       );
 
     # Craft the request's out method to handle http headers, content
@@ -803,17 +789,16 @@ sub prepare_request
         # We use instance here because if we store $request we get a
         # circular reference and a big memory leak
 	if (!$sent_headers and HTML::Mason::Request->instance->auto_send_headers) {
-	    unless (http_header_sent($r)) {
-		$r->send_http_header();
+	    unless (http_header_sent($new_r)) {
+		$new_r->send_http_header();
 	    }
 	    $sent_headers = 1;
 	}
 
-	# Call $r->print (using the real Apache method, not our
-	# overriden method). If request was HEAD, suppress output but
-	# allow the request to continue for consistency.
-	unless ($r->method eq 'HEAD') {
-	    $r->$real_apache_print(grep {defined} @_);
+	# Call $new_r->print (using the real Apache method, not our
+	# overriden method). If request was HEAD, suppress output.
+	unless ($new_r->method eq 'HEAD') {
+	    $new_r->$real_apache_print(grep {defined} @_);
 	}
     };
 
@@ -822,6 +807,30 @@ sub prepare_request
     $request->cgi_object($cgi_object) if $cgi_object;
 
     return $request;
+}
+
+sub request_args
+{
+    my ($self, $r) = @_;
+
+    #
+    # Get arguments from Apache::Request or CGI.
+    #
+
+    # put Apache::Request object here.  Overwriting $r causes a memory
+    # leak!
+    my $apr;
+
+    my (%args, $cgi_object);
+    if ($self->args_method eq 'mod_perl') {
+	$apr = Apache::Request->new($r) unless UNIVERSAL::isa($r, 'Apache::Request');
+	%args = $self->_mod_perl_args($apr);
+    } else {
+        $apr = $r;
+	$cgi_object = CGI->new;
+	%args = $self->_cgi_args($r, $cgi_object);
+    }
+    return (\%args, $apr, $cgi_object);
 }
 
 #
