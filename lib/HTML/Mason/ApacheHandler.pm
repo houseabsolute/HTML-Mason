@@ -5,14 +5,14 @@
 # under the same terms as Perl itself.
 
 use strict;
+# This is the version that introduced PerlAddVar
+use mod_perl 1.24;
 
 #----------------------------------------------------------------------
 #
 # APACHE-SPECIFIC REQUEST OBJECT
 #
 package HTML::Mason::Request::ApacheHandler;
-
-use Apache::Constants qw( REDIRECT );
 
 use HTML::Mason::Request;
 use Class::Container;
@@ -23,13 +23,15 @@ use base qw(HTML::Mason::Request);
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 
+use constant APACHE2	=> $mod_perl::VERSION >= 1.99;
 use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
+use constant REDIRECT	=> 302;
 
 BEGIN
 {
-    my $ap_req_class = mod_perl->VERSION < 1.99 ? 'Apache' : 'Apache::RequestRec';
+    my $ap_req_class = APACHE2 ? 'Apache::RequestRec' : 'Apache';
 
     __PACKAGE__->valid_params
 	( ah         => { isa => 'HTML::Mason::ApacheHandler',
@@ -67,14 +69,6 @@ sub new
     }
 
     return $self;
-}
-
-# Override flush_buffer to also call $r->rflush
-sub flush_buffer
-{
-    my ($self) = @_;
-    $self->SUPER::flush_buffer;
-    $self->apache_req->rflush;
 }
 
 sub cgi_object
@@ -141,6 +135,7 @@ sub exec
     # headers, this will typically only apply after $m->abort.
     # On an error code, leave it to Apache to send the headers.
     if (!$self->is_subrequest
+	and !APACHE2
 	and $self->auto_send_headers
 	and !HTML::Mason::ApacheHandler::http_header_sent($r)
 	and (!$retval or $retval==200)) {
@@ -175,7 +170,7 @@ sub redirect
 
     $r->method('GET');
     $r->headers_in->unset('Content-length');
-    $r->err_header_out( Location => $url );
+    $r->err_headers_out->{Location} = $url;
     $self->clear_and_abort($status || REDIRECT);
 }
 
@@ -249,13 +244,26 @@ use HTML::Mason::Utils;
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
-use Apache;
-use Apache::Constants qw( OK DECLINED NOT_FOUND );
+use constant APACHE2	=> $mod_perl::VERSION >= 1.99;
+use constant OK         => 0;
+use constant DECLINED   => -1;
+use constant NOT_FOUND  => 404;
+use constant REDIRECT	=> 302;
 
-# This is the version that introduced PerlAddVar
-use mod_perl 1.24;
+BEGIN {
+	if (APACHE2) {
+		require Apache2;
+		Apache2->import();
+		require Apache::RequestRec;
+		require Apache::RequestIO;
+		require Apache::Log;
+	} else {
+		require Apache;
+		Apache->import();
+	}
+}
 
-if ( mod_perl->VERSION < 1.99 )
+unless ( APACHE2 )
 {
     # No modern distro/OS packages a mod_perl without all of this
     # stuff turned on, does it?
@@ -269,7 +277,7 @@ if ( mod_perl->VERSION < 1.99 )
 
 use vars qw($VERSION);
 
-$VERSION = 1.69;
+$VERSION = 1.70;
 
 use base qw(HTML::Mason::Handler);
 
@@ -581,7 +589,7 @@ sub new
     my $allowed_params = $class->allowed_params(%defaults, %params);
 
     if ( exists $allowed_params->{comp_root} and
-	 my $req = $r || Apache->request )  # DocumentRoot is only available inside requests
+	 my $req = $r || (APACHE2 ? undef : Apache->request) )  # DocumentRoot is only available inside requests
     {
 	$defaults{comp_root} = $req->document_root;
     }
@@ -846,7 +854,9 @@ sub prepare_request
 		       isa_mason_exception($err, 'Decline') ? $err->declined_value :
 		       rethrow_exception $err );
 	unless ($retval and $retval != 200) {
-	    $r->send_http_header;
+	    unless (APACHE2) {
+		$r->send_http_header();
+	    }
 	}
 	return $retval;
     }
@@ -877,6 +887,8 @@ sub _apache_request_object
         $r_sub = $no_filter;
     }
 
+    my $instance_method = APACHE2 ? 'new' : 'instance';
+
     # This gets the proper request object all in one fell swoop.  We
     # don't want to copy it because if we do something like assign an
     # Apache::Request object to a variable currently containing a
@@ -884,7 +896,7 @@ sub _apache_request_object
     # use multiple variables to avoid this, which is annoying.
     return
         $r_sub->( $self->args_method eq 'mod_perl' ?
-                  Apache::Request->instance( $_[0] ) :
+                  Apache::Request->$instance_method( $_[0] ) :
                   $_[0]
                 );
 }
@@ -960,7 +972,7 @@ sub _mod_perl_args
 #
 # Determines whether the http header has been sent.
 #
-sub http_header_sent { shift->header_out("Content-type") }
+sub http_header_sent { shift->headers_out->{"Content-type"} }
 
 sub _set_mason_req_out_method
 {
@@ -972,30 +984,47 @@ sub _set_mason_req_out_method
 
     # Craft the request's out method to handle http headers, content
     # length, and HEAD requests.
-    my $sent_headers = 0;
-    my $out_method = sub {
+    my $out_method;
+    if (APACHE2) {
 
-	# Send headers if they have not been sent by us or by user.
-        # We use instance here because if we store $m we get a
-        # circular reference and a big memory leak.
-	if (!$sent_headers and HTML::Mason::Request->instance->auto_send_headers) {
-	    unless (http_header_sent($r)) {
-		$r->send_http_header();
+	# mod_perl-2 does not need to call $r->send_httpd_headers
+	$out_method = sub {
+            $r->$final_output_method( grep { defined } @_ );
+	    $r->rflush;
+	};
+
+    } else {
+
+	my $sent_headers = 0;
+	$out_method = sub {
+
+	    # Send headers if they have not been sent by us or by user.
+            # We use instance here because if we store $m we get a
+            # circular reference and a big memory leak.
+	    if (!$sent_headers and HTML::Mason::Request->instance->auto_send_headers) {
+	        unless (http_header_sent($r)) {
+		    $r->send_http_header();
+	        }
+	        $sent_headers = 1;
 	    }
-	    $sent_headers = 1;
-	}
 
-	# Call $r->print (using the real Apache method, not our
-	# overriden method).
-	$r->$final_output_method( grep {defined} @_ );
+	    # Call $r->print (using the real Apache method, not our
+	    # overriden method).
+	    $r->$final_output_method( grep {defined} @_ );
+	    $r->rflush;
 
-        return unless $sent_headers;
+            return unless $sent_headers;
 
-        # Now that we know headers have been sent we can use a
-        # simpler, faster out_method for future output.
-        HTML::Mason::Request->instance->out_method
-            ( sub { $r->$final_output_method( grep { defined } @_ ) } );
-    };
+            # Now that we know headers have been sent we can use a
+            # simpler, faster out_method for future output.
+            HTML::Mason::Request->instance->out_method
+                ( sub { 
+			$r->$final_output_method( grep { defined } @_ );
+			$r->rflush;
+		} );
+        };
+
+    }
 
     $m->out_method($out_method);
 }
@@ -1018,7 +1047,7 @@ sub return_not_found
 BEGIN
 {
     # A method handler is prototyped differently in mod_perl 1.x than in 2.x
-    my $handler_code = sprintf <<'EOF', $mod_perl::VERSION >= 1.99 ? ': method' : '($$)';
+    my $handler_code = sprintf <<'EOF', APACHE2 ? ': method' : '($$)';
 sub handler %s
 {
     my ($package, $r) = @_;
