@@ -56,3 +56,11 @@ sub test
 
     return $test;
 }
+
+sub libscan
+{
+    my $self = shift;
+    my $file = shift;
+
+    return $file =~ /makeconfig\.pl/ ? 0 : $self->SUPER::libscan($file);
+}
