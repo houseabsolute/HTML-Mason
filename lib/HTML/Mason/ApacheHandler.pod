@@ -20,6 +20,31 @@ parameters to the new() constructor.
 handle_request() is not a user method, but rather is called from the
 HTML::Mason::handler() routine in handler.pl.
 
+=head1 PARAMETERS TO THE use() DECLARATION
+
+The following are parameters to pass explicitly when using
+HTML::Mason::ApacheHandler. The line must precede 'use HTML::Mason' to
+take effect; otherwise HTML::Mason implicitly imports ApacheHandler
+with default settings. e.g.
+
+    use HTML::Mason::ApacheHandler (args_method=>'mod_perl');
+    use HTML::Mason;
+
+=over
+
+=item args_method
+
+Method to use for unpacking GET and POST arguments. The valid
+options are 'CGI' and 'mod_perl'; these indicate that a
+CGI.pm or Apache::Request object (respectively) will be
+created for the purposes of argument handling.
+
+CGI is the default and comes with most Perl systems. You may wish to
+switch to Apache::Request (available from CPAN) for speed and memory
+efficiency.
+
+=back
+
 =head1 PARAMETERS TO THE new() CONTRUCTOR
 
 =over
