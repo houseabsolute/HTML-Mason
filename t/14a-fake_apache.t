@@ -1,7 +1,7 @@
 #!perl -w
 
 use strict;
-use Test::More tests => 90;
+use Test::More tests => 92;
 use CGI qw(-no_debug);
 
 BEGIN { use_ok('HTML::Mason::CGIHandler') }
@@ -183,5 +183,8 @@ like($headers, qr/Status: 302 Moved/i, "Check status" );
 like($headers, qr|Location: $url|i, "Check location" );
 like($headers, qr|Content-Type: text/xml(?:; charset=ISO-8859-1)?|i,
      "Check content type" );
+
+is( $r->uri, '/login/welcome.html/index.html', 'test uri method' );
+is( $r->path_info, '/index.html', 'test path_info method' );
 
 __END__

@@ -70,7 +70,7 @@ sub request_time { time }
 sub uri {
     my $self = shift;
 
-    $self->{uri} ||= $self->script_name . $self->path_info || '';
+    $self->{uri} ||= $self->{query}->script_name . $self->path_info || '';
 }
 
 # Is this available in CGI?
@@ -81,7 +81,7 @@ sub uri {
 # is being called." This is irrelevant, I think.
 # sub location {}
 
-sub path_info { $_[0]->path_info }
+sub path_info { $_[0]->{query}->path_info }
 
 sub args {
     my $self = shift;
@@ -105,7 +105,11 @@ sub headers_in {
     $self->{headers_in} ||= HTML::Mason::FakeTable->new
       ( 'Authorization'       => $self->{query}->auth_type, # No credentials though.
         'Content-Length'      => $ENV{CONTENT_LENGTH},
-        'Content-Type'        => $self->{query}->content_type,
+        'Content-Type'        =>
+        ( $self->{query}->can('content_type') ?
+          $self->{query}->content_type :
+          $ENV{CONTENT_TYPE}
+        ),
         # Convert HTTP environment variables back into their header names.
         map {
             my $k = ucfirst lc;
