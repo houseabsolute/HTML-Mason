@@ -1053,5 +1053,26 @@ EOF
 
 #------------------------------------------------------------
 
+    # Note that setting out_method on the interp affects _future_
+    # request objects, not the current one.  This is just a test to
+    # make sure we can set it at all.
+    $group->add_test( name => 'set_out_method',
+		      description => 'test setting out_method on the interp object',
+		      component => <<'EOF',
+foo
+% $m->interp->out_method( sub {} );
+bar
+baz
+EOF
+		      expect => <<'EOF',
+foo
+bar
+baz
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     return $group;
 }
