@@ -596,7 +596,7 @@ to keep track of the nesting of different kinds of blocks within each
 other.  The type of block ("init", "once", etc.) is passed via the
 "block_type" parameter.
 
-=item start_block(block_type => <string>)
+=item end_block(block_type => <string>)
 
 This method is called by the Lexer when it encounters a closing Mason
 block tag like C<< </%perl> >> or C<< </%args> >>.  Like
