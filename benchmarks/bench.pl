@@ -46,9 +46,12 @@ my %flags =
 	      descr => 'Number of times to repeat each test.  Defaults to 1000.',
 	      default => 1000},
      save => {descr => 'Saves information to result_history.db (an MLDBM DB_File).'},
+     cvs_tag
+          => {type => ':s',
+	      descr => 'A CVS tag (like "-r release-1-1-5") to check out in lib/ first.',
+	     },
      tag  => {type  => ':s',
-	      descr => 'Specifies a tag to save to result_history.db.  Default is $HTML::Mason::VERSION.',
-	      default => $HTML::Mason::VERSION},
+	      descr => 'Specifies a tag to save to result_history.db.  Default is $HTML::Mason::VERSION or --cvs_tag value.'},
      clear_cache
           => {descr => 'Will clear on-disk cache first.  Useful for exercising the compiler.'},
      help => {descr => 'Prints this message and exits.'},
@@ -79,6 +82,21 @@ unless ( -e $large_comp )
     open my $fh, ">$large_comp" or die "Can't create $large_comp: $!";
     print $fh 'x' x 79, "\n" for 1..30_000; # 80 * 30_000 = 2.4 MB
 }
+
+if ($opts{cvs_tag})
+{
+    my $cwd = cwd();
+    my $lib = File::Spec->catdir( $cwd, '..', 'lib' );
+    chdir $lib or die "Can't chdir($lib): $!";
+    my $cmd = "cvs update $opts{cvs_tag}";
+    print "$cmd\n";
+    system($cmd) == 0
+	or die "Error updating from CVS";
+    $opts{tag} ||= $opts{cvs_tag};
+    chdir $cwd or die "Can't chdir($lib): $!";
+}
+$opts{tag} ||= $HTML::Mason::VERSION;
+
 
 # Clear out the mason-data directory, otherwise we might include
 # compilation in one run and not the next
