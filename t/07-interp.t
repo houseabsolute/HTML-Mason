@@ -24,8 +24,8 @@ sub basic_interp {
 print "1..20\n";
 
 # autohandler_name/allow_recursive_autohandlers
-try_exec_with_interp({},'autohandler_test/subdir/hello',1);
-try_exec_with_interp({allow_recursive_autohandlers=>1},'autohandler_test/subdir/hello',2);
+try_exec_with_interp({allow_recursive_autohandlers=>0},'autohandler_test/subdir/hello',1);
+try_exec_with_interp({},'autohandler_test/subdir/hello',2);
 try_exec_with_interp({autohandler_name=>'plainfile'},'autohandler_test/subdir/hello',3);
 
 # multiple comp_roots
