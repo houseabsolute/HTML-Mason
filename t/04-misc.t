@@ -99,9 +99,8 @@ EOF
 
     $group->add_test( name => 'dhandler1',
 		      description => 'tests dhandler against nonexistent comp',
-		      path => '',
 		      call_path => '/dhandler_test/foo/bar',
-		      component => '',
+		      skip_component => 1,
 		      expect => <<'EOF',
 dhandler = /misc/dhandler_test/dhandler
 dhandler arg = foo/bar
