@@ -148,10 +148,8 @@ sub import
 {
     my $pack = shift;
 
-    if ( $pack->_in_conf_file )
+    if ( my $args_method = $pack->get_param('ArgsMethod') )
     {
-	my $args_method = $pack->get_param('ArgsMethod');
-
 	if ($args_method eq 'CGI')
 	{
 	    unless (defined $CGI::VERSION)
@@ -167,8 +165,6 @@ sub import
 	    }
 	}
 
-	# can't do this stuff for MultipleConfig cause the classes may be
-	# different for each config section
 	$pack->make_ah() if $pack->_in_simple_conf_file;
     }
 }
@@ -182,7 +178,7 @@ sub _in_conf_file
 
 #
 # This is my best guess as to whether we are being configured via the
-# conf file without MultipleConfig set.  Without a comp root it will
+# conf file without multiple configs.  Without a comp root it will
 # blow up sooner or later anyway.  This may not be the case in the
 # future though.
 #
@@ -193,30 +189,25 @@ sub _in_simple_conf_file
     return $ENV{MOD_PERL} && $self->_get_string_param('MasonCompRoot');
 }
 
-sub _in_complex_conf_file
-{
-    my $self = shift;
-
-    return $ENV{MOD_PERL} && $self->_get_string_param('MasonMultipleConfig');
-}
-
 sub make_ah
 {
     my $package = shift;
 
     use vars qw($AH);
-    return $AH if $AH && ! $package->get_param('MultipleConfig');
+    return $AH if $AH;
 
     my %p = $package->get_config($package->allowed_params);
 
     eval "use $p{interp_class}";
     die $@ if $@;
 
-    $AH = $package->new( interp => $package->_make_interp($p{interp_class}),
-			 %p,
-		       );
+    my $ah = $package->new( interp => $package->_make_interp($p{interp_class}),
+			    %p,
+			  );
 
-    return $AH;
+    $AH = $ah if $Apache::Server::Starting; # otherwise, there are multiple configs
+
+    return $ah;
 }
 
 sub _make_interp
