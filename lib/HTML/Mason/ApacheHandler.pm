@@ -799,7 +799,10 @@ sub prepare_request
     my $out_method = sub {
 
 	# Send headers if they have not been sent by us or by user.
-	if (!$sent_headers and $request->auto_send_headers) {
+
+        # We use instance here because if we store $request we get a
+        # circular reference and a big memory leak
+	if (!$sent_headers and HTML::Mason::Request->instance->auto_send_headers) {
 	    unless (http_header_sent($r)) {
 		$r->send_http_header();
 	    }
