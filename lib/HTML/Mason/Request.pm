@@ -546,12 +546,12 @@ sub fetch_comp
     if ($path !~ /\//) {
 	my $cur_comp = $self->current_comp;
 	# Check my subcomponents.
-	if (my $subcomp = $cur_comp->subcomps->{$path}) {
+	if (my $subcomp = $cur_comp->subcomps($path)) {
 	    return $subcomp;
 	}
 	# If I am a subcomponent, also check my owner's subcomponents.
 	# This won't work when we go to multiply embedded subcomponents...
-	if ($cur_comp->is_subcomp and my $subcomp = $cur_comp->owner->subcomps->{$path}) {
+	if ($cur_comp->is_subcomp and my $subcomp = $cur_comp->owner->subcomps($path)) {
 	    return $subcomp;
 	}
     }
