@@ -238,17 +238,9 @@ Corresponds to the C<max_recurse> parameter.
 
 Corresponds to the C<out_method> parameter.
 
-=item * MasonOutMode - string
-
-Corresponds to the C<out_mode> parameter.
-
 =item * MasonPreloads - list
 
 Corresponds to the C<preloads> parameter.
-
-=item * MasonStaticFileRoot - string
-
-Corresponds to the C<static_file_root> parameter.
 
 =item * MasonSystemLogEvents - string
 
@@ -1035,41 +1027,6 @@ The priorities for the staging site are rapid development and easy
 debugging, while the main priority for the production site is
 performance. This section describes various ways to adapt Mason for
 each case.
-
-=head2 Out mode
-
-Mason can spew data in two modes. In "batch" mode Mason computes the
-entire page in a memory buffer and then transmits it all at once. In
-"stream" mode Mason outputs data as soon as it is computed. (This does
-not take into account buffering done by Apache or the O/S.) The default
-mode is "batch".
-
-Batch mode has the advantage of better error handling.  Suppose an
-error occurs in the middle of a page. In stream mode, the error
-message interrupts existing output, often appearing in an awkward HTML
-context such as the middle of a table which never gets closed. In batch
-mode, the error message is output neatly and alone.
-
-Batch mode also offers more flexibility in controlling HTTP
-headers (see L<Devel/sending_http_headers>) and in handling
-mid-request error conditions (see L<Request/clear_buffer>).
-
-Stream mode may help get data to the browser more quickly, allowing
-server and browser to work in parallel. It also prevents memory
-buildup for very large responses.
-
-Since Apache does its own buffering, stream mode does not entail
-immediate delivery of output to the client. You must set $|=1 to turn
-off Apache buffering completely (generally not a good idea) or call
-C<$m-E<gt>flush_buffer> to flush the buffer selectively.
-
-In terms of making your server seem responsive, the initial bytes are
-most important.  You can send these early by calling C<$m-E<gt>flush_buffer>
-in key locations such as the common page header. However, this dilutes
-the advantages of batch mode mentioned above. Tradeoffs...
-
-You control output mode by setting C<interp-E<gt>out_mode> to "batch"
-or "stream".
 
 =head2 Error mode
 
