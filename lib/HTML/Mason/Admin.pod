@@ -398,7 +398,7 @@ allows the developer to select a variety of options such as time,
 browser, and display mode.  The set of these options together is
 called a previewer configuration. Configurations can be saved under
 one of several preview ports. For more information on how the
-previewer is used, see B<L<HTML::Mason::Components>>.
+previewer is used, see B<L<HTML::Mason::Devel>>.
 
 Follow these steps to activate the Previewer:
 

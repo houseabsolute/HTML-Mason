@@ -27,7 +27,7 @@ stand-alone Perl script), see the L<STANDALONE MODE> section below.
 
 True or undef, default is undef. If true, autohandlers apply both to
 their own directories and all subdirectories; if undef, only to their
-own directories. See the L<Components/autohandlers> section of the
+own directories. See the L<Devel/autohandlers> section of the
 Component Developer's Guide for a discussion of the pros and cons.
 
 =item autohandler_name

@@ -5,7 +5,7 @@ HTML::Mason::Commands - Mason command reference
 =head1 DESCRIPTION
 
 The following commands may be used within Mason components. See
-B<HTML::Mason::Components> (the I<Mason Developer's Guide>), for usage
+B<HTML::Mason::Devel> (the I<Mason Developer's Guide>), for usage
 examples.
 
 =head1 COMMAND REFERENCE
@@ -24,7 +24,7 @@ Calls the component interrupted by an autohandler.  With no arguments,
 the original arguments are passed to the component.  Any arguments
 specified here serve to augment and override (in case of conflict) the
 original arguments. Works like mc_comp in terms of return value and
-scalar/list context.  See the L<Components/autohandlers> section of the
+scalar/list context.  See the L<Devel/autohandlers> section of the
 I<Component Developer's Guide> for examples.
 
 =item mc_auto_comp
@@ -32,7 +32,7 @@ I<Component Developer's Guide> for examples.
 Returns the path of the component interrupted by an autohandler.  This
 is generally a relative path; it is only absolute if you call
 C<mc_auto_comp> from a component other than the autohandler and a
-forward relative path cannot be generated. See the L<Components/autohandlers>
+forward relative path cannot be generated. See the L<Devel/autohandlers>
 section of the I<Component Developer's Guide> for usage and examples.
 
 =item mc_cache ([action=>'retrieve|store|expire|keys'], [key=>name],
@@ -41,7 +41,7 @@ section of the I<Component Developer's Guide> for usage and examples.
 mc_cache() lets you store and retrieve the results
 of computation for improved performance. Each component has its own
 data cache for storing one or more key/value pairs. The cache is
-implemented as a DBM database. See the L<Components/data caching>
+implemented as a DBM database. See the L<Devel/data caching>
 section of the I<Component Developer's Guide> for examples
 and caching strategies.
 
@@ -149,7 +149,7 @@ of the current component. It is typically called at the top of an
         ... <rest of init> ...
     </%init>
 
-See the L<Components/filtering> section of the I<Component Developer's Guide>
+See the L<Devel/filtering> section of the I<Component Developer's Guide>
 for usage and examples.
 
 =item mc_comp =for html <a name="comp">
@@ -212,7 +212,7 @@ mc_date() works faster than UnixDate for some formats by caching results.
 If the request has been handled by a dhandler, this method returns the
 remainder of the URI beyond the dhandler directory.  Similar to the
 PATH_INFO except without the leading slash. See the
-L<Components/dhandlers> section of the I<Component Developer's Guide>
+L<Devel/dhandlers> section of the I<Component Developer's Guide>
 for examples.
 
 =item mc_file (filename)
@@ -275,6 +275,6 @@ Jonathan Swartz, swartz@transbay.net
 =head1 SEE ALSO
 
 L<HTML::Mason>,
-L<HTML::Mason::Components>
+L<HTML::Mason::Devel>
 
 =cut
