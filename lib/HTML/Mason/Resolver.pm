@@ -31,10 +31,6 @@ sub glob_path {
     shift->_virtual;
 }
 
-sub apache_request_to_comp_path {
-    shift->_virtual;
-}
-
 sub _virtual
 {
     my $self = shift;
