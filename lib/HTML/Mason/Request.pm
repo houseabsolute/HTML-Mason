@@ -195,6 +195,16 @@ sub exec {
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
     };
 
+    #
+    # $m is a dynamically scoped global containing this
+    # request. This needs to be defined in the HTML::Mason::Commands
+    # package, as well as the component package if that is different.
+    #
+    local $HTML::Mason::Commands::m = $self;
+    my $interp = $self->interp;
+    $interp->set_global('m'=>$self)
+        if ($interp->compiler->in_package ne 'HTML::Mason::Commands');
+
     my @result;
     eval {
 	# Create initial buffer.
@@ -223,16 +233,6 @@ sub exec {
 	    $self->{wrapper_chain} = [@wrapper_chain];
 	    $self->{wrapper_index} = {map((($wrapper_chain[$_]->path || '') => $_),(0..$#wrapper_chain))};
 	}
-
-        #
-        # $m is a dynamically scoped global containing this
-        # request. This needs to be defined in the HTML::Mason::Commands
-        # package, as well as the component package if that is different.
-        #
-        local $HTML::Mason::Commands::m = $self;
-        my $interp = $self->interp;
-        $interp->set_global('m'=>$self)
-            if ($interp->compiler->in_package ne 'HTML::Mason::Commands');
 
 	{
 	    local *SELECTED;
