@@ -1504,9 +1504,11 @@ In this case, when the value cannot be retrieved, C<get()> sets
 the expiration time of the value 30 seconds in the future before
 returning C<undef>.  This tells the first process to compute the new
 value while causing subsequent processes to use the old value for 30
-seconds.  In general, the duration passed to I<busy_lock> indicates
-how long you're willing to allow this component to use an expired
-cache value.
+seconds. 
+
+Should the 30 seconds expire, a second process will start computing
+the new value while setting the expiration time yet another 30 seconds
+in the future, and so on.
 
 =head2 Caching All Output
 
