@@ -216,7 +216,7 @@ sub make_ah
 {
     my $package = shift;
 
-    my $comp_root = join '', $package->_get_list_param('MasonCompRoot');
+    my $comp_root = join '', @{ $package->_get_list_param('MasonCompRoot') };
 
     use vars qw($AH);
     return $AH if $AH && $AH->{last_comp_root} eq $comp_root;
@@ -296,7 +296,7 @@ sub get_param {
 		$spec->{type} & CODEREF  ? 'code' :
 		undef);
     error "Unknown parse type for config item '$key'" unless $type;
-    
+
     my $method = "_get_${type}_param";
     return scalar $self->$method('Mason'.$self->studly_form($key));
 }
@@ -450,23 +450,44 @@ sub status_as_html {
 <%perl>
 foreach my $property (sort keys %$ah) {
     my $val = $ah->{$property};
-    # only object can ->can, others die
-    eval { $val->can('anything') };
-    if (ref $val ) {
-        $val = '<font color="darkred">' . (ref $val);
-        $val .= $@ ? ' reference' : ' object';
-        $val .= '</font>';
+    my $default = ( defined $val && defined $valid{$property}{default} && $val eq $valid{$property}{default} ) || ( ! defined $val && exists $valid{$property}{default} && ! defined $valid{$property}{default} );
+
+    my $display = $val;
+    if (ref $val) {
+        $display = '<font color="darkred">';
+        # only object can ->can, others die
+        my $is_object = eval { $val->can('anything'); 1 };
+        if ($is_object) {
+            $display .= ref $val . ' object';
+        } else {
+            if (UNIVERSAL::isa($val, 'ARRAY')) {
+                $display .= 'ARRAY reference - [ ';
+                $display .= join ', ', @$val;
+                $display .= '] ';
+            } elsif (UNIVERSAL::isa($val, 'HASH')) {
+                $display .= 'HASH reference - { ';
+                my @pairs;
+                while (my ($k, $v) = each %$val) {
+                   push @pairs, "$k => $v";
+                }
+                $display .= join ', ', @pairs;
+                $display .= ' }';
+            } else {
+                $display = ref $val . ' reference';
+            }
+        }
+        $display .= '</font>';
     }
 
-    $val =~ s,([\x00-\x1F]),'<font color="purple">control-' . chr( ord('A') + ord($1) - 1 ) . '</font>',eg; # does this work for non-ASCII?
+    defined $display && $display =~ s,([\x00-\x1F]),'<font color="purple">control-' . chr( ord('A') + ord($1) - 1 ) . '</font>',eg; # does this work for non-ASCII?
 </%perl>
- <tr>
+ <tr valign="top" cellspacing="10">
   <td>
     <% $property | h %>
   </td>
   <td>
-   <% defined $val ? $val : '<i>undef</i>' %>
-   <% ( defined $val && defined $valid{$property}{default} && $val eq $valid{$property}{default} ) || ( ! defined $val && exists $valid{$property}{default} && ! defined $valid{$property}{default} ) ? '<font color=green>(default)</font>' : '' %>
+   <% defined $display ? $display : '<i>undef</i>' %>
+   <% $default ? '<font color=green>(default)</font>' : '' %>
   </td>
  </tr>
 % }
