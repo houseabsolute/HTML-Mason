@@ -368,13 +368,28 @@ sub match_named_block
     }
 }
 
+# starts with an alpha character or underscore, followed by any word
+# character
+my $flag;
+if ( $] >= 5.006 )
+{
+    # Unicode-friendly
+    $flag = qr/[[:alpha:]_]\w*/;
+}
+else
+{
+    # Anglo-centric
+    $flag = qr/[a-zA-Z_]\w*/;
+}
+
 sub match_substitute
 {
     my $self = shift;
 
     if ( $self->{current}{comp_source} =~ /\G<%/gcs )
     {
-	if ( $self->{current}{comp_source} =~ /\G(.+?)(\s*(?<!\|)\|\s*([\w, \t]+)\s*)?%>/igcs )
+	if ( $self->{current}{comp_source} =~
+             /\G(.+?)(\s*(?<!\|)\|\s*($flag(?:\s*,\s*$flag)*)\s*)?%>/igcs )
 	{
 	    my ($sub, $escape) = ($1, $3);
 	    $self->{current}{compiler}->substitution( substitution => $sub,
