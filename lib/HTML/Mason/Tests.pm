@@ -65,13 +65,13 @@ Including one called <% $comp->subcomps($subkeys[0])->name %>.
 My title is <% $comp->title =~ /anon/ ? '[anon something]' : $comp->title %>.
 
 % if (defined($comp->cache_file)) {
-%   my ($subfile) = ($comp->cache_file =~ m{data/[^/]+/(cache/.*?)$});
+%   my ($subfile) = ($comp->cache_file =~ m{data/(?:[^/]+/)?(cache/.*?)$});
 %   if (defined($subfile)) {
 My cache file is /.../<% $subfile %>
 %   }
 % }
 % if (defined($comp->object_file)) {
-%   my ($subfile) = ($comp->object_file =~ m{data/[^/]+/(obj/.*?)$});
+%   my ($subfile) = ($comp->object_file =~ m{data/(?:[^/]+/)?(obj/.*?)$});
 %   if (defined($subfile)) {
 My object file is /.../<% $subfile %>
 %   }
@@ -160,7 +160,7 @@ sub add_test
 	unless exists $p{component};
 
     die "'$p{name}' test has no 'expect' or 'expect_error' key\n"
-	unless exists $p{expect} || exists $p{expect_error} || $self->{create};
+	unless exists $p{expect} || exists $p{expect_error} || $p{skip_expect} || $self->{create};
 
     foreach ( qw( parser_params interp_params ) )
     {
@@ -192,7 +192,7 @@ sub run
 	$self->_write_support_comps;
 	$self->_run_tests;
     };
-
+#    my $x = <STDIN>;
     $self->_cleanup;
 
     die $@ if $@;
@@ -202,16 +202,22 @@ sub _make_dirs
 {
     my $self = shift;
 
-    $self->{comp_root} = $self->comp_root;
-    $self->{data_dir} = $self->data_dir;
+    my $comp_root = $self->comp_root;
+    my $data_dir = $self->data_dir;
 
-    print "Making comp_root directory: $self->{comp_root}\n" if $DEBUG;
-    mkpath( $self->{comp_root}, 0, 0755 )
-	or die "Unable to make base test directory '$self->{comp_root}': $!";
+    unless ( -d $self->comp_root )
+    {
+	print "Making comp_root directory: $comp_root\n" if $DEBUG;
+	mkpath( $self->comp_root, 0, 0755 )
+	    or die "Unable to make base test directory '$comp_root': $!";
+    }
 
-    print "Making data_dir directory: $self->{data_dir}\n" if $DEBUG;
-    mkpath( $self->{data_dir}, 0, 0755 )
-	or die "Unable to make base test directory '$self->{data_dir}': $!";
+    unless ( -d $self->data_dir )
+    {
+	print "Making data_dir directory: $data_dir\n" if $DEBUG;
+	mkpath( $self->data_dir, 0, 0755 )
+	    or die "Unable to make base test directory '$data_dir': $!";
+    }
 }
 
 sub base_path
@@ -254,7 +260,7 @@ sub _write_shared_comps
 	my @path = split m(/), $comp->{path};
 	my $file = pop @path;
 
-	my $dir = File::Spec->catdir( $self->{comp_root}, @path );
+	my $dir = File::Spec->catdir( $self->comp_root, @path );
 
 	$self->write_comp( $comp->{path}, $dir, $file, $comp->{component} );
     }
@@ -275,7 +281,7 @@ sub _write_support_comps
 	my @path = split m(/), $supp->{path};
 	my $file = pop @path;
 
-	my $dir = File::Spec->catdir( $self->{comp_root}, $self->{name}, @path );
+	my $dir = File::Spec->catdir( $self->comp_root, $self->{name}, @path );
 
 	$self->write_comp( $supp->{path}, $dir, $file, $supp->{component} );
     }
@@ -289,7 +295,7 @@ sub _write_test_comp
     my @path = split m(/), $test->{path};
     my $file = pop @path;
 
-    my $dir = File::Spec->catdir( $self->{comp_root}, $self->{name}, @path );
+    my $dir = File::Spec->catdir( $self->comp_root, $self->{name}, @path );
     unless ( -d $dir )
     {
 	print "Making dir: $dir\n" if $DEBUG;
@@ -386,12 +392,22 @@ sub _run_test
     }
 
     my $buf;
-    my $interp = HTML::Mason::Interp->new( comp_root => $self->{comp_root},
-					   data_dir  => $self->{data_dir},
-					   out_method => \$buf,
-					   parser => $parser,
-					   %params,
-					 );
+    my $interp;
+
+    if ($test->{interp})
+    {
+	$interp = $test->{interp};
+	$interp->out_method(\$buf);
+    }
+    else
+    {
+	$interp = HTML::Mason::Interp->new( comp_root => $self->comp_root,
+					    data_dir  => $self->data_dir,
+					    out_method => \$buf,
+					    parser => $parser,
+					    %params,
+					  );
+    }
 
     print "Calling $test->{name} test with path: $test->{call_path}\n" if $DEBUG;
     $test->{pretest_code}->() if $test->{pretest_code};
@@ -412,7 +428,7 @@ sub _run_test
 	{
 	    if ($VERBOSE)
 	    {
-		print "Got error $@ but expected something matching $test->{expect_error}\n";
+		print "Got error:\n$@\n...but expected something matching:\n$test->{expect_error}\n";
 	    }
 	    $self->_fail;
 	}
@@ -437,6 +453,8 @@ sub _check_output
     my $buf = shift;
     my $test = $self->{current_test};
 
+    return 1 if $test->{skip_expect};
+
     my @actual = split /\n/, $buf;
     my @expect = split /\n/, $test->{expect};
 
@@ -458,8 +476,8 @@ sub _check_output
 	}
     }
 
-    my $actual_prev = ();
-    my $expect_prev = ();
+    my @actual_prev = ();
+    my @expect_prev = ();
     my $limit = @actual < @expect ? @actual : @expect;
     my $line = 0;
     for ( my $x = 0; $x < $limit; $x++ )
@@ -472,10 +490,10 @@ sub _check_output
 		local $^W; #suppress uninit value warnings.
 		print "Result differed from expected output at line $line\n";
 
-		my $actual = join "\n", ( $actual_prev,
+		my $actual = join "\n", ( @actual_prev,
 					  $actual[$x],
 					  $actual[$x + 1] ? $actual[$x + 1] : () );
-		my $expect = join "\n", ( $expect_prev,
+		my $expect = join "\n", ( @expect_prev,
 					  $expect[$x],
 					  $expect[$x + 1] ? $expect[$x + 1] : () );
 		print "Got ...\n<<<<<\n$actual\n>>>>>\n... but expected ...\n<<<<<\n$expect\n>>>>>\n";
@@ -483,8 +501,8 @@ sub _check_output
 	    $diff = 1;
 	    last;
 	}
-	$actual_prev = $actual[$x];
-	$expect_prev = $expect[$x];
+	@actual_prev = ( $actual[$x] );
+	@expect_prev = ( $expect[$x] );
     }
 
     return ! $diff;
@@ -561,81 +579,104 @@ me!).
 
 =head1 METHODS
 
-=over 4
-
-=item * new
+=head2 new
 
 Takes the following parameters:
 
-=item -- name (required)
+=item * name (required)
 
 The name of the entire group of tests.
 
-=item -- description (required)
+=item * description (required)
 
 What this group tests.
 
-=item * add_support
+=head2 add_support
 
 Takes the following parameters:
 
-=item -- path (required)
+=over 4
+
+=item * path (required)
 
 The path that other components will expect this component to be
 reachable at.  All paths are prepended with the group name.  So '/bar'
 as a support component in the 'foo' group's ultimate path would be
 '/foo/bar'.
 
-=item -- component (required)
+=item * component (required)
 
 Text of the support component.
 
-=item * add_test
+=head2 add_test
 
 Takes the following parameters:
 
-=item -- name (required)
+=item * name (required)
 
 The name of this test.
 
-=item --description (required)
+=item *description (required)
 
 What this test is testing.
 
-=item -- component (required)
+=item * component (required)
 
 Text of the component.
 
-=item -- expect (required)
-
-The text expected as a result of calling the component.  This
-parameter is _not_ required when running in L<Create mode|ADDITIONAL
-RUN MODES>.
-
-=item -- path (optional)
+=item * path (optional)
 
 The path that this component should written to.  As with support
 components, this path is prepended with the group's name.  If no path
 is given, the value of the name parameter is used.
 
-=item -- call_path (optional)
+=item * call_path (optional)
 
 The path that should be used to call the component.  If none is given,
 then the value is the same as the path option, if that exists,
 otherwise it is /<group name>/<test name>.  If a value is given, it is
 still prepended by /<group name>/.
 
-=item -- parser_params
+=item * parser_params
 
 This is a hash reference of parameters to be passed to the Parser->new
 method.
 
-=item -- interp_params
+=item * interp_params
 
 This is a hash reference of parameters to be passed to the Interp->new
 method.
 
-=item * run
+=item * interp
+
+Provide an HTML::Mason::Interp object to be used for the test.
+
+=back
+
+One of the following three options is required:
+
+=over 4
+
+=item * expect
+
+The text expected as a result of calling the component.  This
+parameter is _not_ required when running in L<Create mode|ADDITIONAL
+RUN MODES>.
+
+=item * expect_error
+
+A regex containing that will be matched against the error returned
+from the component execution.
+
+=item * skip_expect
+
+This causes the component to be run but its output is ignored.
+However, if the component execution causes an error this will cause
+the test to fail.  This is used in a few situations where it is
+necessary to just run a component as part the preparation for another
+test.
+
+=head2 run
 
 Run the tests in the group.
 
@@ -648,16 +689,16 @@ values.
 
 =over 4
 
-=item * base_path
+=head2 base_path
 
 The base path under which the component root and data directory for
 the tests are created.
 
-=item * comp_root
+=head2 comp_root
 
 Returns the component root directory.
 
-=item * data_dir
+=head2 data_dir
 
 Return the data directory
 
@@ -669,7 +710,7 @@ The following additional modes are available for running tests.
 
 =over 4
 
-=item * Verbose mode
+=head2 Verbose mode
 
 To turn this on, set the environment variables MASON_VERBOSE or
 MASON_DEBUG as true or run the tests as 'make test TEST_VERBOSE=1'.
@@ -677,14 +718,14 @@ In this mode, the C<run> method will output information about tests as
 they are run.  If a test fails, then it will also show the cause of
 the failure.
 
-=item * Debug mode
+=head2 Debug mode
 
 To turn this on, set the MASON_DEBUG environment variable to a true
 value.  In this mode, the C<run> method will print detailed
 information of its actions.  This mode includes the output printed in
 VERBOSE mode.
 
-=item * Create mode
+=head2 Create mode
 
 If the individual tests are run from the command line with the
 '--create' flag, then instead of checking the output of a component,
