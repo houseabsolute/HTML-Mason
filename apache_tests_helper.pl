@@ -144,6 +144,15 @@ EOF
 
 </IfDefine>
 
+<IfDefine no_comp_root>
+  PerlSetVar MasonArgsMethod  mod_perl
+  PerlSetVar MasonDataDir     $APACHE{data_dir}
+
+  SetHandler  perl-script
+  PerlModule  HTML::Mason::ApacheHandler
+  PerlHandler HTML::Mason::ApacheHandler
+</IfDefine>
+
 <IfDefine CGIHandler>
   AddHandler cgi-script .cgi
   Action html-mason /CGIHandler.cgi
@@ -194,7 +203,7 @@ foreach ( 0, 1, 0, 0 )
 
 push \@interps, HTML::Mason::Interp->new( comp_root => '$APACHE{comp_root}',
 				          data_dir => '$APACHE{data_dir}',
-                                          error_mode => 'fata' );
+                                          error_mode => 'fatal' );
 
 chown Apache->server->uid, Apache->server->gid, \$interps[-1]->files_written;
 
