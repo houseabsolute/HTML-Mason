@@ -582,14 +582,21 @@ sub find_comp_upwards
     my ($self,$startpath,$name) = @_;
 
     my $comp;
-    my $p = File::Spec->canonpath($startpath);
+
+    # $startpath is a URL path so we split it on / and rejoin it in
+    # the native filesystem way
+    my $p = File::Spec->canonpath( File::Spec->catpath( split /\//, $startpath ) );
 
     my $last_p;
     while (!($comp = $self->load( File::Spec->catfile( $p, $name ) )) && $p) {
 	my $last_p = $p;
-	my ($basename,$dirname) = fileparse($p);
-	$p = File::Spec->canonpath($dirname);    # certain versions leave ./ in $dirname
-	last if $p eq $last_p;  # last dir was something like '/' and so is this one
+
+	# certain versions of dirname leave ./ in $dirname so we use
+	# canonpath
+	$p = File::Spec->canonpath( dirname($p) );
+
+	# last dir was something like '/' and so is this one
+	last if $p eq $last_p;
     }
     return $comp;
 }
