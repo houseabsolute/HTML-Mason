@@ -41,6 +41,7 @@ use HTML::Mason::MethodMaker
 		          ignore_warnings_expr
 			  max_recurse
 			  out_mode
+                          request_class
 			  resolver
 			  static_file_root
 			  use_object_files

@@ -136,7 +136,6 @@ __PACKAGE__->valid_params
      multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1 },
      output_mode           => { parse => 'string',  type => SCALAR,       default => 'batch' },
      interp_class          => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason::Interp' },
-     request_class         => { parse => 'string',  default => 'HTML::Mason::Request::ApacheHandler', type => SCALAR },
      top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1} },
 
      # the only required param
@@ -427,6 +426,15 @@ sub _initialize {
     my $interp = $self->interp;
 
     #
+    # If the default was overridden we won't touch it (users who
+    # provide their own request class should have subclassed
+    # HTML::Mason::Request::ApacheHandler
+    #
+    if ( $interp->request_class eq 'HTML::Mason::Request' ) {
+	$interp->request_class('HTML::Mason::Request::ApacheHandler');
+    }
+
+    #
     # Create data subdirectories if necessary. mkpath will die on error.
     #
     foreach my $subdir (qw(preview)) {
@@ -520,12 +528,13 @@ sub handle_request {
     }
 
     #
-    # Create an Apache-specific request with additional slots.
+    # If someone is using a custom request class that doesn't accept
+    # 'ah' and 'apache_req' that's their problem.
     #
-    my $request = $self->{request_class}->new( ah => $self,
-					       interp => $interp,
-					       apache_req => $apreq,
-					     );
+    my $request = $self->interp->request_class->new( ah => $self,
+						     interp => $interp,
+						     apache_req => $apreq,
+						   );
     eval { $retval = $self->handle_request_1($apreq, $request) };
     my $err = $@;
     my $err_code = $request->error_code;
