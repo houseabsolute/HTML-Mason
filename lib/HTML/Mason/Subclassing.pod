@@ -251,4 +251,10 @@ Providing an ApacheHandler subclass gives you a chance to do your own
 client parameter parsing, as well as the capability of providing a
 different way of handling requests.
 
+=head1 CGIHandler
+
+Like the ApacheHandler, you could subclass this module in order to
+provide your own argument processing or to step in and provide a
+different way to handle requests.
+
 =cut
