@@ -56,7 +56,7 @@ sub write_apache_conf
     }
 
     my $cwd = cwd();
-    my $conf_file = $APACHE{conf_file} ? "$cwd/$APACHE{conf_file}" : "$cwd/t/httpd.conf";
+    my $conf_file = "$cwd/t/httpd.conf";
     $APACHE{apache_dir} = dirname($conf_file);
     $APACHE{apache_dir} =~ s,/$,,;
 
