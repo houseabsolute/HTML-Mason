@@ -389,7 +389,7 @@ sub match_comp_content_call
 
     my $comp = $self->{comp};
     pos($comp) = $self->{pos};
-    if ( $comp =~ /\G<&\|/gcs )
+    if ( $comp =~ /\G(<&\|)/gcs )
     {
 	$self->{pos} = pos($comp);
 	if ( $comp =~ /\G(.*?)&>/gcs )
@@ -404,7 +404,7 @@ sub match_comp_content_call
 	}
 	else
 	{
-	    my $line = $self->_next_line( $self->{pos} - 2 );
+	    my $line = $self->_next_line( $self->{pos} - 3 );
 	    HTML::Mason::Exception::Syntax->throw( error => "'<&|' without matching '&>' at $self->{lines}:\n$line" );
 	}
     }
@@ -417,22 +417,11 @@ sub match_comp_content_call_end
     my $comp = $self->{comp};
     pos($comp) = $self->{pos};
 
-    if ( $comp =~ m^\G(
-                       </&\|           # '</&|' followed by
-                       (?:
-                        >              # '>' i.e. '</&|>'
-                        |              # or
-                        (.*?)          # anything (name to match with begin tag)
-                        &>             # end of tag '&>'
-                       )
-                      )
-                    ^gcsx )
+    if ( $comp =~ m,\G</&\|>,gc )
     {
         $self->{pos} = pos($comp);
 
-        $self->{compiler}->component_content_call_end( ending => $2 );
-	my $ending = $1;
-        $self->{lines} += $ending =~ tr/\n/\n/;
+        $self->{compiler}->component_content_call_end;
 
         return 1;
     }
