@@ -177,8 +177,8 @@ sub import
 sub _in_apache_conf_file
 {
     my $self = shift;
-    my $interp_class = $self->get_param('InterpClass');
-    return $ENV{MOD_PERL} && ( $self->get_param('CompRoot', $interp_class->valid_params) ||
+
+    return $ENV{MOD_PERL} && ( $self->_get_string_param('CompRoot'),
 			       $self->get_param('MultipleConfig') );
 }
 
