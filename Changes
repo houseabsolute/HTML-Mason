@@ -21,6 +21,7 @@ and there's no guarantee that any particular process has cached a
 given component.  Again, this is a feature added in 1.09_01 so this
 change should not cause most people any problems.
 - Renamed CGIHandler's handle_cgi method to handle_comp.
+- Removed the dev_dirs feature from CGIHandler.
 
 [ ENHANCEMENTS ]
 
@@ -56,6 +57,9 @@ out_method parameter.
 values to CGI.pm in a way that CGI.pm liked.  Now we add a '-' to the
 front of the header name if necessary, and all headers are canonized
 to lower case in order to avoid having duplicates.
+- Mason only requires Apache::Request if you have mod_perl installed
+already.
+
 
 1.09_01  April 4, 2002
 
