@@ -120,6 +120,22 @@ if (defined($cmd_options{tests_class})) {
     $cmd_options{tests_class} = __PACKAGE__;
 }
 
+my %tests_to_run;
+if ($cmd_options{tests_to_run}) {
+    for ($cmd_options{tests_to_run}) { s/^\s+//; s/\s+$// }
+    my @tests_to_run = sort { $a <=> $b } split(/\s*,\s*/, $cmd_options{tests_to_run});
+    %tests_to_run = map { ($_, 1) } @tests_to_run;
+    printf ("Running only test%s %s\n", @tests_to_run == 1 ? "" : "s", join(", ", @tests_to_run));
+}
+
+my %tests_to_skip;
+if ($cmd_options{tests_to_skip}) {
+    for ($cmd_options{tests_to_skip}) { s/^\s+//; s/\s+$// }
+    my @tests_to_skip = split(/\s*,\s*/, $cmd_options{tests_to_skip});
+    %tests_to_skip = map { ($_, 1) } @tests_to_skip;
+    printf ("Skipping test%s %s\n", @tests_to_skip == 1 ? "" : "s", join(", ", @tests_to_skip));
+}
+
 sub new
 {
     my $class = shift;
@@ -169,6 +185,9 @@ sub add_test
     die "no name provided for test\n"
 	unless exists $p{name};
 
+    $self->{test_count}++;
+    
+    
     unless ( exists $p{path} )
     {
 	$p{path} = $p{call_path} || $p{name};
@@ -380,20 +399,6 @@ sub _run_tests
 {
     my $self = shift;
 
-    my %tests_to_run;
-    if ($self->{tests_to_run}) {
-	my @tests_to_run = sort { $a <=> $b } split(/\s*,\s*/, $self->{tests_to_run});
-	%tests_to_run = map { ($_, 1) } @tests_to_run;
-	printf ("Running only test%s %s\n", @tests_to_run == 1 ? "" : "s", join(", ", @tests_to_run));
-    }
-
-    my %tests_to_skip;
-    if ($cmd_options{tests_to_skip}) {
-	my @tests_to_skip = split(/\s*,\s*/, $self->{tests_to_skip});
-	%tests_to_skip = map { ($_, 1) } @tests_to_skip;
-	printf ("Skipping test%s %s\n", @tests_to_skip == 1 ? "" : "s", join(", ", @tests_to_skip));
-    }
-    
     my $count = scalar @{ $self->{tests} };
     print "\n1..$count\n";
 
@@ -405,17 +410,44 @@ sub _run_tests
     my $x = 1;
     foreach my $test ( @{ $self->{tests} } )
     {
-	my $full_name = join(":", $self->{name}, $test->{name});
+	$self->{current_test} = $test;
 	
-	if ((!%tests_to_run or $tests_to_run{$x} or $tests_to_run{$test->{name}} or $tests_to_run{$full_name})
-	    and (!%tests_to_skip or (!$tests_to_skip{$x} and !$tests_to_skip{$test->{name}} and !$tests_to_skip{$full_name}))) {
-	    print "Running $test->{name} (#$x): $test->{description}\n"
-		if $VERBOSE;
-	    $self->{current_test} = $test;
-	    $self->_make_component unless $test->{skip_component};
-	    $self->_run_test;
+	#
+	# If tests_to_run or tests_to_skip were specified in the
+	# environment or command line, check them to see whether to
+	# run the test.
+	#
+	if (%tests_to_run or %tests_to_skip) {
+
+	    # Look for any of the specs [test_file_name:](test_number|test_name|*)
+	    my $wildcard_name = join(":", $self->{name}, "*");
+	    my $full_name = join(":", $self->{name}, $test->{name});
+	    my $full_number = join(":", $self->{name}, $x);
+	    my @all_specs = ($x, $test->{name}, $full_name, $full_number, $wildcard_name);
+
+	    # If our test isn't mentioned in %tests_to_run or is
+	    # mentioned in %tests_to_skip, skip it.
+	    #
+	    if ((%tests_to_run and !(grep { $tests_to_run{$_} } @all_specs))
+		or (%tests_to_skip and (grep { $tests_to_skip{$_} } @all_specs))) {
+
+		# Use presence of PERL_DL_NONLAZY to decide if we are
+		# running inside "make test", and if so, actually
+		# print the appropriate skip response to comply with the
+		# Test::Harness standard. If the user is running the
+		# test by hand, this would just be clutter.
+		#
+		# Checking PERL_DL_NONLAZY is a hack but I don't
+		# know of a better detection method.
+		#
+		$self->_skip if ($ENV{PERL_DL_NONLAZY});
+		$x++;
+		next;
+	    }
 	}
-	    
+	print "Running $test->{name} (#$x): $test->{description}\n" if $VERBOSE;
+	$self->_make_component unless $test->{skip_component};
+	$self->_run_test;
 	$x++;
     }
 }
@@ -569,6 +601,17 @@ sub _success
     $self->{test_count}++;
 
     print "Result for $self->{name}: $test->{name}\nok $self->{test_count}\n";
+}
+
+sub _skip
+{
+    my $self = shift;
+    my $test = $self->{current_test};
+
+    $self->{test_count}++;
+
+    die "no test name for " . $self->{test_count} unless $test->{name};
+    print "Result for $self->{name}: $test->{name}\nok $self->{test_count}  # skip Skipped by user\n";
 }
 
 #
@@ -843,17 +886,14 @@ specific tests with the '--tests-to-skip' flag or the
 MASON_TESTS_TO_SKIP environment variable.
 
 The value of either flag is a comma-separated list of one or more of
-the following:
 
-    * a test number
-    * a test name
-    * a test file name and test name joined with a colon
+   [test_file_name:](test_number|test_name|*)
 
 e.g.
 
     perl ./01-syntax.t --tests-to-run=3,5
     MASON_TESTS_TO_SKIP=fake_percent,empty_percents perl ./01-syntax.t
-    MASON_TESTS_TO_SKIP=misc:autohandler,interp:private1 make test
+    MASON_TESTS_TO_RUN="misc:autohandler, request:*, interp:private1" make test
 
 =head2 Subclassing this module
 
