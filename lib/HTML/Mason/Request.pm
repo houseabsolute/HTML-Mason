@@ -397,11 +397,11 @@ sub make_subrequest
     my ($self, %params) = @_;
     my $interp = $self->interp;
 
-    # Coerce the 'comp' parameter into an absolute path.  Don't create
-    # it if it's missing, though - it's required, but for consistency
-    # we let the exception be thrown later if it's missing.
+    # Coerce a string 'comp' parameter into an absolute path.  Don't
+    # create it if it's missing, though - it's required, but for
+    # consistency we let exceptions be thrown later.
     $params{comp} = absolute_comp_path($params{comp}, $self->current_comp->dir_path)
-	if exists $params{comp};
+	if exists $params{comp} && !ref($params{comp});
 
     # Give subrequest the same values as parent request for read/write params
     my %defaults = map { ($_, $self->$_()) } $self->_properties;
