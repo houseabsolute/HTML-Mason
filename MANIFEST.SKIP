@@ -35,3 +35,5 @@ Events.pm$
 samples/cd-me.*
 
 Build.PL
+
+^benchmarks
