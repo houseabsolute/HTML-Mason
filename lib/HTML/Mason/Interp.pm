@@ -760,8 +760,8 @@ sub object_file {
 # pass info to another request is through PATH_INFO.  That's why the expiration stuff is awkward.
 
 sub status_as_html {
-    my ($self) = @_;
-    
+    my ($self, %p) = @_;
+
     # Should I be scared about this?  =)
 
     my $comp_text = <<'EOF';
@@ -769,6 +769,7 @@ sub status_as_html {
 <blockquote>
  <h4>Startup options:</h4>
  <tt>
+<table width="75%">
 <%perl>
 foreach my $property (sort keys %$interp) {
     my $val = $interp->{$property};
@@ -780,12 +781,19 @@ foreach my $property (sort keys %$interp) {
         $val .= '</font>';
     }
 
-    $val =~ s,([\x00-\x1F]),'<font color="purple">control-' . chr( ord('A') + ord($1) - 1 ) . '</font>',eg; # does this work for non-ASCII?
+    defined $val && $val =~ s,([\x00-\x1F]),'<font color="purple">control-' . chr( ord('A') + ord($1) - 1 ) . '</font>',eg; # does this work for non-ASCII?
 </%perl>
-    <% $property | h %> => <% defined $val ? $val : '<i>undef</i>' %>
-                          <% $val eq $valid{$property}{default} ? '<font color="green">(default)</font>' : '' %>
-		          <br>
+ <tr>
+  <td>
+    <% $property | h %>
+  </td>
+  <td>
+   <% defined $val ? $val : '<i>undef</i>' %>
+   <% ( defined $val && defined $valid{$property}{default} && $val eq $valid{$property}{default} ) || ( ! defined $val && exists $valid{$property}{default} && ! defined $valid{$property}{default} ) ? '<font color=green>(default)</font>' : '' %>
+  </td>
+ </tr>
 % }
+</table>
   </tt>
 
  <h4>Components in memory cache:</h4>
@@ -820,10 +828,13 @@ EOF
 	$current_url .= '?' . $r->args;
     }
 
-    my $comp = $self->make_component(comp => $comp_text);
+    my $comp = $self->make_component(comp_text => $comp_text);
     my $out;
     local $self->{out_method} = \$out;
-    $self->exec($comp, interp => $self, valid => $self->validation_spec, current_url => $current_url);
+
+    my $request = $self->make_request(%p);
+
+    $request->exec($comp, interp => $self, valid => $self->validation_spec, current_url => $current_url);
     return $out;
 }
 
@@ -1159,15 +1170,15 @@ Example of usage:
     # Make an anonymous component
     my $anon_comp =
       eval { $interp->make_component
-               ( comp=>'<%perl>my $name = "World";</%perl>Hello <% $name %>!' ) };
+               ( comp_text => '<%perl>my $name = "World";</%perl>Hello <% $name %>!' ) };
     die $@ if $@;
-    
+
     # Make a public component
     eval { $interp->make_component
-             ( comp=>'<%perl>my $name = "World";</%perl>Hello <% $name %>!',
-               path=>'/hello/world.ma' ) };
+             ( comp_text => '<%perl>my $name = "World";</%perl>Hello <% $name %>!',
+               path => '/hello/world.ma' ) };
     die $@ if $@;
-    
+
     $m->comp($anon_comp);
     $m->comp('/hello/world.ma');
 
