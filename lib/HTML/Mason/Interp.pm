@@ -530,9 +530,16 @@ sub eval_object_code
 #
 sub write_object_file
 {
-    my ($self, %options) = @_;
-    my ($object_code,$object_file,$files_written) =
-	@options{qw(object_code object_file files_written)};
+    my $self = shift;
+
+    my %p = validate( @_, { object_code => { type => SCALAR },
+			    object_file => { type => SCALAR },
+			    files_written => { type => ARRAYREF, optional => 1 } },
+		    );
+
+    my ($object_code, $object_file, $files_written) =
+	@p{qw(object_code object_file files_written)};
+
     my @newfiles = ($object_file);
 
     if (defined $object_file && !-f $object_file) {
