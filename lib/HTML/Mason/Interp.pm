@@ -459,39 +459,40 @@ sub purge_code_cache {
 }
 
 #
-# Make an anonymous component and assign it to this interpreter.
+# Construct a component on the fly.  Public if 'path' parameter is
+# given, otherwise anonymous.
 #
 sub make_component {
     my $self = shift;
-    validate(@_, {path =>      { type => SCALAR },
-		  comp =>      { type => SCALAR, optional => 1 },
-		  comp_file => { type => SCALAR, optional => 1 }});
+    validate(@_, {path =>      { type => SCALAR, optional => 1 },
+		  comp_text => { type => SCALAR, optional => 1 },
+		  comp_file => { type => SCALAR, optional => 1 },
+		  name      => { type => SCALAR, optional => 1 }});
 
     my %p = @_;
-    $p{comp} = read_file(delete $p{comp_file}) if exists $p{comp_file};
+    $p{comp_text} = read_file(delete $p{comp_file}) if exists $p{comp_file};
+    die "Must specify either 'comp_text' or 'comp_file' parameter to 'make_component()'"
+	unless $p{comp_text};
 
-    my $object = $self->compiler->compile( name => $p{path}, @_ );
-    my $object_file = File::Spec->catfile( $self->object_dir, $p{path} );
-  warn "object file is '$object_file'";
-    $self->write_object_file(object_text=>$object, object_file=>$object_file);
+    # The compiler expects 'comp' and 'name'
+    $p{comp} = delete $p{comp_text};
+    $p{name} ||= $p{path} ? $p{path} : '<anonymous component>';
+    my $object = $self->compiler->compile( %p );
+    
+    if ($p{path}) {
+	my $object_file = File::Spec->catfile( $self->object_dir, $p{path} );
+	$self->write_object_file(object_text=>$object, object_file=>$object_file);
+    }
     
     my $err;
     my $comp = $self->eval_object_text(object=>$object, error=>\$err);
-    $comp->assign_runtime_properties($self) if $comp;
-    $self->code_cache->{$p{path}} = {lastmod=>time(), comp=>$comp};
-    return $comp;
-}
-
-sub make_anonymous_component
-{
-    my $self = shift;
-
-    my $object = $self->compiler->compile( name => '<anonymous component>', @_ );
-
-    my $error;
-    my $comp = $self->eval_object_text( object => $object, error => \$error );
-    $self->_compilation_error( '<anonymous component>', $error ) if $error;
-
+    $self->_compilation_error( '<anonymous component>', $err ) if $err;
+    
+    if ($p{path}) {
+	$comp->assign_runtime_properties($self) if $comp;
+	$self->code_cache->{$p{path}} = {lastmod=>time(), comp=>$comp};
+    }
+    
     return $comp;
 }
 
