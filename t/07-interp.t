@@ -36,7 +36,7 @@ try_exec_with_interp({autohandler_name=>'plainfile'},'autohandler_test/subdir/he
 
 # code cache
 {my $interp = basic_interp();
- $interp->code_cache_max_size(5000);
+ $interp->code_cache_max_size(5300);
  $interp->exec("/interp/code_cache_test/use1");
  try_exec($interp,"code_cache_test/show_code_cache",1);
  $interp->exec("/interp/code_cache_test/use2"); 
