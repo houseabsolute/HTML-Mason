@@ -483,7 +483,7 @@ sub _get_code_param
 {
     my $self = shift;
     my $p = $_[0];
-    my $val = $self->_get_val(0, @_);
+    my $val = $self->_get_val(@_);
 
     return unless $val;
 
