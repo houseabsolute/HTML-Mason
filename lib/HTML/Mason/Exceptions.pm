@@ -440,11 +440,17 @@ __END__
 
 HTML::Mason::Exceptions - Exception objects thrown by Mason
 
-=head1 DESCRIPTION
+=head1 SYNOPSIS
 
   use HTML::Mason::Exceptions qw(system_error);
 
   open FH, 'foo' or system_error "cannot open foo: $!";
+
+=head1 DESCRIPTION
+
+This module creates the hierarchy of exception objects used by Mason,
+and provides some extra methods for them beyond those provided by
+C<Exception::Class>
 
 =head1 IMPORT
 
