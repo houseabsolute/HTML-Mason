@@ -501,7 +501,15 @@ sub new
 	$defaults{error_mode} = 'output';
 	$defaults{error_format} = 'html';
     }
-    
+
+    if (exists $allowed_params->{allow_globals}) {
+	if ( $defaults{allow_globals} ) {
+	    push @{ $defaults{allow_globals} }, '$r';
+	} else {
+	    $defaults{allow_globals} = ['$r'];
+	}
+    }
+
     my $self = $class->SUPER::new(%defaults, @_);
 
     unless ( $self->interp->resolver->can('apache_request_to_comp_path') )
@@ -572,7 +580,8 @@ sub _initialize {
     #
     # Allow global $r in components
     #
-    $interp->compiler->add_allowed_globals('$r');
+    $interp->compiler->add_allowed_globals('$r')
+	if $interp->compiler->can('add_allowed_globals');
 }
 
 # Generate HTML that describes ApacheHandler's current status.
