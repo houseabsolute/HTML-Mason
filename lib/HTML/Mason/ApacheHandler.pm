@@ -172,11 +172,31 @@ sub _in_simple_conf_file
     return $ENV{MOD_PERL} && $self->_get_string_param('MasonCompRoot');
 }
 
+my %AH;
 sub make_ah
 {
     my $package = shift;
 
     my %p = $package->_get_mason_params;
+
+    my $key = '';
+    foreach my $k (sort keys %p)
+    {
+	# We can't see the contents of a code ref so we can't reliably
+	# say whether two code refs are the same.  Therefore, we
+	# simply will not cache this particular ApacheHandler object.
+	if ( ref $p{$k} && UNIVERSAL::isa( $p{$k}, 'CODE' ) )
+	{
+	    $key = '';
+	    last;
+	}
+
+	$key .= $k;
+	$key .= ref $p{$k} ? @{ $p{$k} } : $p{$k};
+    }
+
+    return $AH{$key} if $key && exists $AH{$key};
+
     if (exists $p{comp_root}) {
 	if (@{$p{comp_root}} == 1 && $p{comp_root}->[0] !~ /=>/) {
 	    $p{comp_root} = $p{comp_root}[0];  # Convert to a simple string
@@ -190,6 +210,7 @@ sub make_ah
 	}
     }
     my $ah = $package->new( %p );
+    $AH{$key} = $ah if $key;
 
     # If we're running as superuser, change file ownership to http user & group
     if (!($> || $<) && $ah->interp->files_written)
