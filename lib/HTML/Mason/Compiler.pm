@@ -124,7 +124,7 @@ sub allow_globals
 sub compile
 {
     my $self = shift;
-    my %p = validate( @_, { comp_text => { type => SCALAR },
+    my %p = validate( @_, { comp_source => { type => SCALAR },
 			    name => { type => SCALAR },
 			  } );
 
@@ -132,11 +132,11 @@ sub compile
     # reference to the entire script.
     if ($self->preprocess)
     {
-	eval { $self->preprocess->( \$p{comp_text} ) };
+	eval { $self->preprocess->( \$p{comp_source} ) };
 	compiler_error "Error during custom preprocess step: $@" if $@;
     }
 
-    $self->lexer->lex( comp_text => $p{comp_text}, name => $p{name}, compiler => $self );
+    $self->lexer->lex( comp_source => $p{comp_source}, name => $p{name}, compiler => $self );
 
     return $self->compiled_component;
 }

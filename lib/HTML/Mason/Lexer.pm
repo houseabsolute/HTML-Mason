@@ -72,7 +72,7 @@ sub lex
 {
     my $self = shift;
     my %p = validate(@_,
-		     {comp_text => SCALAR,
+		     {comp_source => SCALAR,
 		      name => SCALAR,
 		      compiler => {isa => 'HTML::Mason::Compiler'}}
 		    );
@@ -83,7 +83,7 @@ sub lex
     my $current = $self->{current}; # For convenience
 
     # Clean up Mac and DOS line endings
-    $current->{comp_text} =~ s/\r\n?/\n/g;
+    $current->{comp_source} =~ s/\r\n?/\n/g;
 
     # Initialize lexer state
     $current->{lines} = 1;
@@ -96,7 +96,7 @@ sub lex
     # We need to untaint the component or else the regexes will fail
     # to a Perl bug.  The delete is important because we need to
     # create an entirely new scalar, not just modify the existing one.
-    ($current->{comp_text}) = delete($current->{comp_text}) =~ /(.*)/s;
+    ($current->{comp_source}) = delete($current->{comp_source}) =~ /(.*)/s;
 
     eval
     {
@@ -136,7 +136,7 @@ sub start
     my $self = shift;
 
     my $end;
-    while ( defined $self->{current}{pos} ? $self->{current}{pos} < length $self->{current}{comp_text} : 1 )
+    while ( defined $self->{current}{pos} ? $self->{current}{pos} < length $self->{current}{comp_source} : 1 )
     {
 	last if $end = $self->match_end;
 
@@ -177,7 +177,7 @@ sub match_block
 
     my $blocks_re = $self->blocks_regex;
 
-    if ( $self->{current}{comp_text} =~ /\G<%($blocks_re)>/igcs )
+    if ( $self->{current}{comp_source} =~ /\G<%($blocks_re)>/igcs )
     {
 	my $type = lc $1;
 	$self->{current}{compiler}->start_block( block_type => $type );
@@ -230,7 +230,7 @@ sub variable_list_block
     my $self = shift;
     my %p = @_;
 
-    while ( $self->{current}{comp_text} =~ m,
+    while ( $self->{current}{comp_source} =~ m,
                        \G               # last pos matched
                        (?:
                         [ \t]*
@@ -281,7 +281,7 @@ sub key_val_block
     my $self = shift;
     my %p = @_;
 
-    while ( $self->{current}{comp_text} =~ /
+    while ( $self->{current}{comp_source} =~ /
                       \G
                       [ \t]*
                       ([\w_]+)          # identifier
@@ -316,7 +316,7 @@ sub match_block_end
     my %p = @_;
 
     my $re = $p{allow_text} ? qr,\G(.*?)</%\Q$p{block_type}\E>(\n?),is : qr,\G()</%\Q$p{block_type}\E>(\n?),is;
-    if ( $self->{current}{comp_text} =~ /$re/gc )
+    if ( $self->{current}{comp_source} =~ /$re/gc )
     {
 	return $p{allow_text} ? ($1, $2) : $2;
     }
@@ -331,7 +331,7 @@ sub match_named_block
     my $self = shift;
     my %p = @_;
 
-    if ( $self->{current}{comp_text} =~ /\G<%(def|method)\s+([^\n]+?)>/igcs )
+    if ( $self->{current}{comp_source} =~ /\G<%(def|method)\s+([^\n]+?)>/igcs )
     {
 	my ($type, $name) = ($1, $2);
 	$self->{current}{compiler}->start_named_block( block_type => $type,
@@ -355,9 +355,9 @@ sub match_substitute
 {
     my $self = shift;
 
-    if ( $self->{current}{comp_text} =~ /\G<%/gcs )
+    if ( $self->{current}{comp_source} =~ /\G<%/gcs )
     {
-	if ( $self->{current}{comp_text} =~ /\G(.+?)(\s*\|\s*([a-z]+)?\s*)?%>/igcs )
+	if ( $self->{current}{comp_source} =~ /\G(.+?)(\s*\|\s*([a-z]+)?\s*)?%>/igcs )
 	{
 	    my ($sub, $escape) = ($1, $3);
 	    $self->{current}{compiler}->substitution( substitution => $sub,
@@ -380,9 +380,9 @@ sub match_comp_call
 {
     my $self = shift;
 
-    if ( $self->{current}{comp_text} =~ /\G<&(?!\|)/gcs )
+    if ( $self->{current}{comp_source} =~ /\G<&(?!\|)/gcs )
     {
-	if ( $self->{current}{comp_text} =~ /\G(.*?)&>/gcs )
+	if ( $self->{current}{comp_source} =~ /\G(.*?)&>/gcs )
 	{
 	    my $call = $1;
 	    $self->{current}{compiler}->component_call( call => $call );
@@ -402,9 +402,9 @@ sub match_comp_content_call
 {
     my $self = shift;
 
-    if ( $self->{current}{comp_text} =~ /\G<&\|/gcs )
+    if ( $self->{current}{comp_source} =~ /\G<&\|/gcs )
     {
-	if ( $self->{current}{comp_text} =~ /\G(.*?)&>/gcs )
+	if ( $self->{current}{comp_source} =~ /\G(.*?)&>/gcs )
 	{
 	    my $call = $1;
 	    $self->{current}{compiler}->component_content_call( call => $call );
@@ -423,7 +423,7 @@ sub match_comp_content_call_end
 {
     my $self = shift;
 
-    if ( $self->{current}{comp_text} =~ m,\G</&>,gc )
+    if ( $self->{current}{comp_source} =~ m,\G</&>,gc )
     {
         $self->{current}{compiler}->component_content_call_end;
 
@@ -435,7 +435,7 @@ sub match_perl_line
 {
     my $self = shift;
 
-    if ( $self->{current}{comp_text} =~ /\G%([^\n]*)(?:\n|\z)/gcs )
+    if ( $self->{current}{comp_source} =~ /\G%([^\n]*)(?:\n|\z)/gcs )
     {
 	$self->{current}{compiler}->perl_line( line => $1 );
 	$self->{current}{lines}++;
@@ -448,7 +448,7 @@ sub match_text
 {
     my $self = shift;
 
-    if ( $self->{current}{comp_text} =~ m,
+    if ( $self->{current}{comp_source} =~ m,
                     \G
                     (.*?)       # anything
 		    (           # followed by
@@ -481,7 +481,7 @@ sub match_end
 
     # $self->{current}{ending} is a qr// 'string'.  No need to escape.  It will
     # also include the needed \G marker
-    if ( $self->{current}{comp_text} =~ /($self->{current}{ending})/gcs )
+    if ( $self->{current}{comp_source} =~ /($self->{current}{ending})/gcs )
     {
 	my $text = $1;
 	if (defined $text)
@@ -503,14 +503,14 @@ sub _next_line
 
     $pos = ( defined $pos ?
 	     $pos :
-	     ( substr( $self->{current}{comp_text}, pos($self->{current}{comp_text}), 1 ) eq "\n" ?
-	       pos($self->{current}{comp_text}) + 1 :
-	       pos($self->{current}{comp_text}) ) );
+	     ( substr( $self->{current}{comp_source}, pos($self->{current}{comp_source}), 1 ) eq "\n" ?
+	       pos($self->{current}{comp_source}) + 1 :
+	       pos($self->{current}{comp_source}) ) );
 
-    my $to_eol = ( index( $self->{current}{comp_text}, "\n", $pos ) != -1 ?
-		   ( index( $self->{current}{comp_text}, "\n" , $pos ) ) - $pos :
-		   length $self->{current}{comp_text} );
-    return substr( $self->{current}{comp_text}, $pos, $to_eol );
+    my $to_eol = ( index( $self->{current}{comp_source}, "\n", $pos ) != -1 ?
+		   ( index( $self->{current}{comp_source}, "\n" , $pos ) ) - $pos :
+		   length $self->{current}{comp_source} );
+    return substr( $self->{current}{comp_source}, $pos, $to_eol );
 }
 
 sub line_count
