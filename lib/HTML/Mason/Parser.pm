@@ -474,7 +474,7 @@ sub _parse_flags_section
     my $state = $self->{parser_state};
 
     my $hash = $self->_parse_hash_pairs($params{section});
-    foreach my $key (@keys(%$hash)) {
+    foreach my $key (keys(%$hash)) {
 	die $self->_make_error( error => "invalid flag '$key'" ) unless $valid_flags{$key};
     }    
 
