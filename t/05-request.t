@@ -600,6 +600,23 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'caller_at_top_level',
+		      description => 'tests $m->caller() from top component',
+		      component => <<'EOF',
+caller is <% defined($m->caller) ? "defined" : "undefined" %>
+callers(5) is <% defined($m->callers(5)) ? "defined" : "undefined" %>
+caller_args(7) is <% defined($m->callers(7)) ? "defined" : "undefined" %>
+EOF
+		      expect => <<'EOF',
+caller is undefined
+callers(5) is undefined
+caller_args(7) is undefined
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'call_self',
 		      description => 'Test $m->call_self',
 		      component => <<'EOF',
