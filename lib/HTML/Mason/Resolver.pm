@@ -31,7 +31,7 @@ sub glob_path {
     shift->_virtual;
 }
 
-sub default_path_prefix {
+sub rel2abs {
     return undef;
 }
 
@@ -114,11 +114,16 @@ For example, the filesystem resolver simply appends this pattern to
 each component root in turn and calls the Perl C<glob()> function to
 find matching files on the filesystem.
 
-=item default_path_prefix
+=item rel2abs ($path)
 
-Returns the prefix to be prepended to initial relative component paths
-before they are passed into get_info. Returning undef indicates that
-initial component paths must be absolute (the default).
+Given a relative component $path, returns its corresponding absolute path.
+The function may return undef indicating that only absolute paths are
+allowed - this is the default.
+
+This function is only called if $interp->exec or $interp->load
+receives a relative path. Relative paths to $m->comp and its siblings
+are automatically converted to absolute before being passed to the
+resolver.
 
 =back
 

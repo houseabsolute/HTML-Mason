@@ -186,10 +186,11 @@ sub load {
     my $code_cache = $self->code_cache;
     my $resolver = $self->{resolver};
 
+    #
+    # Given a relative path, call resolver's rel2abs to try and make absolute.
+    #
     unless (substr($path, 0, 1) eq '/') {
-	if (my $prefix = $resolver->default_path_prefix) {
-	    $path = join '/', $prefix, $path;
-	} else {
+	unless ($path = $resolver->rel2abs($path)) {
 	    error "Component paths given to Interp->load must be absolute";
 	}
     }

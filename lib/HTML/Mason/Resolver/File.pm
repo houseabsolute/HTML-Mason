@@ -31,7 +31,7 @@ sub new {
     #
     # no comp_root param was provided.
     #
-    $self->{use_default_path} = ! exists $p{comp_root};
+    $self->{allow_relative_path} = ! exists $p{comp_root};
 
     # Put it through the accessor to ensure proper data structure
     $self->comp_root( $self->{comp_root} ) unless ref $self->{comp_root};
@@ -108,10 +108,18 @@ sub glob_path {
     return keys(%path_hash);
 }
 
-sub default_path_prefix {
-    my $self = shift;
+#
+# Resolve relative url_paths by cwd only if allow_relative_paths
+# flag is on (i.e. if no comp_root param was provided at creation).
+#
+sub rel2abs {
+    my ($self, $path) = @_;
 
-    return File::Spec->rel2abs(cwd) if $self->{use_default_path};
+    if ($self->{allow_relative_path}) {
+	return join("/", File::Spec->rel2abs(cwd), $path);
+    } else {
+	return undef;
+    }
 }
 
 1;
