@@ -179,6 +179,7 @@ sub _initialize {
 
     local $SIG{'__DIE__'} = \&rethrow_exception;
 
+    eval {
 	# create base buffer
 	$self->{buffer_stack} = [];
 	$self->{stack} = [];
@@ -223,6 +224,15 @@ sub _initialize {
 	} elsif ( ! UNIVERSAL::isa( $request_comp, 'HTML::Mason::Component' ) ) {
 	    param_error "comp ($request_comp) must be a component path or a component object";
 	}
+    };
+
+    # Handle errors.
+    my $err = $@;
+    if ($err and !$self->_aborted_or_declined($err)) {
+	$self->_handle_error($err);
+	return;
+    }
+
 }
 
 sub alter_superclass
@@ -328,9 +338,6 @@ sub exec {
     # Handle errors.
     my $err = $@;
     if ($err and !$self->_aborted_or_declined($err)) {
-	pop @{ $self->{buffer_stack} };
-	pop @{ $self->{buffer_stack} };
-	$interp->purge_code_cache;
 	$self->_handle_error($err);
 	return;
     }
@@ -356,6 +363,10 @@ sub exec {
 sub _handle_error
 {
     my ($self, $err) = @_;
+
+    pop @{ $self->{buffer_stack} };
+    pop @{ $self->{buffer_stack} };
+    $self->interp->purge_code_cache;
 
     rethrow_exception $err if $self->is_subrequest;
 

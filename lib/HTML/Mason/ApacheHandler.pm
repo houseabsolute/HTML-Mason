@@ -868,11 +868,19 @@ sub prepare_request
     };
 
     if (my $err = $@) {
-	return $err->aborted_value
-	    if isa_mason_exception($err, 'Abort');
-	return $err->declined_value
-	    if isa_mason_exception($err, 'Decline');
-	rethrow_exception $err;
+	# We rethrow everything but TopLevelNotFound, Abort, and Decline errors.
+	
+	if ( isa_mason_exception($@, 'TopLevelNotFound') ) {
+	    $r->log_error("[Mason] File does not exist: ", $r->filename . ($r->path_info || ""));
+	    return $self->return_not_found($r);
+	}
+	my $retval = ( isa_mason_exception($err, 'Abort')   ? $err->aborted_value  :
+		       isa_mason_exception($err, 'Decline') ? $err->declined_value :
+		       rethrow_exception $err );
+	unless ($retval and $retval != 200) {
+	    $r->send_http_header;
+	}
+	return $retval;
     }
 
     my $final_output_method = ($r->method eq 'HEAD' ?
