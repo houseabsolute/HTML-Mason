@@ -1,6 +1,6 @@
 use strict;
 use 5.005;
-use Module::Build 0.06;
+use Module::Build 0.05_01;
 
 require 'install/apache_tests_helper.pl';
 require 'install/assisted_install_helper.pl';
