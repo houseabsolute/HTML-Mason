@@ -324,7 +324,7 @@ sub start_named_block
     my %p = @_;
 
     $self->lexer->throw_syntax_error
-	("Cannot define a $p{block_type} inside a method or subcomponent")
+	("Cannot define a $p{block_type} block inside a method or subcomponent")
 	    unless $self->{in_main};
 
     $self->lexer->throw_syntax_error("Invalid $p{block_type} name: $p{name}")
