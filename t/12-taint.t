@@ -107,6 +107,8 @@ ok $@, '', "Unable to write a tainted object to disk";
 
 
 my $cwd = getcwd(); # tainted
+$cwd = "$0$^X" unless is_tainted($cwd);
+
 # This isn't a part of the documented interface, but we test it here anyway.
 my $code = "# MASON COMPILER ID: ". $interp->compiler->object_id ."\nmy \$x = '$cwd';"; # also tainted
 ok is_tainted($code);
