@@ -444,6 +444,12 @@ You may still see references to a F<handler.pl> file in the Mason
 users list archives, as well as the FAQ.  These references will
 generally be applicable to any custom code wrapping Mason.
 
+=head2 Wrapping with a <Perl> block
+
+You can also put your wrapper code in a C<< <Perl> >> block as part of
+your F<httpd.conf> file.  The result is no different than loading a
+file via the C<PerlRequire> directive.
+
 =head2 Wrapping with a Module
 
 Remember, this wrapper code doesn't I<have> to be in a file
