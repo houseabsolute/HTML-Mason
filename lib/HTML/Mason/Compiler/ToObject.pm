@@ -6,13 +6,16 @@ package HTML::Mason::Compiler::ToObject;
 
 use strict;
 
-use Params::Validate qw(SCALAR);
-use HTML::Mason::Tools qw(make_fh);
+use Params::Validate qw(SCALAR validate);
+use HTML::Mason::Tools qw(make_fh taint_is_on);
 
 use HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
 
-use HTML::Mason::Exceptions( abbr => [qw(wrong_compiler_error)] );
+use HTML::Mason::Exceptions( abbr => [qw(wrong_compiler_error system_error)] );
+
+use File::Path qw(mkpath rmtree);
+use File::Basename qw(dirname);
 
 BEGIN
 {
@@ -53,6 +56,54 @@ sub compile
 
     local $self->{comp_class} = $p{comp_class} if exists $p{comp_class};
     return $self->SUPER::compile( comp_source => $p{comp_source}, name => $p{name} );
+}
+
+#
+# compile_to_file( source => ..., file => ... )
+# Save object text in an object file.
+#
+# We attempt to handle several cases in which a file already exists
+# and we wish to create a directory, or vice versa.  However, not
+# every case is handled; to be complete, mkpath would have to unlink
+# any existing file in its way.
+#
+sub compile_to_file
+{
+    my $self = shift;
+
+    my %p = validate( @_, {   file => { type => SCALAR },
+			    source => { isa => 'HTML::Mason::ComponentSource' } },
+		    );
+
+    my ($file, $source) = @p{qw(file source)};
+    my $object_code = $self->compile( comp_source => $source->comp_source,
+				      name => $source->friendly_name,
+				      comp_class => $source->comp_class );
+
+    my @newfiles = ($file);
+
+    if (defined $file && !-f $file) {
+	my ($dirname) = dirname($file);
+	if (!-d $dirname) {
+	    unlink($dirname) if (-e _);
+	    push @newfiles, mkpath($dirname, 0, 0775);
+	    system_error "Couldn't create directory $dirname: $!"
+		unless -d $dirname;
+	}
+	rmtree($file) if (-d $file);
+    }
+
+    ($file) = $file =~ /^(.*)/s if taint_is_on;  # Untaint blindly
+
+    my $fh = make_fh();
+    open $fh, "> $file"
+	or system_error "Couldn't write object file $file: $!";
+    print $fh $$object_code
+	or system_error "Couldn't write object file $file: $!";
+    close $fh 
+	or system_error "Couldn't close object file $file: $!";
+    
+    return \@newfiles;
 }
 
 sub object_id
@@ -114,21 +165,16 @@ sub compiled_component
     $params->{object_size} = 0;
     $params->{object_size} += length for ($header, %$params);
 
-    # This funky list subscript is just so that we can avoid making a
-    # copy of the returned string.  Otherwise we'd have to save it,
-    # then delete $self->{current_comp}, then return the string.
-    
-    return +(join('',
-		  "# MASON COMPILER ID: $id\n",
-		  $header,
-		  $self->_subcomponents_footer,
-		  $self->_methods_footer,
-		  $self->_constructor( $self->comp_class,
-				       $params ),
-		  ';',
-		 ),
-	     $self->{current_comp} = undef,
-	    )[0];
+    my $obj_text = join('',
+			"# MASON COMPILER ID: $id\n",
+			$header,
+			$self->_subcomponents_footer,
+			$self->_methods_footer,
+			$self->_constructor( $self->comp_class,
+					     $params ),
+			';');
+    delete $self->{current_comp};
+    return \$obj_text;
 }
 
 sub assert_creatorship
