@@ -845,7 +845,7 @@ sub return_not_found
 BEGIN
 {
     # A method handler is prototyped differently in mod_perl 1.x than in 2.x
-    my $handler_code = sprintf <<'EOF', $mod_perl::VERSION < 1.99 ? ': method' : '($$)';
+    my $handler_code = sprintf <<'EOF', $mod_perl::VERSION >= 1.99 ? ': method' : '($$)';
 sub handler %s
 {
     my ($package, $r) = @_;
