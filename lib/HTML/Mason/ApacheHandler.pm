@@ -452,11 +452,8 @@ sub _get_list_param
     return \@val;
 }
 
-BEGIN
-{
-    use constant
-	HAS_TABLE_API => $mod_perl::VERSION >= 1.99 || Apache::perl_hook('TableApi');
-}
+use constant
+    HAS_TABLE_API => $mod_perl::VERSION >= 1.99 || Apache::perl_hook('TableApi');
 
 sub _get_val
 {
