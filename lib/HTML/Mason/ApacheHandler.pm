@@ -72,7 +72,6 @@ use HTML::Mason::FakeApache;
 use HTML::Mason::Tools qw(dumper_method html_escape url_unescape pkg_installed);
 use HTML::Mason::Utils;
 use Apache::Status;
-use Apache::URI;
 
 # use() params. Assign defaults, in case ApacheHandler is only require'd.
 use vars qw($LOADED $ARGS_METHOD);
@@ -298,10 +297,18 @@ sub handle_request {
 
     if ($err) {
 	#
-	# If first component was not found, return 404.
+	# If first component was not found, return 404. In case of
+	# POST we must trick Apache into not reading POST content
+	# again. Wish there were a more standardized way to do this...
 	#
-	return 404 if defined($err_code) and $err_code eq 'top_not_found';
-	
+	if (defined($err_code) and $err_code eq 'top_not_found') {
+	    if ($apreq->method eq 'POST') {
+		$apreq->method('GET');
+		$apreq->headers_in->unset('Content-length');
+	    }
+	    return NOT_FOUND;
+	}
+
 	#
 	# Take out date stamp and (eval nnn) prefix
 	# Add server name, uri, referer, and agent
