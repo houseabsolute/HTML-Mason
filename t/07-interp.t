@@ -789,7 +789,7 @@ EOF
     $interp = HTML::Mason::Interp->new( data_dir => $group->data_dir,
 					comp_root => $group->comp_root,
 					 );
-    $interp->compiler->set_allowed_globals( qw($global) );
+    $interp->compiler->allowed_globals( qw($global) );
     $interp->set_global( global => 'parsimmon' );
 
 

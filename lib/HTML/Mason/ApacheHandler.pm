@@ -438,7 +438,7 @@ sub _initialize {
     #
     # Allow global $r in components
     #
-    $interp->compiler->set_allowed_globals(qw($r));
+    $interp->compiler->add_allowed_globals('$r');
 }
 
 # Generate HTML that describes ApacheHandler's current status.

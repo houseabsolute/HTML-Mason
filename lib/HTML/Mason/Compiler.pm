@@ -49,7 +49,8 @@ sub new
     my @args = $class->create_contained_objects(@_);
     my $self = bless {validate(@args, $class->validation_spec)}, $class;
 
-    $self->set_allowed_globals( @{$self->{allowed_globals}} );
+    # Verify the validity of the global names
+    $self->allowed_globals( @{$self->{allowed_globals}} );
 
     return $self;
 }
@@ -87,22 +88,33 @@ my %top_level_only_block = map { $_ => 1 } qw( cleanup once shared );
 my %valid_comp_flag = map { $_ => 1 } qw( inherit );
 my %valid_escape_flag = map { $_ => 1 } qw( h n u );
 
-sub set_allowed_globals
+sub add_allowed_globals
 {
     my $self = shift;
     my @globals = @_;
 
     if ( my @bad = grep { ! /^[\$@%]/ } @globals )
     {
-	HTML::Mason::Exception::Params->throw( error => "allowed_globals: bad parameters '@bad', must begin with one of $, @, %\n" );
+	HTML::Mason::Exception::Params->throw
+		( error => "allowed_globals: bad parameters '@bad', must begin with one of \$, \@, %\n" );
     }
 
     $self->{allowed_globals} = [ keys %{ { map { $_ => 1 } @globals, @{ $self->{allowed_globals} } } } ];
+    return @{ $self->{allowed_globals} };
 }
 
 sub allowed_globals
 {
-    return @{ shift->{allowed_globals} };
+    my $self = shift;
+    
+    if (@_)
+    {
+	$self->{allowed_globals} = [];
+	return if @_ == 1 and not defined $_[0]; # @_ is (undef)
+	$self->add_allowed_globals(@_);
+    }
+
+    return @{ $self->{allowed_globals} };
 }
 
 sub compile
@@ -167,7 +179,7 @@ sub end_component
 {
     my $self = shift;
 
-    HTML::Mason::Exception::Syntax->throw( error => "Not enough ending component with content ending tags found" )
+    HTML::Mason::Exception::Syntax->throw( error => "Not enough component-with-content ending tags found" )
 	if @{ $self->{comp_with_content_stack} };
 
     $self->{current_comp} = undef;

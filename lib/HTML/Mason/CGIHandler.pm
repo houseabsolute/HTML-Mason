@@ -29,7 +29,7 @@ sub new {
 
     my $self = bless { validate @my_args, $package->validation_spec };
     $self->interp->out_method(\$self->{output});
-    $self->interp->compiler->set_allowed_globals('$r');
+    $self->interp->compiler->add_allowed_globals('$r');
     
     return $self;
 }
