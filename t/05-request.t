@@ -218,7 +218,8 @@ Here I am:
 
 <& .sub &>
 <%def .sub>
-<% $m->file('file_in_subcomp') %>
+% my $f = $m->file('file_in_subcomp'); $f =~ s/\r\n?/\n/g;
+<% $f %>
 </%def>
 EOF
 		      expect => <<'EOF',
@@ -229,7 +230,8 @@ Here I am:
 
 <& .sub &>
 <%def .sub>
-<% $m->file('file_in_subcomp') %>
+% my $f = $m->file('file_in_subcomp'); $f =~ s/\r\n?/\n/g;
+<% $f %>
 </%def>
 EOF
 		    );
