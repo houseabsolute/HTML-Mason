@@ -382,6 +382,8 @@ else
     $flag = qr/[a-zA-Z_]\w*/;
 }
 
+sub escape_flag_regex { $flag }
+
 sub match_substitute
 {
     my $self = shift;
