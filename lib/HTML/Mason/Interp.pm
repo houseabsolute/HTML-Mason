@@ -663,7 +663,7 @@ sub eval_object_text
 	local $SIG{__WARN__} = $ignore_expr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ } : sub { $warnstr .= $_[0] };
 
 	# If in taint mode, untaint the object filename or object text
-	($object) = ($object =~ /^(.*)$/s) if taint_is_on;
+	($object) = ($object =~ /^(.*)/s) if taint_is_on;
 	$comp = eval $object;
 
 	$err = $warnstr . $@;
@@ -730,6 +730,8 @@ sub write_object_file
 	}
 	rmtree($object_file) if (-d $object_file);
     }
+
+    ($object_file) = $object_file =~ /^(.*)/s if taint_is_on;
 
     my $fh = make_fh();
     open $fh, ">$object_file" or die "Couldn't write object file $object_file: $!";
