@@ -15,9 +15,9 @@ installed alongside the other Mason libraries.
 EOF
     
 my $confFile = <<EOF;
-# Copyright (c) 1998,1999 by Jonathan Swartz. All rights reserved.
-# This program is free software; you can redistribute it and/or modify it
-# under the same terms as Perl itself.
+# Copyright (c) 1998-2001 by Jonathan Swartz. All rights reserved.
+# This program is free software; you can redistribute it and/or modify
+# it under the same terms as Perl itself.
 
 # This is the global configuration file for HTML::Mason.
 
