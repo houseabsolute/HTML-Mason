@@ -1231,6 +1231,29 @@ sub ACTION_test
     $self->SUPER::ACTION_test;
 }
 
+sub ACTION_test_pod
+{
+    my $self = shift;
+
+    eval { require Test::Pod };
+
+    if ($@)
+    {
+        warn "The test_pod action requires the Test::Pod module.\n";
+        return;
+    }
+
+    $self->depends_on('build');
+
+    my @files = $self->_files_with_pod('blib');
+    Test::Pod->import( tests => scalar @files );
+
+    foreach my $f (@files)
+    {
+        Test::Pod::pod_file_ok($f);
+    }
+}
+
 sub ACTION_install
 {
     my $self = shift;
