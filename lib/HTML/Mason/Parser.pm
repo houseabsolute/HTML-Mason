@@ -445,7 +445,7 @@ sub parse
 	$header .= "use strict;\n" if $self->use_strict;
 	$header .= sprintf("use vars qw(%s);\n",join(" ","\$INTERP",@{$self->{'allow_globals'}}));
     }
-    $body = "$header\nreturn sub {\n$body\n};\n";
+    $body = "$header\nsub {\n$body\n};\n";
 
     #
     # Eliminate DOS ctrl-M chars
@@ -469,7 +469,7 @@ sub parse
 	    $err =~ s/\'/\\\'/g;
 	    $err =~ s/\(eval [0-9]\) //g;
 	    my $msg = sprintf("Error during compilation%s:",$scriptFile ? " of '$scriptFile'" : "");
-	    my $errscript = "$header\nreturn sub {\ndie \"$msg\\n\".'$err'.\"\\n\"\n}\n";
+	    my $errscript = "$header\nsub {\ndie \"$msg\\n\".'$err'.\"\\n\"\n}\n";
 	    $sub = eval($errscript);
 	} else {
 	    $err .= "\n";

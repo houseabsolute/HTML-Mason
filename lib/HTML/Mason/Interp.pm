@@ -18,6 +18,7 @@ use IO::File;
 use IO::Seekable;
 use HTML::Mason::Parser;
 use HTML::Mason::Tools qw(read_file pkg_loaded);
+use HTML::Mason::Commands qw();
 use HTML::Mason::Config;
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 
@@ -540,7 +541,7 @@ sub load {
 		$errmsg =~ s/\'/\\\'/g;
 		$errmsg =~ s/\(eval [0-9]\) //g;
 		($errmsg) = ($errmsg =~ /^(.*)$/s);
-		my $script = "return sub { die '$errmsg' };";
+		my $script = "sub { die '$errmsg' };";
 		$sub = eval($script);
 	    }
 	    if ($objfile) {
