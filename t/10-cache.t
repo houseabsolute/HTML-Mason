@@ -34,15 +34,14 @@ sub make_tests
 			 component => <<'EOF',
 <% $result %>
 This was<% $cached ? '' : ' not' %> cached.
-Return value: <% $return %>
 
 <%init>
 my $cached = 0;
 my $result;
 my $return;
-unless ($result = $m->cache(key=>'fandango')) {
+unless ($result = $m->cache->get('fandango')) {
     $result = "Hello Dolly.";
-    $return = $m->cache(action=>'store', key=>'fandango', value=>$result) || '';
+    $return = $m->cache->set('fandango', $result) || '';
 } else {
     $cached = 1;
 }
@@ -63,58 +62,14 @@ EOF
 		      expect => <<'EOF',
 Hello Dolly.
 This was not cached.
-Return value: Hello Dolly.
 
 
 Hello Dolly.
 This was cached.
-Return value: 
 
 
 Hello Dolly.
 This was cached.
-Return value: 
-
-
-EOF
-		    );
-
-
-#------------------------------------------------------------
-
-    $group->add_support( path => 'support/cache_self_test',
-			 component => <<'EOF',
-Hello World! var = <% $var %>
-<%init>
-return if $m->cache_self(key=>'fandango');
-</%init>
-<%args>
-$var
-</%args>
-
-EOF
-		       );
-
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'cache_self',
-		      description => 'cache_self functionality',
-		      component => <<'EOF',
-% my $var = 1;
-% for (my $i=0; $i<3; $i++) {
-<% $m->comp('support/cache_self_test',var=>$var) %>
-% $var++;
-% }
-EOF
-		      expect => <<'EOF',
-Hello World! var = 1
-
-
-Hello World! var = 1
-
-
-Hello World! var = 1
 
 
 EOF
@@ -124,22 +79,23 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'keys',
-		      description => q|test $m->cache( action => 'keys' )|,
+		      description => q|test multiple keys and $m->cache->get_identifiers|,
 		      component => <<'EOF',
 <%init>
 foreach my $key (qw(foo bar baz)) {
-    $m->cache(action=>'store',key=>$key,value=>$key);
+    $m->cache->set($key, $key);
 }
-my @keys = sort $m->cache(action=>'keys');
+my @keys = sort $m->cache->get_identifiers;
 $m->out("keys in cache: ".join(",",@keys)."\n");
 foreach my $key (qw(foo bar baz)) {
-    my $value = $m->cache(key=>$key) || "undefined";
+    my $value = $m->cache->get($key) || "undefined";
     $m->out("value for $key is $value\n");
 }
-$m->cache(action=>'expire', key=>[qw(foo bar)]);
+$m->cache->remove('foo');
+$m->cache->remove('bar');
 $m->out("expiring foo and bar...\n");
 foreach my $key (qw(foo bar baz)) {
-    my $value = $m->cache(key=>$key) || "undefined";
+    my $value = $m->cache->get($key) || "undefined";
     $m->out("value for $key is $value\n");
 }
 </%init>
