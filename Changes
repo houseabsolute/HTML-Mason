@@ -106,6 +106,7 @@ constructor accepts parameters intended for the contained objects.
 For example, the Interp object contains a Resolver object and Request
 objects.  The Interp's new method will accept constructor parameter
 for both the Resolver and Request objects.
+- The ApacheHandler args_method is now a per-object parameter.
 
 [ BUG FIXES ]
 
