@@ -32,7 +32,7 @@ skip_test unless have_httpd;
 kill_httpd(1);
 test_load_apache();
 
-plan(tests => 7);
+plan(tests => 8);
 
 write_test_comps();
 run_tests();
@@ -63,6 +63,14 @@ $m->redirect('/comps/basic');
 </%init>
 EOF
 	      );
+
+    write_comp( 'params', <<'EOF',
+% foreach (sort keys %ARGS) {
+<% $_ %>: <% ref $ARGS{$_} ? join ', ', sort @{ $ARGS{$_} }, 'array' : $ARGS{$_} %>
+% }
+EOF
+	      );
+
 }
 
 sub run_tests
@@ -135,6 +143,21 @@ Basic test.
 EOF
     }
 
+
+    {
+        my $path = '/comps/params?qs1=foo&qs2=bar&mixed=A';
+        my $response = Apache::test->fetch( { uri => $path,
+                                              method => 'POST',
+                                              content => 'post1=a&post2=b&mixed=B',
+                                            } );
+        ok $response->content, <<'EOF',
+mixed: A, B, array
+post1: a
+post2: b
+qs1: foo
+qs2: bar
+EOF
+    }
 
     kill_httpd();
 }
