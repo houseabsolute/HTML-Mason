@@ -1426,7 +1426,7 @@ into the header.
     my $cookie = $m->comp('/shared/get_user_cookie');
     if (!$cookie) {
 	$cookie = new CGI::Cookie (...);
-	$r->headers_out->add('Set-cookie' => $cookie);
+	$r->header_out('Set-cookie' => $cookie);
     }
     ...
     </%init>
