@@ -1,0 +1,341 @@
+=head1 NAME
+
+HTML::Mason FAQ - frequently asked questions about HTML::Mason
+
+=head1 DESCRIPTION
+
+HTML::Mason is a perl-based web site development and delivery engine.
+This document is designed to answer questions that arise when using
+HTML::Mason to develop new and convert existing applications.
+
+=head1 QUESTIONS & ANSWERS
+
+=head2 What is HTML::Mason
+
+HTML::Mason is a Perl-based web site development and delivery engine.  In
+addition to supporting embedded Perl in HTML pages, HTML::Mason provides
+facilities for many common web development issues: templating, caching,
+debugging, profiling, page previewing, and more. Although it can be used
+with CGI or even stand-alone, HTML::Mason works best in conjunction with
+Apache and mod_perl.
+
+=head2 Does HTML::Mason have an official web site?
+
+Yes, at http://www.masonhq.com.
+
+=head2 Where do I obtain HTML::Mason?
+
+HTML::Mason is available from CPAN (the Comprehensive Perl Archive Network).
+Details about CPAN are available at http://www.perl.com/.
+
+=head2 Where can I ask questions about HTML::Mason or report bugs?
+
+You are encouraged to use the HTML::Mason mailing list; that way many people
+can answer questions and/or benefit from the answer. Write to
+mason@netizen.com.au.  You may want to browse past messages in the archive
+first.  Go to http://www.netizen.com.au/resources/lists/mason/ for more
+information or to subscribe (although you can post without being
+subscribed).
+
+If the question is more generally about mod_perl, you may wish to post 
+additionally (or only) to the mod_perl mailing list at modperl@apache.org.
+
+If you have a question or comment that you don't feel is appropriate for the 
+group, write to one of the HTML::Mason authors: Jonathan Swartz 
+(swartz@transbay.net) or Mark Schmick (mark@webz.com).
+
+=head2 What is a component?
+
+A component is a file that contains some combination of text (typically
+HTML), perl code and HTML::Mason directives.
+
+Some components are accessed directly by web browsers.  These are called
+top-level components.  A top-level component might consist purely of static
+HTML.
+
+Other components are support components, which are called by top-level
+compoennts or other support components.  These components are analogous to
+perl subroutines -- they allow you to create small packages of code that you
+can reuse throughout your project.
+
+=head2 How do components communicate with each other?
+
+Components can return values to their callers, just like subroutines.
+
+Some components may have very simple return values.  As an example, consider
+a component called isNetscape which returns a true value when the client's
+browser is Netscape and undef when it is not.  The isNetscape component
+could then be used easily in an if() or other control statement.
+
+Of course, components can also return strings of text, arrays, hashes or
+other arbitarily complex perl data structures.
+
+=head2 How do I use modules in components?
+
+Technically you can just say "use module-name" at the beginning of a
+component.  The disadvantages of this method are that:
+
+=over 4
+
+=item *
+
+the module will be used separately by every httpd child process, costing
+both time and memory.
+
+=item *
+
+it is difficult to keep track of all the modules being used on a site.
+
+=back
+
+A more efficient method is to put the use line in the handler.pl or use the
+PerlModule directive.  If you want components to be able to refer to symbols
+exported by the module, you need to use the module inside the
+HTML::Mason::Commands package.  See the "Pieces of an
+Installation/handler.pl" section of the administration manual (Admin.pod).
+
+=head2 Can I define subroutines in components?
+
+You should not define traditional named subroutines in components, e.g. "sub
+foo {...}", because components are implemented as subroutines, and Perl does
+not like named subroutines to be defined inside other subroutines.  It may
+not raise an error, but it will not work reliably.  Except in odd situations,
+you should use components to break your code into "subroutines" and use
+mc_comp() to call them.
+
+You can define anonymous subroutines inside components:
+
+	my $foo = sub foo {...};
+
+=head2 Can I serve images through a HTML::Mason server?
+
+If you put images in the same directories as components, you need to make
+sure that the images don't get handled through HTML::Mason.  The reason is
+that HTML::Mason will try to parse the images and may inadvertently find
+HTML::Mason syntax (e.g. "<%").  Most images will probably pass through
+successfully but a few will cause HTML::Mason errors.
+
+The simplest remedy is to have HTML::Mason decline image and other non-HTML
+requests, thus letting Apache serve them in the normal way.  The following
+line, placed in the handler() subroutine of your handler.pl,
+
+	return -1 if defined($r->content_type) && $r->content_type !~ m|^text/|io;
+
+declines all requests with a content type not starting with "text/". This 
+allows text/html and text/plain to pass through but not much else. It is 
+included in the default handler.pl.
+
+Another solution is to put all images in a separate directory; it is then
+easier to tell Apache to serve them in the normal way.  See the next
+question.
+
+For performance reasons you should consider serving images from a completely
+separate (non-HTML::Mason) server. This will save a lot of memory as most
+requests will go to a thin image server instead of a large mod_perl server.
+See Vivek Khera's performance FAQ for a more detailed explanation.
+
+=head2 How can I prevent a particular subdirectory from being handled by HTML::Mason?
+
+Suppose you have a directory under your document root, "/plain", and you
+would like to serve these files normally instead of using the HTML::Mason
+handler. One solution is to use a Location directive like:
+
+	<Location /plain>
+		SetHandler */*
+	</Location>
+
+Apparently these will work as well:
+
+	SetHandler default-handler
+	SetHandler text/html
+
+Another solution is to put a line like this at the top of the handler() 
+subroutine of your handler.pl:
+
+	return -1 if $r->uri() =~ m|^/plain|;
+
+=head2 Can I run HTML::Mason outside a web server?
+
+Yes, in fact HTML::Mason can be useful for generating a set of web pages
+offline or as a general templating tool.  See "running HTML::Mason
+stand-alone" in the administration manual (Admin.pm).
+
+=head2 Can I run HTML::Mason via CGI?
+
+Yes, as part of a Perl CGI program you could theoretically create a new
+HTML::Mason interpreter and execute components based on the request.
+However, since HTML::Mason takes some time to load and initialize,
+performance will be poor.
+
+Although mod_perl is the recommended environment for running HTML::Mason, if
+mod_perl cannot be used, other packages that allow CGI programs to run
+persistantly, such as SpeedyCGI (see www.freshmeat.net) may allow you to
+increase the performance of HTML::Mason.
+
+=head2 What platforms does HTML::Mason run on?
+
+So far I am aware of successful installations on Solaris, Linux, FreeBSD,
+and Windows NT.  Because HTML::Mason consists of only Perl code (no C), it
+should work on all Unix systems and most other systems where Perl runs.
+HTML::Mason does use a few nonstandard modules (notably MLDBM) and some file
+access code that may break on obscure systems, but I am not yet aware of
+such problems.
+
+=head2 I'm getting a warning "Mason: filename xxx is outside component root; returning 404" in the error logs. What does it mean?
+
+This means that the filename that Apache has resolved to does not fall
+underneath the component root you specified when you created the interpreter
+in handler.pl.  HTML::Mason requires the file to fall under the component
+root so that it can call it as a top-level component.  (For various reasons,
+such as object file creation, HTML::Mason cannot treat files outside the
+component root as a component.)
+
+If you believe the file is in fact inside the component root and HTML::Mason
+is in error, it may be because you're referring to the Apache document root
+or the HTML::Mason component root through a symbolic link.  The symbolic
+link may confuse HTML::Mason into thinking that two directories are
+different when they are in fact the same. This is a known "bug", but there
+is no obvious fix at this time. For now, you must refrain from using
+symbolic links in either of these configuration items.
+
+=head2 How do I exit from all components including the ones that called me?
+
+Use mc_abort, documented in the commands manual (Commands.pm).
+
+=head2 How do I access GET or POST arguments?
+
+GET and POST arguments are automatically parsed and placed into named
+component arguments just as if you had called the component with mc_comp and
+parameters. So you can get at GET/POST data by pre-declaring argument names
+and/or using the %ARGS hash which is always available.
+
+=head2 Should I use CGI.pm to read GET/POST arguments?
+
+No! HTML::Mason automatically parses GET/POST arguments and places them in
+declared component arguments and %ARGS (see previous question).  If you
+create a CGI object in the usual way for a POST request, it will hang the
+process trying to read $r->content a second time.
+
+=head2 Can I use CGI.pm to output HTML constructs?
+
+Yes. To get a new CGI object, use
+
+	my $query = new CGI('');
+
+You have to give the empty string argument or CGI will try to read GET/POST 
+arguments.
+
+To print HTML constructs returned by CGI functions, just enclose them in
+<%%>, e.g.
+
+	<%$query->radio_group(...)%>
+
+=head2 How do I modify the outgoing HTTP headers?
+
+Use the usual Apache.pm functions, such as $r->header_out, from within the 
+top component's <%perl_init%> section.  See the "Sending HTTP Headers" 
+section in the component developers manual (Components.pod).
+
+=head2 Some of my pages are being served with content type xxx instead of text/html.  How do I get HTML::Mason to properly set the content type?
+
+HTML::Mason doesn't actually touch the content type -- it relies on Apache
+to set it correctly.  You can affect how Apache sets your content type in
+the configuration files (e.g. srm.conf).  The most common change you'll want
+to make is to add the line
+
+	DefaultType text/html
+
+This indicates that files with no extension and files with an unknown 
+extension should be treated as text/html. By default, Apache would treat 
+them as text/plain.
+
+=head2 I have a line in my handler.pl to stop HTML::Mason from processing anything but text files, but I want to generate a dynamic image using HTML::Mason.  How can I get HTML::Mason to set the correct MIME type?
+
+Use mod_perl's $r->content_type function to set the appropriate MIME type.
+This will allow you to output, for example, a GIF file, even if your
+component is called dynamicImage.html.
+
+=head2 How do I put comments in components?
+
+=over 4
+
+=item *
+
+Put general comments in the <%perl_doc> section.
+
+=item *
+
+In the <%perl_init> and <%perl_cleanup> sections, and in a <%perl> block, 
+use standard Perl comments ('#').
+
+=item *
+
+In the primary section, begin a line with %# to make it a comment
+
+=item *
+
+If you are producing HTML, you can use standard HTML comments delimited 
+by <!-- -->.
+
+=back
+
+The difference between 3 and 4 is that %# comments will not appear in the 
+output, while <!-- --> comments will appear. Both have their advantages.
+
+=head2 What's a good way to temporarily comment out code in a component?
+
+For HTML, you might be tempted to surround the section with <!-- -->.  But 
+be careful! Any code inside the section will still execute. Here's a example 
+of commenting out a call to an ad server:
+
+	<!-- temporarily comment out
+	<%mc_comp('FetchAd')%>
+	-->
+
+The ad will still be fetched and counted, but not displayed!
+
+A better way to block out a section is if (0):
+
+	%if (0) {
+		...
+	%}
+
+Code blocked out in this way will neither be executed nor displayed, and 
+multiple if (0) blocks can be nested inside each other (unlike HTML comments).
+
+=head2 How can I capture the output of a component (and modify it, etc.) instead of having it automatically output?
+
+Use the STORE option to mc_comp.  STORE takes a scalar reference as a
+parameter; the output of the component and all its children will be placed
+in the scalar instead of being output.  See the mc_comp section of the
+commands manual (Commands.pm).
+
+=head2 Can I use globals in components?
+
+All HTML::Mason components run in the same package (HTML::Mason::Commands),
+so if you set a global variable in one you'll be able to read it in all the
+others. You can also initialize global variables in the handler() subroutine
+in handler.pl as long as you explicitly put them in the
+HTML::Mason::Commands package.
+
+The only problem is that Mason by default parses components with strict mode
+on, so you'll get a warning about the global (and Mason considers all such
+warnings fatal).
+
+If you have a set of globals that you know in advance you'll want to use,
+this is easy to remedy.  E.g. say you want to put all the globals in a
+global hash called %GLOBALS.  Pass the parameter:
+
+	preamble => 'use vars qw(%GLOBALS);'
+
+when you create the Parser object.  This piece of code will get inserted at
+the top of every generated component subroutine, thus suppressing the
+warning.  This is exactly how HTML::Mason deals with the global $r.
+
+Alternatively you can turn off strict entirely by passing:
+
+	use_strict => 0
+
+when you create the Parser object.  Then you can use all the globals you 
+want.  Doing this is terribly silly, however, and is bound to get you in
+trouble down the road.
