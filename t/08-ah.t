@@ -404,7 +404,7 @@ EOF
 	$actual = filter_response($response, $with_handler);
 	$success = HTML::Mason::Tests->check_output( actual => $actual,
 						     expect => <<'EOF',
-X-Mason-Test: New value 2
+X-Mason-Test: New value 1
 
 
 Blah blah
