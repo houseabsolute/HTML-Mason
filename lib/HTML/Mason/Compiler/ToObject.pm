@@ -35,13 +35,11 @@ sub new
     my %p = @_;
 
     my $self = bless {}, $class;
+    $self = $self->SUPER::new(%p);
 
     foreach ( keys %p )
     {
-	if ( exists $fields{$_} )
-	{
-	    $self->{$_} = $p{$_} || $fields{$_};
-	}
+	$self->{$_} = $p{$_};
     }
     foreach ( keys %fields )
     {
