@@ -90,6 +90,17 @@ assisted_install_config() unless $opts{'no-prompts'};
 # Get these into the MY namespace for the MY::test method
 %MY::APACHE = %APACHE;
 
+# Be very careful about removing these files - otherwise, if
+# apache_dir isn't set, we're removing things like /httpd and /mason !
+my $more_clean_files = ($APACHE{apache_dir} 
+			? join(' ', map "$APACHE{apache_dir}/$_", 
+			       qw(httpd.conf error_log httpd httpd.pid
+                                  mason_handler_CGI.pl mason_handler_mod_perl.pl 
+                                  CGIHandler.cgi mason)
+			      )
+			: '');
+  
+
 WriteMakefile(
     'NAME'    => 'HTML::Mason',
     'VERSION_FROM' => 'lib/HTML/Mason.pm',
@@ -98,7 +109,7 @@ WriteMakefile(
     # %APACHE is created when setup_mod_perl_tests() is called.  The
     # code that does this creation is in apache_tests_helper.pl.
     clean => {
-	'FILES' => "apache_install.txt lib/HTML/Mason/Config.pm mason_tests $APACHE{apache_dir}/httpd.conf $APACHE{apache_dir}/error_log $APACHE{apache_dir}/httpd $APACHE{apache_dir}/httpd.pid $APACHE{comp_root} $APACHE{data_dir} $APACHE{apache_dir}/mason_handler_CGI.pl $APACHE{apache_dir}/mason_handler_mod_perl.pl $APACHE{apache_dir}/CGIHandler.cgi $APACHE{apache_dir}/mason",
+	'FILES' => "apache_install.txt lib/HTML/Mason/Config.pm mason_tests $APACHE{comp_root} $APACHE{data_dir} $more_clean_files",
     }
 );
 
