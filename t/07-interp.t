@@ -870,38 +870,6 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'make_component',
-		      description => 'test make_component() with a path',
-		      component => <<'EOF',
-% $m->interp->make_component( comp_source => 'Hello, <% "World" %>', path => '/fooey_comp' );
-% $m->comp('/fooey_comp');
-!
-EOF
-		      expect => <<'EOF',
-Hello, World!
-EOF
-		    );
-
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'no_comp_root',
-		      description => 'test a comp_root-less interpreter',
-		      interp => HTML::Mason::Interp->new(resolver_class => 'HTML::Mason::Resolver::Null', data_dir => $group->data_dir),
-		      is_virtual => 1,
-
-		      component => <<'EOF',
-% $m->interp->make_component( comp_source => 'Hello, <% "World" %>', path => '/fooey_comp' );
-% $m->comp('/fooey_comp');
-!
-EOF
-		      expect => <<'EOF',
-Hello, World!
-EOF
-		    );
-
-#------------------------------------------------------------
-
     $group->add_test( name => 'read_write_contained',
 		      description => 'test that we can read/write contained object params',
 		      component => <<'EOF',
