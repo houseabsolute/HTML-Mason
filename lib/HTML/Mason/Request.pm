@@ -622,7 +622,7 @@ sub comp {
     eval {
 	if ($wantarray) {
 	    @result = $comp->run(@args);
-	} elsif (defined wantarray) {
+	} elsif (defined $wantarray) {
 	    $result[0] = $comp->run(@args);
 	} else {
 	    $comp->run(@args);
