@@ -89,6 +89,11 @@ sub write_apache_conf
     my $include .= <<"EOF";
 ServerRoot $APACHE{apache_dir}
 
+# tainting has to be turned on before any Perl code is loaded
+<IfDefine taint>
+  PerlTaintCheck On
+</IfDefine>
+
 <Perl>
  $libs
 </Perl>
@@ -177,6 +182,11 @@ EOF
   ServerRoot /tmp
   SetHandler perl-script
   PerlSetVar MasonDataDir /tmp/one/two
+  PerlHandler HTML::Mason::ApacheHandler
+</IfDefine>
+
+<IfDefine taint>
+  SetHandler  perl-script
   PerlHandler HTML::Mason::ApacheHandler
 </IfDefine>
 
