@@ -277,7 +277,7 @@ EOF
 		    );
 
 #------------------------------------------------------------
-    $group->add_test( name => 'whitespace near </%args>',
+    $group->add_test( name => 'whitespace_near_args',
 		      description => 'test that whitespace is allowed before </%args>',
 		      call_args => [qw(foo foo)],
 		      component => <<'EOF',
@@ -355,8 +355,7 @@ EOF
  <% 5 %>
 </%subcomp>
 EOF
-		      expect_error => 'Unknown block',
-		      #expect_error => '.*',
+		      expect_error => qr/Unterminated <>/,
 		    );
 
 #------------------------------------------------------------
@@ -367,7 +366,7 @@ EOF
     # (Note that there *is* a syntax error here, but that shouldn't be
     # causing an infinite loop).
 
-    $group->add_test( name => 'infinite_loop?',
+    $group->add_test( name => 'infinite_loop_wrong',
 		      description => 'infinite lexer loop here?',
 		      component => <<'EOF',
 <%args>
@@ -382,8 +381,7 @@ EOF
   <% "foo">large</a
  <% $i->{comment} %>
 EOF
-		      expect_error => 'Unknown block',
-		      #expect_error => '.*',
+		      expect_error => qr/Global symbol "\$r"/,
 		    );
 
 #------------------------------------------------------------
