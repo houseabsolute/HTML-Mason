@@ -165,14 +165,14 @@ sub mc_call_self
 {
     check_request;
     my ($cref,$rref) = @_;
-    return 0 if $REQ->{in_call_self_flag};
+    return 0 if $REQ->topstack->{in_call_self_flag};
     
     #
     # Reinvoke the component with in_call_self_flag=1. Collect
     # output and return value in references provided.
     #
     my $content;
-    my $lref = $REQ->{stack}->[0];
+    my $lref = $REQ->stack->[0];
     my %saveLocals = %$lref;
     $lref->{sink} = sub { $content .= $_[0] };
     $lref->{in_call_self_flag} = 1;

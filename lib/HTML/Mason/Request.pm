@@ -82,7 +82,7 @@ sub exec_next {
     # load into object.
     #
     if (!ref($comp)) {
-	my $path = $self->process_comp_path($comp);
+	my $path = $req->process_comp_path($comp);
 	$comp = $interp->load($path);
 	die "could not find component for path '$path'\n" if (!$comp);
     }
@@ -109,7 +109,7 @@ sub exec_next {
 	my $store = $args{STORE};
 	die "exec_next: STORE value ($store) is not a scalar reference" if ref($store) ne 'SCALAR';
 	$$store = '';
-	$sink = sub { $$store .= $_[0] if defined ($_[0]) }
+	$sink = sub { $$store .= $_[0] if defined ($_[0]) };
 	delete($args{STORE});
     } elsif (!$depth) {
 	$sink = $interp->{out_method};
