@@ -184,6 +184,8 @@ package HTML::Mason;
 
 $libs
 
+use Apache::Constants qw(REDIRECT);
+
 use HTML::Mason::ApacheHandler;
 use HTML::Mason;
 
@@ -228,6 +230,7 @@ sub handler
     \$r->filename(\$filename);
 
     my \$status = \$ah[\$ah_index]->handle_request(\$r);
+    return \$status if \$status == REDIRECT;
     \$r->print( "Status code: \$status\\n" );
 }
 
