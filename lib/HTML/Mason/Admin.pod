@@ -121,7 +121,7 @@ Here is a configuration that enforces this naming scheme:
       PerlHandler HTML::Mason
     </LocationMatch>
 
-    <LocationMatch "(\.m(html|txt|pl)|dhandler|autohandler)$"
+    <LocationMatch "(\.m(html|txt|pl)|dhandler|autohandler)$">
       SetHandler perl-script
       PerlInitHandler Apache::Constants::NOT_FOUND
     </LocationMatch>
