@@ -19,7 +19,7 @@ use HTML::Mason;
 # Uncomment the second line (and comment the first) to use
 # Apache::Request instead of CGI.pm to parse arguments.
 use HTML::Mason::ApacheHandler;
-# use HTML::Mason::ApacheHandler qw(args_method=>'mod_perl');
+# use HTML::Mason::ApacheHandler (args_method=>'mod_perl');
 
 use strict;
 
