@@ -504,6 +504,53 @@ thereby surprising the C<if> statement! Conversely, any value returned
 by an HTML component would typically be discarded by the <& &> tag
 that invoked it.
 
+=head2 Subrequests
+
+You may sometimes want to have a component call go through all the
+steps that the initial component call goes through, such as checking
+for autohandlers and dhandlers.  To do this, you need to execute a
+subrequest.
+
+A subrequest is simply a Mason Request object and has all of the
+methods normally associated with one.
+
+To create a subrequest you simply use the C<< $m->make_subrequest >>
+method.  This method can take any parameters normally given to the
+Request object's constructor, such as C<autoflush> or C<out_method>.
+Once you have a new request object you simply call its C<exec> method
+to execute it, which takes exactly the same parameters as the C<comp>
+method.
+
+Since subrequests inherit their parent request's parameters, output
+from a component called via a subrequest goes to the same desintation
+as output from components caled during the parent request.  Of course,
+you can change this.
+
+Here are some examples:
+
+  % my $req = $m->make_subrequest;
+  % $req->exec( '/some/comp', id => 172 );
+
+If you want to capture the subrequest's output in a scalar, you can
+simply pass an C<out_method> parameter to C<< $m->make_subrequest >>:
+
+  % my $buffer;
+  % my $req = $m->make_subrequest( out_method => \$buffer );
+  % $req->exec( '/some/comp', id => 172 );
+
+Now C<$buffer> contains all the output from that call to F</some/comp>.
+
+For convenience, Mason also provides an C<< $m->subexec >> method that
+internally calls C<< $m->make_subrequest >> and then calls C<exec> on
+the created request, all in one fell swoop.  This is useful in cases
+where you have no need to override any of the parent request's
+parameters.
+
+Mason Request objects are only designed to handle a single call to
+C<exec>.  If you wish to make multiple subrequests, we recommend
+creating a new subrequest object for each one.  The effect of calling
+C<exec> more than once on a given object is not predictable.
+
 =head1 TOP-LEVEL COMPONENTS
 
 The first component invoked for a page (the "top-level component")

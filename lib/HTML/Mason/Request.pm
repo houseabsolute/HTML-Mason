@@ -1326,8 +1326,8 @@ relative path, Mason prepends the current component directory.
 =item flush_buffer
 
 Flushes the Mason output buffer. Under mod_perl, also sends HTTP
-headers if they haven't been sent and calls $r->rflush to flush the
-Apache buffer. Flushing the initial bytes of output can make your
+headers if they haven't been sent and calls C<< $r->rflush >> to flush
+the Apache buffer. Flushing the initial bytes of output can make your
 servers appear more responsive.
 
 =for html <a name="item_interp">
@@ -1335,6 +1335,25 @@ servers appear more responsive.
 =item interp
 
 Returns the Interp object associated with this request.
+
+=for html <a name="item_make_subrequest">
+
+=item make_subrequest (parameters)
+
+This method creates a new Request object which inherits its parent's
+settable properties, such as C<autoflush> and C<out_method>.  These
+values may be overridden by passing parameters to this method.
+
+See the L<Devel/Subrequests> of the Component Developer's Guide for
+more details about the subrequest feature.
+
+=for html <a name="item_exec">
+
+=item exec (comp, args)
+
+This method takes the same arguments as the C<comp> method but will
+use autohandlers and dhandlers if available.  This method should
+B<only> be called on subrequests!
 
 =for html <a name="item_out">
 
@@ -1361,6 +1380,13 @@ C<$m-E<gt>print>.
 Like C<$m-E<gt>comp>, but returns the component output as a string
 instead of printing it. (Think sprintf versus printf.) The
 component's return value is discarded.
+
+=for html <a name="item_subexec">
+
+=item subexec (comp, args...)
+
+This method is a convenience that creates a new subrequest object and
+then calls its C<exec> method with the given arguments.
 
 =for html <a name="item_top_args">
 
@@ -1435,3 +1461,5 @@ Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams
 L<HTML::Mason>,
 L<HTML::Mason::Devel>,
 L<HTML::Mason::Component>
+
+=cut
