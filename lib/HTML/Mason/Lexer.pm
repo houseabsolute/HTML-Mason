@@ -8,20 +8,17 @@ use strict;
 
 use Exception::Class qw( Mason::Exception::Lexer );
 
-use HTML::Mason::MethodMaker
-    ( read_write => [ qw( preprocess
-                          compiler_class
-                         )
-		    ],
-    );
-
-
 my %fields =
-    ( preprocess => undef,
-      compiler_class => 'HTML::Mason::Compiler::ToObject',
+    ( compiler => undef,
     );
 
 
+# This is a block name and what method should be called to lex its
+# contents if it is encountered.  'def' & 'method' blocks are special
+# cases we actually call ->start again to recursively parse the
+# contents of a subcomponent/method.  Theoretically, adding a block is
+# as simple as adding an entry to this hash, and possibly a new
+# contents lexing method.
 my %blocks = ( args    => 'variable_list_block',
 	       attr    => 'key_val_block',
 	       flags   => 'key_val_block',
@@ -57,7 +54,7 @@ sub new
 	}
 	else
 	{
-	    Mason::Lexer::Exception->throw( error => "Invalid option to new: '$_'");
+	    Mason::Lexer::Exception::Params->throw( error => "Invalid option to new: '$_'");
 	}
     }
     foreach ( keys %fields )
@@ -65,62 +62,35 @@ sub new
 	$self->{$_} ||= $fields{$_};
     }
 
-    $self->{compiler} = $self->{compiler_class}->new( lexer => $self );
+    Mason::Lexer::Exception::Params->throw( error => "No compiler object provided in call to HTML::Mason::Lexer->new" )
+	unless ref $self->{compiler} && $self->{compiler}->isa('HTML::Mason::Compiler');
 
     return $self;
 }
 
-sub parse_component
+sub lex
 {
-    my ($self, %options) = @_;
+    my $self = shift;
+    my %p = @_;
 
-    $self->{comp} = $options{script};
-    $self->{comp_class} = $options{comp_class} || 'HTML::Mason::Component';
-
-    #
-    # If script_file option used, read script from file.
-    #
-    if (!defined($self->{comp})) {
-	die "parse: must specify script or script_file\n" 
-	    unless defined $options{script_file};
-	$self->{script} = read_file($options{script_file});
-    }
-
-    # def and method are special cases.
-    my @tags = qw( args attr cleanup
-		   doc filter flags init
-		   once perl shared text );
-
+    $self->{comp} = $p{comp};
+    $self->{filename} = $p{filename};
     $self->{lines} = 1;
-    $self->{filename} = $options{script_file} || 'inline script';
 
     # This will be overridden if entering a def or method section.
     $self->{ending} = qr/\G\z/;
 
     eval
     {
-	#
-	# Preprocess the script.  The preprocessor routine is handed a
-	# reference to the entire script.
-	#
-	if ($self->{preprocess}) {
-	    eval {$self->{preprocess}->(\$self->{comp})};
-	    if ($@) {
-		die { err => "error during custom preprocess step:\n$@" };
-	    }
-	}
-
 	$self->{compiler}->start_component;
 
 	$self->start;
     };
-    die "$@\n" if $@;
-
     # Call this out here because it may be needed to break circular
     # refs inside the compiler
     $self->{compiler}->end_component;
 
-    return;
+    die $@ if $@;
 }
 
 sub start
