@@ -67,8 +67,6 @@ See L<the FILE-BASED METHODS section of
 HTML::Mason::Component|HTML::Mason::Component/FILE-BASED METHODS> for
 documentation.
 
-=back
-
 =head1 SEE ALSO
 
 L<HTML::Mason::Component|HTML::Mason::Component>
