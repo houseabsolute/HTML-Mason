@@ -155,7 +155,6 @@ use HTML::Mason::MethodMaker
 			  decline_dirs
 			  error_mode
 			  interp
-			  output_mode
 			  top_level_predicate ) ]
     );
 
@@ -183,7 +182,6 @@ __PACKAGE__->valid_params
 				  sub { $_[0] =~ /^(?:raw_)?(?:html|fatal)$/ } }
 			      },
      multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1 },
-     output_mode           => { parse => 'string',  type => SCALAR,       default => 'batch' },
      top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1} },
 
      # the only required param
@@ -674,13 +672,6 @@ sub handle_request_1
     }
 
     #
-    # Deprecated output_mode parameter - just pass to request out_mode.
-    #
-    if (my $mode = $self->output_mode) {
-	$request->out_mode($mode);
-    }
-
-    #
     # Set up interpreter global variables.
     #
     $interp->set_global(r=>$r);
@@ -915,13 +906,6 @@ have overriden the L<Interp/die_handler> Interp parameter.
 The only required parameter.  Specifies a Mason interpreter to use for
 handling requests.  The interpreter should be an instance of the
 C<HTML::Mason::Interp> class, or a subclass thereof.
-
-=item output_mode
-
-This parameter has been replaced by the equivalent Interp parameter
-L<Interp/out_mode>. For backward compatibility, setting
-C<$ah-E<gt>output_mode> will cause C<$interp-E<gt>out_mode> to be set
-appropriately.
 
 =item top_level_predicate
 
