@@ -234,6 +234,7 @@ sub _initialize {
 	    param_error "comp ($request_comp) must be a component path or a component object";
 	}
 
+        $self->{plugin_things} = [];
  	# construct a plugin object for each plugin class in each request.
  	foreach my $plugin (@{ delete $self->{plugins} }) {
  	    my $plugin_thing = $plugin;
