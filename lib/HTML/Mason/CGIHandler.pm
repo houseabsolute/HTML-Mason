@@ -108,8 +108,8 @@ sub content_type {
 
 sub _set_header {
     my ($self, $header, $value) = @_;
-    delete $self->{$header}, return unless defined $value;
-    return $self->{$header} = $value;
+    delete $self->{headers}{$header}, return unless defined $value;
+    return $self->{headers}{$header} = $value;
 }
 
 sub http_header {
