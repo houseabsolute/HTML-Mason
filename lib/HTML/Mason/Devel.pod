@@ -1684,9 +1684,9 @@ indirectly) in an eval, you must take care to rethrow the exception,
 or the status will not make it out:
 
    eval { $m->comp('...') };
-   if ($@) {
+   if (my $err = $@) {
       if ($m->aborted) {
-          die $@;
+          die $err;
       } else {
           # deal with non-abort exceptions
       }
