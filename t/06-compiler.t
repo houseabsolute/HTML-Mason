@@ -364,8 +364,12 @@ EOF
 
 #------------------------------------------------------------
 
-    if ( $Config{d_alarm} )
+    if ( $Config{d_alarm} || $] >= 5.007003 )
     {
+	my $error =
+	    $] >= 5.007003 ? qr/Global symbol "\$r"/ :
+		qr/Might be a runaway multi-line <> string/;
+
 	$group->add_test( name => 'infinite_loop',
 			  description => 'this code hangs when Interp.pm attempts to eval it.',
 			  component => <<'EOF',
@@ -380,7 +384,7 @@ EOF
   <% "foo">large</a
  <% $i->{comment} %>
 EOF
-			  expect_error => qr/Attempt to eval code took longer/,
+			  expect_error => $error,
 			);
     }
 
