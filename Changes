@@ -18,7 +18,8 @@ cache with the new caching system.  This is in HTML::Mason::Devel.
 
 - Fixed a compilation error in HTML::Mason::Tools that was occuring
 with Perl 5.00503.
-- Allow <%method> and <%def> tags to be in any case.
+- Made sure that <%method> and <%def> tags are treated
+case-insensitively.
 
 1.12  July 23, 2002
 
