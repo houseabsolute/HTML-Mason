@@ -8,6 +8,8 @@ use File::Path;
 use File::Spec;
 
 use HTML::Mason;
+use HTML::Mason::Lexer;
+use HTML::Mason::Compiler::ToObject;
 use HTML::Mason::Tools qw(make_fh);
 
 use Getopt::Long;
@@ -28,7 +30,7 @@ BEGIN
 if ($error) {
   my @lines = split("\n",$error);
   $error = join("\n",@lines[0..$lines-1]);
-  $error =~ s{ at ([A-Z]:)?/.*}{ }g;
+  $error =~ s{ at .*}{ }g;
 }
 </%init>
 <%args>
@@ -41,8 +43,8 @@ EOF
 	      component => <<'EOF',
 Declared args:
 % my %decl = %{$comp->declared_args};
-% while (my ($key,$val) = each(%decl)) {
-<% $key %><% (defined($val->{default})) ? "=>".$val->{default} : "" %>
+% foreach (sort keys %decl) {
+<% $_ %><% (defined($decl{$_}->{default})) ? "=>".$decl{$_}->{default} : "" %>
 % }
 
 This is <% $comp->first_time ? '' : 'not ' %>my first time.
@@ -375,30 +377,48 @@ sub _run_test
     my $self = shift;
     my $test = $self->{current_test};
 
-    my %params = ( exists $test->{compiler_params} ?
-		   %{ $test->{compiler_params} } :
-		   ()
-		 );
+    my %lexer_params = ( exists $test->{lexer_params} ?
+			 %{ $test->{lexer_params} } :
+			 ()
+		       );
 
-    if ($DEBUG && keys %params)
+    if ($DEBUG && keys %lexer_params)
     {
-	print "Compiler params:\n";
-	while ( my ($k, $v) = each %params)
+	print "Lexer params:\n";
+	while ( my ($k, $v) = each %lexer_params)
 	{
-	    print "$k => $v\n";
+	    print "  $k => $v\n";
 	}
     }
 
-    %params = ( exists $test->{interp_params} ?
-		%{ $test->{interp_params} } :
-		() );
+    my %compiler_params = ( exists $test->{compiler_params} ?
+			    %{ $test->{compiler_params} } :
+			    ()
+			  );
 
-    if ($DEBUG && keys %params)
+    if ($DEBUG && keys %compiler_params)
+    {
+	print "Compiler params:\n";
+	while ( my ($k, $v) = each %compiler_params)
+	{
+	    print "  $k => $v\n";
+	}
+    }
+
+    my $compiler = HTML::Mason::Compiler::ToObject->new( %compiler_params,
+							 %lexer_params
+						       );
+
+    my %interp_params = ( exists $test->{interp_params} ?
+			  %{ $test->{interp_params} } :
+			  () );
+
+    if ($DEBUG && keys %interp_params)
     {
 	print "Interp params:\n";
-	while ( my ($k, $v) = each %params)
+	while ( my ($k, $v) = each %interp_params)
 	{
-	    print "$k => $v\n";
+	    print "  $k => $v\n";
 	}
     }
 
@@ -415,8 +435,8 @@ sub _run_test
 	$interp = HTML::Mason::Interp->new( comp_root => $self->comp_root,
 					    data_dir  => $self->data_dir,
 					    out_method => \$buf,
-#					    compiler => $compiler,
-					    %params,
+					    compiler => $compiler,
+					    %interp_params,
 					  );
     }
 
@@ -579,7 +599,7 @@ sub _cleanup
 {
     my $self = shift;
 
-    rm_tree ($self->{base_path}, $DEBUG) if $self->{base_path};
+    rm_tree( $self->{base_path}, $DEBUG ) if $self->{base_path};
 }
 
 1;
