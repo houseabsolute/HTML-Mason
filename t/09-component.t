@@ -303,6 +303,34 @@ EOF
 
 #------------------------------------------------------------
 
+
+    $group->add_support( path => 'clear_filter_comp',
+			 component => <<'EOF',
+Bar
+% $m->clear_buffer;
+Baz
+EOF
+		       );
+
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'clear_in_comp_called_with_filter',
+                      description => 'Test that clear_buffer clears _all_ buffers, even inside a filter',
+                      component => <<'EOF',
+Foo
+<& clear_filter_comp &>\
+<%filter>
+s/^/-/gm;
+</%filter>
+EOF
+                      expect => <<'EOF',
+-Baz
+EOF
+                    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'attr_if_exists',
 		      description => 'Test attr_if_exists method',
 		      component => <<'EOF',
