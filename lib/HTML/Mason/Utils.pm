@@ -14,6 +14,7 @@ use IO::File qw(!/^SEEK/);
 use POSIX;
 use Fcntl qw(:flock);
 use File::Basename;
+use File::Path;
 use HTML::Mason::Config;
 use HTML::Mason::Tools qw(date_delta_to_secs);
 use MLDBM ($HTML::Mason::Config{mldbm_use_db}, $HTML::Mason::Config{mldbm_serializer});
