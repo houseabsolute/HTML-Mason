@@ -470,8 +470,7 @@ EOF
 	    $default_val .= "\n" if defined $_->{default} && $_->{default} =~ /\#/;
 
 	    push @assign, <<"EOF";
-     $var_name =
-         exists \$pos{'$_->{name}'} ? $coerce : $default_val;
+     $var_name = exists \$pos{'$_->{name}'} ? $coerce : $default_val;
 EOF
 	}
 	else
