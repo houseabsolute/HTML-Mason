@@ -14,7 +14,8 @@ sub assisted_install_config
 
     my %httpd_params = Apache::test->get_compilation_params( $APACHE{httpd} );
 
-    my %config_params = _get_config_file_params( $httpd_params{SERVER_CONFIG_FILE} );
+    my $conf_file = $APACHE{config_file} ? $APACHE{config_file} : $httpd_params{SERVER_CONFIG_FILE};
+    my %config_params = _get_config_file_params($conf_file);
 
     foreach my $k ( qw( document_root user group ) )
     {
@@ -24,14 +25,14 @@ sub assisted_install_config
 
     my $default = $config_params{has_mason} ? 'no' : 'yes';
 
-    my $conf_dir = dirname( $httpd_params{SERVER_CONFIG_FILE} );
+    my $conf_dir = dirname( $conf_file );
     $default = 'no' if -e File::Spec->catfile( $conf_dir, 'mason.conf' );
 
     print <<"EOF";
 
 It is possible to have this program automatically set up a simple
 Mason configuration.  This would involve altering the configuration
-file at $httpd_params{SERVER_CONFIG_FILE}.
+file at $conf_file.
 
 EOF
 
@@ -43,7 +44,7 @@ EOF
 
     my %install = ( user => $config_params{user},
 		    group => $config_params{group},
-		    apache_config_file => $httpd_params{SERVER_CONFIG_FILE},
+		    apache_config_file => $conf_file,
 		  );
 
     print <<'EOF';
