@@ -200,6 +200,18 @@ use HTML::Mason::Tools qw(paths_eq);
 
 use HTML::Mason::Resolver::File;
 use base qw(HTML::Mason::Resolver::File);
+use Params::Validate qw(SCALAR ARRAYREF);
+
+BEGIN
+{
+    __PACKAGE__->valid_params
+	(
+	 comp_root =>   # This is optional in superclass, but required for us.
+	 { parse => 'list',
+	   type => SCALAR|ARRAYREF,
+	   descr => "A string or array of arrays indicating the search path for component calls" },
+	);
+}
 
 #
 # Given an apache request object, return the associated component
@@ -599,16 +611,15 @@ sub new
 	}
     }
 
-    # Don't allow resolver to get created without comp_root, if it needs one
-    if ( exists $allowed_params->{comp_root} &&
-         ! $defaults{comp_root} &&
-         ! $params{comp_root} )
+    my $self = eval { $class->SUPER::new(%defaults, %params) };
+
+    # We catch & throw this exception just to provide a better error message
+    if ( $@ && isa_mason_exception( $@, 'Params' ) && $@->message =~ /comp_root/ )
     {
 	param_error "No comp_root specified and cannot determine DocumentRoot." .
                     " Please provide comp_root explicitly.";
     }
-
-    my $self = $class->SUPER::new(%defaults, %params);
+    rethrow_exception $@;
 
     unless ( $self->interp->resolver->can('apache_request_to_comp_path') )
     {
