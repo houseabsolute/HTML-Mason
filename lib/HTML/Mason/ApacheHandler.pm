@@ -172,9 +172,11 @@ sub import
 
         my $compiler_class = $pack->get_param('CompilerClass', $interp_class->valid_params);
         eval "use $compiler_class";
+	die $@ if $@;
 
         my $lexer_class = $pack->get_param('LexerClass', $compiler_class->valid_params);
         eval "use $lexer_class";
+	die $@ if $@;
 
 	my $args_method = $pack->get_param('ArgsMethod');
 
@@ -232,6 +234,12 @@ sub _make_interp
 	}
     }
 
+    foreach ($interp_class, $compiler_class)
+    {
+	eval "use $_";
+	die $@ if $@;
+    }
+
     my $interp = $interp_class->new( compiler => $self->_make_compiler($compiler_class),
 				     %p,
 				   );
@@ -251,6 +259,9 @@ sub _make_compiler
     my ($self, $compiler_class) = @_;
 
     my %p = $self->get_config($compiler_class->valid_params);
+
+    eval "use $p{lexer_class}";
+    die $@ if $@;
 
     return $compiler_class->new(%p);
 }
