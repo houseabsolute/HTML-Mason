@@ -18,10 +18,19 @@ sub try_exec_with_interp {
 }
 
 sub basic_interp {
-    return (new HTML::Mason::Interp(comp_root => $comp_root, data_dir => $data_dir));
+    return (new HTML::Mason::Interp(comp_root => $comp_root, data_dir => $data_dir, @_));
 }
 
 print "1..20\n";
+
+# system_log_xxx
+my $log_file = "$root/test/data/etc/system.log";
+unlink($log_file);
+{my $interp = basic_interp(system_log_events=>'COMP_LOAD',system_log_separator=>'||',out_method=>sub {});
+ $interp->exec('/interp/autohandler_test/subdir/hello');
+ $interp->exec('/interp/max_recurse_8');}
+try_exec_with_interp({},'system_log');
+exit;
 
 # autohandler_name/allow_recursive_autohandlers
 try_exec_with_interp({},'autohandler_test/subdir/hello',1);
@@ -33,6 +42,16 @@ try_exec_with_interp({autohandler_name=>'plainfile'},'autohandler_test/subdir/he
  try_exec_with_interp({comp_root=>\@roots},'comp_root_test/shared.html');
  try_exec_with_interp({comp_root=>\@roots},'comp_root_test/private1.html');
  try_exec_with_interp({comp_root=>\@roots},'comp_root_test/private2.html');}
+
+# code cache
+{my $interp = basic_interp();
+ $interp->code_cache_max_size(5000);
+ $interp->exec("/interp/code_cache_test/use1");
+ try_exec($interp,"code_cache_test/show_code_cache",1);
+ $interp->exec("/interp/code_cache_test/use2"); 
+ try_exec($interp,"code_cache_test/show_code_cache",2);
+ $interp->exec("/interp/code_cache_test/use3");
+ try_exec($interp,"code_cache_test/show_code_cache",3);}
 
 # current_time
 try_exec_with_interp({current_time=>945526402},'current_time');
@@ -61,15 +80,5 @@ try_exec_with_interp({preloads=>['/interp/preloads_test/*']},'preloads_test/show
  $interp->parser->allow_globals(qw($global));
  $interp->set_global(global=>'parsimmon');
  try_exec($interp,'set_global');}
-
-# code cache
-{my $interp = basic_interp();
- $interp->code_cache_max_size(5000);
- $interp->exec("/interp/code_cache_test/use1");
- try_exec($interp,"code_cache_test/show_code_cache",1);
- $interp->exec("/interp/code_cache_test/use2"); 
- try_exec($interp,"code_cache_test/show_code_cache",2);
- $interp->exec("/interp/code_cache_test/use3");
- try_exec($interp,"code_cache_test/show_code_cache",3);}
 
 1;

@@ -142,7 +142,7 @@ sub _initialize
     # Open system log file
     #
     if ($self->{system_log_events_hash}) {
-	$self->system_log_file($self->data_dir . "/etc/system.log") if !$self->system_log_file;
+	$self->{system_log_file} = $self->data_dir . "/etc/system.log" if !$self->system_log_file;
 	my $fh = new IO::File ">>".$self->system_log_file
 	    or die "Couldn't open system log file ".$self->{system_log_file}." for append";
 	$fh->autoflush(1);

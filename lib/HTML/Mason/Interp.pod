@@ -145,6 +145,11 @@ not require a trailing slash. For example, if the file root is
 relative path names to C<$m->file()> are prepended with the
 current component directory.
 
+=item system_log_events
+
+A string value indicating one or more events to record in the system
+log, separated by "|". Default is to log nothing.
+
 =item system_log_file
 
 Absolute path of system log.  Default is data_dir/etc/system.log.
@@ -152,11 +157,6 @@ Absolute path of system log.  Default is data_dir/etc/system.log.
 =item system_log_separator
 
 Separator to use between fields on a line in the system log. Default is ctrl-A ("\cA").
-
-=item system_log_events
-
-A string value indicating one or more events to record in the system
-log, separated by "|". Default is to log nothing.
 
 =item use_data_cache
 
