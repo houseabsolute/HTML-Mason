@@ -588,6 +588,8 @@ This throws an C<HTML::Mason::Exception::Syntax> error with the given
 error message as well as additional information about the component
 source.
 
+This method is used by both the Lexer and the Compiler.
+
 =back
 
 =head1 SUBCLASSING
