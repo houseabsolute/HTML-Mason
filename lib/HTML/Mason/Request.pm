@@ -20,7 +20,8 @@ use HTML::Mason::MethodMaker
 			 count
 			 declined
 			 error_code
-			 interp ) ],
+			 interp
+			 top_comp ) ],
 
       read_write => [ qw( out_method
 			  out_mode ) ],
@@ -46,7 +47,8 @@ sub new
 	error_flag => undef,
 	out_buffer => '',
 	stack_array => undef,
-	wrapper_chain => undef
+	wrapper_chain => undef,
+	wrapper_index => undef
     };
     my (%options) = @_;
     while (my ($key,$value) = each(%options)) {
@@ -126,14 +128,20 @@ sub exec {
     # This label is for declined requests.
     retry:
     
-    # Build wrapper chain.
-    my @wrapper_chain = ($comp);
-    for (my $parent = $comp->parent; $parent; $parent = $parent->parent) {
-	unshift(@wrapper_chain,$parent);
-	die "inheritance chain length > 32 (infinite inheritance loop?)" if (@wrapper_chain > 32);
-    }
-    my $first_comp = shift(@wrapper_chain);
-    $self->{wrapper_chain} = [@wrapper_chain];
+    # Build wrapper chain and index.
+    my $first_comp;
+    {my @wrapper_chain = ($comp);
+     for (my $parent = $comp->parent; $parent; $parent = $parent->parent) {
+	 unshift(@wrapper_chain,$parent);
+	 die "inheritance chain length > 32 (infinite inheritance loop?)" if (@wrapper_chain > 32);
+     }
+     $first_comp = $wrapper_chain[0];
+     $self->{wrapper_chain} = [@wrapper_chain];
+     $self->{wrapper_index} = {map(($wrapper_chain[$_]->path => $_),(0..$#wrapper_chain))}; }
+
+    # Fill top_level slots for introspection.
+    $self->{top_comp} = $first_comp;
+    $self->{top_args} = \@args;
 
     # Call the first component.
     my ($result, @result);
@@ -298,7 +306,7 @@ sub call_dynamic {
 
 sub call_next {
     my ($self,@extra_args) = @_;
-    my $comp = shift(@{$self->{wrapper_chain}}) or die "call_next: no next component to invoke";
+    my $comp = $self->fetch_next or die "call_next: no next component to invoke";
     my @args = (@{$self->current_args},@extra_args);
     return $self->comp($comp, @args);
 }
@@ -331,7 +339,12 @@ sub caller_args
     my ($self,$index) = @_;
     my @caller_stack = reverse(@{$self->stack});
     if (defined($index)) {
-	return $caller_stack[$index]->{args};
+	if (wantarray) {
+	    return @{$caller_stack[$index]->{args}};
+	} else {
+	    my %h = @{$caller_stack[$index]->{args}};
+	    return \%h;
+	}
     } else {
 	die "caller_args expects stack level as argument";
     }
@@ -448,7 +461,28 @@ sub fetch_comp
     return $self->interp->load($path);
 }
 
-sub fetch_next { return shift->{wrapper_chain}->[0] }
+#
+# Fetch next component in wrapper chain. If current component is not in chain, search
+# the component stack for the most recent one that was.
+#
+sub fetch_next {
+    my ($self) = @_;
+    my $index = $self->{wrapper_index}->{$self->current_comp->path};
+    unless (defined($index)) {
+	my @callers = $self->callers;
+	shift(@callers);
+	while (my $comp = shift(@callers) and !defined($index)) {
+	    $index = $self->{wrapper_index}->{$comp->path};
+	}
+	die "fetch_next: cannot find next component in chain" unless defined($index);
+    }
+    if (wantarray) {
+	my @wc = @{$self->{wrapper_chain}};
+	return @wc[($index+1)..$#wc];
+    } else {
+	return $self->{wrapper_chain}->[$index+1];
+    }
+}
 
 sub file
 {
@@ -700,6 +734,18 @@ sub flush_buffer
     my ($self, $content) = @_;
     $self->out_method->($self->{out_buffer});
     $self->{out_buffer} = '';    
+}
+
+
+sub top_args
+{
+    my ($self) = @_;
+    if (wantarray) {
+	return @{$self->{top_args}};
+    } else {
+	my %h = @{$self->{top_args}};
+	return \%h;
+    }
 }
 
 #
