@@ -332,7 +332,7 @@ sub parse
 		    $arglist =~ s/^\s*,//;
 		} else {
 		    # no quotes
-		    ($comp,$arglist) = split(',',$call);
+		    ($comp,$arglist) = split(',',$call,2);
 		    $comp =~ s/\s+$//;
 		    if ($comp =~ /\s/) {
 			$err = "comp path ($comp) cannot contain whitespace; did you forget a comma?";
