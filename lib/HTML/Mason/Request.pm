@@ -180,7 +180,6 @@ sub _initialize {
     local $SIG{'__DIE__'} = \&rethrow_exception;
 
     eval {
-	# create base buffer
 	$self->{buffer_stack} = [];
 	$self->{stack} = [];
 
@@ -291,7 +290,7 @@ sub exec {
     my $wantarray = wantarray;
     my @result;
     eval {
-	# Create initial buffer.
+	# Create base buffer.
 	my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
 	push @{ $self->{buffer_stack} }, $buffer;
         push @{ $self->{buffer_stack} }, $buffer->new_child;
