@@ -41,7 +41,7 @@ __PACKAGE__->valid_params
      error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
 		     callbacks => { "must be one of 'html', 'text', or 'fatal'" =>
 					sub { $_[0] =~ /^(?:html|text|fatal)$/ } } },
-     out_method => { type => SCALARREF | CODEREF, optional => 1 },
+     out_method => { type => SCALARREF | CODEREF },
      data_cache_defaults => { type => HASHREF|UNDEF, optional => 1 },
     );
 
@@ -88,9 +88,6 @@ sub _initialize {
     while (my ($type,$href) = each(%{$interp->{hooks}})) {
 	$self->{"hooks_$type"} = [values(%$href)] if (%$href);
     }
-
-    # Inherit some properties from interp if not otherwise specified
-    $self->{out_method} = $interp->out_method if !defined($self->{out_method});
 
     # create base buffer
     $self->{buffer_stack} = [];

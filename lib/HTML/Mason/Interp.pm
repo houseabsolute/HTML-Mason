@@ -182,7 +182,7 @@ sub exec {
 sub make_request {
     my $self = shift;
 
-    return $self->create_delayed_object( 'request', interp => $self, @_ );
+    return $self->create_delayed_object( 'request', interp => $self, out_method => $self->out_method, @_ );
 }
 
 #
