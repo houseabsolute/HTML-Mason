@@ -241,13 +241,13 @@ use File::Path;
 use File::Spec;
 use HTML::Mason::Exceptions( abbr => [qw(param_error system_error error)] );
 use HTML::Mason::Interp;
+use HTML::Mason::Tools qw( load_pkg );
 use HTML::Mason::Utils;
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
 use Apache;
 use Apache::Constants qw( OK DECLINED NOT_FOUND );
-use Apache::Status;
 
 # Require a reasonably modern mod_perl - should probably be later
 use mod_perl 1.22;
@@ -313,11 +313,11 @@ sub _startup
     {
 	if ($args_method eq 'CGI')
 	{
-	    require CGI;
+	    require CGI unless defined $CGI::VERSION;
 	}
 	elsif ($args_method eq 'mod_perl')
 	{
-	    require Apache::Request;
+	    require Apache::Request unless defined $Apache::Request::VERSION;
 	}
 
 	# if we are in a simple conf file (meaning one without
@@ -615,13 +615,12 @@ sub new
 
 # Register with Apache::Status at module startup.  Will get replaced
 # with a more informative status once an interpreter has been created.
-
 my $status_name = 'mason0001';
-
+if ( load_pkg('Apache::Status') )
 {
     Apache::Status->menu_item
-	    ($status_name => __PACKAGE__->allowed_params->{apache_status_title}{default},
-	     sub { ["<b>(no interpreters created in this child yet)</b>"] });
+	($status_name => __PACKAGE__->allowed_params->{apache_status_title}{default},
+         sub { ["<b>(no interpreters created in this child yet)</b>"] });
 }
 
 
