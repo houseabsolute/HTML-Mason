@@ -269,7 +269,7 @@ BEGIN
 }
 
 use HTML::Mason::MethodMaker
-    ( read_only  => [ 'args_method',
+    ( read_only  => [ 'args_method' ],
       read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
 		      qw( apache_status_title
 			  decline_dirs
