@@ -151,8 +151,8 @@ and request_comp, respectively.  The old method names have been
 deprecated but will continue to work for a while.
 
 - The Component class's create_time method has been renamed to
-load_time, which better reflects its semantics. create_time will
-continue to work for a while.
+load_time, which better reflects its semantics. create_time is
+deprecated but will continue to work for a while.
 
 - The Interp class's time method and current_time parameters are
 deprecated but will continue to work for a while.
