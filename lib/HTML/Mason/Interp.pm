@@ -34,6 +34,8 @@ BEGIN
 					   descr => "The maximum size of the component code cache" },
 	 compiler                     => { isa => 'HTML::Mason::Compiler',
 					   descr => "A Compiler object for compiling components" },
+	 current_time                 => { parse => 'string', default => 'real', optional => 1,
+					   type => SCALAR, descr => "Current time (deprecated)" },
 	 data_dir                     => { parse => 'string', optional => 1, type => SCALAR,
 					   descr => "A directory for storing cache files and other state information" },
 	 static_source                => { parse => 'boolean', default => 0, type => BOOLEAN,
@@ -82,6 +84,7 @@ use HTML::Mason::MethodMaker
 
       read_write_contained => { request =>
 				[ [ autoflush => { type => BOOLEAN } ],
+				  [ data_cache_api => { type => SCALAR } ],
 				  [ data_cache_defaults => { type => HASHREF } ],
 				  [ dhandler_name => { type => SCALAR } ],
 				  [ error_format => { type => SCALAR } ],
@@ -692,6 +695,19 @@ EOF
     return $out;
 }
 
+#
+# Set or fetch the current time value (deprecated in 1.1x).
+#
+sub current_time {
+    my $self = shift;
+    if (@_) {
+	my $newtime = shift;
+	die "Interp::current_time: invalid value '$newtime' - must be 'real' or a numeric time value" if $newtime ne 'real' && $newtime !~ /^[0-9]+$/;
+	return $self->{current_time} = $newtime;
+    } else {
+	return $self->{current_time};
+    }
+}
 
 1;
 
