@@ -240,7 +240,10 @@ sub write_apache_conf
     mkdir $DATA_DIR, 0755
 	or die "Can't make dir '$COMP_ROOT': $!";
 
-    my $include = <<"EOF";
+    my $include;
+    $include = "PerlSetEnv PERL5LIB $ENV{PERL5LIB}\n\n" if $ENV{PERL5LIB};
+
+    $include .= <<"EOF";
 
 <IfDefine CGI>
   PerlRequire $APACHE_DIR/mason_handler_CGI.pl
