@@ -556,6 +556,23 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'no_strict_no_object_files',
+			  description =>
+                          'test turning off strict in a component when not using object files',
+                          interp_params => { use_strict => 0, use_object_files => 0 },
+			  component => <<'EOF',
+no errors
+<%init>
+$x = 1;
+</%init>
+EOF
+                          expect => <<'EOF',
+no errors
+EOF
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
