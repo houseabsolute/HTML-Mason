@@ -128,11 +128,12 @@ sub get_test_params {
 	}
     } until ($found);
     system "$Config{lns} $httpd t/httpd";
+    $conf{httpd} = $httpd;
 
     # Default: search for dynamic dependencies if mod_so is present, don't bother otherwise.
     my $default = (`t/httpd -l` =~ /mod_so\.c/ ? 'y' : 'n');
     if (lc _ask("Search existing config file for dynamic module dependencies?", $default) eq 'y') {
-	my %compiled = $pkg->_get_compilation_params('t/httpd');
+	my %compiled = $pkg->get_compilation_params('t/httpd');
 
 	my $file = _ask("  Config file", $compiled{SERVER_CONFIG_FILE}, 1);
 	$conf{modules} = $pkg->_read_existing_conf($file);
@@ -150,7 +151,7 @@ sub get_test_params {
     return %conf;
 }
 
-sub _get_compilation_params {
+sub get_compilation_params {
     my ($self, $httpd) = @_;
 
     my %compiled;
@@ -270,7 +271,7 @@ sub _httpd_has_mod_perl {
 
     return 1 if `$httpd -l` =~ /mod_perl\.c/;
 
-    my %compiled = $self->_get_compilation_params($httpd);
+    my %compiled = $self->get_compilation_params($httpd);
 
     if ($compiled{SERVER_CONFIG_FILE}) {
 	local *SERVER_CONF;

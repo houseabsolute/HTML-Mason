@@ -62,6 +62,19 @@ WriteMakefile(
 
 package MY;
 
+sub install
+{
+    my $self = shift;
+
+    my $install = $self->SUPER::install(@_);
+
+    $install =~ s/install :: all pure_install doc_install/install :: all pure_install doc_install configure_apache/;
+
+    $install .= "\nconfigure_apache :\n\t\$(PERL) configure_apache.pl\n";
+
+    return $install;
+}
+
 sub test
 {
     my $self = shift;
