@@ -479,17 +479,17 @@ PERL
 sub capture_debug_state
 {
     my ($self, $r) = @_;
-    my (%d,$expr);
+    my (%d);
 
-    $expr = '';
-    foreach my $field (qw(allow_options auth_name auth_type bytes_sent no_cache content_encoding content_languages content_type document_root filename header_only method method_number path_info protocol proxyreq requires status status_line the_request uri as_string get_remote_host get_remote_logname get_server_port is_initial_req is_main)) {
-	$expr .= "\$d{$field} = \$r->$field;\n";
-    }
-    eval($expr);
+    eval {
+      foreach my $field (qw(allow_options auth_name auth_type bytes_sent no_cache content_encoding content_languages content_type document_root filename header_only method method_number path_info protocol proxyreq requires status status_line the_request uri as_string get_remote_host get_remote_logname get_server_port is_initial_req is_main)) {
+	$d{$field} = $r->$field();
+      }
+    };
     warn "error creating debug file: $@\n" if $@;
 
     if (pkg_installed('Apache::Table')) {
-	$expr = "my \$href;\n";
+	my $expr = "my \$href;\n";
 	foreach my $field (qw(headers_in headers_out err_headers_out notes dir_config subprocess_env)) {
 	    $expr .= "\$href = scalar(\$r->$field); \$d{$field} = {\%\$href};\n";
 	}
@@ -504,19 +504,15 @@ sub capture_debug_state
     $d{'args@'} = [$r->args];
     $d{'args$'} = scalar($r->args);
     
-    $expr = '';
     $d{server} = {};
     foreach my $field (qw(server_admin server_hostname port is_virtual names)) {
-	$expr .= "\$d{server}->{$field} = \$r->server->$field;\n";
+	$d{server}->{$field} = $r->server->$field();
     }
-    eval($expr);
     
-    $expr = '';
     $d{connection} = {};
     foreach my $field (qw(remote_host remote_ip local_addr remote_addr remote_logname user auth_type aborted)) {
-	$expr .= "\$d{connection}->{$field} = \$r->connection->$field;\n";
+	$d{connection}->{$field} = $r->connection->$field();
     }
-    eval($expr);
 
     $d{ENV} = {%ENV};
 
