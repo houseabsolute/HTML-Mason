@@ -2,9 +2,14 @@
 
 use strict;
 
-BEGIN { $ENV{PATH} = '/bin:/usr/bin' }
+BEGIN {
+  # See 'perlrun' and 'perlsec' man pages
+  # and http://marc.theaimsgroup.com/?l=mason-devel&m=105469927404246&w=2
+  $ENV{PATH} = '/bin:/usr/bin';
+  delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
+}
 
-# Cwd has to be loaded after sanitizing $ENV{PATH}
+# Cwd has to be loaded after sanitizing %ENV
 use Cwd;
 use File::Spec;
 use Test;
