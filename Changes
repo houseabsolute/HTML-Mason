@@ -7,6 +7,11 @@ simply use <%init>, <%cleanup>, <%args>, etc. (The old names still
 work.) L<Components/Other Perl sections>
 - The utility bin/convert0.6.pl converts existing components to use
 the above new syntax.
+- New autohandler feature finally provides an easy way to specify a
+common template or behavior for a directory. An autohandler is invoked
+just before any top-level components in its directory begins executing.
+It can display header/footers, apply a filtering function, set up
+globals, etc.  A good complement to dhandlers. L<Components/autohandlers>
 - New <%once> section contains code that will be executed once when a
 component is loaded.  It is useful for defining persistent variables
 and named subroutines.  L<Components/&lt%once&gt;>
@@ -16,23 +21,26 @@ particular section of text.  L<Components/&lt%text&gt;>
 - Handler.pl creation wizard [modus]
 - HEAD optimization: we now automatically abort after headers are sent
 on a HEAD request.
-- Allow arguments to be passed via @_ into component (suggested by Ken
-Williams)
+- Component arguments can now be passed in traditional manner via @_
+(suggested by Ken Williams)
 - New mc_comp_source command returns the source filename of this or
 any component.  L<Commands/item_mc_comp_source_compPath_>
 - mc_file now uses current component path by default if no
 static_file_root defined (suggested by John Landahl)
+- Various previewer interface improvements
 - Removed link tags in pods documentation due to 5.004 problems
 - Took out previewer stub from Mason.pm to eliminate "subroutine
 redefined" warning
 - Updated makeconfig.pl to prefer GDBM_File, to avoid a bug in
 Berkeley DB 1.x
 - Cleaned and sped up interp hooks facility
-- Stop substituting control characters for section strings in Parser
+- Stopped substituting control characters for section strings in Parser
 [modus]
+- Fixed mc_cache 'expire' bug (reported by Aaron Ross)
 - Changed ignore_warnings default to ignore "subroutine redefined"
 warnings to make <%once> more useful
-- Removed defunct Safe code from Parser
+- Removed defunct Safe code from Parser and defunct ALLOW_HANDLERS
+code from Interp
 
 VERSION 0.5.1  Thu Jun 10 23:35:13 PDT 1999
 - Removed leftover "use File::Recurse" in ApacheHandler.pm [modus]
