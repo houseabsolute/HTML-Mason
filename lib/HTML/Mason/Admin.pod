@@ -222,6 +222,10 @@ Corresponds to the C<current_time> parameter.
 
 Corresponds to the C<die_handler> parameter.
 
+=item * MasonDhandlerName - string
+
+Corresponds to the C<dhandler_name> parameter.
+
 =item * MasonIgnoreWarningsExpr - string
 
 Corresponds to the C<ignore_warnings_expr> parameter.
