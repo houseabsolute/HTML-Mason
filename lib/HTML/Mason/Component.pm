@@ -11,29 +11,20 @@ require Exporter;
 
 use strict;
 use HTML::Mason::Tools qw(read_file);
+use vars qw($AUTOLOAD);
 
 my %fields =
     (
-     # All components
      code => undef,
+     comp_root => undef,
      create_time => undef,
      declared_args => undef,
-     is_file_based => 0,
-     is_subcomp => 0,
-     name => undef,
-     parent_comp => undef,
-     dir_path => undef,
+     fq_path => undef,
+     interp => undef,
      parser_version => undef,
      run_count => 0,
-     subcomps => undef,
-     title => undef,
-
-     # File-based components
-     comp_root => undef,
-     data_dir => undef,
-     cache_dir => undef,
-     path => undef,
      source_ref_start => undef,
+     subcomps => undef,
      );
 
 # Create accessor routines
@@ -49,8 +40,7 @@ sub new
 {
     my $class = shift;
     my $self = {
-	_permitted => \%fields,
-	%fields,
+	%fields
     };
     my (%options) = @_;
     while (my ($key,$value) = each(%options)) {
@@ -62,25 +52,54 @@ sub new
     }
     bless $self, $class;
 
-    # Initialize subcomponent properties. Note that other properties
-    # (dir_path, title) are initialized in assign_file_properties.
-    while (my ($name,$c) = each(%{$self->{subcomps}})) {
-	# I am a subcomponent
-	$c->{is_subcomp} = 1;
-	
-	# This is my parent
-	$c->{parent_comp} = $self;
-	
-	# Title is a combination of names
-	$c->{name} = $name;
-    }
-
-    $self->{title} = "[anon ". ++$compCount . "]" if !defined($self->{title});
+    # Assign defaults.
+    $self->{fq_path} = "[anon ". ++$compCount . "]" if !defined($self->{fq_path});
     $self->{declared_args} = {} if !defined($self->{declared_args});
     $self->{subcomps} = {} if !defined($self->{subcomps});
     
+    # Initialize subcomponent properties.
+    while (my ($name,$c) = each(%{$self->{subcomps}})) {
+	$c->assign_subcomponent_properties($self,$name);
+    }
+
     return $self;
 }
+
+#
+# Assign interpreter and, optionally, new fq_path to component.
+# Must be run before component will fully work.
+#
+sub assign_runtime_properties {
+    my ($self,$interp,$fq_path) = @_;
+    $self->{interp} = $interp;
+    $self->{fq_path} = $fq_path if $fq_path;
+    foreach my $c (values(%{$self->{subcomps}})) {
+	$c->assign_runtime_properties($interp,$fq_path);
+    }
+}
+
+#
+# By default components are not persistent.
+#
+sub persistent { 0 }
+
+#
+# Only true in Subcomponent subclass.
+#
+sub is_subcomp { 0 }
+
+#
+# Only true in FileBased subclass.
+#
+sub is_file_based { 0 }
+
+#
+# Basic defaults for component designators: title, path, name, dir_path
+#
+sub title { return $_[0]->fq_path }
+sub name { return $_[0]->fq_path }
+sub path { return undef }
+sub dir_path { return undef }
 
 #
 # Is this our first time being run?
@@ -88,23 +107,8 @@ sub new
 sub first_time { return $_[0]->{run_count} <= 1 }
 
 #
-# For file-based components
+# Get all subcomps or particular subcomp by name
 #
-sub assign_file_properties
-{
-    my ($self,$compRoot,$dataDir,$cacheDir,$path) = @_;
-    ($self->{is_file_based},$self->{comp_root},$self->{data_dir},$self->{cache_dir},$self->{path},$self->{title}) =
-	(1,$compRoot,$dataDir,$cacheDir,$path,$path);
-    ($self->{dir_path}) = ($path =~ /^(.*)\/[^\/]+$/);
-    ($self->{name}) = ($path =~ /([^\/]+)$/);
-
-    # Initialize subcomponent properties
-    while (my ($name,$c) = each(%{$self->{subcomps}})) {
-	$c->{title} = "$path:$name";
-	$c->{dir_path} = $self->{dir_path};
-    }
-}
-
 sub subcomps {
     my ($self,$key) = @_;
     if (defined($key)) {
@@ -114,18 +118,21 @@ sub subcomps {
     }    
 }
 
-sub source_file { my $self = shift; return ($self->is_file_based) ? ($self->comp_root . $self->path) : undef }
-sub object_file { my $self = shift; return ($self->is_file_based) ? ($self->data_dir . "/obj/" . $self->path) : undef }
-sub cache_file { my $self = shift; return ($self->is_file_based) ? ($self->cache_dir . $self->path) : undef }
+#
+# Accessors for various files associated with component
+#
+sub object_file { my $self = shift; return ($self->persistent) ? ($self->interp->object_dir . "/" . $self->fq_path) : undef }
+sub cache_file { my $self = shift; return ($self->persistent) ? ($self->interp->data_cache_filename($self->fq_path)) : undef }
 
+#
+# Returns source text stored at bottom of object file
+#
 sub source_ref_text
 {
     my ($self) = @_;
-    return undef if !$self->is_file_based || !defined($self->{source_ref_start});
+    return undef unless defined($self->{source_ref_start});
     my $content = read_file($self->object_file);
     return substr($content,$self->{source_ref_start});
 }
 
 1;
-
-__END__

@@ -14,7 +14,8 @@ use Data::Dumper;
 use File::Path;
 use File::Basename;
 use File::Find;
-use HTML::Mason::Component;
+use HTML::Mason::Component::FileBased;
+use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Request;
 use HTML::Mason::Tools qw(read_file);
 
@@ -43,7 +44,7 @@ foreach my $f (keys %fields) {
 #
 sub version
 {
-    return 0.7;
+    return 0.8;
 }
 
 sub new
@@ -114,10 +115,11 @@ sub parse
 sub parse_component
 {
     my ($self, %options) = @_;
-    my ($script,$scriptFile,$errorRef,$errposRef,$embedded,$fileBased) =
-	@options{qw(script script_file error errpos embedded file_based)};
+    my ($script,$scriptFile,$errorRef,$errposRef,$embedded,$fileBased,$compClass) =
+	@options{qw(script script_file error errpos embedded file_based comp_class)};
     my ($sub, $err, $errpos, $suberr, $suberrpos);
     $fileBased = 1 if !exists($options{file_based});
+    $compClass = 'HTML::Mason::Component' if !exists($options{comp_class});
     my $pureTextFlag = 1;
     my $parseError = 1;
     my $parserVersion = version();
@@ -187,7 +189,7 @@ sub parse_component
 		    $errpos = $begintail;
 		} else {
 		    my $subtext = substr($script,$begintail,$endmark-$begintail);
-		    if (my $objtext = $self->parse_component(script=>$subtext, embedded=>1, file_based=>0, error=>\$suberr, errpos=>\$suberrpos)) {
+		    if (my $objtext = $self->parse_component(script=>$subtext, embedded=>1, file_based=>0, comp_class=>'HTML::Mason::Component::Subcomponent', error=>\$suberr, errpos=>\$suberrpos)) {
 			$subcomps{$name} = $objtext;
 		    } else {
 			$err = "Error while parsing subcomponent '$name':\n$suberr";
@@ -214,8 +216,14 @@ sub parse_component
     # Start body of subroutine with user preamble and args declare.
     #
     my $body = $self->preamble();
-    $body .= 'my (%ARGS) = @_;'."\n";
-    $body .= 'my $_out = $REQ->sink;'."\n";
+    $body .= 'my $m = shift;'."\n";
+    $body .= 'my %ARGS;'."\n";
+    if ($sectiontext{args}) {
+	$body .= 'if (@_ % 2 == 0) { %ARGS = @_ } else { die "Odd number of parameters passed to component expecting name/value pairs" }'."\n";
+    } else {
+	$body .= '%ARGS = @_ unless (@_ % 2);'."\n";
+    }
+    $body .= 'my $_out = $m->sink;'."\n";
 
     #
     # Process args section.
@@ -276,9 +284,10 @@ sub parse_component
     }
 
     #
-    # Parse in-line insertions, which take one of four forms:
+    # Parse in-line insertions, which take one of five forms:
     #   - Lines beginning with %
     #   - Text delimited by <%perl> </%perl>
+    #   - Text delimited by <%do> </%do>
     #   - Text delimited by <% %> 
     #   - Text delimited by <& &>
     # All else is a string to be delimited by single quotes and output.
@@ -353,6 +362,24 @@ sub parse_component
 		    my $length = $i-($b+7);
 		    $perl = substr($text,$b+7,$length);
 		    $curpos = $b+7+$length+8;
+		} elsif (lc(substr($text,$b,5)) eq '<%do>') {
+		    #
+		    # <%do> section
+		    #
+		    $alpha = [$curpos,$b-$curpos];
+		    if (!($text =~ m{</%do>}ig)) {
+			$err = "<%DO> with no matching </%DO>";
+			$errpos = $segbegin + $b;
+			goto parse_error;
+		    }
+		    my $i = pos($text)-8;
+		    my $length = $i-($b+5);
+		    my $block = substr($text,$b+5,$length);
+		    $perl = '{my $_err;'."\n";
+		    $perl .= sprintf(q{my $_comp = $m->interp->make_component(script=>'%s',error=>\$_err)},$block)."\n";
+		    $perl .= 'die "Error during compilation of anonymous component for <%do> block:\n$_err"; unless $_comp'."\n";
+		    $perl .= '$m->call($_comp);}'."\n";
+		    $curpos = $b+5+$length+6;
 		} else {
 		    #
 		    # <% %> section
@@ -396,7 +423,7 @@ sub parse_component
 		    (my $comp = substr($call,0,$comma)) =~ s/\s+$//;
 		    $call = "'$comp'".substr($call,$comma);
 		}
-		$perl = "\$REQ->call($call);";
+		$perl = "\$m->call($call);";
 		$curpos = $c+2+$length+2;
 		$pureTextFlag = 0;
 	    } else {
@@ -430,7 +457,7 @@ sub parse_component
     my @alphatexts;
     my $endsec = '';
     if ($useSourceReference) {
-	$body .= 'my $_srctext = $REQ->comp->source_ref_text;'."\n";
+	$body .= 'my $_srctext = $m->comp->source_ref_text;'."\n";
 	my $cur = 0;
 	foreach my $sec (@alphasecs) {
 	    $endsec .= substr($script,$sec->[0],$sec->[1])."\n";
@@ -449,7 +476,7 @@ sub parse_component
     #
     # Insert call to debug hook.
     #
-    $body .= '$REQ->debug_hook($REQ->comp->path) if (%DB::);'."\n";
+    $body .= '$m->debug_hook($m->comp->path) if (%DB::);'."\n";
     
     #
     # Insert <%filter> section.
@@ -468,7 +495,7 @@ sub parse_component
     #
     # Call start_primary hooks.
     #
-    $body .= "\$REQ->call_hooks('start_primary');\n";
+    $body .= "\$m->call_hooks('start_primary');\n";
     
     #
     # Postprocess the alphabetical and Perl stuff separately
@@ -500,7 +527,7 @@ sub parse_component
     #
     # Call end_primary hooks.
     #
-    $body .= "\$REQ->call_hooks('end_primary');\n";
+    $body .= "\$m->call_hooks('end_primary');\n";
     
     #
     # Insert <%cleanup> section.
@@ -521,7 +548,9 @@ sub parse_component
     if (!$embedded) {
 	$header .= "package $pkg;\n";
 	$header .= "use strict;\n" if $self->use_strict;
-	$header .= sprintf("use vars qw(%s);\n",join(" ","\$REQ",@{$self->{'allow_globals'}}))."\n";
+	if (my @g = @{$self->{'allow_globals'}}) {
+	    $header .= sprintf("use vars qw(%s);\n",join(" ",@g));
+	}
     }
     $header .= $sectiontext{once}."\n" if $sectiontext{once};
 
@@ -553,7 +582,7 @@ sub parse_component
     }
     my $cparamstr = join(",\n",@cparams);
     
-    $body = "new HTML::Mason::Component (\n$cparamstr\n);\n";
+    $body = "new $compClass (\n$cparamstr\n);\n";
     $body = $header . $body;
 
     #
@@ -690,7 +719,6 @@ sub eval_object_text
 	$$errref = $err if defined($errref);
 	return undef;
     } else {
-	$comp->object_file($objectFile);
 	return $comp;
     }
 }

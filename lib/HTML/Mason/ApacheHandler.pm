@@ -72,9 +72,9 @@ my %fields =
     (
      apache_status_title => 'mason',
      decline_dirs => 1,
-     error_mode => 'html',
+     error_mode => undef,
      interp => undef,
-     output_mode => 'batch',
+     output_mode => undef,  # deprecated
      top_level_predicate => undef,
      debug_mode => 'none',
      debug_perl_binary => '/usr/bin/perl',
@@ -115,7 +115,9 @@ sub _initialize {
 
     my $interp = $self->interp;
 
-    # ----------------------------
+    # Handle deprecated out_mode by passing to interpreter.
+    $interp->out_mode($self->out_mode) if (defined($self->out_mode));
+    
     # Add an HTML::Mason menu item to the /perl-status page. Things we report:
     # -- Interp properties
     # -- loaded (cached) components
@@ -123,8 +125,7 @@ sub _initialize {
     my $title;
     if ($name eq 'mason') {
         $title='HTML::Mason status';    #item for HTML::Mason module
-    } 
-    else {
+    } else {
         $title=$name;
         $name=~s/\W/_/g;
     }
@@ -218,19 +219,6 @@ sub handle_request {
 	$rstring = substr($rstring,0,150).'...' if length($rstring) > 150;
 	$interp->write_system_log('REQ_START', $self->{request_number},
 				  $rstring);
-    }
-
-    #
-    # If output mode is 'batch', collect output in a buffer and
-    # print at the end. If output mode is 'stream', send output
-    # to client as it is produced.
-    #
-    if ($self->output_mode eq 'batch') {
-        $outsub = sub { $outbuf .= $_[0] if defined($_[0]) };
-	$interp->out_method($outsub);
-    } elsif ($self->output_mode eq 'stream') {
-	$outsub = sub { print($_[0]) };
-	$interp->out_method($outsub);
     }
 
     #
@@ -469,16 +457,11 @@ sub handle_request_1
     }
     
     #
-    # Compute the component path by deleting the component root
-    # directory from the front of Apache's filename.  If the
-    # substitute fails, we must have an URL outside Mason's component
-    # space; return not found.
+    # Compute the component path via the resolver.
     #
-    my $compPath = $r->filename;
-    if (!($compPath =~ s/^$compRoot//)) {
-	$r->warn("Mason: filename (\"$compPath\") is outside component root (\"$compRoot\"); returning 404.");
-	return NOT_FOUND;
-    }
+    my $compPath = $interp->resolver->file_to_path($r->filename,$interp)
+    return NOT_FOUND unless $compPath;
+
     $compPath =~ s@/$@@ if $compPath ne '/';
     while ($compPath =~ s@//@/@) {}
 
@@ -567,7 +550,7 @@ sub handle_request_1
     #
     $interp->set_global(r=>$r);
     
-    return $interp->exec($comp, REQ=>$request, %args);
+    return $interp->exec_request($comp, $request, %args);
 }
 
 sub simulate_debug_request
