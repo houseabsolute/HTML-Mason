@@ -1035,11 +1035,9 @@ sub _fetch_comp
     }
 
     #
-    # Otherwise pass the absolute path to interp->load.
+    # Otherwise pass the canonicalized absolute path to interp->load.
     #
-    $path = absolute_comp_path($path, $current_comp->dir_path)
-	unless substr($path, 0, 1) eq '/';
-
+    $path = absolute_comp_path($path, $current_comp->dir_path);
     my $comp = $self->interp->load($path);
 
     return $comp;
