@@ -23,6 +23,7 @@ sub setup_mod_perl_tests
     write_apache_conf();
     setup_handler('mod_perl');
     setup_handler('CGI');
+    write_CGIHandler();
 }
 
 sub cleanup_files
@@ -143,6 +144,16 @@ EOF
 
 </IfDefine>
 
+<IfDefine CGIHandler>
+  AddHandler cgi-script .cgi
+  Action html-mason /CGIHandler.cgi
+  <Location /comps>
+    Options +ExecCGI
+    SetHandler html-mason
+  </Location>
+</IfDefine>
+
+
 EOF
 
     local $^W;
@@ -218,6 +229,43 @@ sub handler
 }
 EOF
     close F;
+}
+
+sub write_CGIHandler
+{
+    my $handler = "CGIHandler.cgi";
+    my $handler_file = "$APACHE{apache_dir}/$handler";
+    open F, ">$handler_file"
+	or die "Can't write to '$handler_file': $!";
+
+    my $libs = _libs();
+
+    my $data_dir = "$APACHE{apache_dir}/data";
+
+    use Config;
+
+    print F <<"EOF";
+$Config{startperl}
+
+$libs
+
+use HTML::Mason::CGIHandler;
+
+my \%p;
+if ( \$ENV{PATH_INFO} =~ s,/stream\$,, )
+{
+    \%p = ( out_mode => 'stream' );
+}
+
+my \$h = HTML::Mason::CGIHandler->new( data_dir  => '$data_dir', \%p );
+
+\$h->handle_request;
+EOF
+
+    close F;
+
+    chmod 0755, $handler_file
+	or die "cannot chmod $handler_file to 0755: $!";
 }
 
 sub _libs
