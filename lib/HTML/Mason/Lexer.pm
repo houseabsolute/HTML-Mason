@@ -259,7 +259,7 @@ sub variable_list_block
                         |
                         [ \t]*          # just space
                        )
-                       (?:\n |          # newline or
+                       (\n |          # newline or
                           (?= <\/%\Q$p{block_type}\E> ) )   # end of block (don't consume it)
                       ,xgc
 	  )
@@ -273,7 +273,7 @@ sub variable_list_block
 							    );
 	}
 
-	$self->{current}{lines}++;
+	$self->{current}{lines}++ if $4;
     }
 
     my $nl = $self->match_block_end( block_type => $p{block_type},
