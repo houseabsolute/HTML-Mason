@@ -55,15 +55,14 @@ chk_version('Apache::Request' => '0.31') or
         . "    Mason requires version 0.31, or later, of Apache::Request\n"
 	. "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
 
-chk_version('Exception::Class' => '1.00') or
+chk_version('Exception::Class' => '1.01') or
     warn  "\n"
-	. "*** If you plan to use Mason with mod_perl,\n"
-        . "    Mason requires version 1.00, or later, of Exception::Class\n"
+        . "    Mason requires version 1.01, or later, of Exception::Class\n"
 	. "    from CPAN/modules/by-module/Exception/Exception-Class-x.x.tar.gz\n\n";
 
 chk_version('Cache::Cache' => '1.00') or
     warn  "\n"
-	. "*** If you plan to use Mason with mod_perl,\n"
+	. "*** If you plan to use Mason's caching feature,\n"
         . "    Mason requires version 1.00, or later, of Cache::Cache\n"
 	. "    from CPAN/modules/by-authors/id/D/DC/DCLINTON/Cache-Cache-x.x.tar.gz\n\n";
 
@@ -82,7 +81,7 @@ WriteMakefile(
 		     'File::Spec' => 0.8,
 		     'Params::Validate' => 0.16,
 		     'Apache::Request' => 0.31,
-		     'Exception::Class' => 1.00,
+		     'Exception::Class' => 1.01,
 		     'Cache::Cache' => 0.99,
 		   },
 
