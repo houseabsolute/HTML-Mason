@@ -136,7 +136,15 @@ sub send_http_header_hook
 # Standard entry point for handling request
 #
 sub handle_request {
-    my ($self,$r) = @_;
+
+    #
+    # Why do we use $req instead of $r here? A scoping bug in certain
+    # versions of Perl 5.005 was getting confused about $r being used
+    # in components, and the easiest workaround was to rename "$r" to
+    # something else in this routine.  Go figure...
+    # -jswartz 5/23
+    #
+    my ($self,$req) = @_;
     my ($outsub, $retval, $argString, $debugMsg);
     my $outbuf = '';
     my $interp = $self->interp;
@@ -145,8 +153,8 @@ sub handle_request {
     # construct (and truncate if necessary) the request to log at start
     #
     if ($interp->system_log_event_check('REQ_START')) {
-	my $rstring = $r->server->server_hostname . $r->uri;
-	$rstring .= "?".scalar($r->args) if defined(scalar($r->args));
+	my $rstring = $req->server->server_hostname . $req->uri;
+	$rstring .= "?".scalar($req->args) if defined(scalar($req->args));
 	$rstring = substr($rstring,0,150).'...' if length($rstring) > 150;
 	$interp->write_system_log('REQ_START', ++$self->{request_number},
 				  $rstring);
@@ -168,19 +176,19 @@ sub handle_request {
     #
     # Get argument string
     #
-    if ($r->method() eq 'GET') {
-	$argString = $r->args();
-    } elsif ($r->method() eq 'POST') {
-	$argString = $r->content();
+    if ($req->method() eq 'GET') {
+	$argString = $req->args();
+    } elsif ($req->method() eq 'POST') {
+	$argString = $req->content();
     }
     
     my $debugMode = $self->debug_mode;
-    $debugMode = 'none' if (ref($r) eq 'HTML::Mason::FakeApache');
-    my $debugState = $self->capture_debug_state($r,$argString)
+    $debugMode = 'none' if (ref($req) eq 'HTML::Mason::FakeApache');
+    my $debugState = $self->capture_debug_state($req,$argString)
 	if ($debugMode eq 'all' or $debugMode eq 'error');
-    $debugMsg = $self->write_debug_file($r,$debugState) if ($debugMode eq 'all');
+    $debugMsg = $self->write_debug_file($req,$debugState) if ($debugMode eq 'all');
     
-    eval('$retval = handle_request_1($self, $r, $argString)');
+    eval('$retval = handle_request_1($self, $req, $argString)');
     my $err = $@;
     my $err_status = $err ? 1 : 0;
 
@@ -191,23 +199,23 @@ sub handle_request {
 	#
 	$err =~ s@^\[[^\]]*\] \(eval [0-9]+\): @@mg;
 	$err = html_escape($err);
-	my $referer = $r->header_in('Referer') || '<none>';
-	my $agent = $r->header_in('User-Agent') || '';
-	$err = sprintf("while serving %s %s (referer=%s, agent=%s)\n%s",$r->server->server_hostname,$r->uri,$referer,$agent,$err);
+	my $referer = $req->header_in('Referer') || '<none>';
+	my $agent = $req->header_in('User-Agent') || '';
+	$err = sprintf("while serving %s %s (referer=%s, agent=%s)\n%s",$req->server->server_hostname,$req->uri,$referer,$agent,$err);
 
 	if ($self->error_mode eq 'fatal') {
 	    die ("System error:\n$err\n");
 	} elsif ($self->error_mode eq 'html') {
-	    if (!http_header_sent($r)) {
-		$r->content_type('text/html');
-		$r->send_http_header();
+	    if (!http_header_sent($req)) {
+		$req->content_type('text/html');
+		$req->send_http_header();
 	    }
 	    print("<h3>System error</h3><p><pre><font size=-1>$err</font></pre>\n");
-	    $debugMsg = $self->write_debug_file($r,$debugState) if ($debugMode eq 'error');
+	    $debugMsg = $self->write_debug_file($req,$debugState) if ($debugMode eq 'error');
 	    print("<pre><font size=-1>\n$debugMsg\n</font></pre>\n") if defined($debugMsg);
 	}
     } else {
-	print("\n<!--\n$debugMsg\n-->\n") if defined($debugMsg) && http_header_sent($r) && $r->header_out("Content-type") =~ /text\/html/;
+	print("\n<!--\n$debugMsg\n-->\n") if defined($debugMsg) && http_header_sent($req) && $req->header_out("Content-type") =~ /text\/html/;
 	print($outbuf) if $self->output_mode eq 'batch';
     }
 
