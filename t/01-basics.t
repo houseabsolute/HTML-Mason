@@ -34,7 +34,7 @@ print "1..15\n";
 foreach my $component ( @comps ) {
   undef $buf;
   my $result;
-  eval { $interp->exec($component); };
+  eval { $interp->exec("/$component"); };
 
   open(F, ">$tmp_dir$component");
   print F $buf;

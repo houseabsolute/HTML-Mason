@@ -687,7 +687,7 @@ sub out_method
     my ($self, $value) = @_;
     if (defined($value)) {
 	if (ref($value) eq 'SCALAR') {
-	    $self->{out_method} = sub { $$value .= $_[0] };
+	    $self->{out_method} = sub { $$value .= $_[0] if defined($_[0]) };
 	} elsif (ref($value) eq 'CODE') {
 	    $self->{out_method} = $value;
 	} else {
