@@ -412,7 +412,7 @@ sub current_time {
     my $self = shift;
     if (@_) {
 	my $newtime = shift;
-	die "Interp->current_time: invalid value '$newtime' - must be 'real' or a numeric time value" if $newtime ne 'real' && $newtime !~ /^[0-9]+$/;
+	die "Interp::current_time: invalid value '$newtime' - must be 'real' or a numeric time value" if $newtime ne 'real' && $newtime !~ /^[0-9]+$/;
 	return $self->{current_time} = $newtime;
     } else {
 	return $self->{current_time};
@@ -422,6 +422,7 @@ sub current_time {
 sub set_global
 {
     my ($self, $decl, @values) = @_;
+    die "Interp::set_global: expects a variable name and one or more values" if !@values;
     my ($prefix, $name) = ($decl =~ /^[\$@%]/) ? (substr($decl,0,1),substr($decl,1)) : ("\$",$decl);
 
     my $varname = sprintf("%s::%s",$self->{parser}->{in_package},$name);
