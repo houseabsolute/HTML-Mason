@@ -27,10 +27,6 @@ Mason - High-performance, dynamic web site authoring system
 
 =head1 SYNOPSIS
 
-    PerlSetVar MasonCompRoot /usr/local/www/htdocs
-    PerlSetVar MasonDataDir /usr/local/www/mason
-    PerlModule HTML::Mason::ApacheHandler
-
     <FilesMatch "\.html$">
         SetHandler perl-script
         PerlHandler HTML::Mason::ApacheHandler
@@ -148,10 +144,6 @@ great resources.
 The simplest configuration of Mason requires a few lines in your
 httpd.conf. You can find an annotated version of these lines in
 C<eg/httpd.conf> in your distribution.
-
-    PerlSetVar MasonCompRoot /usr/local/www/htdocs
-    PerlSetVar MasonDataDir /usr/local/www/mason
-    PerlModule HTML::Mason::ApacheHandler
 
     <FilesMatch "\.html$">
         SetHandler perl-script
