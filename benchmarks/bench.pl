@@ -7,10 +7,10 @@ use lib '../lib';
 use Benchmark;
 use Cwd;
 use Fcntl qw( O_RDWR O_CREAT );
-use HTML::Mason;
 use Getopt::Long;
 use MLDBM qw( DB_File Storable );
 use File::Path;
+use File::Spec;
 
 my %tests =
     ( print =>
@@ -87,6 +87,7 @@ if ($opts{cvs_tag})
 {
     my $cwd = cwd();
     my $lib = File::Spec->catdir( $cwd, '..', 'lib' );
+    print "chdir $lib\n";
     chdir $lib or die "Can't chdir($lib): $!";
     my $cmd = "cvs update $opts{cvs_tag}";
     print "$cmd\n";
@@ -97,6 +98,10 @@ if ($opts{cvs_tag})
     $opts{tag} ||= $opts{cvs_tag};
     chdir $cwd or die "Can't chdir($lib): $!";
 }
+
+# Do this only after updating lib/ to proper CVS version
+require HTML::Mason;
+
 $opts{tag} ||= $HTML::Mason::VERSION;
 
 
