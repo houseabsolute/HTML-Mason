@@ -338,6 +338,8 @@ sub exec {
     # Handle errors.
     my $err = $@;
     if ($err and !$self->_aborted_or_declined($err)) {
+	pop @{ $self->{buffer_stack} };
+	pop @{ $self->{buffer_stack} };
 	$self->_handle_error($err);
 	return;
     }
@@ -364,8 +366,6 @@ sub _handle_error
 {
     my ($self, $err) = @_;
 
-    pop @{ $self->{buffer_stack} };
-    pop @{ $self->{buffer_stack} };
     $self->interp->purge_code_cache;
 
     rethrow_exception $err if $self->is_subrequest;
