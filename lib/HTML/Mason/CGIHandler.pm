@@ -7,6 +7,7 @@ use HTML::Mason::Utils;
 use CGI;
 use File::Spec;
 use Params::Validate qw(:all);
+use HTML::Mason::Exceptions;
 
 use Class::Container;
 use base qw(Class::Container);
@@ -84,7 +85,12 @@ sub _handler {
 
     my %args = $self->request_args($r);
 
-    $self->interp->exec($p->{comp}, %args);
+    eval { $self->interp->exec($p->{comp}, %args) };
+    if (my $err = $@) {
+        rethrow_exception($err)
+          unless isa_mason_exception($err, 'Abort')
+          or isa_mason_exception($err, 'Decline');
+    }
 
     if (@_) {
 	# This is a secret feature, and should stay secret (or go away) because it's just a hack for the test suite.
@@ -134,6 +140,7 @@ sub redirect {
 
 ###########################################################
 package HTML::Mason::FakeApache;
+@HTML::Mason::FakeApache::ISA = qw(Apache);
 # Analogous to Apache request object $r (but not an actual Apache subclass)
 # In the future we'll probably want to switch this to Apache::Fake or similar
 
@@ -157,6 +164,22 @@ sub header_out {
     return $self->_set_header($header, shift) if @_;
     return $self->headers->{$header};
 }
+
+sub headers_out {
+    my $self = shift;
+    $self->header_out(shift, shift) while @_;
+    return $self->headers;
+}
+
+BEGIN {
+    local $^W;
+    *err_header_out = \&header_out;
+    *err_headers_out = \&headers_out;
+}
+
+sub method {}
+sub unset {}
+sub headers_in { shift }
 
 sub content_type {
     my $self = shift;

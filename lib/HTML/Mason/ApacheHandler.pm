@@ -859,11 +859,20 @@ sub prepare_request
     # If someone is using a custom request class that doesn't accept
     # 'ah' and 'apache_req' that's their problem.
     #
-    my $request = $interp->make_request( comp => $comp_path,
-					 args => [%$args],
-					 ah => $self,
-					 apache_req => $r,
-				       );
+    my $request = eval {
+	$interp->make_request( comp => $comp_path,
+			       args => [%$args],
+			       ah => $self,
+			       apache_req => $r,
+			     );
+    };
+
+    if (my $err = $@) {
+	return $err->aborted_value
+	    if isa_mason_exception($err, 'Abort')
+	    or isa_mason_exception($err, 'Decline');
+	rethrow_exception $err;
+    }
 
     my $final_output_method = ($r->method eq 'HEAD' ?
 			       sub {} :

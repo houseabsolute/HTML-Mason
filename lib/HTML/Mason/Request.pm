@@ -177,13 +177,8 @@ sub _initialize {
     my ($self) = @_;
     my $interp = $self->interp;
 
-    # All errors returned from this routine will be converted to a
-    # Mason exception and placed in the {prepare_error} slot.  exec()
-    # will then trigger the error. This makes for an easier new + exec
-    # API.
     local $SIG{'__DIE__'} = \&rethrow_exception;
-    
-    eval {
+
 	# create base buffer
 	$self->{buffer_stack} = [];
 	$self->{stack} = [];
@@ -228,8 +223,6 @@ sub _initialize {
 	} elsif ( ! UNIVERSAL::isa( $request_comp, 'HTML::Mason::Component' ) ) {
 	    param_error "comp ($request_comp) must be a component path or a component object";
 	}
-    };
-    $self->{prepare_error} = $@ if $@;
 }
 
 sub alter_superclass
@@ -292,11 +285,6 @@ sub exec {
 	my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
 	push @{ $self->{buffer_stack} }, $buffer;
         push @{ $self->{buffer_stack} }, $buffer->new_child;
-
-	# If there was an error during request preparation, throw it now.
-	if (my $err = $self->{prepare_error}) {
-	    $err->throw;
-	}
 
 	# Build wrapper chain and index.
 	my $request_comp = $self->request_comp;
