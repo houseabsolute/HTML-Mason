@@ -85,8 +85,8 @@ sub lex
     # We need to untaint the component or else the regexes will fail
     # to a Perl bug.  The delete is important because we need to
     # create an entirely new scalar, not just modify the existing one.
-    ($current->{comp_source}) = $current->{comp_source} =~ /(.*)/s
-        taint_is_on;
+    ($current->{comp_source}) = (delete $current->{comp_source}) =~ /(.*)/s
+        if taint_is_on;
 
     eval
     {
