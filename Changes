@@ -48,6 +48,10 @@ output.  The new default is that this output appears "inline" in the
 calling component, which we think is most DWIM-ish.  Alternate
 behavior can be achieved by explicitly setting the subrequest's
 out_method parameter.
+- The $r object provided by CGIHandler.pm was not passing header
+values to CGI.pm in a way that CGI.pm liked.  Now we add a '-' to the
+front of the header name if necessary, and all headers are canonized
+to lower case in order to avoid having duplicates.
 
 1.09_01  April 4, 2002
 
