@@ -1094,11 +1094,13 @@ my %html_escape = ('&' => '&amp;', '>'=>'&gt;', '<'=>'&lt;', '"'=>'&quot;');
 sub _escape_perl_expression
 {
     my ($expr,@flags) = @_;
-    foreach my $flag (@flags) {
-	if ($flag eq 'h') {
-	    $expr =~ s/([<>&\"])/$html_escape{$1}/mgoe;
-	} elsif ($flag eq 'u') {
-	    $expr =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
+    if (defined($expr) {
+	foreach my $flag (@flags) {
+	    if ($flag eq 'h') {
+		$expr =~ s/([<>&\"])/$html_escape{$1}/mgoe;
+	    } elsif ($flag eq 'u') {
+		$expr =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
+	    }
 	}
     }
     return $expr;
