@@ -113,51 +113,63 @@ sub _initialize {
     my ($self) = @_;
     my $interp = $self->interp;
 
-    # Initialize hooks arrays for fast access
-    while (my ($type,$href) = each(%{$interp->{hooks}})) {
-	$self->{"hooks_$type"} = [values(%$href)] if (%$href);
-    }
+    # All errors returned from this routine will be in exception form.
+    local $SIG{'__DIE__'} = sub {
+	my $err = $_[0];
+	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
+    };
 
-    # create base buffer
-    $self->{buffer_stack} = [];
-    $self->{stack} = [];
+    eval {
+	# Initialize hooks arrays for fast access
+	while (my ($type,$href) = each(%{$interp->{hooks}})) {
+	    $self->{"hooks_$type"} = [values(%$href)] if (%$href);
+	}
 
-    # top_comp can be an absolute path or component object.  If a path,
-    # load into object.
-    my $top_comp = $self->{top_comp};
-    my ($path);
-    if (!ref($top_comp)) {
-	$top_comp =~ s{/+}{/}g;
-	$self->{top_path} = $path = $top_comp;
+	# create base buffer
+	$self->{buffer_stack} = [];
+	$self->{stack} = [];
 
-        search: {
-	    $top_comp = $self->interp->load($path);
-	    
-	    # If path was not found, check for dhandler.
-	    unless ($top_comp) {
-		if ( $top_comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
-		    my $parent_path = $top_comp->dir_path;
-		    ($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
-		}
-	    }
-	    
-	    # If the component was declined previously in this request,
-	    # look for the next dhandler up the tree.
-	    if ($top_comp and $self->{declined_comps}->{$top_comp->comp_id}) {
-		$path = $top_comp->dir_path;
-		unless ($path eq '/' and $top_comp->name eq $interp->dhandler_name) {
-		    if ($top_comp->name eq $interp->dhandler_name) {
-			$path =~ s{/[^\/]+$}{};
+	# top_comp can be an absolute path or component object.  If a path,
+	# load into object.
+	my $top_comp = $self->{top_comp};
+	my ($path);
+	if (!ref($top_comp)) {
+	    $top_comp =~ s{/+}{/}g;
+	    $self->{top_path} = $path = $top_comp;
+
+	    search: {
+		$top_comp = $self->interp->load($path);
+		
+		# If path was not found, check for dhandler.
+		unless ($top_comp) {
+		    if ( $top_comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
+			my $parent_path = $top_comp->dir_path;
+			($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
 		    }
 		}
-		redo search;
+		
+		# If the component was declined previously in this request,
+		# look for the next dhandler up the tree.
+		if ($top_comp and $self->{declined_comps}->{$top_comp->comp_id}) {
+		    $path = $top_comp->dir_path;
+		    unless ($path eq '/' and $top_comp->name eq $interp->dhandler_name) {
+			if ($top_comp->name eq $interp->dhandler_name) {
+			    $path =~ s/\/[^\/]+$//;
+			}
+		    }
+		    redo search;
+		}
 	    }
-        }
 
-	$self->{top_comp} = $top_comp;
-    } elsif ( ! UNIVERSAL::isa( $top_comp, 'HTML::Mason::Component' ) ) {
-	param_error "comp ($top_comp) must be a component path or a component object";
-    }
+	    unless ($self->{top_comp} = $top_comp) {
+		top_level_not_found_error "could not find component for initial path '" . $self->{top_path} . "'\n";
+	    }
+
+	} elsif ( ! UNIVERSAL::isa( $top_comp, 'HTML::Mason::Component' ) ) {
+	    param_error "comp ($top_comp) must be a component path or a component object";
+	}
+    };
+    $self->{prepare_error} = $@ if $@;
 }
 
 sub exec {
@@ -176,11 +188,14 @@ sub exec {
 	my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
 	$self->push_buffer_stack($buffer);
 
+	# If there was an error during request preparation, throw it now.
+	if (my $err = $self->{prepare_error}) {
+	    $err->throw;
+	}
+	
 	# Build wrapper chain and index.
 	my $top_comp = $self->top_comp;
-	unless ($top_comp) {
-	    top_level_not_found_error "could not find component for initial path '" . $self->{top_path} . "'\n";
-	}
+
         my @top_args = $self->top_args;
 	my $first_comp;
 	{
