@@ -311,7 +311,7 @@ sub text
 
     $$tref =~ s,(['\\]),\\$1,g;
 
-    $self->_add_body_code("\$m->print( '", $$tref, "' );\n");
+    $self->_add_body_code("\$m->print( \\'", $$tref, "' );\n");
 
     $self->{current_comp}{last_body_code_type} = 'text';
 }
