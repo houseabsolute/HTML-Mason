@@ -521,7 +521,7 @@ sub check_output
 		my $actual = join "\n", ( @actual_prev, $actual[$x], @actual_next );
 		my $expect = join "\n", ( @expect_prev, $expect[$x], @expect_next );
 
-		print "Got ...\n<<<<<\n$actual\n>>>>>\n... but expected ...\n<<<<<\n$expect\n>>>>>\n";
+		print "Got ...\n-----\n$actual\n-----\n   ... but expected ...\n-----\n$expect\n-----\n";
 	    }
 	    $diff = 1;
 	    last;
