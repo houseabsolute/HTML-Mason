@@ -551,10 +551,12 @@ sub comp {
 		       } );
 
     if ($mods{store}) {
-        $self->push_buffer_stack($self->top_buffer->new_child( mode => 'batch', ignore_flush => 1 ));
-    } else {
-        $self->push_buffer_stack($self->top_buffer->new_child);
+	# This extra buffer is to catch flushes (in the given scalar ref).
+	# The component's main buffer can then be cleared without
+	# affecting previously flushed output.
+        $self->push_buffer_stack($self->top_buffer->new_child( mode => 'batch', sink => $mods{store}, ignore_flush => 1 ));
     }
+    $self->push_buffer_stack($self->top_buffer->new_child);
 
     # Call start_comp hooks.
     $self->call_hooks('start_comp');
@@ -615,13 +617,10 @@ sub comp {
     #
     $self->call_hooks('end_comp');
 
-    if ($mods{store}) {
-	${$mods{store}} = $self->top_buffer->output;
-    } else {
-        $self->top_buffer->flush;
-    }
+    $self->top_buffer->flush;
     $self->pop_stack;
     $self->pop_buffer_stack;
+    $self->pop_buffer_stack if ($mods{store});
 
     return wantarray ? @result : $result;  # Will return undef in void context (correct)
 }
@@ -706,6 +705,7 @@ sub clear_buffer
 {
     my $self = shift;
     for (reverse $self->buffer_stack) {
+	last if $_->ignore_flush;
 	$_->clear;
     }
 }

@@ -227,6 +227,88 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'flush_clear',
+		      description => 'Flush then clear',
+		      component => <<'EOF',
+Foo
+% $m->flush_buffer;
+Bar
+% $m->clear_buffer;
+Baz
+EOF
+		      expect => <<'EOF',
+Foo
+Baz
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'flush_clear_scomp',
+		      description => 'Flush then clear inside scomp',
+		      component => <<'EOF',
+<%method s>
+Foo
+% $m->flush_buffer;
+Bar
+% $m->clear_buffer;
+Baz
+</%method>
+This is me
+----------
+This is scomp-ed output:
+<% $m->scomp('SELF:s') %>
+----------
+This is me again
+EOF
+		      expect => <<'EOF',
+This is me
+----------
+This is scomp-ed output:
+
+Foo
+Baz
+
+----------
+This is me again
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => 'flush_clear_filter_comp',
+			 component => <<'EOF',
+Foo
+% $m->flush_buffer;
+Bar
+% $m->clear_buffer;
+Baz
+<%filter>
+s/^/-/gm;
+</%filter>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'flush_clear_filter',
+		      description => 'Flush then clear with filter section',
+		      component => <<'EOF',
+before
+<& flush_clear_filter_comp &>
+after
+EOF
+		      expect => <<'EOF',
+before
+-Foo
+-Baz
+
+after
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
