@@ -424,7 +424,7 @@ sub make_component {
 
     $p{comp_source} = read_file(delete $p{comp_file}) if exists $p{comp_file};
     param_error "Must specify either 'comp_source' or 'comp_file' parameter to 'make_component()'"
-	unless $p{comp_source};
+	unless defined $p{comp_source};
 
     $p{name} ||= '<anonymous component>';
 
