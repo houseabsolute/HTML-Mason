@@ -18,7 +18,7 @@ sub make_tests
 		      component => <<'EOF',
 <% $global = 1 %>
 EOF
-		      expect_error => qr/Global symbol .* requires explicit package name/,
+		      expect_error => 'Global symbol .* requires explicit package name',
 		    );
 
     $group->add_test( name => 'allow_globals',
@@ -28,7 +28,7 @@ EOF
 		      component => <<'EOF',
 <% $global = 1 %>
 EOF
-		      expect_error => qr/Global symbol .* requires explicit package name/,
+		      expect_error => 'Global symbol .* requires explicit package name',
 		    );
 
     $group->add_test( name => 'allow_globals',
@@ -189,6 +189,19 @@ EOF
 fooFOO
 bar
 EOF
+		    );
+
+    $group->add_test( name => 'bad_var_name',
+		      description => 'test that invalid Perl variable names are caught',
+		      component => <<'EOF',
+<%args>
+$foo
+$8teen
+%bar
+</%args>
+Never get here
+EOF
+		      expect_error => 'Invalid variable name',
 		    );
 
     return $group;
