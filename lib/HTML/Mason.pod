@@ -17,7 +17,8 @@ Mason - High-performance, dynamic web site authoring system
     # Start Mason and define the mod_perl handler routine.
     #
     package HTML::Mason;
-    use HTML::Mason;    # brings in subpackages: Parser, Interp, etc.
+    use HTML::Mason;
+    use HTML::Mason::ApacheHandler;
     use strict;
 
     my $parser = new HTML::Mason::Parser;
@@ -33,6 +34,8 @@ Mason - High-performance, dynamic web site authoring system
         my ($r) = @_;
         $ah->handle_request($r);
     }
+
+    1;
 
 =head1 DESCRIPTION 
 
@@ -301,7 +304,7 @@ B<L<HTML::Mason::Interp>>.
 
 =head1 AUTHOR 
 
-Jonathan Swartz, swartz@transbay.net 
+Jonathan Swartz, swartz@pobox.com 
 
 =head1 SEE ALSO
 
