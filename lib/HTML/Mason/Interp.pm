@@ -118,24 +118,6 @@ use HTML::Mason::MethodMaker
 			      },
       );
 
-BEGIN {
-    #
-    # We've found at least one generated component that for some
-    # reason never returns from eval-ing its object code.  For
-    # systems that provide alarm we can try to protect against
-    # this.
-    #
-    # This appears to be a Perl bug, fixed in 5.7.3+.  We'll skip
-    # this hack for versions where the bug is fixed.  To eliminate the
-    # checking penalty, we make it a compile-time constant.
-    #
-    if ( $Config{d_alarm} && $] < 5.007003 ) {
-	eval 'sub PERL_BUG_INFINITE_LOOP () { 1 }';
-    } else {
-	eval 'sub PERL_BUG_INFINITE_LOOP () { 0 }';
-    }
-}
-
 sub new
 {
     my $class = shift;
@@ -545,12 +527,7 @@ sub eval_object_code
               ) :
 	      sub { $warnstr .= $_[0] } );
 	
-	local $SIG{ALRM} = sub { die $warnstr } if PERL_BUG_INFINITE_LOOP;
-	alarm 5 if PERL_BUG_INFINITE_LOOP;
-	
 	$comp = $self->_do_or_eval(\%p);
-	
-	alarm 0 if PERL_BUG_INFINITE_LOOP;
     }
 
     $err = $warnstr . $@;

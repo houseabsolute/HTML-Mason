@@ -605,28 +605,6 @@ EOF
 
 #------------------------------------------------------------
 
-    if ( $Config{d_alarm} || $] >= 5.007003 )
-    {
-	$group->add_test( name => 'infinite_loop',
-			  description => 'this code hangs when Interp.pm attempts to eval it.',
-			  component => <<'EOF',
-<%args>
- $prev
- $next
- $i
-</%args>
-% (my $p = $r->uri) =~ s,/[^/]+$,/,;
-  <% $p %>"><% $dir %>
-  <% $i->{fileroot} %>
-  <% "foo">large</a
- <% $i->{comment} %>
-EOF
-			  expect_error => qr/Global symbol "\$r"/,
-			);
-    }
-
-#------------------------------------------------------------
-
 	$group->add_test( name => 'uc_method',
 			  description => 'make sure that <%METHOD ...> is allowed',
 			  component => <<'EOF',
