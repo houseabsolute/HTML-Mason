@@ -104,6 +104,22 @@ sub compress_path
     return $path;
 }
 
+sub mason_canonpath {
+    # Just like File::Spec::canonpath, but we're having trouble
+    # getting a patch through to them.
+    shift;
+    my $path = shift;
+    $path =~ s|/+|/|g unless($^O eq 'cygwin');       # xx////yy  -> xx/yy
+    $path =~ s|(/\.)+/|/|g;                          # xx/././yy -> xx/yy
+    {
+	$path =~ s|^(\./)+||s unless $path eq "./";  # ./xx      -> xx
+	$path =~ s|^/(\.\./)+|/|s;                   # /../../xx -> xx
+	$path =~ s|/\Z(?!\n)|| unless $path eq "/";  # xx/       -> xx
+	$path =~ s|[^/]+/\.\./|| && redo;            # /xx/../yy -> /yy
+    }
+    return $path;
+}
+
 no strict 'refs';
 
 #
@@ -129,3 +145,4 @@ sub pkg_loaded
     return $$varname ? 1 : 0;
 }
 
+1;
