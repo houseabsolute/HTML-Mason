@@ -109,6 +109,8 @@ small component or set of components, and send those.
 
 If you are experiencing test failures, please run the tests like this:
 
+        export MASON_VERBOSE=1
+
         make test TEST_VERBOSE=1
 
 and send the output along with the bug report.  Otherwise we'll just
