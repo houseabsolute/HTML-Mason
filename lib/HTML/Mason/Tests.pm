@@ -192,7 +192,7 @@ sub run
 	$self->_write_support_comps;
 	$self->_run_tests;
     };
-#    my $x = <STDIN>;
+
     $self->_cleanup;
 
     die $@ if $@;
@@ -442,7 +442,7 @@ sub _run_test
 	return;
     }
 
-    my $success = $test->{skip_expect} ? 1 : $self->check_output( $buf, $test->{expect} );
+    my $success = $test->{skip_expect} ? 1 : $self->check_output( actual => $buf, expect => $test->{expect} );
 
     $success ? $self->_success : $self->_fail;
 }
@@ -450,19 +450,18 @@ sub _run_test
 sub check_output
 {
     my $self = shift;
-    my $actual = shift;
-    my $expect = shift;
+    my %p = @_;
 
-    my @actual = split /\n/, $actual;
-    my @expect = split /\n/, $expect;
+    my @actual = split /\n/, $p{actual};
+    my @expect = split /\n/, $p{expect};
 
     my $diff;
-    if (@actual > @expect)
+    if (@expect > @actual)
     {
-	$diff = @actual - @expect;
+	$diff = @expect - @actual;
 	if ($VERBOSE)
 	{
-	    print "Actual result contained $diff extra lines.\n";
+	    print "Actual result contained $diff too few lines.\n";
 	}
     }
     elsif (@expect < @actual)
