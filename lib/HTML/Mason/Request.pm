@@ -322,7 +322,7 @@ sub decline
 {
     my ($self) = @_;
     $self->{declined} = 1;
-    HTLM::Mason::Exception->throw( error => "decline() called (and not caught)" );
+    HTML::Mason::Exception->throw( error => "decline() called (and not caught)" );
 }
 
 #
