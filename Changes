@@ -14,64 +14,46 @@ which covers these in more detail.
 [ INCOMPATIBLE CHANGES ]
 
 - ** Errors now report line numbers from the component source file.
-
 - ** The Parser class has been removed entirely.  Its functionality
 has been split between the Lexer and Compiler objects.  L{Compiler},
 L{Compiler::ToObject} and L{Lexer}.
-
 - ** The debug file feature has been removed.
-
 - ** The previewer has been removed.
-
 - ** The Interp use_reload_files parameter has been removed.  The new
 static_source parameter provides a useful, and conceptually simpler,
 replacement.  L{Interp/static_source}.
-
 - ** Mason's built in caching now uses Cache::Cache to do all the
 heavy lifting.  This means that parameters for both the $m->cache and
 $m->cache_self methods have changed.
-
 - ** The ApacheHandler's top_level_predicate parameter has been
 removed.
-
 - ** The mc_* commands have been removed entirely.
-
 - ** The Interp's taint_check parameter has been removed.  Mason now
 simply determines whether or not it is running in taint mode and acts
 appropriately without user intervention.
-
 - ** Mason now uses Apache::Request as the default argument processing
 module.  You can explicitly use CGI.pm if you prefer.
-
 - ** The ApacheHandler module no longers accepts parameters when
 imported.  Instead, you specify this parameter via the ApacheHandler
 constructor.
-
 - ** The ApacheHandler module now requires a minimum of mod_perl 1.22.
-
 - ** The Component's run_count() and first_time() methods have been
 removed.
-
 - ** The HTML::Mason::Config module is no longer needed, and is no
  longer generated during the installation process.
-
 - ** The Interp's autohandler_name and dhandler_name params no longer take
 undef as a valid value.
-
 - ** The Interp's use_autohandlers, use_dhandlers, and
 allow_recursive_autohandlers parameters have all been removed.
-
 - ** The $m->top_args and $m->top_comp methods have been renamed to
 $m->request_args and $m->request_comp.  The old methods are deprecated
 but will work until the 1.20 release.
-
 - ** Passing an Interp object to the ApacheHandler constructor (as in
 a handler.pl file) will no longer work unless you set the Interp's
 resolver_class parameter to
 'HTML::Mason::Resolver::File::ApacheHandler'.  However, you can now
 pass Interp constructor params directly to the ApacheHandler
 constructor, which will create the interp object internally. 
-
 - ** The MasonMultipleConfig httpd.conf parameter has been removed.
 Mason can now figure this out by itself.
 
@@ -79,50 +61,37 @@ Mason can now figure this out by itself.
 
 - It is now possible to pass chunks of component content as part of a
 component call.  L{Devel/Component Calls with Content}.
-
 - Mason now supports subrequests via the new $m->subexec and
 $m->make_subrequest methods.  L{Devel/Subrequests}.
-
 - Mason no longer requires you to specify a component root or data
 directory.  The component root now defaults to your document root in a
 web context, or your filesystem root in a standalone context.  The
 data directory will be a subdirectory of your server root under
 mod_perl, and Mason can work without any data directory at all in
 other contexts.
-
 - The Resolver class API has been redesigned and is documented for the
 first time.
-
 - The installation process will offer to help you setup Mason for use
 with mod_perl if it can find your Apache configuration file and it
 cannot find an existing Mason configuration.
-
 - The HTML::Mason::Request->instance method is now the officially
 supported way of getting at the current request object outside of a
 Mason component (suggested by John Siracusa).
-
 - The HTML::Mason::Interp->comp_exists method now checks for a
 component's existence without loading the component (suggested by
 Randal Schwartz).
-
 - Mason now includes a module called HTML::Mason::CGIHandler, which
 greatly simplifies the use of Mason via CGI scripts.
-
 - Mason now uses File::Spec for all filesystem operations.
-
 - All the .pod files have been merged into their corresponding .pm
 files, where appropriate.
-
 - Added the Component attr_if_exists method (suggested by Joe
 Frisbie).
-
 - We now use the HTML::Entities module's encode function for the 'h'
 substitution escape flag.  This module escapes high-ascii characters
 properly.
-
 - Calling a method via $m->comp('comp:method') works just like
 $comp->call_method('method').  Previously, ???
-
 - When an object contains other objects then the containing object's
 constructor accepts parameters intended for the contained objects.
 For example, the Interp object contains a Resolver object and Request
@@ -133,11 +102,9 @@ for both the Resolver and Request objects.
 
 - The <%args> section can now contain comments which contain the
 string '=>' (reported by Chris Hutchinson).
-
 - Fixed the longstanding bug that using print() or $r->print() causes
 output/headers to appear out of order.  You can now safely use these,
 though we still recommend that you use Mason to send output.
-
 - Filtered output now does appear when $m->abort() used.  However, an
 abort inside a component called via $m->scomp() still cause the output
 generated by that component to disappear.
@@ -146,19 +113,14 @@ generated by that component to disappear.
 
 - Output buffering and filtering is handled by the new
 HTML::Mason::Buffer class.
-
 - All fatal errors thrown during component execution are exception
 objects in the HTML::Mason::Exception class hierarchy.
-
 - The CGI GET/POST argument processing code has been simplified
 (submitted by Ilmari Karonen).
-
 - ApacheHandler now uses a special Resolver subclass to translate URIs
 to component paths.
-
 - Parameters passed to "set" accessors are now validated in the same
 way as constructor parameters.
-
 - The component requested and the arguments it was passed are now
 properties of the Request object.
 
@@ -326,7 +288,6 @@ appearing in new requests)
 
 0.88  August 30, 2000
 
->>>>>>> 1.54.2.9.2.15
 - Fixed broken Parser postprocessor code (broken since 0.85).  Added
 tests for this code path as well as the preprocessor feature.
 (reported by Tim Bishop)
