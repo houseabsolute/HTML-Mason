@@ -20,7 +20,7 @@ if ($add) {
    $new_cookie = "";
 }
 
-$new_cookie_header = "CD-ME=$new_cookie;path=/;expires=Wednesday, 09-Nov-99 23:12:40 GMT";
+$new_cookie_header = "CD-ME=$new_cookie;path=/;expires=Tue, 21-Jan-2020 14:49:28 GMT";
 $r->header_out('Set-cookie'=>$new_cookie_header);
 
 </%INIT>
