@@ -849,8 +849,8 @@ sets and returns the value.  For example:
     my $c = $interp->compiler;
     $interp->out_method(\$buf);
 
-The following properties can be queried but not modified: comp_root,
-data_dir, preloads.
+The following properties can be queried but not modified: data_dir,
+preloads.
 
 =head1 OTHER METHODS
 
