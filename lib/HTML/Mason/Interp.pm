@@ -537,19 +537,16 @@ sub push_files_written
 #
 sub find_comp_upwards
 {
-    my ($self,$startpath,$name) = @_;
-
-    my $comp;
-
-    # $startpath is a URL path so we split it on / and rejoin it in
-    # the native filesystem way
-    my @p = split /\//, $startpath;
+    my ($self, $startpath, $name) = @_;
+    $startpath =~ s{/+$}{};
 
     # Don't use File::Spec here, this is a URL path.
-    while ( ! ( $comp = $self->load( join '/', @p, $name ) ) && @p ) {
-	pop @p;
-    }
-    return $comp;
+    do {
+      my $comp = $self->load("$startpath/$name");
+      return $comp if $comp;
+    } while $startpath =~ s{/+[^/]*$}{};
+
+    return;  # Nothing found
 }
 
 #
