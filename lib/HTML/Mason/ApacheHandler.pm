@@ -117,7 +117,6 @@ use HTML::Mason::MethodMaker
                           args_method
 			  auto_send_headers
 			  decline_dirs
-			  error_mode
 			  interp
 			  top_level_predicate ) ]
     );
@@ -140,11 +139,6 @@ __PACKAGE__->valid_params
      auto_send_headers     => { parse => 'boolean', type => SCALAR|UNDEF, default => 1 },
 
      decline_dirs          => { parse => 'boolean', type => SCALAR|UNDEF, default => 1 },
-     error_mode            => { parse => 'string',  type => SCALAR,       default => 'html',
-				callbacks =>
-				{ "must be one of 'html', 'fatal', 'raw_html', or 'raw_fatal'" =>
-				  sub { $_[0] =~ /^(?:raw_)?(?:html|fatal)$/ } }
-			      },
      multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1 },
      top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1} },
 
@@ -526,20 +520,14 @@ sub handle_request {
 					       apache_req => $apreq,
 					     );
     eval { $retval = $self->handle_request_1($apreq, $request) };
-    my $err = $@;
-    my $err_code = $request->error_code;
-    my $err_status = $err ? 1 : 0;
-
-    if ($err) {
+    
+    if (my $err = $@) {
 	#
 	# If first component was not found, return NOT_FOUND. In case
 	# of POST we must trick Apache into not reading POST content
 	# again. Wish there were a more standardized way to do this...
 	#
-	# This $err_code stuff is really only used to communicate found
-	# errors; it will be replaced with exceptions
-	#
-	if (defined($err_code) and $err_code eq 'top_not_found') {
+	if (UNIVERSAL::isa($err, 'HTML::Mason::Exception::TopLevelNotFound')) {
 	    if ($apreq->method eq 'POST') {
 		$apreq->method('GET');
 		$apreq->headers_in->unset('Content-length');
@@ -548,45 +536,12 @@ sub handle_request {
 	    # Log the error the same way that Apache does (taken from default_handler in http_core.c)
 	    $apreq->log_error("[Mason] File does not exist: ",$apreq->filename . ($apreq->path_info ? $apreq->path_info : ""));
 	    return NOT_FOUND;
-	}
-
-	#
-	# Do not process error at all in raw mode or if die handler was overriden.
-	#
-	my $raw_err = $err;
-	unless ($self->error_mode =~ /^raw_/) {
-	    $err = error_process ($err, $request);
-	}
-
-	#
-	# In fatal/raw_fatal mode, compress error to one line (for Apache logs) and die.
-	# In html/raw_html mode, call error_display_html and print result.
-	# The raw_ modes correspond to pre-1.02 error formats.
-	#
-	if ($self->error_mode eq 'fatal') {
-	    $err =~ s/\n/\t/g;
-	    $err =~ s/\t$//g;
-	    $err .= "\n" if $err !~ /\n$/;
+	    
+	} else {
 	    die $err;
-	} elsif ($self->error_mode eq 'raw_fatal') {
-	    die ("System error:\n$raw_err\n");
-	} elsif ($self->error_mode =~ /html$/) {
-	    if ($self->error_mode =~ /^raw_/) {
-		$err = "<h3>System error</h3><p><pre><font size=-1>$raw_err</font></pre>\n";
-	    } else {
-		$err = error_display_html($err,$raw_err);
-	    }
-	    # Send HTTP headers if they have not been sent.
-	    if (!http_header_sent($apreq)) {
-		$apreq->content_type('text/html');
-		$apreq->send_http_header();
-	    }
-	    print($err);
 	}
     }
-    undef $request;  # ward off memory leak
-
-    return ($err) ? &OK : (defined($retval)) ? $retval : &OK;
+    return defined($retval) ? $retval : &OK;
 }
 
 #
@@ -833,27 +788,6 @@ Apache to serve up a directory index or a FORBIDDEN error as
 appropriate. Default is 1. See L<Admin/Allowing directory requests>
 for more information about handling directories with Mason.
 
-=item error_mode
-
-Specifies how to handle Perl errors. Options are 'html', 'fatal',
-'raw_html', and 'raw_fatal'; the default is 'html'.
-
-In html mode the handler sends a readable HTML version of the error
-message to the client. This mode is most useful on a development
-server.
-
-In fatal mode the handler simply dies with a compact version of the
-error message. This may be caught with an eval around
-C<$ah-E<gt>handle_request> or left for Apache to handle. In the latter
-case the error will end up in the error logs. This mode is most
-useful on a production server.
-
-The raw_html and raw_fatal modes emulate pre-1.02 error behavior. They
-are analagous to the modes above except that the errors are not
-processed for readability or compactness. The resulting messages are
-much longer, but may include information accidentally omitted by
-Mason's processing.
-
 =item interp
 
 The only required parameter.  Specifies a Mason interpreter to use for
@@ -883,8 +817,8 @@ same name: no arguments retrieves the value, and one argument sets it.
 For example:
 
     my $ah = new HTML::Mason::ApacheHandler;
-    my $errmode = $ah->error_mode;
-    $ah->error_mode('html');
+    my $auto_send_headers = $ah->auto_send_headers;
+    $ah->auto_send_headers(0);
 
 =head1 AUTHOR
 
