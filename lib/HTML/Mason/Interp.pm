@@ -134,6 +134,7 @@ sub new
 
     $self->{data_cache_dir} ||= ($self->{data_dir} . "/cache");
     bless $self, $class;
+
     $self->out_method($options{out_method}) if (exists($options{out_method}));
     $self->system_log_events($options{system_log_events}) if (exists($options{system_log_events}));
     $self->_initialize;
@@ -541,16 +542,14 @@ sub system_log_event_check
 #
 sub out_method
 {
-    my ($self, $value) = @_;
-    if (defined($value)) {
-	if (ref($value) eq 'SCALAR') {
-	    $self->{out_method} = $value;
-	} elsif (ref($value) eq 'CODE') {
-	    $self->{out_method} = $value;
-	} else {
-	    confess "out_method: argument must be a scalar or code reference";
-	}
+    my ($self) = shift;
+
+    if (@_)
+    {
+	validate_pos( @_, { type => SCALARREF | CODEREF } );
+	$self->{out_method} = shift;
     }
+
     return $self->{out_method};
 }
 
