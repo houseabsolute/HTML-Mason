@@ -394,8 +394,22 @@ sub make_ah
                         "like 'foo => \&foo_escape'.  Invalid parameter:\n$pair"
                 unless defined $key && defined $val;
 
-            my $coderef = eval $val;
-            param_error "Invalid escape: $val" if $@;
+            my $coderef;
+            if ( $val =~ /^\w+$/ )
+            {
+                no strict 'refs';
+                unless ( defined &{"HTML::Mason::Escapes::$val"} )
+                {
+                    param_error "Invalid escape: $val (no matching subroutine in HTML::Mason::Escapes";
+                }
+
+                $coderef = \&{"HTML::Mason::Escapes::$val"};
+            }
+            else
+            {
+                $coderef = eval $val;
+                param_error "Invalid escape: $val ($@)" if $@;
+            }
 
             $escapes{$key} = $coderef;
         }
