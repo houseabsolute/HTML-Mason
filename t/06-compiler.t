@@ -442,6 +442,21 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'line_nums_with_escaped_newlines',
+		      description => 'Check line numbers of error messages after escaped newlines',
+		      component => <<'EOF',
+1
+2
+3\
+4\
+5
+% die "Dead";
+EOF
+		      expect_error => qr/Dead at .* line 6/,
+		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'line_nums_off_by_one',
 		      description => 'make sure that line number reporting is not off by one',
 		      component => <<'EOF',
