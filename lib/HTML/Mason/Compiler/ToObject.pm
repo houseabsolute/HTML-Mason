@@ -500,6 +500,7 @@ sub _define_args_hash
               $self->_blocks('init'),
               $self->{current_compile}{body},
               $self->_blocks('cleanup'),
+              $self->postamble,
               map { $_->{default} } @{ $self->{current_compile}{args} }
             )
     {
