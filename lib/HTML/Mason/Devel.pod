@@ -1173,6 +1173,11 @@ without C<if> statements surrounding each link!  Note that the regular
 expression need not be very robust as long as you have control over what
 will appear in the body.
 
+A filter block does not have access to variables declared in a
+component's C<< <%init> >> section, though variables declared in the
+C<< <%args> >>, C<< <%once> >> or C<< <%shared> >> blocks are
+usable in a filter.
+
 It should be noted that a filter cannot rely on receiving all of a
 component's output at once, and so may be called multiple times with
 different chunks of output.  This can happen if autoflush is on, or if
