@@ -248,7 +248,8 @@ having trouble with your document and component root. Make sure
 the error and check the error log for Mason warnings.  One situation
 that will unfortunately confuse Mason is if your document or component
 root goes through a soft link. Try specifying your document and
-component root settings in terms of the true path.)
+component root settings in terms of the true path. On Win32 systems,
+make sure the document and component roots are spelled with the same case.)
 
 Assuming it worked, you now have a Mason "lens" through which to view
 your HTML tree. Try adding a Mason tag to some HTML file, say <% 2+2
