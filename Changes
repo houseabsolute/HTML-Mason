@@ -17,7 +17,6 @@ during development, never fear).
 - Fixed a number of problems with filters:
 -- They didn't see changes made to %ARGS (they were seeing a copy).
 -- They couldn't see any variables declared in <%args> blocks.
--- Filters in subcomponent and methods were ignored.
 -- The presence of a filter caused a call to $m->flush_buffer,
 breaking redirects.
 - Added a number of tests for filters (*cough*).
