@@ -15,24 +15,18 @@ use vars qw(@ISA);
 @ISA = qw(HTML::Mason::Resolver);
 
 #
-# Public API
-#
-# Given a component path, return the fully-qualified path, plus
-# auxiliary information that will be passed to the get_* methods
-# below.
-#
 # With a single component root, the fully-qualified path is just
 # the component path. With multiple component roots, we search
 # through each root in turn, and the fully-qualified path is
 # uc(root key) + component path.
 #
-sub lookup_path {
-    my ($self,$path,$interp) = @_;
-    my $comp_root = $interp->comp_root;
+sub resolve {
+    my ($self,$path) = @_;
+    my $comp_root = $self->interp->comp_root;
     if (!ref($comp_root)) {
 	my $srcfile = File::Spec->catdir( $comp_root, $path );
 	my @srcstat = stat $srcfile;
-	return (-f _) ? ($path, $srcfile, $srcstat[9]) : undef;
+	return (-f _) ? ( path => $path, description => $srcfile, last_modified => $srcstat[9] ) : ();
     } elsif (UNIVERSAL::isa($comp_root, 'ARRAY')) {
 	foreach my $lref (@$comp_root) {
 	    my ($key,$root) = @$lref;
@@ -40,20 +34,24 @@ sub lookup_path {
 	    my $srcfile = File::Spec->catfile( $root, $path );
 	    my @srcstat = stat $srcfile;
 	    my $fq_path = File::Spec->canonpath( File::Spec->catfile( File::Spec->rootdir, $key, $path ) );
-	    return ($fq_path, $srcfile, $srcstat[9]) if (-f _);  # File::Spec?
+	    return ( path => $fq_path, description => $srcfile, last_modified => $srcstat[9] ) if (-f _);
 	}
-	return undef;
+	return;
     } else {
 	HTML::Mason::Exception::Params->throw( error => "comp_root must be a scalar or listref" );
     }
+}
+
+sub comp_class {
+    return 'HTML::Mason::Component::FileBased';
 }
 
 #
 # Given a glob pattern, return all existing paths.
 #
 sub glob_path {
-    my ($self,$pattern,$interp) = @_;
-    my $comp_root = $interp->comp_root;
+    my ($self,$pattern) = @_;
+    my $comp_root = $self->interp->comp_root;
     my @roots;
     if (!ref($comp_root)) {
 	@roots = ($comp_root);
@@ -80,12 +78,12 @@ sub glob_path {
 # to a particular file.
 #
 sub file_to_path {
-    my ($self,$file,$interp) = @_;
-    my $comp_root = $interp->comp_root;
+    my ($self,$file) = @_;
+    my $comp_root = $self->interp->comp_root;
     my @roots;
     
     if (!ref($comp_root)) {
-	@roots = ($interp->comp_root);
+	@roots = ($self->interp->comp_root);
     } elsif (ref($comp_root) eq 'ARRAY') {
 	@roots = map($_->[1],@{$comp_root});
     } else {

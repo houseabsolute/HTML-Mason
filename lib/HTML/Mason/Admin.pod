@@ -347,7 +347,6 @@ well-placed Perl in your handler.pl.  In this section we present the
 basics of setting up handler.pl as well as some ideas for more
 advanced applications.
 
-=======
 =item * MasonDataCacheDir - string
 
 Corresponds to the C<data_cache_dir> parameter.

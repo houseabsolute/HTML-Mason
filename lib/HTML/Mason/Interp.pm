@@ -159,8 +159,7 @@ sub _initialize
     unless ($self->{resolver}) {
 	HTML::Mason::Exception::Params->throw( error => "must specify value for comp_root\n" )
 	    if !$self->{comp_root};
-	my $r = new HTML::Mason::Resolver::File;
-	$self->{resolver} = $r;
+	$self->{resolver} = HTML::Mason::Resolver::File->new($self);
     }
 
     #
@@ -217,7 +216,7 @@ sub _initialize
 	foreach my $pattern (@{$self->preloads}) {
 	    HTML::Mason::Exception->throw( error => "preloads pattern must be an absolute path" )
 		unless substr($pattern,0,1) eq '/';
-	    my @paths = $self->resolver->glob_path($pattern,$self);
+	    my @paths = $self->resolver->glob_path($pattern);
 	    foreach (@paths) { $self->load($_) }
 	}
     }
@@ -297,8 +296,8 @@ sub process_comp_path
 # 
 sub lookup {
     my ($self,$path) = @_;
-    my (@lookup_info) = $self->resolver->lookup_path($path,$self);
-    return $lookup_info[0];
+    my %info = $self->resolver->resolve($path);
+    return $info{path};
 }
 
 #
@@ -337,13 +336,13 @@ sub load {
     # Use resolver to look up component and get fully-qualified path.
     # Return undef if component not found.
     #
-    my (@lookup_info) = $resolver->lookup_path($path,$self);
-    my $fq_path = $lookup_info[0] or return undef;
+    my %lookup_info = $resolver->resolve($path);
+    my $fq_path = $lookup_info{path} or return undef;
 
     #
     # Get last modified time of source.
     #
-    my $srcmod = $resolver->get_last_modified(@lookup_info);
+    my $srcmod = $lookup_info{last_modified};
     
     if ($self->{use_object_files}) {
 	$objfile = File::Spec->catfile( $self->object_dir, $fq_path );
@@ -372,10 +371,13 @@ sub load {
 	    #
 	    update_object:
 	    my $object;
-	    my %params = $resolver->get_source_params(@lookup_info);
-	    my $file = read_file( $params{script_file} );
+	    #
+	    # the encapsulation is breaking here.  I think the
+	    # resolver needs to return this text. - dave
+	    #
+	    my $file = read_file( $lookup_info{description} );
 	    if ($objfilemod < $srcmod) {
-		$object = $self->compiler->compile( comp => $file, name => $params{script_file}, comp_class => $params{comp_class} );
+		$object = $self->compiler->compile( comp => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
 		$self->write_object_file(object_text=>$object, object_file=>$objfile);
 	    }
 	    # read the existing object file
@@ -388,18 +390,17 @@ sub load {
 		    $objfilemod = 0;
 		    goto update_object;
 		} else {
-		    $self->_compilation_error( $resolver->get_source_description(@lookup_info),$err );
+		    $self->_compilation_error( $lookup_info{description}, $err );
 		}
 	    }
 	} else {
 	    #
 	    # No object files. Load component directly into memory.
 	    #
-	    my %params = $resolver->get_source_params(@lookup_info);
-	    my $file = read_file( $params{script_file} );
-	    my $object = $self->compiler->compile( comp => $file, name => $params{script_file}, comp_class => $params{comp_class} );
+	    my $file = read_file( $lookup_info{description} );
+	    my $object = $self->compiler->compile( comp => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
 	    $comp = $self->eval_object_text(object=>$object, error=>\$err)
-		or $self->_compilation_error( $lookup_info[1], $err );
+		or $self->_compilation_error( $lookup_info{description}, $err );
 	}
 	$comp->assign_runtime_properties($self,$fq_path);
 

@@ -7,36 +7,32 @@ require 5.004;
 
 use strict;
 
+use Params::Validate qw(:all);
+Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
+
+use HTML::Mason::MethodMaker
+    ( read_write => [ 'interp' ] );
+
 sub new
 {
     my $class = shift;
-    my $self = {};
-    bless $self,$class;
-    return $self;
+
+    validate_pos( @_, { isa => 'HTML::Mason::Interp' } );
+
+    my $self = { interp => shift };
+
+    return bless $self, $class;
 }
 
-sub lookup_path {
-    my ($self,$path,$interp) = @_;    
-    return $path;
-}
-
-sub glob_path {
-    return ();
-}
-
-sub file_to_path {
-    my ($self,$file,$interp) = @_;    
-    return $file;
-}
-sub get_last_modified {
-    return 0;
-}
-
-sub get_source_text {
+sub resolve {
     shift->_virtual;
 }
 
-sub get_source_description {
+sub glob_path {
+    shift->_virtual;
+}
+
+sub comp_class {
     shift->_virtual;
 }
 
@@ -48,10 +44,6 @@ sub _virtual
     $sub =~ s/.*::(.*?)$/$1/;
     HTML::Mason::Exception::VirtualMethod->throw( error =>
 						  "$sub is a virtual method and must be subclassed in " . ref $self );
-}
-
-sub get_source_params {
-    return (script=>($_[0]->get_source_text(@_)));
 }
 
 1;
