@@ -46,7 +46,6 @@ sub _init_comp_data
     my $self = shift;
     my $data = shift;
 
-    $data->{text_buffer} = [];
     $data->{body} = '';
 
     $data->{subcomponents} = {};
@@ -65,7 +64,6 @@ sub end_component
 {
     my $self = shift;
 
-    $self->_flush_text_buffer;
     $self->{current_comp} = undef;
 }
 
@@ -96,7 +94,6 @@ sub perl_block
     my $self = shift;
     my %p = @_;
 
-    $self->_flush_text_buffer;
     $self->_add_body_code( $p{block} );
 }
 
@@ -109,10 +106,9 @@ sub text
 
     1 if $self->{postprocess_text};
 
-    my $line = $self->{lexer}->line_count;
-    my $file = $self->{lexer}->file;
+    $p{text} =~ s,(['\\]),\\$1,g;
 
-    push @{ $self->{current_comp}{text_buffer} }, "#line $line $file\n$p{text}";
+    $self->_add_body_code( "\$m->out( '$p{text}' )\n" );
 }
 
 sub text_block
@@ -120,10 +116,7 @@ sub text_block
     my $self = shift;
     my %p = @_;
 
-    my $line = $self->{lexer}->line_count;
-    my $file = $self->{lexer}->file;
-
-    push @{ $self->{current_comp}{text_buffer} }, "#line $line $file\n$p{text}";
+    $self->_add_body_code( "\$m->out( '$p{text}' )\n" );
 }
 
 sub end_block
@@ -187,7 +180,6 @@ sub end_named_block
 {
     my $self = shift;
 
-    $self->_flush_text_buffer;
     $self->{current_comp} = $self;
 }
 
@@ -204,7 +196,6 @@ sub substitution
 	$text = "\$_escape( $text, '$p{escape}' )";
     }
 
-    $self->_flush_text_buffer;
     $self->_add_body_code( "\$m->out( $text );\n" );
 }
 
@@ -225,7 +216,6 @@ sub component_call
 
     1 if $self->{postprocess_perl};
 
-    $self->_flush_text_buffer;
     $self->_add_body_code( "\$m->comp( $call );\n" );
 }
 
@@ -236,29 +226,17 @@ sub perl_line
 
     1 if $self->{postprocess_perl};
 
-    $self->_flush_text_buffer;
     $self->_add_body_code( "$p{line}\n" );
-}
-
-sub _flush_text_buffer
-{
-    my $self = shift;
-
-    return unless @{ $self->{current_comp}{text_buffer} };
-
-    my $text = join '', @{ $self->{current_comp}{text_buffer} };
-    $text =~ s,(['\\]),\\$1,g;
-
-    $self->_add_body_code( "\$m->out( '$text' );\n" );
-
-    $self->{current_comp}{text_buffer} = [];
 }
 
 sub _add_body_code
 {
     my $self = shift;
 
-    $self->{current_comp}{body} .= shift;
+    my $line = $self->{lexer}->line_count;
+    my $file = $self->{lexer}->file;
+
+    $self->{current_comp}{body} .= "#line $line $file\n" . shift;
 }
 
 sub dump
