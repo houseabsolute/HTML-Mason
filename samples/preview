@@ -66,21 +66,21 @@ $previewServer = $r->server->server_hostname;
 
 <td>
 <tt><font color="#FF0000">Time</font></tt><br>
-<%$query->popup_menu(name=>'b_time','values'=>['Real','+1 hour','+4 hours','+1 day','+2 days','+3 days','+4 days','+5 days','Other...'],default=>$conf{b_time})%>
+<%$query->popup_menu('-name'=>'b_time','-values'=>['Real','+1 hour','+4 hours','+1 day','+2 days','+3 days','+4 days','+5 days','Other...'],'-default'=>$conf{b_time})%>
 </td>
 
 <td>&nbsp;</td>
 
 <td>
 <tt><font color="#FF0000">Display</font></tt><br>
-<%$query->popup_menu(name=>'outputtype','values'=>['HTML','Debug'],default=>$conf{outputtype})%>
+<%$query->popup_menu('-name'=>'outputtype','-values'=>['HTML','Debug'],'-default'=>$conf{outputtype})%>
 </td>
 
 <td>&nbsp;</td>
 
 <td>
 <tt><font color="#FF0000">Port</font></tt><br>
-<%$query->popup_menu(name=>'previewPort','values'=>\@previewPorts,default=>$previewPort)%>
+<%$query->popup_menu('-name'=>'previewPort','-values'=>\@previewPorts,'-default'=>$previewPort)%>
 </td>
 
 </tr>
@@ -182,9 +182,9 @@ Relative: <input type=text name=a_reltimenum size=3 value="<%$conf{a_reltimenum}
 </select><br>
 <%$spacer%><input type=radio name=a_timetype value=absolute <%$conf{a_timetype} eq 'absolute' ? 'checked' : ''%>>
 Absolute:
-<%$query->popup_menu(name=>'a_abstimemonth','values'=>[0..11],labels=>{0=>'Jan',1=>'Feb',2=>'Mar',3=>'Apr',4=>'May',5=>'Jun',6=>'Jul',7=>'Aug',8=>'Sep',9=>'Oct',10=>'Nov',11=>'Dec'},default=>$conf{a_abstimemonth})%>
-<%$query->popup_menu(name=>'a_abstimeday','values'=>[1..31],default=>$conf{a_abstimeday})%>
-<%$query->popup_menu(name=>'a_abstimeyear','values'=>[97..110],labels=>{map(($_,$_+1900),(97..110))},default=>$conf{a_abstimeyear})%>
+<%$query->popup_menu('-name'=>'a_abstimemonth','-values'=>[0..11],'-labels'=>{0=>'Jan',1=>'Feb',2=>'Mar',3=>'Apr',4=>'May',5=>'Jun',6=>'Jul',7=>'Aug',8=>'Sep',9=>'Oct',10=>'Nov',11=>'Dec'},'-default'=>$conf{a_abstimemonth})%>
+<%$query->popup_menu('-name'=>'a_abstimeday','-values'=>[1..31],'-default'=>$conf{a_abstimeday})%>
+<%$query->popup_menu('-name'=>'a_abstimeyear','-values'=>[97..110],'-labels'=>{map(($_,$_+1900),(97..110))},'-default'=>$conf{a_abstimeyear})%>
 at <SELECT NAME="a_abstimehour">
 %for ($i=1; $i<=12; $i++) {
 <option value="<%$i%>"
@@ -202,9 +202,9 @@ To activate these options, check the boxes.<p>
 <p>
 
 <input type="checkbox" name=af_useragent value=1 <%$conf{af_useragent} ? 'checked' : ''%>>&nbsp;<tt><font color="#FF0000">User agent</font></tt><br>
-<%$spacer%>OS: <%$query->popup_menu(name=>'a_os','values'=>[qw(win95 win31 winnt mac unix)],labels=>{win95=>'Windows 95',win31=>'Windows 3.1',winnt=>'Windows NT',mac=>'Macintosh',unix=>'Unix'},default=>$conf{a_os})%>
-&nbsp;Browser: <%$query->popup_menu(name=>'a_browser','values'=>[qw(netscape msie aol robot)],labels=>{netscape=>'Netscape',msie=>'Internet Explorer',aol=>'AOL',robot=>'Robot'},default=>$conf{a_browser})%>
-<%$query->popup_menu(name=>'a_browserVersion','values'=>[qw(2.0 3.0 4.0 5.0)],default=>$conf{a_browserVersion})%>    
+<%$spacer%>OS: <%$query->popup_menu('-name'=>'a_os','-values'=>[qw(win95 win31 winnt mac unix)],'-labels'=>{win95=>'Windows 95',win31=>'Windows 3.1',winnt=>'Windows NT',mac=>'Macintosh',unix=>'Unix'},'-default'=>$conf{a_os})%>
+&nbsp;Browser: <%$query->popup_menu('-name'=>'a_browser','-values'=>[qw(netscape msie aol robot)],'-labels'=>{netscape=>'Netscape',msie=>'Internet Explorer',aol=>'AOL',robot=>'Robot'},'-default'=>$conf{a_browser})%>
+<%$query->popup_menu('-name'=>'a_browserVersion','-values'=>[qw(2.0 3.0 4.0 5.0)],'-default'=>$conf{a_browserVersion})%>    
 <p>
 
 <input type="checkbox" name=af_referer value=1 <%$conf{af_referer} ? 'checked' : ''%>>&nbsp;<tt><font color="#FF0000">Referer</font></tt><br>
@@ -239,7 +239,6 @@ my $thisComp = $m->current_comp;
 $previewPort = $previewPorts[0] if !defined($previewPort);
 if ($mode eq 'home') {
     $query = new CGI('');
-    $query->use_named_parameters(1);
     my $in = HTML::Mason::Preview::open_preview_settings($previewDir,$userName,0);
     foreach my $p (@previewPorts) {
 	if (defined($in->{$p})) {
@@ -263,7 +262,6 @@ if ($mode eq 'home') {
 	%conf =
 	    (
 	     b_port => $previewPorts[0],
-
 	     b_time => 'Real',
 	     outputtype => 'HTML',
 	     a_port => '',
