@@ -247,7 +247,7 @@ sub _handle_error
     if ($self->error_mode eq 'fatal') {
 	die $err;
     } else {
-	UNIVERSAL::isa( $self->out_method, 'CODE' ) ? $self->out_method->("$err") : ${ $self->out_method } .= "$err";
+	UNIVERSAL::isa( $self->out_method, 'CODE' ) ? $self->out_method->("$err") : ( ${ $self->out_method } = "$err" );
     }
 }
 
