@@ -4,6 +4,7 @@ use strict;
 
 use File::Spec;
 use HTML::Mason::Tests;
+use HTML::Mason::Tools qw(load_pkg);
 
 my $tests = make_tests();
 $tests->run;
