@@ -20,13 +20,13 @@ use HTML::Mason::Tests;
   use base qw(HTML::Mason::Plugin);
   sub start_component {
     my $self = shift;
-    my $context = shift;
-    print "Before Component " . $context->{comp}->title . "\n";
+    my %context = @_;
+    print "Before Component " . $context{comp}->title . "\n";
   }
   sub end_component {
     my $self = shift;
-    my $context = shift;
-    print "After Component " . $context->{comp}->title . "\n";
+    my %context = @_;
+    print "After Component " . $context{comp}->title . "\n";
   }
 }
 
@@ -36,25 +36,25 @@ use HTML::Mason::Tests;
   use base qw(HTML::Mason::Plugin);
   sub start_request {
     my $self = shift;
-    my $context = shift;
-    my $rcomp = $context->{request}->request_comp()->title;
+    my %context = @_;
+    my $rcomp = $context{request}->request_comp()->title;
     print "AllCalls Request Start on: $rcomp\n";
   }
   sub end_request {
     my $self = shift;
-    my $context = shift;
-    my $rcomp = $context->{request}->request_comp()->title;
+    my %context = @_;
+    my $rcomp = $context{request}->request_comp()->title;
     print "AllCalls Request Finish on: $rcomp\n";
   }
   sub start_component {
     my $self = shift;
-    my $context = shift;
-    print "AllCalls Before Component " . $context->{comp}->title . "\n";
+    my %context = @_;
+    print "AllCalls Before Component " . $context{comp}->title . "\n";
   }
   sub end_component {
     my $self = shift;
-    my $context = shift;
-    print "AllCalls After Component " . $context->{comp}->title . "\n";
+    my %context = @_;
+    print "AllCalls After Component " . $context{comp}->title . "\n";
   }
 }  
 
@@ -63,25 +63,25 @@ use HTML::Mason::Tests;
   use base qw(HTML::Mason::Plugin);
    sub start_request {
     my $self = shift;
-    my $context = shift;
-    my $rcomp = $context->{request}->request_comp->title();
+    my %context = @_;
+    my $rcomp = $context{request}->request_comp->title();
     print "PreRequest: " . ++ $self->{count} . " : $rcomp\n";
   }
   sub end_request {
     my $self = shift;
-    my $context = shift;
-    my $rcomp = $context->{request}->request_comp->title();
+    my %context = @_;
+    my $rcomp = $context{request}->request_comp->title();
     print "PostRequest: " . ++ $self->{count} . " : $rcomp\n";
   }
   sub start_component {
     my $self = shift;
-    my $context = shift;
-    print "PreComponent: " . ++ $self->{count} . " : " . $context->{comp}->title() ."\n";
+    my %context = @_;
+    print "PreComponent: " . ++ $self->{count} . " : " . $context{comp}->title() ."\n";
   }
   sub end_component {
     my $self = shift;
-    my $context = shift;
-    print "PostComponent: " . ++ $self->{count} . " : " . $context->{comp}->title() ."\n";
+    my %context = @_;
+    print "PostComponent: " . ++ $self->{count} . " : " . $context{comp}->title() ."\n";
   }
 }
 {
@@ -89,8 +89,8 @@ use HTML::Mason::Tests;
   use base qw(HTML::Mason::Plugin);
   sub start_request {
     my $self = shift;
-    my $context = shift;
-    die("plugin error on start request " . $context->{request}->request_comp->title);
+    my %context = @_;
+    die("plugin error on start request " . $context{request}->request_comp->title);
   }
 }
 {
@@ -98,8 +98,8 @@ use HTML::Mason::Tests;
   use base qw(HTML::Mason::Plugin);
   sub end_request {
     my $self = shift;
-    my $context = shift;
-    die("plugin error on end request " . $context->{request}->request_comp->title);
+    my %context = @_;
+    die("plugin error on end request " . $context{request}->request_comp->title);
   }
 }
 {
@@ -107,8 +107,8 @@ use HTML::Mason::Tests;
   use base qw(HTML::Mason::Plugin);
   sub start_component {
     my $self = shift;
-    my $context = shift;
-    die("plugin error on start component " . $context->{request}->request_comp->title);
+    my %context = @_;
+    die("plugin error on start component " . $context{request}->request_comp->title);
   }
   
 }
@@ -117,8 +117,8 @@ use HTML::Mason::Tests;
   use base qw(HTML::Mason::Plugin);
   sub end_component {
     my $self = shift;
-    my $context = shift;
-    die("plugin error on end component " . $context->{request}->request_comp->title);
+    my %context = @_;
+    die("plugin error on end component " . $context{request}->request_comp->title);
   }
 } 
 {
@@ -126,10 +126,10 @@ use HTML::Mason::Tests;
   use base qw(HTML::Mason::Plugin);
   sub end_component {
     my $self = shift;
-    my $context = shift;
-    if (${ $context->{error} }) {
-      print "Caught error " . ${ $context->{error} } . " and trapping it.\n";
-      ${ $context->{error} }  = undef;
+    my %context = @_;
+    if (${ $context{error} }) {
+      print "Caught error " . ${ $context{error} } . " and trapping it.\n";
+      ${ $context{error} }  = undef;
     }
   }
 }

@@ -353,10 +353,9 @@ sub exec {
 
  	    eval {
  	      foreach my $plugin (@{$self->plugin_things}) {
- 		$plugin->start_request( { request => $self,
-                                          args => $request_args,
-                                          wantarray => $wantarray
-                                        }
+ 		$plugin->start_request( request => $self,
+                                        args => $request_args,
+                                        wantarray => $wantarray
                                       );
  	      }
  	    };
@@ -378,12 +377,11 @@ sub exec {
  	    # plugins called in reverse order when exiting.
  	    eval {
  	      foreach my $plugin (reverse @{$self->plugin_things}) {
- 		$plugin->end_request( { request => $self,
-                                        args => $request_args,
-                                        wantarray => $wantarray,
-                                        error => \$error,
-                                        return_value => \@result
-                                      }
+ 		$plugin->end_request( request => $self,
+                                      args => $request_args,
+                                      wantarray => $wantarray,
+                                      error => \$error,
+                                      return_value => \@result
                                     );
  	      }
  	    };
@@ -1122,11 +1120,10 @@ sub comp {
 
     # plugins can modify the arguments before the component sees them!
     foreach my $plugin (@{$self->plugin_things}) {
-        $plugin->start_component( { comp => $comp,
-                                    args => \@_,
-                                    request => $self,
-                                    wantarray => $wantarray,
-                                  }
+        $plugin->start_component( comp => $comp,
+                                  args => \@_,
+                                  request => $self,
+                                  wantarray => $wantarray,
 				);
     }
 
@@ -1147,13 +1144,12 @@ sub comp {
 
     # reverse order for the end hooks.
     foreach my $plugin (reverse @{$self->plugin_things}) {
-      $plugin->end_component( { comp => $comp,
-                                args => \@_,
-                                request => $self,
-                                wantarray => $wantarray,
-                                error => \$err,
-                                return_value => \@result
-                              }
+      $plugin->end_component( comp => $comp,
+                              args => \@_,
+                              request => $self,
+                              wantarray => $wantarray,
+                              error => \$err,
+                              return_value => \@result
 			    );
     }
 

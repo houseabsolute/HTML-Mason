@@ -48,8 +48,8 @@ HTML::Mason::Plugin - Plugin Base class for Mason
 
    sub end_component {
       my $self = shift;
-      my $context = shift;
-      my $comp = $context->{comp};
+      my %context = @_;
+      my $comp = $context{comp};
       my $elapsed = Time::HiRes::time - pop @{$self->{ timers }};
       print STDERR "Component $comp took $elapsed seconds\n";
    }
@@ -76,7 +76,7 @@ plugin object, or you will create a nasty circular reference.
 
 =item start_request
 
-Receives a hashref containing:
+Receives a hash containing:
 
     request => $request,    # the current request
     args    => \@args,      # arguments the request was called with
@@ -93,7 +93,7 @@ memory leak.
 
 =item end_request
 
-Receives a hashref containing:
+Receives a hash containing:
 
     request => $request,    # the current request
     args    => \@args,      # arguments the request was called with
@@ -106,7 +106,7 @@ a single value, it will be the first element of that array.
 
 =item start_component
 
-Receives a hashref containing:
+Receives a hash containing:
 
    request => $request,    # the current request
    comp => $comp,          # the component object
@@ -119,7 +119,7 @@ take effect in the arguments the component receives.
 
 =item end_component
 
-Receives a hashref containing:
+Receives a hash containing:
 
    request => $request,    # the current request
    comp => $comp,          # the component object
