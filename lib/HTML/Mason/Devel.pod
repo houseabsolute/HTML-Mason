@@ -977,15 +977,16 @@ component is preloaded.
 
 =head2 <%shared>
 
-As with C<< <%once> >>, variables declared in this section can be seen in all
-of a component's code: the main component, subcomponents, and methods.
-However, the code runs once per request (whenever the component is used)
-and its variables last only til the end of the request.
+As with C<< <%once> >>, variables declared in this section can be seen
+in all of a component's code: the main component, subcomponents, and
+methods.  But unlike C<< <%once> >>, this only applies to I<lexical>
+(C<my>) variables.  Also unlike C<< <%once> >>, the code runs once per
+request (whenever the component is used) and its variables last only
+til the end of the request.
 
-Useful for initializing variables needed in, say, the main body and
-one more subcomponents or methods. See L<Object-Oriented
-Techniques|"Object-Oriented Techniques"> for an example of
-usage.
+This section is useful for initializing variables needed in, say, the
+main body and one more subcomponents or methods. See L<Object-Oriented
+Techniques|"Object-Oriented Techniques"> for an example of usage.
 
 It's important to realize that you do not have access to the C<%ARGS>
 hash or variables created via an C<< <%args> >> block inside a shared
