@@ -148,6 +148,8 @@ sub _read_existing_conf {
     
     my @modules       =   grep /^\s*(Add|Load)Module/, @lines;
     my ($server_root) = (map /^\s*ServerRoot\s*(\S+)/, @lines);
+    $server_root =~ s/^"//;
+    $server_root =~ s/"$//;
 
     # Rewrite all modules to load from an absolute path.
     foreach (@modules) {
