@@ -1254,7 +1254,7 @@ user to define their own escapes or to override the built-in 'h' and
 
 This is done via the L<Interp object's add_escape()
 method|HTML::Mason::Interp/item_add_escape>.  Escape names may be any
-number of characters as long as it matches the regex C</^[\w-]$/>.
+number of characters as long as it matches the regex C</^[\w-]+$/>.
 The one exception is that you cannot override the 'n' flag.
 
 Each escape flag is associated with a subroutine reference.  The
