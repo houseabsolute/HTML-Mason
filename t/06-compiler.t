@@ -496,6 +496,39 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'attr_flag_block_comment',
+		      description => 'test comment lines in attr and flags blocks',
+		      component => <<'EOF',
+<%attr>
+# this is a comment
+  # another comment
+ key => 'foo'
+</%attr>
+<%flags>
+# this is a comment
+  # another comment
+inherit => undef
+</%flags>
+compiled
+EOF
+		      expect => 'compiled',
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'attr_flag_block_empty',
+		      description => 'test empty attr and flags blocks',
+		      component => <<'EOF',
+<%attr></%attr>
+<%flags>
+</%flags>
+compiled
+EOF
+		      expect => 'compiled',
+		    );
+
+#------------------------------------------------------------
+
     my $error =
 	$] >= 5.006 ? qr/Unterminated <>/ : qr/Bareword "subcomp" not allowed/;
 
