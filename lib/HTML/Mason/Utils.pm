@@ -17,10 +17,31 @@ require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(data_cache_namespace);
+@EXPORT_OK = qw(data_cache_namespace cgi_request_args);
 
 sub data_cache_namespace
 {
     my ($path) = @_;
     return compress_path($path);
+}
+
+sub cgi_request_args
+{
+    my ($q, $method) = @_;
+
+    my %args;
+
+    # Checking scalar $r->args when the method is POST is important
+    # because otherwise ->url_param returns a parameter named
+    # 'keywords' with a value of () (empty array).  This is apparently
+    # a feature related to <ISINDEX> queries or something (see the
+    # CGI.pm) docs.  It makes my head heart. - dave
+    my @methods = $method eq 'GET' || ! $ENV{QUERY_STRING} ? ( 'param' ) : ( 'param', 'url_param' );
+    foreach my $key ( map { $q->$_() } @methods ) {
+	next if exists $args{$key};
+	my @values = map { $q->$_($key) } @methods;
+	$args{$key} = @values == 1 ? $values[0] : \@values;
+    }
+
+    return %args;
 }

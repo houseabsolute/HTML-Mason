@@ -708,21 +708,7 @@ sub _cgi_args
     my $q = CGI->new;
     $request->cgi_object($q);
 
-    my %args;
-
-    # Checking scalar $r->args when the method is POST is important
-    # because otherwise ->url_param returns a parameter named
-    # 'keywords' with a value of () (empty array).  This is apparently
-    # a feature related to <ISINDEX> queries or something (see the
-    # CGI.pm) docs.  It makes my head heart. - dave
-    my @methods = $r->method eq 'GET' || ! scalar $r->args ? ( 'param' ) : ( 'param', 'url_param' );
-    foreach my $key ( map { $q->$_() } @methods ) {
-	next if exists $args{$key};
-	my @values = map { $q->$_($key) } @methods;
-	$args{$key} = @values == 1 ? $values[0] : \@values;
-    }
-
-    return %args;
+    return HTML::Mason::Utils::cgi_request_args($q, $r->method);
 }
 
 #
