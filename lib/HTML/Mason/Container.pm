@@ -34,17 +34,20 @@ Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ 
 my %VALID_PARAMS = ();
 my %CONTAINED_OBJECTS = ();
 
-# Dump in a format suitable for spreadsheet importing (useful for generating docs)
+# Dump in several different formats.  Maybe we should just return the
+# data structure, though, and let the caller format it.
 sub dump_specs
 {
+    my ($self, $style) = @_;
+    $style ||= 'text';
+
     require B::Deparse;
-    my $output = '';
-    $output .= "Name\tType\tDefault\tDescription\n\n";
+    my %out;
+
     foreach my $class (sort keys %VALID_PARAMS)
     {
 	my $params = $VALID_PARAMS{$class};
-	$output .= " --- $class\n";
-	$output .= " ----- valid parameters\n";
+
 	foreach my $name (sort keys %$params)
 	{
 	    my $spec = $params->{$name};
@@ -59,35 +62,79 @@ sub dump_specs
 		$default =~ s/^\(\?(\w*)-\w*:(.*)\)/\/$2\/$1/;
 	    }
 	    my $descr = $spec->{descr} || '';
-	    $output .= sprintf("%-28s   %-7s   %s\t%s\n", $name, $type, $default, $descr);
+	    $out{$class}{valid_params}{$name} = {type => $type, default => $default, descr => $descr};
 	}
 
-	if (exists $CONTAINED_OBJECTS{$class})
-	{
-	    $output .= " ----- contained objects\n";
+	$out{$class}{contained_objects} = {};
+	next unless exists $CONTAINED_OBJECTS{$class};
+	my $contains = $CONTAINED_OBJECTS{$class};
 
-	    my $contains = $CONTAINED_OBJECTS{$class};
-	    foreach my $name (sort keys %$contains)
-	    {
-		my $default;
-		if (ref $contains->{$name} eq 'HASH')
-		{
-		    $default = '{ ';
-		    $default .= join ', ', map { "$_ => $contains->{$name}{$_}" } sort keys %{ $contains->{$name} };
-		    $default .= ' }';
-		}
-		else
-		{
-		    $default = $contains->{$name};
-		}
-		
-		$output .= sprintf("%-20s   %s\n", $name, $default);
+	foreach my $name (sort keys %$contains)
+	{
+	    $out{$class}{contained_objects}{$name} = ref($contains->{$name}) 
+		? {map {$_, $contains->{$name}{$_}} qw(class delayed)}
+		: {class => $contains->{$name}, delayed => 0};
+	}
+    }
+
+    if ($style eq 'hash') {
+	return %out;
+    } elsif ($style eq 'text') {
+	my $format = " - %-28s   %-7s   %s\n    %s\n";
+	my $output = sprintf $format, qw(Name Type Default Description);
+	
+	foreach my $class (sort keys %out) {
+	    $output .= "-------------- $class -------------------" . ('-'x(40-length($class))) . "\n";
+	    $output .= "Valid Parameters:\n";
+	    foreach my $param (sort keys %{$out{$class}{valid_params}}) {
+		$output .= sprintf($format,
+				   $param, map $out{$class}{valid_params}{$param}{$_}, qw(type default descr));
+	    }
+	    $output .= "Contained Objects:\n";
+	    $output .= "  (none)\n" unless keys %{$out{$class}{contained_objects}};
+	    foreach my $object (sort keys %{$out{$class}{contained_objects}}) {
+		$output .= sprintf(" - %-20s   %s\n", $object, $out{$class}{contained_objects}{$object}{class});
 	    }
 	}
-	
-	$output .= "\n";
+	return $output;
+    } elsif ($style eq 'pod') {
+	my $output = '';
+
+	foreach my $class (sort keys %out) {
+	    $output .= "=head2 $class\n\nValid Parameters:\n\n=over 4\n\n";
+
+	    foreach my $param (sort keys %{$out{$class}{valid_params}}) {
+		my $spec = $out{$class}{valid_params}{$param};
+		$output .= <<"EOF";
+ =item * $param
+ 
+  Default: $spec->{default}
+     Type: $spec->{type}
+
+ $spec->{descr}
+
+EOF
+	    }
+	    $output .= "=back\n\nContained Objects:\n\n=over 4\n\n";
+	    $output .= "(none)\n\n" unless keys %{$out{$class}{contained_objects}};
+	    foreach my $object (sort keys %{$out{$class}{contained_objects}}) {
+		my $spec = $out{$class}{contained_objects}{$object};
+		$output .= <<"EOF";
+ =item * $object
+ 
+  Default class: $spec->{class}
+        Delayed: $spec->{delayed}
+
+EOF
+	    }
+	    $output .= "=back\n\n";
+	}
+	$output =~ s/^ //mg;
+	return $output;
+
+    } else {   #  $style eq 'tabbed'
+	my $output = "Name\tType\tDefault\tDescription\n\n";
     }
-    return $output;
 }
 
 sub valid_params
