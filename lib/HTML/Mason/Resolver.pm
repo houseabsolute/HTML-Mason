@@ -6,8 +6,10 @@ package HTML::Mason::Resolver;
 
 use strict;
 
+use HTML::Mason::Exceptions( abbr => ['param_error', 'virtual_error'] );
+
 use Params::Validate qw(:all);
-Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
+Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
 
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
@@ -44,8 +46,7 @@ sub _virtual
 
     my $sub = (caller(1))[3];
     $sub =~ s/.*::(.*?)$/$1/;
-    HTML::Mason::Exception::VirtualMethod->throw( error =>
-						  "$sub is a virtual method and must be overridden in " . ref $self );
+    virtual_error "$sub is a virtual method and must be overridden in " . ref($self);
 }
 
 1;
