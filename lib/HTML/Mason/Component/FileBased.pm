@@ -39,14 +39,15 @@ sub assign_runtime_properties {
 	$self->{'path'} = $fq_path;
     } else {
 	($self->{source_root_key},$self->{'path'}) = ($fq_path =~ m{ ^/([^/]+)(/.*)$ }x)
-	    or die "Assert error: could not split FQ path ($fq_path) as expected";
+	    or HTML::Mason::Exception->throw( error => "could not split FQ path ($fq_path) as expected" );
 	foreach my $lref (@$comp_root) {
 	    my ($key,$root) = @$lref;
 	    if ($self->{source_root_key} eq uc($key)) {
 		$self->{source_root} = $root;
 	    }
 	}
-	die "Assert error: FQ path ($fq_path) contained unknown source root key" unless $self->{source_root};
+	HTML::Mason::Exception->throw( error => "FQ path ($fq_path) contained unknown source root key" )
+	    unless $self->{source_root};
     }
     $self->{'source_file'} = File::Spec->canonpath( File::Spec->catfile( $self->{source_root}, $self->{'path'} ) );
     $self->SUPER::assign_runtime_properties($interp,$fq_path);
