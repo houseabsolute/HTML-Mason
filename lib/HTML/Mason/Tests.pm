@@ -179,6 +179,7 @@ sub run
 
     eval
     {
+	$self->_cleanup;
 	$self->_make_dirs;
 	$self->_write_shared_comps;
 	$self->_write_support_comps;
@@ -514,7 +515,7 @@ sub _cleanup
 {
     my $self = shift;
 
-    rm_tree( $self->{base_path}, $DEBUG ) if $self->{base_path};
+    rm_tree( $self->base_path, $DEBUG );
 }
 
 1;
