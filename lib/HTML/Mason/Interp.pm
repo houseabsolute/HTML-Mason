@@ -34,7 +34,6 @@ use HTML::Mason::MethodMaker
 			  autohandler_name
 			  code_cache_max_size
 			  compiler
-			  data_cache_defaults
 			  data_dir
 			  dhandler_name
 		          ignore_warnings_expr
@@ -120,7 +119,6 @@ sub _initialize
     my ($self) = shift;
     $self->{code_cache} = {};
     $self->{code_cache_current_size} = 0;
-    $self->{data_cache_defaults} = {};
 
     #
     # Check that directories are absolute.
@@ -267,7 +265,7 @@ sub load {
     my ($self,$path) = @_;
     my ($maxfilemod, $objfile, $objfilemod);
     my (@objstat, $objisfile);
-    my $code_cache = $self->{code_cache};
+    my $code_cache = $self->code_cache;
     my $resolver = $self->{resolver};
 
     #

@@ -29,6 +29,7 @@ use HTML::Mason::MethodMaker
 			 top_comp ) ],
 
       read_write => [ qw( out_method
+			  data_cache_defaults
 			  out_mode ) ],
     );
 
@@ -40,6 +41,7 @@ __PACKAGE__->valid_params
 				   sub { $_[0] =~ /^(?:real|\d+)$/ }} },
      out_method => { type => SCALARREF | CODEREF, optional => 1 },
      out_mode   => { type => SCALAR, optional => 1 },
+     data_cache_defaults => { type => HASHREF|UNDEF, optional => 1 },
     );
 
 __PACKAGE__->contained_objects
@@ -241,8 +243,8 @@ sub cache
 {
     my ($self, %options) = @_;
 
-    if (%{$self->interp->data_cache_defaults}) {
-	%options = (%{$self->interp->data_cache_defaults},%options);
+    if ($self->data_cache_defaults) {
+	%options = (%{$self->data_cache_defaults},%options);
     }
     $options{namespace}   ||= compress_path($self->current_comp->fq_path);
     $options{cache_root}  ||= File::Spec->catdir($self->interp->data_dir,"cache");
@@ -299,7 +301,7 @@ sub cache_self {
 	    if ($wantarray) {
 		@result = $comp->run(@args);
 	    } elsif (defined $wantarray) {
-		@result = scalar $comp->run(@args);
+		$result[0] = $comp->run(@args);
 	    } else {
 		$comp->run(@args);
 	    }
