@@ -155,7 +155,9 @@ sub query { $_[0]->{query} }
 
 __END__
 
-=head1 NAME HTML::Mason::CGIHandler - Use Mason in a CGI environment
+=head1 NAME
+
+HTML::Mason::CGIHandler - Use Mason in a CGI environment
 
 =head1 SYNOPSIS
 
