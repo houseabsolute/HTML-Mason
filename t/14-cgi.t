@@ -7,6 +7,7 @@ use CGI qw(-no_debug);  # Prevent "(offline mode: enter name=value pairs on stan
 {
     # This class simulates CGI requests.
     package CGITest;
+    use HTML::Mason::Tests;
     use base 'HTML::Mason::Tests';
     sub _execute
     {
