@@ -637,6 +637,8 @@ sub handle_request_1
     #
     $interp->set_global(r=>$r);
 
+    $interp->out_method( sub { for (@_) { $r->print($_) if defined } } );
+
     #
     # Craft the out method for this request to handle automatic http
     # headers.
