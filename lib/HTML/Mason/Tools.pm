@@ -164,10 +164,7 @@ sub load_pkg {
 
 sub taint_is_on
 {
-    return ( $] >= 5.008 ?
-             ${^TAINT} :
-             not eval { "$0$^X" && kill 0; 1 }
-           );
+    return not eval { "$0$^X" && kill 0; 1 };
 }
 
 sub make_fh
