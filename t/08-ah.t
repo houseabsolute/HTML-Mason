@@ -765,8 +765,8 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
 
-    ok ( $actual, qr{<b>error:</b>.*Error during compilation}s,
-         "bad code should cause an HTML error message" );
+    ok( $actual, qr{<b>error:</b>.*Error during compilation}s,
+        "bad code should cause an HTML error message" );
 
     my $expected_class = $with_handler ? 'My::Interp' : 'HTML::Mason::Interp';
 
