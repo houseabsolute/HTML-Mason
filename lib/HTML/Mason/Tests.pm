@@ -36,6 +36,66 @@ $lines=>1
 </%args>
 EOF
 	    },
+	    { path => '/shared/display_comp_obj',
+	      component => <<'EOF',
+Declared args:
+% my %decl = %{$comp->declared_args};
+% while (my ($key,$val) = each(%decl)) {
+<% $key %><% (defined($val->{default})) ? "=>".$val->{default} : "" %>
+% }
+
+This is <% $comp->first_time ? '' : 'not ' %>my first time.
+I am <% $comp->is_subcomp ? '' : 'not ' %>a subcomponent.
+I am <% $comp->is_file_based ? '' : 'not ' %>file-based.
+% if (defined($comp->name)) {
+My short name is <% $comp->name =~ /anon/ ? '[anon something]' : $comp->name %>.
+% }
+% if ($comp->is_subcomp and defined($comp->parent_comp)) {
+My parent component is <% $comp->parent_comp->title %>.
+% }
+% if (defined($comp->dir_path)) {
+My directory is <% $comp->dir_path %>.
+% }
+I have run <% $comp->run_count %> time(s).
+% my @subkeys = sort keys(%{$comp->subcomps});
+I have <% scalar(@subkeys) %> subcomponent(s).
+% if (@subkeys) {
+Including one called <% $comp->subcomps($subkeys[0])->name %>.
+% }
+My title is <% $comp->title =~ /anon/ ? '[anon something]' : $comp->title %>.
+
+% if (defined($comp->cache_file)) {
+%   my ($subfile) = ($comp->cache_file =~ m{data/[^/]+/(cache/.*?)$});
+%   if (defined($subfile)) {
+My cache file is /.../<% $subfile %>
+%   }
+% }
+% if (defined($comp->object_file)) {
+%   my ($subfile) = ($comp->object_file =~ m{data/[^/]+/(obj/.*?)$});
+%   if (defined($subfile)) {
+My object file is /.../<% $subfile %>
+%   }
+% }
+% if (defined($comp->path)) {
+My path is <% $comp->path %>.
+% }
+% if (defined($comp->fq_path)) {
+My fq_path is <% $comp->fq_path =~ /anon/ ? '[anon something]' : $comp->fq_path %>.
+% }
+% if ($comp->is_file_based and defined($comp->source_file)) {
+%   my ($subfile) = ($comp->source_file =~ m{((alt_root|comps)/.*?)$});
+My source file is /.../<% $subfile %>
+% }
+% if ($comp->is_file_based and defined($comp->source_dir)) {
+%   my ($subfile) = ($comp->source_dir =~ m{((alt_root|comps)/.*?)$});
+My source dir is /.../<% $subfile %>
+% }
+
+<%args>
+$comp
+</%args>
+EOF
+	    },
 	  );
 }
 
@@ -86,12 +146,12 @@ sub add_test
     die "no name provided for test\n"
 	unless exists $p{name};
 
+    $p{path} ||= $p{call_path} || $p{name};
+
     my $call_path = "/$self->{name}/";
     $call_path .= exists $p{call_path} ? $p{call_path} : $p{name};
     $p{call_path} = $call_path;
     $p{call_path} =~ s,/+,/,g;
-
-    $p{path} ||= $p{name};
 
     die "'$p{name}' test has no description\n"
 	unless exists $p{description};
@@ -99,8 +159,8 @@ sub add_test
     die "'$p{name}' test has no component\n"
 	unless exists $p{component};
 
-    die "'$p{name}' test has no 'expect' key\n"
-	unless exists $p{expect} || $self->{create};
+    die "'$p{name}' test has no 'expect' or 'expect_error' key\n"
+	unless exists $p{expect} || exists $p{expect_error} || $self->{create};
 
     foreach ( qw( parser_params interp_params ) )
     {
@@ -142,9 +202,8 @@ sub _make_dirs
 {
     my $self = shift;
 
-    $self->{base_path} = File::Spec->catdir( cwd(), 'mason_tests' );
-    $self->{comp_root} = File::Spec->catdir( $self->{base_path},  'comps' );
-    $self->{data_dir} = File::Spec->catdir( $self->{base_path},  'data' );
+    $self->{comp_root} = $self->comp_root;
+    $self->{data_dir} = $self->data_dir;
 
     print "Making comp_root directory: $self->{comp_root}\n" if $DEBUG;
     mkpath( $self->{comp_root}, 0, 0755 )
@@ -153,6 +212,35 @@ sub _make_dirs
     print "Making data_dir directory: $self->{data_dir}\n" if $DEBUG;
     mkpath( $self->{data_dir}, 0, 0755 )
 	or die "Unable to make base test directory '$self->{data_dir}': $!";
+}
+
+sub base_path
+{
+    my $proto = shift;
+
+    if (ref $proto)
+    {
+	$proto->{base_path} ||= File::Spec->catdir( cwd(), 'mason_tests' );
+	return $proto->{base_path};
+    }
+    else
+    {
+	return File::Spec->catdir( cwd(), 'mason_tests' );
+    }
+}
+
+sub comp_root
+{
+    my $proto = shift;
+
+    return File::Spec->catdir( $proto->base_path, 'comps' );
+}
+
+sub data_dir
+{
+    my $proto = shift;
+
+    return File::Spec->catdir( $proto->base_path, 'data' );
 }
 
 sub _write_shared_comps
@@ -168,7 +256,7 @@ sub _write_shared_comps
 
 	my $dir = File::Spec->catdir( $self->{comp_root}, @path );
 
-	$self->_write_comp( $comp->{path}, $dir, $file, $comp->{component} );
+	$self->write_comp( $comp->{path}, $dir, $file, $comp->{component} );
     }
 }
 
@@ -189,7 +277,7 @@ sub _write_support_comps
 
 	my $dir = File::Spec->catdir( $self->{comp_root}, $self->{name}, @path );
 
-	$self->_write_comp( $supp->{path}, $dir, $file, $supp->{component} );
+	$self->write_comp( $supp->{path}, $dir, $file, $supp->{component} );
     }
 }
 
@@ -209,10 +297,10 @@ sub _write_test_comp
 	    or die "Unable to create directory '$dir': $!";
     }
 
-    $self->_write_comp( $test->{path}, $dir, $file, $test->{component} );
+    $self->write_comp( $test->{path}, $dir, $file, $test->{component} );
 }
 
-sub _write_comp
+sub write_comp
 {
     my $self = shift;
     my ($path, $dir, $file, $component) = @_;
@@ -278,7 +366,7 @@ sub _run_test
 	print "Parser params:\n";
 	while ( my ($k, $v) = each %params)
 	{
-	    print "$k = $v\n";
+	    print "$k => $v\n";
 	}
     }
 
@@ -293,7 +381,7 @@ sub _run_test
 	print "Interp params:\n";
 	while ( my ($k, $v) = each %params)
 	{
-	    print "$k = $v\n";
+	    print "$k => $v\n";
 	}
     }
 
@@ -301,17 +389,35 @@ sub _run_test
     my $interp = HTML::Mason::Interp->new( comp_root => $self->{comp_root},
 					   data_dir  => $self->{data_dir},
 					   out_method => \$buf,
+					   parser => $parser,
 					   %params,
-					   parser => $parser );
+					 );
 
     print "Calling $test->{name} test with path: $test->{call_path}\n" if $DEBUG;
-
+    $test->{pretest_code}->() if $test->{pretest_code};
     eval { $interp->exec( $test->{call_path} ); };
 
-    if ($@)
+    if ( $@ && ! $test->{expect_error} )
     {
 	print "Error running $test->{name}: $@" if $VERBOSE;
 	return $self->_fail($test);
+    }
+    elsif ( $test->{expect_error} )
+    {
+	if ( $@ =~ /$test->{expect_error}/ )
+	{
+	    $self->_success
+	}
+	else
+	{
+	    if ($VERBOSE)
+	    {
+		print "Got error $@ but expected something matching $test->{expect_error}\n";
+	    }
+	    $self->_fail;
+	}
+
+	return;
     }
 
     if ($self->{create} )
@@ -363,6 +469,7 @@ sub _check_output
 	{
 	    if ($VERBOSE)
 	    {
+		local $^W; #suppress uninit value warnings.
 		print "Result differed from expected output at line $line\n";
 
 		my $actual = join "\n", ( $actual_prev,
@@ -407,7 +514,7 @@ sub _cleanup
 {
     my $self = shift;
 
-    rmtree ($self->{base_path}, $DEBUG) if $self->{base_path};
+    rmtree ($self->{base_path}, $DEBUG, 1) if $self->{base_path};
 }
 
 1;
@@ -514,8 +621,9 @@ is given, the value of the name parameter is used.
 =item -- call_path (optional)
 
 The path that should be used to call the component.  If none is given,
-then the value is /<group name>/<test name>.  If a value is given, it
-is still prepended by /<group name>/.
+then the value is the same as the path option, if that exists,
+otherwise it is /<group name>/<test name>.  If a value is given, it is
+still prepended by /<group name>/.
 
 =item -- parser_params
 
@@ -530,6 +638,28 @@ method.
 =item * run
 
 Run the tests in the group.
+
+=back
+
+=head2 Class methods
+
+These methods are provided since some tests may need to know these
+values.
+
+=over 4
+
+=item * base_path
+
+The base path under which the component root and data directory for
+the tests are created.
+
+=item * comp_root
+
+Returns the component root directory.
+
+=item * data_dir
+
+Return the data directory
 
 =back
 
