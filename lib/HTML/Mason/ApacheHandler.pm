@@ -27,6 +27,7 @@ use HTML::Mason::FakeApache;
 use HTML::Mason::Tools qw(html_escape url_unescape);
 use HTML::Mason::Utils;
 use Apache::Status;
+use CGI qw(-private_tempfiles);
 
 my %fields =
     (
@@ -140,7 +141,7 @@ sub handle_request {
     # -jswartz 5/23
     #
     my ($self,$req) = @_;
-    my ($outsub, $retval, $argString, $debugMsg);
+    my ($outsub, $retval, $argString, $debugMsg, $q);
     my $outbuf = '';
     my $interp = $self->interp;
 
@@ -169,21 +170,19 @@ sub handle_request {
     }
 
     #
-    # Get argument string
+    # Create query object and get argument string
     #
-    if ($req->method() eq 'GET') {
-	$argString = $req->args();
-    } elsif ($req->method() eq 'POST') {
-	$argString = $req->content();
-    }
-    
+    $q = new CGI;
+    $argString = $q->query_string;
+
     my $debugMode = $self->debug_mode;
     $debugMode = 'none' if (ref($req) eq 'HTML::Mason::FakeApache');
+
     my $debugState = $self->capture_debug_state($req,$argString)
 	if ($debugMode eq 'all' or $debugMode eq 'error');
     $debugMsg = $self->write_debug_file($req,$debugState) if ($debugMode eq 'all');
-    
-    eval('$retval = handle_request_1($self, $req, $argString)');
+
+    eval('$retval = handle_request_1($self, $req, $argString, $q)');
     my $err = $@;
     my $err_status = $err ? 1 : 0;
 
@@ -321,13 +320,11 @@ sub capture_debug_state
     my (%d,$expr);
 
     $expr = '';
-    foreach my $field (qw(allow_options auth_name auth_type bytes_sent no_cache content content_encoding content_languages content_type document_root filename header_only method method_number path_info protocol proxyreq requires status status_line the_request uri as_string get_remote_host get_remote_logname get_server_port is_initial_req is_main)) {
+    foreach my $field (qw(allow_options auth_name auth_type bytes_sent no_cache content_encoding content_languages content_type document_root filename header_only method method_number path_info protocol proxyreq requires status status_line the_request uri as_string get_remote_host get_remote_logname get_server_port is_initial_req is_main)) {
 	$expr .= "\$d{$field} = \$r->$field;\n";
     }
-#    foreach my $field (qw(dir_config headers_in headers_out err_headers_out notes subprocess_env cgi_env)) {
-#	$expr .= "{ my \%h = \$r->$field; \$d{$field} = {\%h} }\n";
-#    }
     eval($expr);
+
     warn "error creating debug file: $@\n" if $@;
     $d{'args@'} = [$r->args];
     $d{'args$'} = scalar($r->args);
@@ -355,7 +352,7 @@ sub capture_debug_state
 
 sub handle_request_1
 {
-    my ($self,$r,$argString) = @_;
+    my ($self,$r,$argString,$q) = @_;
     my $interp = $self->interp;
     my $compRoot = $interp->comp_root;
 
@@ -422,23 +419,21 @@ sub handle_request_1
     # keys with array references.
     #
     my (%args);
-    if ($argString) {
-	my (@pairs) = split('&',$argString);
-	foreach my $pair (@pairs) {
-	    my ($key,$value) = split('=',$pair);
-	    $key = url_unescape($key);
-	    $value = url_unescape($value);
-	    if (exists($args{$key})) {
-		if (ref($args{$key})) {
-		    $args{$key} = [@{$args{$key}},$value];
-		} else {
-		    $args{$key} = [$args{$key},$value];
-		}
-	    } else {
-		$args{$key} = $value;
-	    }
-	}
+
+    foreach my $key ( $q->param ) {
+      foreach my $value ( $q->param($key) ) {
+        if (exists($args{$key})) {
+          if (ref($args{$key})) {
+            $args{$key} = [@{$args{$key}}, $value];
+          } else {
+            $args{$key} = [$args{$key}, $value];
+          }
+        } else {
+          $args{$key} = $value;
+        }
+      }
     }
+
     $argString = '' if !defined($argString);
 
     #
