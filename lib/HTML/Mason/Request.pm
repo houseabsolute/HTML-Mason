@@ -67,8 +67,7 @@ BEGIN
 
          data_cache_api =>
          { parse => 'string', default => '1.1', type => SCALAR,
-           callbacks => { "must be one of '1.0' or '1.1'" =>
-                          sub { $_[0] eq '1.0' or $_[0] eq '1.1'; } },
+           regex => qr/^(?:1\.0|1\.1)$/,
            descr => "Data cache API to use: 1.0 or 1.1" },
 
 	 data_cache_defaults =>
@@ -97,8 +96,7 @@ BEGIN
 
 	 error_mode =>
          { parse => 'string', type => SCALAR, default => 'fatal',
-           callbacks => { "must be one of 'output' or 'fatal'" =>
-                          sub { $_[0] =~ /^(?:output|fatal)$/ } },
+           regex => qr/^(?:output|fatal)$/,
            descr => "How error conditions are manifest (output or fatal)" },
 
 	 max_recurse =>

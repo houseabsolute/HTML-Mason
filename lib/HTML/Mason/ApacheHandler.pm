@@ -275,9 +275,7 @@ BEGIN
 
 	 args_method =>
          { parse => 'string',  type => SCALAR,       default => 'mod_perl',
-           callbacks =>
-           { "must be either 'CGI' or 'mod_perl'" =>
-             sub { $_[0] =~ /^(?:CGI|mod_perl)$/ } },
+           regex => qr/^(?:CGI|mod_perl)$/,
            descr => "Whether to use CGI.pm or Apache::Request for parsing the incoming HTTP request",
          },
 
