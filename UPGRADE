@@ -142,6 +142,13 @@ can help with this.
 is no longer supported. You will need to remove this prefix. The utility
 bin/convert0.6.pl can help with this.
 
+- The |h escape flag now uses HTML::Entities::encode instead of just
+encoding <, >, ", and &.  This module escapes control and high-ascii
+characters properly for ISO-8859-1 pages. However, it will wreak
+havoc with different encodings. You can get the 1.0x behavior by
+setting the html_escaping parameter to 'lite'; you can also define
+your own arbitrary escaping behavior using $interp->set_escape.
+
 - The run_count and first_time component object methods have been
 deprecated, as they cannot be implemented reliably (see bug #209).
 Use a manual counter variable declared in <%once> instead.
