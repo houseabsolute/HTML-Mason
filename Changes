@@ -21,8 +21,7 @@ which covers these in more detail.
 
 - ** Errors now report line numbers from the component source file.
 - ** The Parser class has been removed entirely.  Its functionality
-has been split between the Lexer and Compiler objects.  L{Compiler},
-L{Compiler::ToObject} and L{Lexer}
+has been split between the Lexer and Compiler objects.  L{Compiler}
 - ** The debug file feature has been removed.
 - ** The previewer has been removed.
 - ** The Interp use_reload_files parameter has been removed.  The new
