@@ -37,6 +37,8 @@ BEGIN
 	 declined_comps => { type => HASHREF, optional=>1,
 			     descr => "Hash of components that have been declined in previous parent requests",
 			     public => 0 },
+	 dhandler_name => { parse => 'string',  default => 'dhandler', type => SCALAR,
+			    descr => "The filename to use for Mason's 'dhandler' capability" },
 	 interp     => { isa => 'HTML::Mason::Interp',
 			 descr => "An interpreter for Mason control functions",
 			 public => 0 },
@@ -48,6 +50,8 @@ BEGIN
 			 callbacks => { "must be one of 'output' or 'fatal'" =>
 					sub { $_[0] =~ /^(?:output|fatal)$/ } },
 			 descr => "How error conditions are returned to the caller (brief, text, line or html)" },
+	 max_recurse => { parse => 'string',  default => 32, type => SCALAR,
+			  descr => "The maximum recursion depth for component, inheritance, and request stack" },
 	 out_method => { parse => 'code',    type => CODEREF|SCALARREF,
 			 default => sub { print STDOUT grep {defined} @_ },
 			 descr => "A subroutine or scalar reference through which all output will pass" },
