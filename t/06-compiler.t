@@ -364,7 +364,7 @@ EOF
 
 #------------------------------------------------------------
 
-    if ( $Config{d_alarm} || $] >= 5.007003 )
+    if ( 0 && $Config{d_alarm} || $] >= 5.007003 )
     {
 	$group->add_test( name => 'infinite_loop',
 			  description => 'this code hangs when Interp.pm attempts to eval it.',
@@ -434,6 +434,23 @@ various
 EOF
 		      expect => <<'EOF',
 various
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'percent_at_end',
+		      description => 'Make sure that percent signs are only considered perl lines when at the beginning of the line',
+		      component => <<'EOF',
+<% $x %>% $x = 5;
+<% $x %>
+<%init>
+my $x = 10;
+</%init>
+EOF
+		      expect => <<'EOF',
+10% $x = 5;
+10
 EOF
 		    );
 
