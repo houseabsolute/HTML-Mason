@@ -181,21 +181,28 @@ sub load_pkg {
     return 1;
 }
 
-my $Taint;
+# This code seems to be very fragile!  Please don't check in changes
+# unless you've tested it with Perl 5.00503, 5.6.1, and 5.8.0
+my $TaintIsOn;
 sub taint_is_on
 {
-    return $Taint if defined $Taint;
+    return $TaintIsOn if defined $TaintIsOn;
+    return $TaintIsOn = _taint_is_on();
+}
 
+sub _taint_is_on
+{
     if ( $] >= 5.008 )
     {
         # We have to eval a string because this variable name causes
         # earlier Perls to not compile at all.
-        return $Taint = eval '${^TAINT}';
+        return eval '${^TAINT}' ? 1 : 0;
     }
     else
     {
         local $^W;
-        return eval { $Taint = 0; local $^W; "$0$^X" && kill 0; $Taint = 1 };
+        eval { "$0$^X" && kill 0; 1 };
+        return $@ ? 1 : 0;
     }
 }
 
