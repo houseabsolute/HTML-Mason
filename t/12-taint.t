@@ -56,6 +56,7 @@ my $tests = $alarm_works ? 3 : 2;
 
 print "1..$tests\n";
 
+my $test_count = 1;
 if ($alarm_works)
 {
     my $compiler = HTML::Mason::Compiler::ToObject->new;
@@ -84,12 +85,14 @@ if ($alarm_works)
 	{
 	    $reason = "returned an undefined value from compiling";
 	}
-	print "not ok 1 - $reason\n";
+	print "not ok $test_count - $reason\n";
     }
     else
     {
-	print "ok 1\n";
+	print "ok $test_count\n";
     }
+
+    $test_count++;
 }
 
 my $comp_root = File::Spec->catdir( getcwd(), 'mason_tests', 'comps' );
@@ -113,12 +116,13 @@ eval { $interp->write_object_file( object_code => \$comp2,
 
 if (! $@)
 {
-    print "ok 2\n";
+    print "ok $test_count\n";
 }
 else
 {
-    print "not ok 2 - Unable to write a tainted object file to disk: $@\n";
+    print "not ok $test_count - Unable to write a tainted object file to disk: $@\n";
 }
+$test_count++;
 
 my $cwd = getcwd(); # tainted
 # This isn't a part of the documented interface, but we test it here anyway.
@@ -127,9 +131,10 @@ eval { $interp->eval_object_code( object_code => \$code ) };
 
 if (! $@)
 {
-    print "ok 3\n";
+    print "ok $test_count\n";
 }
 else
 {
-    print "not ok 3 - Unable to eval a tainted object file: $@\n";
+    print "not ok $test_count - Unable to eval a tainted object file: $@\n";
 }
+$test_count++;
