@@ -117,6 +117,16 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/dhandler_test/subdir/autohandler',
+			 component => <<'EOF',
+Header
+<% $m->call_next %>
+EOF
+		       );
+
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/dhandler_test/bar/dhandler',
 			 component => <<'EOF',
 dhandler = <% $m->current_comp->title %>
@@ -157,7 +167,9 @@ EOF
 I'm leaf
 EOF
 		      expect => <<'EOF',
+Header
 I'm leaf
+
 EOF
 		    );
 
@@ -171,8 +183,10 @@ EOF
 		      component => <<'EOF',
 % $m->decline;
 I'm leaf2
+
 EOF
 		      expect => <<'EOF',
+Header
 dhandler = /misc/dhandler_test/subdir/dhandler
 dhandler arg = leaf2
 
