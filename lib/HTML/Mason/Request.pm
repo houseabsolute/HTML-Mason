@@ -192,7 +192,7 @@ sub exec {
 		    die $err;
 		}
 	    }
-		
+
 	} while ($declined && $path);
     };
 
@@ -704,12 +704,6 @@ sub content {
     return $buffer->output;
 }
 
-sub process_comp_path
-{
-    my ($self) = shift;
-    return $self->interp->process_comp_path(@_,$self->current_comp->dir_path);
-}
-
 #
 # Call hooks of the specified type, passing along params if any.
 #
@@ -903,8 +897,10 @@ method C<instance>.
 
 =head1 COMPONENT PATHS
 
-The methods L<Request/comp>, L<Request/comp_exists>, L<Request/fetch_comp>, and
-L<Request/process_comp_path> take a component path as argument.
+The methods L<Request/comp>, L<Request/comp_exists>,
+L<Request/fetch_comp>.  Component paths are like URL paths, and always
+use a forward slash (/) as the separator, regardless of what your
+operating system uses.
 
 =over
 
@@ -1223,12 +1219,6 @@ if you need to output something in the middle of a Perl block.
 C<$m-E<gt>out> should be used instead of C<print> or C<$r-E<gt>print>,
 since C<$m-E<gt>out> may be redirected or buffered depending on the
 current state of the interpreter.
-
-=for html <a name="item_process_comp_path">
-
-=item process_comp_path (comp_path)
-
-Given a I<comp_path>, returns the corresponding absolute component path.
 
 =for html <a name="item_scomp">
 
