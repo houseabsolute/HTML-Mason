@@ -664,17 +664,6 @@ values are then examined by a customizable "L<Parser/source_refer_predicate>"
 which makes a determination based on local policy, say "more than 50%
 HTML", or "more than 20K of HTML".
 
-=head2 Pure text components
-
-A component with no Perl and no Mason constructs -- all text and HTML
--- is known as a pure text component.  Mason optimizes this special
-case by creating a zero size object file.  The dummy object file
-signifies that the results should simply be obtained by reading the
-component's source file.
-
-This feature requires no administration; I mention it simply so that
-you are not surprised to see zero size object files.
-
 =head2 Preloading
 
 You can tell Mason to preload a set of components in the parent
