@@ -288,6 +288,7 @@ EOF
 
     $group->add_test( name => 'max_recurse_2',
 		      description => 'Test that recursion is stopped after 32 levels',
+		      interp_params => { out_mode => 'stream' },
 		      component => <<'EOF',
 % eval { mc_comp('support/recurse_test', max=>48) };
 <& /shared/check_error, error=>$@ &>
