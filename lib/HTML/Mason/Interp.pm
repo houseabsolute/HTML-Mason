@@ -38,9 +38,7 @@ use HTML::Mason::MethodMaker
 			  dhandler_name
 		          ignore_warnings_expr
 			  max_recurse
-			  out_mode
 			  resolver
-			  static_file_root
 			  use_object_files
 			  use_reload_file ) ],
       );
@@ -64,13 +62,9 @@ __PACKAGE__->valid_params
 				       default => qr/Subroutine .* redefined/i },
      out_method                   => { parse => 'code',    type => CODEREF|SCALARREF,
 				       default => sub { print grep {defined} @_ } },
-     out_mode                     => { parse => 'string',  default => 'batch', type => SCALAR,
-				       callbacks => { "must be either 'batch' or 'stream'" =>
-						      sub { $_[0] =~ /^(?:batch|stream)$/ } } },
      max_recurse                  => { parse => 'string',  default => 32, type => SCALAR },
      preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF },
      resolver                     => { isa => 'HTML::Mason::Resolver' },
-     static_file_root             => { parse => 'string',  optional => 1, type => SCALAR },
      system_log_events            => { parse => 'string',  optional => 1, type => SCALAR|HASHREF|UNDEF },
      system_log_file              => { parse => 'string',  optional => 1, type => SCALAR },
      system_log_separator         => { parse => 'string',  default => "\cA", type => SCALAR },
@@ -1014,16 +1008,6 @@ string. For example, to send output to a file called "mason.out":
 By default, out_method prints to standard output. (In a mod_perl
 environment this is automatically redirected to the HTTP client.)
 
-=item out_mode
-
-Specifies one of two ways to send output, 'batch' or 'stream'.  In
-batch mode Mason computes the entire page in a memory buffer and then
-transmits it all at once. In stream mode Mason outputs data as soon as
-it is computed. (This does not take into account buffering done by
-Apache or the O/S.) The default mode is batch.  See the 
-L<Admin/staging vs production> section of the I<Admin Guide> for a
-discussion of the trade-offs.
-
 =item preloads
 
 A list of component paths, optionally with glob wildcards, to load
@@ -1035,15 +1019,6 @@ Default is the empty list.  For maximum performance, this should only
 be used for components that are frequently viewed and rarely updated.
 See the L<Admin/preloading> section of the I<Admin Guide> for further
 details.
-
-=item static_file_root
-
-Absolute path to prepend to relative filenames passed to C<$m-E<gt>file()>. Does
-not require a trailing slash. For example, if the file root is
-'/foo/bar', then C<$m-E<gt>file('baz/bap')> will read the file
-'/foo/bar/baz/bap'. Undefined by default; if left undefined,
-relative path names to C<$m-E<gt>file()> are prepended with the
-current component directory.
 
 =item system_log_events
 
