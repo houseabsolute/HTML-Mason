@@ -259,7 +259,7 @@ my \@ah_params = ( {},
 my \@interp_params = ( {},
                        { autoflush => 1 },
                        {},
-                       { error_mode => 'fatal' },
+                       { error_mode => 'fatal', error_format => 'line' },
                      );
 
 my \@ah;
