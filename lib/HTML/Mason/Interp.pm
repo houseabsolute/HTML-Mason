@@ -1062,7 +1062,7 @@ You may also choose not to provide a component root, in which case the
 component root is the root directory of your filesystem.
 
 In this case, the C<< $interp->exec >> method will accept relative
-paths and treat them as being relative to the current director.
+paths and treat them as being relative to the current directory.
 
     my $outbuf;
     my $interp = new HTML::Mason::Interp (data_dir=>'<data directory>',
