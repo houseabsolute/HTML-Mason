@@ -17,6 +17,14 @@ BEGIN
 	   { isa => 'HTML::Mason::Exception',
 	     description => 'a component called $m->abort' },
 
+	   'HTML::Mason::Exception::Compiler' =>
+	   { isa => 'HTML::Mason::Exception',
+	     description => 'error thrown from the compiler' },
+
+	   'HTML::Mason::Exception::Compilation' =>
+	   { isa => 'HTML::Mason::Exception',
+	     description => "error thrown in eval of the code for a component" },
+
 	   'HTML::Mason::Exception::Params' =>
 	   { isa => 'HTML::Mason::Exception',
 	     description => 'invalid parameters were given to a method/function' },
