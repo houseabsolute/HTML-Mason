@@ -313,7 +313,7 @@ sub as_html
     my ($self) = @_;
 
     my $out;
-    my $interp = HTML::Mason::Interp->new(out_method => \$out, error_mode => 'fatal');
+    my $interp = HTML::Mason::Interp->new(out_method => \$out);
 
     # Can't use |h escape in here because if we fail to load
     # HTML::Entities we end up in an endless loop.
