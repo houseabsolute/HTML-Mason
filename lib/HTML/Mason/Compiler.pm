@@ -553,6 +553,59 @@ C<lex> method and passing itself as the C<compiler> parameter.  The
 lexer then calls various methods in the compiler as it parses the
 component source.
 
+=head1 PARAMETERS TO THE new() CONTRUCTOR
+
+=over 4
+
+=item allow_globals
+
+List of variable names, complete with prefix (C<$@%>), that you intend
+to use as globals in components.  Normally global variables are
+forbidden by C<strict>, but any variable mentioned in this list is
+granted a reprieve via a "use vars" statement. For example:
+
+    allow_globals => [qw($DBH %session)]
+
+In a mod_perl environment, C<$r> (the request object) is automatically
+added to this list.
+
+=item default_escape_flags
+
+Escape flags to apply to all <% %> expressions by default. The current
+valid flags are
+
+    h - escape for HTML ('<' => '&lt;', etc.)
+    u - escape for URL (':' => '%3A', etc.)
+
+The developer can override default escape flags on a per-expression
+basis; see L<HTML::Mason::Devel/escaping_expressions>.
+
+=item preprocess
+
+Sub reference that is called to preprocess each component before Parser does
+it's magic.  The sub is called with a single parameter, a scalar reference
+to the script.  The sub is expected to process the script in-place.   This is
+one way to extend the HTML::Mason syntax with new tags, etc., although a much
+more flexible way is to subclass the Lexer or Compiler class.
+
+=item postprocess_text
+
+Sub reference that is called to postprocess the text portion of a
+compiled component, just before it is assembled into its final
+subroutine form.  The sub is called with a single parameter, a scalar
+reference to the text portion of the component.  The sub is expected
+to process the string in-place.
+
+=item postprocess_perl
+
+Sub reference that is called to postprocess the Perl portion of a
+compiled component, just before it is assembled into its final
+subroutine form.  The sub is called with a single parameter, a scalar
+reference to the Perl portion of the component.  The sub is expected
+to process the string in-place.
+
+=back
+
 =head1 METHODS
 
 There are several methods besides the compilation callbacks below that
