@@ -22,8 +22,6 @@ setup_mod_perl_tests();
 %MY::APACHE_PARAMS = %APACHE_PARAMS;
 $MY::APACHE_DIR = $APACHE_DIR;
 
-my @dirs = 'faq';
-
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 WriteMakefile(
@@ -51,8 +49,9 @@ sub test
 
     # %APACHE_PARAMS & $APACHE_DIR are globals set in makeconfig.pl.
     # If we are not going to test with Apache there is no harm in
-    # setting this to undef.
+    # setting this anyway.
     my $port = $APACHE_PARAMS{port} || 8228;
+    $APACHE_DIR ||= '';
     $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE}=\$(TEST_VERBOSE); \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$APACHE_DIR^; $1/;
 
     return $test;
