@@ -325,9 +325,9 @@ method Test
 <%method foo>
 % my $sum = $y + $y;
 <% $y %> + <% $y %> = <% $sum %>.
-<%args>
+<%ARGS>
 $y
-</%args>
+</%ARGS>
 </%method>
 <%method bar>
 The second method. Arguments are <% join(",",@_) %>.
@@ -371,9 +371,9 @@ once Test
 my $message = "Hello World";
 </%once>
 
-<%init>
+<%INIT>
 $message .= "!";
-</%init>
+</%INIT>
 EOF
 		      expect => <<'EOF',
 <HTML>

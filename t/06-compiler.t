@@ -342,9 +342,9 @@ EOF
 1
 2
 3
-<%once>
+<%ONCE>
 $x = 1;
-</%once>
+</%ONCE>
 EOF
 		      expect_error => qr/Global symbol .* at .* line 5/,
 		    );
