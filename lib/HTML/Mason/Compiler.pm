@@ -281,7 +281,7 @@ sub variable_declaration
     my $arg = "$p{type}$p{name}";
 
     compile_error "$arg already defined"
-        if grep { "$_->{type}$_->{name}" eq "$p{type}$p{name}" } @{ $self->{current_comp}{args} };
+        if grep { "$_->{type}$_->{name}" eq $arg } @{ $self->{current_comp}{args} };
 
     push @{ $self->{current_comp}{args} }, { type => $p{type},
 					     name => $p{name},
