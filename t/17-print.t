@@ -5,7 +5,7 @@ use File::Spec;
 
 use HTML::Mason::Interp;
 
-print "1..4\n";
+print "1..8\n";
 
 my $comp_root = File::Spec->catdir( getcwd(), 'mason_tests', 'comps' );
 ($comp_root) = $comp_root =~ /(.*)/;
@@ -39,6 +39,21 @@ EOF
     my $comp = $interp->make_component( comp_source => $source );
 
     my $req = $interp->make_request( autoflush => 1 );
+
+    $req->exec($comp);
+}
+
+{
+    my $source = <<'EOF';
+ok 5
+% print "ok 6\n";
+ok 7
+% print "ok 8\n";
+EOF
+
+    my $comp = $interp->make_component( comp_source => $source );
+
+    my $req = $interp->make_request;
 
     $req->exec($comp);
 }
