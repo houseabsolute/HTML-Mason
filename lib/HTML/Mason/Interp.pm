@@ -252,8 +252,8 @@ sub process_comp_path
 # 
 sub lookup {
     my ($self,$path) = @_;
-    my %info = $self->resolver->resolve($path);
-    return $info{path};
+    my %info = $self->resolver->get_info($path) or return;
+    return $info{fq_path};
 }
 
 #
@@ -293,8 +293,8 @@ sub load {
     # Use resolver to look up component and get fully-qualified path.
     # Return undef if component not found.
     #
-    my %lookup_info = $resolver->resolve($path);
-    my $fq_path = $lookup_info{path} or return undef;
+    my %lookup_info = $resolver->get_info($path) or return undef;
+    my $fq_path = $lookup_info{fq_path};
 
     #
     # Get last modified time of source.
@@ -329,13 +329,10 @@ sub load {
 	    my $object;
 	    do
 	    {
-		#
-		# the encapsulation is breaking here.  I think the
-		# resolver needs to return this text. - dave
-		#
-		my $file = $resolver->get_component(%lookup_info);
+		my $comp_text = $resolver->get_source(%lookup_info);
 		if ($objfilemod < $srcmod) {
-		    $object = $self->compiler->compile( comp_text => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
+# XXX 'description' isn't known
+		    $object = $self->compiler->compile( comp_text => $comp_text, name => $lookup_info{url_path}, comp_class => $resolver->comp_class );
 		    $self->write_object_file(object_text=>$object, object_file=>$objfile);
 		}
 		# read the existing object file
@@ -355,12 +352,13 @@ sub load {
 	    #
 	    # No object files. Load component directly into memory.
 	    #
-	    my $file = $resolver->get_component(%lookup_info);
-	    my $object = $self->compiler->compile( comp_text => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
+	    my $comp_text = $resolver->get_source(%lookup_info);
+# XXX 'description' isn't known
+	    my $object = $self->compiler->compile( comp_text => $comp_text, name => $lookup_info{url_path}, comp_class => $resolver->comp_class );
 	    $comp = eval { $self->eval_object_text( object => $object ) };
 	    $self->_compilation_error( $lookup_info{description}, $@ ) if $@;
 	}
-	$comp->assign_runtime_properties($self,$fq_path);
+	$comp->assign_runtime_properties($self, %lookup_info);
 
 	#
 	# Delete any stale cached version of this component, then
@@ -997,9 +995,10 @@ when the interpreter initializes. e.g.
 
     preloads => ['/foo/index.html','/bar/*.pl']
 
-Default is the empty list. This should only be used for components that
-are frequently viewed and rarely updated.  See the L<Admin/preloading>
-section of the I<Admin Guide> for further details.
+Default is the empty list.  For maximum performance, this should only
+be used for components that are frequently viewed and rarely updated.
+See the L<Admin/preloading> section of the I<Admin Guide> for further
+details.
 
 =item static_file_root
 
