@@ -29,6 +29,7 @@ my %fields =
      use_strict => 1,
      );
 
+my %valid_comp_flags = (map(($_,1),qw(inherit)));
 my %valid_escape_flags = map(($_,1),qw(h n u));
 
 #
@@ -146,7 +147,7 @@ sub parse_component
     # _Everything_ gets wrapped in an eval so we can die anywhere and
     # just call _handle_parse_error.
     #
-    my $comp_code;
+    my $result;
     eval
     {
 	#
@@ -192,11 +193,10 @@ sub parse_component
 	$state->{methods} = {};
 	$state->{declared_args} = {};
 
-	# def is a special case.
+	# def and method are special cases.
 	my @tags = qw( args attr cleanup
-		       doc filter
-		       flags init
-		       once text );
+		       doc filter flags
+		       init once shared text );
 
 	foreach my $t (@tags)
 	{
@@ -273,7 +273,11 @@ sub parse_component
 			       startline => $startline )
 	    if $curpos < $script_length;
 
-	$comp_code = $self->_build_component;
+	if ($state->{embedded}) {
+	    $result = $self->_build_embedded_component;
+	} else {
+	    $result = $self->_build_main_component;
+	}
     };
     # End of eval {}
 
@@ -283,7 +287,7 @@ sub parse_component
     # Clear out everything.
     $self->{parser_state} = {};
 
-    return $comp_code;
+    return $result;
 }
 
 sub _parse_def_section
@@ -464,7 +468,15 @@ sub _parse_once_section
     $state->{once} = $params{section}."\n";
 }
 
-my %valid_flags = (map(($_,1),qw(inherit)));
+sub _parse_shared_section
+{
+    my $self = shift;
+    my %params = @_;
+
+    my $state = $self->{parser_state};
+
+    $state->{shared} = $params{section}."\n";
+}
 
 sub _parse_flags_section
 {
@@ -475,10 +487,10 @@ sub _parse_flags_section
 
     my $hash = $self->_parse_hash_pairs($params{section});
     foreach my $key (keys(%$hash)) {
-	die $self->_make_error( error => "invalid flag '$key'" ) unless $valid_flags{$key};
+	die $self->_make_error( error => "invalid flag '$key'" ) unless $valid_comp_flags{$key};
     }    
 
-    $state->{flags} = "'flags' => { $hash }";
+    $state->{flags} = $hash;
 }
 
 sub _parse_attr_section
@@ -490,7 +502,7 @@ sub _parse_attr_section
 
     my $hash = $self->_parse_hash_pairs($params{section});
 
-    $state->{attr} = "'attr' => { $hash }";
+    $state->{attr} = $hash;
 }
 
 # used for attr & flags sections
@@ -501,7 +513,7 @@ sub _parse_hash_pairs
     my @pairs = grep {/\S/} split /\n/, $section;
     my $hash = join ",\n", @pairs;
 
-    return $hash;
+    return "{ $hash }";
 }
 
 sub _parse_doc_section
@@ -778,17 +790,60 @@ sub _add_output_section
     push @{ $state->{output_sections} }, $section;
 }
 
-sub _build_component
+sub _build_main_component
 {
     my $self = shift;
 
     my $state = $self->{parser_state};
 
-    my $header = $self->_build_header;
     my $body = $self->_build_body;
-    my $params = $self->_build_params_string($header, $body);
+    my $cparams = $self->_build_params($body);
 
-    return $header . "$state->{comp_class}\->new(\n$params\n);\n";
+    # Add the params that are only applicable to main components
+    $cparams->{parser_version} = $self->version;
+    $cparams->{create_time} = time();
+
+    # If component has a shared section, relocate subroutine definitions
+    # under one scope with the shared code at the top.
+    if ($state->{shared}) {
+	my %subs;
+	while (my ($name,$pref) = each(%{$state->{subcomponents}})) {
+	    my $key = "subcomp_$name";
+	    $subs{$key} = $pref->{'code'};
+	    $pref->{'code'} = "sub {\n\$m->call_dynamic('$key',\@_)\n}";
+	}
+	while (my ($name,$pref) = each(%{$state->{methods}})) {
+	    my $key = "method_$name";
+	    $subs{$key} = $pref->{'code'};
+	    $pref->{'code'} = "sub {\n\$m->call_dynamic('$key',\@_)\n}";
+	}
+	$subs{'main'} = $cparams->{'code'};
+	$cparams->{'code'} = "sub {\n\$m->call_dynamic('main',\@_)\n}";
+
+	$cparams->{dynamic_subs_init} = 
+	    join("",
+		 "sub {\n",
+		 $state->{shared},
+		 "return {\n",
+		 join(",\n",map("'$_'=>".$subs{$_},sort keys %subs)),
+		 "\n}\n}");
+    }
+    
+    my $header = $self->_build_header;
+    $cparams->{object_size} = length($header) + length (join("",values(%$cparams)));
+    my $constructor = $self->_build_constructor($state->{comp_class},$cparams).";";
+    
+    return $header . $constructor;
+}
+
+sub _build_embedded_component
+{
+    my $self = shift;
+
+    my $state = $self->{parser_state};
+
+    my $body = $self->_build_body;
+    return $self->_build_params($body);
 }
 
 sub _build_header
@@ -842,33 +897,28 @@ sub _build_subcomponent_or_method_header
     return '' unless %{ $state->{$type} };
 
     my $code = '';
-    #
-    # Add subcomponent (<%def>) sections.
-    #
-    $code .= "my \%_$type = (\n";
+    my $comp_class = 'HTML::Mason::Component::Subcomponent';
+    $code .= "my \%_$type =\n(\n";
     $code .= join ( ",\n",
-		    map {"'$_' => do {\n$state->{$type}{$_}\n}"}
+		    map { "'$_' => ".$self->_build_constructor($comp_class,$state->{$type}{$_}) }
 		    sort keys %{ $state->{$type} } );
     $code .= "\n);\n";
 
     return $code;
 }
 
-sub _build_params_string
+sub _build_params
 {
-    my ($self, $header, $body) = @_;
+    my ($self, $body) = @_;
     my $state = $self->{parser_state};
 
     #
     # Assemble parameters for component.
     #
-    my $ver = $self->version();
-    my @cparams = ( "'parser_version'=>$ver",
-		    "'create_time'=>".time() );
-
-    push @cparams, "'subcomps'=>\\\%_subcomponents"
+    my %cparams = ();
+    $cparams{'subcomps'} = '\%_subcomponents'
 	if %{ $state->{subcomponents} };
-    push @cparams, "'methods'=>\\\%_methods"
+    $cparams{'methods'} = '\%_methods'
 	if %{ $state->{methods} };
 
     if (%{ $state->{declared_args} })
@@ -877,17 +927,23 @@ sub _build_params_string
 	# Brought in from Tools.
 	my $dump = dumper_method($d);
 	for ($dump) { s/\$VAR1\s*=//g; s/;\s*$// }
-	push @cparams, "'declared_args'=>$dump";
+	$cparams{'declared_args'} = $dump;
     }
 
-    push @cparams, $state->{flags} if $state->{flags};
-    push @cparams, $state->{attr} if $state->{attr};
+    $cparams{'flags'} = $state->{flags} if $state->{flags};
+    $cparams{'attr'} = $state->{attr} if $state->{attr};
 
-    push @cparams, "'code'=>sub {\n$body\n}";
-    push @cparams, sprintf( "'object_size'=>%d",
-			    length($header) + length (join ",\n", @cparams) );
+    $cparams{'code'} = "sub {\n$body\n}";
 
-    return join(",\n",@cparams);
+    return \%cparams;
+}
+
+sub _build_constructor
+{
+    my ($self,$comp_class,$cparams) = @_;
+
+    my $cparams_string = join(",\n",map("'$_'=>".$cparams->{$_},sort keys %$cparams));
+    return "$comp_class\->new\n(\n$cparams_string\n)\n";
 }
 
 sub _build_body
