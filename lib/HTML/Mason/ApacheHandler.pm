@@ -865,6 +865,24 @@ sub return_not_found
     return NOT_FOUND;
 }
 
+sub _handler_1 ($$)
+{
+    my ($package, $r) = @_;
+
+    my $ah = $AH || $package->make_ah($r);
+
+    return $ah->handle_request($r);
+}
+
+sub _handler_2 : method
+{
+    my ($package, $r) = @_;
+
+    my $ah = $AH || $package->make_ah($r);
+
+    return $ah->handle_request($r);
+}
+
 #
 # PerlHandler HTML::Mason::ApacheHandler
 #
@@ -872,29 +890,11 @@ BEGIN
 {
     if ( $mod_perl::VERSION < 1.99 )
     {
-	eval <<'EOF';
-sub handler ($$)
-{
-    my ($package, $r) = @_;
-
-    my $ah = $AH || $package->make_ah($r);
-
-    return $ah->handle_request($r);
-}
-EOF
+        *handler = \&_handler_1;
     }
     else
     {
-	eval <<'EOF';
-sub handler : method
-{
-    my ($package, $r) = @_;
-
-    my $ah = $AH || $package->make_ah($r);
-
-    return $ah->handle_request($r);
-}
-EOF
+        *handler = \&_handler_2;
     }
 }
 
