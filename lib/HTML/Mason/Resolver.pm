@@ -186,6 +186,20 @@ This method needs to return the class that component objects should
 use.  If you do not want to create a custom component class, you can
 simply use "HTML::Mason::Component".
 
+=back
+
+=head2 Using a Resolver with HTML::Mason::ApacheHandler
+
+If you are creating a new resolver that you intend to use with the
+L<C<HTML::Mason::ApacheHandler>> module, then you must implement the
+following method as well, possibly in a different subclass.
+
+For example, Mason includes the C<HTML::Mason::Resolver::File> and
+C<HTML::Mason::Resolver::File::Apache> classes.  The latter simply
+adds an implementation of this method for file based components.
+
+=over 4
+
 =item apache_request_to_comp_path
 
 This method, given an Apache object, should return a component path.

@@ -7,7 +7,7 @@ package HTML::Mason::Resolver::File;
 use strict;
 
 use File::Spec;
-use HTML::Mason::Tools qw(paths_eq read_file);
+use HTML::Mason::Tools qw(read_file);
 use Params::Validate qw(:all);
 
 use HTML::Mason::Resolver;
@@ -123,27 +123,6 @@ sub glob_path {
 	}
     }
     return keys(%path_hash);
-}
-
-#
-# Given an apache request objectx, return the associated component
-# path or undef if none exists. This is called for top-level web
-# requests that resolve to a particular file.
-#
-sub apache_request_to_comp_path {
-    my ($self, $r) = @_;
-
-    my $file = $r->filename;
-    $file .= $r->path_info unless -f $file;
-
-    foreach my $root (map $_->[1], $self->comp_root_array) {
-	if (paths_eq($root, substr($file, 0, length($root)))) {
-	    my $path = substr($file, ($root eq '/' ? 0 : length($root)));
-	    $path =~ s,\/$,, unless $path eq '/';
-	    return $path;
-	}
-    }
-    return undef;
 }
 
 1;

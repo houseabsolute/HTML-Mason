@@ -376,7 +376,8 @@ sub new
 	$defaults{data_dir} = Apache->server_root_relative('mason');
     }
 
-    $defaults{request_class} = 'HTML::Mason::Request::ApacheHandler';
+    $defaults{request_class}  = 'HTML::Mason::Request::ApacheHandler';
+    $defaults{resolver_class} = 'HTML::Mason::Resolver::File::Apache';
 
     my @args = $class->create_contained_objects(%defaults, @_);
 
