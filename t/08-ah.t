@@ -48,11 +48,6 @@ print STDERR "\n";
 write_test_comps();
 
 if ($have_libapreq) {        # 54 tests
-    if ($have_filter) {
-        cleanup_data_dir();
-        filter_tests();      # 1 tests
-    }
-
     cleanup_data_dir();
     apache_request_tests(1); # 22 tests
 
@@ -62,6 +57,10 @@ if ($have_libapreq) {        # 54 tests
     cleanup_data_dir();
     no_config_tests();       # 15 tests
 
+    if ($have_filter) {
+        cleanup_data_dir();
+        filter_tests();      # 1 tests
+    }
 }
 
 if ($have_cgi) {             # 40 tests (+ 1?)
