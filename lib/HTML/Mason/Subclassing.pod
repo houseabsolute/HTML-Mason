@@ -49,6 +49,12 @@ component.  Mason comes with a single Resolver subclass,
 C<HTML::Mason::Resolver::File>, which is used to translate component
 paths into filesystem paths.
 
+=item * HTML::Mason::ComponentSource
+
+An object of this class represents a component's source.  These
+objects are instantiated by the resolver when it finds a component
+matching a given path.
+
 =item * HTML::Mason::Lexer
 
 The lexer is responsible for parsing a component.  Creating a new
@@ -82,5 +88,168 @@ The Interp is the core of Mason, and is primarily responsible for
 making all the other objects do their jobs.
 
 =back
+
+=head1 CONSTRUCTORS
+
+If you choose to override the constructor, which is always C<new> with
+Mason objects, that you make sure to call the superclass's constructor
+and that you use the object returned by it.  A good boilerplate for an
+overridden constructor looks something like this:
+
+  sub new
+  {
+      my $class = shift;
+
+      my $self = $class->SUPER::new(@_);
+
+      $self->_do_some_init;
+
+      return $self;
+  }
+
+=head1 Request
+
+=head2 What to Subclass?
+
+One important thing to know about this class is that it is actually
+several classes.  The first, C<HTML::Mason::Request>, is used when
+ApacheHandler is not loaded.  The other,
+C<HTML::Mason::Request::ApacheHandler>, is loaded by ApacheHandler and
+used to provide some mod_perl specific features.  Similar, the
+CGIHandler class provides its own request subclass,
+C<HTML::Mason::Request::CGIHandler>.
+
+It is impossible to know which one of these to subclass at compile
+time, since it is possible that your subclass will be loaded before
+either ApacheHandler or CGIHandler.
+
+To handle this, simply set C<@ISA> in your constructor, like this:
+
+
+  sub new
+  {
+      @ISA = 
+          ( $HTML::Mason::ApacheHandler::VERSION ?
+            'HTML::Mason::Request::ApacheHandler' :
+            $HTML::Mason::CGIHandler::VERSION ?
+            'HTML::Mason::Request::CGI' :
+            'HTML::Mason::Request' );
+
+      my $class = shift;
+
+      my $self = $class->SUPER::new(@_);
+
+      ...
+
+      return $self;
+  }
+
+It is quite important that you do this as these handler-specific
+subclasses provide important functionality.
+
+=head2 The exec() method
+
+The C<exec> method is called in order to execute a request, and is the
+method that you are most likely to want to override.
+
+However, if you do override it we suggest that you make sure to call
+the parent class's C<exec> method to implement the actual component
+execution and there is no need for you to re-implement them.
+
+Since the C<exec()> method is scalar/list context-sensitive, your
+C<exec> method will need to preserve that.  Here is a boilerplate:
+
+  sub exec
+  {
+      my $self = shift;
+
+      ... # do something cool
+
+      my @r;
+      if (wantarray)
+      {
+          @r = $self->SUPER::exec(@_);
+      }
+      else
+      {
+          $r[0] = $self->SUPER::exec(@_);
+      }
+
+      ... # maybe do some cleanup
+
+      return wantarray ? @r : $r[0];
+  }
+
+=head2 Subrequests
+
+Your custom request class will also be used to implement subrequests,
+which are implemented by calling C<exec> just like any other method.
+If you only want to do certain things in C<exec> for the first
+request, you can simply check the value of C<< $self->is_subrequest
+>>.
+
+=head2 Examples
+
+See the C<HTML::Mason::Request::WithApacheSession> module on CPAN.
+
+=head1 Resolver and ComponentSource
+
+The resolver takes a component path and figures out what component
+that path corresponds to.
+
+All resolver classes must implement two methods, C<get_info> and
+C<glob_path>.  The first takes a component path and returns a new
+C<HTML::Mason::ComponentSource> object.  This object contains
+information about the component, such as its last modified time and
+its source.  See the
+L<C<HTML::Mason::ComponentSource>|HTML::Mason::ComponentSource>
+documentation for more details.
+
+You may choose to provide your own ComponentSource subclass as well,
+if your resolver implementation can take advantage of it.
+
+The C<glob_path> method is responsible for translating a component
+path like F</foo/*/bar> into a list of component paths that match that
+glob pattern.
+
+=head1 Lexer
+
+The rationale for providing your own lexer would be to extend or
+replace Mason's syntax.
+
+The lexer is called by the compiler via its C<lex> method.  The
+arguments it receives are the component name, source, and the compiler
+object.  See the C<Compiler class|HTML::Mason::Compiler> documentation
+for details on what methods the lexer can call.
+
+=head1 Compiler
+
+See the C<Compiler class|HTML::Mason::Compiler> documentation for
+details on what methods a subclass of this class needs to provide.
+
+=head1 Buffer
+
+The public API documented in
+L<C<HTML::Mason::Buffer>|HTML::Mason::Buffer> is the complete Buffer
+class API, except for one method, C<_initialize>, which is called as
+part of the buffer's construction, from the C<new> method.
+
+Those interested in subclassing this class should also know that the
+constructor may take an additional parameter, C<parent>, which should
+be a Buffer object.  This parameter is automatically supplied by the
+C<new_child> method.
+
+Any subclass of this class you create should declare itself to be a
+subclass of the C<HTML::Mason::Buffer> class.
+
+=head2 ApacheHandler
+
+The methods that you are mostly to want to subclass are documented in
+the L<C<ApacheHandler class>|HTML::Mason::ApacheHandler>
+documentation.
+
+Providing an ApacheHandler subclass gives you a chance to do your own
+client parameter parsing, as well as the capability of providing a
+different way of handling requests.
 
 =cut
