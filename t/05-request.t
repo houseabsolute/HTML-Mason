@@ -16,9 +16,12 @@ sub make_tests
 
     $group->add_support( path => '/support/abort_test',
 			 component => <<'EOF',
+<%args>
+$val => 50
+</%args>
 Some more text
 
-% $m->abort(50);
+% $m->abort($val);
 
 But this will never be seen
 EOF
@@ -132,8 +135,33 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'abort_0',
+		      description => 'test $m->abort method with value of 0',
+
+		      component => <<'EOF',
+Some text
+
+% eval {$m->comp('support/abort_test', val => 0)};
+% if (my $err = $@) {
+%   if ($m->aborted) {
+Component aborted with value <% $m->aborted_value %>
+%   } else {
+Got error
+%   }
+% }
+EOF
+		      expect => <<'EOF',
+Some text
+
+Component aborted with value 0
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'abort',
-		      description => 'test $m->abort method (batch mode)',
+		      description => 'test $m->abort method (autoflush off)',
 		      component => <<'EOF',
 Some text
 
