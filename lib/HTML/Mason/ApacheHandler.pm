@@ -386,11 +386,11 @@ sub make_ah
 	}
     }
 
-    if (exists $p{escapes}) {
+    if (exists $p{escape_flags}) {
         my %escapes;
-        foreach my $pair (@{$p{escapes}}) {
+        foreach my $pair (@{$p{escape_flags}}) {
             my ($key, $val) = split /\s*=>\s*/, $pair, 2;
-            param_error "Configuration parameter MasonEscapes must be a key/value pair ".
+            param_error "Configuration parameter MasonEscapeFlags must be a key/value pair ".
                         "like 'foo => \&foo_escape'.  Invalid parameter:\n$pair"
                 unless defined $key && defined $val;
 
@@ -400,7 +400,7 @@ sub make_ah
             $escapes{$key} = $coderef;
         }
 
-        $p{escapes} = \%escapes;
+        $p{escape_flags} = \%escapes;
     }
 
     my $ah = $package->new(%p, $r);

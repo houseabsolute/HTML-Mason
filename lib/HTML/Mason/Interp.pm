@@ -38,7 +38,7 @@ BEGIN
 					   type => SCALAR, descr => "Current time (deprecated)" },
 	 data_dir                     => { parse => 'string', optional => 1, type => SCALAR,
 					   descr => "A directory for storing cache files and other state information" },
-         escapes                      => { parse => 'list', optional => 1, type => HASHREF,
+         escape_flags                 => { parse => 'list', optional => 1, type => HASHREF,
                                            descr => "A list of escape flags to set (as if calling the set_escape() method" },
 	 static_source                => { parse => 'boolean', default => 0, type => BOOLEAN,
 					   descr => "When true, we only compile source files once" },
@@ -161,7 +161,7 @@ sub _initialize
         $self->set_escape(@$_);
     }
 
-    if ( my $e = delete $self->{escapes} )
+    if ( my $e = delete $self->{escape_flags} )
     {
         while ( my ($flag, $code) = each %$e )
         {
@@ -832,7 +832,7 @@ unspecified, Mason will not use L<object files|HTML::Mason::Admin/object files>,
 cache class|HTML::Mason::Request/item_cache> will be C<MemoryCache>
 instead of C<FileCache>.
 
-=item escapes
+=item escape_flags
 
 A hash reference of escape flags to set for this object.  See the
 section on the L<C<set_escape()> method|Interpreter/item_set_scape>
