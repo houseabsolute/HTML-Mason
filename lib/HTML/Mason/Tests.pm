@@ -86,7 +86,9 @@ sub add_test
     die "no name provided for test\n"
 	unless exists $p{name};
 
-    $p{call_path} ||= "/$self->{name}/$p{name}";
+    my $call_path = "/$self->{name}/";
+    $call_path .= exists $p{call_path} ? $p{call_path} : $p{name};
+    $p{call_path} = $call_path;
     $p{call_path} =~ s,/+,/,g;
 
     $p{path} ||= $p{name};
@@ -191,6 +193,25 @@ sub _write_support_comps
     }
 }
 
+sub _write_test_comp
+{
+    my $self = shift;
+    my $test = $self->{current_test};
+
+    my @path = split m(/), $test->{path};
+    my $file = pop @path;
+
+    my $dir = File::Spec->catdir( $self->{comp_root}, $self->{name}, @path );
+    unless ( -d $dir )
+    {
+	print "Making dir: $dir\n" if $DEBUG;
+	mkpath( $dir, 0, 0755 )
+	    or die "Unable to create directory '$dir': $!";
+    }
+
+    $self->_write_comp( $test->{path}, $dir, $file, $test->{component} );
+}
+
 sub _write_comp
 {
     my $self = shift;
@@ -242,25 +263,6 @@ sub _run_tests
     }
 }
 
-sub _write_test_comp
-{
-    my $self = shift;
-    my $test = $self->{current_test};
-
-    my @path = split m(/), $test->{path};
-    my $file = pop @path;
-
-    my $dir = File::Spec->catdir( $self->{comp_root}, $self->{name}, @path );
-    unless ( -d $dir )
-    {
-	print "Making dir: $dir\n" if $DEBUG;
-	mkpath( $dir, 0, 0755 )
-	    or die "Unable to create directory '$dir': $!";
-    }
-
-    $self->_write_comp( $test->{path}, $dir, $file, $test->{component} );
-}
-
 sub _run_test
 {
     my $self = shift;
@@ -302,11 +304,9 @@ sub _run_test
 					   %params,
 					   parser => $parser );
 
-    my $call_path = $test->{call_path};
+    print "Calling $test->{name} test with path: $test->{call_path}\n" if $DEBUG;
 
-    print "Calling $test->{name} test with path: $call_path\n" if $DEBUG;
-
-    eval { $interp->exec($call_path); };
+    eval { $interp->exec( $test->{call_path} ); };
 
     if ($@)
     {
@@ -514,7 +514,8 @@ is given, the value of the name parameter is used.
 =item -- call_path (optional)
 
 The path that should be used to call the component.  If none is given,
-then the value is /<group name>/<test name>.
+then the value is /<group name>/<test name>.  If a value is given, it
+is still prepended by /<group name>/.
 
 =item -- parser_params
 
