@@ -131,7 +131,7 @@ sub _initialize
     # Create data subdirectories if necessary. mkpath will die on error.
     #
     if ($self->data_dir) {
-	foreach my $subdir ( qw(obj cache etc) ) {
+	foreach my $subdir ( qw(obj cache) ) {
 	    my @newdirs = mkpath( File::Spec->catdir( $self->data_dir, $subdir ) , 0, 0775 );
 	    $self->push_files_written(@newdirs);
 	}
