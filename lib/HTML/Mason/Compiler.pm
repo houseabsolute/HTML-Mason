@@ -6,9 +6,12 @@ package HTML::Mason::Compiler;
 
 use strict;
 
-use Exception::Class qw( Mason::Exception::Compiler );
+use HTML::Mason::Component::FileBased;
+use HTML::Mason::Component::Subcomponent;
 
-use HTML::Mason::Tools qw(read_file);
+use HTML::Mason::Exceptions;
+use Params::Validate qw(:all);
+Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( allow_globals
@@ -40,7 +43,7 @@ sub _init
 
     foreach ( keys %fields )
     {
-	$self->$_( $fields{$_} ) unless $self->$_();
+	$self->$_( $p{$_} || $fields{$_} ) unless $self->$_();
     }
 
     $self->lexer( $self->lexer_class->new( compiler => $self ) );
@@ -51,18 +54,16 @@ sub compile
     my $self = shift;
     my %p = @_;
 
-    foreach ( qw( comp name ) )
-    {
-	Mason::Lexer::Exception::Params->throw( error => "No $_ option provided to compile method")
-	    unless defined $p{$_};
-    }
+    validate( @_, { comp => { type => SCALAR },
+		    name => { type => SCALAR },
+		  } );
 
     # Preprocess the script.  The preprocessor routine is handed a
     # reference to the entire script.
     if ($self->preprocess)
     {
 	eval { $self->preprocess->( \$self->{comp} ) };
-	Mason::Exception::Compiler->throw( error => "Error during custom preprocess step: $@" )
+	HTML::Mason::Exception::Compiler->throw( error => "Error during custom preprocess step: $@" )
 	    if $@;
     }
 
@@ -75,7 +76,7 @@ sub start_component
 {
     my $self = shift;
 
-    Mason::Exception::Compiler->throw( error => "Cannot start a component while already compiling a component" )
+    HTML::Mason::Exception::Compiler->throw( error => "Cannot start a component while already compiling a component" )
         if $self->{current_comp};
 
     $self->{in_main} = 1;
@@ -92,13 +93,14 @@ sub _init_comp_data
 
     $data->{body} = '';
 
-    $data->{subcomponents} = {};
-    $data->{methods} = {};
+    foreach ( $self->lexer->named_block_types )
+    {
+	$data->{$_} = {};
+    }
 
     $data->{args} = [];
-    $data->{current_args} = undef;
 
-    foreach ( qw( cleanup doc filter init once shared text ) )
+    foreach ( $self->lexer->simple_block_types )
     {
 	$data->{blocks}{$_} = [];
     }
@@ -116,10 +118,10 @@ sub start_block
     my $self = shift;
     my %p = @_;
 
-    Mason::Exception::Compiler->throw( error => "Cannot define a $p{block_type} section inside a method or subcomponent" )
+    HTML::Mason::Exception::Syntax->throw( error => "Cannot define a $p{block_type} section inside a method or subcomponent" )
 	 if $top_level_only_block{ $p{block_type} } && ! $self->{in_main};
 
-    Mason::Exception::Compiler->throw( error => "Cannot nest a $p{block_type} inside a $self->{in_block} block" )
+    HTML::Mason::Exception::Syntax->throw( error => "Cannot nest a $p{block_type} inside a $self->{in_block} block: " . $self->lexer->name )
 	 if $self->{in_block};
 
     $self->{in_block} = $p{block_type};
@@ -163,6 +165,8 @@ sub text_block
     my $self = shift;
     my %p = @_;
 
+    $p{block} =~ s,(['\\]),\\$1,g;
+
     $self->_add_body_code( "\$_out->( '$p{block}' );\n" ) if $p{block} ne '';
 }
 
@@ -171,7 +175,7 @@ sub end_block
     my $self = shift;
     my %p = @_;
 
-    Mason::Exception::Compiler->throw( error => "end of $p{block_type} encountered while in $self->{in_block} block" )
+    HTML::Mason::Exception::Syntax->throw( error => "end of $p{block_type} encountered while in $self->{in_block} block" )
 	unless $self->{in_block} eq $p{block_type};
 
     $self->{in_block} = undef;
@@ -182,15 +186,15 @@ sub variable_declaration
     my $self = shift;
     my %p = @_;
 
-    Mason::Exception::Compiler->throw( error => "variable_declaration called inside a $p{block_type} block")
+    HTML::Mason::Exception::Compiler->throw( error => "variable_declaration called inside a $p{block_type} block")
 	unless $p{block_type} eq 'args';
 
-    my $arg = "$p{var_type}$p{name}";
+    my $arg = "$p{type}$p{name}";
 
-    Mason::Exception::Compiler->throw( "$arg already defined" )
-        if grep { $_->{type} eq $p{var_type} && $_->{name} eq $p{name} } @{ $self->{current_comp}{args} };
+    HTML::Mason::Exception::Compiler->throw( "$arg already defined" )
+        if grep { "$_->{type}$_->{name}" eq "$p{type}$p{name}" } @{ $self->{current_comp}{args} };
 
-    push @{ $self->{current_comp}{args} }, { type => $p{var_type},
+    push @{ $self->{current_comp}{args} }, { type => $p{type},
 					     name => $p{name},
 					     default => $p{default} };
 }
@@ -200,11 +204,11 @@ sub key_value_pair
     my $self = shift;
     my %p = @_;
 
-    Mason::Exception::Compiler->throw( error => "variable_declaration called inside a $p{block_type} block")
+    HTML::Mason::Exception::Compiler->throw( error => "key_value_pair called inside a $p{block_type} block")
 	unless $p{block_type} eq 'flags' || $p{block_type} eq 'attr';
 
     my $type = $p{block_type} eq 'flags' ? 'flag' : 'attribute';
-    Mason::Exception::Compiler->throw( error => "$p{key} $type already defined" )
+    HTML::Mason::Exception::Compiler->throw( error => "$p{key} $type already defined" )
 	if exists $self->{current_comp}{ $p{block_type} }{ $p{key} };
 
     $self->{current_comp}{ $p{block_type} }{ $p{key} } = $p{value}
@@ -215,19 +219,21 @@ sub start_named_block
     my $self = shift;
     my %p = @_;
 
-    my $type = $p{block_type} eq 'def' ? 'subcomponent' : 'method';
-    Mason::Exception::Compiler->throw( "Cannot define a $type inside a method or subcomponent" )
+    HTML::Mason::Exception::Syntax->throw( "Cannot define a $p{type} inside a method or subcomponent" )
         unless $self->{in_main};
 
-    $type .= 's';
-    $self->{$type}{ $p{name} } = {};
-    $self->_init_comp_data( $self->{$type}{ $p{name} } );
-    $self->{current_comp} = $self->{$type}{ $p{name} };
+    $self->{in_main}--;
+
+    $self->{ $p{block_type} }{ $p{name} } = {};
+    $self->_init_comp_data( $self->{ $p{block_type} }{ $p{name} } );
+    $self->{current_comp} = $self->{ $p{block_type} }{ $p{name} };
 }
 
 sub end_named_block
 {
     my $self = shift;
+
+    $self->{in_main}++;
 
     $self->{current_comp} = $self;
 }
@@ -296,16 +302,16 @@ sub dump
 
     $self->_dump_data( $self );
 
-    foreach ( keys %{ $self->{subcomponents} } )
+    foreach ( keys %{ $self->{def} } )
     {
 	print "  Subcomponent $_\n";
-	$self->_dump_data( $self->{subcomponents}{$_}, '  ' );
+	$self->_dump_data( $self->{def}{$_}, '  ' );
     }
 
-    foreach ( keys %{ $self->{methods} } )
+    foreach ( keys %{ $self->{method} } )
     {
 	print "  Methods $_\n";
-	$self->_dump_data( $self->{methods}{$_}, '  ');
+	$self->_dump_data( $self->{method}{$_}, '  ');
     }
 }
 
