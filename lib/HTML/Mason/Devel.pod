@@ -1324,7 +1324,7 @@ To change the expiration time for a piece of data, call C<set> again
 with the new expiration. To expire an item immediately, use
 C<< $m->cache->remove >>.
 
-The 'expire_if' option from Mason 1.0x and earlier is currently not
+The C<expire_if> option from Mason 1.0x and earlier is currently not
 supported, though a version of it may be added to C<Cache::Cache> in
 the future. For now, you can use tests on C<get_object()> to
 conditionally expire a cache. For example, this code expires C<$key>
