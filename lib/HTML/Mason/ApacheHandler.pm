@@ -270,8 +270,8 @@ sub make_ah
 	} else {
 	    foreach my $root (@{$p{comp_root}}) {
 		$root = [ split /\s*=>\s*/, $root, 2 ];
-		param_error("Configuration parameter MasonCompRoot must be either a single string value ".
-			    "or multiple key/value pairs like 'foo => /home/mason/foo'" )
+		param_error "Configuration parameter MasonCompRoot must be either a single string value ".
+			    "or multiple key/value pairs like 'foo => /home/mason/foo'" 
 		    unless defined $root->[1];
 	    }
 	}
@@ -374,7 +374,7 @@ sub _get_code_param
 
     my $sub_ref = eval $val;
 
-    param_error( "Configuration parameter '$p' is not valid perl:\n$@\n" )
+    param_error "Configuration parameter '$p' is not valid perl:\n$@\n"
 	if $@;
 
     return $sub_ref;
@@ -400,7 +400,7 @@ sub _get_val
 
     my @val = Apache::perl_hook('TableApi') ? $c->dir_config->get($p) : $c->dir_config($p);
 
-    param_error( "Only a single value is allowed for configuration parameter '$p'\n" )
+    param_error "Only a single value is allowed for configuration parameter '$p'\n"
 	if @val > 1 && ! $wantarray;
 
     $vals->{$p} = join '', @val if $vals;

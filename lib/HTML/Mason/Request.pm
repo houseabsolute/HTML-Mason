@@ -266,7 +266,7 @@ sub abort
     my ($self) = @_;
     $self->{aborted} = 1;
     $self->{aborted_value} = $_[1] || $self->{aborted_value} || undef;
-    abort_error $self->{aborted_value};
+    HTML::Mason::Exception::Abort( error => 'Request->abort was called', aborted_value => $self->{aborted_value} );
 }
 
 #
@@ -293,7 +293,7 @@ sub cache
     load_pkg($cache_class, 'Fix your Cache::Cache installation or choose another cache class.');
 
     my $cache = $cache_class->new (\%options)
-	or error( "could not create cache object" );
+	or error "could not create cache object";
 
     return $cache;
 }
