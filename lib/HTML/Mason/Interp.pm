@@ -1238,7 +1238,7 @@ A more complex handler.cgi script might look like this:
     use HTML::Mason::Utils qw(cgi_request_args);
     use HTTP::Headers;
 
-    my $compiler = HTML::Mason::Compiler::ToObject->new( allow_globals => '$H' );
+    my $compiler = new HTML::Mason::Compiler::ToObject (allow_globals => '$H');
     my $interp = new HTML::Mason::Interp (comp_root=>'...',
                                           data_dir=>'...',
                                           compiler=>$compiler);
