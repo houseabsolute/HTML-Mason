@@ -1,6 +1,0 @@
-Content-type: text/html
-X-Mason-Test: Initial value
-scalar = 5
-list = a,b
-hash = key=>value
-Status code: 0

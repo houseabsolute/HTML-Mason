@@ -1,8 +1,0 @@
-scalar = <% $scalar %>
-list = <% join(",",@list) %>
-hash = <% join(",",map("$_=>$hash{$_}",sort(keys(%hash)))) %>
-<%args>
-$scalar
-@list
-%hash
-</%args>
