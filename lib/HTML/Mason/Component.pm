@@ -137,6 +137,8 @@ sub dynamic_subs_init {
     my $self = shift;
 
     $self->{dynamic_subs_hash} = $self->{dynamic_subs_init}->();
+    die "could not process <%shared> section (does it contain a return()?)"
+	unless ref($self->{dynamic_subs_hash}) eq 'HASH';
 }
 
 sub run_dynamic_sub {

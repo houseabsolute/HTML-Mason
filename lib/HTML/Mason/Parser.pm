@@ -216,7 +216,6 @@ sub parse_component
 	    $state->{$t} = '';
 	}
 
-
 	my $comp_names = join '|', @tags;
 
 	# Use a scalar instead of a hash key to get at the script, to
@@ -1169,6 +1168,15 @@ sub eval_object_text
 	    $comp = eval($object_text);
 	}
 	$err = $warnstr . $@;
+
+	#
+	# If no error generated and no component object returned, we
+	# have a prematurely-exited <%once> section or other syntax
+	# accident.
+	#
+	unless ($err or (defined($comp) and (UNIVERSAL::isa($comp, 'HTML::Mason::Component') or ref($comp) eq 'CODE'))) {
+	    $err = "could not generate component object (return() in a <%once> section or extra close brace?)";
+	}
     }
 
     #
@@ -1185,8 +1193,6 @@ sub eval_object_text
 	} elsif ($comp) {
 	    if (ref($comp) eq 'CODE') {
 		$err = sprintf($incompat,"a pre-0.7 parser");
-	    } elsif (ref($comp) !~ /HTML::Mason::Component/) {
-		$err = "object file ($object_file) did not return a component object!";
 	    } elsif ($comp->parser_version != $parser_version) {
 		$err = sprintf($incompat,"parser version ".$comp->parser_version);
 	    }
@@ -1233,7 +1239,7 @@ sub make_dirs
     }
     
     my $compilesub = sub {
-	my ($srcfile) = $File::Find::name;
+	my ($srcfile) = @_;
 	return if (!-f $srcfile);
 	return if defined($predicate) && !($predicate->($srcfile));
 	my $compPath = substr($srcfile,length($source_dir));
@@ -1259,7 +1265,7 @@ sub make_dirs
 	if ($makeflag) {
 	    my ($errmsg,$objText);
 	    print "compiling $srcfile\n" if $verbose;
-	    if ($self->make_component(script_file=>$srcfile, object_text=>\$objText, error=>\$errmsg)) {
+	    if ($self->make_component(script_file=>$srcfile, comp_class=>'HTML::Mason::Component::FileBased', object_text=>\$objText, error=>\$errmsg)) {
 		$self->write_object_file(object_file=>$objfile, object_text=>$objText);
 		print $relfh $compPath, "\n" if defined $reload_file;
 	    } else {

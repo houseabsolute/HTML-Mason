@@ -736,7 +736,9 @@ Useful for declaring persistent component-scoped lexical variables
 subroutines (both named and anonymous), and initializing state.
 
 This code does not run inside a request context. You cannot call
-components or access $m from this section.
+components or access $m from this section. Also, do not attempt to
+return() from a C<E<lt>%onceE<gt>> section; the current parser
+cannot properly handle it.
 
 Normally this code will execute individually from every HTTP child
 that uses the component. However, if the component is preloaded, this
@@ -782,6 +784,9 @@ component.  The exact penalty varies between systems and for most
 applications will be unnoticeable. However, one should avoid using
 C<E<lt>%sharedE<gt>> when patently unnecessary, e.g. when an C<E<lt>%initE<gt>> would work
 as well.
+
+Do not attempt to return() from a C<E<lt>%sharedE<gt>> section; the current
+parser cannot properly handle it.
 
 =head1 EMBEDDED COMPONENTS
 
