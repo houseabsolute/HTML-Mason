@@ -31,12 +31,12 @@ sub cgi_request_args
 
     my %args;
 
-    # Checking scalar $r->args when the method is POST is important
-    # because otherwise ->url_param returns a parameter named
-    # 'keywords' with a value of () (empty array).  This is apparently
-    # a feature related to <ISINDEX> queries or something (see the
-    # CGI.pm) docs.  It makes my head heart. - dave
-    my @methods = $method eq 'GET' || ! $ENV{QUERY_STRING} ? ( 'param' ) : ( 'param', 'url_param' );
+    # Checking that there really is no query string when the method is
+    # not POST is important because otherwise ->url_param returns a
+    # parameter named 'keywords' with a value of () (empty array).
+    # This is apparently a feature related to <ISINDEX> queries or
+    # something (see the CGI.pm) docs.  It makes my head heart. - dave
+    my @methods = $method ne 'POST' || ! $ENV{QUERY_STRING} ? ( 'param' ) : ( 'param', 'url_param' );
     foreach my $key ( map { $q->$_() } @methods ) {
 	next if exists $args{$key};
 	my @values = map { $q->$_($key) } @methods;
