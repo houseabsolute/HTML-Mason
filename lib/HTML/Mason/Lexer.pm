@@ -182,10 +182,10 @@ sub match_block
     }
 }
 
-sub _generic_block
+sub generic_block
 {
     my ($self, %p) = @_;
-    
+
     my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     if ( $comp =~ m,\G(.*?)</%\Q$p{block_type}\E>(\n?),igcs )
@@ -206,25 +206,24 @@ sub _generic_block
 	HTML::Mason::Exception::Syntax->throw
 		( error => "<%$p{block_type}> tag at line $self->{lines} has no matching </%$p{block_type}> tag" );
     }
-    
 }
 
 sub text_block
 {
     my $self = shift;
-    $self->_generic_block(@_, method => 'text_block');
+    $self->generic_block(@_, method => 'text_block');
 }
 
 sub raw_block
 {
     my $self = shift;
-    $self->_generic_block(@_, method => 'raw_block');
+    $self->generic_block(@_, method => 'raw_block');
 }
 
 sub doc_block
 {
     my $self = shift;
-    $self->_generic_block(@_, method => 'doc_block');
+    $self->generic_block(@_, method => 'doc_block');
 }
 
 sub variable_list_block
