@@ -249,10 +249,6 @@ Corresponds to the C<use_object_files> parameter.
 
 Corresponds to the C<use_reload_file> parameter.
 
-=item * MasonVerboseCompileError - boolean
-
-Corresponds to the C<verbose_compile_error> parameter.
-
 =back
 
 =head2 ApacheHandler Parameters

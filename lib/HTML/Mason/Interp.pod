@@ -197,12 +197,6 @@ True or undef, default is undef. If true, disables Mason's automatic
 timestamp checking on component source files, relying instead on an
 explicitly updated L<Admin/reload file>.
 
-=item verbose_compile_error
-
-True or undef, default is undef. If true, component compile errors are
-followed with the full component source, annotated with line numbers,
-to better interpret the error message. Does not affect runtime errors.
-
 =back
 
 =head1 ACCESSOR METHODS

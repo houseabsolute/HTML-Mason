@@ -39,8 +39,7 @@ use HTML::Mason::MethodMaker
 			  resolver
 			  static_file_root
 			  use_object_files
-			  use_reload_file
-			  verbose_compile_error ) ],
+			  use_reload_file ) ],
       );
 
 # Fields that can be set in new method, with defaults
@@ -65,8 +64,7 @@ my %fields =
      resolver => undef,     
      static_file_root => undef,
      use_object_files => 1,
-     use_reload_file => 0,
-     verbose_compile_error => 0
+     use_reload_file => 0
      );
 
 sub new
