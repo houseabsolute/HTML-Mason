@@ -46,10 +46,11 @@ To install Mason, run the standard sequence:
 	make install
 
 By default, Mason will prompt you for information about where Apache
-is installed so that it can do tests with a live Apache server.  If
-you would like to skip this, invoke the Makefile.PL like this:
+is installed so that it can help you configure Mason to run under
+mod_perl.  If you would like to skip this, invoke the Makefile.PL like
+this:
 
-        perl Makefile.PL --no-prompts
+        perl Makefile.PL --noprompts
 
 After Mason is installed, you will need to activate it by adding some
 directives to your Apache configuration files.
