@@ -155,9 +155,13 @@ sub attr {
     my ($self,$name) = @_;
     my $value;
     if ($self->_locate_inherited('attr',$name,\$value)) {
-	return $value;
+	if (ref($value) eq 'CODE') {
+	    return $value->();
+	} else {
+	    return $value;
+	}
     } else {
-	die "no attribute $name for component $self->title";
+	die "no attribute '$name' for component ".$self->title;
     }
 }
 
@@ -178,7 +182,7 @@ sub call_method {
     if ($self->_locate_inherited('methods',$name,\$method)) {
 	$HTML::Mason::Commands::m->comp({called_comp=>$self},$method,%args);
     } else {
-	die "no method $name for component ".$self->title;
+	die "no method '$name' for component ".$self->title;
     }
 }
 
