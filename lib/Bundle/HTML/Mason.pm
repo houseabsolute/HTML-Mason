@@ -22,9 +22,7 @@ File::Spec  0.8
 
 Params::Validate  0.16
 
-Apache::Request  0.31
-
-Exception::Class  1.00
+Exception::Class  1.01
 
 Cache::Cache  1.00
 
