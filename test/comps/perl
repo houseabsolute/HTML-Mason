@@ -1,0 +1,13 @@
+<HTML>
+<HEAD>
+<TITLE>
+perl Test
+</TITLE>
+</HEAD>
+<BODY>
+<%perl>
+my $message = "Hello World!";
+</%perl>
+<% $message %>
+</BODY>
+</HTML>

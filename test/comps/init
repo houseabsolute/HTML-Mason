@@ -1,0 +1,14 @@
+<HTML>
+<HEAD>
+<TITLE>
+init Test
+</TITLE>
+</HEAD>
+<BODY>
+<% $message %>
+</BODY>
+</HTML>
+
+<%init>
+my $message = "Hello World!";
+</%init>

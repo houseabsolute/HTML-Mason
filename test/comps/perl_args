@@ -1,0 +1,10 @@
+<HTML>
+<HEAD>
+<TITLE>
+perl_args Test
+</TITLE>
+</HEAD>
+<BODY>
+<% mc_comp("support/perl_args_test", message => 'Hello World!') %>
+</BODY>
+</HTML>

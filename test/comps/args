@@ -1,0 +1,10 @@
+<HTML>
+<HEAD>
+<TITLE>
+args Test
+</TITLE>
+</HEAD>
+<BODY>
+<% mc_comp("support/args_test", message => 'Hello World!') %>
+</BODY>
+</HTML>
