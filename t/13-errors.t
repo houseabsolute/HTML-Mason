@@ -157,6 +157,33 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'check_error_format',
+		      description => 'Make sure setting error_format => "html" works',
+                      interp_params => { error_format => 'html',
+					 error_mode => 'output',
+                                       },
+		      component => <<'EOF',
+% die("Horrible death");
+EOF
+                      expect => qr{^\s+<html>.*Horrible death}is,
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'change_error_format',
+		      description => 'Make sure setting $m->error_format($foo) works on the fly',
+                      interp_params => { error_format => 'html',
+					 error_mode => 'output',
+                                       },
+		      component => <<'EOF',
+% $m->error_format('text');
+% die("Horrible death");
+EOF
+                      expect => qr{^Horrible death},
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
