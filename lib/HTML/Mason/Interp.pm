@@ -758,14 +758,13 @@ the only user method is the new() constructor.
 
 =item autohandler_name
 
-File name used for autohandlers. Default is "autohandler".
+File name used for L<autohandlers|HTML::Mason::Devel/autohandlers>. Default is "autohandler".
 
 =item code_cache_max_size
 
 Specifies the maximum size, in bytes, of the in-memory code cache
-where components are stored. Default is 10 MB. See the L<Code Cache
-section in the I<Admin Guide>|HTML::Mason::Admin/"Code Cache"> for
-further details.
+where components are stored. Default is 10 MB. See ADMIN<code cache>
+for further details.
 
 =item compiler
 
@@ -774,7 +773,7 @@ a new object of class P<compiler_class> will be created.
 
 =item compiler_class
 
-The class to use when creating a compiler. Defaults to L<HTML::Mason::Compiler>.
+The class to use when creating a compiler. Defaults to L<HTML::Mason::Compiler|HTML::Mason::Compiler>.
 
 =item current_time
 
@@ -784,14 +783,18 @@ Interpreter's notion of the current time (deprecated).
 
 The data directory is a writable directory that Mason uses for various
 features and optimizations: for example, component object files and
-data cache files.
-
-Mason will create the directory on startup, if necessary, and set its
+data cache files. Mason will create the directory on startup, if necessary, and set its
 permissions according to the web server User/Group.
 
-If this parameter is not specified, Mason will not use object files,
-and the default L<data cache class|HTML::Mason:Request/item_cache>
-will be Cache::MemoryCache instead of Cache::FileCache.
+Under L<Apache|HTML::Mason::ApacheHandler>, data_dir defaults to a
+directory called "mason" under the Apache server root. You will
+need to change this on certain systems that assign a high-level
+server root such as F</usr>!
+
+In non-Apache environments, data_dir has no default. If it is left
+unspecified, Mason will not use L<object files|HTML::Mason::Admin/object files>, and the default L<data
+cache class|HTML::Mason:Request/item_cache> will be C<MemoryCache>
+instead of C<FileCache>.
 
 =item ignore_warnings_expr
 
@@ -817,8 +820,7 @@ when the interpreter initializes. e.g.
 
 Default is the empty list.  For maximum performance, this should only
 be used for components that are frequently viewed and rarely updated.
-See the L<preloading section in the I<Admin
-Guide>|HTML::Mason::Admin/preloading> for further details.
+See ADMIN<preloading> for further details.
 
 As mentioned in the developer's guide, a component's C<< <%once> >>
 section is executed when it is loaded.  For preloaded components, this
@@ -828,7 +830,7 @@ C<< <%once> >> section will fail.
 
 =item request_class
 
-The class to use when creating requests. Defaults to L<HTML::Mason::Request>.
+The class to use when creating requests. Defaults to L<HTML::Mason::Request|HTML::Mason::Request>.
 
 =item resolver
 
@@ -838,7 +840,7 @@ object of class P<resolver_class> will be created.
 =item resolver_class
 
 The class to use when creating a resolver. Defaults to
-L<HTML::Mason::Resolver::File>.
+L<HTML::Mason::Resolver::File|HTML::Mason::Resolver::File>.
 
 =item static_source
 

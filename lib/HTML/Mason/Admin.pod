@@ -1,10 +1,10 @@
 =head1 NAME
 
-HTML::Mason::Admin - Mason Administrator's Guide
+HTML::Mason::Admin - Mason Administrator's Manual
 
 =head1 DESCRIPTION
 
-This guide is intended for the sysadmin/webmaster in charge of
+This manual is written for the sysadmin/webmaster in charge of
 installing, configuring, or tuning a Mason system.
 
 =head1 SITE CONFIGURATION METHODS
@@ -237,7 +237,9 @@ Keys must be unique in a case-insensitive comparison.
 
 The data directory (P<data_dir>) is a writable directory that Mason
 uses for various features and optimizations. By default, it is a
-directory called "mason" under your Apache server root.
+directory called "mason" under your Apache server root. You will need
+to change this on certain systems that assign a high-level server root
+such as F</usr>!
 
 Mason will create the directory on startup, if necessary, and set its
 permissions according to the web server User/Group.

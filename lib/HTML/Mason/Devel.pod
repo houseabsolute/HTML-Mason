@@ -9,13 +9,13 @@ least a little Perl. The goal is to write, run, and debug Mason
 components.
 
 If you are the webmaster (or otherwise responsible for the Mason
-installation), you should also read B<HTML::Mason::Admin>. There you
-will find information about virtual site configuration, performance
-tuning, component caching, and so on.
+installation), you should also read L<the administrator's
+guide|HTML::Mason::Admin>. There you will find information about site
+configuration, performance tuning, component caching, and so on.
 
 If you are a developer just interested in knowing more about Mason's
-capabilities and implementation, then B<HTML::Mason::Admin> is for you
-too.
+capabilities and implementation, then L<the administrator's
+guide|HTML::Mason::Admin> is for you too.
 
 We strongly suggest that you have a working Mason to play with as you
 work through these examples. Other component examples can be found in
@@ -26,8 +26,8 @@ site, that is what I<most> people want to do with Mason, and is thus
 the focus of this manual.
 
 If you are planning to use Mason outside of the web, this manual will
-still be useful, of course.  Also make sure to read L<NON-WEB MASON in
-Admin|HTML::Mason::Admin/NON-WEB MASON> in the Administrator's Guide.
+still be useful, of course.  Also make sure to read ADMIN<running
+outside of mod_perl>.
 
 =head1 HOW TO USE THIS MANUAL
 
@@ -528,11 +528,11 @@ A subrequest is simply a Mason Request object and has all of the
 methods normally associated with one.
 
 To create a subrequest you simply use the C<< $m->make_subrequest >>
-method.  This method can take any parameters normally given to the
-Request object's constructor, such as P<autoflush> or P<out_method>.
-Once you have a new request object you simply call its C<exec> method
-to execute it, which takes exactly the same parameters as the C<comp>
-method.
+method.  This method can take any parameters belonging to
+L<HTML::Mason::Request|HTML::Mason::Request>, such as P<autoflush> or
+P<out_method>.  Once you have a new request object you simply call its
+C<exec> method to execute it, which takes exactly the same parameters
+as the C<comp> method.
 
 Since subrequests inherit their parent request's parameters, output
 from a component called via a subrequest goes to the same desintation
@@ -642,8 +642,8 @@ By default dhandlers do not get a chance to handle requests to a
 directory itself (e.g. F</newsfeeds>). These are automatically
 deferred to Apache, which generates an index page or a FORBIDDEN
 error.  Often this is desirable, but if necessary the administrator
-can let in directory requests as well; see L<Allowing directory
-request in Admin|HTML::Mason::Admin/"Allowing directory requests">.
+can let in directory requests as well; see ADMIN<allowing directory
+request>.
 
 A component or dhandler that does not want to handle a particular
 request may defer control to the next dhandler by calling C<<
@@ -1274,16 +1274,17 @@ under special circumstances, one component does not access another
 component's cache. Each cached value may be set to expire at a certain
 time.
 
-Data caching is implemented with DeWitt Clinton's C<Cache::Cache>
-module. To get the full benefit out of caching you should I<read the
-documentation> for C<Cache::Cache> as well as for relevant subclasses
-(e.g. C<Cache::FileCache>). Our documentation here covers common usage
-but skips some options and features.
+Data caching is implemented on top of DeWitt Clinton's C<Cache::Cache>
+package. Mason implements its own extended subclass of Dewitt's module
+called L<HTML::Mason::Cache::BaseCache|HTML::Mason::Cache::BaseCache>.
+See that module's documentation for a companion API reference to this
+section.
 
 =head2 Basic Usage
 
-The C<< $m->cache >> method returns an object representing the cache
-for this component. Here's the typical usage of C<< $m->cache >>:
+The C<< $m->cache >> method returns an
+L<object|HTML::Mason::Cache::BaseCache> representing the cache for
+this component. Here's the typical usage of C<< $m->cache >>:
 
     my $result = $m->cache->get('key');
     if (!defined($result)) {
@@ -1326,15 +1327,16 @@ with the new expiration. To expire an item immediately, use
 C<< $m->cache->remove >>.
 
 You can also specify an expiration condition when you fetch the item,
-using the C<expire_if> option:
+using the I<expire_if> option:
 
     my $result = $m->cache->get('key',
         expire_if=>sub { $_[0]->get_created_at < (stat($file))[9] });
 
-C<expire_if> takes an anonymous subroutine, which is called with the
-cache object as its only parameter. If the subroutine returns a true
-value, the item is expired. In the example above, we expire the item
-whenever a certain file changes.
+I<expire_if> takes an anonymous subroutine, which is called with the
+L<cache object|HTML::Mason::Devel/Cache Object> as its only
+parameter. If the subroutine returns a true value, the item is
+expired. In the example above, we expire the item whenever a certain
+file changes.
 
 Finally, you can expire a cache item from an external script; see
 L<Accessing a Cache Externally|"Accessing a Cache Externally"> below.
@@ -1360,7 +1362,7 @@ This sequence continues until the first process finishes and stores
 the new value.  On average, the value will be recomputed and written
 to the cache 15 times!
 
-Mason offers a solution with the C<busy_lock> flag:
+Mason offers a solution with the I<busy_lock> flag:
 
    my $result = $m->cache->get('key', busy_lock=>'30 sec');
 
@@ -1368,7 +1370,7 @@ In this case, when the value cannot be retrieved, C<get()> sets
 the expiration time of the value 30 seconds in the future before
 returning C<undef>.  This tells the first process to compute the new
 value while causing subsequent processes to use the old value for 30
-seconds.  In general, the duration passed to C<busy_lock> indicates
+seconds.  In general, the duration passed to I<busy_lock> indicates
 how long you're willing to allow this component to use an expired
 cache value.
 
@@ -1389,33 +1391,34 @@ It is typically used right at the top of an C<< <%init> >> section:
      ... <rest of init> ...
     </%init>
 
-C<< $m->cache_self >> is built on top of C<< $m->cache >>, so it
-accepts all of the cache options described earlier.  C<<
-$m->cache_self >> can also cache a component's return value. See the
-B<L<HTML::Mason::Request|HTML::Mason::Request>> documentation for details.
+A full list of parameters and examples are available in the
+L<cache_self|HTML::Mason::Request/item_cache_self> section of the Request
+manual.
 
-=head2 Cache Object Meta-data
+=head2 Cache Object
 
-C<< $m->cache->get_object >> returns the B<Cache::Object> associated
+C<< $m->cache->get_object >> returns the C<Cache::Object> associated
 with a particular key. You can use this to retrieve useful
 meta-data:
 
     my $co = $m->cache->get_object('name1');
     $co->get_created_at();    # when was object stored in cache
     $co->get_accessed_at();   # when was object last accessed
-    $co->get_expired_at();    # when does object expire
+    $co->get_expires_at();    # when does object expire
 
 =head2 Choosing a Cache Subclass
 
-C<Cache::Cache> is a purely virtual API implemented by a variety of
-subclasses. For example, B<Cache::FileCache> implements the interface with a
-set of directories and files, while B<Cache::MemoryCache> implements the
-interface in memory.
+The cache API is implemented by a variety of backend subclasses. For
+example, C<FileCache> implements the interface with a set of
+directories and files, C<MemoryCache> implements the interface in
+process memory, and C<SharedMemoryCache> implements the interface in
+shared memory. See the C<Cache::Cache> package for a full list of
+backend subclasses.
 
-By default C<< $m->cache >> uses B<Cache::FileCache>, but you can override
+By default C<< $m->cache >> uses C<FileCache>, but you can override
 this with the I<cache_class> keyword. The value must be the name of a
-C<Cache::Cache> subclass; if it does not contain a "::", the prefix
-"Cache::" is automatically prepended. For example:
+C<Cache::Cache> subclass; the prefix "Cache::" need not be included.
+For example:
 
     my $result = $m->cache(cache_class => 'MemoryCache')->get('key');
     $m->cache(cache_class => 'MemoryCache')->set(key => $result);
@@ -1438,7 +1441,7 @@ external Perl script), you'll need have the following information:
 =item *
 
 the namespace associated with the component. The function
-L<HTML::Mason::Utils::data_cache_namespace|HTML::Mason::Utils/data_cache_namespace>,
+C<HTML::Mason::Utils::data_cache_namespace>,
 given a component id (usually just the component path), returns the
 namespace.
 
@@ -1457,7 +1460,7 @@ the cache_root, for file-based caches only. Defaults to the
 Given this information you can get a handle on the component's cache.
 For example, the following code removes a cache item for component
 F</foo/bar>, assuming the data directory is F</usr/local/www/mason>
-and the cache subclass is C<Cache::FileCache>:
+and the cache subclass is C<FileCache>:
 
     use HTML::Mason::Utils qw(data_cache_namespace);
 

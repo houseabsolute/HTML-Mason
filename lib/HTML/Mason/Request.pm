@@ -1245,12 +1245,14 @@ subcomponent takes precedence.
 
 =item autoflush
 
-Indicates whether or not to delay sending output until all output has
-been generated. Default is true.
+True or false, default is false. Indicates whether to flush the output buffer
+after every string is output. Turn on autoflush if you need to send partial
+output to the client, for example in a progress meter.
 
 =item buffer_class
 
-The class to use when creating buffers. Defaults to L<HTML::Mason::Buffer>.
+The class to use when creating buffers. Defaults to
+L<HTML::Mason::Buffer|HTML::Mason::Buffer>.
 
 =item data_cache_api
 
@@ -1263,7 +1265,7 @@ from older versions of Mason, but will not be supported indefinitely.
 =item data_cache_defaults
 
 A hash reference of default options to use for the C<$m-E<gt>cache>
-command. For example, to use the Cache::MemoryCache implementation
+command. For example, to use the C<MemoryCache> implementation
 by default,
 
     data_cache_defaults => {cache_class => 'MemoryCache'}
@@ -1273,21 +1275,53 @@ C<$m-E<gt>cache> calls.
 
 =item dhandler_name
 
-File name used for dhandlers. Default is "dhandler".
+File name used for L<dhandlers|HTML::Mason::Devel/dhandlers>. Default is "dhandler".
 
 =item error_format
 
-The format used to display errors.  The options are 'brief', 'text',
-'line', and 'html'.  The default is 'text' except when running under
-ApacheHandler, in which case the default is 'html'.
+Indicates how errors are formatted. The built-in choices are
+
+=over
+
+=item *
+
+I<brief> - just the error message with no trace information
+
+=item *
+
+I<text> - a multi-line text format
+
+=item *
+
+I<line> - a single-line text format, with different pieces of information separated by tabs (useful for log files)
+
+=item *
+
+I<html> - a fancy html format
+
+=back
+
+The default format under L<Apache|HTML::Mason::ApacheHandler> and
+L<CGI|HTML::Mason::CGIHandler> is either I<line> or I<html> depending
+on whether the error mode is I<fatal> or I<output>, respectively. The
+default for standalone mode is I<text>.
+
+The formats correspond to C<HTML::Mason::Exception> methods named
+as_I<format>. You can define your own format by creating an
+appropriately named method; for example, to define an "xml" format,
+create a method C<HTML::Mason::Exception::as_xml> patterned after one of
+the built-in methods.
 
 =item error_mode
 
-This can be either 'fatal' or 'output'.  If the mode is 'fatal',
-errors generate an exception.  With 'output' mode, the error is sent
-to the same output as normal component output.  The default is
-'fatal', except when running under ApacheHandler or CGIHandler, in
-which case the output is 'default'.
+Indicates how errors are returned to the caller.  The choices are
+I<fatal>, meaning die with the error, and I<output>, meaning output
+the error just like regular output.
+
+The default under L<Apache|HTML::Mason::ApacheHandler> and
+L<CGI|HTML::Mason::CGIHandler> is I<output>, causing the error to be
+displayed in the browser.  The default for standalone mode is
+I<fatal>.
 
 =item max_recurse
 
@@ -1306,9 +1340,9 @@ string. For example, to send output to a file called "mason.out":
     ...
     out_method => sub { $fh->print($_[0]) }
 
-By default, out_method prints to standard output.  When the
-HTML::Mason::ApacheHandler module is used, the out method uses the C<<
-$r->print >> method to send output.
+By default, out_method prints to standard output. Under
+L<Apache|HTML::Mason::ApacheHandler>, standard output is
+redirected to C<< $r->print >>.
 
 =back
 
@@ -1365,23 +1399,23 @@ first argument, or the call starts with SELF: or PARENT:.
 
 =item cache (cache_class=>'...', [cache_options])
 
-C<$m-E<gt>cache> returns a new cache object with a namespace specific
-to this component.
+C<$m-E<gt>cache> returns a new L<cache
+object|HTML::Mason::Cache::BaseCache> with a namespace specific to
+this component.
 
 I<cache_class> specifies the class of cache object to create. It
-defaults to Cache::FileCache in most cases, or Cache::MemoryCache if
-the interpreter has no data directory, and must be a subclass of
-Cache::Cache.  If I<cache_class> does not contain a "::", the prefix
-"Cache::" is automatically prepended.
-
+defaults to C<FileCache> in most cases, or C<MemoryCache> if the
+interpreter has no data directory, and must be a backend subclass of
+C<Cache::Cache>. The prefix "Cache::" need not be included.  See the
+C<Cache::Cache> package for a full list of backend subclasses.
+ 
 I<cache_options> may include any valid options to the new() method of
-the cache class. e.g. for Cache::FileCache, valid options include
+the cache class. e.g. for C<FileCache>, valid options include
 default_expires_in and cache_depth.
 
-See the L<data caching in the I<Component Developer's
-Guide>|HTML::Mason::Devel/"data caching"> for examples and caching
-strategies. See the Cache::Cache documentation for a complete list of
-options and methods.
+See DEVEL<data caching> for a caching tutorial and examples. See the
+L<HTML::Mason::Cache::BaseCache|HTML::Mason::Cache::BaseCache>
+documentation for a method reference.
 
 Note: users upgrading from 1.0x and earlier can continue to use the
 old C<$m-E<gt>cache> API by setting P<data_cache_api> to '1.0'.  This
@@ -1399,9 +1433,9 @@ return value of the component followed by '1'. You should return
 immediately upon getting the latter result, as this indicates
 that you are inside the second invocation of the component.
 
-C<cache_self> takes any of parameters to C<$m->cache>
-(e.g. C<cache_depth>), any of the optional parameters to
-C<$m->cache->get> (C<expire_if>, C<busy_lock>), and two additional
+C<cache_self> takes any of parameters to C<$m-E<gt>cache>
+(e.g. I<cache_depth>), any of the optional parameters to
+C<$cache-E<gt>get> (I<expire_if>, I<busy_lock>), and two additional
 options:
 
 =over
@@ -1409,14 +1443,14 @@ options:
 =item *
 
 I<expire_in> or I<expires_in>: Indicates when the cache expires - it
-is passed as the third argument to $cache-E<gt>set. e.g. '10 sec',
+is passed as the third argument to C<$cache-E<gt>set>. e.g. '10 sec',
 '5 min', '2 hours'.
 
 =item *
 
 I<key>: An identifier used to uniquely identify the cache results - it
-is passed as the first argument to $cache-E<gt>get and
-$cache-E<gt>set.  The default key is '__mason_cache_self__'.
+is passed as the first argument to C<$cache-E<gt>get> and
+C<$cache-E<gt>set>.  The default key is '__mason_cache_self__'.
 
 =back
 
@@ -1494,9 +1528,7 @@ from an autohandler. With no arguments, the original arguments are
 passed to the component.  Any arguments specified here serve to
 augment and override (in case of conflict) the original
 arguments. Works like C<$m-E<gt>comp> in terms of return value and
-scalar/list context.  See the L<autohandlers section in the
-I<Component Developer's Guide>|HTML::Mason::Devel/"autohandlers"> for
-examples.
+scalar/list context.  See DEVEL<autohandlers> for examples.
 
 =for html <a name="item_clear_buffer"></a>
 
@@ -1595,54 +1627,6 @@ removed. Otherwise returns undef.
 C<dhandler_arg> may be called from any component in the request, not just
 the dhandler.
 
-=for html <a name="item_error_format"></a>
-
-=item error_format
-
-Indicates how errors are formatted. The built-in choices are
-
-=over
-
-=item *
-
-I<brief> - just the error message with no trace information
-
-=item *
-
-I<text> - a multi-line text format
-
-=item *
-
-I<line> - a single-line text format, with different pieces of information separated by tabs (useful for log files)
-
-=item *
-
-I<html> - a fancy html format
-
-=back
-
-The default format within mod_perl and CGI environments is either I<line> or
-I<html> depending on whether the error mode is I<fatal> or I<output>,
-respectively. The default for standalone mode is I<text>.
-
-The formats correspond to HTML::Mason::Exception methods named
-as_I<format>. You can define your own format by creating an
-appropriately named method; for example, to define an "xml" format,
-create a method HTML::Mason::Exception::as_xml patterned after one of
-the built-in methods.
-
-=for html <a name="item_error_mode"></a>
-
-=item error_mode
-
-Indicates how errors are returned to the caller.  The choices are
-I<fatal>, meaning die with the error, and I<output>, meaning output
-the error just like regular output.
-
-The default mode within mod_perl and CGI environments is I<output>,
-causing the error will be displayed in HTML form in the browser.
-The default for standalone mode is I<fatal>.
-
 =for html <a name="item_exec"></a>
 
 =item exec (comp, args...)
@@ -1667,17 +1651,15 @@ undef if no such component exists.
 
 Returns the next component in the content wrapping chain, or undef if
 there is no next component. Usually called from an autohandler.  See
-the L<autohandlers section in the I<Component Developer's
-Guide>|HTML::Mason::Devel/"autohandlers"> for usage and examples.
+DEVEL<autohandlers> for usage and examples.
 
 =for html <a name="item_fetch_next_all"></a>
 
 =item fetch_next_all
 
 Returns a list of the remaining components in the content wrapping
-chain. Usually called from an autohandler.  See the L<autohandlers
-section in the I<Component Developer's
-Guide>|HTML::Mason::Devel/"autohandlers"> for usage and examples.
+chain. Usually called from an autohandler.  See DEVEL<autohandlers>
+for usage and examples.
 
 =for html <a name="item_file"></a>
 
@@ -1732,9 +1714,7 @@ values may be overridden by passing parameters to this method.
 The "comp" parameter is required, while all other parameters are
 optional.
 
-See the L<Subrequests section in the I<Component Developer's
-Guide>|HTML::Mason::Devel/"Subrequests"> for more details about the
-subrequest feature.
+See DEVEL<subrequests> for more information about subrequests.
 
 =for html <a name="item_out"></a>
 
@@ -1818,12 +1798,11 @@ global $r.
 
 True or undef; default true.  Indicates whether Mason should
 automatically send HTTP headers before sending content back to the
-client. If you set to false, you should call $r->send_http_header
+client. If you set to false, you should call C<$r-E<gt>send_http_header>
 manually.
 
-See the L<Sending HTTP Headers section of the I<Component Developer's
-Guide>|HTML::Mason::Devel/"Sending HTTP Headers> for details about the
-automatic header feature.
+See DEVEL<sending HTTP headers> for more details about the automatic
+header feature.
 
 =back
 

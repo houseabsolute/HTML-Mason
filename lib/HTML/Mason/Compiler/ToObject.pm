@@ -416,12 +416,12 @@ All of these parameters are optional.
 =item comp_class
 
 The class into which component objects are blessed.  This defaults to
-L<C<HTML::Mason::Component>|HTML::Mason::Component>.
+L<HTML::Mason::Component|HTML::Mason::Component>.
 
 =item subcomp_class
 
 The class into which subcomponent objects are blessed.  This defaults
-to L<C<HTML::Mason::Subcomponent>|HTML::Mason::Subcomponent>.
+to L<HTML::Mason::Component::Subcomponent|HTML::Mason::Component::Subcomponent>.
 
 =item in_package
 
@@ -430,17 +430,16 @@ historical reasons, this defaults to C<HTML::Mason::Commands>.
 
 =item preamble
 
-If this parameter is supplied, then the text given is placed at the
-beginning of each component.
+Text given for this parameter is placed at the beginning of each component. See also P<postamble>.
 
 =item postamble
 
-Text given for this parameter is placed at the end of each component.
+Text given for this parameter is placed at the end of each component. See also P<preamble>.
 
 =item use_strict
 
-This indicates whether or not a given component should C<use strict>.
-By default, this is true.
+True or false, default is true. Indicates whether or not a given
+component should C<use strict>.
 
 =back
 

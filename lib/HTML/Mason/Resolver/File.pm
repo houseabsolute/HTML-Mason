@@ -143,13 +143,14 @@ The C<new> method takes a single mandatory parameter, C<comp_root>.
 
 The component root marks the top of your component hierarchy and
 defines how component paths are translated into real file paths. For
-example, if your component root is /usr/local/httpd/docs, a component
-path of /products/index.html translates to the file
-/usr/local/httpd/docs/products/index.html.
+example, if your component root is F</usr/local/httpd/docs>, a component
+path of F</products/index.html> translates to the file
+F</usr/local/httpd/docs/products/index.html>.
 
-Under the ApacheHandler and CGIHandler, comp_root defaults to the
-server's document root. In standalone mode comp_root defaults to the
-current working directory.
+Under L<Apache|HTML::Mason::ApacheHandler> and
+L<CGI|HTML::Mason::CGIHandler>, comp_root defaults to the server's
+document root. In standalone mode comp_root defaults to the current
+working directory.
 
 This parameter may be either a scalar or an array reference.  If it is
 a scalar, it should be a filesystem path indicating the component

@@ -536,6 +536,9 @@ sub new
     {
 	# constructs path to <server root>/mason
 	$defaults{data_dir} = Apache->server_root_relative('mason');
+	if ($defaults{data_dir} =~ m|^/[^/]+/mason$|) {
+	    die "cannot default data directory to $defaults{data_dir}; must provide data_dir (MasonDataDir) on this system";
+	}
     }
 
     # Set default error_format based on error_mode
@@ -970,43 +973,42 @@ visible via Apache::Status.
 =item args_method
 
 Method to use for unpacking GET and POST arguments. The valid options
-are 'CGI' and 'mod_perl'; these indicate that a CGI.pm or
-Apache::Request object (respectively) will be created for the purposes
+are 'CGI' and 'mod_perl'; these indicate that a C<CGI.pm> or
+C<Apache::Request> object (respectively) will be created for the purposes
 of argument handling.
 
-Apache::Request is the default and requires that you have installed
-this package.
+'mod_perl' is the default and requires that you have installed the
+C<Apache::Request> package.
 
-If the args_method is 'CGI', the Mason request object ($m) will have a
+If the args_method is 'CGI', the Mason request object (C<$m>) will have a
 method called C<cgi_object> available.  This method returns the CGI
-object used in the ApacheHandler code.
+object used for argument processing.
 
-If args_method is 'mod_perl', the $r global is upgraded to an
+If args_method is 'mod_perl', the C<$r> global is upgraded to an
 Apache::Request object. This object inherits all Apache methods and
 adds a few of its own, dealing with parameters and file uploads.  See
 L<Apache::Request|Apache::Request> for more information.
 
-While Mason will load Apache::Request or CGI as needed at runtime, it
+While Mason will load C<Apache::Request> or C<CGI> as needed at runtime, it
 is recommended that you preload the relevant module either in your
-httpd.conf or handler.pl file, as this will save some memory.
+F<httpd.conf> or F<handler.pl> file, as this will save some memory.
 
 =item decline_dirs
 
-Indicates whether Mason should decline directory requests, leaving
-Apache to serve up a directory index or a FORBIDDEN error as
-appropriate. Default is 1. See L<Allowing directory requests in the
-Admin manual|HTML::Mason::Admin/"Allowing directory requests"> for
-more information about handling directories with Mason.
+True or false, default is true. Indicates whether Mason should decline
+directory requests, leaving Apache to serve up a directory index or a
+C<FORBIDDEN> error as appropriate. See ADMIN<allowing directory requests>
+for more information about handling directories with Mason.
 
 =item interp
 
-The Interp object to associate with this Compiler. By default a new
-object of class P<interp_class> will be created.
+The interpreter object to associate with this compiler. By default a
+new object of class P<interp_class> will be created.
 
 =item interp_class
 
 The class to use when creating a interpreter. Defaults to
-L<HTML::Mason::Interp>.
+L<HTML::Mason::Interp|HTML::Mason::Interp>.
 
 =back
 

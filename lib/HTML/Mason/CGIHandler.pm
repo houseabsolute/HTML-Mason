@@ -230,8 +230,7 @@ about the particular details of invoking Mason on each request.
 If you want to use Mason components from I<within> a regular CGI
 script (or any other Perl program, for that matter), then you don't
 need this module.  You can simply follow the directions in
-L<HTLM::Mason::Admin/Using Mason from a standalone script|"Using Mason
-from a standalone script">.    
+ADMIN<Using Mason from a standalone script>.
 
 This module also provides an C<$r> request object for use inside
 components, similar to the Apache request object under

@@ -578,7 +578,7 @@ valid flags are
     u - escape for URL (':' => '%3A', etc.)
 
 The developer can override default escape flags on a per-expression
-basis; see L<HTML::Mason::Devel/escaping_expressions>.
+basis; see DEVEL<escaping expressions>.
 
 =item lexer
 
@@ -587,7 +587,7 @@ object of class P<lexer_class> will be created.
 
 =item lexer_class
 
-The class to use when creating a lexer. Defaults to L<HTML::Mason::Lexer>.
+The class to use when creating a lexer. Defaults to L<HTML::Mason::Lexer|HTML::Mason::Lexer>.
 
 =item preprocess
 
@@ -595,7 +595,8 @@ Sub reference that is called to preprocess each component before Parser does
 it's magic.  The sub is called with a single parameter, a scalar reference
 to the script.  The sub is expected to process the script in-place.   This is
 one way to extend the HTML::Mason syntax with new tags, etc., although a much
-more flexible way is to subclass the Lexer or Compiler class.
+more flexible way is to subclass the Lexer or Compiler class. See also
+P<postprocess_text> and P<postprocess_perl>.
 
 =item postprocess_text
 
@@ -603,7 +604,8 @@ Sub reference that is called to postprocess the text portion of a
 compiled component, just before it is assembled into its final
 subroutine form.  The sub is called with a single parameter, a scalar
 reference to the text portion of the component.  The sub is expected
-to process the string in-place.
+to process the string in-place. See also
+P<preprocess> and P<postprocess_perl>.
 
 =item postprocess_perl
 
@@ -611,7 +613,8 @@ Sub reference that is called to postprocess the Perl portion of a
 compiled component, just before it is assembled into its final
 subroutine form.  The sub is called with a single parameter, a scalar
 reference to the Perl portion of the component.  The sub is expected
-to process the string in-place.
+to process the string in-place. See also
+P<preprocess> and P<postprocess_text>.
 
 =back
 
