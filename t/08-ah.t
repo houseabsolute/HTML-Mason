@@ -37,7 +37,7 @@ kill_httpd(1);
 test_load_apache();
 
 my $tests = 4; # multi conf tests
-$tests += 56 if my $have_libapreq = have_module('Apache::Request');
+$tests += 57 if my $have_libapreq = have_module('Apache::Request');
 $tests += 40 if my $have_cgi      = have_module('CGI');
 $tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
 $tests++ if my $have_filter = have_module('Apache::Filter');
@@ -47,12 +47,12 @@ print STDERR "\n";
 
 write_test_comps();
 
-if ($have_libapreq) {        # 56 tests
+if ($have_libapreq) {        # 57 tests
     cleanup_data_dir();
     apache_request_tests(1); # 22 tests
 
     cleanup_data_dir();
-    apache_request_tests(0); # 19 tests
+    apache_request_tests(0); # 20 tests
 
     cleanup_data_dir();
     no_config_tests();       # 15 tests
@@ -263,6 +263,11 @@ EOF
 EOF
               );
 
+    write_comp( 'old_html_escape2', <<'EOF',
+<% '<>' | old_h2 %>
+EOF
+              );
+
     write_comp( 'uc_escape', <<'EOF',
 <% 'upper case' | uc %>
 EOF
@@ -370,6 +375,17 @@ EOF
 	ok($success);
 
 	$response = Apache::test->fetch('/comps/old_html_escape');
+	$actual = filter_response($response, $with_handler);
+	$success = HTML::Mason::Tests->check_output( actual => $actual,
+						     expect => <<'EOF',
+X-Mason-Test: Initial value
+&lt;&gt;
+Status code: 0
+EOF
+						   );
+	ok($success);
+
+	$response = Apache::test->fetch('/comps/old_html_escape2');
 	$actual = filter_response($response, $with_handler);
 	$success = HTML::Mason::Tests->check_output( actual => $actual,
 						     expect => <<'EOF',
