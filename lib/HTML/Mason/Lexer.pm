@@ -124,7 +124,7 @@ sub start
 	unless ( $end eq $expect )
 	{
 	    my $block_name = $self->{"in_$type"};
-	    Mason::Exception::Lexer->throw( error => "No $expect tag for <%$type $block_name> named block" );
+	    Mason::Exception::Lexer->throw( error => "No $expect tag for <%$type $block_name> block" );
 	}
     }
 }
