@@ -559,19 +559,19 @@ sub dump
 {
     my $self = shift;
 
-    print "Main component\n";
+    warn "Main component\n";
 
     $self->_dump_data( $self );
 
     foreach ( keys %{ $self->{def} } )
     {
-	print "  Subcomponent $_\n";
+	warn "  Subcomponent $_\n";
 	$self->_dump_data( $self->{def}{$_}, '  ' );
     }
 
     foreach ( keys %{ $self->{method} } )
     {
-	print "  Methods $_\n";
+	warn "  Methods $_\n";
 	$self->_dump_data( $self->{method}{$_}, '  ');
     }
 }
@@ -584,17 +584,17 @@ sub _dump_data
 
     if ( @{ $data->{args} } )
     {
-	print "$indent  args\n";
+	warn "$indent  args\n";
 	foreach ( @{ $data->{args} } )
 	{
-	    print "$indent    $_->{type}$_->{name}";
-	    print " => $_->{default}" if defined $_->{default};
-	    print "\n";
+	    warn "$indent    $_->{type}$_->{name}";
+	    warn " => $_->{default}" if defined $_->{default};
+	    warn "\n";
 	}
     }
 
-    print "\n$indent  body\n";
-    print $data->{body}, "\n";
+    warn "\n$indent  body\n";
+    warn $data->{body}, "\n";
 }
 
 sub _blocks
