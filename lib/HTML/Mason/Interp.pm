@@ -859,7 +859,7 @@ stand-alone Perl script), see the L<STANDALONE MODE> section below.
 
 =item allow_recursive_autohandlers
 
-True or undef. Default is true as of verison 0.85. If true,
+True or false. Default is true as of verison 0.85. If true,
 autohandlers apply both to their own directories and all
 subdirectories; if undef, only to their own directories. See the
 L<Devel/autohandlers> section of the Component Developer's Guide for a
@@ -1065,24 +1065,24 @@ Separator to use between fields on a line in the system log. Default is ctrl-A (
 
 =item use_autohandlers
 
-True or undef, default is true.  If not true, Mason will not attempt
+True or false, default is true.  If not true, Mason will not attempt
 to use autohandlers.
 
 =item use_dhandlers
 
-True or undef, default is true.  If not true, Mason will not attempt
+True or false, default is true.  If not true, Mason will not attempt
 to use dhandlers.
 
 =item use_object_files
 
-True or undef, default is true.  Specifies whether Mason creates
+True or false, default is true.  Specifies whether Mason creates
 object files to save the results of component parsing. You may want to
 turn off object files for disk space reasons, but otherwise this
 should be left alone.
 
 =item use_reload_file
 
-True or undef, default is undef. If true, disables Mason's automatic
+True or false, default is undef. If true, disables Mason's automatic
 timestamp checking on component source files, relying instead on an
 explicitly updated L<Admin/reload file>.
 
