@@ -759,9 +759,6 @@ sub prepare_request
 	$print = \&{"$ap_req_class\::print"};
     }
 
-    # Craft the request's out method to handle http headers, content
-    # length, and HEAD requests.
-
     # If someone is using a custom request class that doesn't accept
     # 'ah' and 'apache_req' that's their problem.
     #
@@ -772,6 +769,9 @@ sub prepare_request
 				       );
 
     my $must_send_headers = $request->auto_send_headers;
+
+    # Craft the request's out method to handle http headers, content
+    # length, and HEAD requests.
     my $out_method = sub {
 
 	# Send headers if they have not been sent by us or by user.
