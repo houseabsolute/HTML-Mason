@@ -1096,6 +1096,8 @@ sub _generate_html_docs
     my @files;
     foreach my $file ( $self->_files_with_pod( File::Spec->catdir( $dir, 'lib' ) ) )
     {
+        next if $file =~ m{Bundle/|Apache/};
+
 	my $html_file = $self->_pod_to_html( $file, $html_dir );
 
 	my $rel_path = File::Spec->abs2rel( $html_file, $target_dir );
