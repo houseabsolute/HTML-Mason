@@ -212,6 +212,12 @@ sub apache_request_to_comp_path {
     my $file = $r->filename;
     $file .= $r->path_info unless -f $file;
 
+    # Clear up any weirdness here so that paths_eq compares two
+    # 'canonical' paths (canonpath is called on comp roots when
+    # resolver object is created.  Seems to be needed on Win32 (see
+    # bug #356).
+    $file = File::Spec->canonpath($file);
+
     foreach my $root (map $_->[1], $self->comp_root_array) {
 	if (paths_eq($root, substr($file, 0, length($root)))) {
 	    my $path = substr($file, ($root eq '/' ? 0 : length($root)));
