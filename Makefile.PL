@@ -12,6 +12,31 @@ GetOptions( \%opts, 'no-prompts' );
 require 'install/apache_tests_helper.pl';
 require 'install/assisted_install_helper.pl';
 
+eval { require HTML::Mason };
+
+unless ($@)
+{
+    if ( $HTML::Mason::VERSION < 1.09 )
+    {
+	print <<"EOF";
+
+It looks like you have an older version of Mason already installed on
+your machine (version $HTML::Mason::VERSION).  This version is not backwards
+compatible with versions of Mason before version 1.09_01.
+Please read the UPGRADE document before continuing with this
+installation.
+
+EOF
+
+	unless ( $opts{'no-prompts'} )
+	{
+	    my $yn = prompt('Continue with installation?', 'N');
+
+	    exit unless $yn =~ /y(?:es)?/i;
+	}
+    }
+}
+
 # These are required modules.
 
 chk_version('File::Spec' => '0.8') or
