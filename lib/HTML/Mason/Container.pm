@@ -96,7 +96,7 @@ sub all_specs
 	foreach my $name (sort keys %$contains)
 	{
 	    $out{$class}{contained_objects}{$name} = ref($contains->{$name}) 
-		? {map {$_, $contains->{$name}{$_}} qw(class delayed)}
+		? {map {$_, $contains->{$name}{$_}} qw(class delayed descr)}
 		: {class => $contains->{$name}, delayed => 0};
 	}
     }
