@@ -29,7 +29,7 @@ a13=>'a13 from level 1'
 a123=>'a123 from level 1'
 </%attr>
 
-<& variants &>
+<& { base_comp => $m->base_comp }, 'variants' &>
 
 <% $m->call_next %>
 
@@ -104,7 +104,7 @@ a23=>'a23 from level 2'
 a123=>'a123 from level 2'
 </%attr>
 
-<& ../variants &>
+<& { base_comp => $m->base_comp }, '../variants' &>
 
 <& call_next_helper &>
 
@@ -194,7 +194,9 @@ a23=>'a23 from level 3'
 a123=>'a123 from level 3'
 </%attr>
 
-<& ../variants &>
+%# base_comp currently does not change when a comp ref is used
+% my $variants = $m->fetch_comp('../variants'); 
+<& $variants &>
 
 <& ../report_parent &>
 
@@ -311,6 +313,245 @@ My name is /inherit/subdir/normal and my parent is /inherit/subdir/autohandler.
 
 EOF
 		    );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/base/autohandler',
+			 component => <<'EOF',
+<%flags>
+inherit => undef
+</%flags>
+<%attr>
+a => 'base autohandler'
+</%attr>
+<%method x>
+This is X in base autohandler
+attribute A is <% $m->base_comp->attr('a') %>
+<& SELF:x &>
+</%method>
+<% $m->call_next %>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/util/autohandler',
+			 component => <<'EOF',
+<%flags>
+inherit => undef
+</%flags>
+<%attr>
+a => 'util autohandler'
+</%attr>
+<%method x>
+This is X in util autohandler
+attribute A is <% $m->base_comp->attr('a') %>
+<& SELF:x , why => 'infinite loop if PARENT does not work ' &>
+</%method>
+<%method exec>
+This is autohandler:exec
+exec was really called for <% $m->base_comp->name %>
+attribute A is <% $m->base_comp->attr('a') %>
+<& SELF:x &>
+</%method>
+<% $m->call_next %>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/util/util',
+			 component => <<'EOF',
+<%method x>
+This is method X in UTIL
+</%method>
+<%attr>
+a => 'util'
+</%attr>
+This is UTIL
+attribute A is <% $m->base_comp->attr('a') %>
+<& SELF:x &>
+<& PARENT:x &>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( 	name => 'base_comp',
+			path => '/base/base',
+			call_path => '/base/base',
+			description => 'base_comp test',
+			component => <<'EOF',
+<%method x>
+This is method X in BASE
+</%method>
+<%attr>
+a => 'base'
+</%attr>
+This is BASE
+attribute A is <% $m->base_comp->attr('a') %>
+<& SELF:x &>
+<& ../util/util &>
+<& PARENT:x &>
+EOF
+		      expect => <<'EOF',
+This is BASE
+attribute A is base
+
+This is method X in BASE
+
+This is UTIL
+attribute A is util
+
+This is method X in UTIL
+
+
+This is X in util autohandler
+attribute A is util
+
+This is method X in UTIL
+
+
+
+
+This is X in base autohandler
+attribute A is base
+
+This is method X in BASE
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( 	name => 'base_comp_method',
+			path => '/base/meth',
+			call_path => '/base/meth',
+			description => 'base_comp method inheritance test',
+			component => <<'EOF',
+<%method x>
+This is method X in METH
+</%method>
+<%attr>
+a => 'meth'
+</%attr>
+This is METH
+attribute A is <% $m->base_comp->attr('a') %>
+<& SELF:x &>
+<& ../util/util:exec &>
+EOF
+		      expect => <<'EOF',
+This is METH
+attribute A is meth
+
+This is method X in METH
+
+
+This is autohandler:exec
+exec was really called for util
+attribute A is util
+
+This is method X in UTIL
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/base2/autohandler',
+			 component => <<'EOF',
+<%flags>
+inherit => undef
+</%flags>
+This is autohandler A
+<& sub/sibling &>
+<% $m->call_next %>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/base2/sub/autohandler',
+			 component => <<'EOF',
+This is autohandler B
+<& SELF:m &>
+<% $m->call_next %>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/base2/sub/sibling',
+			 component => <<'EOF',
+This is SIBLING
+<& PARENT &>
+<%method m>
+This is method M in SIBLING
+</%method>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( 	name => 'double_parent',
+			path => '/base2/sub/child',
+			call_path => '/base2/sub/child',
+			description => 'test that parent does not confuse children',
+			component => <<'EOF',
+This is CHILD
+<%method m>
+This is method M in CHILD
+</%method>
+EOF
+		      expect => <<'EOF',
+This is autohandler A
+This is SIBLING
+This is autohandler B
+
+This is method M in SIBLING
+
+This is CHILD
+
+
+
+This is autohandler B
+
+This is method M in CHILD
+
+This is CHILD
+
+
+
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( 	name => 'subcomponent',
+			path => '/base2/subcomp',
+			call_path => '/base2/subcomp',
+			description => 'test subcomponents',
+			component => <<'EOF',
+<%flags>
+inherit => undef
+</%flags>
+<%def .sub>
+This is a subcomponent
+<& SELF:x &>
+</%def>
+<%method x>
+This is method X
+</%method>
+This is the component
+<& .sub &>
+EOF
+		      expect => <<'EOF',
+This is the component
+
+This is a subcomponent
+
+This is method X
+
+EOF
+		       );
 
 #------------------------------------------------------------
 

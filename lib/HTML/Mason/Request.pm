@@ -505,8 +505,9 @@ sub comp {
     # $comp can be an absolute path or component object.  If a path,
     # load into object.
     #
+    my $path;
     if (!ref($comp)) {
-	my $path = $comp;
+	$path = $comp;
 	$comp = $self->fetch_comp($path)
 	    or HTML::Mason::Exception->throw( error => "could not find component for path '$path'\n" );
     }
@@ -526,10 +527,21 @@ sub comp {
     $interp->set_global('m'=>$self) if ($interp->compiler->in_package ne 'HTML::Mason::Commands');
 
     #
-    # Determine base_comp (base component for method and attribute
-    # references). Stays the same unless passed in as a modifier.
+    # Determine base_comp (base component for method and attribute inheritance)
+    # User may override with { base_comp => $compref }
+    # Don't change on SELF:x and PARENT:x calls
+    # Assume they know what they are doing if a component ref is passed in
     #
     my $base_comp = exists($mods{base_comp}) ? $mods{base_comp} : $self->base_comp;
+    unless (
+        $mods{base_comp} ||	# base_comp override
+        !$path || 		# path is undef if $comp is a reference
+        $path =~ m/^(SELF|PARENT)(:..*)?$/) {
+            $base_comp = ( $path =~ m/(.*):/ ?
+			$self->fetch_comp($1) :
+			$comp );
+	    $base_comp = $base_comp->owner if $base_comp->is_subcomp;
+    }
 
     # Push new frame onto stack.
     $self->push_stack( {comp => $comp,
