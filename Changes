@@ -34,6 +34,9 @@ when referring to a parameter.
 disk, we now print an extra warning, because this indicates that the
 user does not understand the distinction between component paths and
 filesystem paths.
+- The Request object's redirect() method now accepts an optional
+additional argument, allowing users to use a different status for the
+redirect than 302.
 
 [ BUG FIXES ]
 
