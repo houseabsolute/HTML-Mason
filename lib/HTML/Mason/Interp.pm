@@ -464,7 +464,7 @@ sub flush_code_cache {
     if ($self->use_internal_component_caches) {
 	foreach my $entry (values %{$self->{code_cache}}) {
 	    my $comp = $entry->{comp};
-#	    $comp->flush_internal_caches;
+	    $comp->flush_internal_caches;
 	}
     }
     $self->{code_cache} = {};
