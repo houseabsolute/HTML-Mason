@@ -153,6 +153,8 @@ EOF
 		      expect => <<'EOF',
 Some text
 
+Some more text
+
 Component aborted with value 0
 EOF
 		    );
@@ -176,6 +178,8 @@ Got error
 EOF
 		      expect => <<'EOF',
 Some text
+
+Some more text
 
 Component aborted with value 50
 EOF
@@ -614,6 +618,26 @@ EOF
 EOF
 		      expect => <<'EOF',
 yes
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'abort_and_filter',
+		      description => 'Test that an abort in a filtered component still generates _some_ output',
+		      component => <<'EOF',
+filter
+
+% eval { $m->comp('support/abort_test') };
+<%filter>
+return uc $_;
+</%filter>
+EOF
+		      expect => <<'EOF',
+FILTER
+
+SOME MORE TEXT
+
 EOF
 		    );
 
