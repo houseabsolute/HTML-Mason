@@ -70,17 +70,17 @@ my @used = ($HTML::Mason::IN_DEBUG_FILE);
 	    
 my %fields =
     (
+     apache_status_title => 'mason',
+     decline_dirs => 1,
+     error_mode => 'html',
      interp => undef,
      output_mode => 'batch',
-     error_mode => 'html',
-     top_level_predicate => sub { return 1 },
-     decline_dirs => 1,
+     top_level_predicate => undef,
      debug_mode => 'none',
      debug_perl_binary => '/usr/bin/perl',
      debug_handler_script => undef,
      debug_handler_proc => undef,
      debug_dir_config_keys => [],
-     apache_status_title => 'mason',
      );
 # Minor speedup: create anon. subs to reduce AUTOLOAD calls
 foreach my $f (keys %fields) {
@@ -204,7 +204,8 @@ sub handle_request {
     # -jswartz 5/23
     #
     my ($self,$req) = @_;
-    my ($outsub, $retval, $argString, $debugMsg, $q);
+    my ($outsub, $retval, $debugMsg, $q);
+    my $argString = '';
     my $outbuf = '';
     my $interp = $self->interp;
 
@@ -233,16 +234,18 @@ sub handle_request {
     }
 
     #
-    # Create query object and get argument string.
-    # Special case for debug files w/POST -- standard input not available
-    # for CGI to read in this case.
+    # Create query object and get argument string. Skip if GET with no
+    # query string.  Special case for debug files w/POST -- standard
+    # input not available for CGI to read in this case.
     #
-    if ($HTML::Mason::IN_DEBUG_FILE && $req->method eq 'POST') {
-	$q = new CGI ($req->content);
-    } else {
-	$q = new CGI;
+    unless ($req->method eq 'GET' && !scalar($req->args)) {
+	if ($HTML::Mason::IN_DEBUG_FILE && $req->method eq 'POST') {
+	    $q = new CGI ($req->content);
+	} else {
+	    $q = new CGI;
+	}
+	$argString = $q->query_string;
     }
-    $argString = $q->query_string;
 
     my $debugMode = $self->debug_mode;
     $debugMode = 'none' if (ref($req) eq 'HTML::Mason::FakeApache');
@@ -436,6 +439,18 @@ sub capture_debug_state
     return {%d};
 }
 
+#
+# Send HTTP headers when the primary section is reached.
+#
+sub send_headers_hook
+{
+    my ($req) = @_;
+    my $r = $req->apache_req;
+    $r->send_http_header() if !http_header_sent($r);
+    $req->abort() if $r->header_only;
+    $req->suppress_hook(name=>'http_header',type=>'start_primary');
+}
+
 sub handle_request_1
 {
     my ($self,$r,$argString,$q) = @_;
@@ -462,7 +477,7 @@ sub handle_request_1
     #
     my $compPath = $r->filename;
     if (!($compPath =~ s/^$compRoot//)) {
-	$r->warn("Mason: filename (\"".$r->filename."\") is outside component root (\"$compRoot\"); returning 404.");
+	$r->warn("Mason: filename (\"$compPath\") is outside component root (\"$compRoot\"); returning 404.");
 	return NOT_FOUND;
     }
     $compPath =~ s@/$@@ if $compPath ne '/';
@@ -484,14 +499,16 @@ sub handle_request_1
 	    return NOT_FOUND;
 	}
     }
-    my $srcfile = $comp->source_file;
 
     #
     # Decline if file does not pass top level predicate.
     #
-    if (!$self->top_level_predicate->($srcfile)) {
-	$r->warn("Mason: component file \"$srcfile\" does not pass top-level predicate; returning 404.");
-	return NOT_FOUND;
+    if (defined($self->{top_level_predicate})) {
+	my $srcfile = $comp->source_file;
+	if ($self->{top_level_predicate}->($srcfile)) {
+	    $r->warn("Mason: component file \"$srcfile\" does not pass top-level predicate; returning 404.");
+	    return NOT_FOUND;
+	}
     }
     
     #
@@ -500,32 +517,23 @@ sub handle_request_1
     #
     my (%args);
 
-    foreach my $key ( $q->param ) {
-      foreach my $value ( $q->param($key) ) {
-        if (exists($args{$key})) {
-          if (ref($args{$key})) {
-            $args{$key} = [@{$args{$key}}, $value];
-          } else {
-            $args{$key} = [$args{$key}, $value];
-          }
-        } else {
-          $args{$key} = $value;
-        }
-      }
+    if ($q) {
+	foreach my $key ( $q->param ) {
+	    foreach my $value ( $q->param($key) ) {
+		if (exists($args{$key})) {
+		    if (ref($args{$key})) {
+			$args{$key} = [@{$args{$key}}, $value];
+		    } else {
+			$args{$key} = [$args{$key}, $value];
+		    }
+		} else {
+		    $args{$key} = $value;
+		}
+	    }
+	}
     }
 
-    $argString = '' if !defined($argString);
-
-    #
-    # Send HTTP headers when the primary section is reached.
-    #
-    my $hdrsub = sub {
-	my ($req) = @_;
-	$r->send_http_header() if !http_header_sent($r);
-	$req->abort() if $r->header_only;
-	$req->suppress_hook(name=>'http_header',type=>'start_primary');
-    };
-    $interp->add_hook(name=>'http_header',type=>'start_primary',code=>$hdrsub);
+    $interp->add_hook(name=>'http_header',type=>'start_primary',code=>\&send_headers_hook);
 
     #
     # Create an Apache-specific request with additional slots.
@@ -533,7 +541,7 @@ sub handle_request_1
     my $request = new HTML::Mason::Request::ApacheHandler
 	(ah=>$self,
 	 interp=>$interp,
-	 http_input=>$argString,
+	 http_input=>($argString || ''),
 	 apache_req=>$r
 	 );
 
