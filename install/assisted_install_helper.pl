@@ -38,7 +38,7 @@ EOF
 
     print "It appears that this configuration file does " . ($config_params{has_mason} ? '' : 'not ' ) . "have previous Mason configuration directives.\n\n";
 
-    my $yn = prompt( 'Would you us to help you configure Apache/mod_perl to use Mason?', $default );
+    my $yn = prompt( 'Would you like help configuring Apache/mod_perl to use Mason?', $default );
 
     return unless $yn =~ /^y/i;
 
