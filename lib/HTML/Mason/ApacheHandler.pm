@@ -111,7 +111,10 @@ use vars qw($VERSION);
 
 $VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
 
-my %valid_params =
+use HTML::Mason::Container;
+use base qw(HTML::Mason::Container);
+
+__PACKAGE__->valid_params
     (
      apache_status_title   => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason status' },
      args_method           => { parse => 'string',  type => SCALAR,       default => 'mod_perl',
@@ -141,9 +144,6 @@ my %valid_params =
      # the only required param
      interp                => { isa => 'HTML::Mason::Interp' },
     );
-
-sub allowed_params { \%valid_params }
-sub validation_spec { shift->allowed_params }
 
 sub import
 {
