@@ -10,10 +10,9 @@ use Carp;
 use File::Basename;
 use File::Path;
 use File::Spec;
-use HTML::Mason::Config;
 use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
-use HTML::Mason::Tools qw(make_fh read_file taint_is_on compress_path);
+use HTML::Mason::Tools qw(make_fh read_file taint_is_on);
 
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
@@ -600,7 +599,7 @@ sub write_system_log {
     my $self = shift;
 
     if ($self->{system_log_fh} && $self->{system_log_events_hash}->{$_[0]}) {
-	my $time = ($HTML::Mason::Config{use_time_hires} ? scalar(Time::HiRes::gettimeofday()) : time);
+	my $time = (defined %Time::HiRes::) ? scalar(Time::HiRes::gettimeofday()) : time);
 	my $fh = $self->{system_log_fh};
 	print $fh (join ($self->system_log_separator,
 			 $time,                  # current time
