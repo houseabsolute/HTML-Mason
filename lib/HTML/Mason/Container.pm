@@ -169,7 +169,6 @@ sub allowed_params
 	# the new class provided.  Otherwise, we use our default.
 	my $spec = exists $args->{$low_class} ? $args->{$low_class} : $c{$name};
 	my $contained_class = ref($spec) ? $spec->{class}   : $spec;
-	my $delayed         = ref($spec) ? $spec->{delayed} : 0;
 
 	# we have to make sure it is loaded before we try calling
 	# ->allowed_params
