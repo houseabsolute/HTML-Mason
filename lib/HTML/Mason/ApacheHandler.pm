@@ -573,6 +573,9 @@ sub preview_dir { return shift->interp->data_dir . "/preview" }
 sub handle_request_1
 {
     my ($self,$r,$request) = @_;
+
+    $r = Apache::Request->new($r);
+
     my $interp = $self->interp;
 
     #
@@ -620,7 +623,7 @@ sub handle_request_1
 
     my %args;
     my $args_method = $self->args_method eq 'mod_perl' ? '_mod_perl_args' : '_cgi_args';
-    %args = $self->$args_method(\$r,$request);
+    %args = $self->$args_method($r,$request);
 
     #
     # Deprecated output_mode parameter - just pass to request out_mode.
@@ -694,9 +697,7 @@ sub handle_request_1
 #
 sub _cgi_args
 {
-    my ($self, $rref, $request) = @_;
-
-    my $r = $$rref;
+    my ($self, $r, $request) = @_;
 
     # For optimization, don't bother creating a CGI object if request
     # is a GET with no query string
@@ -723,18 +724,11 @@ sub _cgi_args
 }
 
 #
-# Get %args hash via Apache::Request package. As a side effect, assign the
-# new Apache::Request package back to $r, unless $r is already an Apache::Request.
+# Get %args hash via Apache::Request package.
 #
 sub _mod_perl_args
 {
-    my ($self, $rref, $request) = @_;
-
-    my $apr = $$rref;
-    unless (UNIVERSAL::isa($apr, 'Apache::Request')) {
-	$apr = Apache::Request->new($apr);
-	$$rref = $apr;
-    }
+    my ($self, $apr, $request) = @_;
 
     my %args;
     foreach my $key ( $apr->param ) {
