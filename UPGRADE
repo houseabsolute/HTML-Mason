@@ -15,6 +15,9 @@ Apache::Reload instead.
 - The HTML::Mason::Commands module has been removed.  None of the old
 'mc_' style commands will work with this version.
 
+- The "perl_" prefix for Mason tags (like <%perl_args>) is no longer
+supported.  Simply remove this prefix.
+
 - The HTML::Mason::Parser class no longer exists.  If you were
 creating one with the default options in your handler.pl file, you can
 remove the Parser-related code entirely.  Otherwise see the
