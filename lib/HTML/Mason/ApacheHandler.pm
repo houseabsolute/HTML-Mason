@@ -760,21 +760,17 @@ sub _cgi_args
     $request->cgi_object($q);
 
     my %args;
-    my $methods = $r->method eq 'GET' ? [ 'param' ] : [ 'param', 'url_param' ];
-    foreach my $method (@$methods) {
-	foreach my $key ( $q->$method() ) {
-	    foreach my $value ( $q->$method($key) ) {
-		if (exists($args{$key})) {
-		    if (ref($args{$key}) eq 'ARRAY') {
-			push @{ $args{$key} }, $value;
-		    } else {
-			$args{$key} = [$args{$key}, $value];
-		    }
-		} else {
-		    $args{$key} = $value;
-		}
-	    }
-	}
+
+    # Checking scalar $r->args when the method is POST is important
+    # because otherwise ->url_param returns a parameter named
+    # 'keywords' with a value of () (empty array).  This is apparently
+    # a feature related to <ISINDEX> queries or something (see the
+    # CGI.pm) docs.  It makes my head heart. - dave
+    my @methods = $r->method eq 'GET' || ! scalar $r->args ? ( 'param' ) : ( 'param', 'url_param' );
+    foreach my $key ( map { $q->$_() } @methods ) {
+	next if exists $args{$key};
+	my @values = map { $q->$_($key) } @methods;
+	$args{$key} = @values == 1 ? $values[0] : \@values;
     }
 
     return %args;
@@ -798,17 +794,8 @@ sub _mod_perl_args
 
     my %args;
     foreach my $key ( $apr->param ) {
-	foreach my $value ( $apr->param($key) ) {
-	    if (exists($args{$key})) {
-		if (ref($args{$key}) eq 'ARRAY') {
-		    push @{ $args{$key} }, $value;
-		} else {
-		    $args{$key} = [$args{$key}, $value];
-		}
-	    } else {
-		$args{$key} = $value;
-	    }
-	}
+	my @values = $apr->param($key);
+	$args{$key} = @values == 1 ? $values[0] : \@values;
     }
 
     return %args;
