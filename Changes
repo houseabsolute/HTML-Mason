@@ -27,7 +27,7 @@ change should not cause most people any problems.
 - All the modules included with Mason are now documented.
 - Various pieces of existing documentation have been tweaked and
 modified.
-- Added handle_cgi_object method to HTML::Mason::CGIHandler.
+- Added handle_cgi_object method to CGIHandler.
 
 [ BUG FIXES ]
 
