@@ -276,7 +276,7 @@ sub load {
 	} until ($object_code);
     } else {
 	#
-	# No object files. Load component directly into memory.
+	# Not using object files. Load component directly into memory.
 	#
 	my $object_code = $source->object_code( compiler => $self->compiler );
 	$comp = eval { $self->eval_object_code( object_code => $object_code ) };
