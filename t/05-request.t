@@ -56,7 +56,7 @@ EOF
 Caller is <% $m->caller->title %> or <% $m->callers(1)->title %>.
 The top level component is <% $m->callers(-1)->title %>.
 The full component stack is <% join(",",map($_->title,$m->callers)) %>.
-My argument list is (<% join(",",@{$m->caller_args(0)}) %>).
+My argument list is (<% join(",",$m->caller_args(0)) %>).
 
 % foreach my $path (qw(various_test /request/sections/perl foobar /shared)) {
 %   my $full_path = $m->process_comp_path($path);
