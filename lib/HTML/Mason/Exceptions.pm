@@ -25,6 +25,10 @@ BEGIN
 	   { isa => 'HTML::Mason::Exception',
 	     description => "error thrown in eval of the code for a component" },
 
+	   'HTML::Mason::Exception::Compilation::IncompatibleCompiler' =>
+	   { isa => 'HTML::Mason::Exception',
+	     description => "a component was compiled by a compiler/lexer with incompatible options.  recompilation is needed" },
+
 	   'HTML::Mason::Exception::Params' =>
 	   { isa => 'HTML::Mason::Exception',
 	     description => 'invalid parameters were given to a method/function' },
