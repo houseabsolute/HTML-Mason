@@ -247,6 +247,10 @@ sub setup_handler
 
     my $libs = _libs();
 
+    # The code below tries to create its configurations using
+    # different combinations of parameters.  The goal is to have
+    # different combinations of providing contained objects and
+    # providing the contained object class and its parameters.
     print F <<"EOF";
 package My::Resolver;
 \$My::Resolver::VERSION = '0.01';
@@ -281,19 +285,55 @@ my \@interp_params = ( {},
 my \@ah;
 for (my \$x = 0; \$x <= \$#ah_params; \$x++)
 {
-    my \$res = My::Resolver->new( comp_root => '$APACHE{comp_root}' );
+    my \%res_params;
+
+    if ( \$x < 2 )
+    {
+        \%res_params = ( resolver_class => 'My::Resolver',
+                        comp_root => '$APACHE{comp_root}',
+                      );
+    }
+    else
+    {
+        \%res_params =
+            ( resolver =>
+              My::Resolver->new( comp_root => '$APACHE{comp_root}' )
+            );
+    }
+
+    my \%interp_params;
+    if ( \$x % 2 )
+    {
+
+        \%interp_params = ( interp_class => 'My::Interp',
+                           data_dir => '$APACHE{data_dir}',
+                           error_mode => 'output',
+                           error_format => 'html',
+                           \%{\$interp_params[\$x]},
+                         );
+    }
+    else
+    {
+        \%interp_params =
+            ( interp =>
+              My::Interp->new( request_class => 'HTML::Mason::Request::ApacheHandler',
+                               data_dir => '$APACHE{data_dir}',
+                               error_mode => 'output',
+                               error_format => 'html',
+                               %res_params,
+                              \%{\$interp_params[\$x]},
+                             )
+            );
+
+        \%res_params = ();
+    }
 
     my \$ah =
         HTML::Mason::ApacheHandler->new
             ( args_method => '$args_method',
-              interp_class => 'My::Interp',
-	      request_class => 'HTML::Mason::Request::ApacheHandler',
-	      resolver => \$res,
-	      error_mode => 'output',
-	      error_format => 'html',
-	      data_dir => '$APACHE{data_dir}',
               \%{\$ah_params[\$x]},
-	      \%{\$interp_params[\$x]},
+              \%interp_params,
+	      \%res_params,
             );
 
     chown Apache->server->uid, Apache->server->gid, \$ah->interp->files_written;
