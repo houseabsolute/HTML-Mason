@@ -14,6 +14,8 @@ use HTML::Mason::Exceptions;
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
 
+use Digest::MD5 ();
+
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
@@ -52,10 +54,31 @@ sub new
     return $self;
 }
 
+sub object_id
+{
+    my $self = shift;
+
+    # Can't use coderef keys because they stringify differently every
+    # time the program is loaded, whether they are a reference to the
+    # same code or not.
+    my @id_keys = grep { $_ ne 'lexer' && $_ ne 'preprocess' &&
+			 $_ ne 'postprocess_perl' && $_ ne 'postprocess_text' } keys %{ $self->validation_spec };
+
+    my @vals;
+    foreach my $k ( @id_keys )
+    {
+	push @vals, $k;
+	push @vals, ( UNIVERSAL::isa( $self->{$k}, 'HASH' )  ? map { $_ => $self->{$k}{$_} } keys %{ $self->{$k} } :
+		      UNIVERSAL::isa( $self->{$k}, 'ARRAY' ) ? @{ $self->{$k} } :
+		      $self->{$k} );
+    }
+
+    return join '!', ( $self->lexer->object_id, Digest::MD5::md5_hex(@vals) );
+}
+
 my %top_level_only_block = map { $_ => 1 } qw( cleanup once shared );
 my %valid_comp_flag = map { $_ => 1 } qw( inherit );
 my %valid_escape_flag = map { $_ => 1 } qw( h n u );
-
 
 sub set_allowed_globals
 {
