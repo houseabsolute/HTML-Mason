@@ -34,14 +34,6 @@ sub try_exec_all
 	@comps = grep(!/^\./ && -f ("$dir/$_"),$dh->read);
     }
 
-    # Don't do data cache related tests if flock not implemented.
-    if ($branch =~ /^mc|interp$/) {
-	eval { my $fh = new IO::File "$root/t/test-common.pl"; flock($fh,1) };
-	if ($@) {
-	    @comps = grep(!/^(mc_)?(cache|cache_self)/,@comps);
-	}
-    }
-
     print "1..".scalar(@comps)."\n";
     foreach my $component ( @comps ) {
 	try_exec($interp, $component);

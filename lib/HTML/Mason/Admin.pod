@@ -332,6 +332,9 @@ output (possibly useful for debugging cache files).  On the other hand
 B<Storable> is significantly faster than the other options according
 to the MLDBM documentation.
 
+Data caching will not work on systems lacking flock(), such as Windows
+95 and 98.
+
 =item Administration
 
 Once set up, data caching requires little administration. When a

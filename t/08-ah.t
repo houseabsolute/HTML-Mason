@@ -8,7 +8,7 @@ use vars (qw($root $branch $comp_root $data_dir));
 eval { require mod_perl };
 my @use = ($mod_perl::VERSION);
 unless ($mod_perl::VERSION) {
-    print "1..0";
+    print "1..0\n";
     exit;
 }
 
