@@ -34,8 +34,8 @@ kill_httpd(1);
 test_load_apache();
 
 my $tests = 4; # multi conf tests
-$tests += 42 if my $have_libapreq = have_module('Apache::Request');
-$tests += 32 if my $have_cgi      = have_module('CGI');
+$tests += 45 if my $have_libapreq = have_module('Apache::Request');
+$tests += 34 if my $have_cgi      = have_module('CGI');
 $tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
 print "1..$tests\n";
 
@@ -43,23 +43,23 @@ print STDERR "\n";
 
 write_test_comps();
 
-if ($have_libapreq) {        # 42 tests
+if ($have_libapreq) {        # 45 tests
     cleanup_data_dir();
-    apache_request_tests(1); # 18 tests
+    apache_request_tests(1); # 19 tests
 
     cleanup_data_dir();
-    apache_request_tests(0); # 13 tests
+    apache_request_tests(0); # 14 tests
 
     cleanup_data_dir();
-    no_config_tests();    # 11 tests
+    no_config_tests();    # 12 tests
 }
 
-if ($have_cgi) {             # 32 tests
+if ($have_cgi) {             # 34 tests (+ 1?)
     cleanup_data_dir();
-    cgi_tests(1);            # 18 tests + 1 if mod_perl version > 1.24
+    cgi_tests(1);            # 19 tests + 1 if mod_perl version > 1.24
 
     cleanup_data_dir();
-    cgi_tests(0);            # 14 tests
+    cgi_tests(0);            # 15 tests
 }
 
 cleanup_data_dir();
@@ -210,6 +210,13 @@ foreach (keys %ARGS) {
 }
 </%init>
 We should never see this.
+EOF
+	      );
+
+    write_comp( 'redirect', <<'EOF',
+<%init>
+$m->redirect('/comps/basic');
+</%init>
 EOF
 	      );
 
@@ -654,6 +661,25 @@ EOF
 	ok($success);
     }
 
+    $path = '/comps/redirect';
+    $path = "/ah=0$path" if $with_handler;
+
+    $response = Apache::test->fetch($path);
+    $actual = filter_response($response, $with_handler);
+    $success = HTML::Mason::Tests->check_output( actual => $actual,
+						 expect => <<'EOF',
+X-Mason-Test: Initial value
+Basic test.
+2 + 2 = 4.
+uri = /basic.
+method = GET.
+
+
+Status code: 0
+EOF
+						  );
+    ok($success);
+
 =pod
 
     $path = '/comps/internal_redirect';
@@ -809,7 +835,8 @@ sub kill_httpd
     if ( ! $result and $! =~ /no such (?:file|proc)/i )
     {
 	# Looks like apache wasn't running, so we're done
-	unlink "$ENV{APACHE_DIR}/httpd.pid" or warn "Couldn't remove '$ENV{APACHE_DIR}/httpd.pid': $!";
+	unlink "$ENV{APACHE_DIR}/httpd.pid"
+	    or warn "Couldn't remove '$ENV{APACHE_DIR}/httpd.pid': $!";
 	return;
     }
     die "Can't kill process $pid: $!" if !$result;
@@ -822,21 +849,25 @@ sub kill_httpd
 	{
 	    sleep (1);
 	    $x++;
-	    if ( $x > 10 )
+	    if ( $x > 1 )
 	    {
 		my $result = kill 'TERM', $pid;
 		if ( ! $result and $! =~ /no such (?:file|proc)/i )
 		{
 		    # Looks like apache wasn't running, so we're done
-		    unlink "$ENV{APACHE_DIR}/httpd.pid" or warn "Couldn't remove '$ENV{APACHE_DIR}/httpd.pid': $!";
+		    if ( -e "$ENV{APACHE_DIR}/httpd.pid" )
+		    {
+			unlink "$ENV{APACHE_DIR}/httpd.pid"
+			    or warn "Couldn't remove '$ENV{APACHE_DIR}/httpd.pid': $!";
+		    }
 		    return;
 		}
-		else
-		{
-		    die "$ENV{APACHE_DIR}/httpd.pid file still exists after 10 seconds.  Exiting.";
-		}
 	    }
+
+	    die "$ENV{APACHE_DIR}/httpd.pid file still exists after 10 seconds.  Exiting."
+		if $x > 10;
 	}
+
     }
 }
 
