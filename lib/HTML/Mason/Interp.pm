@@ -503,15 +503,6 @@ sub eval_object_code
 
     $err = $warnstr . $@;
 
-    #
-    # If no error generated and no component object returned, we
-    # have a prematurely-exited <%once> section or other syntax
-    # accident.
-    #
-    unless (1 or $err or (defined($comp) and (UNIVERSAL::isa($comp, 'HTML::Mason::Component') or ref($comp) eq 'CODE'))) {
-	$err = "could not generate component object (return() in a <%once> section or extra close brace?)";
-    }
-
     unless ($err) {
 	# Yes, I know I always freak out when people start poking
 	# around in object internals but since there is no longer a
