@@ -880,6 +880,11 @@ discussion of the pros and cons.
 File name used for autohandlers. Default is "autohandler". If
 undef, Mason will not look for autohandlers.
 
+=item autoflush
+
+This parameter indicates whether or not requests created by this
+interpreter should have autoflush turned on or off by default.
+
 =item code_cache_max_size
 
 Specifies the maximum size, in bytes, of the in-memory code cache
@@ -975,8 +980,9 @@ string. For example, to send output to a file called "mason.out":
     ...
     out_method => sub { $fh->print($_[0]) }
 
-By default, out_method prints to standard output. (In a mod_perl
-environment this is automatically redirected to the HTTP client.)
+By default, out_method prints to standard output.  When the
+HTML::Mason::ApacheHandler module is used, the out method uses the C<<
+$r->print >> method to send output.
 
 =item preloads
 
@@ -1155,7 +1161,7 @@ Example of usage:
 
 Although Mason is most commonly used in conjunction with mod_perl,
 there is also a functional API that allows you to use Mason from CGI
-programs or from stand-alone Perl scripts. 
+programs or from stand-alone Perl scripts.
 
 When using Mason outside of mod_perl, just create an Interp object;
 you do not need the ApacheHandler object.  Once you've created an
