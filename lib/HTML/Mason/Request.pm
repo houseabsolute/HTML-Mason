@@ -42,7 +42,7 @@ BEGIN
 			 public => 0 },
 	 error_format => { parse => 'string', type => SCALAR, default => 'text',
 			   callbacks => { "must be one of 'brief', 'text', 'line', or 'html'" =>
-					  sub { $_[0] =~ /^(?:brief|text|line|html)$/; } },
+					  sub { my $m = "as_$_[0]"; HTML::Mason::Exception->can($m); } },
 			   descr => "How error messages are formatted" },
 	 error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
 			 callbacks => { "must be one of 'output' or 'fatal'" =>
@@ -163,7 +163,7 @@ sub _initialize {
 	    }
 
 	    unless ($self->{top_comp} = $top_comp) {
-		top_level_not_found_error "could not find component for initial path '" . $self->{top_path} . "'\n";
+		top_level_not_found_error "could not find component for initial path '$self->{top_path}'\n";
 	    }
 
 	} elsif ( ! UNIVERSAL::isa( $top_comp, 'HTML::Mason::Component' ) ) {
