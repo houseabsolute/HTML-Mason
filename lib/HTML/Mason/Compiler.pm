@@ -6,6 +6,8 @@ package HTML::Mason::Compiler;
 
 use strict;
 
+use vars qw( %VALID_PARAMS %CONTAINED_OBJECTS );
+
 use HTML::Mason::Component::FileBased;
 use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Lexer;
@@ -14,6 +16,9 @@ use HTML::Mason::Utils qw(create_subobjects);
 use HTML::Mason::Exceptions;
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
+
+use HTML::Mason::Container;
+use base qw(HTML::Mason::Container);
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( default_escape_flags
@@ -25,29 +30,24 @@ use HTML::Mason::MethodMaker
 		    ],
     );
 
-my %valid_params = 
+%VALID_PARAMS =
     (
      allowed_globals      => { parse => 'list',   type => ARRAYREF, default => [] },
      default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
      lexer                => { isa => 'HTML::Mason::Lexer', optional => 1 },
-     lexer_class          => { parse => 'string', type => SCALAR,   default => 'HTML::Mason::Lexer' },
      preprocess           => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_perl     => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1 },
     );
-sub allowed_params { \%valid_params }
-sub validation_spec { return shift->allowed_params }
 
-# For subobject auto-creation
-my %creates_objects = ( lexer => 'HTML::Mason::Lexer' ); # Default class
-sub creates_objects { \%creates_objects }
+%CONTAINED_OBJECTS = ( lexer => 'HTML::Mason::Lexer' );
 
 sub new
 {
     my $class = shift;
 
     # Must assign to an actual array for validate() to work
-    my @args = create_subobjects($class, @_);
+    my @args = $class->create_contained_objects(@_);
     my $self = bless {validate(@args, $class->validation_spec)}, $class;
 
     $self->set_allowed_globals( @{$self->{allowed_globals}} );
