@@ -1099,6 +1099,8 @@ sub request_args
 	return { @{$self->{request_args}} };
     }
 }
+
+# For backward compatibility:
 *top_args = \&request_args;
 *top_comp = \&request_comp;
 
