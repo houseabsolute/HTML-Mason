@@ -7,6 +7,11 @@ available at http://www.masonhq.com/changes.html.
 
 1.13
 
+[ ENHANCEMENTS ]
+
+- Replace the regex "[A-Za-z0-9]" with "\w", which should cooperate
+better with the use of the locale pragma.
+
 [ BUG FIXES ]
 
 - When running under mod_perl, a warning was issued from
