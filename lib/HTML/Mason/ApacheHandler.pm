@@ -23,13 +23,16 @@ use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
 
+my $ap_req_class;
 BEGIN
 {
+    $ap_req_class = $mod_perl::VERSION < 1.99 ? 'Apache' : 'Apache::RequestRec';
+
     __PACKAGE__->valid_params
 	( ah         => { isa => 'HTML::Mason::ApacheHandler',
 			  descr => 'An ApacheHandler to handle web requests',
 			  public => 0 },
-	  apache_req => { isa => 'Apache', default => undef,
+	  apache_req => { isa => $ap_req_class, default => undef,
 			  descr => "An Apache request object",
 			  public => 0 },
 	  cgi_object => { isa => 'CGI',    default => undef,
@@ -101,7 +104,8 @@ sub exec
 
     {
 	# Remap $r->print to Mason's $m->print while executing request
-	local *Apache::print = sub { shift; $self->print(@_) };
+	no strict 'refs';
+	local *{"$ap_req_class\::print"} = sub { shift; $self->print(@_) };
 	eval { $retval = $self->SUPER::exec(@_) };
     }
 
@@ -195,11 +199,15 @@ Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ 
 
 use Apache;
 use Apache::Status;
-die "mod_perl must be compiled with PERL_METHOD_HANDLERS=1 (or EVERYTHING=1) to use ", __PACKAGE__, "\n"
-    unless Apache::perl_hook('MethodHandlers');
 
 # Require a reasonably modern mod_perl - should probably be later
 use mod_perl 1.22;
+
+if ( $mod_perl::VERSION < 1.99 )
+{
+    die "mod_perl must be compiled with PERL_METHOD_HANDLERS=1 (or EVERYTHING=1) to use ", __PACKAGE__, "\n"
+	unless Apache::perl_hook('MethodHandlers');
+}
 
 use constant OK         => 0;
 use constant DECLINED   => -1;
@@ -247,6 +255,8 @@ use HTML::Mason::MethodMaker
 
 use vars qw($AH);
 
+# force import to be called even if we're just required.
+__PACKAGE__->import;
 sub import
 {
     my $pack = shift;
@@ -360,6 +370,17 @@ sub _get_mason_params
 {
     my $self = shift;
 
+    foreach my $obj ( grep { defined } Apache->request, Apache->server )
+    {
+	warn "OBJ: $obj\n";
+	warn "CONF: ", $obj->dir_config, "\n";
+	my $c = $obj->dir_config;
+	while (my ($k, $v) = each %$c)
+	{
+	    warn " $k => $v\n";
+	}
+    }
+
     my $c = Apache->request ? Apache->request : Apache->server;
 
     my $config = $c->dir_config;
@@ -441,13 +462,18 @@ sub _get_list_param
     return \@val;
 }
 
+BEGIN
+{
+    my $has_table_api = $mod_perl::VERSION >= 1.99 || Apache::perl_hook('TableApi');
+    use constant HAS_TABLE_API => $has_table_api;
+}
+
 sub _get_val
 {
     my ($self, $p, $wantarray, $vals) = @_;
 
     my $c = Apache->request ? Apache->request : Apache->server;
-
-    my @val = Apache::perl_hook('TableApi') ? $c->dir_config->get($p) : $c->dir_config($p);
+    my @val = HAS_TABLE_API ? $c->dir_config->get($p) : $c->dir_config($p);
 
     param_error "Only a single value is allowed for configuration parameter '$p'\n"
 	if @val > 1 && ! $wantarray;
@@ -722,7 +748,11 @@ sub prepare_request
     # we call the version of the sub that sends its output to the
     # right place.
     #
-    my $print = \&Apache::print;
+    my $print;
+    {
+	no strict 'refs';
+	$print = \&{"$ap_req_class\::print"};
+    }
 
     # Craft the request's out method to handle http headers, content
     # length, and HEAD requests.
@@ -808,10 +838,14 @@ sub return_not_found
     return NOT_FOUND;
 }
 
-
 #
 # PerlHandler HTML::Mason::ApacheHandler
 #
+BEGIN
+{
+    if ( $mod_perl::VERSION < 1.99 )
+    {
+	eval <<'EOF';
 sub handler ($$)
 {
     my ($package, $r) = @_;
@@ -819,6 +853,22 @@ sub handler ($$)
     my $ah = $AH || $package->make_ah();
 
     return $ah->handle_request($r);
+}
+EOF
+    }
+    else
+    {
+	eval <<'EOF';
+sub handler : method
+{
+    my ($package, $r) = @_;
+
+    my $ah = $AH || $package->make_ah();
+
+    return $ah->handle_request($r);
+}
+EOF
+    }
 }
 
 1;
