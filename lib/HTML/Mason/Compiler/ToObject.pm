@@ -384,7 +384,60 @@ HTML::Mason::Compiler::ToObject - A Compiler subclass that generates Mason objec
 
 =head1 DESCRIPTION
 
-This Compiler subclass that generates Mason object code (Perl code).
-It is the default Compiler class.
+This Compiler subclass generates Mason object code (Perl code).  It is
+the default Compiler class used by Mason.
+
+=head1 PARAMETERS FOR new() CONSTRUCTOR
+
+All of these parameters are optional.
+
+=over
+
+=item comp_class
+
+The class into which component objects are blessed.  This defaults to
+L<C<HTML::Mason::Component>|HTML::Mason::Component>.
+
+=item subcomp_class
+
+The class into which subcomponent objects are blessed.  This defaults
+to L<C<HTML::Mason::Subcomponent>|HTML::Mason::Subcomponent>.
+
+=item in_package
+
+This is the package in which a component's code is executed.  For
+historical reasons, this defaults to C<HTML::Mason::Commands>.
+
+=item preamble
+
+If this parameter is supplied, then the text given is placed at the
+beginning of each component.
+
+=item postamble
+
+Text given for this parameter is placed at the end of each component.
+
+=item use_strict
+
+This indicates whether or not a given component should C<use strict>.
+By default, this is true.
+
+=back
+
+=head1 METHODS
+
+This class is primarily meant to be used by the Interpreter object,
+and as such has a very limited public API.
+
+=over
+
+=item compile (comp_source => $source, name => $name, comp_class = $comp_class)
+
+This method will take component source and return the compiled object
+code for that source.  The C<comp_source> and C<name> parameters are
+optional.  The C<comp_class> can be used to change the component class
+for this one comonent.
+
+=back
 
 =cut
