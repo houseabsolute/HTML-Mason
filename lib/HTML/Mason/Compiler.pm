@@ -31,7 +31,7 @@ __PACKAGE__->valid_params
     (
      allow_globals        => { parse => 'list',   type => ARRAYREF, default => [] },
      default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
-     lexer                => { can => [ 'lex', 'object_id', 'named_block_types', 'simple_block_types', 'line_count' ] },
+     lexer                => { isa => 'HTML::Mason::Lexer' },
      preprocess           => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_perl     => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1 },
