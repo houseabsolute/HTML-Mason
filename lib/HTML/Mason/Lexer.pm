@@ -37,10 +37,21 @@ my %blocks = ( args    => 'variable_list_block',
 	       text    => 'text_block',
 	     );
 
-my $blocks_re;
+sub block_body_method
 {
+    return $blocks{ $_[1] };
+}
+
+{
+    my $blocks_re;
+
     my $re = join '|', keys %blocks;
     $blocks_re = qr/$re/i;
+
+    sub blocks_regex
+    {
+	return $blocks_re
+    }
 }
 
 sub simple_block_types
@@ -155,7 +166,7 @@ sub start
     if ( $self->{in_def} || $self->{in_method} )
     {
 	my $type = $self->{in_def} ? 'def' : 'method';
-	unless ( $end =~ m,</%\Q$type\E>\n?, )
+	unless ( $end =~ m,</%\Q$type\E>\n?,i )
 	{
 	    my $block_name = $self->{"in_$type"};
 	    HTML::Mason::Exception::Syntax->throw( error => "No </%$type> tag for <%$type $block_name> block" );
@@ -169,6 +180,9 @@ sub match_block
 
     my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
+
+    my $blocks_re = $self->blocks_regex;
+
     if ( $comp =~ /\G<%($blocks_re)>/igcs )
     {
 	$self->{pos} = pos($comp);
@@ -176,7 +190,7 @@ sub match_block
 	my $type = lc $1;
 	$self->{compiler}->start_block( block_type => $type );
 
-	my $method = $blocks{$type};
+	my $method = $self->block_body_method($type);
 	$self->$method( block_type => $type );
 
 	return 1;
@@ -185,28 +199,23 @@ sub match_block
 
 sub generic_block
 {
-    my ($self, %p) = @_;
+    my $self = shift;
+    my %p = @_;
 
     my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
-    if ( $comp =~ m,\G(.*?)</%\Q$p{block_type}\E>(\n?),igcs )
-    {
-	$self->{pos} = pos($comp);
 
-	my $block = $1;
-	my $method = $p{method};
-	$self->{compiler}->$method( block_type => $p{block_type},
-				    block => $block );
-	$self->{lines} += $block =~ tr/\n/\n/;
-	$self->{lines}++ if $2;
+    my ($block, $nl) = $self->match_block_end( block_type => $p{block_type},
+					       allow_text => 1 );
 
-	$self->{compiler}->end_block( block_type => $p{block_type} );
-    }
-    else
-    {
-	HTML::Mason::Exception::Syntax->throw
-		( error => "<%$p{block_type}> tag at line $self->{lines} has no matching </%$p{block_type}> tag" );
-    }
+    my $method = $p{method};
+    $self->{compiler}->$method( block_type => $p{block_type},
+				block => $block );
+
+    $self->{lines} += $block =~ tr/\n/\n/;
+    $self->{lines}++ if $nl;
+
+    $self->{compiler}->end_block( block_type => $p{block_type} );
 }
 
 sub text_block
@@ -262,7 +271,7 @@ sub variable_list_block
     {
 	$self->{pos} = pos($comp);
 
-	if ( $1 && $2 )
+	if ( length $1 && length $2 )
 	{
 	    $self->{compiler}->variable_declaration( block_type => $p{block_type},
 						     type => $1,
@@ -270,20 +279,15 @@ sub variable_list_block
 						     default => $3,
 						   );
 	}
+
 	$self->{lines}++;
     }
 
-    if ( $comp =~ m,\G</%\Q$p{block_type}\E>(\n?),igcs )
-    {
-	$self->{pos} = pos($comp);
-	$self->{compiler}->end_block( block_type => $p{block_type} );
-	$self->{lines}++ if $1;
-    }
-    else
-    {
-	my $line = $self->_next_line;
-	HTML::Mason::Exception::Syntax->throw( error => "Invalid <%$p{block_type}> section line at line $self->{lines}:\n$line" );
-    }
+    my $nl = $self->match_block_end( block_type => $p{block_type},
+				     allow_text => 0 );
+    $self->{lines}++ if $nl;
+
+    $self->{compiler}->end_block( block_type => $p{block_type} );
 }
 
 sub key_val_block
@@ -304,21 +308,39 @@ sub key_val_block
                      /gcx )
     {
 	$self->{pos} = pos($comp);
-	if (length($1) and length($2))
+
+	if ( length $1 && length $2 )
 	{
 	    $self->{compiler}->key_value_pair( block_type => $p{block_type},
 					       key => $1,
 					       value => $2
 					     );
 	}
+
 	$self->{lines}++;
     }
 
-    if ( $comp =~ m,\G</%\Q$p{block_type}\E>(\n?),igcs )
+    my $nl = $self->match_block_end( block_type => $p{block_type},
+				     allow_text => 0 );
+    $self->{lines}++ if $nl;
+
+    $self->{compiler}->end_block( block_type => $p{block_type} );
+}
+
+sub match_block_end
+{
+    my $self = shift;
+    my %p = @_;
+
+    my $comp = $self->{comp_text};
+    pos($comp) = $self->{pos};
+
+    my $re = $p{allow_text} ? qr,\G(.*?)</%\Q$p{block_type}\E>(\n?),is : qr,\G()</%\Q$p{block_type}\E>(\n?),is;
+    if ( $comp =~ /$re/gc )
     {
 	$self->{pos} = pos($comp);
-	$self->{compiler}->end_block( block_type => $p{block_type} );
-	$self->{lines}++ if $1;
+
+	return $p{allow_text} ? ($1, $2) : $2;
     }
     else
     {
@@ -345,11 +367,9 @@ sub match_named_block
 	# appropriate ending tag.
 	local $self->{ending} = qr,\G</%\Q$type\E>\n?,i;
 
-	$self->{"in_$type"} = $name;
+	local $self->{"in_$type"} = $name;
 
 	$self->start();
-
-	$self->{"in_$type"} = undef;
 
 	$self->{compiler}->end_named_block( block_type => $type );
 
@@ -503,7 +523,7 @@ sub match_text
 	my $consumed = "$1$2";
 	return 0 unless length $consumed;
 
-	$self->{compiler}->text( text => "$1" );
+	$self->{compiler}->text( text => $1 );
 	$self->{lines} += $consumed =~ tr/\n/\n/;
 	return 1;
     }
