@@ -9,35 +9,32 @@ use strict;
 # APACHE-SPECIFIC REQUEST OBJECT
 #
 package HTML::Mason::Request::ApacheHandler;
+
 use HTML::Mason::Request;
-use base qw(HTML::Mason::Request);
+use HTML::Mason::Container;
+use base qw(HTML::Mason::Request HTML::Mason::Container);
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( ah apache_req ) ] );
 
-# Fields that can be set in new method, with defaults
-my %reqfields =
-    (ah => undef,
-     apache_req => undef,
-     cgi_object => undef,
-     );
+__PACKAGE__->valid_params
+    ( ah         => { isa => 'HTML::Mason::ApacheHandler' },
+      apache_req => { isa => 'Apache', default => undef },
+      cgi_object => { isa => 'CGI',    default => undef },
+    );
 
 sub new
 {
-    my ($class,%options) = @_;
-    my $interp = $options{interp} or
-	param_error( "HTML::Mason::Request::ApacheHandler->new: must specify interp\n" );
-    delete $options{interp};
-    my $self = $class->SUPER::new(interp=>$interp);
-    while (my ($key,$value) = each(%options)) {
-	if (exists($reqfields{$key})) {
-	    $self->{$key} = $value;
-	} else {
-	    param_error( "HTML::Mason::Request::ApacheHandler->new: invalid option '$key'\n" );
-	}
+    my $class = shift;
+    my $self = $class->SUPER::new(@_);  # Magic!
+
+    unless ($self->apache_req or $self->cgi_object)
+    {
+	param_error __PACKAGE__ . "->new: must specify 'apache_req' or 'cgi_object' parameter";
     }
+
     return $self;
 }
 
@@ -53,8 +50,8 @@ sub cgi_object
 {
     my ($self) = @_;
 
-    error( "Can't call cgi_object method unless CGI.pm was used to handle incoming arguments.\n" )
-	unless defined $CGI::VERSION;
+    error "Can't call cgi_object() unless 'args_method' is set to CGI.\n"
+	unless $self->ah->args_method eq 'CGI';
 
     if (defined($_[1])) {
 	$self->{cgi_object} = $_[1];
