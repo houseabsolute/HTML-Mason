@@ -141,7 +141,7 @@ void mason_module_init(server_rec *s, pool *p)
 static int mason_handler(request_rec *r)
 {
   int retval;
-  SV * handler_sv = newSVpv($handler, 0);
+  SV * handler_sv = newSVpv("$handler", 0);
 
   ENTER;
 
