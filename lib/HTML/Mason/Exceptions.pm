@@ -67,9 +67,9 @@ if ($HTML::Mason::DEBUG)
 my %abbrs = map { $e{$_}{abbr} => $_ } grep {exists $e{$_}{abbr}} keys %e;
 
 # The import() method allows this:
-#  use HTML::Mason::Exceptions('abbr' => {short_error => 'HTML::Mason::Exception::Longname',...});
+#  use HTML::Mason::Exceptions(abbr => ['error1', 'error2', ...]);
 # ...
-#  short_error("something went wrong");
+#  error1 "something went wrong";
 
 sub import
 {
