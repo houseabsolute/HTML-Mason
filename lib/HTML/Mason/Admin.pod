@@ -328,6 +328,22 @@ well-placed Perl in your C<handler.pl>.  In this section we present the
 basics of setting up C<handler.pl> as well as some ideas for more
 advanced applications.
 
+=head2 Declaring your handler.pl
+
+This method requires only a bit of Apache configuration.  First, use a
+PerlRequire directive to declare your handler.pl location (this can be
+anywhere, though the Apache conf/ subdirectory is a good place as
+any).  Second, set your PerlHandler simply to HTML::Mason rather than
+HTML::Mason::ApacheHandler.
+
+    PerlRequire /path/to/handler.pl
+
+    <FilesMatch "\.html$">
+        SetHandler perl-script
+        # notice - no ::ApacheHandler!
+        PerlHandler HTML::Mason
+    </FilesMatch>
+
 =head2 Creating the Mason objects
 
 C<handler.pl> creates three Mason objects: the Parser, Interpreter,
