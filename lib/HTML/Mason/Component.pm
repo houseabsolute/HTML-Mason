@@ -20,6 +20,7 @@ use HTML::Mason::MethodMaker
 			 inherit_path
 			 inherit_start_path
                          interp
+                         has_filter
 			 load_time
 			 object_size
                        ) ],
@@ -116,7 +117,7 @@ sub run {
 
     $self->{mfu_count}++;
 
-    return $self->{code}->(@_) unless $self->{has_filter};
+    return $self->{code}->(@_) unless $self->has_filter;
 
     my $req = HTML::Mason::Request->instance;
 
