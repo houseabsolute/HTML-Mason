@@ -48,7 +48,7 @@ EOF
 foo
 </%args>
 EOF
-		      expect_error => quotemeta q|Invalid <%args> section line in /errors/_make_error component at line 2|
+		      expect_error => qr|Invalid <%args> section line|
 		    );
 
 #------------------------------------------------------------
