@@ -52,13 +52,18 @@ new component dynamically.
 
 Similarly, there is no C<execute> or C<call> method, because calling a
 component requires a request. All of the interfaces for calling a
-component (<& &>, C<$m->comp>, C<$interp-E<gt>exec>, C<$m-E<gt>call>)
+component (<& &>, C<$m->comp>, C<$interp-E<gt>exec>
 which normally take a component path, will also take a component
 object.
 
 =head1 METHODS
 
 =over
+
+
+=item cache_file
+
+Returns the data cache filename for this component.
 
 =item create_time
 
@@ -126,10 +131,18 @@ Returns a short name of the component.  For file-based components this
 is the filename without the path. For subcomponents this is the name
 specified in C<E<lt>%defE<gt>>. Undefined for anonymous components.
 
+=item object_file
+
+Returns the object filename for this component.
+
 =item parent_comp
 
 Defined only for subcomponents; returns the parent component that this
 subcomponent was defined in.
+
+=item path
+
+Returns the absolute path of this component.
 
 =item run_count
 
@@ -169,21 +182,13 @@ component types.
 
 =over
 
-=item cache_file
-
-Returns the data cache filename for this component.
-
-=item object_file
-
-Returns the object filename for this component.
-
-=item path
-
-Returns the absolute path of this component.
-
 =item source_file
 
 Returns the source filename for this component.
+
+=item source_dir
+
+Returns the directory of the source filename for this component.
 
 =back
 

@@ -986,7 +986,7 @@ administration manual for details on where cache files are stored and
 how they are named.
 
     use HTML::Mason::Utils 'access_data_cache';
-    access_data_cache (cache_file=>'/usr/local/mason/cache/foo::bar',
+    access_data_cache (cache_file=>'/usr/local/mason/cache/foo+2fbar',
                        action=>'expire' [, key=>'fookey']);
 
 
@@ -995,9 +995,9 @@ this can be used in conjunction with the 'keys' action to expire all
 keys matching a particular pattern.
 
     use HTML::Mason::Utils 'access_data_cache';
-    my @keys = access_data_cache (cache_file=>'/usr/local/mason/cache/foo::bar',
+    my @keys = access_data_cache (cache_file=>'/usr/local/mason/cache/foo+2fbar',
                                   action=>'keys');
-    access_data_cache (cache_file=>'/usr/local/mason/cache/foo::bar',
+    access_data_cache (cache_file=>'/usr/local/mason/cache/foo+2fbar',
                        action=>'expire', key=>[grep(/^sales/,@keys)]);
 
 

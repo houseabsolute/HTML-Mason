@@ -16,17 +16,19 @@ sub is_file_based { 1 }
 sub persistent { 1 }
 sub path { return $_[0]->{'path'} }
 sub source_file { return $_[0]->{'source_file'} }
+sub source_dir {
+    my $dir = dirname($_[0]->source_file);
+    $dir =~ s/\/$// unless $dir eq '/';
+    return $dir;
+}
 sub title {
     my ($self) = @_;
     return $self->path . ($self->{source_root_key} ? " [".$self->{source_root_key}."]" : "");
 }
-sub name {
-    my ($name,$dir_path) = fileparse($_[0]->path);
-    return $name;
-}
+sub name { return basename($_[0]->path) }
 sub dir_path {
-    my ($name,$dir_path) = fileparse($_[0]->path);
-    $dir_path =~ s/\/$//g;
+    my $dir_path = dirname($_[0]->path);
+    $dir_path =~ s/\/$// unless $dir_path eq '/';
     return $dir_path;
 }
 sub assign_runtime_properties {

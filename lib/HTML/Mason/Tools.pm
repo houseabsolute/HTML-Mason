@@ -13,7 +13,7 @@ require 5.004;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw();
-@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs is_absolute_path make_absolute_path pkg_loaded pkg_installed);
+@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs paths_eq is_absolute_path make_absolute_path pkg_loaded pkg_installed);
 
 use strict;
 use IO::File qw(!/^SEEK/);
@@ -104,6 +104,14 @@ sub date_delta_to_secs
     my $mult = $dateDeltaHash{$unit};
     die $usage if !$mult;
     return $num * $mult * ($sign eq '-' ? -1 : 1);
+}
+
+#
+# Determines whether two paths are equal, taking into account
+# case-insensitivity in Windows O/S.
+#
+sub paths_eq {
+    return (lc($^O) =~ /^ms(dos|win32)/) ? (lc($_[0]) eq lc($_[1])) : $_[0] eq $_[1];
 }
 
 #

@@ -40,6 +40,10 @@ My fq_path is <% $comp->fq_path =~ /anon/ ? '[anon something]' : $comp->fq_path 
 %   my ($subdir) = ($comp->source_file =~ m{((alt_root|comps)/.*?)$});
 My source file is .../<% $subdir %>
 % }
+% if ($comp->is_file_based and defined($comp->source_dir)) {
+%   my ($subdir) = ($comp->source_dir =~ m{((alt_root|comps)/.*?)$});
+My source dir is .../<% $subdir %>
+% }
 
 <%args>
 $comp

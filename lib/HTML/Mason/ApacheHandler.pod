@@ -31,6 +31,16 @@ Apache::Status.  Default is "HTML::Mason status".  This is useful if
 you create more then one ApacheHandler object and want them all
 visible via Apache::Status.
 
+=item auto_send_headers
+
+True or undef; default true.  Indicates whether Mason should
+automatically send HTTP headers before sending content back to the
+client. If you set to false, you should call $r->send_http_header
+manually.
+
+See L<Devel/sending_http_headers> for details about the automatic
+header feature.
+
 =item debug_handler_proc, debug_handler_script, debug_mode, debug_perl_binary
 
 The B<debug_*> parameters control Mason's use of debug files.
@@ -49,15 +59,10 @@ batch output mode for debugging.
 
 =item output_mode
 
-Specifies one of two ways to send output to the client, 'batch' or
-'stream'.  Batch mode means that Mason computes the entire page in
-memory and then transmits it all at once. Stream mode means that
-Mason outputs data as soon as it is computed. (This is only Mason's
-point of view; it does not take buffering done by Perl or the O/S
-into account.) Both of these modes use C<$r-E<gt>print> and override
-the value of C<$interp-E<gt>out_method>. The default is 'batch'.  If
-output_mode is specified as C<undef>, then C<$interp-E<gt>out_method>
-is left untouched.
+This parameter has been replaced by an equivalent parameter
+L<Interp/out_mode>. For backward compatibility, setting
+C<$ah-E<gt>output_mode> will cause C<$interp-E<gt>out_mode> to be set
+appropriately.
 
 =item top_level_predicate
 
@@ -71,13 +76,7 @@ component.  It then returns either a true (serve component) or false
 (reject component). In this example, the predicate rejects requests
 for components whose name starts with an "_" character:
 
-    top_level_predicate => sub { basename($_[0]) !~ /^_/ }
-
-B<NOTE>: In this example I've used basename() from the B<File::Basename>
-package. Since the top_level_predicate is defined in handler.pl,
-within B<HTML::Mason>, any such symbols need to be imported into that
-package. In other words, I would need a C<S<use File::Basename>>
-somewhere below the C<S<package HTML::Mason>> line in C<handler.pl>.
+    top_level_predicate => sub { $_[0] !~ m{/_[^/]+$}
 
 =back
 

@@ -5,6 +5,11 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+0.8
+
+- Fixed doc_root / comp_root mismatch on case-insensitive O/S
+(reported by John Arnold)
+
 0.73
 
 - Added "code examples" section to README

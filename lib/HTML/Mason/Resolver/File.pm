@@ -10,6 +10,7 @@ require Exporter;
 @EXPORT_OK = qw();
 
 use HTML::Mason::Resolver;
+use HTML::Mason::Tools qw(paths_eq);
 use strict;
 
 #
@@ -89,7 +90,8 @@ sub file_to_path {
 	die "comp_root must be a scalar or listref";
     }
     foreach my $root (@roots) {
-	if ((my $path = $file) =~ s/^$root//) {
+	if (paths_eq($root,substr($file,0,length($root)))) {
+	    my $path = substr($file,length($root));
 	    $path =~ s/\/$// unless $path eq '/';
 	    return $path;
 	}

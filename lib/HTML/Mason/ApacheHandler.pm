@@ -482,7 +482,6 @@ sub handle_request_1
     if (defined($self->{top_level_predicate})) {
 	my $srcfile = $comp->source_file;
 	if (!$self->{top_level_predicate}->($srcfile)) {
-	    $r->warn("Mason: component file \"$srcfile\" does not pass top-level predicate; returning 404.");
 	    return NOT_FOUND;
 	}
     }

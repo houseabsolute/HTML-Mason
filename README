@@ -56,9 +56,8 @@ CODE EXAMPLES
 The samples/ directory contains a few basic components as well as
 a miniature commerce site built with components.
 
-The Mason component archive (http://www.masonhq.com/arch/) was
-launched in November 1999. It should be another good source of
-examples as well as truly useful utilities.
+The Mason component archive (http://www.masonhq.com/arch/), launched
+in November 1999, should be another good source of examples.
 
 REPORTING BUGS
 
