@@ -1593,6 +1593,47 @@ augment and override (in case of conflict) the original
 arguments. Works like C<$m-E<gt>comp> in terms of return value and
 scalar/list context.  See DEVEL<autohandlers> for examples.
 
+=for html <a name="item_call_self"></a>
+
+=item call_self (output, return)
+
+This method allows a component to call itself so that it can filter
+both its output and return values.  It is fairly advanced; for most
+purposes the C<< <%filter> >> tag will be sufficient and simpler.
+
+C<< $m->call_self >> takes two arguments.  The first is a scalar
+reference and will be populated with the component output.  The second
+is either a scalar or list reference and will be populated with the
+component return value; the type of reference determines whether the
+component will be called in scalar or list context.  Both of these
+arguments are optional; you may pass undef for either of them.
+
+C<< $m->call_self >> acts like a C<fork()> in the sense that it will
+return twice with different values.  When it returns 0, you allow
+control to pass through to the rest of your component.  When it
+returns 1, that means the component has finished and you can begin
+filtering the output and/or return value. (Don't worry, it doesn't
+really do a fork! See next section for explanation.)
+
+The following examples would generally appear at the top of a C<<
+<%init> >> section.  Here is a no-op C<< $m->call_self >> that leaves
+the output and return value untouched:
+
+    my ($output, $retval);
+    if ($m->call_self(\$output, \$retval)) {
+        $m->print($output);
+        return $retval;
+    }
+
+Here is a simple output filter that makes the output all uppercase.
+Note that we ignore both the original and the final return value.
+
+    my $output;
+    if ($m->call_self(\$output, undef)) {
+        $m->print(uc $output);
+        return;
+    }
+
 =for html <a name="item_clear_buffer"></a>
 
 =item clear_buffer
