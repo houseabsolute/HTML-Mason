@@ -351,7 +351,22 @@ sub _get_val
 sub new
 {
     my $class = shift;
-    my @args = $class->create_contained_objects(@_);
+
+    my $allowed_params = $class->allowed_params;
+
+    my %defaults;
+    if (exists $allowed_params->{comp_root} && Apache->request)
+    {
+	$defaults{comp_root} = Apache->request->document_root;
+    }
+
+    if (exists $allowed_params->{data_dir})
+    {
+	# constructs path to <server root>/mason
+	$defaults{data_dir} = Apache->server_root_relative('mason');
+    }
+
+    my @args = $class->create_contained_objects(%defaults, @_);
 
     my $self = bless {validate( @args, $class->validation_spec )}, $class;
 
