@@ -585,11 +585,11 @@ optional arguments; they are assigned the specified default values if
 unspecified.  All the arguments are available as lexically scoped ("my")
 variables in the rest of the component.
 
-Mason fills arguments in top-to-bottom order, and default expressions
-may reference earlier arguments (as $e references $d above).
-
 Arguments are separated by one or more newlines. Comments may be used at
 the end of a line or on their own line.
+
+Default expressions are evaluated in top-to-bottom order, and one
+expression may reference an earlier one (as $e references $d above).
 
 Only valid Perl variable names may be used in C<E<lt>%argsE<gt>>
 sections.  Parameters with non-valid variable names cannot be
