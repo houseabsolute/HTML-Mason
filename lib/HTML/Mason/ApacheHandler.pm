@@ -112,18 +112,7 @@ sub print
 {
     my $self = shift;
 
-    my $apache_print = \&Apache::print;
-
-    my $w = $^W;
-    $^W = 0;
-    local *Apache::print = $self->{apache_print} if $self->{apache_print};
-    $^W = $w;
-
     $self->top_buffer->receive(@_);
-
-    $^W = 0;
-    *Apache::print = $apache_print;
-    $^W = $w;
 }
 
 *out = \&print;
