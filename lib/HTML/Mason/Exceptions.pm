@@ -196,7 +196,7 @@ sub as_string
     my $info = $self->analyze_error;
     (my $msg = $info->{msg}) =~ s/\n/\t/g;
     my $stack = join(", ", map { sprintf("[%s:%d]", $_->filename, $_->line) } @{$info->{frames}});
-    return sprintf("%s\tStack: %s", $msg, $stack);
+    return sprintf("%s\tStack: %s\n", $msg, $stack);
 }
 
 use overload
@@ -208,7 +208,6 @@ sub as_html
     my ($self) = @_;
     
     my $info = $self->analyze_error;
-    my $interp = new HTML::Mason::Interp;
 
     my $out;
     my $msg = HTML::Mason::Tools::html_escape($info->{msg});
