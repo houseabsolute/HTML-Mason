@@ -39,7 +39,7 @@ use HTML::Mason::MethodMaker
                         ) ],
       );
 
-my %defaults = ( comp_class => 'HTML::Mason::component' );
+my %defaults = ( comp_class => 'HTML::Mason::Component' );
 
 sub new
 {
