@@ -140,7 +140,7 @@ sub exec
 	    $r->log_error("[Mason] File does not exist: ", $r->filename . ($r->path_info ? $r->path_info : ""));
 	    return $self->ah->return_not_found($r);
 	} else {
-	    die $@;
+	    rethrow_exception $@;
 	}
     }
 
@@ -167,7 +167,7 @@ sub _handle_error
     my ($self, $err) = @_;
 
     if (isa_mason_exception($err, 'TopLevelNotFound')) {
-	die $err;
+	rethrow_exception $err;
     } else {
         if ( $self->error_format eq 'html' ) {
             $self->apache_req->content_type('text/html');
@@ -254,7 +254,7 @@ use mod_perl 1.22;
 
 if ( $mod_perl::VERSION < 1.99 )
 {
-    die "mod_perl must be compiled with PERL_METHOD_HANDLERS=1 (or EVERYTHING=1) to use ", __PACKAGE__, "\n"
+    error "mod_perl must be compiled with PERL_METHOD_HANDLERS=1 (or EVERYTHING=1) to use ", __PACKAGE__, "\n"
 	unless Apache::perl_hook('MethodHandlers');
 }
 
@@ -574,11 +574,11 @@ sub new
     {
 	# constructs path to <server root>/mason
 	my $def = $defaults{data_dir} = Apache->server_root_relative('mason');
-	die "Default data_dir (MasonDataDir) '$def' must be an absolute path"
+	param_error "Default data_dir (MasonDataDir) '$def' must be an absolute path"
 	    unless File::Spec->file_name_is_absolute($def);
 	  
 	my @levels = File::Spec->splitdir($def);
-	die "Default data_dir (MasonDataDir) '$def' must be more than two levels deep (or must be set explicitly)"
+	param_error "Default data_dir (MasonDataDir) '$def' must be more than two levels deep (or must be set explicitly)"
 	    if @levels <= 3;
     }
 
@@ -975,7 +975,7 @@ sub handler %s
 }
 EOF
     eval $handler_code;
-    die $@ if $@;
+    rethrow_exception $@;
 }
 
 1;

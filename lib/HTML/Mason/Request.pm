@@ -271,7 +271,7 @@ sub exec {
 
     # Cheap way to prevent users from executing the same request twice.
     if ($self->{execd}++) {
-	die "Can only call exec() once for a given request object. Did you want to use a subrequest?";
+	error "Can only call exec() once for a given request object. Did you want to use a subrequest?";
     }
 
     # All errors returned from this routine will be in exception form.
@@ -333,7 +333,7 @@ sub exec {
 		eval {$self->comp({base_comp=>$request_comp}, $first_comp, @$request_args)};
 	    }
 	    select $old;
-	    die $@ if $@;
+	    rethrow_exception $@;
 	}
     };
 
@@ -369,7 +369,7 @@ sub _handle_error
 {
     my ($self, $err) = @_;
 
-    die $err if $self->is_subrequest;
+    rethrow_exception $err if $self->is_subrequest;
 
     # Set error format for when error is stringified.
     if (UNIVERSAL::can($err, 'format')) {
@@ -378,7 +378,7 @@ sub _handle_error
 
     # In fatal mode, die with error. In display mode, output stringified error.
     if ($self->error_mode eq 'fatal') {
-	die $err;
+	rethrow_exception $err;
     } else {
 	UNIVERSAL::isa( $self->out_method, 'CODE' ) ? $self->out_method->("$err") : ( ${ $self->out_method } = "$err" );
     }
@@ -494,7 +494,7 @@ sub cache
         # need to break up mention of VERSION var or else CPAN/EU::MM can choke when running 'r'
 	eval sprintf('package %s; use base qw(HTML::Mason::Cache::BaseCache %s); use vars qw($' . 'VERSION); $' . 'VERSION = 1.0;',
 		     $mason_cache_class, $cache_class);
-	die "Error constructing mason cache class $mason_cache_class: $@" if $@;
+	error "Error constructing mason cache class $mason_cache_class: $@" if $@;
     }
 
     my $cache = $mason_cache_class->new (\%options)
@@ -524,7 +524,7 @@ sub _cache_1_x
 	
 	# Validate parameters.
 	if (my @invalids = grep(!/^(expire_if|action|key|busy_lock|keep_in_memory|tie_class)$/, keys(%options))) {
-	    die "cache: invalid parameter '$invalids[0]' for action '$action'\n";
+	    param_error "cache: invalid parameter '$invalids[0]' for action '$action'\n";
 	}
 
 	# Handle expire_if.
@@ -547,9 +547,9 @@ sub _cache_1_x
 
 	# Validate parameters	
 	if (my @invalids = grep(!/^(expire_(at|next|in)|action|key|value|keep_in_memory|tie_class)$/, keys(%options))) {
-	    die "cache: invalid parameter '$invalids[0]' for action '$action'\n";
+	    param_error "cache: invalid parameter '$invalids[0]' for action '$action'\n";
 	}
-	die "cache: no store value provided" unless exists($options{value});
+	param_error "cache: no store value provided" unless exists($options{value});
 
 	# Determine $expires_in if expire flag given. For the "next"
 	# options, we're jumping through hoops to find the *top* of
@@ -558,7 +558,7 @@ sub _cache_1_x
 	my $expires_in;
 	my $time = time;
 	if (exists($options{expire_at})) {
-	    die "cache: invalid expire_at value '$options{expire_at}' - must be a numeric time value\n" if $options{expire_at} !~ /^[0-9]+$/;
+	    param_error "cache: invalid expire_at value '$options{expire_at}' - must be a numeric time value\n" if $options{expire_at} !~ /^[0-9]+$/;
 	    $expires_in = $options{expire_at} - $time;
 	} elsif (exists($options{expire_next})) {
             my $term = $options{expire_next};
@@ -568,7 +568,7 @@ sub _cache_1_x
             } elsif ($term eq 'day') {
 		$expires_in = 3600*(23-$hour)+60*(59-$min)+(60-$sec);
             } else {
-                die "cache: invalid expire_next value '$term' - must be 'hour' or 'day'\n";
+                param_error "cache: invalid expire_next value '$term' - must be 'hour' or 'day'\n";
             }
 	} elsif (exists($options{expire_in})) {
 	    $expires_in = $options{expire_in};

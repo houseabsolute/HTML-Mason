@@ -770,7 +770,7 @@ sub current_time {
     my $self = shift;
     if (@_) {
 	my $newtime = shift;
-	die "Interp::current_time: invalid value '$newtime' - must be 'real' or a numeric time value" if $newtime ne 'real' && $newtime !~ /^[0-9]+$/;
+	param_error "Interp::current_time: invalid value '$newtime' - must be 'real' or a numeric time value" if $newtime ne 'real' && $newtime !~ /^[0-9]+$/;
 	return $self->{current_time} = $newtime;
     } else {
 	return $self->{current_time};
