@@ -41,7 +41,11 @@ simply determines whether or not it is running in taint mode and acts
 appropriately without user intervention.
 
 - ** Mason now uses Apache::Request as the default argument processing
-module.
+module.  You can explicitly use CGI.pm if you prefer.
+
+- ** The ApacheHandler module no longers accepts parameters when
+imported.  Instead, you specify this parameter via the ApacheHandler
+constructor.
 
 - ** The ApacheHandler module now requires a minimum of mod_perl 1.22.
 
@@ -60,6 +64,16 @@ allow_recursive_autohandlers parameters have all been removed.
 - ** The $m->top_args and $m->top_comp methods have been renamed to
 $m->request_args and $m->request_comp.  The old methods are deprecated
 but will work until the 1.20 release.
+
+- ** Passing an Interp object to the ApacheHandler constructor (as in
+a handler.pl file) will no longer work unless you set the Interp's
+resolver_class parameter to
+'HTML::Mason::Resolver::File::ApacheHandler'.  However, you can now
+pass Interp constructor params directly to the ApacheHandler
+constructor, which will create the interp object internally. 
+
+- ** The MasonMultipleConfig httpd.conf parameter has been removed.
+Mason can now figure this out by itself.
 
 [ ENHANCEMENTS AND NEW FEATURES ]
 
@@ -109,7 +123,11 @@ properly.
 - Calling a method via $m->comp('comp:method') works just like
 $comp->call_method('method').  Previously, ???
 
-
+- When an object contains other objects then the containing object's
+constructor accepts parameters intended for the contained objects.
+For example, the Interp object contains a Resolver object and Request
+objects.  The Interp's new method will accept constructor parameter
+for both the Resolver and Request objects.
 
 [ BUG FIXES ]
 
