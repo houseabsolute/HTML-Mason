@@ -770,6 +770,22 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'qw_in_perl_lines',
+			  description => 'Make sure that Mason that a qw() list stretching across multiple perl-lines works',
+			  component => <<'EOF',
+% foreach my $foo qw( a
+%                     b ) {
+<% $foo %>
+% }
+EOF
+                          expect => <<'EOF',
+a
+b
+EOF
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
