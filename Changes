@@ -35,11 +35,12 @@ disk, we now print an extra warning, because this indicates that the
 user does not understand the distinction between component paths and
 filesystem paths.
 - The Request object's redirect() method now accepts an optional
-additional argument, allowing users to use a different status for the
-redirect than 302.
+additional argument, allowing users to use a status code other than
+302 for the redirect.
 
 [ BUG FIXES ]
 
+- Installation was failing when Exception::Class wasn't installed.
 - Calling <%def> subcomponents no longer changes base_comp, which is
 important in autohandlers.  (reported by Ian Robertson)
 - The documentation incorrectly indicated that you could create an
@@ -64,6 +65,12 @@ code, but still worth fixing.  (reported by Adam Rinehart).
 - $m->caller() was inadvertently left out of the documentation - fixed.
 - Fixed a small documentation error about what kinds of things are
 valid keys in <%flags> and <%attr> blocks.
+- Configuring multiple component roots via the httpd.conf file failed
+silently (as opposed to releases 1.10 - 1.13, where this failed with
+an error).
+- Unreadable component source files caused the confusing error message
+"source callback returned no source".  This will now throw a much more
+helpful exception.
 
 1.13  August 26, 2002 (Taiwan time)
 
