@@ -536,11 +536,14 @@ sub eval_object_code
     my $warnstr = '';
 
     {
-	local $^W = 1 unless $ignore_expr eq '.';
+	local $^W = $ignore_expr eq '.' ? 0 : 1;
 	local $SIG{__WARN__} =
 	    ( $ignore_expr ?
-	      sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ } :
-	      sub { $warnstr .= $_[0] } ) unless $ignore_expr eq '.';
+              ( $ignore_expr eq '.' ?
+                sub { } :
+                sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ }
+              ) :
+	      sub { $warnstr .= $_[0] } );
 	
 	local $SIG{ALRM} = sub { die $warnstr } if PERL_BUG_INFINITE_LOOP;
 	alarm 5 if PERL_BUG_INFINITE_LOOP;
