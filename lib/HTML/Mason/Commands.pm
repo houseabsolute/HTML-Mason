@@ -199,7 +199,8 @@ sub mc_date ($)
 sub mc_file ($)
 {
     my ($file) = @_;
-    if (substr($file,0,1) ne '/') {
+    # filenames beginning with / or a drive letter (e.g. C:/) are absolute
+    unless ($file =~ /^([A-Za-z]:)?\//) {
 	$file = $INTERP->static_file_root . "/" . $file;
     }
     $INTERP->call_hooks(type=>'start_file',params=>[$file]);
