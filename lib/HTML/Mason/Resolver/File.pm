@@ -93,8 +93,8 @@ sub glob_path {
     foreach my $root (@roots) {
 	my @files = glob($root.$pattern);
 	foreach my $file (@files) {
-	    if (my ($path) = ($file =~ m/$root(\/.*)$/)) {  # File::Spec?
-		$path_hash{$path}++;
+	    if (substr($file, 0, length $root) eq $root) {
+		$path_hash{ substr($file, length $root) } = 1;
 	    }
 	}
     }
