@@ -125,7 +125,7 @@ sub _body_method
     my $self = shift;
 
     my @args;
-    if ( $self->{current_comp}{args} )
+    if ( @{ $self->{current_comp}{args} } )
     {
 	@args = ( <<'EOF',
     if (@_args % 2 == 0) { %ARGS = @_args } else { die "Odd number of parameters passed to component expecting name/value pairs" }
@@ -159,7 +159,7 @@ sub _arg_declarations
     my $self = shift;
 
     my @args;
-    foreach ( values %{ $self->{current_comp}{args} } )
+    foreach ( @{ $self->{current_comp}{args} } )
     {
 	my $default_val = ( defined $_->{default} ?
 			    $_->{default} :
