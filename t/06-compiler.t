@@ -801,6 +801,63 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/has_subcomp',
+                         component => <<'EOF',
+<%shared>
+my $x;
+</%shared>
+<& .a &>
+<%def .a>
+A
+<%init>
+$x = 1;
+</%init>
+</%def>
+<%method .d>
+D
+</%method>
+EOF
+                       );
+
+    $group->add_support( path => '/no_subcomp',
+			 component => <<'EOF',
+<%shared>
+my $y = 1;
+</%shared>
+
+<%method .c>
+C
+</%method>
+EOF
+		       );
+
+    $group->add_test( name => 'subcomp_leak',
+		      description => 'Make sure subcomps from one component do not show up in other components',
+	              component => <<'EOF',
+<%init>
+$m->scomp('has_subcomp');
+$m->scomp('no_subcomp');
+
+local *FH;
+my $obj = $m->fetch_comp('no_subcomp')->object_file;
+open FH, "< $obj"
+    or die "Cannot read $obj";
+my $text = join '', <FH>;
+close FH;
+</%init>
+% if ( $text =~ /subcomponent_\.a/ ) {
+Subcomponent leakage!
+% } else {
+No leak
+% }
+EOF
+                      expect => <<'EOF',
+No leak
+EOF
+                    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
