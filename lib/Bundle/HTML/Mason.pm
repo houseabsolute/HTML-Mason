@@ -22,7 +22,7 @@ Data::Dumper
 
 File::Spec  0.8
 
-Params::Validate  0.10
+Params::Validate  0.13
 
 Apache::Request  0.31
 
