@@ -752,6 +752,7 @@ EOF
 
     $group->add_support( path => '/support/return/scalar',
 			 component => <<'EOF',
+% die "wantarray should be 0!" unless defined(wantarray) and wantarray == 0;
 % return 'foo';
 EOF
 		       );
@@ -775,6 +776,7 @@ EOF
 
     $group->add_support( path => '/support/return/list',
 			 component => <<'EOF',
+% die "wantarray should be 1!" unless defined(wantarray) and wantarray == 1;
 % return (1, 2, 3);
 EOF
 		       );
