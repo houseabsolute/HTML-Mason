@@ -20,6 +20,7 @@ my %fields =
      code => undef,
      create_time => undef,
      declared_args => undef,
+     dynamic_subs_init => undef,
      flags => undef,
      fq_path => undef,
      inherit_path => undef,
