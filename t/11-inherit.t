@@ -596,6 +596,7 @@ base_comp is <% $m->base_comp->name %>
 <& SELF:x &>
 EOF
 		      expect => <<'EOF',
+
 This is BASE
 base_comp is call_next_in_def
 
@@ -604,6 +605,47 @@ EOF
 		       );
 
 #------------------------------------------------------------
+
+    $group->add_support( path => '/subcompbase/parent',
+			 component => <<'EOF',
+<& _foo &>
+
+<%def _foo>
+<& SELF:bar &>
+</%def>
+
+<%method bar>
+This is parent's bar.
+</%method>
+
+<%flags>
+inherit => undef
+</%flags>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( 	name => 'subcomponent_inheritance',
+			path => '/subcompbase/child',
+			call_path => '/subcompbase/child',
+			description => 'test base_comp with subcomponents',
+			component => <<'EOF',
+<%flags>
+inherit => 'parent'
+</%flags>
+
+<%method bar>
+This is child's bar.
+</%method>
+EOF
+		      expect => <<'EOF',
+
+
+This is child's bar.
+EOF
+		       );
+
 
     return $group;
 }
