@@ -35,21 +35,35 @@ my %tests =
       },
     );
 
-my %opts = ( reps => 1000,
-             tag  => $HTML::Mason::VERSION,
-             save => 0,
-           );
+my %flags = 
+    (
+     test => {type  => ':s',
+	      descr => 'Specify one or more tests to perform.',
+	      default => []},
+     profile
+          => {descr => '(Not implemented)'},
+     reps => {type  => ':i',
+	      descr => 'Number of times to repeat each test.  Defaults to 1000.',
+	      default => 1000},
+     save => {descr => 'Saves information to result_history.db (an MLDBM DB_File).'},
+     tag  => {type  => ':s',
+	      descr => 'Specifies a tag to save to result_history.db.  Default is $HTML::Mason::VERSION.',
+	      default => $HTML::Mason::VERSION},
+     clear_cache
+          => {descr => 'Will clear on-disk cache first.  Useful for exercising the compiler.'},
+     help => {descr => 'Prints this message and exits.'},
+    );
 
-GetOptions( 'test:s'  => \@{ $opts{test} },
-            'profile' => \$opts{profile},
-            'reps:i'  => \$opts{reps},
-            'help'    => \$opts{help},
-            'tag:s'   => \$opts{tag},
-            'save'    => \$opts{save},
-	    'clear_cache' => \$opts{clear_cache},
-          );
+my %opts;
+$opts{$_} = $flags{$_}{default}
+    foreach grep exists($flags{$_}{default}), keys %flags;
 
-if ( $opts{help} || ! @{ $opts{test} } )
+{
+    local $^W;
+    GetOptions( \%opts, map "$_$flags{$_}{type}", keys %flags );
+}
+
+if ( $opts{help} )
 {
     usage();
     exit;
@@ -128,33 +142,23 @@ sub usage
     my $comps;
     foreach my $name ( sort keys %tests )
     {
-        $comps .= sprintf( '            %-10s   %s', $name, $tests{$name}{description} );
-        $comps .= "\n";
+        $comps .= sprintf( "            %-10s   %s\n", $name, $tests{$name}{description} );
+    }
+
+    my $opts;
+    foreach my $name ( sort keys %flags )
+    {
+	$opts .= sprintf "  %13s  %s\n", "--$name", $flags{$name}{descr};
     }
 
     print <<"EOF";
 
-bench.pl
+Usage: $0 <options>
 
-  --test  Specify one or more tests to perform.  Valid tests include:
+$opts
+  Valid tests include:
 
 $comps
-
-  --reps  Number of times to repeat each test.  Defaults to 1000.
-
 EOF
 }
 
-__END__
-
-=pod
-
-=head1 many_prints.pl
-
-This benchmarks a component that ends up making a B<lot> of calls to
-C<< $m->print >>.
-
-By default, it calls the same component 1000 times.  If you give it an
-argument it will call the component this many times instead.
-
-=cut
