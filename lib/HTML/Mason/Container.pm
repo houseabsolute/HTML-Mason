@@ -28,6 +28,8 @@ use strict;
 
 use Params::Validate qw(SCALAR HASHREF);
 
+use HTML::Mason::Exceptions (abbr => [qw(error param_error)]);
+
 my %VALID_PARAMS = ();
 my %CONTAINED_OBJECTS = ();
 
@@ -82,7 +84,7 @@ sub create_contained_objects
 	my $delayed       = ref($spec) ? $spec->{delayed} : 0;
 	if (exists $args{$name}) {
 	    # User provided an object
-	    HTML::Mason::Exception::Params->throw( error => "Cannot provide a '$name' object, its creation is delayed" )
+	    param_error "Cannot provide a '$name' object, its creation is delayed"
 		if $delayed;
 	    next;
 	}
@@ -108,27 +110,42 @@ sub create_delayed_object
     my ($self, $name, %args) = @_;
 
     # It just has to exist.  An empty hash is fine.
-    HTML::Mason::Exception::Params->throw( error => "Unknown delayed object '$name'" )
+    param_error "Unknown delayed object '$name'"
 	unless exists $self->{"_delayed_$name"}{args};
 
     my $class = $self->{"_delayed_$name"}{class}
-	or HTML::Mason::Exception::Params->throw( error => "Unknown class for delayed object '$name'" );
+	or param_error "Unknown class for delayed object '$name'";
 
     return $class->new( %{ $self->{"_delayed_$name"}{args} }, %args );
+}
+
+sub delayed_object_params
+{
+    my ($self, $name, %args) = @_;
+
+    param_error "Unknown delayed object '$name'"
+	unless exists $self->{"_delayed_$name"}{args};
+
+    if (%args)
+    {
+	@{ $self->{"_delayed_$name"}{args} }{ keys(%args) } = values(%args);
+    }
+
+    return %{ $self->{"_delayed_$name"}{args} };
 }
 
 sub _get_contained_args
 {
     my ($class, $name, $contained_class, $args) = @_;
 
-    HTML::Mason::Exception::Params->throw( error => "Invalid class name '$contained_class'" )
+    param_error "Invalid class name '$contained_class'"
 	unless $contained_class =~ /^[\w:]+$/;
 
     unless ( eval { $contained_class->can('new') } )
     {
 	no strict 'refs';
 	eval "use $contained_class";
-	HTML::Mason::Exception->throw( error => $@ ) if $@;
+	error $@ if $@;
     }
 
     return {} unless $contained_class->can('allowed_params');
@@ -208,7 +225,7 @@ sub allowed_params
 	unless ( eval { $contained_class->can('new') } )
 	{
 	    eval "use $contained_class";
-	    HTML::Mason::Exception->throw( error => $@ ) if $@;
+	    error $@ if $@;
 	}
 
 	next unless $contained_class->can('allowed_params');
