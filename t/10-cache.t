@@ -449,18 +449,19 @@ EOF
     $group->add_test( name => 'busy_lock',
 		      description => 'test busy_lock',
 		      component => <<'EOF',
-<% join(', ', $value1 || 'undef', $value2 || 'undef') %>
+<% join(', ', $value1 || 'undef', $value2 || 'undef', $value3 || 'undef') %>
 <%init>
 my $time = time;
 my $cache = $m->cache;
 $cache->set('main', 'gardenia', 0);
-sleep(1);
-my $value1 = $cache->get('main', busy_lock=>10);
-my $value2 = $cache->get('main');
+sleep(2);
+my $value1 = $cache->get('main', busy_lock=>5);  # ok
+my $value2 = $cache->get('main', busy_lock=>10); # ok
+my $value3 = $cache->get('main', busy_lock=>1);  # not ok
 </%init>
 EOF
 		      expect => <<'EOF',
-undef, gardenia
+gardenia, gardenia, undef
 EOF
 		    );
 

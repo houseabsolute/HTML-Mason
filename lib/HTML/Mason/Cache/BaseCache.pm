@@ -30,9 +30,8 @@ sub get
 
     if (Cache::BaseCache::Object_Has_Expired($object))
     {
-	if (my $duration = $params{busy_lock}) {
-	    $object->set_expires_at(time + $duration);
-	    $self->set_object($key, $object);
+	if ($params{busy_lock} and time - $object->get_expires_at < $params{busy_lock}) {
+	    return $object->get_data( );
 	} else {
 	    $self->remove($key);
 	}
