@@ -76,6 +76,17 @@ unless ( ( $@ || $^O =~ /mac|darwin/ ) || $has_only_mp2 )
     $prereq{'Apache::Request'} = 0.32;
 }
 
+eval { require Apache::Filter };
+
+unless ( $@ || $Apache::Filter::VERSION >= 1.021 )
+{
+    warn  "\n"
+        . "*** If you plan to use Mason with Apache::Filter \n"
+        . "    you will need to install Apache::Filter 1.021 or newer.\n";
+
+    $prereq{'Apache::Filter'} = 1.021;
+}
+
 setup_mod_perl_tests() if is_maintainer() && ! $opts{'no-prompts'};
 assisted_install_config() unless $opts{'no-prompts'};
 
