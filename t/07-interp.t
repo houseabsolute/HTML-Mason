@@ -916,5 +916,20 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'no_data_dir',
+		      description => 'test interp without a data directory',
+                      interp => HTML::Mason::Interp->new( comp_root => HTML::Mason::Tests->comp_root ),
+		      component => <<'EOF',
+Hello World!
+<% ref $m->cache %>
+EOF
+		      expect => <<'EOF',
+Hello World!
+Cache::MemoryCache
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
