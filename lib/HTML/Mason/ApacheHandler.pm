@@ -308,7 +308,7 @@ use HTML::Mason::MethodMaker
 			  interp ) ]
     );
 
-use vars qw($AH $STARTED);
+my ($AH, $STARTED);
 
 # hack to let the make_params_pod.pl script work
 __PACKAGE__->_startup() if Apache->server;
@@ -348,7 +348,7 @@ sub _in_simple_conf_file
     return $ENV{MOD_PERL} && @roots;
 }
 
-my %AH;
+my (%AH, %AH_BY_LOCATION);
 sub make_ah
 {
     my ($package, $r) = @_;
@@ -398,6 +398,8 @@ sub make_ah
 
     my $ah = $package->new(%p, $r);
     $AH{$key} = $ah if $key;
+    $AH_BY_LOCATION{ $r->location } = $ah
+        if $r && defined $r->location;
 
     return $ah;
 }
@@ -973,11 +975,15 @@ BEGIN
 sub handler %s
 {
     my ($package, $r) = @_;
-# use Time::HiRes ();
-# my $t0 = [Time::HiRes::gettimeofday()];
-# my $has = $AH ? 'first time' : '';
-    my $ah = $AH || $package->make_ah($r);
-# warn "$has TOOK ", Time::HiRes::tv_interval($t0), "\n";
+    my $ah = $AH;
+
+    if ( ! $ah && defined $r->location )
+    {
+        $ah = $AH_BY_LOCATION{ $r->location };
+    }
+
+    $ah ||= $package->make_ah($r);
+
     return $ah->handle_request($r);
 }
 EOF
