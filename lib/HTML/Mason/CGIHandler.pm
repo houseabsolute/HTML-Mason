@@ -105,11 +105,12 @@ sub cgi_object {
 sub redirect {
     my $self = shift;
     my $url = shift;
+    my $status = = shift || 302;
 
     $self->clear_buffer;
 
     $self->{cgi_request}->header_out( Location => $url );
-    $self->{cgi_request}->http_header;
+    $self->{cgi_request}->http_header( Status => $status );
 
     $self->abort;
 }
