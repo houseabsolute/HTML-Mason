@@ -84,6 +84,7 @@ sub cgi_object
 sub exec
 {
     my $self = shift;
+    my $r = $self->apache_req;
     my $retval;
 
     {
@@ -94,13 +95,23 @@ sub exec
 
     if ($@) {
 	if (isa_mason_exception($@, 'TopLevelNotFound')) {
-	    my $r = $self->apache_req;
 	    # Log the error the same way that Apache does (taken from default_handler in http_core.c)
 	    $r->log_error("[Mason] File does not exist: ", $r->filename . ($r->path_info ? $r->path_info : ""));
-	    return $self->return_not_found($r);
+	    return $self->ah->return_not_found($r);
 	} else {
 	    die $@;
 	}
+    }
+
+    # On a success code, send headers if they have not been sent and
+    # if we are the top-level request. Since the out_method sends
+    # headers, this will typically only apply after $m->abort.
+    # On an error code, leave it to Apache to send the headers.
+    if (!$self->is_subrequest
+	and $self->ah->auto_send_headers
+	and !HTML::Mason::ApacheHandler::http_header_sent($r)
+	and (!$retval or $retval==200)) {
+	$r->send_http_header();
     }
 
     return defined($retval) ? $retval : OK;
