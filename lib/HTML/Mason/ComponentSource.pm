@@ -54,10 +54,7 @@ sub comp_source_ref
 
     my $source = eval { $self->{source_callback}->() };
 
-    if (my $err = $@)
-    {
-	UNIVERSAL::can( $err, 'rethrow' ) ? $err->rethrow : error $err;
-    }
+    rethrow_exception($@);
 
     unless ( defined $source )
     {

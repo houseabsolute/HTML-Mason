@@ -182,8 +182,7 @@ sub _initialize {
     # will then trigger the error. This makes for an easier new + exec
     # API.
     local $SIG{'__DIE__'} = sub {
-	my $err = $_[0];
-	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
+        rethrow_exception( $_[0] );
     };
 
     eval {
@@ -279,8 +278,7 @@ sub exec {
 
     # All errors returned from this routine will be in exception form.
     local $SIG{'__DIE__'} = sub {
-	my $err = $_[0];
-	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
+        rethrow_exception( $_[0] );
     };
 
     #
@@ -1066,11 +1064,7 @@ sub comp {
         pop @{ $self->{buffer_stack} };
     }
 
-    if ($err)
-    {
-        UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
-    }
-
+    rethrow_exception($err);
 
     return wantarray ? @result : $result[0];  # Will return undef in void context (correct)
 }
@@ -1101,9 +1095,7 @@ sub content {
 
     push @{ $self->{stack} }, $old_frame;
 
-    if ($err) {
-	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
-    }
+    rethrow_exception($err);
 
     return $buffer->output;
 }
