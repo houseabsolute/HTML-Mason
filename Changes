@@ -23,7 +23,7 @@ system.  Task id #446.
 the Apache config file has changed.  You can now set an explicit
 MasonConfigName parameter to get a significant speed enhancement.  See
 the "Configuration Names" section under "BASIC CONFIGURATION VIA
-httpd.conf DIRECTIVES" in the Admin guide for details.
+httpd.conf DIRECTIVES" in the Admin manual for details.
 
 - Mason's test harness now gives verbose output when the TEST_VERBOSE
 environment variable is true.  This eliminates the need for setting
