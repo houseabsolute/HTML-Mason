@@ -83,10 +83,8 @@ sub _run_comp
     local *Apache::print = sub { shift; local *Apache::print = $apache_print; $self->out(@_) };
     $^W = $w;
 
-    my $obj;
     if ($self->depth == 1) {
-	$obj = tied *STDOUT;
-	tie *STDOUT, 'Tie::Handle::Mason', $self, $obj;
+	tie *STDOUT, 'Tie::Handle::Mason', $self;
     }
 
     my ($result, @result);
@@ -100,9 +98,6 @@ sub _run_comp
 
     if ($self->depth == 1) {
 	untie *STDOUT;
-	if ( $obj && UNIVERSAL::isa( $obj, 'Apache' ) ) {
-	    tie *STDOUT, 'Apache', $obj;
-	}
     }
 
     return wantarray ? @result : $result;

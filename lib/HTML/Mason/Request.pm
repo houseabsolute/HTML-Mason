@@ -665,8 +665,7 @@ sub _run_comp
     my ($self, $wantarray, $comp, @args) = @_;
 
     if ($self->depth == 1) {
-	my $obj = tied *STDOUT;
-	tie *STDOUT, 'Tie::Handle::Mason', $self, $obj;
+	tie *STDOUT, 'Tie::Handle::Mason', $self;
     }
 
     my ($result, @result);
@@ -867,29 +866,14 @@ sub TIEHANDLE
     my $req = shift;
     my $object = shift;
 
-    return bless { request => $req,
-		   object => $object }, $class;
+    return bless { request => $req }, $class;
 }
 
 sub PRINT
 {
     my $self = shift;
 
-    {
-	# This needs to be done to avoid an infinite loop because the
-	# ->out method could end up calling print on STDOUT.
-	if ( $self->{object} && UNIVERSAL::isa( $self->{object}, 'Apache' ) )
-	{
-	    tie *STDOUT, 'Apache', $self->{object};
-	}
-	else
-	{
-	    local $^W;  # Quiets an 'untie attempted while 1 inner references exist' warning
-	    untie *STDOUT;
-	}
-	$self->{request}->out(@_);
-	tie *STDOUT, 'Tie::Handle::Mason', $self->{request}, $self->{object};
-    }
+    $self->{request}->out(@_);
 }
 
 sub PRINTF
