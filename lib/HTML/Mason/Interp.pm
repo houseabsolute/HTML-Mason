@@ -262,7 +262,8 @@ sub load {
 	    }
 	    # read the existing object file
 	    $object_code ||= read_file($objfile);
-	    $comp = eval { $self->eval_object_code( object_code => $object_code ) };
+	    $comp = eval { $self->eval_object_code( object_code => $object_code,
+                                                    object_file => $objfile ) };
 
 	    if ($@) {
 		if (isa_mason_exception($@, 'Compilation::IncompatibleCompiler')) {
@@ -457,9 +458,8 @@ sub code_cache_decay_factor { 0.75 }
 sub eval_object_code
 {
     my ($self, %p) = @_;
-    my $object_code = $p{object_code};
 
-    if ( $object_code =~ /\n# MASON COMPILER ID: (\S+)$/ )
+    if ( $p{object_code} =~ /\n# MASON COMPILER ID: (\S+)$/ )
     {
 	my $comp_version = $1;
 
@@ -468,7 +468,7 @@ sub eval_object_code
     }
 
     # If in taint mode, untaint the object text
-    ($object_code) = ($object_code =~ /^(.*)/s) if taint_is_on;
+    ($p{object_code}) = ($p{object_code} =~ /^(.*)/s) if taint_is_on;
 
     #
     # Evaluate object file or text with warnings on
@@ -497,12 +497,14 @@ sub eval_object_code
 	{
            local $SIG{ALRM} = sub { die $warnstr };
            alarm 5;
-           $comp = eval $object_code;
+
+           $comp = $self->_do_or_eval(%p);
+
            alarm 0;
 	}
 	else
 	{
-	    $comp = eval $object_code;
+           $comp = $self->_do_or_eval(%p);
 	}
     }
 
@@ -532,6 +534,21 @@ sub eval_object_code
 	compilation_error $err;
     } else {
 	return $comp;
+    }
+}
+
+sub _do_or_eval
+{
+    my $self = shift;
+    my %p = @_;
+
+    if ( $p{object_file} )
+    {
+        return do $p{object_file};
+    }
+    else
+    {
+        return eval $p{object_code};
     }
 }
 
