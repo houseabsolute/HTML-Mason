@@ -199,11 +199,11 @@ sub parse_component
 	foreach my $decl (@decls) {
 	    my ($var,$default,$defaultClause);
 	    my $split = index($decl,'=>');
-	    if ($split !=-1) {
+            if ($split !=-1) {
 		$var = substr($decl,0,$split);
 		$default = substr($decl,$split+2);
 	    } else {
-		$var = $decl;
+		($var) = ($decl =~ /^(\S+)/);
 	    }
 	    $var =~ s/\s//g;
 	    # %ARGS is automatic, so ignore explicit declaration.
@@ -220,26 +220,27 @@ sub parse_component
 
 	    if (defined($default)) {
 		$defaultClause = "$var = $default";
+                $defaultClause .= "\n" if ($default =~ /\#/);   # allow comments in default clause
 	    } else {
 		$defaultClause = "die \"no value sent for required parameter '$name'\"";
 	    }
 	    
 	    # Scalar
 	    if ($type eq "\$") {
-		my $tmpl = '$val = $ARGS{\'%s\'}; if (!exists($ARGS{\'%s\'})) { %s; } else { %s; }';
+		my $tmpl = '$val = $ARGS{\'%s\'}; if (!exists($ARGS{\'%s\'})) { %s } else { %s; }';
 		$argsec .= sprintf($tmpl,$name,$name,$defaultClause,
 				   "$var = \$val");
 	    }
 	    # Array
 	    if ($type eq "\@") {
-		my $tmpl = '$val = $ARGS{\'%s\'}; if (!exists($ARGS{\'%s\'})) { %s; } elsif (ref($val) eq \'ARRAY\') { %s; } else { %s; }';
+		my $tmpl = '$val = $ARGS{\'%s\'}; if (!exists($ARGS{\'%s\'})) { %s } elsif (ref($val) eq \'ARRAY\') { %s; } else { %s; }';
 		$argsec .= sprintf($tmpl,$name,$name,$defaultClause,
 				   "$var = \@\$val",
 				   "$var = (\$val)");
 	    }
 	    # Hash
 	    if ($type eq "\%") {
-		my $tmpl = '$val = $ARGS{\'%s\'}; if (!exists($ARGS{\'%s\'})) { %s; } elsif (ref($val) eq \'ARRAY\') { %s; } elsif (ref($val) eq \'HASH\') { %s } else { %s; }';
+		my $tmpl = '$val = $ARGS{\'%s\'}; if (!exists($ARGS{\'%s\'})) { %s } elsif (ref($val) eq \'ARRAY\') { %s; } elsif (ref($val) eq \'HASH\') { %s } else { %s; }';
 		$argsec .= sprintf($tmpl,$name,$name,$defaultClause,
 				   "$var = \@\$val",
 				   "$var = \%\$val",
