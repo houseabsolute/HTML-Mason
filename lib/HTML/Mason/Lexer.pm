@@ -55,7 +55,7 @@ sub simple_block_types
 # make this settable somehow
 sub named_block_types
 {
-    return 'def', 'method';
+    return ('def', 'method');
 }
 
 sub new
@@ -450,27 +450,33 @@ sub match_text
 
     my $comp = $self->{comp};
     pos($comp) = $self->{pos};
-    if ( $comp =~ /\G
-                   (.+?)        # anything
-		   (?=          # followed by (use lookahead so as to not consume text)
-                    %          # an eval line
-                    |
-                    <%         # a substitution or tag start
-                    |
-                    <\/%       # a tag end
-                    |
-                    <&         # a comp call
-                    |
-                    <\/&       # a comp end
-                    |
-                    \z         # or EOF.
-                   )
-                  /gcsx
+    if ( $comp =~ m,\G
+                    (.*?)       # anything
+		    (           # followed by
+                     %          # an eval line
+                     |
+                     <%         # a substitution or tag start
+                     |
+                     </%        # a tag end
+                     |
+                     <&         # a comp call
+                     |
+                     </&        # a filtering comp end
+                     |
+                     \\\n       # an escaped newline
+                     |
+                     \z         # or EOF.
+                    )
+                   ,gcsx
        )
     {
+	# put back anything but an escaped newline or EOF
+	pos($comp) -= length $2 if defined $2 && $2 ne "\\\n";
+
 	$self->{pos} = pos($comp);
 
 	my $text = $1;
+
 	$self->{compiler}->text( text => $text );
 	$self->{lines} += $text =~ tr/\n/\n/;
     }
