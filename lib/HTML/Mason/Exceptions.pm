@@ -206,7 +206,7 @@ sub get_file_context
 
     my @context;
     my $fh = do { local *FH; *FH; };
-    unless (open($fh, $file)) {
+    unless (defined($file) and open($fh, $file)) {
 	@context = (['unable to open file', '']);
     } else {
 	# Put the file into a list, indexed at 1.
