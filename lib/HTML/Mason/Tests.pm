@@ -179,7 +179,8 @@ sub run
 
     eval
     {
-	$self->_cleanup;
+        # 1 indicates to be silent on missing directories
+	$self->_cleanup(1);
 	$self->_make_dirs;
 	$self->_write_shared_comps;
 	$self->_write_support_comps;
@@ -493,7 +494,7 @@ sub _success
 # otherwise interfere with tests.
 #
 sub rm_tree {
-    my ($path, $debug) = @_;
+    my ($path, $debug, $silent) = @_;
     $path =~ s#/$##;
     if (-d $path) {
 	local *DIR;
@@ -507,7 +508,8 @@ sub rm_tree {
     } elsif (-f $path) {
 	unlink $path;
     } else {
-	warn "Can't find $path to remove";
+	warn "Can't find $path to remove"
+            unless $silent;
     }
 }
 
@@ -515,7 +517,7 @@ sub _cleanup
 {
     my $self = shift;
 
-    rm_tree( $self->base_path, $DEBUG );
+    rm_tree( $self->base_path, $DEBUG, @_ );
 }
 
 1;
