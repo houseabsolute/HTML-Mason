@@ -42,8 +42,8 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => '_make_error',
-		      description => 'Exercise possible failure for Parser.pm _make_error method',
+    $group->add_test( name => 'bad_args',
+		      description => 'Make sure a bad args line is caught properly',
 		      component => <<'EOF',
 <%args>
 foo
