@@ -70,6 +70,11 @@ report the true time.
 The other required argument. Mason's various data directories (obj, cache,
 debug, etc), live within the data_dir.
 
+=item data_cache_dir
+
+Specifies an absolute directory for data cache files. By default, it lives
+under C<data_dir>/cache.
+
 =item dhandler_name
 
 File name used for dhandlers. Default is "dhandler". If
