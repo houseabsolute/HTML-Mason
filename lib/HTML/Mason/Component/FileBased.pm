@@ -48,3 +48,29 @@ sub assign_runtime_properties {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::Component::Subcomponent - Mason Subcomponent Class
+
+=head1 DESCRIPTION
+
+This is a subclass of
+L<HTML::Mason::Component|HTML::Mason::Component>. Mason uses it to
+implement components which are stored in files.
+
+=head1 METHODS
+
+See L<the FILE-BASED METHODS section of
+HTML::Mason::Component|HTML::Mason::Component/FILE-BASED METHODS> for
+documentation.
+
+=back
+
+=head1 SEE ALSO
+
+L<HTML::Mason::Component|HTML::Mason::Component>
+
+=cut
