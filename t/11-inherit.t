@@ -31,7 +31,7 @@ a123=>'a123 from level 1'
 
 <& { base_comp => $m->base_comp }, 'variants' &>
 
-<% $m->call_next %>
+% $m->call_next;
 
 EOF
 		       );
@@ -329,7 +329,7 @@ This is X in base autohandler
 attribute A is <% $m->base_comp->attr('a') %>
 <& SELF:x &>
 </%method>
-<% $m->call_next %>
+% $m->call_next;
 EOF
 		       );
 
@@ -354,7 +354,7 @@ exec was really called for <% $m->base_comp->name %>
 attribute A is <% $m->base_comp->attr('a') %>
 <& SELF:x &>
 </%method>
-<% $m->call_next %>
+% $m->call_next;
 EOF
 		       );
 
@@ -463,7 +463,7 @@ inherit => undef
 </%flags>
 This is autohandler A
 <& sub/sibling &>
-<% $m->call_next %>
+% $m->call_next;
 EOF
 		       );
 
@@ -473,7 +473,7 @@ EOF
 			 component => <<'EOF',
 This is autohandler B
 <& SELF:m &>
-<% $m->call_next %>
+% $m->call_next;
 EOF
 		       );
 
@@ -509,7 +509,6 @@ This is autohandler B
 This is method M in SIBLING
 
 This is CHILD
-
 
 
 This is autohandler B
