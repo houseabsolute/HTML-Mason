@@ -80,10 +80,11 @@ sub create_delayed_object
     my ($self, $name, %args) = @_;
     my $spec = $self->{"_delayed_$name"}
 	or die "Unknown delayed object '$name'";
-    my $class = delete $spec->{_class}
+    my %saved_args = %$spec;
+    my $class = delete $saved_args{_class}
 	or die "Unknown class for delayed object '$name'";
 
-    return $class->new(%$spec, %args);
+    return $class->new(%saved_args, %args);
 }
 
 sub _get_contained_args
