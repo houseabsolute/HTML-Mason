@@ -269,7 +269,6 @@ EOF
 		      description => 'use in_package with subrequest',
                       interp_params => { in_package => 'Test::Package' },
 		      component => <<'EOF',
-% $::D = 1;
 Before subreq
 % $m->subexec( '/subrequest/support/output' );
 After subreq
