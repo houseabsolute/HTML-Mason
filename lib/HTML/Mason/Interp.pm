@@ -43,9 +43,6 @@ BEGIN
 	 ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
 					   default => qr/Subroutine .* redefined/i,
 					   descr => "A regular expression describing Perl warning messages to ignore" },
-	 out_method                   => { parse => 'code',    type => CODEREF|SCALARREF,
-					   default => sub { print STDOUT grep {defined} @_ },
-					   descr => "A subroutine or scalar reference through which all output will pass" },
 	 max_recurse                  => { parse => 'string',  default => 32, type => SCALAR,
 					   descr => "The maximum recursion depth for component, inheritance, and request stack" },
 	 preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF,
@@ -79,13 +76,13 @@ use HTML::Mason::MethodMaker
 			  fixed_source
 			  ignore_warnings_expr
 			  max_recurse
-                          out_method
 			  resolver
 			  use_object_files )
 		    ],
 
       read_write_contained => { request => [ [ autoflush => { type => BOOLEAN } ],
 					     [ data_cache_defaults => { type => HASHREF } ],
+					     [ out_method => { type => SCALARREF | CODEREF } ],
 					   ]
 			      },
       );
@@ -167,7 +164,7 @@ sub exec {
 sub make_request {
     my $self = shift;
 
-    return $self->create_delayed_object( 'request', interp => $self, out_method => $self->out_method, @_ );
+    return $self->create_delayed_object( 'request', interp => $self, @_ );
 }
 
 sub comp_exists {
@@ -672,10 +669,9 @@ EOF
 
     my $comp = $self->make_component(comp_source => $comp_source);
     my $out;
-    local $self->{out_method} = \$out;
 
     my $args = {interp => $self, valid => $self->validation_spec, current_url => $current_url};
-    $self->make_request(comp=>$comp, args=>$args, %p)->exec;
+    $self->make_request(comp=>$comp, args=>$args, out_method=>\$out, %p)->exec;
 
     return $out;
 }
@@ -803,21 +799,6 @@ The maximum recursion depth for the component stack, for the request
 stack, and for the inheritance stack. An error is signalled if the
 maximum is exceeded.  Default is 32.
 
-=item out_method
-
-Indicates where to send output. If out_method is a reference to a
-scalar, output is appended to the scalar.  If out_method is a
-reference to a subroutine, the subroutine is called with each output
-string. For example, to send output to a file called "mason.out":
-
-    my $fh = new IO::File ">mason.out";
-    ...
-    out_method => sub { $fh->print($_[0]) }
-
-By default, out_method prints to standard output.  When the
-HTML::Mason::ApacheHandler module is used, the out method uses the C<<
-$r->print >> method to send output.
-
 =item preloads
 
 A list of component paths, optionally with glob wildcards, to load
@@ -847,7 +828,7 @@ sets and returns the value.  For example:
 
     my $interp = new HTML::Mason::Interp (...);
     my $c = $interp->compiler;
-    $interp->out_method(\$buf);
+    $interp->dhandler_name("da-handler");
 
 The following properties can be queried but not modified: data_dir,
 preloads.
