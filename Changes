@@ -21,6 +21,9 @@ using FilesMatch means you can't use dhandlers.
 - Reduced memory usage when compiling large components.  Memory usage
 for smaller components hasn't changed much, but they weren't really a
 problem in the first place.
+- Added a cgi_request method to the CGIHandler::Request object, which
+parallels the apache_req method offered by the ApacheHandler::Request
+object.
 
 [ BUG FIXES ]
 
@@ -50,6 +53,14 @@ Apache::Request object, then the one Mason created would be missing
 any POST arguments.  Reported by Ray Zimmerman.
 - Several different places in the docs said that Cache::Cache accepts
 a username option, but there is no such thing.
+- alter_superclass didn't work with CGIHandler because CGIHandler
+didn't define a $VERSION variable.  Reported by Nadine and Harry
+Laxen.
+- Made CGIHandler merge together POST and query string arguments in
+order to be consistent with ApacheHandler.  Reported by Nadine and Harry
+Laxen.
+- The CGIHandler module was overriding any out_method provided by the
+user.  Reported by Nadine and Harry Laxen.
 
 
 1.15  October 14, 2002
