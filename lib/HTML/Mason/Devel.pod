@@ -1855,10 +1855,7 @@ right thing with regards to Mason buffering.
 Mason calls C<$r-E<gt>content> itself to read request input, emptying
 the input buffer and leaving a trap for the unwary: subsequent calls
 to C<$r-E<gt>content> hang the server. This is a mod_perl "feature" that
-may be fixed in an upcoming release. Instead you can access the request
-input via
-
-  $m->http_input
+may be fixed in an upcoming release.
 
 For the same reason you should not create a CGI object like
 

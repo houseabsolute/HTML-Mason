@@ -371,16 +371,6 @@ and the ApacheHandler.
 
 Returns the ApacheHandler object associated with this request.
 
-=for html <a name="item_http_input">
-
-=item http_input
-
-Returns the input string for this HTTP request: for GET, the query
-string, and for POST, the content block read from the client. Because
-$r->content can only be called once and is automatically called by
-Mason, it cannot be called directly inside components; this method is
-a good way to get at the value of $r->content.
-
 =for html <a name="item_apache_req">
 
 =item apache_req
