@@ -37,8 +37,8 @@ kill_httpd(1);
 test_load_apache();
 
 my $tests = 4; # multi conf tests
-$tests += 45 if my $have_libapreq = have_module('Apache::Request');
-$tests += 34 if my $have_cgi      = have_module('CGI');
+$tests += 48 if my $have_libapreq = have_module('Apache::Request');
+$tests += 36 if my $have_cgi      = have_module('CGI');
 $tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
 print "1..$tests\n";
 
@@ -46,23 +46,23 @@ print STDERR "\n";
 
 write_test_comps();
 
-if ($have_libapreq) {        # 45 tests
+if ($have_libapreq) {        # 48 tests
     cleanup_data_dir();
-    apache_request_tests(1); # 19 tests
+    apache_request_tests(1); # 20 tests
 
     cleanup_data_dir();
-    apache_request_tests(0); # 14 tests
+    apache_request_tests(0); # 15 tests
 
     cleanup_data_dir();
-    no_config_tests();    # 12 tests
+    no_config_tests();       # 13 tests
 }
 
-if ($have_cgi) {             # 34 tests (+ 1?)
+if ($have_cgi) {             # 36 tests (+ 1?)
     cleanup_data_dir();
-    cgi_tests(1);            # 19 tests + 1 if mod_perl version > 1.24
+    cgi_tests(1);            # 20 tests + 1 if mod_perl version > 1.24
 
     cleanup_data_dir();
-    cgi_tests(0);            # 15 tests
+    cgi_tests(0);            # 16 tests
 }
 
 cleanup_data_dir();
@@ -224,26 +224,23 @@ $m->redirect('/comps/basic');
 EOF
 	      );
 
-=pod
-
-Hmm, what are the expect correct and double-header-broken outputs
-here?  I don't even get 'I am the target.'
-
     write_comp( 'internal_redirect', <<'EOF',
 <%init>
+$r->internal_redirect('/comps/internal_redirect_target?foo=17');
 $m->auto_send_headers(0);
-$r->internal_redirect('/comps/redirect_target');
-$m->auto_send_headers(1);
+$m->clear_buffer;
+$m->abort;
 </%init>
 EOF
 	      );
 
-    write_comp( 'redirect_target', <<'EOF',
-I am the target.
+    write_comp( 'internal_redirect_target', <<'EOF',
+The number is <% $foo %>.
+<%args>
+$foo
+</%args>
 EOF
 	      );
-
-=cut
 
 }
 
@@ -653,20 +650,18 @@ EOF
 						  );
     ok($success);
 
-=pod
-
     $path = '/comps/internal_redirect';
     $path = "/ah=0$path" if $with_handler;
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->check_output( actual => $actual,
 						 expect => <<'EOF',
-I dunno
+X-Mason-Test: Initial value
+The number is 17.
+Status code: 0
 EOF
 					       );
-
-=cut
-
+    ok($success);
 }
 
 sub multi_conf_tests
