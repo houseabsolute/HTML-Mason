@@ -588,6 +588,12 @@ sub object_file {
 	undef;
 }
 
+sub use_autohandlers
+{
+    my $self = shift;
+    return defined $self->{autohandler_name} and length $self->{autohandler_name};
+}
+
 # Generate HTML that describes Interp's current status.
 # This is used in things like Apache::Status reports.  Currently shows:
 # -- Interp properties

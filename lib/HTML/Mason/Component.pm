@@ -115,7 +115,7 @@ sub _determine_inheritance {
 	if (defined($self->{flags}->{inherit})) {
 	    $self->{inherit_path} = absolute_comp_path($self->{flags}->{inherit}, $self->dir_path);
 	}
-    } elsif ( $self->use_autohandlers ) {
+    } elsif ( $interp->use_autohandlers ) {
 	if ($self->name eq $interp->autohandler_name) {
 	    unless ($self->dir_path eq '/') {
 		($self->{inherit_start_path}) = $self->dir_path =~ m,^(.*/)?.*,s
@@ -124,15 +124,6 @@ sub _determine_inheritance {
 	    $self->{inherit_start_path} = $self->dir_path;
 	}
     }
-}
-
-sub use_autohandlers
-{
-    my $self = shift;
-
-    my $name = $self->interp->autohandler_name;
-
-    return defined $name and length $name;
 }
 
 sub run {
