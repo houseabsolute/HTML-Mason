@@ -285,6 +285,10 @@ sub handle_request {
     my $interp = $self->interp;
     $self->{request_number}++;
 
+    if (lc($apreq->dir_config('Filter')) eq 'on') {
+	$apreq = $apreq->filter_register;
+    }
+
     #
     # Construct (and truncate if necessary) the request to log at start
     #
