@@ -90,7 +90,7 @@ sub try_exec_with_ah {
     compare_results ($test_name, $buf);
 }
 
-print "1..5\n";
+print "1..6\n";
 
 try_exec_with_ah('/basic','basic',{},{});
 
@@ -99,5 +99,7 @@ try_exec_with_ah('/headers','headers-stream',{output_mode=>'stream'},{});
 { my $qs = 'blank=1';
   try_exec_with_ah('/headers','headers-batch-blank',{output_mode=>'batch'},{"args_hash" => {blank=>1}});
   try_exec_with_ah('/headers','headers-stream-blank',{output_mode=>'stream'},{"args_hash" => {blank=>1}}); }
+
+try_exec_with_ah('/cgi_object', 'cgi_object', {}, {});
 
 1;
