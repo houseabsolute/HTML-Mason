@@ -218,10 +218,6 @@ Corresponds to the C<code_cache_max_size> parameter.
 
 Corresponds to the C<current_time> parameter.
 
-=item * MasonDataCacheDir - string
-
-Corresponds to the C<data_cache_dir> parameter.
-
 =item * MasonDieHandler - code or 0
 
 Corresponds to the C<die_handler> parameter.
@@ -261,10 +257,6 @@ Corresponds to the C<system_log_file> parameter.
 =item * MasonSystemLogSeparator - string
 
 Corresponds to the C<system_log_separator> parameter.
-
-=item * MasonUseDataCache - boolean
-
-Corresponds to the C<use_data_cache> parameter.
 
 =item * MasonUseObjectFiles - boolean
 
@@ -667,10 +659,11 @@ defaults.
 
 =item Disabling data caching
 
-If for some reason you want to disable data caching entirely, set
-C<Interp/use_data_cache> to false. This causes all C<$m-E<gt>cache>
-calls to return a C<Cache::NullCache> object, which correctly
-implements the API but never stores data.
+If for some reason you want to disable data caching entirely, use
+
+    data_cache_defaults => {cache_class => 'NullCache'}
+
+This subclass faithfully implements the cache API but never stores data.
 
 =back
 
