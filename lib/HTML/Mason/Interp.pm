@@ -1172,9 +1172,7 @@ Example of usage:
 
 Although Mason is most commonly used in conjunction with mod_perl,
 there is also a functional API that allows you to use Mason from CGI
-programs or from stand-alone Perl scripts.  In the latter case Mason can be
-used as a glorified Text::Template, producing a set of
-files from components, or used to generate a flat version of a componentized site.
+programs or from stand-alone Perl scripts. 
 
 When using Mason outside of mod_perl, just create an Interp object;
 you do not need the ApacheHandler object.  Once you've created an
@@ -1190,6 +1188,8 @@ Component parameters are given as a series of name/value pairs, just
 as they are with C<$m-E<gt>comp>. exec returns the return value of
 the component. Component output is sent to standard output by default,
 but you can change this by specifying C<out_method>.
+
+=head2 Using Mason from a CGI script
 
 Here is a skeleton CGI script that calls a component and sends the
 output to the browser.
@@ -1212,7 +1212,7 @@ output to the browser.
 
     $interp->exec($comp, %args);
 
-The relevant portions of my httpd.conf file look like:
+The relevant portions of the httpd.conf file look like:
 
     DocumentRoot /path/to/comp/root
     ScriptAlias /cgi-bin/ /path/to/cgi-bin/
@@ -1273,6 +1273,25 @@ This script offers components the use of a global named C<$h> which
 can be used to set headers (for example, for a redirect).  It also
 catches errors in the execution of the script and has a routine to
 handle them.
+
+=head2 Using Mason from a standalone script
+
+Here is a skeleton script that calls a component and places the output
+in a file:
+
+    my $outbuf;
+    my $interp = new HTML::Mason::Interp (comp_root=>'<component root>',
+					  data_dir=>'<data directory>',
+					  out_method=>\$outbuf);
+    my $retval = $interp->exec('<component path>', <args>...);
+    open(F,">mason.out");
+    print F $outbuf;
+    close(F);
+    print "return value of component was: $retval\n";
+
+This allows you to use Mason as a pure text templating solution --
+like Text::Template and its brethren, but with more power (and of
+course more complexity).
 
 =head1 AUTHOR
 
