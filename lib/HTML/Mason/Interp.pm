@@ -864,31 +864,6 @@ where components are stored. e.g.
 Default is 10 MB. See the L<Admin/Code Cache> section of the I<Admin Guide>
 for further details.
 
-=item comp_root
-
-The required Mason component root. All components live under the comp_root.
-
-You may also specify multiple component roots to be searched in the
-spirit of Perl's @INC. To do so you must specify a list of lists:
-
-    comp_root => [[key1, root1], [key2, root2], ...]
-
-Each pair consists of a key and root.  The key is a string that
-identifies the root mnemonically to a component developer.  Data cache
-and object directories are split up by these keys to make sure
-different components sharing the same path have different cache and
-object files. The key is also included whenever Mason prints the
-component title, as in an error message.
-
-For example:
-
-    comp_root => [['private', '/usr/home/joe/comps'],
-                  ['main', '/usr/local/www/htdocs']]
-
-This specifies two component roots, a main component tree and a
-private tree which overrides certain components.  The order is
-respected ala @INC, so 'private' is searched first and 'main' second.
-
 =item compiler
 
 Compiler object for compiling components on the fly.  If none is
@@ -1038,11 +1013,10 @@ sets and returns the value.  For example:
 
     my $interp = new HTML::Mason::Interp (...);
     my $c = $interp->compiler;
-    my $comproot = $interp->comp_root;
     $interp->out_method(\$buf);
 
-The following properties can be queried but not modified:
-comp_root, data_dir, system_log_file, system_log_separator, preloads.
+The following properties can be queried but not modified: data_dir,
+system_log_file, system_log_separator, preloads.
 
 =head1 OTHER METHODS
 
@@ -1115,6 +1089,15 @@ Example of usage:
 
     $m->comp($anon_comp);
 
+=for html <a name="item_comp_root">
+
+=item comp_root (comp_root)
+
+This is a convenience method which simply calls the C<comp_root>
+method in the resolver object.  Obviously, if you are using a custom
+resolver class which does not have a C<comp_root> method, then this
+convenience method will not work.
+
 =back
 
 =head1 STANDALONE MODE
@@ -1153,7 +1136,7 @@ output to the browser.
 
     my $q = new CGI;
     my $comp = $ENV{'PATH_TRANSLATED'};
-    my $root = $interp->comp_root;
+    my $root = $interp->resolver->comp_root;
     $comp =~ s/^$root//
         or die "Requested file '$comp' is outside component root '$root'";
     my %args = cgi_request_args($q, $q->request_method);
@@ -1194,7 +1177,7 @@ A more complex handler.cgi script might look like this:
 
     my $q = new CGI;
     my $comp = $ENV{'PATH_TRANSLATED'};
-    my $root = $interp->comp_root;
+    my $root = $interp->resolver->comp_root;
     $comp =~ s/^$root//
         or die "Requested file '$comp' is outside component root '$root'";
     my %args = cgi_request_args($q, $q->request_method);
