@@ -10,21 +10,22 @@ use File::Basename;
 use HTML::Mason::Tools qw(read_file compress_path);
 use vars qw($AUTOLOAD);
 
-use HTML::Mason::MethodMaker ( read_only => [ qw( code
-						  create_time
-						  declared_args
-						  fq_path
-						  inherit_path
-						  inherit_start_path
-						  interp
-						  mfu_count
-						  object_size
-						  parser_version
-						  run_count ) ],
+use HTML::Mason::MethodMaker
+    ( read_only => [ qw( code
+			 create_time
+			 declared_args
+			 fq_path
+			 inherit_path
+			 inherit_start_path
+			 interp
+			 mfu_count
+			 object_size
+			 parser_version
+			 run_count ) ],
 
-			       read_write => [ qw ( dynamic_subs_request
-						    dynamic_subs_hash ) ]
-			     );
+      read_write => [ qw ( dynamic_subs_request
+			   dynamic_subs_hash ) ]
+      );
 
 my %fields =
     (

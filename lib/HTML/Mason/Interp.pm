@@ -20,29 +20,30 @@ use HTML::Mason::Config;
 use HTML::Mason::Resolver::File;
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 
-use HTML::Mason::MethodMaker ( read_only => [ qw( code_cache
-						  comp_root
-						  data_dir
-						  hooks
-						  system_log_file
-						  system_log_separator
-						  preloads ) ],
+use HTML::Mason::MethodMaker
+    ( read_only => [ qw( code_cache
+			 comp_root
+			 data_dir
+			 hooks
+			 system_log_file
+			 system_log_separator
+			 preloads ) ],
 
-			       read_write => [ qw( allow_recursive_autohandlers
-						   autohandler_name
-						   code_cache_max_size
-						   data_cache_dir
-						   dhandler_name
-						   max_recurse
-						   out_mode
-						   parser
-						   resolver
-						   static_file_root
-						   use_data_cache
-						   use_object_files
-						   use_reload_file
-						   verbose_compile_error ) ],
-			     );
+      read_write => [ qw( allow_recursive_autohandlers
+			  autohandler_name
+			  code_cache_max_size
+			  data_cache_dir
+			  dhandler_name
+			  max_recurse
+			  out_mode
+			  parser
+			  resolver
+			  static_file_root
+			  use_data_cache
+			  use_object_files
+			  use_reload_file
+			  verbose_compile_error ) ],
+      );
 
 # Fields that can be set in new method, with defaults
 my %fields =

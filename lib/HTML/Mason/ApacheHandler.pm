@@ -13,8 +13,9 @@ package HTML::Mason::Request::ApacheHandler;
 use vars qw(@ISA);
 @ISA = qw(HTML::Mason::Request);
 
-use HTML::Mason::MethodMaker ( read_only => 'cgi_object',
-			       read_write => [ qw( ah apache_req ) ] );
+use HTML::Mason::MethodMaker
+    ( read_only => 'cgi_object',
+      read_write => [ qw( ah apache_req ) ] );
 
 # Fields that can be set in new method, with defaults
 my %reqfields =
@@ -70,21 +71,22 @@ use HTML::Mason::Tools qw(dumper_method html_escape url_unescape pkg_installed);
 use HTML::Mason::Utils;
 use Apache::Status;
 
-use HTML::Mason::MethodMaker ( read_write => [ qw( apache_status_title
-						   auto_send_headers
+use HTML::Mason::MethodMaker
+    ( read_write => [ qw( apache_status_title
+			  auto_send_headers
 
-						   debug_dir_config_keys
-						   debug_mode
-						   debug_handler_proc
-						   debug_handler_script
-						   debug_perl_binary
+			  debug_dir_config_keys
+			  debug_mode
+			  debug_handler_proc
+			  debug_handler_script
+			  debug_perl_binary
 
-						   decline_dirs
-						   error_mode
-						   interp
-						   output_mode
-						   top_level_predicate ) ]
-			     );
+			  decline_dirs
+			  error_mode
+			  interp
+			  output_mode
+			  top_level_predicate ) ]
+      );
 
 # use() params. Assign defaults, in case ApacheHandler is only require'd.
 use vars qw($LOADED $ARGS_METHOD);

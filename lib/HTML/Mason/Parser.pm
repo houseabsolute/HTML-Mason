@@ -15,16 +15,17 @@ use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Request;
 use HTML::Mason::Tools qw(dumper_method read_file);
 
-use HTML::Mason::MethodMaker ( read_write => [ qw( default_escape_flags
-						   ignore_warnings_expr
-						   in_package
-						   postamble
-						   postprocess
-						   preamble
-						   preprocess
-						   taint_check
-						   use_strict ) ]
-			     );
+use HTML::Mason::MethodMaker
+( read_write => [ qw( default_escape_flags
+		      ignore_warnings_expr
+		      in_package
+		      postamble
+		      postprocess
+		      preamble
+		      preprocess
+		      taint_check
+		      use_strict ) ]
+  );
 
 # Fields that can be set in new method, with defaults
 my %fields =
