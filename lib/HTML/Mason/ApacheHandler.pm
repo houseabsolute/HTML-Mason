@@ -567,7 +567,13 @@ sub handle_request_1
 			return;
 		    } else {
 			$r->send_http_header();
-			$request->abort() if $r->header_only;
+			
+			# If this is a HEAD request and our Mason request is
+			# still active, abort it.
+			if ($r->header_only) {
+			    $request->abort if $request->depth > 0;
+			    return;
+			}
 		    }
 		}
 		unless ($delay_buf eq '') {
@@ -592,10 +598,10 @@ sub handle_request_1
 	# to Apache to send the headers.
 	if (!$headers_sent and (!$retval or $retval==200)) {
 	    $r->send_http_header() unless http_header_sent($r);
-	    $interp->out_method($delay_buf) unless $delay_buf eq '';
+	    $interp->out_method->($delay_buf) unless $delay_buf eq '';
 	}
     } else {
-	$request->exec($comp, %args);
+	$retval = $request->exec($comp, %args);
     }
     undef $request; # ward off leak
     return $retval;

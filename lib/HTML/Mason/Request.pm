@@ -23,7 +23,7 @@ my %fields =
      declined => undef,
      interp => undef,
      out_method => undef,
-     out_mode => undef,
+     out_mode => undef
      );
 # Create read-only accessor routines
 foreach my $f (keys %fields) {
@@ -732,7 +732,7 @@ sub process_comp_path
     if ($comp_path !~ m@^/@) {
 	$dir_path = $self->current_comp->dir_path unless defined($dir_path);
 	die "relative component path ($comp_path) used from component with no current directory" unless $dir_path;
-	$comp_path = $dir_path . "/" . $comp_path;
+	$comp_path = $dir_path . ($dir_path eq "/" ? "" : "/") . $comp_path;
     }
     while ($comp_path =~ s@/[^/]+/\.\.@@) {}
     while ($comp_path =~ s@/\./@/@) {}

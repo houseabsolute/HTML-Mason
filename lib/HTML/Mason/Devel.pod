@@ -704,10 +704,6 @@ technical details at the bottom.
     }
     </%INIT>
 
-Since C<E<lt>%initE<gt>> sections fire before any HTTP headers
-are sent, they should do their work quickly to prevent dead time on
-the browser side.
-
 =head2 E<lt>%cleanupE<gt>
 
 Used for cleanup code. For example: closing a database connection or
