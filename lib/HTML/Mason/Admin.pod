@@ -198,6 +198,10 @@ cookie-based session with user data stored on the filesystem:
     $r->header_out("Set-Cookie" => "SESSION_ID=$session{_session_id};") if ( !$cookie );
     local *HTML::Mason::Commands::session = \%session;
 
+and then, after C<handle_request>,
+
+    untie %session;
+
 This code is customizable; you can change the user ID location
 (e.g. URL instead of cookie), the user data storage mechanism
 (e.g. DBI database), and the name of the global hash.
