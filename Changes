@@ -18,6 +18,67 @@ module.
 'inherit' flag cannot be found. Task id #480.
 
 
+1.24  November 12, 2003
+
+[ BUG FIXES ]
+
+- Two tests in 04-misc.t, #9 and #10, failed if Params::Validate 0.66+
+was installed.  This happened because an error message given by
+Params::Validate changed slightly, and was not a problem in the Mason
+core code.
+- The Component object method attr_if_exists returned 0 when the
+attribute didn't exist, instead of undef as is documented.  Reported
+by Chris Reinhardt.
+- The HTML::Mason::Resolver::File glob_path method, which is used for
+the preloads feature, now uses File::Glob::bsd_glob when run with Perl
+5.6.0+.  This function properly handles spaces in filenames, which are
+legal on most systems, and common on Win32.  Implemented by Autrijus
+Tang.
+- The Admin guide erroneously said that the default component root
+when running Mason outside a web environment was "/".  It is the
+current working directory.  Reported by Patrick Kane.
+
+
+1.23  September 8, 2003
+
+[ ENHANCEMENTS ]
+
+- Lots of enhancements to the Apache.pm emulation when using the
+CGIHandler module.  Implemented by David Wheeler.
+- The fact that autohandlers or dhandlers can be turned off by setting
+autohandler_name or dhandler_name to "" has now been documented, and
+we explicitly check for this in the code.  Task id #499.
+- The ApacheHandler module now handles certain exceptions
+(TopLevelNotFound, Abort, Decline) thrown from the Interp class's
+make_request method by returning the desired error code.  With the
+default Mason Interp & Request classes, this will never happen.
+However, subclasses may want to throw exceptions when constructing a
+request.  Implemented by David Wheeler.
+
+[ BUG FIXES ]
+
+- If any code type parameters were set in the httpd.conf file, Mason
+died trying to read them.  This bug was introduced in version 1.20.
+Task id #496.  Reported by David Wheeler.
+- $m->caller, $m->callers and $m->caller_args now return undef or an
+empty list instead of crashing when the specified stack level does not
+exist. Task id #495.  Reported by Bernhard Schmalhofer.
+- The busy_lock option to $m->cache->get did not accept did not accept
+string values for durations, like "4m".  Task id #484.  Reported by
+Igor Muratov.
+- When generating the HTML error message page, we now only use basic
+HTML escaping.  This fixes two problems.  One is that if
+HTML::Entities is not installed, using the "|h" escape flag in the
+error display component causes an endless loop.  The other is that the
+"|h" flag can mangle non-Latin-1 characters.  Task ids #497 and #494.
+Reported by Harmen and Oleg Bartunov respectively.
+- If a component generated output, then called another component via
+$m->scomp, and that other component attempted to clear the buffer and
+then abort, any output generated before the call to $m->scomp was
+still sent to the client.  This broke calling $m->redirect inside an
+$m->scomp call.  Task id #498.  Reported by Kim Alexander Hansen.
+
+
 1.22  July 14, 2003
 
 [ ENHANCEMENTS ]
@@ -55,7 +116,7 @@ with the same name.  Task id #476.  Reported by John Michael Mars.
 
 [ INCOMPATIBLE CHANGES ]
 
-** The semantics of @_ for components now match Perl subroutines: @_
+- ** The semantics of @_ for components now match Perl subroutines: @_
 contains aliases to the caller's arguments, instead of copies.  For
 example, if a component updates $_[0], the corresponding argument is
 updated (or an error occurs if it is not updatable). The only users
@@ -209,7 +270,7 @@ a component, it would die instead of returning a not found status.
 
 [ INCOMPATIBLE CHANGES ]
 
-- Removed the long deprecated and undocumented $comp->parent_comp
+- ** Removed the long deprecated and undocumented $comp->parent_comp
 method.  Use $comp->owner instead.
 
 
@@ -485,6 +546,7 @@ requested component.  Now we explicitly set $r->content_type before
 sending HTML error output.
 - Fix failures of Resolver::File::glob_path() with Win32.  (reported
 by Adam Reinhart)
+
 
 1.10  June 25, 2002
 
