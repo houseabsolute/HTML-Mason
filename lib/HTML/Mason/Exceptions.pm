@@ -284,7 +284,7 @@ sub as_html
     my ($self) = @_;
 
     my $out;
-    my $interp = new HTML::Mason::Interp(out_method => \$out);
+    my $interp = HTML::Mason::Interp->new(out_method => \$out);
     my $comp = $interp->make_component(comp_source => <<'EOF');
 
 <%args>
