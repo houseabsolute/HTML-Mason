@@ -264,7 +264,7 @@ The httpd PerlModule directive:
 
 =item *
 
-In the <%once> section of the component(s) that use the module.
+In the C<< <%once> >> section of the component(s) that use the module.
 
     <%once>
     use CGI ':standard';
@@ -683,8 +683,8 @@ Since all components run in the same package, you'll be able to set
 the global in one component and access it in all the others.
 
 Autohandlers are common places to assign values to globals.  Use the
-<tt>&lt;%once&gt;</tt> section if the global only needs to be
-initialized at load time, or the <tt>&lt;%init&gt;</tt> section if it
+C<< <%once> >> section if the global only needs to be
+initialized at load time, or the C<< <%init> >> section if it
 needs to be initialized every request.
 
 =head2 Sessions

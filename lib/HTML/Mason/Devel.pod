@@ -127,8 +127,8 @@ After 12 pm, the output of this component is:
 
 This short example demonstrates the three primary "in-line" Perl
 sections. In-line sections are generally embedded within HTML and
-execute in the order they appear. Other sections (C<< <%init> >>, C<<
-<%args> >>, etc.) are tied to component events like initialization,
+execute in the order they appear. Other sections (C<< <%init> >>,
+C<< <%args> >>, etc.) are tied to component events like initialization,
 cleanup, and argument definition.
 
 The parsing rules for these Perl sections are as follows:
@@ -892,8 +892,8 @@ regular Perl subroutines. For example, if a component updates $_[0],
 the corresponding argument is updated (or an error occurs if it is not
 updatable).
 
-Most users won't notice this change because <%args> variables and the
-%ARGS hash always contain copies of arguments.
+Most users won't notice this change because C<< <%args> >> variables
+and the C<%ARGS> hash always contain copies of arguments.
 
 See perlsub for more information on @_ aliasing.
 
@@ -1682,8 +1682,8 @@ or the status will not make it out:
 =head3 Filters and $m->abort
 
 A filter section will still be called after a component aborts with
-C<< $m->abort >>.  You can always check C<< $m->aborted >> in your C<<
-<%filter> >> block if you don't want to run the filter after an abort.
+C<< $m->abort >>.  You can always check C<< $m->aborted >> in your
+C<< <%filter> >> block if you don't want to run the filter after an abort.
 
   <%filter>
   unless ( $m->aborted ) {
