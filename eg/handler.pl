@@ -57,9 +57,11 @@ sub handler
     #
     #local *HTML::Mason::Commands::session = \%session;
     
-    $ah->handle_request($r);
+    my $status = $ah->handle_request($r);
     
     #untie %HTML::Mason::Commands::session;
+
+    return $status;
 }
 
 1;
