@@ -263,7 +263,7 @@ EOF
 		      component => <<'EOF',
 % $m->interp->code_cache_max_size([1]);
 EOF
-		      expect_error => qr/Parameter #1 to .*? was an 'arrayref'/,
+		      expect_error => qr/Parameter #1.*to .*? was an 'arrayref'/,
 		    );
 
 #------------------------------------------------------------
@@ -273,7 +273,7 @@ EOF
 		      component => <<'EOF',
 % $m->interp->autoflush([1]);
 EOF
-		      expect_error => qr/Parameter #1 to .*? was an 'arrayref'/,
+		      expect_error => qr/Parameter #1.*to .*? was an 'arrayref'/,
 		    );
 
 #------------------------------------------------------------
