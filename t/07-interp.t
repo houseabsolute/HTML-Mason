@@ -19,7 +19,7 @@ sub make_tests
 			 component => <<'EOF',
 The recursive autohandler: <% $m->current_comp->path %>
 
-<% $m->call_next %>
+% $m->call_next;
 EOF
 		       );
 
@@ -46,7 +46,7 @@ EOF
 			 component => <<'EOF',
 The local autohandler: <% $m->current_comp->path %>
 
-<% $m->call_next %>
+% $m->call_next;
 EOF
 		       );
 
