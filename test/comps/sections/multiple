@@ -1,0 +1,22 @@
+<%attr>
+name=>'Joe'
+</%attr>
+<%init>
+my $var1 = "Foo!";
+</%init>
+<%filter>
+tr/a-z/A-Z/
+</%filter>
+var1 = <% $var1 %>
+var2 = <% $var2 %>
+Name = <% $m->current_comp->attr('name') %>
+Color = <% $m->current_comp->attr('color') %>
+<%filter>
+s/\!/\?/g
+</%filter>
+<%init>
+my $var2 = "Bar!";
+</%init>
+<%attr>
+color=>'Blue'
+</%attr>
