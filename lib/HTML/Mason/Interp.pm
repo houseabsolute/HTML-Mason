@@ -11,7 +11,7 @@ use File::Basename;
 use File::Path;
 use File::Spec;
 use HTML::Mason::Parser;
-use HTML::Mason::Tools qw(is_absolute_path make_fh read_file);
+use HTML::Mason::Tools qw(make_fh);
 use HTML::Mason::Commands qw();
 use HTML::Mason::Config;
 use HTML::Mason::Resolver::File;
