@@ -136,6 +136,11 @@ sub run {
 sub dynamic_subs_init {
     my $self = shift;
 
+    error "cannot call a method or subcomponent from a <%shared> block"
+        if $self->{in_dynamic_subs_init};
+
+    local $self->{in_dynamic_subs_init} = 1;
+
     $self->{dynamic_subs_hash} = $self->{dynamic_subs_init}->();
     error "could not process <%shared> section (does it contain a return()?)"
 	unless ref($self->{dynamic_subs_hash}) eq 'HASH';
