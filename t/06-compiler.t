@@ -193,7 +193,7 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'postprocess1',
+    $group->add_test( name => 'postprocess_text1',
 		      description => 'test postprocess compiler parameter (alpha blocks)',
 		      interp_params => { postprocess_text => \&uc_alpha },
 		      component => <<'EOF',
@@ -208,23 +208,61 @@ EOF
 
 
 #------------------------------------------------------------
-
-    $group->add_test( name => 'postprocess2',
-		      description => 'test postprocess compiler parameter (perl blocks)',
-		      interp_params => { postprocess_perl => \&add_foo_to_perl },
+    $group->add_test( name => 'postprocess_text2',
+		      description => 'test postprocess compiler parameter (alpha blocks)',
+		      interp_params => { postprocess_text => \&uc_alpha },
 		      component => <<'EOF',
 <% 'foo' %>
-bar
+<%text>bar</%text>
 EOF
 		      expect => <<'EOF',
-fooFOO
-bar
+foo
+BAR
 EOF
 		    );
 
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'postprocess_perl1',
+		      description => 'test postprocess compiler parameter (perl blocks)',
+		      interp_params => { postprocess_perl => \&make_foo_foofoo },
+		      component => <<'EOF',
+<% 'foo' %>
+bar
+EOF
+		      expect => <<'EOF',
+foofoo
+bar
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'postprocess_perl2',
+		      description => 'test postprocess compiler parameter (perl blocks)',
+		      interp_params => { postprocess_perl => \&make_foo_foofoo },
+		      component => <<'EOF',
+<% 'foo' %>
+% $m->out("Make mine foo!\n");
+bar
+<% "stuff-$var-stuff" %>
+<%init>
+ my $var = 'foo';
+</%init>
+EOF
+		      expect => <<'EOF',
+foofoo
+Make mine foofoo!
+bar
+stuff-foofoo-stuff
+EOF
+		    );
+
+
+
+
+#------------------------------------------------------------
     $group->add_test( name => 'bad_var_name',
 		      description => 'test that invalid Perl variable names are caught',
 		      component => <<'EOF',
@@ -301,7 +339,7 @@ sub uc_alpha
     ${ $_[0] } = uc ${ $_[0] };
 }
 
-sub add_foo_to_perl
+sub make_foo_foofoo
 {
-    ${ $_[0] } =~ s/\);/. 'FOO');/;
+    ${ $_[0] } =~ s/foo/foofoo/ig;
 }

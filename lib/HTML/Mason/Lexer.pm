@@ -29,13 +29,13 @@ my %blocks = ( args    => 'variable_list_block',
 	       attr    => 'key_val_block',
 	       flags   => 'key_val_block',
 	       cleanup => 'raw_block',
-	       doc     => 'raw_block',
+	       doc     => 'doc_block',
 	       filter  => 'raw_block',
 	       init    => 'raw_block',
 	       once    => 'raw_block',
 	       perl    => 'raw_block',
 	       shared  => 'raw_block',
-	       text    => 'raw_block',
+	       text    => 'text_block',
 	     );
 
 my $blocks_re;
@@ -183,11 +183,10 @@ sub match_block
     }
 }
 
-sub raw_block
+sub _generic_block
 {
-    my $self = shift;
-    my %p = @_;
-
+    my ($self, %p) = @_;
+    
     my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     if ( $comp =~ m,\G(.*?)</%\Q$p{block_type}\E>(\n?),igcs )
@@ -195,20 +194,38 @@ sub raw_block
 	$self->{pos} = pos($comp);
 
 	my $block = $1;
-	if (defined $block)
-	{
-	    $self->{compiler}->raw_block( block_type => $p{block_type},
-					  block => $block );
-	    $self->{lines} += $block =~ tr/\n/\n/;
-	    $self->{lines}++ if $2;
-	}
+	my $method = $p{method};
+	$self->{compiler}->$method( block_type => $p{block_type},
+				    block => $block );
+	$self->{lines} += $block =~ tr/\n/\n/;
+	$self->{lines}++ if $2;
 
 	$self->{compiler}->end_block( block_type => $p{block_type} );
     }
     else
     {
-	HTML::Mason::Exception::Syntax->throw( error => "<%$p{block_type}> tag at line $self->{lines} has no matching </%$p{block_type}> tag" );
+	HTML::Mason::Exception::Syntax->throw
+		( error => "<%$p{block_type}> tag at line $self->{lines} has no matching </%$p{block_type}> tag" );
     }
+    
+}
+
+sub text_block
+{
+    my $self = shift;
+    $self->_generic_block(@_, method => 'text_block');
+}
+
+sub raw_block
+{
+    my $self = shift;
+    $self->_generic_block(@_, method => 'raw_block');
+}
+
+sub doc_block
+{
+    my $self = shift;
+    $self->_generic_block(@_, method => 'doc_block');
 }
 
 sub variable_list_block

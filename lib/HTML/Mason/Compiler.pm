@@ -201,13 +201,22 @@ sub start_block
 
 sub raw_block
 {
+    # These blocks contain Perl code - so don't include <%text> and so on.
+
     my $self = shift;
     my %p = @_;
+
+    $self->postprocess_perl->( \$p{block} ) if $self->postprocess_perl;
 
     my $method = "$p{block_type}_block";
     return $self->$method(%p) if $self->can($method);
 
     push @{ $self->{current_comp}{blocks}{ $p{block_type} } }, $p{block};
+}
+
+sub doc_block
+{
+    # Don't do anything - just discard the comment.
 }
 
 sub perl_block
@@ -246,10 +255,7 @@ sub text_block
 {
     my $self = shift;
     my %p = @_;
-
-    $p{block} =~ s,(['\\]),\\$1,g;
-
-    $self->_add_body_code( "\$_out->( '$p{block}' );\n" ) if $p{block} ne '';
+    $self->text(text => $p{block});
 }
 
 sub end_block
