@@ -11,9 +11,11 @@ use File::Basename;
 use File::Path;
 use File::Spec;
 use HTML::Mason::Parser;
+use HTML::Mason::Tools qw(is_absolute_path make_fh read_file);
 use HTML::Mason::Commands qw();
 use HTML::Mason::Config;
 use HTML::Mason::Resolver::File;
+use Params::Validate qw(:all);
 
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 
@@ -53,7 +55,7 @@ my %fields =
      data_dir => undef,
      data_cache_defaults => undef,
      dhandler_name => 'dhandler',
-     die_handler => sub { confess($_[0]) },
+     die_handler => sub { Carp::confess($_[0]) },
      die_handler_overridden => 0,
      system_log_file => undef,
      system_log_separator => "\cA",
@@ -61,8 +63,11 @@ my %fields =
      out_mode => 'batch',
      parser => undef,
      preloads => [],
-     resolver => undef,     
+     resolver => undef,
      static_file_root => undef,
+     use_autohandlers => 1,
+     use_data_cache => 1,
+     use_dhandlers => 1,
      use_object_files => 1,
      use_reload_file => 0
      );
@@ -82,18 +87,49 @@ sub new
 	system_log_fh => undef,
 	system_log_events_hash => undef
     };
+
+    validate( @_,
+	      { allow_recursive_autohandlers => { type => SCALAR | UNDEF, optional => 1 },
+		autohandler_name => { type => SCALAR | UNDEF, optional => 1 },
+		code_cache_max_size => { type => SCALAR, optional => 1 },
+		current_time => { type => SCALAR, optional => 1 },
+		data_cache_dir => { type => SCALAR, optional => 1 },
+		dhandler_name => { type => SCALAR | UNDEF, optional => 1 },
+		die_handler => { type => CODEREF | SCALAR | UNDEF, optional => 1 },
+		out_method => { type => CODEREF | SCALARREF, optional => 1 },
+		out_mode => { type => SCALAR, optional => 1 },
+		max_recurse => { type => SCALAR, optional => 1 },
+		parser => { isa => 'HTML::Mason::Parser', optional => 1 },
+		preloads => { type => ARRAYREF, optional => 1 },
+		static_file_root => { type => SCALAR, optional => 1 },
+		system_log_events => { type => SCALAR | UNDEF, optional => 1 },
+		system_log_file => { type => SCALAR, optional => 1 },
+		system_log_separator => { type => SCALAR, optional => 1 },
+		use_autohandlers => { type => SCALAR | UNDEF, optional => 1 },
+		use_data_cache => { type => SCALAR | UNDEF, optional => 1 },
+		use_dhandlers => { type => SCALAR | UNDEF, optional => 1 },
+		use_object_files => { type => SCALAR | UNDEF, optional => 1 },
+		use_reload_file => { type => SCALAR | UNDEF, optional => 1 },
+
+		comp_root => { type => SCALAR | ARRAYREF },
+		data_dir => { type => SCALAR },
+	      }
+	    );
+
     my (%options) = @_;
+
+    die "out_mode parameter must be either 'batch' or 'stream'\n"
+	if defined $options{out_mode} && $options{out_mode} ne 'batch' && $options{out_mode} ne 'stream';
+
     while (my ($key,$value) = each(%options)) {
 	next if $key =~ /out_method|system_log_events/;
-	if (exists($fields{$key})) {
-	    $self->{$key} = $value;
-	} else {
-	    die "HTML::Mason::Interp::new: invalid option '$key'\n";
-	}
+	$self->{$key} = $value;
     }
+    $self->{autohandler_name} = undef unless $self->{use_autohandlers};
+    $self->{dhandler_name} = undef unless $self->{use_dhandlers};
     $self->{die_handler_overridden} = 1 if exists $options{die_handler};
 
-    die "HTML::Mason::Interp::new: must specify value for data_dir\n" if !$self->{data_dir};
+    $self->{data_cache_dir} ||= ($self->{data_dir} . "/cache");
     bless $self, $class;
     $self->out_method($options{out_method}) if (exists($options{out_method}));
     $self->system_log_events($options{system_log_events}) if (exists($options{system_log_events}));
@@ -158,7 +194,7 @@ sub _initialize
     #
     if ($self->{system_log_events_hash}) {
 	$self->{system_log_file} = File::Spec->catfile( $self->data_dir, 'etc', 'system.log' ) if !$self->system_log_file;
-	my $fh = do { local *FH; *FH; };  # double *FH avoids warning
+	my $fh = make_fh();
 	open $fh, ">>".$self->system_log_file
 	    or die "Couldn't open system log file ".$self->{system_log_file}." for append";
 	my $oldfh = select $fh;
@@ -216,7 +252,7 @@ sub check_reload_file {
     if ($lastmod > $self->{last_reload_time}) {
 	my $length = (stat(_))[7];
 	$self->{last_reload_file_pos} = 0 if ($length < $self->{last_reload_file_pos});
-	my $fh = do { local *FH; *FH; };  # double *FH avoids warning
+	my $fh = make_fh();
 	open $fh, $reload_file or return;
 
 	my $block;
@@ -232,6 +268,7 @@ sub check_reload_file {
 		delete($self->{code_cache}->{$comp_path});
 	    }
 	}
+	close $fh;
     }
 }
 
@@ -282,7 +319,7 @@ sub load {
 	
 	$self->write_system_log('COMP_LOAD', $fq_path);	# log the load event
 	my $comp = $self->{parser}->eval_object_text(object_file=>$objfile, error=>\$err)
-	    or die "Error while loading '$objfile' at runtime:\n$err\n";
+	    or $self->_compilation_error($objfile, $err);
 	$comp->assign_runtime_properties($self,$fq_path);
 	
 	$code_cache->{$fq_path}->{comp} = $comp;
@@ -315,7 +352,6 @@ sub load {
 	return $code_cache->{$fq_path}->{comp};
     } else {
 	$objfilemod = (defined($objfile) and $objisfile) ? $objstat[9] : 0;
-	
 	#
 	# Load the component from source or object file.
 	#
@@ -333,7 +369,7 @@ sub load {
 		my @newfiles;
 		my @params = $resolver->get_source_params(@lookup_info);
 		my $objText = $parser->parse_component(@params,error=>\$err)
-		    or die sprintf("Error during compilation of %s:\n%s\n",$resolver->get_source_description(@lookup_info),$err);
+		    or $self->_compilation_error( $resolver->get_source_description(@lookup_info),$err );
 		$parser->write_object_file(object_text=>$objText, object_file=>$objfile);
 	    }
 	    $comp = $parser->eval_object_text(object_file=>$objfile, error=>\$err);
@@ -344,7 +380,7 @@ sub load {
 		    $objfilemod = 0;
 		    goto update_object;
 		} else {
-		    die "Error while loading '$objfile' at runtime:\n$err\n";
+		    $self->_compilation_error( $resolver->get_source_description(@lookup_info),$err );
 		}
 	    }
 	} else {
@@ -353,7 +389,7 @@ sub load {
 	    #
 	    my @params = $resolver->get_source_params(@lookup_info);
 	    $comp = $self->parser->make_component(@params,error=>\$err)
-		or die sprintf("Error during compilation of %s:\n%s\n",$resolver->get_source_description(@lookup_info),$err);
+		or $self->_compilation_error( $resolver->get_source_description(@lookup_info),$err );
 	}
 	$comp->assign_runtime_properties($self,$fq_path);
 
@@ -370,6 +406,13 @@ sub load {
 	}
 	return $comp;
     }
+}
+
+sub _compilation_error {
+    my ($self, $filename, $err) = @_;
+
+    my $msg = sprintf("Error during compilation of %s:\n%s\n",$filename, $err);
+    die $msg;
 }
 
 #
@@ -437,7 +480,7 @@ sub set_global
     die "Interp::set_global: expects a variable name and one or more values" if !@values;
     my ($prefix, $name) = ($decl =~ /^[\$@%]/) ? (substr($decl,0,1),substr($decl,1)) : ("\$",$decl);
 
-    my $varname = sprintf("%s::%s",$self->{parser}->{in_package},$name);
+    my $varname = sprintf("%s::%s",$self->{parser}->in_package,$name);
     if ($prefix eq "\$") {
 	no strict 'refs'; $$varname = $values[0];
     } elsif ($prefix eq "\@") {
