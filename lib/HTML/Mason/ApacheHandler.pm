@@ -206,7 +206,7 @@ sub _initialize {
 		my @strings = ();
 
 		push (@strings,
-		      qq(<FONT size="+2"><B>$self->apache_status_title</B></FONT><BR><BR>),
+		      qq(<FONT size="+2"><B>) . $self->apache_status_title . qq(</B></FONT><BR><BR>),
 		      $self->interp_status);
 
 		return \@strings;     # return an array ref
