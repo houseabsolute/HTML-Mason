@@ -4,6 +4,10 @@
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
+#
+# ** Proposed virtual subclass for handler classes (e.g. ApacheHandler). Not in use yet.
+# 
+
 package HTML::Mason::Handler;
 
 use strict;
