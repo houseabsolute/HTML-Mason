@@ -212,7 +212,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'list_out',
-		      description => 'tests that $m->out can handle a list of arguments',
+		      description => 'tests that $m->print can handle a list of arguments',
 		      component => <<'EOF',
 Sending list of arguments:
 
@@ -235,7 +235,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'req_obj',
-		      description => 'tests various operations such as $m->out, comp calls, $m->current_comp',
+		      description => 'tests various operations such as comp calls, $m->current_comp',
 		      component => <<'EOF',
 <%def .subcomp>
 % if ($count < 5) {
