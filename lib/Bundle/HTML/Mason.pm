@@ -20,7 +20,7 @@ C<perl -MCPAN -e 'install Bundle::HTML::Mason'>
 
 File::Spec  0.8
 
-Params::Validate  0.13
+Params::Validate  0.15
 
 Apache::Request  0.31
 
