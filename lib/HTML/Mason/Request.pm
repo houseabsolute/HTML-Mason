@@ -598,8 +598,7 @@ sub current_sink { return $_[0]->top_stack->{sink} }
 sub process_comp_path
 {
     my ($self,$compPath) = @_;
-    confess("!") if !defined($compPath);
-    if ($compPath !~ /\S/) {
+    if (!defined($compPath) or $compPath !~ /\S/) {
 	return $self->current_comp->path;
     }
     if ($compPath !~ m@^/@) {
