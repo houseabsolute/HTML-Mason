@@ -360,6 +360,7 @@ sub create_context_html {
     } else {
 	# Put the file into a list, indexed at 1.
 	my @file = map(html_escape($_),<$fh>);
+	for (@file) { s/ /&nbsp;/g }
 	chomp(@file);
 	unshift(@file,undef);
 	
