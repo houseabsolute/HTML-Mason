@@ -480,6 +480,22 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'printf',
+		      description => 'Test printf function from a component',
+		      component => <<'EOF',
+This is first.
+% printf '%s', "This is second.\n";
+This is third.
+EOF
+		      expect => <<'EOF',
+This is first.
+This is second.
+This is third.
+EOF
+		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'instance',
 		      description => 'Test HTML::Mason::Request->instance',
 		      component => <<'EOF',

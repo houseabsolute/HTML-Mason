@@ -902,7 +902,9 @@ sub PRINTF
 {
     my $self = shift;
 
-    $self->print(sprintf(@_));
+    # apparently sprintf(@_) won't work, it needs to be a scalar
+    # followed by a list
+    $self->PRINT(sprintf(shift, @_));
 }
 
 1;
