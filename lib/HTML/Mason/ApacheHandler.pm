@@ -856,8 +856,10 @@ sub prepare_request
 					 apache_req => $r,
 				       );
 
-    # get this from current object.
-    my $real_apache_print = $r->can('print');
+    # Get print() from original $r.
+    my $final_output_method = ($r->method eq 'HEAD' ?
+			       sub {} :
+			       $r->can('print'));
 
     # Craft the request's out method to handle http headers, content
     # length, and HEAD requests.
@@ -881,10 +883,8 @@ sub prepare_request
 
 	
 	# Call $r->print (using the real Apache method, not our
-	# overriden method). If request was HEAD, suppress output.
-	unless ($r->method eq 'HEAD') {
-	    $r->$real_apache_print(grep {defined} @_);
-	}
+	# overriden method).
+	$r->$final_output_method(grep {defined} @_);
     };
 
     $request->out_method($out_method);
