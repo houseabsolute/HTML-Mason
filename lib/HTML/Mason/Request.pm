@@ -106,7 +106,7 @@ sub new
 # in the future this method may do something completely different but
 # for now this works just fine.
 sub instance {
-    return $HTML::Mason::Commands::m;
+#    return $HTML::Mason::Commands::m;
 }
 
 sub _initialize {
@@ -129,29 +129,35 @@ sub _initialize {
     if (!ref($top_comp) && substr($top_comp, 0, 1) eq '/') {
 	$top_comp =~ s{/+}{/}g;
 	$self->{top_path} = $path = $top_comp;
-	
-	declined:
-	$top_comp = $self->interp->load($path);
 
-	# If path was not found, check for dhandler.
-	unless ($top_comp) {
-	    if ( $top_comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
-		my $parent_path = $top_comp->dir_path;
-		($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
-	    }
-	}
+        # until it is a component _object_
+	do
+	{
+	    $top_comp = $self->interp->load($path);
 
-	# If the component was declined previously in this request,
-	# look for the next dhandler up the tree.
-	if ($top_comp and $self->{declined_comps}->{$top_comp->comp_id}) {
-	    $path = $top_comp->dir_path;
-	    unless ($path eq '/' and $top_comp->name eq $interp->dhandler_name) {
-		if ($top_comp->name eq $interp->dhandler_name) {
-		    $path =~ s{/[^\/]+$}{};
+	    # If path was not found, check for dhandler.
+	    unless ($top_comp) {
+		if ( $top_comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
+		    my $parent_path = $top_comp->dir_path;
+		    ($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
 		}
-		goto declined;
 	    }
-	}
+
+	    last unless $top_comp;
+
+	    # If the component was declined previously in this request,
+	    # look for the next dhandler up the tree.
+	    if ($top_comp and $self->{declined_comps}->{$top_comp->comp_id}) {
+		$path = $top_comp->dir_path;
+		unless ($path eq '/' and $top_comp->name eq $interp->dhandler_name) {
+		    if ($top_comp->name eq $interp->dhandler_name) {
+			$path =~ s{/[^\/]+$}{};
+		    }
+		    undef $top_comp;
+		}
+	    }
+	} until (ref $top_comp);
+
 	$self->{top_comp} = $top_comp;
     } elsif ( ! UNIVERSAL::isa( $top_comp, 'HTML::Mason::Component' ) ) {
 	param_error "comp ($top_comp) must be an absolute component path or a component object";
@@ -173,7 +179,7 @@ sub exec {
 	# Create initial buffer.
 	my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
 	$self->push_buffer_stack($buffer);
-	
+
 	# Build wrapper chain and index.
 	my $top_comp = $self->top_comp;
 	unless ($top_comp) {
@@ -183,22 +189,22 @@ sub exec {
 	my $first_comp;
 	{
 	    my @wrapper_chain = ($top_comp);
-	    
+
 	    for (my $parent = $top_comp->parent; $parent; $parent = $parent->parent) {
 		unshift(@wrapper_chain,$parent);
 		error "inheritance chain length > " . $interp->max_recurse . " (infinite inheritance loop?)"
 		    if (@wrapper_chain > $interp->max_recurse);
 	    }
-	    
+
 	    $first_comp = $wrapper_chain[0];
 	    $self->{wrapper_chain} = [@wrapper_chain];
 	    $self->{wrapper_index} = {map((($wrapper_chain[$_]->path || '') => $_),(0..$#wrapper_chain))};
 	}
-	
+
 	{
 	    local *SELECTED;
 	    tie *SELECTED, 'Tie::Handle::Mason', $self;
-	    
+
 	    my $old = select SELECTED;
 	    if (wantarray) {
 		@result = eval {$self->comp({base_comp=>$top_comp}, $first_comp, @top_args)};
@@ -272,7 +278,7 @@ sub make_subrequest
     $subreq->{request_depth}  = $self->request_depth+1;
     error "subrequest depth > " . $interp->max_recurse . " (infinite subrequest loop?)"
 	if $subreq->request_depth > $interp->max_recurse;
-    
+
     return $subreq;
 }
 
@@ -342,7 +348,7 @@ sub cache_self {
 
 	my $comp = $self->top_stack->{comp};
 	my @args = @{ $self->top_stack->{args} };
-	
+
 	#
 	# Go back and find the context that the component was first
 	# called in (back up there in the comp method).
