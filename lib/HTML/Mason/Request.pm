@@ -1347,6 +1347,10 @@ sub base_comp {
     return $self->{top_stack}->[STACK_BASE_COMP];
 }
 
+#
+# Determine the base_comp for a stack frame. See the user
+# documentation for base_comp for a description of these rules.
+#
 sub compute_base_comp_for_frame_ {
     my ($self, $frame_num) = @_;
     my $frame = $self->{stack}->[$frame_num];
@@ -1636,11 +1640,35 @@ to a temporary variable.
 =for html <a name="item_base_comp"></a>
 
 Returns the current base component for method and attributes.
-Initially, the base component is the same as the requested component
-(returned by C<< $m->request_comp >>.  However, whenever a component
-call is made, the base component changes to the called component,
-unless the component call was made uses a component object for its
-first argument, or the call starts with SELF:, PARENT:, or REQUEST.
+This is the component referred to by SELF:.
+
+Here are the rules that determine base_comp as you move from
+component to component.
+
+=over
+
+=item * At the beginning of a request, the base component is
+initialized to the requested component (C<< $m->request_comp >>.
+
+=item * When a component call is made to a regular component via a
+path, the base component changes to the called component.
+
+=item * When a component call is made to a component method via a path
+(/foo/bar:baz), the base component changes to the method's owner.
+
+=item * The base component does not change when:
+
+=over
+
+=item * a component call is made to a component object
+
+=item * a component call is made to SELF:x or PARENT:x or REQUEST:x
+
+=item * a component call is made to a subcomponent (<%def>)
+
+=back
+
+=back
 
 =item cache (cache_class=>'...', [cache_options])
 

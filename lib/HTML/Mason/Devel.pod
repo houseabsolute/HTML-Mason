@@ -1943,6 +1943,10 @@ for example:
 
 =item *
 
+A subcomponent (defined with C<< <%def> >>) is called.
+
+=item *
+
 A method is called via the use of C<SELF:>, C<PARENT:>, or
 C<REQUEST:>.  These are covered in more detail below.
 

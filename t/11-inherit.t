@@ -328,7 +328,17 @@ a => 'base autohandler'
 This is X in base autohandler
 attribute A is <% $m->base_comp->attr('a') %>
 <& SELF:x &>
+<& .util &>
 </%method>
+<%method y>
+This is method Y in base autohandler
+base_comp is <% $m->base_comp->name %>
+</%method>
+<%def .util>
+This is subcomponent .util
+base_comp is <% $m->base_comp->name %>
+<& SELF:y &>
+</%def>
 % $m->call_next;
 EOF
 		       );
@@ -418,6 +428,13 @@ This is X in base autohandler
 attribute A is base
 
 This is method X in BASE
+
+
+This is subcomponent .util
+base_comp is base
+
+This is method Y in base autohandler
+base_comp is base
 EOF
 		       );
 

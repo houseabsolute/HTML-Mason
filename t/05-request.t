@@ -638,6 +638,61 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/support/longjump_test3',
+			 component => <<'EOF',
+Depth is <% $m->depth %>.
+The full component stack is <% join(",",map($_->title,$m->callers)) %>.
+EOF
+                       );
+
+    $group->add_support( path => '/support/subdir/longjump_test2',
+			 component => <<'EOF',
+This is longjump_test2
+% next;
+EOF
+                       );
+
+    $group->add_support( path => '/support/longjump_test1',
+			 component => <<'EOF',
+<& longjump_test3 &>
+% foreach my $i (0..2) {
+<& subdir/longjump_test2 &>
+% }
+<& longjump_test3 &>
+EOF
+                       );
+
+
+
+
+#------------------------------------------------------------
+
+    # It is possible to accidentally call 'next' from a component and
+    # jump out to the last loop or block in a previous component.
+    # While this cannot be supported behavior (since necessary cleanup
+    # and plugin code is skipped), we'd like to avoid a Mason request
+    # stack corruption at a minimum.
+    #
+    $group->add_test( name => 'longjump',
+		      description => 'Accidentally calling next to exit a component does not corrupt stack',
+		      component => <<'EOF',
+<& support/longjump_test1 &>
+EOF
+		      expect => <<'EOF',
+Depth is 3.
+The full component stack is /request/support/longjump_test3,/request/support/longjump_test1,/request/longjump.
+
+This is longjump_test2
+
+This is longjump_test2
+
+This is longjump_test2
+
+Depth is 3.
+The full component stack is /request/support/longjump_test3,/request/support/longjump_test1,/request/longjump.
+EOF
+		    );
+
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/callers_out_of_bounds2',
