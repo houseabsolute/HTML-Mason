@@ -1527,10 +1527,10 @@ number of arbitrarily named templates.
 =head2 Accessing methods and attributes
 
 A template can access methods and/or attributes of the requested
-page. First, use C<< $m->base_comp >> to get a handle on the
+page. First, use C<< $m->request_comp >> to get a handle on the
 appropriate component:
 
-    my $self = $m->base_comp;
+    my $self = $m->request_comp;
 
 $self now refers to the component corresponding to the requested page
 (the component at the end of the chain).
@@ -1539,26 +1539,54 @@ To access a method for the page, use C<call_method>:
 
     $self->call_method('header');
 
-or alternatively a path of the form 'SELF:method':
+This looks for a method named 'header' in the page component.  If no
+such method exists, the chain of parents is searched upwards, until
+ultimately a "method not found" error occurs. Use 'method_exists' to
+avoid this error for questionable method calls:
+
+    if ($self->method_exists('header')) { ...
+
+The component returned by the C<< $m->request_comp >> method never
+changes during request execution.  In contrast, the component returned
+by C<< $m->base_comp >> may change several times during request
+execution.
+
+When execution starts, the base component is the same as the requested
+component.  Whenever a component call is executed, the base component
+may become the component that was called.  The base component will
+change for all component calls B<except> in the following cases:
+
+=over
+
+=item
+
+A component is called via its component object rather than its path,
+for example:
+
+  <& $m->fetch_comp('/some/comp'), foo => 1 &>
+
+=item
+
+A method is called via the use of C<SELF:> or C<PARENT:>.  These are
+covered in more detail below.
+
+=back
+
+In all other cases, the base component is the called component or the
+called component's owner component if that called component is a
+method.
+
+As hinted at above, Mason provides a shortcut syntax for method calls.
+
+If a component call path starts with C<SELF:>, then Mason will start
+looking for the method (the portion of the call after C<SELF:>), in
+the base component.
 
     <& SELF:header &>
     $m->comp('SELF:header')
 
-In the context of a component path, SELF is shorthand for
-C<< $m->base_comp >>.
-
-Each of the above looks for a method named 'header' in the page
-component.  If no such method exists, the chain of parents is searched
-upwards, until ultimately a "method not found" error occurs. Use
-'method_exists' to avoid this error for questionable method calls:
-
-    if ($self->method_exists('header')) { ...
-
-To defer to the method of your parent, use C<parent>:
-
-    $m->current_comp->parent->call_method('header')
-
-or alternatively a path of the form 'PARENT:method':
+If the call path starts with C<PARENT:>, then Mason will start looking
+in the current component's parent for the named method.
 
     <& PARENT:header &>
     $m->comp('PARENT:header')
