@@ -376,7 +376,9 @@ sub dhandler_arg { shift->{dhandler_arg} }
 sub fetch_comp
 {
     my ($self,$path) = @_;
-    if (defined($path) and $path !~ /\//) {
+    die "fetch_comp: requires path as first argument" unless defined($path);
+
+    if ($path !~ /\//) {
 	# Check my subcomponents.
 	if (my $comp = $self->current_comp->subcomps->{$path}) {	
 	    return $comp;
@@ -476,6 +478,7 @@ sub comp1 {
     my ($self, $comp, @args) = @_;
     my $interp = $self->{interp};
     my $depth = $REQ_DEPTH;
+    die "comp: requires path or component as first argument" unless defined($comp);
 
     #
     # $comp can be an absolute path or component object.  If a path,
@@ -495,8 +498,9 @@ sub comp1 {
     $interp->set_global('m'=>$self) if ($interp->parser->{in_package} ne 'HTML::Mason::Commands');
 
     #
-    # Determine sink (where output is going). Look for STORE and scalar
-    # reference passed as last two arguments.
+    # Determine sink (where output is going).
+    # Look for STORE and scalar reference passed as last two arguments. This is deprecated
+    # and will go away eventually.
     #
     my $sink;
     if (@args >= 2 and $args[-2] eq 'STORE' and ref($args[-1]) eq 'SCALAR' and @args % 2 == 0) {
@@ -552,6 +556,32 @@ sub comp1 {
     #
     pop(@$stack);
     return wantarray ? @result : $result;
+}
+
+#
+# Like comp, but return component output.
+#
+sub scomp {
+    my $self = shift;
+    my $store = '';
+
+    # Set a new top-level sink.
+    my $save_sink = $self->current_sink;
+    $self->top_stack->{sink} = sub { $store .= $_[0] if defined($_[0]) };
+
+    # Call comp wrapped in an eval so we can pop off sink no matter what happens
+    my $retval = eval { $self->comp(@_) };
+    my $err = $@;
+    $self->top_stack->{sink} = $save_sink;
+    die $err if $err;
+
+    # In scalar context, just return component output. In list context, return both output
+    # and return value.
+    if (wantarray) {
+	return ($store,$retval);
+    } else {
+	return $store;
+    }
 }
 
 #
@@ -639,7 +669,7 @@ sub current_sink { return $_[0]->top_stack->{sink} }
 sub process_comp_path
 {
     my ($self,$compPath) = @_;
-    if (!defined($compPath) or $compPath !~ /\S/) {
+    if ($compPath !~ /\S/) {
 	return $self->current_comp->path;
     }
     if ($compPath !~ m@^/@) {

@@ -155,7 +155,7 @@ component object at that index in the list. e.g.
     $m->callers(-1)     # top-level component
 
 =for html <a name="comp">
-=item comp
+=item comp (comp, option=>value, ...)
 
 Calls the component designated by I<comp> with the specified
 option/value pairs. I<comp> may be a component path or a component
@@ -170,9 +170,9 @@ then returned from the $m->comp call.
 
 The <& &> tag provides a convenient shortcut for $m->comp.
 
-=item $m->comp_exists (comp_path)
+=item comp_exists (comp_path)
 
-Returns 1 if I<comp_path> is a valid component path, 0 otherwise. 
+Returns 1 if I<comp_path> is the path of an existing component, 0 otherwise. 
 
 =item count
 
@@ -254,6 +254,14 @@ Returns the Parser object associated with this request.
 
 Given an absolute or relative component path, returns the
 corresponding absolute component path.
+
+=item scomp
+
+Like C<$m->comp>, but returns the component output as a string
+instead of printing it. (Think sprintf versus printf.) In scalar
+context the component's return value is discarded. In array context
+the component output and return value are both returned in a
+two-item list.
 
 =item time
 

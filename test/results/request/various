@@ -13,6 +13,8 @@ Trying to fetch /shared (full path /shared):
 /shared does not exist.
 
 Output via the out function.
+/request/file outputs 76 characters.
+
 No time difference.
 
 
