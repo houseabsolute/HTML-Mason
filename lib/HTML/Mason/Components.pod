@@ -10,6 +10,6 @@ The HTML::Mason::Component class reference is in L<HTML::Mason::Component>.
 
 =head1 AUTHOR
 
-Jonathan Swartz, swartz@transbay.net
+Jonathan Swartz, swartz@pobox.com
 
 =cut
