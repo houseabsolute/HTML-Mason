@@ -12,6 +12,9 @@ package HTML::Mason::Request::ApacheHandler;
 
 use HTML::Mason::Request;
 use HTML::Mason::Container;
+use Params::Validate qw(BOOLEAN);
+Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
+
 use base qw(HTML::Mason::Request);
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
@@ -29,11 +32,14 @@ BEGIN
 			  descr => "An Apache request object" },
 	  cgi_object => { isa => 'CGI',    default => undef,
 			  descr => "A CGI.pm request object" },
+	  auto_send_headers => { parse => 'boolean', type => BOOLEAN, default => 1,
+				 descr => "Whether HTTP headers should be auto-generated" },
 	);
 }
 
 use HTML::Mason::MethodMaker
-    ( read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
+    ( read_only  => 'auto_send_headers',
+      read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
 		      qw( ah apache_req ) ] );
 
 sub new
@@ -108,7 +114,7 @@ sub exec
     # headers, this will typically only apply after $m->abort.
     # On an error code, leave it to Apache to send the headers.
     if (!$self->is_subrequest
-	and $self->ah->auto_send_headers
+	and $self->auto_send_headers
 	and !HTML::Mason::ApacheHandler::http_header_sent($r)
 	and (!$retval or $retval==200)) {
 	$r->send_http_header();
@@ -212,8 +218,6 @@ BEGIN
 				      sub { $_[0] =~ /^(?:CGI|mod_perl)$/ } },
 				    descr => "Whether to use CGI.pm or Apache::Request for parsing the incoming HTTP request",
 				  },
-	 auto_send_headers     => { parse => 'boolean', type => SCALAR|UNDEF, default => 1,
-				    descr => "Whether HTTP headers should be auto-generated" },
 	 decline_dirs          => { parse => 'boolean', type => SCALAR|UNDEF, default => 1,
 				    descr => "Whether Mason should decline to handle requests for directories" },
 	 multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1,
@@ -233,7 +237,6 @@ use HTML::Mason::MethodMaker
     ( read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
 		      qw( apache_status_title
                           args_method
-			  auto_send_headers
 			  decline_dirs
 			  interp ) ]
     );
@@ -722,7 +725,16 @@ sub prepare_request
     # Craft the request's out method to handle http headers, content
     # length, and HEAD requests.
 
-    my $must_send_headers = $self->auto_send_headers;
+    # If someone is using a custom request class that doesn't accept
+    # 'ah' and 'apache_req' that's their problem.
+    #
+    my $request = $interp->make_request( comp => $comp_path,
+					 args => [%args],
+					 ah => $self,
+					 apache_req => $r,
+				       );
+
+    my $must_send_headers = $request->auto_send_headers;
     my $out_method = sub {
 
 	# Send headers if they have not been sent by us or by user.
@@ -740,17 +752,10 @@ sub prepare_request
 	}
     };
 
-    # If someone is using a custom request class that doesn't accept
-    # 'ah' and 'apache_req' that's their problem.
-    #
-    my $request = $interp->make_request( comp => $comp_path,
-					 args => [%args],
-					 ah => $self,
-					 apache_req => $r,
-					 out_method => $out_method
-					 );
+    $request->out_method($out_method);
+
     $request->cgi_object($cgi_object) if $cgi_object;
-    
+
     return $request;
 }
 
@@ -877,16 +882,6 @@ While Mason will load Apache::Request or CGI as needed at runtime, it
 is recommended that you preload the relevant module either in your
 httpd.conf or handler.pl file, as this will save some memory.
 
-=item auto_send_headers
-
-True or undef; default true.  Indicates whether Mason should
-automatically send HTTP headers before sending content back to the
-client. If you set to false, you should call $r->send_http_header
-manually.
-
-See the L<Devel/sending_http_headers> of the Component Developer's
-Guide for details about the automatic header feature.
-
 =item decline_dirs
 
 Indicates whether Mason should decline directory requests, leaving
@@ -909,8 +904,8 @@ same name: no arguments retrieves the value, and one argument sets it.
 For example:
 
     my $ah = new HTML::Mason::ApacheHandler;
-    my $auto_send_headers = $ah->auto_send_headers;
-    $ah->auto_send_headers(0);
+    my $decline_dirs = $ah->decline_dirs;
+    $ah->decline_dirs(1);
 
 =head1 SEE ALSO
 

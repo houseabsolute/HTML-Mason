@@ -1402,6 +1402,18 @@ Returns the ApacheHandler object associated with this request.
 Returns the Apache request object.  This is also available in the
 global $r.
 
+=for html <a name="item_auto_send_headers">
+
+=item auto_send_headers
+
+True or undef; default true.  Indicates whether Mason should
+automatically send HTTP headers before sending content back to the
+client. If you set to false, you should call $r->send_http_header
+manually.
+
+See the L<Devel/sending_http_headers> of the Component Developer's
+Guide for details about the automatic header feature.
+
 =for html <a name="item_cgi_object">
 
 =item cgi_object

@@ -1376,7 +1376,8 @@ this code will only work as long as F</shared/get_user_cookie> doesn't
 output anything (given its functional nature, it shouldn't).
 
 The administrator can turn off automatic header sending via the
-L<ApacheHandler/auto_send_headers> ApacheHandler parameter.
+L<Request/auto_send_headers> Request parameter available when running
+Mason with the ApacheHandler module.
 
 =head1 USING THE PERL DEBUGGER
 

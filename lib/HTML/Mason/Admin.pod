@@ -272,10 +272,6 @@ Correponds to the C<apache_status_title> parameter.
 
 Correponds to the C<args_method> parameter.
 
-=item * MasonAutoSendHeaders - boolean
-
-Correponds to the C<auto_send_headers> parameter.
-
 =back
 
 =head2 Request Parameters
@@ -285,6 +281,10 @@ Correponds to the C<auto_send_headers> parameter.
 =item * MasonAutoflush - boolean
 
 Correponds to the C<autoflush> parameter.
+
+=item * MasonAutoSendHeaders - boolean
+
+Correponds to the C<auto_send_headers> parameter.
 
 =item * MasonDataCacheDefaults - list
 
