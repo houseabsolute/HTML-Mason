@@ -304,7 +304,7 @@ sub key_val_block
                      /gcx )
     {
 	$self->{pos} = pos($comp);
-	if ($1 && $2)
+	if (length($1) and length($2))
 	{
 	    $self->{compiler}->key_value_pair( block_type => $p{block_type},
 					       key => $1,
