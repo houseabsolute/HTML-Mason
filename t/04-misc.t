@@ -115,6 +115,16 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/dhandler_test/bar/dhandler',
+			 component => <<'EOF',
+dhandler = <% $m->current_comp->title %>
+dhandler arg = <% $m->dhandler_arg %>
+EOF
+		       );
+
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'dhandler1',
 		      description => 'tests dhandler against nonexistent comp',
 		      call_path => '/dhandler_test/foo/bar',
@@ -190,6 +200,19 @@ EOF
 		      expect => <<'EOF',
 dhandler = /misc/dhandler_test/dhandler
 dhandler arg = subdir/slashes
+
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'dhandler6',
+		      description => 'test that a dhandler more than one directory up is found',
+		      call_path => '/dhandler_test/bar/baz/quux/not_here',
+		      skip_component => 1,
+		      expect => <<'EOF',
+dhandler = /misc/dhandler_test/bar/dhandler
+dhandler arg = baz/quux/not_here
 
 EOF
 		    );
