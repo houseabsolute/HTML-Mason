@@ -152,18 +152,13 @@ sub _handle_error
 sub redirect
 {
     my ($self, $url) = @_;
-
+    my $r = $self->apache_req;
+    
     $self->clear_buffer;
-
-    $self->apache_req->method('GET');
-    $self->apache_req->headers_in->unset('Content-length');
-
-    $self->apache_req->err_header_out( Location => $url );
-    $self->apache_req->status(REDIRECT);
-
-    $self->apache_req->send_http_header;
-
-    $self->abort;
+    $r->method('GET');
+    $r->headers_in->unset('Content-length');
+    $r->err_header_out( Location => $url );
+    $self->abort(REDIRECT);
 }
 
 #----------------------------------------------------------------------
