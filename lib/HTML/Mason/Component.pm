@@ -319,7 +319,9 @@ sub parent {
 
     my $comp;
     if ($self->inherit_path) {
-	$comp = $interp->load($self->inherit_path);
+	$comp = $interp->load($self->inherit_path)
+	    or error(sprintf("cannot find inherit path '%s' for component '%s'",
+			     $self->inherit_path, $self->title));
     } elsif ($self->inherit_start_path) {
 	$comp = $interp->find_comp_upwards($self->inherit_start_path, $interp->autohandler_name);
     }
