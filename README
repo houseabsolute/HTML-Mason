@@ -83,14 +83,16 @@ actually stop and start the server.
 
 GETTING HELP
 
-The official Mason web site is at http://www.masonhq.com/.  There
-you'll find Mason documentation, news, etc.
+The official Mason web site is at http://www.masonhq.com/. It's a
+wiki, so most pages can be edited by any registered user.
 
-The FAQ can be found at http://www.masonhq.com/docs/faq/.
+The official documentation is at http://www.masonhq.com/docs/manual/.
+
+The FAQ is at http://www.masonhq.com/?FAQ.
 
 Several mailing lists exist for Mason users and developers. Full
 information can be found at
-http://www.masonhq.com/resources/mailing_lists.html.
+http://www.masonhq.com/?MailingLists.
 
 There is a book about Mason, _Embedding Perl in HTML with Mason_, by
 Dave Rolsky and Ken Williams.  This book is published by O'Reilly and
@@ -100,11 +102,11 @@ CODE EXAMPLES
 
 The samples/ directory contains a few basic components.
 
-The Mason community collaboration system (http://www.masonhq.com/)
-contains, among other things, an archive of contributed code.
+The Mason site contains a variety of user-contributed code and
+how-tos; see http://www.masonhq.com/?ContributedCode, for example.
 
 Links to various articles containing code examples are listed at
-http://www.masonhq.com/docs/articles.html.
+http://www.masonhq.com/?Articles.
 
 REPORTING BUGS
 
