@@ -286,14 +286,13 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'subrequest',
-		      description => 'tests a provisional subrequest mechanism (Jon will explain)',
+		      description => 'tests the official subrequest mechanism',
 		      component => <<'EOF',
 <%def .helper>
-% my $interp = $m->interp;
 Executing subrequest
 % # This is still unsupported but will likely be official later
 % my $buf;
-% my $req = new HTML::Mason::Request (interp=>$interp, out_method=>\$buf);
+% my $req = $m->interp->make_request(out_method => \$buf);
 % $req->exec('/request/support/display_req_obj');
 <% $buf %>
 </%def>
@@ -328,11 +327,10 @@ EOF
     unless ($] == 5.006)
     {
 	$group->add_test( name => 'subrequest_error',
-			  description => 'check error handling for provision subrequest mechanism',
+			  description => 'check error handling for subrequest mechanism',
 			  component => <<'EOF',
 <%def .helper>
-% my $interp = $m->interp;
-% $interp->exec('/request/support/subrequest_error_test');
+% $m->interp->make_request->exec('/request/support/subrequest_error_test');
 </%def>
 
 Calling helper
