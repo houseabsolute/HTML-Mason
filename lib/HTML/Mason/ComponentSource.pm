@@ -11,8 +11,9 @@ use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
-use Class::Container;
-use base qw(Class::Container);
+=pod
+
+=begin for reference later
 
 BEGIN
 {
@@ -30,6 +31,10 @@ BEGIN
     );
 }
 
+=end
+
+=cut
+
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( comp_id
                          friendly_name
@@ -39,6 +44,15 @@ use HTML::Mason::MethodMaker
                          extra
                         ) ],
       );
+
+my %defaults = ( comp_class => 'HTML::Mason::component' );
+
+sub new
+{
+    my $class = shift;
+
+    return bless { %defaults, @_ }, $class
+}
 
 sub comp_source
 {
