@@ -93,6 +93,7 @@ sub object_id
               $self->{$k} );
     }
 
+    local $^W; # ignore undef warnings
     # unpack('%32C*', $x) computes the 32-bit checksum of $x
     return join '!', $self->lexer->object_id, unpack('%32C*', join "\0", @vals);
 }
