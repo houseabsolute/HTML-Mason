@@ -845,6 +845,36 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'use_source_line_numbers_1',
+			  description => 'test presence of line directives when use_source_line_numbers is 1 (default)',
+			  component => <<'EOF',
+This is line <% __LINE__ %>.
+<%doc>
+
+</%doc>
+This is line <% __LINE__ %>.
+EOF
+                          expect => <<'EOF',
+This is line 1.
+This is line 5.
+EOF
+                        );
+
+#------------------------------------------------------------
+
+	$group->add_test( name => 'use_source_line_numbers_0',
+			  description => 'test absence of line directives when use_source_line_numbers is 1',
+		          interp_params => { use_source_line_numbers => 0 },
+			  component => <<'EOF',
+This line number is <% __LINE__ < 3 ? 'less than 3' : 'not less than 3' %>.
+EOF
+                          expect => <<'EOF',
+This line number is not less than 3.
+EOF
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 

@@ -44,6 +44,10 @@ BEGIN
 	 postprocess_text =>
          { parse => 'code', type => CODEREF, optional => 1,
            descr => "A subroutine through which all plain text will be sent during compilation" },
+
+	 use_source_line_numbers =>
+	 { parse => 'boolean', type => SCALAR, default => 1,
+	   descr => "Whether to use source line numbers in errors and debugger" },
 	);
 
     __PACKAGE__->contained_objects
@@ -58,6 +62,7 @@ use HTML::Mason::MethodMaker
                           preprocess
                           postprocess_perl
                           postprocess_text
+			  use_source_line_numbers
                         )
 		    ],
     );
@@ -280,7 +285,7 @@ sub raw_block
     {
 	my $line = $self->lexer->line_number;
 	my $file = $self->lexer->name;
-	$comment = "#line $line $file\n";
+	$comment = "#line $line $file\n" if $self->use_source_line_numbers;
     }
 
     push @{ $self->{current_comp}{blocks}{ $p{block_type} } }, "$comment$p{block}";
@@ -554,7 +559,7 @@ sub _add_body_code
     {
 	my $line = $self->lexer->line_number;
 	my $file = $self->lexer->name;
-	$self->{current_comp}{body} .= "#line $line $file\n";
+	$self->{current_comp}{body} .= "#line $line $file\n" if $self->use_source_line_numbers;
     }
 
     $self->{current_comp}{body} .= $_ foreach @_;
@@ -701,6 +706,15 @@ subroutine form.  The sub is called with a single parameter, a scalar
 reference to the Perl portion of the component.  The sub is expected
 to process the string in-place. See also
 P<preprocess> and P<postprocess_text>.
+
+=item use_source_line_numbers
+
+True or false, default is true. Indicates whether component line
+numbers that appear in error messages, stack traces, etc. are in terms
+of the source file instead of the object file. Mason does this by
+inserting '#line' directives into compiled components.  While source
+line numbers are more immediately helpful, object file line numbers
+may be more appropriate for in-depth debugging sessions.
 
 =back
 

@@ -411,7 +411,7 @@ sub _arg_declarations
 	}
 
 	push @assign, "#line $_->{line} $_->{file}\n"
-	    if defined $_->{line} && defined $_->{file};
+	    if defined $_->{line} && defined $_->{file} && $self->use_source_line_numbers;
 	if ( defined $_->{default} )
 	{
 	    my $default_val = $_->{default};

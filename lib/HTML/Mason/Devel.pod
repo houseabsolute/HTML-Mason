@@ -1724,6 +1724,12 @@ which reduces the previous examples to just:
     mb
     mb $_[1] =~ /component name/
 
+Mason normally inserts '#line' directives into compiled components so
+that line numbers are reported relative to the source file. Depending
+on your task, this can be a help or a hindrance when using the
+debugger.  The administrator can turn off '#line' directives with
+the P<use_source_line_numbers> parameter.
+
 =head1 OBJECT-ORIENTED TECHNIQUES
 
 Earlier you learned how to assign a common template to an entire
