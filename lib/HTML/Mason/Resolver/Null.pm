@@ -21,7 +21,7 @@ sub get_source {
     return;
 }
 
-# Returns everything get_info() returns, plus the component source in a 'comp_text' entry.
+# Returns everything get_info() returns, plus the component source in a 'comp_source' entry.
 sub resolve {
     return;
 }
@@ -64,7 +64,7 @@ and execute it then it can be useful.  For example:
   my $interp = HTML::Mason::Interp->new( resolver_class => 'HTML::Mason::Resolver::Null',
                                          data_dir => '/tmp' );
 
-  my $comp = $interp->make_component( comp_text => <<'EOF' );
+  my $comp = $interp->make_component( comp_source => <<'EOF' );
 % my $var = 'World';
 Hello, <% $var %>!
 EOF

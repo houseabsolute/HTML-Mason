@@ -495,7 +495,7 @@ sub status_as_html {
 
     # Should I be scared about this?  =)
 
-    my $comp_text = <<'EOF';
+    my $comp_source = <<'EOF';
 <h3>ApacheHandler properties:</h3>
 <blockquote>
  <tt>
@@ -555,7 +555,7 @@ foreach my $property (sort keys %$ah) {
 EOF
 
     my $interp = $self->interp;
-    my $comp = $interp->make_component(comp_text => $comp_text);
+    my $comp = $interp->make_component(comp_source => $comp_source);
     my $out;
     local $interp->{out_method} = \$out;
 

@@ -372,8 +372,8 @@ sub _make_component
     my $self = shift;
     my $test = $self->{current_test};
     if ($test->{is_virtual}) {
-	$test->{interp}->make_component(comp_text => $test->{component},
-					path      => "/$self->{name}/$test->{path}");
+	$test->{interp}->make_component(comp_source => $test->{component},
+					path        => "/$self->{name}/$test->{path}");
     } else {
 	$self->_write_test_comp;
     }

@@ -43,7 +43,7 @@ sub compile
     my %p = @_;
 
     local $self->{comp_class} = $p{comp_class} if exists $p{comp_class};
-    return $self->SUPER::compile( comp_text => $p{comp_text}, name => $p{name} );
+    return $self->SUPER::compile( comp_source => $p{comp_source}, name => $p{name} );
 }
 
 sub object_id

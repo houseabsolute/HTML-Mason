@@ -317,9 +317,9 @@ sub load {
 	    my $object;
 	    do
 	    {
-		my $comp_text = $info->source;
+		my $comp_source = $info->source;
 		if ($objfilemod < $srcmod) {
-		    $object = $self->compiler->compile( comp_text => $comp_text, name => $info->friendly_name, comp_class => $resolver->comp_class );
+		    $object = $self->compiler->compile( comp_source => $comp_source, name => $info->friendly_name, comp_class => $resolver->comp_class );
 		    $self->write_object_file(object_text=>$object, object_file=>$objfile);
 		}
 		# read the existing object file
@@ -339,8 +339,8 @@ sub load {
 	    #
 	    # No object files. Load component directly into memory.
 	    #
-	    my $comp_text = $info->source;
-	    my $object = $self->compiler->compile( comp_text => $comp_text, name => $info->friendly_name, comp_class => $resolver->comp_class );
+	    my $comp_source = $info->source;
+	    my $object = $self->compiler->compile( comp_source => $comp_source, name => $info->friendly_name, comp_class => $resolver->comp_class );
 	    $comp = eval { $self->eval_object_text( object => $object ) };
 	    $self->_compilation_error( $info->friendly_name, $@ ) if $@;
 	}
@@ -414,16 +414,16 @@ sub purge_code_cache {
 sub make_component {
     my $self = shift;
     validate(@_, {path =>      { type => SCALAR, optional => 1 },
-		  comp_text => { type => SCALAR, optional => 1 },
-		  comp_file => { type => SCALAR, optional => 1 },
-		  name      => { type => SCALAR, optional => 1 }});
+		  comp_source => { type => SCALAR, optional => 1 },
+		  comp_file   => { type => SCALAR, optional => 1 },
+		  name        => { type => SCALAR, optional => 1 }});
 
     my %p = @_;
-    $p{comp_text} = read_file(delete $p{comp_file}) if exists $p{comp_file};
-    param_error "Must specify either 'comp_text' or 'comp_file' parameter to 'make_component()'"
-	unless $p{comp_text};
+    $p{comp_source} = read_file(delete $p{comp_file}) if exists $p{comp_file};
+    param_error "Must specify either 'comp_source' or 'comp_file' parameter to 'make_component()'"
+	unless $p{comp_source};
 
-    # The compiler expects 'comp_text' and 'name'
+    # The compiler expects 'comp_source' and 'name'
     $p{name} ||= $p{path} ? $p{path} : '<anonymous component>';
     my $object = $self->compiler->compile( %p );
 
@@ -764,7 +764,7 @@ sub status_as_html {
 
     # Should I be scared about this?  =)
 
-    my $comp_text = <<'EOF';
+    my $comp_source = <<'EOF';
 <h3>Interpreter properties:</h3>
 <blockquote>
  <h4>Startup options:</h4>
@@ -850,7 +850,7 @@ EOF
 	$current_url .= '?' . $r->args;
     }
 
-    my $comp = $self->make_component(comp_text => $comp_text);
+    my $comp = $self->make_component(comp_source => $comp_source);
     my $out;
     local $self->{out_method} = \$out;
 
@@ -1140,12 +1140,12 @@ value indicating whether or not a component exists for that path.
 
 =for html <a name="item_make_component">
 
-=item make_component (comp_text=>... [, path=>...])
+=item make_component (comp_source=>... [, path=>...])
 
 =item make_component (comp_file=>... [, path=>...])
 
 This method compiles Mason component source code and returns a
-Component object.  The source may be passed in as a string in C<comp_text>,
+Component object.  The source may be passed in as a string in C<comp_source>,
 or as a filename in C<comp_file>.  When using C<comp_file>, the
 filename is specified as a path on the file system, not as a path
 relative to Mason's component root (see 
@@ -1163,12 +1163,12 @@ Example of usage:
     # Make an anonymous component
     my $anon_comp =
       eval { $interp->make_component
-               ( comp_text => '<%perl>my $name = "World";</%perl>Hello <% $name %>!' ) };
+               ( comp_source => '<%perl>my $name = "World";</%perl>Hello <% $name %>!' ) };
     die $@ if $@;
 
     # Make a public component
     eval { $interp->make_component
-             ( comp_text => '<%perl>my $name = "World";</%perl>Hello <% $name %>!',
+             ( comp_source => '<%perl>my $name = "World";</%perl>Hello <% $name %>!',
                path => '/hello/world.ma' ) };
     die $@ if $@;
 
