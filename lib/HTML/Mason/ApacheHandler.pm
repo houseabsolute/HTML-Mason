@@ -778,18 +778,17 @@ sub prepare_request
 					 apache_req => $r,
 				       );
 
-    my $must_send_headers = $request->auto_send_headers;
-
     # Craft the request's out method to handle http headers, content
     # length, and HEAD requests.
+    my $sent_headers = 0;
     my $out_method = sub {
 
 	# Send headers if they have not been sent by us or by user.
-	if ($must_send_headers) {
+	if (!$sent_headers and $request->auto_send_headers) {
 	    unless (http_header_sent($r)) {
 		$r->send_http_header();
 	    }
-	    $must_send_headers = 0;
+	    $sent_headers = 1;
 	}
 
 	# Call $r->print. If request was HEAD, suppress output
