@@ -1417,6 +1417,30 @@ sub _alter_httpd_conf
     close CONF or die "Can't close $params->{apache_config_file}: $!";
 }
 
+sub do_create_makefile_pl
+{
+    my $self = shift;
+    $self->SUPER::do_create_makefile_pl(@_);
+
+    open my $fh, 'Makefile.PL'
+        or die "Cannot open Makefile.PL: $!";
+
+    my $makefile = join '', <$fh>;
+
+    close $fh;
+
+    open $fh, '>Makefile.PL'
+        or die "Cannot write to Makefile.PL: $!";
+
+    print $fh <<"EOF";
+# Added by Mason::Build so we can find Mason::Build again
+use lib 'inc';
+$makefile
+EOF
+
+    close $fh;
+}
+
 # Copied from HTML::Mason::Tools
 sub load_pkg {
     my ($pkg, $nf_error) = @_;

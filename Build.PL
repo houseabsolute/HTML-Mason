@@ -41,6 +41,7 @@ my $build = Mason::Build->new
 		      'Test::Builder' => 0,
 		     },
    license     => 'perl',
+   create_makefile_pl => 'passthrough',
   );
 
 $build->create_build_script;
