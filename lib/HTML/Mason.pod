@@ -220,7 +220,7 @@ letting Apache serve them in the normal way.  The following line
 
 declines all requests with a content type not starting with "text/".
 This allows text/html and text/plain to pass through but not much else.
-It is included in the default handler.pl.
+It is included (commented out) in the default handler.pl.
 
 =item Are you running with taint checks (e.g. PerlTaintCheck)?
 
