@@ -154,8 +154,7 @@ don't do very much.
 =item * extra
 
 This optional parameter should be a hash reference.  It is used to
-pass information that doesn't concern the interpreter from the
-resolver to the component class.
+pass information from the resolver to the component class.
 
 This is needed since a
 L<C<HTML::Mason::Resolver>|HTML::Mason::Resolver> subclass and a
