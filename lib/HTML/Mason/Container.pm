@@ -429,12 +429,24 @@ As an example, HTML::Mason::Compiler contains the following:
 
   __PACKAGE__->valid_params
       (
-       allow_globals        => { parse => 'list',   type => ARRAYREF, default => [] },
-       default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
-       lexer                => { isa => 'HTML::Mason::Lexer' },
-       preprocess           => { parse => 'code',   type => CODEREF,  optional => 1 },
-       postprocess_perl     => { parse => 'code',   type => CODEREF,  optional => 1 },
-       postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1 },
+       allow_globals =>
+         { parse => 'list',   type => ARRAYREF, default => [],
+           descr => "An array of names of Perl variables that are allowed globally within components" },
+       default_escape_flags =>
+         { parse => 'string', type => SCALAR,   default => '',
+           descr => "Escape flags that will apply by default to all Mason tag output" },
+       lexer =>
+         { isa => 'HTML::Mason::Lexer',
+	   descr => "A Lexer object that will scan component text during compilation" },
+       preprocess =>
+         { parse => 'code',   type => CODEREF,  optional => 1,
+           descr => "A subroutine through which all component text will be sent during compilation" },
+       postprocess_perl =>
+         { parse => 'code',   type => CODEREF,  optional => 1,
+	   descr => "A subroutine through which all Perl code will be sent during compilation" },
+       postprocess_text =>
+         { parse => 'code',   type => CODEREF,  optional => 1,
+	   descr => "A subroutine through which all plain text will be sent during compilation" },
       );
 
 The C<type>, C<default>, and C<optional> parameters are part of the
@@ -444,8 +456,13 @@ Params::Validate.  These parameters correspond to the
 MasonAllowGlobals, MasonDefaultEscapeFlags, MasonLexerClass (yes,
 B<Class> is added automatically because it was given to the
 C<contained_objects> method.  Whee, magic!)  Don't worry about it too
-much as long as you can see the pattern here.), etc. Apache
-configuration parameters.
+much as long as you can see the pattern here.
+
+The C<descr> parameter is useful in conjunction with the C<all_specs>
+function provided by this class.
+
+In addition, you can provide a C<public> parameter which is also
+useful with the C<all_stats> function.
 
 =head1 SEE ALSO
 
