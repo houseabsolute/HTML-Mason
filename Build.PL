@@ -13,7 +13,7 @@ my %prereq = ( 'Cache::Cache'     => 1.00,
                'CGI'              => 2.46,
                'Exception::Class' => 1.15,
                'File::Spec'       => 0.8,
-               'Params::Validate' => 0.59,
+               'Params::Validate' => 0.70,
                'Scalar::Util'     => 1.01,
              );
 
