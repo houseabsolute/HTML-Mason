@@ -20,14 +20,14 @@ attributes inherited from a parent.  Suggested by Matti Makitalo.
 
 [ BUG FIXES ]
 
+- ** When $m->cache_self was used for a component with a filter block,
+the output would be cached _before_ filtering, and filtered every time
+it was retrieved from the cache.  This has been fixed, and the
+documentation now specifies that the filtered output is cached.
 - May have fixed failure of 12-taint.t #7 on Win32 boxes.  Reported by
 Randy Kobes.
 - Without HTML::Entities installed, 13-errors.t #7 fails.  Reported by
 Sam Kington.
-- When $m->cache_self was used for a component with a filter block,
-the output would be cached _before_ filtering, and filtered every time
-it was retrieved from the cache.  This has been fixed, and the
-documentation now specifies that the filtered output is cached.
 - $m->file did not handle relative paths properly when called from a
 subcomponent or method.  Reported by Chris Hutchinson.
 - If $m->abort was called in the shared block of a component that had
