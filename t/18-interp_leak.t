@@ -1,13 +1,14 @@
 use strict;
 
+use Test;
+BEGIN {plan tests => 2}
+
 use HTML::Mason::Interp;
 use HTML::Mason::Tests;
 
 my $destroy_count = 0;
 
 sub HTML::Mason::Interp::DESTROY { $destroy_count++ }
-
-print "1..2\n";
 
 # this object is just used for convenience in order to find a proper
 # comp root, write comps, etc.  It won't actually run any tests
@@ -35,7 +36,7 @@ $group->_write_support_comps;
     $interp->exec('/interp_leaks/test_comp');
 }
 
-print $destroy_count == 1 ? "ok 1\n" : "not ok 1\n";
+ok $destroy_count, 1;
 
 
 {
@@ -48,7 +49,7 @@ print $destroy_count == 1 ? "ok 1\n" : "not ok 1\n";
     $interp->exec('/interp_leaks/test_comp');
 }
 
-print $destroy_count == 2 ? "ok 2\n" : "not ok 2\n";
+ok $destroy_count, 2;
 
 # I am very evil
 $group->_cleanup unless $ENV{MASON_NO_CLEANUP};
