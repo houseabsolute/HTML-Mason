@@ -184,7 +184,7 @@ sub _read_existing_conf {
 	warn "ADDED INC $file\n";
     }
 
-    my @modules       =   grep /^\s*(Add|Load)Module/, @lines;
+    my @modules       =   grep /^\s*(Add|Load|Clear)Module/, @lines;
 
     my ($server_root) = (map /^\s*ServerRoot\s*(\S+)/, @lines);
     $server_root =~ s/^"//;
