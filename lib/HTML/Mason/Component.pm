@@ -11,10 +11,13 @@ use HTML::Mason::Tools qw(absolute_comp_path);
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
+use HTML::Mason::Container;
+use base qw(HTML::Mason::Container);
+
 use HTML::Mason::Exceptions( abbr => ['error'] );
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code
-			 create_time
+			 load_time
 			 declared_args
 			 comp_id
 			 inherit_path
@@ -28,15 +31,11 @@ use HTML::Mason::MethodMaker
 		    ]
       );
 
-#  XXX This needs to be a HTML::Mason::Container.
-# Interesting sidenote: more people in Australia than I expected say 
-# the letter H as "Haitch" instead of "Aitch".  Thus "a" instead of "an".
-
-my %valid_params =
+__PACKAGE__->valid_params
     (
      attr               => {type => HASHREF, default => {}},
      code               => {type => CODEREF},
-     create_time        => {type => SCALAR,  optional => 1},
+     load_time          => {type => SCALAR,  optional => 1},
      declared_args      => {type => HASHREF, default => {}},
      dynamic_subs_init  => {type => CODEREF, default => sub {}},
      flags              => {type => HASHREF, default => {}},
@@ -49,15 +48,10 @@ my %valid_params =
      subcomps           => {type => HASHREF, default => {}},
     );
 
-sub allowed_params { \%valid_params }
-sub validation_spec { return shift->allowed_params }
-
 sub new
 {
     my $class = shift;
-    my $self = bless {
-		      validate(@_, $class->validation_spec),
-		     }, $class;
+    my $self = $class->SUPER::new(@_);
 
     # Initialize subcomponent and method properties.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
@@ -390,7 +384,7 @@ attribute does not exist.
 Returns true if the specified attribute exists in this component or
 one of its parents, undef otherwise.
 
-=item create_time
+=item load_time
 
 Returns the time (in Perl time() format) when this component object
 was created.
