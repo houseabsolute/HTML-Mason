@@ -142,10 +142,17 @@ sub add_test
 	$p{path} = $p{call_path} || $p{name};
     }
 
-    my $call_path = "/$self->{name}/";
-    $call_path .= exists $p{call_path} ? $p{call_path} : $p{name};
+    my $call_path = "/$self->{name}";
+    if ( exists $p{call_path} )
+    {
+	$call_path .= '/' unless substr( $p{call_path}, 0, 1 ) eq '/';
+	$call_path .= $p{call_path};
+    }
+    else
+    {
+	$call_path .= '/' . $p{name};
+    }
     $p{call_path} = $call_path;
-    $p{call_path} =~ s,/+,/,g;
 
     if ( ref($p{call_args}) eq 'HASH' )
     {
@@ -389,7 +396,7 @@ sub _execute
 {
     my ($self, $interp) = @_;
     my $test = $self->{current_test};
-    
+
     print "Calling $test->{name} test with path: $test->{call_path}\n" if $DEBUG;
     $test->{pretest_code}->() if $test->{pretest_code};
     $interp->exec( $test->{call_path}, @{$test->{call_args}} );
