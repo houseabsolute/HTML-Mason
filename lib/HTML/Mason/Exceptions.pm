@@ -36,7 +36,7 @@ BEGIN
 	     description => "error thrown in eval of the code for a component" },
 
 	   'HTML::Mason::Exception::Compilation::IncompatibleCompiler' =>
-	   { isa => 'HTML::Mason::Exception',
+	   { isa => 'HTML::Mason::Exception::Compilation',
 	     alias => 'wrong_compiler_error',
 	     description => "a component was compiled by a compiler/lexer with incompatible options.  recompilation is needed" },
 
