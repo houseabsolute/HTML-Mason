@@ -1138,7 +1138,7 @@ sub eval_object_text
     my $ignoreExpr = $self->ignore_warnings_expr;
     my ($comp,$err);
     {
-	my $warnstr;
+	my $warnstr = '';
 	local $^W = 1;
 	local $SIG{__WARN__} = $ignoreExpr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignoreExpr/ } : sub { $warnstr .= $_[0] };
 	if ($objectFile) {
