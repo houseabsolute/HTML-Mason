@@ -12,14 +12,6 @@ unless ( $ENV{MASON_MAINTAINER} &&
 
 use strict;
 
-use vars qw($VERBOSE $DEBUG);
-
-BEGIN
-{
-    $VERBOSE = $ENV{MASON_DEBUG} || $ENV{MASON_VERBOSE} || $ENV{TEST_VERBOSE};
-    $DEBUG = $ENV{MASON_DEBUG};
-}
-
 use File::Spec;
 use HTML::Mason::Tests;
 use Test;
