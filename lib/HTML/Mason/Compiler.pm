@@ -287,24 +287,22 @@ sub perl_block
 
 sub text
 {
-    my $self = shift;
-    my %p = @_;
+    my ($self, %p) = @_;
+    my $tref = ref($p{text}) ? $p{text} : \$p{text};  # Allow a reference
 
-    eval { $self->postprocess_text->(\$p{text}) if $self->postprocess_text };
+    eval { $self->postprocess_text->($tref) } if $self->postprocess_text;
     compiler_error $@ if $@;
 
-    $p{text} =~ s,(['\\]),\\$1,g;
+    $$tref =~ s,(['\\]),\\$1,g;
 
-    my $code = "\$m->print( '$p{text}' );\n";
-
-    $self->_add_body_code($code);
+    $self->_add_body_code("\$m->print( '$$tref' );\n");
 }
 
 sub text_block
 {
     my $self = shift;
     my %p = @_;
-    $self->text(text => $p{block});
+    $self->text(text => \$p{block});
 }
 
 sub end_block
@@ -426,7 +424,7 @@ sub substitution
 
     my $code = "\$m->print( $text );\n";
 
-    eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
+    eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
     compiler_error $@ if $@;
 
     $self->_add_body_code($code);
@@ -448,7 +446,7 @@ sub component_call
     }
 
     my $code = "\$m->comp( $call );\n";
-    eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
+    eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
     compiler_error $@ if $@;
 
     $self->_add_body_code($code);
@@ -465,7 +463,7 @@ sub component_content_call
 
     my $code = "\$m->comp( { content => sub {\n";
 
-    eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
+    eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
     compiler_error $@ if $@;
 
     $self->_add_body_code($code);
@@ -490,7 +488,7 @@ sub component_content_call_end
 
     my $code = "} }, $call );\n";
 
-    eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
+    eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
     compiler_error $@ if $@;
 
     $self->_add_body_code($code);
@@ -503,7 +501,7 @@ sub perl_line
 
     my $code = "$p{line}\n";
 
-    eval { $self->postprocess_perl->(\$code) if $self->postprocess_perl };
+    eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
     compiler_error $@ if $@;
 
     $self->_add_body_code($code);
@@ -512,17 +510,16 @@ sub perl_line
 sub _add_body_code
 {
     my $self = shift;
-    my $code = shift;
 
     my $comment;
     if ( $self->lexer->line_number )
     {
 	my $line = $self->lexer->line_number;
 	my $file = $self->lexer->name;
-	$comment = "#line $line $file\n";
+	$self->{current_comp}{body} .= "#line $line $file\n";
     }
 
-    $self->{current_comp}{body} .= "$comment$code";
+    $self->{current_comp}{body} .= $_[0];
 }
 
 sub dump
