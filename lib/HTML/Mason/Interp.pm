@@ -343,7 +343,7 @@ sub load {
 		my $comp_text = $resolver->get_source(%lookup_info);
 		if ($objfilemod < $srcmod) {
 # XXX 'description' isn't known
-		    $object = $self->compiler->compile( comp_text => $comp_text, name => $lookup_info{url_path}, comp_class => $resolver->comp_class );
+		    $object = $self->compiler->compile( comp_text => $comp_text, name => ($lookup_info{disk_path} || $lookup_info{url_path}), comp_class => $resolver->comp_class );
 		    $self->write_object_file(object_text=>$object, object_file=>$objfile);
 		}
 		# read the existing object file
@@ -365,7 +365,7 @@ sub load {
 	    #
 	    my $comp_text = $resolver->get_source(%lookup_info);
 # XXX 'description' isn't known
-	    my $object = $self->compiler->compile( comp_text => $comp_text, name => $lookup_info{url_path}, comp_class => $resolver->comp_class );
+	    my $object = $self->compiler->compile( comp_text => $comp_text, name => ($lookup_info{disk_path} || $lookup_info{url_path}), comp_class => $resolver->comp_class );
 	    $comp = eval { $self->eval_object_text( object => $object ) };
 	    $self->_compilation_error( $lookup_info{disk_path}, $@ ) if $@;
 	}
