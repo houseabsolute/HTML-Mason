@@ -97,9 +97,8 @@ else
 
 my $cwd = getcwd(); # tainted
 my $text = "my \$x = '$cwd';"; # also tainted
-my $err;
 
-eval { $interp->eval_object_text( object => $text, error => \$err ) };
+eval { $interp->eval_object_text( object => $text ) };
 
 if (! $@)
 {
