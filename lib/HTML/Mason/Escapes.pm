@@ -50,8 +50,11 @@ HTML::Mason::Escapes - Functions to escape text for Mason
 
 =head1 DESCRIPTION
 
-This module contains exportable functions that are intended to be used
-by other Mason modules.
+This module contains functions for implementing Mason's L<substitution
+escaping|HTML::Mason::Devel/Escaping expressions> feature.  These
+functions may also be called directly.
+
+=over 4
 
 =item html_entities_escape
 
@@ -91,6 +94,6 @@ scripting attacks.  See
 http://www.megasecurity.org/Info/cross-site_scripting.txt for more
 details.
 
-It is not exportable.
+=back
 
 =cut
