@@ -724,10 +724,17 @@ sub ACTION_build
     $self->depends_on('params_pod');
 
     $self->SUPER::ACTION_build(@_);
+}
+
+sub ACTION_docs
+{
+    my $self = shift;
 
     # This has to be done to the blib files or else if we run this
     # from our local repositories we end up modifying those files.
     $self->_convert_custom_pod('blib');
+
+    $self->SUPER::ACTION_docs(@_);
 }
 
 # trick ApacheHandler into not dying
@@ -1035,14 +1042,14 @@ sub _generate_html_docs
     require File::Temp;
 
     # should use something less sucky
-    require Pod::Html;
+    require Pod::Simple::HTML;
 
     my $html_dir = File::Spec->catdir( $target_dir, 'htdocs' );
 
     my @files;
     foreach my $file ( $self->_files_with_pod( File::Spec->catdir( $dir, 'lib' ) ) )
     {
-	my $html_file = $self->_pod_from_html( $file, $html_dir );
+	my $html_file = $self->_pod_to_html( $file, $html_dir );
 
 	my $rel_path = File::Spec->abs2rel( $html_file, $target_dir );
 
@@ -1057,7 +1064,7 @@ sub _generate_html_docs
     return @files;
 }
 
-sub _pod_from_html
+sub _pod_to_html
 {
     my $self = shift;
     my ( $pod_file, $out_dir ) = @_;
@@ -1104,6 +1111,34 @@ sub _pod_from_html
 
     return $html_file;
 }
+
+# sub _pod_to_html
+# {
+#     my $self = shift;
+#     my ( $pod_file, $out_dir ) = @_;
+
+#     die "could not find $pod_file" unless -f $pod_file;
+
+#     # Determine html filename - will break if run on non-Unix
+#     my ($base) = ($pod_file =~ m/\/HTML\/(.*)\.(?:pm|pod)/);
+#     return unless $base;
+
+#     $base =~ s{Mason/}{};
+
+#     my $html_file = "$out_dir/$base.html";
+#     File::Path::mkpath( File::Basename::dirname($html_file) );
+
+#     my $fh = do { local *FH; *FH; };
+#     open $fh, ">$html_file" or die "Cannot write to $html_file: $!";
+
+#     my $parser = Pod::Simple::HTML->new;
+#     $parser->output_fh($fh);
+#     $parser->parse_file($pod_file);
+
+#     $self->add_to_cleanup($html_file);
+
+#     return $html_file;
+# }
 
 # This is how pod2html used to escape its links. It may not be
 # necessary anymore, but then again some browsers may choke on the
