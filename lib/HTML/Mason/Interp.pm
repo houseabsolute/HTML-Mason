@@ -9,8 +9,6 @@ use strict;
 use Carp;
 use File::Path;
 use File::Basename;
-use IO::File;
-use IO::Seekable;
 use HTML::Mason::Parser;
 use HTML::Mason::Tools qw(is_absolute_path);
 use HTML::Mason::Commands qw();
@@ -162,9 +160,13 @@ sub _initialize
     #
     if ($self->{system_log_events_hash}) {
 	$self->{system_log_file} = $self->data_dir . "/etc/system.log" if !$self->system_log_file;
-	my $fh = new IO::File ">>".$self->system_log_file
+	my $fh = do { local *FH; *FH; };  # double *FH avoids warning
+	open $fh, ">>".$self->system_log_file
 	    or die "Couldn't open system log file ".$self->{system_log_file}." for append";
-	$fh->autoflush(1);
+	my $oldfh;
+	select $fh;
+	$| = 1;
+	select $oldfh;
 	$self->{system_log_fh} = $fh;
     }
     
@@ -209,20 +211,21 @@ sub exec {
 #
 sub check_reload_file {
     my ($self) = @_;
-    my $reloadFile = $self->reload_file;
-    return if (!-f $reloadFile);
+    my $reload_file = $self->reload_file;
+    return if (!-f $reload_file);
     my $lastmod = (stat(_))[9];
     if ($lastmod > $self->{last_reload_time}) {
-	my ($block);
 	my $length = (stat(_))[7];
 	$self->{last_reload_file_pos} = 0 if ($length < $self->{last_reload_file_pos});
-	my $fh = new IO::File $reloadFile;
-	return if !$fh;
+	my $fh = do { local *FH; *FH; };  # double *FH avoids warning
+	open $fh, $reload_file or return;
+
+	my $block;
 	my $pos = $self->{last_reload_file_pos};
-	$fh->seek($pos,&SEEK_SET);
+	seek ($fh,$pos,0);
 	read($fh,$block,$length-$pos);
 	$self->{last_reload_time} = $lastmod;
-	$self->{last_reload_file_pos} = $fh->tell;
+	$self->{last_reload_file_pos} = tell $fh;
 	my @lines = split("\n",$block);
 	foreach my $compPath (@lines) {
 	    if (exists($self->{code_cache}->{$compPath})) {
@@ -570,12 +573,13 @@ sub write_system_log {
 
     if ($self->{system_log_fh} && $self->{system_log_events_hash}->{$_[0]}) {
 	my $time = ($HTML::Mason::Config{use_time_hires} ? scalar(Time::HiRes::gettimeofday()) : time);
-	$self->{system_log_fh}->print(join ($self->system_log_separator,
-					    $time,                  # current time
-					    $_[0],                  # event name
-					    $$,                     # pid
-					    @_[1..$#_]              # event-specific fields
-					    ),"\n");
+	my $fh = $self->{system_log_fh};
+	print $fh (join ($self->system_log_separator,
+			 $time,                  # current time
+			 $_[0],                  # event name
+			 $$,                     # pid
+			 @_[1..$#_]              # event-specific fields
+			),"\n");
     }
 }
 
