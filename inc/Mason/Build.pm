@@ -956,19 +956,20 @@ sub _files_with_pod
 sub _convert_custom_pod
 {
     my $self = shift;
+    my $dir = shift || 'blib';
 
-    return if $self->{converted_pod};
+    return if $self->{converted_pod}{$dir};
 
-    print "Converting custom POD tags in files under blib\n";
+    print "Converting custom POD tags in files under $dir\n";
 
     # This has to be done to the blib files or else if we run this
     # from our local repositories we end up modifying those files.
-    foreach my $file ( $self->_files_with_pod('blib') )
+    foreach my $file ( $self->_files_with_pod($dir) )
     {
 	$self->_convert_pod_in_file($file);
     }
 
-    $self->{converted_pod} = 1;
+    $self->{converted_pod}{$dir} = 1;
 }
 
 sub _convert_pod_in_file
@@ -1021,7 +1022,7 @@ sub _make_writeable
     }
 }
 
-sub ACTION_dist
+sub ACTION_distdir
 {
     my $self = shift;
 
@@ -1039,7 +1040,8 @@ EOF
 
     $self->depends_on('params_pod');
     $self->depends_on('manifest');
-    $self->depends_on('distdir');
+
+    $self->SUPER::ACTION_distdir(@_);
 
     $self->_convert_custom_pod( File::Spec->catdir( $self->dist_dir, 'lib' ) );
 
@@ -1055,11 +1057,6 @@ EOF
     ExtUtils::Manifest::maniadd( { map { $_ => '' } @files } );
 
     $self->_cleanup_changes_file;
-
-    my $dist_dir = $self->dist_dir;
-
-    $self->make_tarball($dist_dir);
-    $self->delete_filetree($dist_dir);
 }
 
 sub ACTION_manifest
@@ -1109,7 +1106,7 @@ sub _generate_html_docs
     $self->_check_html_doc_links($html_dir);
 
     $self->add_to_cleanup( map { File::Spec->catfile( $self->base_dir, $_ ) }
-			   'pod2htmd.x~~', 'pod2htmi.x~~' );
+			   'pod2htmd.*', 'pod2htmi.*' );
 
     return @files;
 }
@@ -1281,29 +1278,6 @@ sub ACTION_test
     $self->SUPER::ACTION_test;
 }
 
-sub ACTION_test_pod
-{
-    my $self = shift;
-
-    eval { require Test::Pod };
-
-    if ($@)
-    {
-        warn "The test_pod action requires the Test::Pod module.\n";
-        return;
-    }
-
-    $self->depends_on('build');
-
-    my @files = $self->_files_with_pod('blib');
-    Test::Pod->import( tests => scalar @files );
-
-    foreach my $f (@files)
-    {
-        Test::Pod::pod_file_ok($f);
-    }
-}
-
 sub ACTION_test_pod_coverage
 {
     my $self = shift;
@@ -1312,7 +1286,7 @@ sub ACTION_test_pod_coverage
 
     if ($@)
     {
-        warn "The test_pod action requires the Test::Pod module.\n";
+        warn "The test_pod action requires the Test::Pod::Coverage module.\n";
         return;
     }
 
