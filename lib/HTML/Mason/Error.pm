@@ -360,8 +360,7 @@ sub create_context_html {
     my $context .= qq(<table border="0" cellpadding="0" cellspacing="0">);
 
     my $fh = make_fh();
-    open $fh, $file;
-    unless($fh) {
+    unless (open($fh, $file)) {
 	$context = "unable to open file";
     } else {
 	# Put the file into a list, indexed at 1.
@@ -400,8 +399,8 @@ sub create_context_html {
 	}
 	$context .= $conf->{table_entry}->("...", "");
 	$context .= qq(</table>);
+	close $fh or HTML::Mason::Exception->throw( error => "can't close file: $file: $!" );
     }
-    close $fh or HTML::Mason::Exception->throw( error => "can't close file: $file: $!" );
 
     return $context;
 }
