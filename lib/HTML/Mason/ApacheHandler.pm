@@ -83,8 +83,11 @@ sub _run_comp
     local *Apache::print = sub { shift; local *Apache::print = $apache_print; $self->out(@_) };
     $^W = $w;
 
-    my $obj = tied *STDOUT;
-    tie *STDOUT, 'Tie::Handle::Mason', $self, $obj;
+    my $obj;
+    if ($self->depth == 1) {
+	$obj = tied *STDOUT;
+	tie *STDOUT, 'Tie::Handle::Mason', $self, $obj;
+    }
 
     my ($result, @result);
     if ($wantarray) {
@@ -94,9 +97,12 @@ sub _run_comp
     } else {
 	eval { $comp->run(@args) };
     }
-    untie *STDOUT;
-    if ( $obj && UNIVERSAL::isa( $obj, 'Apache' ) ) {
-	tie *STDOUT, 'Apache', $obj;
+
+    if ($self->depth == 1) {
+	untie *STDOUT;
+	if ( $obj && UNIVERSAL::isa( $obj, 'Apache' ) ) {
+	    tie *STDOUT, 'Apache', $obj;
+	}
     }
 
     return wantarray ? @result : $result;
@@ -665,11 +671,11 @@ sub handle_request_1
     $interp->set_global(r=>$r);
 
     #
-    # Why this strangeness? See HTML::Mason::ApacheHandler::Request
-    # where much strangeness is done to catch calls to print and
-    # $r->print inside components.  Without this, calling
-    # $m->flush_buffer can lead to a loop where the content
-    # disappears.
+    # Why this strangeness with taking a reference to Apache::print?
+    # See HTML::Mason::ApacheHandler::Request where much strangeness
+    # is done to catch calls to print and $r->print inside components.
+    # Without this, calling $m->flush_buffer can lead to a loop where
+    # the content disappears.
     #
     # By using the reference to the original function we ensure that
     # we call the version of the sub that sends its output to the
@@ -679,10 +685,10 @@ sub handle_request_1
 
     # Craft the request's out method to handle http headers, content
     # length, and HEAD requests.
-    
+
     my $must_send_headers = $self->auto_send_headers;
     my $out_method = sub {
-	
+
 	# Send headers if they have not been sent by us or by user.
 	if ($must_send_headers) {
 	    unless (http_header_sent($r)) {
@@ -690,11 +696,11 @@ sub handle_request_1
 	    }
 	    $must_send_headers = 0;
 	}
-	
+
 	# Call $r->print. If request was HEAD, suppress output
 	# but allow the request to continue for consistency.
 	unless ($r->method eq 'HEAD') {
-	    $r->print(grep {defined} @_);
+	    $r->$print(grep {defined} @_);
 	}
     };
     $request->out_method($out_method);
