@@ -500,14 +500,6 @@ sub _initialize {
     my $interp = $self->interp;
 
     #
-    # Create data subdirectories if necessary. mkpath will die on error.
-    #
-    foreach my $subdir (qw(preview)) {
-	my @newdirs = mkpath($interp->data_dir."/$subdir",0,0775);
-	$interp->push_files_written(@newdirs);
-    }
-
-    #
     # Allow global $r in components
     #
     $interp->compiler->add_allowed_globals('$r');
