@@ -160,7 +160,6 @@ sub new
 {
     my $class = shift;
     my $self = {
-	_permitted => \%fields,
 	request_number => 0,
 	%fields,
     };
@@ -247,7 +246,7 @@ sub interp_status
         map {"<DD><TT>$_ = ".(defined($interp->{$_}) ? 
                                 $interp->{$_} : '<I>undef</I>'
                              )."</TT>\n" 
-            } grep ref $interp->{$_} eq '', sort keys %{$interp->{_permitted}};
+            } grep ! ref $interp->{$_}, sort keys %$interp;
 
     push @strings, '</DL>',
             '<DL><DT><FONT SIZE="+1"><B>Cached components</B></FONT><DD>';
@@ -697,15 +696,18 @@ sub _cgi_args
 
 #
 # Get %args hash via Apache::Request package. As a side effect, assign the
-# new Apache::Request package back to $r.
+# new Apache::Request package back to $r, unless $r is already an Apache::Request.
 #
 sub _mod_perl_args
 {
     my ($self, $rref, $request) = @_;
 
-    my $apr = Apache::Request->new($$rref);
-    $$rref = $apr;
-
+    my $apr = $$rref;
+    unless (UNIVERSAL::isa($apr, 'Apache::Request')) {
+	$apr = Apache::Request->new($apr);
+	$$rref = $apr;
+    }
+    
     return unless $apr->param;
 
     my %args;
