@@ -114,25 +114,22 @@ sub exec
     }
     else
     {
-        local $^W = 0;
         # ack, this has to be done at runtime to account for the fact
-        # that Apache::Filter change's $r's class and implements its
+        # that Apache::Filter changes $r's class and implements its
         # own print() method.
         my $real_apache_print = $r->can('print');
 
 	# Remap $r->print to Mason's $m->print while executing
 	# request, but just for this $r, in case user does an internal
 	# redirect or apache subrequest.
+	local $^W = 0;
 	no strict 'refs';
 
         my $req_class = ref $r;
 	local *{"$req_class\::print"} = sub {
 	    my $local_r = shift;
-	    if ($local_r eq $r) {
-		$self->print(@_);
-	    } else {
-		$local_r->$real_apache_print(@_);
-	    }
+	    return $self->print(@_) if $local_r eq $r;
+	    return $local_r->$real_apache_print(@_);
 	};
 	eval { $retval = $self->SUPER::exec(@_) };
     }
