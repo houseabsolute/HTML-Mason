@@ -27,6 +27,9 @@ httpd.conf-based configurations.
 environment variable is true.  This eliminates the need for setting
 MASON_VERBOSE.
 
+- ** It is now an error to have a subcomponent and method with the
+same name in a single component.
+
 [ BUG FIXES ]
 
 - Mason dies if asked to compile a component that evaluates to a false

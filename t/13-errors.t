@@ -214,6 +214,21 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'method_subcomp_conflict',
+		      description => "Make sure Mason doesn't allow a subcomponent and method to have the same name",
+		      component => <<'EOF',
+<%method foo>
+foo
+</%method>
+<%def foo>
+foo
+</%def>
+EOF
+		      expect_error => qr/with the same name/,
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 

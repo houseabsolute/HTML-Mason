@@ -382,6 +382,11 @@ sub start_named_block
     $self->lexer->throw_syntax_error("Invalid $p{block_type} name: $p{name}")
 	if $p{name} =~ /[^.\w-]/;
 
+    my $other_type = $p{block_type} eq 'def' ? 'method' : 'def';
+    $self->lexer->throw_syntax_error
+        ("Cannot define a method and subcomponent with the same name ($p{name}")
+            if exists $self->{$other_type}{ $p{name} };
+
     $self->{in_main}--;
 
     $self->{ $p{block_type} }{ $p{name} } = {};
