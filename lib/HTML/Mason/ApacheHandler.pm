@@ -69,6 +69,41 @@ sub cgi_object
 
 #----------------------------------------------------------------------
 #
+# APACHE-SPECIFIC FILE RESOLVER OBJECT
+#
+package HTML::Mason::Resolver::File::ApacheHandler;
+
+use strict;
+
+use HTML::Mason::Tools qw(paths_eq);
+
+use HTML::Mason::Resolver::File;
+use base qw(HTML::Mason::Resolver::File);
+
+#
+# Given an apache request object, return the associated component
+# path or undef if none exists. This is called for top-level web
+# requests that resolve to a particular file.
+#
+sub apache_request_to_comp_path {
+    my ($self, $r) = @_;
+
+    my $file = $r->filename;
+    $file .= $r->path_info unless -f $file;
+
+    foreach my $root (map $_->[1], $self->comp_root_array) {
+	if (paths_eq($root, substr($file, 0, length($root)))) {
+	    my $path = substr($file, ($root eq '/' ? 0 : length($root)));
+	    $path =~ s,\/$,, unless $path eq '/';
+	    return $path;
+	}
+    }
+    return undef;
+}
+
+
+#----------------------------------------------------------------------
+#
 # APACHEHANDLER OBJECT
 #
 package HTML::Mason::ApacheHandler;
@@ -377,7 +412,7 @@ sub new
     }
 
     $defaults{request_class}  = 'HTML::Mason::Request::ApacheHandler';
-    $defaults{resolver_class} = 'HTML::Mason::Resolver::File::Apache';
+    $defaults{resolver_class} = 'HTML::Mason::Resolver::File::ApacheHandler';
 
     my @args = $class->create_contained_objects(%defaults, @_);
 
