@@ -1,14 +1,8 @@
 #!/usr/bin/perl -w
+BEGIN { $HTML::Mason::IN_DEBUG_FILE = 1 if !$HTML::Mason::IN_DEBUG_FILE }
 use Cwd;
 use strict;
 use vars (qw($root $branch $comp_root $data_dir));
-
-$branch = "ah";
-my $pwd = cwd();
-$root = (-f "test-common.pl") ? "$pwd/.." : (-f "t/test-common.pl") ? "$pwd" : die "ERROR: cannot find test-common.pl\n";
-unshift(@INC,"$root/lib");
-
-require "$root/t/test-common.pl";
 
 # Skip test if no mod_perl
 eval { require mod_perl };
@@ -17,6 +11,14 @@ unless ($mod_perl::VERSION) {
     print "1..0";
     die "";
 }
+
+$branch = "ah";
+my $pwd = cwd();
+$root = (-f "test-common.pl") ? "$pwd/.." : (-f "t/test-common.pl") ? "$pwd" : die "ERROR: cannot find test-common.pl\n";
+unshift(@INC,"$root/lib");
+
+require "$root/t/test-common.pl";
+
 require HTML::Mason::ApacheHandler;
 
 init();
