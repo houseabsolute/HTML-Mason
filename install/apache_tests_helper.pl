@@ -6,6 +6,8 @@ use Cwd;
 use File::Path;
 use File::Basename;
 
+use HTML::Mason::Tools qw(load_pkg);
+
 use vars qw(%APACHE);
 
 sub setup_mod_perl_tests
@@ -157,9 +159,46 @@ EOF
     SetHandler html-mason
   </Location>
 </IfDefine>
-
-
 EOF
+
+    if ( load_pkg('Apache::Filter') )
+    {
+        my $filter_handler = <<'EOF';
+  sub FilterTest::handler
+  {
+      my $r = shift;
+
+      $r = $r->filter_register;
+
+      my ($fh, $status) = $r->filter_input;
+
+      return $status unless $status == Apache::Constants::OK();
+
+      print uc while <$fh>;
+
+      return $status;
+  }
+EOF
+
+        $include .= <<"EOF";
+<IfDefine filter_tests>
+  PerlModule  Apache::Constants
+  <Perl>
+$filter_handler
+  </Perl>
+
+  PerlSetVar  MasonArgsMethod mod_perl
+  PerlSetVar  MasonCompRoot "root => $APACHE{comp_root}"
+  PerlSetVar  MasonDataDir  "$APACHE{data_dir}"
+  PerlModule  Apache::Filter;
+  PerlSetVar  Filter  On
+
+  SetHandler  perl-script
+  PerlModule  HTML::Mason::ApacheHandler
+  PerlHandler HTML::Mason::ApacheHandler FilterTest
+</IfDefine>
+EOF
+    }
 
     local $^W;
     Apache::test->write_httpd_conf
