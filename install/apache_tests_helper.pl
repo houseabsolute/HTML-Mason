@@ -286,16 +286,14 @@ for (my \$x = 0; \$x <= \$#ah_params; \$x++)
     my \$ah =
         HTML::Mason::ApacheHandler->new
             ( args_method => '$args_method',
+              interp_class => 'My::Interp',
+	      request_class => 'HTML::Mason::Request::ApacheHandler',
+	      resolver => \$res,
+	      error_mode => 'output',
+	      error_format => 'html',
+	      data_dir => '$APACHE{data_dir}',
               \%{\$ah_params[\$x]},
-              interp =>
-              # need to duplicate AH provided defaults here
-              My::Interp->new( request_class => 'HTML::Mason::Request::ApacheHandler',
-                               resolver_class => 'HTML::Mason::Resolver::File::ApacheHandler',
-                               error_mode => 'output',
-                               error_format => 'html',
-                               data_dir => '$APACHE{data_dir}',
-                               \%{\$interp_params[\$x]},
-                             ),
+	      \%{\$interp_params[\$x]},
             );
 
     chown Apache->server->uid, Apache->server->gid, \$ah->interp->files_written;
