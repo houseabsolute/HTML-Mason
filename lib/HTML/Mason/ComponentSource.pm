@@ -54,7 +54,7 @@ sub comp_source
 
     my $source = eval { $self->{source_callback}->() };
 
-    if (my $err = @_)
+    if (my $err = $@)
     {
 	UNIVERSAL::can( $err, 'rethrow' ) ? $err->rethrow : error $err;
     }
