@@ -61,7 +61,7 @@ sub dump_specs
 		$type = 'regex';
 		$default =~ s/^\(\?(\w*)-\w*:(.*)\)/\/$2\/$1/;
 	    }
-	    my $descr = $spec->{descr} || '';
+	    my $descr = $spec->{descr} || '(No description available)';
 	    $out{$class}{valid_params}{$name} = {type => $type, default => $default, descr => $descr};
 	}
 
