@@ -386,3 +386,5 @@ HTML::Mason::Compiler::ToObject - A Compiler subclass that generates Mason objec
 
 This Compiler subclass that generates Mason object code (Perl code).
 It is the default Compiler class.
+
+=cut
