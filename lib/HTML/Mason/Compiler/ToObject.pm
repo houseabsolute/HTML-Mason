@@ -612,11 +612,16 @@ historical reasons, this defaults to C<HTML::Mason::Commands>.
 
 =item preamble
 
-Text given for this parameter is placed at the beginning of each component. See also P<postamble>.
+Text given for this parameter is placed at the beginning of each
+component, but after the execution of any C<< <%once> >> block. See
+also P<postamble>. The request will be available as C<$m> in preamble
+code.
 
 =item postamble
 
-Text given for this parameter is placed at the end of each component. See also P<preamble>.
+Text given for this parameter is placed at the end of each
+component. See also P<preamble>.  The request will be available as
+C<$m> in postamble code.
 
 =item use_strict
 
