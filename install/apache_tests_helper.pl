@@ -118,7 +118,7 @@ EOF
 <IfDefine mod_perl_no_handler>
   PerlSetVar  MasonArgsMethod mod_perl
   PerlSetVar  MasonCompRoot "root => $APACHE{comp_root}"
-  PerlSetVar  MasonCompRoot "root2 => $APACHE{data_dir}"
+  PerlAddVar  MasonCompRoot "root2 => $APACHE{data_dir}"
   PerlSetVar  MasonDataDir  "$APACHE{data_dir}"
   PerlSetVar  MasonDeclineDirs 0
 
