@@ -20,11 +20,13 @@ C<perl -MCPAN -e 'install Bundle::HTML::Mason'>
 
 File::Spec  0.8
 
-Params::Validate  0.16
+Params::Validate  0.18
 
 Exception::Class  1.01
 
 Cache::Cache  1.00
+
+Class::Container  0.02
 
 HTML::Mason
 
