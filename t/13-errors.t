@@ -88,5 +88,23 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/support/zero_size',
+			 component => '',
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'read_zero_size',
+		      description => 'Make sure that Mason handles a zero length source file correctly',
+		      component => <<'EOF',
+zero[<& support/zero_size &>]zero
+EOF
+		      expect => <<'EOF'
+zero[]zero
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
