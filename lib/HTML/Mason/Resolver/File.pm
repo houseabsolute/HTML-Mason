@@ -8,7 +8,7 @@ use strict;
 
 use File::Spec;
 use HTML::Mason::Resolver;
-use HTML::Mason::Tools qw(paths_eq);
+use HTML::Mason::Tools qw(paths_eq read_file);
 
 use vars qw(@ISA);
 
@@ -72,6 +72,12 @@ sub glob_path {
     return keys(%path_hash);
 }
 
+sub get_component {
+    my ($self, %lookup_info) = @_;
+
+    return read_file( $lookup_info{description} );
+}
+
 #
 # Given a filename, return the associated component path or undef if
 # none exists. This is called for top-level web requests that resolve
@@ -81,7 +87,7 @@ sub file_to_path {
     my ($self,$file) = @_;
     my $comp_root = $self->interp->comp_root;
     my @roots;
-    
+
     if (!ref($comp_root)) {
 	@roots = ($self->interp->comp_root);
     } elsif (ref($comp_root) eq 'ARRAY') {
@@ -97,27 +103,6 @@ sub file_to_path {
 	}
     }
     return undef;
-}
-
-#
-# Return the last modified time of the source file.
-#
-sub get_last_modified {
-    return $_[3];
-}
-
-#
-# Return filename for error messages etc.
-#
-sub get_source_description {
-    return $_[2];
-}
-
-#
-# Return parameters to pass to make_component.
-#
-sub get_source_params {
-    return (script_file=>$_[2], comp_class=>'HTML::Mason::Component::FileBased');
 }
 
 1;

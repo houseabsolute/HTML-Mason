@@ -375,7 +375,7 @@ sub load {
 	    # the encapsulation is breaking here.  I think the
 	    # resolver needs to return this text. - dave
 	    #
-	    my $file = read_file( $lookup_info{description} );
+	    my $file = $resolver->get_component(%lookup_info);
 	    if ($objfilemod < $srcmod) {
 		$object = $self->compiler->compile( comp => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
 		$self->write_object_file(object_text=>$object, object_file=>$objfile);
@@ -397,7 +397,7 @@ sub load {
 	    #
 	    # No object files. Load component directly into memory.
 	    #
-	    my $file = read_file( $lookup_info{description} );
+	    my $file = $resolver->get_component(%lookup_info);
 	    my $object = $self->compiler->compile( comp => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
 	    $comp = $self->eval_object_text(object=>$object, error=>\$err)
 		or $self->_compilation_error( $lookup_info{description}, $err );

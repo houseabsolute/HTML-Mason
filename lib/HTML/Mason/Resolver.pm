@@ -36,6 +36,10 @@ sub comp_class {
     shift->_virtual;
 }
 
+sub get_component {
+    shift->_virtual;
+}
+
 sub _virtual
 {
     my $self = shift;
