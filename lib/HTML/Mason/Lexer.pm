@@ -6,7 +6,10 @@ package HTML::Mason::Lexer;
 
 use strict;
 
-use Exception::Class qw( Mason::Exception::Lexer );
+use HTML::Mason::Exceptions;
+
+use Params::Validate qw(:all);
+Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
 
 my %fields =
     ( compiler => undef,
@@ -18,7 +21,7 @@ my %fields =
 # cases we actually call ->start again to recursively parse the
 # contents of a subcomponent/method.  Theoretically, adding a block is
 # as simple as adding an entry to this hash, and possibly a new
-# contents lexing method.
+# contents lexing methods.
 my %blocks = ( args    => 'variable_list_block',
 	       attr    => 'key_val_block',
 	       flags   => 'key_val_block',
@@ -38,32 +41,31 @@ my $blocks_re;
     $blocks_re = qr/$re/i;
 }
 
+sub simple_block_types
+{
+    return grep { $blocks{$_} eq 'raw_block'} keys %blocks;
+}
+
+# make this settable somehow
+sub named_block_types
+{
+    return 'def', 'method';
+}
+
 sub new
 {
     my $proto = shift;
     my $class = ref $proto || $proto;
+
+    validate( @_, { compiler => { isa => 'HTML::Mason::Compiler' } } );
     my %p = @_;
 
     my $self = bless {}, $class;
 
-    foreach ( keys %p )
-    {
-	if ( exists $fields{$_} )
-	{
-	    $self->{$_} = $p{$_} || $fields{$_};
-	}
-	else
-	{
-	    Mason::Lexer::Exception::Params->throw( error => "Invalid option to new: '$_'");
-	}
-    }
     foreach ( keys %fields )
     {
-	$self->{$_} ||= $fields{$_};
+	$self->{$_} = $p{$_} || $fields{$_};
     }
-
-    Mason::Lexer::Exception::Params->throw( error => "No compiler object provided in call to HTML::Mason::Lexer->new" )
-	unless ref $self->{compiler} && $self->{compiler}->isa('HTML::Mason::Compiler');
 
     return $self;
 }
@@ -78,6 +80,9 @@ sub lex
 
     $self->{name} = $p{name};
     $self->{lines} = 1;
+
+    $self->{in_def} = $self->{in_method} = 0;
+    $self->{pos} = undef;
 
     # This will be overridden if entering a def or method section.
     $self->{ending} = qr/\G\z/;
@@ -120,11 +125,10 @@ sub start
     if ( $self->{in_def} || $self->{in_method} )
     {
 	my $type = $self->{in_def} ? 'def' : 'method';
-	my $expect = "</%$type>";
-	unless ( $end eq $expect )
+	unless ( $end =~ m,</%\Q$type\E>\n?, )
 	{
 	    my $block_name = $self->{"in_$type"};
-	    Mason::Exception::Lexer->throw( error => "No $expect tag for <%$type $block_name> block" );
+	    HTML::Mason::Exception::Syntax->throw( error => "No </%$type> tag for <%$type $block_name> block" );
 	}
     }
 }
@@ -156,7 +160,7 @@ sub raw_block
 
     my $comp = $self->{comp};
     pos($comp) = $self->{pos};
-    if ( $comp =~ m,\G(.*?)</%\Q$p{block_type}\E>,igs )
+    if ( $comp =~ m,\G(.*?)</%\Q$p{block_type}\E>(\n?),igcs )
     {
 	$self->{pos} = pos($comp);
 
@@ -165,14 +169,15 @@ sub raw_block
 	{
 	    $self->{compiler}->raw_block( block_type => $p{block_type},
 					  block => $block );
-	    $self->{lines} += $block =~ tr/\n\r/\n\n/;
+	    $self->{lines} += $block =~ tr/\n/\n/;
+	    $self->{lines}++ if $2;
 	}
 
 	$self->{compiler}->end_block( block_type => $p{block_type} );
     }
     else
     {
-	Mason::Exception::Lexer->throw( error => "<%$p{block_type}> tag at line $self->{lines} has no matching </%$p{block_type}> tag" );
+	HTML::Mason::Exception::Syntax->throw( error => "<%$p{block_type}> tag at line $self->{lines} has no matching </%$p{block_type}> tag" );
     }
 }
 
@@ -193,6 +198,11 @@ sub variable_list_block
 			 =>
                          ( [^\n]+ )     # default value
 		        )?
+                        (?:             # an optional comment
+                         [ \t]*
+                         \#
+                         [^\n]*
+                        )?
                         |
                         [ \t]*          # a comment line
                         \#
@@ -209,7 +219,7 @@ sub variable_list_block
 	if ( $1 && $2 )
 	{
 	    $self->{compiler}->variable_declaration( block_type => $p{block_type},
-						     var_type => $1,
+						     type => $1,
 						     name => $2,
 						     default => $3,
 						   );
@@ -217,15 +227,16 @@ sub variable_list_block
 	$self->{lines}++;
     }
 
-    if ( $comp =~ m,\G</%\Q$p{block_type}\E>,gcs )
+    if ( $comp =~ m,\G</%\Q$p{block_type}\E>(\n?),igcs )
     {
 	$self->{pos} = pos($comp);
 	$self->{compiler}->end_block( block_type => $p{block_type} );
+	$self->{lines}++ if $1;
     }
     else
     {
 	my $line = $self->_next_line;
-	Mason::Exception::Lexer->throw( error => "Invalid <%$p{block_type}> section line at line $self->{lines}:\n$line" );
+	HTML::Mason::Exception::Syntax->throw( error => "Invalid <%$p{block_type}> section line at line $self->{lines}:\n$line" );
     }
 }
 
@@ -237,14 +248,14 @@ sub key_val_block
     my $comp = $self->{comp};
     pos($comp) = $self->{pos};
     while ( $comp =~ /\G
-                              [ \t]*
-                              (\w+)             # identifier
-                              [ \t]*=>[ \t]*    # separator
-                              (\S[^\n]*)        # value ( must start with a non-space char)
-                              \n
-                              |
-                              \G\n
-                            /gcx )
+                      [ \t]*
+                      ([\w_]+)          # identifier
+                      [ \t]*=>[ \t]*    # separator
+                      (\S[^\n]*)        # value ( must start with a non-space char)
+                      \n
+                      |
+                      \G[ \t]*\n
+                     /gcx )
     {
 	$self->{pos} = pos($comp);
 	if ($1 && $2)
@@ -257,15 +268,16 @@ sub key_val_block
 	$self->{lines}++;
     }
 
-    if ( $comp =~ m,\G</%\Q$p{block_type}\E>,gcs )
+    if ( $comp =~ m,\G</%\Q$p{block_type}\E>(\n?),igcs )
     {
 	$self->{pos} = pos($comp);
 	$self->{compiler}->end_block( block_type => $p{block_type} );
+	$self->{lines}++ if $1;
     }
     else
     {
 	my $line = $self->_next_line;
-	Mason::Exception::Lexer->throw( error => "Invalid <%$p{block_type}> section line at line $self->{lines}:\n$line" );
+	HTML::Mason::Exception::Syntax->throw( error => "Invalid <%$p{block_type}> section line at line $self->{lines}:\n$line" );
     }
 }
 
@@ -285,7 +297,7 @@ sub match_named_block
 
 	# This will cause ->start to return once it hits the
 	# appropriate ending tag.
-	local $self->{ending} = qr,\G</%\Q$type\E>,i;
+	local $self->{ending} = qr,\G</%\Q$type\E>\n?,i;
 
 	$self->{"in_$type"} = $name;
 
@@ -317,14 +329,14 @@ sub match_substitute
 
 	    # Add it in just to count lines
 	    $sub .= $2 if $2;
-	    $self->{lines} += $sub =~ tr/\n\r/\n\n/;
+	    $self->{lines} += $sub =~ tr/\n/\n/;
 
 	    return 1;
 	}
 	else
 	{
-	    my $line = $self->_next_line( $self->{comp} - 2 );
-	    Mason::Exception::Lexer->throw( error => "'<%' without matching '%>' at $self->{lines}:\n$line" );
+	    my $line = $self->_next_line( $self->{pos} - 2 );
+	    HTML::Mason::Exception::Syntax->throw( error => "'<%' without matching '%>' at $self->{lines}:\n$line" );
 	}
     }
 }
@@ -344,14 +356,14 @@ sub match_comp_call
 
 	    my $call = $1;
 	    $self->{compiler}->component_call( call => $call );
-	    $self->{lines} += $call =~ tr/\n\r/\n\n/;
+	    $self->{lines} += $call =~ tr/\n/\n/;
 
 	    return 1;
 	}
 	else
 	{
 	    my $line = $self->_next_line( $self->{pos} - 2 );
-	    Mason::Exception::Lexer->throw( error => "'<&' without matching '&>' at $self->{lines}:\n$line" );
+	    HTML::Mason::Exception::Syntax->throw( error => "'<&' without matching '&>' at $self->{lines}:\n$line" );
 	}
     }
 }
@@ -380,26 +392,26 @@ sub match_text
     my $comp = $self->{comp};
     pos($comp) = $self->{pos};
     if ( $comp =~ /\G
-                           (.+?)        # anything
-			   (?=          # followed by (use lookahead so as to not consume text)
-                             %          # an eval line
-                             |
-                             <%         # a substitution or tag start
-                             |
-                             <\/%       # a tag end
-                             |
-                             <&         # a comp call
-                             |
-                             \z         # or EOF.
-                           )
-                          /gcsx
+                   (.+?)        # anything
+		   (?=          # followed by (use lookahead so as to not consume text)
+                    %          # an eval line
+                    |
+                    <%         # a substitution or tag start
+                    |
+                    <\/%       # a tag end
+                    |
+                    <&         # a comp call
+                    |
+                    \z         # or EOF.
+                   )
+                  /gcsx
        )
     {
 	$self->{pos} = pos($comp);
 
 	my $text = $1;
 	$self->{compiler}->text( text => $text );
-	$self->{lines} += $text =~ tr/\n\r/\n\n/;
+	$self->{lines} += $text =~ tr/\n/\n/;
     }
 }
 
@@ -418,7 +430,7 @@ sub match_end
 	my $text = $1;
 	if (defined $text)
 	{
-	    $self->{lines} += $text =~ tr/\n\r/\n\n/;
+	    $self->{lines} += $text =~ tr/\n/\n/;
 	}
 
 	return $1 || 1;
