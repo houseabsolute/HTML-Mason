@@ -109,7 +109,7 @@ sub send_http_header {
 package HTML::Mason::Preview;
 use HTML::Mason::ApacheHandler;
 use HTML::Mason::Config;
-use HTML::Mason::Tools qw(date_delta_to_secs html_escape);
+use HTML::Mason::Tools qw(date_delta_to_secs html_escape make_fh);
 use MLDBM ($HTML::Mason::Config{mldbm_use_db}, $HTML::Mason::Config{mldbm_serializer});
 use POSIX;
 
@@ -356,7 +356,7 @@ sub handle_preview_request_1
 		    if (substr($content,$start,length($nextEventStr)) eq $nextEventStr) {
 			$start += length($nextEventStr);
 			my $length = [stat($path)]->[7];
-			my $fh = do { local *FH; *FH; };
+			my $fh = make_fh();
 			open($fh,$path) or die "Can't open $path: $!";
 			if ($length < 1024) {
 			    local $/ = undef;
