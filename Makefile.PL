@@ -22,7 +22,7 @@ unless ($@)
 
 It looks like you have an older version of Mason already installed on
 your machine (version $HTML::Mason::VERSION).  This version is not backwards
-compatible with versions of Mason before version 1.09_01.
+compatible with versions of Mason before version 1.10.
 Please read the UPGRADE document before continuing with this
 installation.
 
