@@ -265,6 +265,7 @@ sub _compile_subcomponents_or_methods
     foreach ( keys %{ $self->{current_compile}{$type} } )
     {
 	local $self->{current_compile} = $self->{current_compile}{$type}{$_};
+	local $self->{current_compile}->{in_named_block} = {type => $type, name => $_};
 	$compiled{$_} = $self->_component_params;
     }
 
