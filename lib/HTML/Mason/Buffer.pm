@@ -15,6 +15,7 @@ use HTML::Mason::MethodMaker
     ( read_only => [ qw( sink
 			 parent
                          filter
+                         filter_args
 			 ignore_flush
 		       ) ],
     );
@@ -69,6 +70,13 @@ sub _initialize
         $self->{sink_is_scalar} = 1;
     }
 
+    if ( $self->{filter} &&
+         ! ( $self->{filter_args} && @{ $self->{filter_args} } )
+       )
+    {
+        $self->{filter_args} = [];
+    }
+
     $self->{ignore_flush} = 1 unless $self->{parent};
 }
 
@@ -119,7 +127,7 @@ sub output
     my $self = shift;
     return unless exists $self->{buffer};
     my $output = ${$self->{buffer}};
-    return $self->{filter}->( $output ) if $self->{filter};
+    return $self->{filter}->( $output, @{ $self->{filter_args} } ) if $self->{filter};
     return $output;
 }
 
