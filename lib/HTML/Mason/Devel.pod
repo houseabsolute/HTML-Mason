@@ -1189,10 +1189,10 @@ but skips many options and features.
 The C<$m-E<gt>cache> method returns an object representing the cache
 for this component. Here's the typical usage of C<$m-E<gt>cache>:
 
-    my $result = $m->cache->get('key');
+    my $result = $m->cache->get('identifier');
     if (!defined($result)) {
         ... compute $result ...
-        $m->cache->set('key', $result);
+        $m->cache->set('identifier', $result);
     }
 
 C<$m-E<gt>cache-E<gt>get> attempts to retrieve this component's cache
@@ -1200,15 +1200,19 @@ value. If the value is available it is placed in I<$result>. If the
 value is not available, C<$result> is computed and stored in the
 cache by C<$m-E<gt>cache-E<gt>set>.
 
-=head2 Multiple Keys/Values
+=head2 Multiple Identifiers/Values
 
-A cache can store multiple keys and values. A value can be anything
-serializable by C<Storable>, from a simple scalar to an arbitrary
-complex list or hash reference:
+A cache can store multiple identifier/value pairs. A value can be
+anything serializable by C<Storable>, from a simple scalar to an
+arbitrary complex list or hash reference:
 
     $m->cache->set('name', $string);
     $m->cache->set('friends',\@list);
     $m->cache->set('map', %hash);
+
+You can fetch all the identifiers in a cache with
+
+    my @idents = $m->cache->get_identifiers;
 
 =head2 Expiration
 
@@ -1225,25 +1229,36 @@ C<$m-E<gt>cache-E<gt>remove>.
 You can also expire a cache item from an external script; see
 L<Accessing a Cache Externally> below.
 
+=head2 Cache Object Meta-data
+
+C<$m->E<gt>cache-E<gt>get_object> returns the B<Cache::Object> associated
+with a particular identifier. You can use this to retrieve useful
+meta-data:
+
+    my $co = $m->cache->get_object('name1');
+    $co->get_created_at();    # when was object stored in cache
+    $co->get_accessed_at();   # when was object last accessed
+    $co->get_expired_at();    # when does object expire
+
 =head2 Choosing a Cache Subclass
 
 C<Cache::Cache> is a purely virtual API implemented by a variety of
-subclasses. For example, Cache::FileCache implements the interface with a
-set of directories and files, while Cache::MemoryCache implements the
+subclasses. For example, B<Cache::FileCache> implements the interface with a
+set of directories and files, while B<Cache::MemoryCache> implements the
 interface in memory.
 
-By default C<$m-E<gt>cache> uses Cache::FileCache, but you can override
+By default C<$m-E<gt>cache> uses B<Cache::FileCache>, but you can override
 this with the I<cache_class> keyword. The value must be the name of a
 C<Cache::Cache> subclass; if it does not contain a "::", the prefix
 "Cache::" is automatically prepended. For example:
 
-    my $result = $m->cache(cache_class=>'MemoryCache')->get('key');
-    $m->cache(cache_class=>'MemoryCache')->set('key', $result);
+    my $result = $m->cache(cache_class=>'MemoryCache')->get('identifier');
+    $m->cache(cache_class=>'MemoryCache')->set('identifier', $result);
 
-You can even specify different subclasses for different keys in the
+You can even specify different subclasses for different identifiers in the
 same component. Just make sure the correct value is passed to all calls
 to C<$m-E<gt>cache>; Mason does not remember which subclass you
-have used for a given component or key.
+have used for a given component or identifier.
 
 =head2 Accessing a Cache Externally
 
@@ -1271,7 +1286,7 @@ the cache_root, for file-based caches only. Defaults to the
 =back
 
 Given this information you can get a handle on the component's cache.
-For example, the following code expires a cache item for component
+For example, the following code removes a cache item for component
 C</foo/bar>, assuming the data directory is C</usr/local/www/mason>
 and the cache subclass is C<Cache::FileCache>:
 
@@ -1281,7 +1296,7 @@ and the cache subclass is C<Cache::FileCache>:
         (namespace => data_cache_namespace("/foo/bar"),
 	 cache_root => "/usr/local/www/mason/cache",
 	 username => "mason");
-    $cache->remove('key1');
+    $cache->remove('identifier1');
 
 =head2 Guarantees (or lack thereof)
 
