@@ -151,12 +151,12 @@ Mason handler. If you want all Mason pages to have a distinct
 extension like ".mcomp", use that instead. If you wish to restrict
 Mason to one subdirectory at first, do this:
 
-    <Location /mason>
+    <Directory /path/to/subdirectory>
         <FilesMatch "*.html">
             SetHandler perl-script
             PerlHandler HTML::Mason::ApacheHandler
         </FilesMatch>
-    </Location>
+    </Directory>
 
 Once you have added the configuration directives, restart the
 server. First, go to a standard URL on your site to make sure you
