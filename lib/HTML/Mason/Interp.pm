@@ -35,16 +35,12 @@ BEGIN
 					   descr => "A Compiler object for compiling components" },
 	 data_dir                     => { parse => 'string', optional => 1, type => SCALAR,
 					   descr => "A directory for storing cache files and other state information" },
-	 dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR,
-					   descr => "The filename to use for Mason's 'dhandler' capability" },
 	 static_source                => { parse => 'boolean', default => 0, type => BOOLEAN,
 					   descr => "When true, we only compile source files once" },
 	 # OBJECT cause qr// returns an object
 	 ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
 					   default => qr/Subroutine .* redefined/i,
 					   descr => "A regular expression describing Perl warning messages to ignore" },
-	 max_recurse                  => { parse => 'string',  default => 32, type => SCALAR,
-					   descr => "The maximum recursion depth for component, inheritance, and request stack" },
 	 preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF,
 					   descr => "A list of components to load immediately when creating the Interpreter" },
 	 resolver                     => { isa => 'HTML::Mason::Resolver',
@@ -67,26 +63,29 @@ BEGIN
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code_cache
+                         compiler
 			 data_dir
 			 preloads
-                         source_cache ) ],
+                         static_source
+                         resolver
+                         source_cache
+			 use_object_files
+                        ) ],
 
       read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
-		      qw( autohandler_name
-		          code_cache_max_size
-			  compiler
+		      qw( code_cache_max_size
 			  dhandler_name
-			  static_source
 			  ignore_warnings_expr
-			  max_recurse
-			  resolver
-			  use_object_files )
+                         )
 		    ],
 
-      read_write_contained => { request => [ [ autoflush => { type => BOOLEAN } ],
-					     [ data_cache_defaults => { type => HASHREF } ],
-					     [ out_method => { type => SCALARREF | CODEREF } ],
-					   ]
+      read_write_contained => { request =>
+				[ [ autoflush => { type => BOOLEAN } ],
+				  [ autohandler_name => { type => SCALAR } ],
+				  [ data_cache_defaults => { type => HASHREF } ],
+				  [ max_recurse => { type => SCALAR } ],
+				  [ out_method => { type => SCALARREF | CODEREF } ],
+				]
 			      },
       );
 
@@ -765,10 +764,6 @@ by default,
 These settings are overriden by options given to particular
 C<$m-E<gt>cache> calls.
 
-=item dhandler_name
-
-File name used for dhandlers. Default is "dhandler".
-
 =item static_source
 
 True or false, default is false. When false, Mason checks the
@@ -801,12 +796,6 @@ If undef, all warnings are heeded; if '.', all warnings are ignored.
 By default, this is set to 'Subroutine .* redefined'.  This allows you
 to declare global subroutines inside <%once> sections and not receive
 an error when the component is reloaded.
-
-=item max_recurse
-
-The maximum recursion depth for the component stack, for the request
-stack, and for the inheritance stack. An error is signalled if the
-maximum is exceeded.  Default is 32.
 
 =item preloads
 
