@@ -351,6 +351,32 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'line_nums_off_by_one',
+		      description => 'make sure that line number reporting is not off by one',
+		      component => <<'EOF',
+1
+2
+3
+<%once>#4
+my $x = 1; #5
+</%once>6
+7
+<%args>#8
+$foo#9
+@bar#10
+</%args>11
+<%init>#12
+#13
+#14
+#15
+$y; #16
+</%init>
+EOF
+		      expect_error => qr/Global symbol .* at .* line 16/,
+		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'attr_block_zero',
 		      description => 'test proper handling of zero in <%attr> block values',
 		      component => <<'EOF',
