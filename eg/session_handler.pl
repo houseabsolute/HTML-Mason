@@ -102,7 +102,7 @@ __END__
 In your httpd.conf, add something like this:
 
  PerlRequire /path/to/handler.pl
- <FilesMatch "\.html$">
+ <LocationMatch "\.html$">
    SetHandler perl-script
    PerlHandler MyMason::MyApp
- </FilesMatch>
+ </LocationMatch>
