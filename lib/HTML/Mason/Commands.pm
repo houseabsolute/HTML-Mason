@@ -51,13 +51,17 @@ my $process_comp_path = sub {
     return $compPath;
 };
 
+my $no_interp_error = "called outside of Interp::exec environment";
+
 sub mc_abort
 {
+    die "mc_abort $no_interp_error" if !$INTERP;
     $INTERP->abort(@_);
 }
 
 sub mc_cache
 {
+    die "mc_cache $no_interp_error" if !$INTERP;
     my (%options) = @_;
     return undef if !$INTERP->use_data_cache;
     $options{cache_file} = $INTERP->data_cache_filename($INTERP->locals->{truePath});
@@ -80,6 +84,7 @@ sub mc_cache
 
 sub mc_cache_self
 {
+    die "mc_cache_self $no_interp_error" if !$INTERP;
     my (%options) = @_;
     
     return 0 if !$INTERP->use_data_cache;
@@ -120,6 +125,7 @@ sub mc_cache_self
 
 sub mc_caller ()
 {
+    die "mc_caller $no_interp_error" if !$INTERP;
     if ($INTERP->depth <= 1) {
 	return undef;
     } else {
@@ -129,11 +135,13 @@ sub mc_caller ()
 
 sub mc_call_stack ()
 {
+    die "mc_call_stack $no_interp_error" if !$INTERP;
     return map($_->{truePath},@{$INTERP->{stack}});
 }
 
 sub mc_comp
 {
+    die "mc_comp $no_interp_error" if !$INTERP;
     my ($compPath, %args) = @_;
 
     $compPath = &$process_comp_path($compPath);
@@ -148,6 +156,7 @@ sub mc_comp
 
 sub mc_comp_exists
 {
+    die "mc_comp_exists $no_interp_error" if !$INTERP;
     my ($compPath, %args) = @_;
 
     $compPath = &$process_comp_path($compPath);
@@ -170,6 +179,7 @@ sub mc_comp_exists
 
 sub mc_comp_source
 {
+    die "mc_comp_source $no_interp_error" if !$INTERP;
     my ($compPath) = @_;
     
     $compPath = &$process_comp_path($compPath);
@@ -178,6 +188,7 @@ sub mc_comp_source
 
 sub mc_comp_stack ()
 {
+    die "mc_comp_stack $no_interp_error" if !$INTERP;
     return map($_->{truePath},@{$INTERP->{stack}});
 }
 
@@ -187,6 +198,7 @@ sub mc_comp_stack ()
 #
 sub mc_date ($)
 {
+    die "mc_date $no_interp_error" if !$INTERP;
     my ($format) = @_;
 
     my $time = $INTERP->current_time();
@@ -217,6 +229,7 @@ sub mc_date ($)
 
 sub mc_file ($)
 {
+    die "mc_file $no_interp_error" if !$INTERP;
     my ($file) = @_;
     # filenames beginning with / or a drive letter (e.g. C:/) are absolute
     unless ($file =~ /^([A-Za-z]:)?\//) {
@@ -234,16 +247,19 @@ sub mc_file ($)
 
 sub mc_file_root ()
 {
+    die "mc_file_root $no_interp_error" if !$INTERP;
     return $INTERP->static_file_root;
 }
 
 sub mc_out ($)
 {
+    die "mc_out $no_interp_error" if !$INTERP;
     $INTERP->locals->{sink}->($_[0]);
 }
 
 sub mc_time
 {
+    die "mc_time $no_interp_error" if !$INTERP;
     my $time = $INTERP->current_time;
     $time = time() if $time eq 'real';
     return $time;
@@ -251,6 +267,7 @@ sub mc_time
 
 sub mc_var ($)
 {
+    die "mc_var $no_interp_error" if !$INTERP;
     my ($field) = @_;
     return $INTERP->{vars}->{$field};
 }
