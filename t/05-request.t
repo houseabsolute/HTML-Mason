@@ -700,5 +700,17 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'reexec',
+		      description => 'test that $m cannot be reexecuted',
+		      component => <<'EOF',
+<%init>
+$m->exec;
+</%init>
+EOF
+                      expect_error => qr/Can only call exec\(\) once/,
+                    );
+
+#------------------------------------------------------------
+
     return $group;
 }

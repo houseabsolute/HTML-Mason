@@ -100,6 +100,7 @@ sub new
 		      buffer_stack => undef,
 		      count => 0,
 		      dhandler_arg => undef,
+	              execd => 0,
 		      parent_request => undef,
 		      request_depth => 0,
 		      stack => undef,
@@ -187,6 +188,11 @@ sub _initialize {
 sub exec {
     my ($self) = @_;
     my $interp = $self->interp;
+
+    # Cheap way to prevent users from executing the same request twice.
+    if ($self->{execd}++) {
+	die "Can only call exec() once for a given request object. Did you want to use a subrequest?";
+    }
 
     # All errors returned from this routine will be in exception form.
     local $SIG{'__DIE__'} = sub {
