@@ -318,7 +318,7 @@ sub load {
 	return undef unless (-f $objfile);   # component not found
 	
 	$self->write_system_log('COMP_LOAD', $fq_path);	# log the load event
-	my $comp = $self->eval_object_text(object_file=>$objfile, error=>\$err)
+	my $comp = $self->eval_object_text(object=>$objfile, error=>\$err)
 	    or $self->_compilation_error($objfile, $err);
 	$comp->assign_runtime_properties($self,$fq_path);
 	
@@ -364,14 +364,16 @@ sub load {
 	    # and load component from there.
 	    #
 	    update_object:
+	    my $object;
+	    my %params = $resolver->get_source_params(@lookup_info);
+	    my $file = read_file( $params{script_file} );
 	    if ($objfilemod < $srcmod) {
-		my @newfiles;
-		my %params = $resolver->get_source_params(@lookup_info);
-		my $comp = read_file( $params{script_file} );
-		my $object = $self->compiler->compile( comp => $comp, name => $params{script_file}, comp_class => $params{comp_class} );
+		$object = $self->compiler->compile( comp => $file, name => $params{script_file}, comp_class => $params{comp_class} );
 		$self->write_object_file(object_text=>$object, object_file=>$objfile);
 	    }
-	    $comp = $self->eval_object_text(object_file=>$objfile, error=>\$err);
+	    # read the existing object file
+	    $object ||= read_file($objfile);
+	    $comp = $self->eval_object_text(object=>$object, error=>\$err);
 	    if (!$comp) {
 		# If this is an earlier version object file, replace it.
 		if ($err =~ /object file was created by a pre-0\.7 parser/
@@ -387,10 +389,10 @@ sub load {
 	    # No object files. Load component directly into memory.
 	    #
 	    my %params = $resolver->get_source_params(@lookup_info);
-
-	    my $object = $self->compiler->compile( comp => $comp, name => $params{script_file}, comp_class => $params{comp_class} );
-	    $self->write_object_file(object_text=>$object, object_file=>$objfile);
-	    $comp = $self->eval_object_text(object_file=>$objfile, error=>\$err);
+	    my $file = read_file( $params{script_file} );
+	    my $object = $self->compiler->compile( comp => $file, name => $params{script_file}, comp_class => $params{comp_class} );
+	    $comp = $self->eval_object_text(object=>$object, error=>\$err)
+		or $self->_compilation_error( $lookup_info[1], $err );
 	}
 	$comp->assign_runtime_properties($self,$fq_path);
 
@@ -455,7 +457,8 @@ sub make_component {
 
     my $object = $self->compiler->compile( comp => ${ $p{object_text} }, name => $p{script_file}, comp_class => $p{comp_class} );
     $self->write_object_file(object_text=>$object, object_file=>$p{script_file});
-    my $comp = $self->eval_object_text(object_file=>$p{script_file}, error=>\$err);
+
+    my $comp = $self->eval_object_text(object=>$object, error=>\$err);
     $comp->assign_runtime_properties($self) if $comp;
     return $comp;
 }
@@ -647,8 +650,7 @@ sub code_cache_decay_factor { 0.75 }
 sub eval_object_text
 {
     my ($self, %options) = @_;
-    my ($object_text,$object_file,$errref) =
-	@options{qw(object_text object_file error)};
+    my ($object, $errref) = @options{qw(object error)};
 
     #
     # Evaluate object file or text with warnings on
@@ -659,14 +661,11 @@ sub eval_object_text
 	my $warnstr = '';
 	local $^W = 1;
 	local $SIG{__WARN__} = $ignore_expr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ } : sub { $warnstr .= $_[0] };
+
 	# If in taint mode, untaint the object filename or object text
-	if ($object_file) {
-	    ($object_file) = ($object_file =~ /^(.*)$/s) if taint_is_on;
-	    $comp = do($object_file);
-	} else {
-	    ($object_text) = ($object_text =~ /^(.*)$/s) if taint_is_on;
-	    $comp = eval($object_text);
-	}
+	($object) = ($object =~ /^(.*)$/s) if taint_is_on;
+	$comp = eval $object;
+
 	$err = $warnstr . $@;
 
 	#
@@ -680,23 +679,11 @@ sub eval_object_text
     }
 
     #
-    # Detect various forms of older, incompatible object files:
-    #  -- zero-sized files (previously signifying pure text components)
-    #  -- pre-0.7 files that return code refs
-    #  -- valid components but with an earlier parser_version
+    # I will overhaul this sometime soon - dave (I hope soon)
     #
-    if ($object_file) {
-	my $parser_version = '0.8';
-	my $incompat = "Incompatible object file ($object_file);\nobject file was created by %s and you are running parser version $parser_version.\nAsk your administrator to clear the object directory.\n";
-	if (-z $object_file) {
-	    $err = sprintf($incompat,"a pre-0.7 parser");
-	} elsif ($comp) {
-	    if (ref($comp) eq 'CODE') {
-		$err = sprintf($incompat,"a pre-0.7 parser");
-	    } elsif ($comp->parser_version != $parser_version) {
-		$err = sprintf($incompat,"parser version ".$comp->parser_version);
-	    }
-	}
+    if ($self->{use_object_files}) {
+	# check compatibility between lexer/compiler that wrote this
+	# and lexer/compiler we're using now.
     }
 
     #
@@ -734,7 +721,7 @@ sub write_object_file
 	@options{qw(object_text object_file files_written)};
     my @newfiles = ($object_file);
 
-    if (!-f $object_file) {
+    if (defined $object_file && !-f $object_file) {
 	my ($dirname) = dirname($object_file);
 	if (!-d $dirname) {
 	    unlink($dirname) if (-e $dirname);
@@ -751,11 +738,25 @@ sub write_object_file
     @$files_written = @newfiles if (defined($files_written))
 }
 
+sub make_anonymous_component
+{
+    my $self = shift;
+    my %p = @_;
+
+    my $object = $self->compiler->compile(%p);
+
+    my $error;
+    my $comp = $self->eval_object_text( object => $object, error => \$error );
+    $self->_compilation_error( '<<anonymous component>>', $error ) if $error;
+
+    return $comp;
+}
+
 sub _compilation_error {
     my ($self, $filename, $err) = @_;
 
     my $msg = sprintf("Error during compilation of %s:\n%s\n",$filename, $err);
-    die $msg;
+    HTML::Mason::Exception::Compilation->throw( error => $msg );
 }
 
 
