@@ -135,6 +135,10 @@ sub test
     return $test;
 }
 
+# prevents the Makefile from trying to process the Build.PL file into
+# Build
+sub processPL { '' }
+
 sub libscan
 {
     my $self = shift;
