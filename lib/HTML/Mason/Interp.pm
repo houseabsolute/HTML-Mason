@@ -923,6 +923,19 @@ Example of usage:
 
     $m->comp($anon_comp);
 
+=for html <a name="item_load">
+
+=item load (path)
+
+Given a component path, this method returns the component object for
+that path, if one exists.  In normal operations, this method expects
+to receive an absolute path and will throw an exception if it is not
+given one.
+
+However, if you did not provide a component root and you are using
+Mason's default Resolver class, then relative paths will be treated as
+relative to the current working directory.
+
 =for html <a name="item_comp_root">
 
 =item comp_root (comp_root)
@@ -1058,6 +1071,21 @@ in a file:
 This allows you to use Mason as a pure text templating solution --
 like Text::Template and its brethren, but with more power (and of
 course more complexity).
+
+You may also choose not to provide a component root, in which case the
+component root is the root directory of your filesystem.
+
+In this case, the C<< $interp->exec >> method will accept relative
+paths and treat them as being relative to the current director.
+
+    my $outbuf;
+    my $interp = new HTML::Mason::Interp (data_dir=>'<data directory>',
+					  out_method=>\$outbuf);
+    my $retval = $interp->exec('../foo.comp', <args>...);
+    open(F,">mason.out");
+    print F $outbuf;
+    close(F);
+    print "return value of the ../foo.comp component was: $retval\n";
 
 =head1 SEE ALSO
 
