@@ -42,9 +42,15 @@ Apache::Request object (respectively) will be created for the purposes
 of argument handling. These objects are, unfortunately, not yet
 accessible from components.
 
-CGI is the default and comes with most Perl systems. You may wish to
-switch to Apache::Request (available from CPAN) for speed and memory
+'CGI' is the default and should work on most Perl systems. However,
+if you have the Apache::Request package (or are inclined to fetch it
+from CPAN), you might switch to 'mod_perl' for speed and memory
 efficiency.
+
+When specifying args_method='mod_perl', the $r global is upgraded
+to an Apache::Request object. This object inherits all Apache
+methods and adds a few of its own, dealing with parameters and
+file uploads. See Apache::Request manual page for more information.
 
 =back
 
