@@ -480,10 +480,10 @@ The events are:
  EVENT NAME	DESCRIPTION			EXTRA FIELDS
 
  REQ_START	start of HTTP request		request number, URL + query string
- REQ_END	end of HTTP request		request number, error flag (1 if error occurred,
-						0 otherwise)
- CACHE_READ	attempt to read from		component path, cache key, success flag
-		data cache (mc_cache)		(1 if item was found, 0 otherwise)
+ REQ_END	end of HTTP request		request number, error flag (1 if
+						error occurred, 0 otherwise)
+ CACHE_READ	attempt to read from		component path, cache key, success
+		data cache (mc_cache)		flag (1 if item found, 0 otherwise)
  CACHE_STORE	store to data cache		component path, cache key
  COMP_LOAD	component loaded into memory	component path
 		for first time	

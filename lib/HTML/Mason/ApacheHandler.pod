@@ -1,6 +1,6 @@
 =head1 NAME
 
-HTML::Mason::ApacheHandler - Link Mason to Apache via mod_perl
+HTML::Mason::ApacheHandler - Mason/mod_perl interface
 
 =head1 SYNOPSIS
 
@@ -24,13 +24,7 @@ HTML::Mason::handler() routine in handler.pl.
 
 =over
 
-=item debug_handler_proc
-
-=item debug_handler_script
-
-=item debug_mode
-
-=item debug_perl_binary
+=item debug_handler_proc, debug_handler_script, debug_mode, debug_perl_binary
 
 The B<debug_*> parameters control Mason's use of debug files.
 Component L<Admin/debugging> procedures are fully described in the I<Mason

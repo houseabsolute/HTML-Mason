@@ -775,12 +775,13 @@ your code as if the cache might disappear at any time. In particular,
 
 o If the 'store' action cannot get a write lock on the cache, it simply
 fails quietly.
+
 o Your Mason administrator will be required to remove cache files
 periodically when they get too large; this can happen any time.
 
 On the other hand, expiration in its various forms is guaranteed,
 because Mason does not want you to rely on bad data to generate your
-content. If you use the 'expire' action and it cannot get a write
+content. If you use the 'expire' action and Mason cannot get a write
 lock, it will repeat the attempt several times and finally die with an
 error.
 
@@ -803,7 +804,7 @@ sampling of methods useful to component developers:
 
     $r->content()       # don't use this one! (see Tips and Traps)
 
-=head1 SENDING  HTTP HEADERS
+=head1 SENDING HTTP HEADERS
 
 Mason sends a standard HTTP header with content type text/html when
 it reaches the primary HTML section of a component (after any
