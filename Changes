@@ -26,6 +26,8 @@ without affecting the global component namespace.
 L{Devel/e&lt%def_i_name_e&gt;}
 - <%args> section now accommodates optional comments for declarations
 L{Devel/e&lt%argse&gt;}
+- Improved Perl translation of <%args> section (submitted by Ken
+Williams)
 - Autohandler and dhandler file names are now configurable
 L{Interp/item_autohandler_name}
 - Dhandlers, which formerly worked only in mod_perl mode, now work in
@@ -36,6 +38,8 @@ having been moved to Request class.
 simplified set of options, and returns a component object
 directly. make is now called make_dirs. L{Parser/item_make_component}
 - Removed obsolete and undocumented Interp::vars and mc_var functions
+- Simplified chown/getpwuid usage in handler.pl (submitted by Randal
+Schwartz)
 
 0.6.1  Tue Jul 27 09:34:31 PDT 1999
 
