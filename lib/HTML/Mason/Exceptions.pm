@@ -28,6 +28,7 @@ BEGIN
 	   'HTML::Mason::Exception::Compilation' =>
 	   { isa => 'HTML::Mason::Exception',
 	     abbr => 'compilation_error',
+	     fields => [qw(filename)],
 	     description => "error thrown in eval of the code for a component" },
 
 	   'HTML::Mason::Exception::Compilation::IncompatibleCompiler' =>
@@ -315,6 +316,15 @@ sub as_html
     return $out;
 }
 
+package HTML::Mason::Exception::Compilation;
+
+sub full_message
+{
+    my $self = shift;
+
+    return sprintf("Error during compilation of %s:\n%s\n", $self->filename || '', $self->message || '');
+}
+
 package HTML::Mason::Exception::Syntax;
 
 sub full_message
@@ -368,6 +378,16 @@ Exceptions in this class contain the field C<aborted_value>.
 
 Abbreviated as C<abort_error>.
 
+=item HTML::Mason::Exception::Compilation
+
+An exception occurred when attempting to C<eval> an existing object
+file.
+
+Exceptions in this class have the field C<filename>, which indicates
+what file contained the code that caused the error.
+
+Abbreviated as C<compilation_error>.
+
 =item HTML::Mason::Exception::Compiler
 
 The compiler threw an exception because it received incorrect input.
@@ -376,13 +396,6 @@ initialize compilation while it was in the middle of compiling another
 component.
 
 Abbreviated as C<compiler_error>.
-
-=item HTML::Mason::Exception::Compilation
-
-An exception occurred when attempting to C<eval> an existing object
-file.
-
-Abbreviated as C<compilation_error>.
 
 =item HTML::Mason::Exception::Compilation::IncompatibleCompiler
 
