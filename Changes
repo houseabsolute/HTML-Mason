@@ -19,10 +19,11 @@ modules like Error.pm.  Task id #446.
 - Added more documentation on Mason's error handling and exception
 system.  Task id #446.
 
-- ApacheHandler objects created by Mason are now cached more
-aggressively.  This results in a big speed win for almost all
-httpd.conf-based configurations.  See the PERFORMANCE section of the
-Admin guide for details.
+- The way ApacheHandler objects are cached when Mason is configured in
+the Apache config file has changed.  You can now set an explicit
+MasonConfigName parameter to get a significant speed enhancement.  See
+the "Configuration Names" section under "BASIC CONFIGURATION VIA
+httpd.conf DIRECTIVES" in the Admin guide for details.
 
 - Mason's test harness now gives verbose output when the TEST_VERBOSE
 environment variable is true.  This eliminates the need for setting
