@@ -414,6 +414,14 @@ sub new
     $defaults{request_class}  = 'HTML::Mason::Request::ApacheHandler';
     $defaults{resolver_class} = 'HTML::Mason::Resolver::File::ApacheHandler';
 
+    # Set default error_format based on error_mode
+    my %params = @_;
+    if (exists($params{error_mode}) and $params{error_mode} eq 'fatal') {
+	$defaults{error_format} = 'line';
+    } else {
+	$defaults{error_format} = 'html';
+    }
+
     my @args = $class->create_contained_objects(%defaults, @_);
 
     my $self = bless {validate( @args, $class->validation_spec )}, $class;
