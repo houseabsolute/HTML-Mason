@@ -27,13 +27,15 @@ use HTML::Mason::MethodMaker
 			 hooks
 			 system_log_file
 			 system_log_separator
-			 preloads ) ],
+			 preloads
+                         source_cache ) ],
 
       read_write => [ qw( autohandler_name
 			  code_cache_max_size
 			  compiler
 			  data_dir
-			  dhandler_name
+ 			  dhandler_name
+                          fixed_source
 		          ignore_warnings_expr
 			  max_recurse
 			  resolver
@@ -55,6 +57,8 @@ __PACKAGE__->valid_params
 				       descr => "A Compiler object for compiling components" },
      dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR,
 				       descr => "The filename to use for Mason's 'dhandler' capability" },
+     fixed_source                 => { parse => 'boolean', default => 0, type => BOOLEAN,
+				       descr => "When true, we only compile source files once" },
      # OBJECT cause qr// returns an object
      ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
 				       default => qr/Subroutine .* redefined/i,
@@ -68,13 +72,13 @@ __PACKAGE__->valid_params
 				       descr => "A list of components to load immediately when creating the Interpreter" },
      resolver                     => { isa => 'HTML::Mason::Resolver',
 				       descr => "A Resolver object for fetching components from storage" },
-     system_log_events            => { parse => 'string',  optional => 1, type => SCALAR|HASHREF|UNDEF,
+     system_log_events            => { parse => 'string',  optional => 1, type => BOOLEAN|HASHREF,
 				       descr => "An array or |-separated string of Mason events to log" },
      system_log_file              => { parse => 'string',  optional => 1, type => SCALAR,
 				       descr => "A filename in which Mason events will be logged" },
      system_log_separator         => { parse => 'string',  default => "\cA", type => SCALAR,
 				       descr => "A string to separate entries in the Mason events log" },
-     use_object_files             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF,
+     use_object_files             => { parse => 'boolean', default => 1, type => BOOLEAN,
 				       descr => "Whether to cache component objects on disk" },
      data_dir                     => { parse => 'string', type => SCALAR,
 				       descr => "A directory for storing cache files and other state information" },
@@ -194,42 +198,62 @@ sub comp_exists {
 sub load {
     my ($self,$path) = @_;
     my ($maxfilemod, $objfile, $objfilemod);
-    my (@objstat, $objisfile);
     my $code_cache = $self->code_cache;
     my $resolver = $self->{resolver};
-
 
     if (exists $code_cache->{$path} and $code_cache->{$path}{type} eq 'virtual') {
 	# Don't look for this in the component root
 	return $code_cache->{$path}{comp};
     }
 
+    my $source;
+    if ($self->{fixed_source} && exists $self->{source_cache}{$path}) {
+	# This path did not resolve on an earlier attempt
+	return unless defined $self->{source_cache}{$path};
+
+	$source = $self->{source_cache}{$path};
+    }
+
     #
-    # Use resolver to look up component and get fully-qualified path.
-    # Return undef if component not found.
+    # Use resolver to look up component and get source info if it
+    # wasn't cached.
     #
-    my $source = $resolver->get_info($path) or return;
+    $source ||= $resolver->get_info($path);
+
+    $self->{source_cache}{$path} = $source if $self->{fixed_source};
+
+    # No component matches this path.
+    return unless defined $source;
+
     my $comp_id = $source->comp_id;
+
 
     #
     # Get last modified time of source.
     #
     my $srcmod = $source->last_modified;
 
-    if ($self->{use_object_files}) {
-	$objfile = $self->comp_id_to_objfile($comp_id);
-	@objstat = stat $objfile;
-	$objisfile = -f _;
-    }
-
     #
-    # If code cache contains an up to date entry for this path,
-    # use the cached sub.
+    # If code cache contains an up to date entry for this path, use
+    # the cached sub.  Always use the cached sub in fixed_source mode.
     #
     return $code_cache->{$comp_id}->{comp}
-	if exists($code_cache->{$comp_id}) and $code_cache->{$comp_id}->{lastmod} >= $srcmod;
+	if exists($code_cache->{$comp_id}) and ( $self->{fixed_source} || $code_cache->{$comp_id}->{lastmod} >= $srcmod );
 
-    $objfilemod = (defined($objfile) and $objisfile) ? $objstat[9] : 0;
+    if ($self->{use_object_files}) {
+	$objfile = $self->comp_id_to_objfile($comp_id);
+
+	if ($self->{fixed_source}) {
+	    # No entry in the code cache so if the object file exists,
+	    # we will use it, otherwise we must create it.  These
+	    # values make that happen.
+	    $objfilemod = -f $objfile ? $srcmod : 0;
+	} else {
+	    # Um, what's our plan if it _is not_ a file?!
+	    $objfilemod = (defined($objfile) and -f $objfile) ? (stat _)[9] : 0;
+	}
+    }
+
     #
     # Load the component from source or object file.
     #
