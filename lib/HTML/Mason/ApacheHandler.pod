@@ -47,6 +47,14 @@ The B<debug_*> parameters control Mason's use of debug files.
 Component L<Admin/debugging> procedures are fully described in the I<Mason
 Administrator's Guide>.
 
+=item decline_dirs
+
+Indicates whether Mason should decline directory requests, leaving
+Apache to serve up a directory index or a FORBIDDEN error as
+appropriate. Default is 1. See L<Admin/Allowing requests for
+directories> for more information about handling directories
+with Mason.
+
 =item error_mode
 
 Specifies one of two ways to handle Perl errors, 'fatal' or 'html'.

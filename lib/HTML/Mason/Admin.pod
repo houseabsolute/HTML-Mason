@@ -227,45 +227,6 @@ end of the startup code in C<handler.pl>:
     chown (scalar(getpwnam "nobody"), scalar(getgrnam "nobody"),
             $interp->files_written);
 
-=head2 Declining requests for binary files
-
-Mason should not be allowed to handle binary files (images, tarballs,
-etc.) as regular components. Not only is there extra overhead, but
-such a file may inadvertently contain a Mason character sequence such
-as "<%".
-
-The following line, placed at the top of the handler() routine,
-
-    return -1 if $r->content_type && $r->content_type !~ m|^text/|i;
-
-declines all requests with a content type not starting with "text/".
-This allows text/html and text/plain to pass through but not much
-else.  It is included (commented out) in the default handler.pl.
-
-=head2 Allowing requests for directories
-
-By default Mason will decline requests for directories, allowing
-Apache to serve up a directory index or a FORBIDDEN depending on your
-configuration. Unfortunately this rule applies even if there is a
-dhandler in the directory: /foo/bar/dhandler does not, by
-default, get a chance to handle a request for /foo/bar.
-
-If you would like Mason to handle directory requests, do the
-following:
-
-1. Set the L<ApacheHandler/decline_dirs> ApacheHandler parameter to 0.
- 
-2. If your handler.pl contains the standard "return -1" line to
-decline non-text requests (as given in the previous section), add a
-clause allowing directory types:
- 
-    return -1 if $r->content_type && $r->content_type !~ m|^text/|i
-                 && $r->content_type !~ m|directory$|i;
-
-A directory request can only be caught by a dhandler, in that
-directory or above. The dhandler is responsible for setting the
-content type.
-
 =head2 Persistent user sessions
 
 With just a few lines in handler.pl you can make a global hash
@@ -335,6 +296,53 @@ Now when referring to these globals inside components, you can use the
 plain variable name:
 
     $dbh->prepare...
+
+=head2 Declining image requests
+
+Mason should be prevented from serving images, tarballs, and other
+binary files as regular components. Such a file may inadvertently
+contain a Mason character sequence such as "<%", causing an error.
+
+There are several ways to restrict which file types are handled by Mason.
+One way is with a line at the top of handler(), e.g.:
+
+    return -1 if $r->content_type && $r->content_type !~ m|^text/|i;
+
+This line allows text/html and text/plain to pass through but not much
+else.  It is included (commented out) in the default handler.pl.
+
+Another way is specifying a filename pattern in the Apache
+configuration, e.g.:
+
+    <FilesMatch "(\.html|\.txt|^[^\.]+)$>
+    SetHandler perl-script
+    PerlHandler HTML::Mason
+    </FilesMatch>
+
+This directs Mason to handle only files with .html, .txt, or no extension.
+
+=head2 Allowing directory requests
+
+By default Mason will decline requests for directories, leaving Apache
+to serve up a directory index or a FORBIDDEN as appropriate.
+Unfortunately this rule applies even if there is a dhandler in the
+directory: /foo/bar/dhandler does not get a chance to
+handle a request for /foo/bar.
+
+If you would like Mason to handle directory requests, do the
+following:
+
+1. Set the L<ApacheHandler/decline_dirs> ApacheHandler parameter to 0.
+
+2. If your handler.pl contains the standard "return -1" line to
+decline non-text requests (as given in the previous section), add a
+clause allowing directory types:
+
+    return -1 if $r->content_type && $r->content_type !~ m|^text/|i
+                 && $r->content_type !~ m|directory$|i;
+
+The dhandler that catches a directory request is responsible for
+setting a reasonable content type.
 
 =head1 STANDARD FEATURES
 
