@@ -41,7 +41,6 @@ my %valid_params =
      object_size        => {type => SCALAR,  default => 0},
      parser_version     => {type => SCALAR,  optional => 1},
      subcomps           => {type => HASHREF, default => {}},
-     source_ref_start   => {type => SCALAR,  optional => 1},   # legacy, left in for pre-0.8 obj files
     );
 
 sub allowed_params { \%valid_params }
@@ -300,11 +299,6 @@ sub object_file {
     return $self->interp->object_file($self);
 }
 
-sub cache_file {
-    my $self = shift;
-    return $self->interp->cache_file($self);
-}
-
 1;
 
 __END__
@@ -382,10 +376,6 @@ found. Attributes are declared in the C<E<lt>%attrE<gt>> section.
 
 Returns true if the specified attribute exists in this component or
 one of its parents, undef otherwise.
-
-=item cache_file
-
-Returns the data cache filename for this component.
 
 =item create_time
 
