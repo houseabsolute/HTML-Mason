@@ -109,6 +109,9 @@ package HTML::Mason::Request::CGI;
 use HTML::Mason::Request;
 use base qw(HTML::Mason::Request);
 
+use HTML::Mason::MethodMaker
+    ( read_only => [ 'cgi_request' ] );
+
 __PACKAGE__->valid_params( cgi_request => {isa => 'HTML::Mason::FakeApache'} );
 
 sub cgi_object {
@@ -389,6 +392,12 @@ Note that the ApacheHandler class (for using Mason under mod_perl)
 also provides a C<cgi_object()> method that does the same thing as
 this one.  This makes it easier to write components that function
 equally well under CGIHandler and ApacheHandler.
+
+=item * cgi_request
+
+Returns the object that is used to emulate Apache's request object.
+In other words, this is the object that C<$r> is set to when you use
+this class.
 
 =back
 
