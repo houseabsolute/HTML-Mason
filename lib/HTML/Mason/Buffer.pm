@@ -117,8 +117,12 @@ sub flush
 {
     my $self = shift;
     return if $self->ignore_flush;
-    $self->parent->receive( $self->output ) if $self->parent;
-    $self->clear;
+
+    if ($self->parent)
+    {
+	$self->parent->receive( $self->output );
+	$self->clear;
+    }
 }
 
 sub clear
