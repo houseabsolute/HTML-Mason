@@ -83,7 +83,6 @@ use File::Spec;
 use HTML::Mason::Exceptions;
 use HTML::Mason::Interp;
 use HTML::Mason::Error qw(error_process error_display_html);
-use HTML::Mason::Tools qw(dumper_method html_escape make_fh pkg_installed);
 use HTML::Mason::Utils;
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
