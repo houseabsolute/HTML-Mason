@@ -102,7 +102,7 @@ sub exec
 	    die $@;
 	}
     }
-    
+
     return defined($retval) ? $retval : OK;
 }
 
@@ -701,7 +701,7 @@ sub prepare_request
 	%args = $self->_mod_perl_args($r);
     } else {
 	$cgi_object = CGI->new;
-	%args = $self->_cgi_args($r);
+	%args = $self->_cgi_args($r, $cgi_object);
     }
 
     #
