@@ -290,7 +290,7 @@ Make sure this directive comes I<after> any directive which turns
 Mason on for certain locations, as Apache gives the last block defined
 precedence.
 
-=head3 Securing Top-Level Components
+=head3 Securing top-level components
 
 Users may exploit a server-side scripting environment by invoking
 scripts with malicious or unintended arguments. Mason administrators
@@ -609,7 +609,7 @@ this:
       return $ah->handle_request($r);
   }
 
-=head3 Securing Top-Level Components with Code
+=head3 Securing top-level components with code
 
 Again, as discussed earlier, you will often have components that are
 intended only for use by other components, and you don't want these to
@@ -618,6 +618,32 @@ components have the extension ".mas".  To reject such requests, we can
 add this line to our C<handler()> subroutine:
 
   return DECLINED if $r->uri =~ /\.mas$/;
+
+=head3 Controlling access with component attributes
+
+If you wanted to control access to components based on component
+attributes, as defined in an C<< <%attr> >> section, you might do
+something like this:
+
+  sub handler {
+      my ($r) = @_;
+
+      my $req = $ah->prepare_request($r);
+
+      my $comp = $req->request_comp;
+
+      # this is done via magic hand-waving ...
+      my $user = get_user_from_cookie();
+
+      # remember, attributes are inherited so this could come from a
+      # component higher up the inheritance chain
+      my $required_access = $comp->attr('access_level');
+
+      return NOT_FOUND
+          if $user->access_level < $required_access;
+
+      return $req->exec;
+  }
 
 =head2 Wrappers with Virtual Hosts
 
@@ -655,6 +681,8 @@ C<PerlSetVar> directive in each C<VirtualHost> block, like this:
     </Location>
   </VirtualHost>
 
+=head3 Creating apachehandler objects on the fly
+
 You might also consider creating ApacheHandler objects on the fly,
 like this:
 
@@ -675,11 +703,7 @@ like this:
 This is more flexible but you lose the memory savings of creating all
 your objects during server startup.
 
-=head2 But Why a Wrapper?
-
-All of the examples so far have begged the question of why you might
-actually want to write a wrapper, since everything they do can be done
-just as easily via configuration directives in the F<httpd.conf> file.
+=head2 Calling a Component to Handle Errors
 
 How about if you wanted to handle all request errors by calling an
 error handling component?  There is no way to do this without wrapper
