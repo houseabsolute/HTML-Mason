@@ -81,7 +81,6 @@ sub compile
 sub compile_to_file
 {
     my $self = shift;
-    printf "C->compile_to_file: rss=%d, vsz=%d\n", `ps -eo rss,vsz -p $$` =~ /(\d+)\s+(\d+)/ if $ENV{MEM};
 
     my %p = validate( @_, {   file => { type => SCALAR },
 			    source => { isa => 'HTML::Mason::ComponentSource' } },
