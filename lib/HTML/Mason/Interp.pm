@@ -490,7 +490,7 @@ sub system_log_events
 	} elsif (ref($value) eq 'HASH') {
 	    $self->{system_log_events_hash} = $value;
 	} else {
-	    param_error "Interp->system_log_events: argument must be a scalar or hash reference";
+	    param_error "Interp->system_log_events: argument must be a scalar or hash reference, not '$value'";
 	}
     }
     return $self->{system_log_events};
@@ -572,23 +572,22 @@ my @hook_types = qw(start_comp end_comp start_file end_file);
 my %hook_type_map = map(($_,1),@hook_types);
 
 sub add_hook {
-    my ($self, %args) = @_;
-    foreach (qw(name type code)) {
-	param_error "Interp->add_hook: must specify $_\n" unless exists($args{$_});
-    }
-    param_error "Interp->add_hook: type must be one of " . join(",",@hook_types)."\n"
-	unless $hook_type_map{$args{type}};
-    param_error "Interp->add_hook: code must be a code reference\n"
-	unless UNIVERSAL::isa( $args{code}, 'CODE' );
+    my $self = shift;
+    my %args = validate( @_, { name => {type => SCALAR},
+			       code => {type => CODEREF},
+			       type => {type => SCALAR,
+					callbacks =>
+					{ 'Must be one of ' . join(",",@hook_types) => sub {exists $hook_type_map{$_[0]}} },
+				       }
+			     } );
     $self->{hooks}->{$args{type}}->{$args{name}} = $args{code};
 }
 
 sub remove_hook {
-    my ($self, %args) = @_;
-    foreach (qw(name type)) {
-	param_error "Interp->remove_hook: must specify $_\n"
-	    unless exists($args{$_});
-    }
+    my $self = shift;
+    my %args = validate( @_, { name => SCALAR,
+			       type => SCALAR });
+
     delete($self->{hooks}->{$args{type}}->{$args{name}});
 }
 
@@ -1017,15 +1016,53 @@ current component directory.
 =item system_log_events
 
 A string value indicating one or more events to record in the system
-log, separated by "|". Default is to log nothing.
+log, separated by "|".  The following events are available for logging:
+
+=over 4
+
+=item * COMP_LOAD
+
+The loading of a component object file from disk
+
+=item * CACHE_READ
+
+The reading of a cache item
+
+=item * CACHE_WRITE
+
+The writing of a cache item
+
+=item * REQ_START
+
+The start of a Mason request
+
+=item * REQ_END
+
+The end of a Mason request
+
+=item * REQUEST
+
+Shorthand for C<REQ_START|REQ_END>
+
+=item * CACHE
+
+Shorthand for C<CACHE_READ|CACHE_WRITE>
+
+=item * ALL
+
+Shorthand for C<REQUEST|CACHE|COMP_LOAD>
+
+=back
+
+Default is to log nothing.
 
 =item system_log_file
 
-Absolute path of system log.  Default is data_dir/etc/system.log.
+Absolute path of system log.  Default is $data_dir/etc/system.log .
 
 =item system_log_separator
 
-Separator to use between fields on a line in the system log. Default is ctrl-A ("\cA").
+Separator to use between fields on a line in the system log. Default is ctrl-A (C<"\cA">).
 
 =item use_autohandlers
 
