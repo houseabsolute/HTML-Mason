@@ -149,7 +149,7 @@ sub end_component
 {
     my $self = shift;
 
-    HTML::Mason::Exception::Syntax->throw( error => "Not enough ending </&|> tags found" )
+    HTML::Mason::Exception::Syntax->throw( error => "Not enough ending component with content ending tags found" )
 	if @{ $self->{comp_with_content_stack} };
 
     $self->{current_comp} = undef;
@@ -353,23 +353,11 @@ sub component_content_call
 sub component_content_call_end
 {
     my $self = shift;
-    my %p = @_;
 
-    HTML::Mason::Exception::Compiler->throw(error=>"found </&|> tag with no beginning tag")
+    HTML::Mason::Exception::Compiler->throw(error=>"found component with content ending tag but no beginning tag")
 	unless @{ $self->{comp_with_content_stack} };
 
-    my $ending = $p{ending};
-    my $call = pop( @{ $self->{comp_with_content_stack} } );
-    my $begin = $call;
-
-    if ($ending)
-    {
- 	# literal match up to first comma, whitespace removed
-	for ($begin, $ending) { s/,.*//s; s/\s//gs; }
-
-	HTML::Mason::Exception::Compiler->throw(error=>"Component name in ending tag ($ending}) does not match component name in beginning tag ($begin)")
-	    unless $begin eq $ending;
-    }
+    my $call = pop @{ $self->{comp_with_content_stack} };
 
     if ( $call =~ m,^[A-Za-z0-9/_.],)
     {
@@ -379,7 +367,7 @@ sub component_content_call_end
 	$call = "'$comp'" . substr($call, $comma);
     }
 
-    my $code = "} }, $call );";
+    my $code = "} }, $call );\n";
 
     $self->postprocess_perl->(\$code) if $self->postprocess_perl;
 
