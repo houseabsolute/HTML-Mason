@@ -1,0 +1,7 @@
+Hello World!
+The answer is <% $b %>.
+<%args>
+$b
+</%args>
+
+

@@ -65,24 +65,25 @@ sub mc_auto_comp
 {
     check_request;
     my $aref = $REQ->{autohandler_next} or die "mc_auto_comp $no_auto_error";
-    my $path = $aref->[0];
+    my $path = $aref->[0]->path;
     
     # return relative path if possible
     my $curdir = $REQ->comp->parent_path;
-    $path =~ s{^$curdir}{};
+    $path =~ s{^$curdir/}{};
+    return $path;
 }
 
 sub mc_auto_next
 {
     check_request;
     my $aref = $REQ->{autohandler_next} or die "mc_auto_next $no_auto_error";
-    my ($compPath, $argsref) = @$aref;
+    my ($comp, $argsref) = @$aref;
     my %args = (%$argsref,@_);
     my ($result,@result);
     if (wantarray) {
-	@result = mc_comp($compPath, %args);
+	@result = mc_comp($comp, %args);
     } else {
-	$result = mc_comp($compPath, %args);
+	$result = mc_comp($comp, %args);
     }
     return wantarray ? @result : $result;
 }

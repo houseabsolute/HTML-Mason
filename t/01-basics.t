@@ -39,13 +39,14 @@ my $interp = new HTML::Mason::Interp( parser=>$parser,
                                       data_dir => $data_dir,
                                       out_method => \$buf, );
 
-print "1..15\n";
+print "1..".scalar(@comps)."\n";
 
 foreach my $component ( @comps ) {
     undef $buf;
     my $result;
     eval { $interp->exec("/$component"); };
     $buf = "ERROR:\n$@" if $@;
+    $component =~ s/\//::/g;
     open(F, ">$tmp_dir$component");
     print F $buf if defined($buf);
     close F;
