@@ -50,6 +50,44 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'filter_and_ARGS_assign',
+                      description =>
+                      'make sure <%filter> can see changes to %ARGS',
+                      component => <<'EOF',
+I am X
+<%init>
+$ARGS{change_to} = 'Y';
+</%init>
+<%filter>
+s/X/$ARGS{change_to}/;
+</%filter>
+EOF
+                      expect => <<'EOF',
+I am Y
+EOF
+                    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'filter_and_args_section',
+                      description =>
+                      'make sure <%filter> can see variables from <%args> section',
+                      component => <<'EOF',
+I am X
+<%args>
+$change_to => 'Y'
+</%args>
+<%filter>
+s/X/$change_to/;
+</%filter>
+EOF
+                      expect => <<'EOF',
+I am Y
+EOF
+                    );
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/support/has_filter',
 			 component => <<'EOF',
 lower case
