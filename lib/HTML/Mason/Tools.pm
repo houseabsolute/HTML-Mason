@@ -173,28 +173,19 @@ sub make_fh
     return do { local *FH; *FH; };  # double *FH avoids a warning
 }
 
-#
-# Process escape flags in <% %> tags
-#   h - html escape
-#   u - url escape
-#
-sub escape_perl_expression
+sub html_entities_escape
 {
-    my ($expr,@flags) = @_;
+    load_pkg( 'HTML::Entities',
+              'HTML escaping requires the HTML::Entities module, available from CPAN.');
 
-    return $expr if grep { $_ eq 'n' } @flags;
+    return HTML::Entities::encode($_[0]);
+}
 
-    if (defined($expr)) {
-	foreach my $flag (@flags) {
-	    if ($flag eq 'h') {
-		load_pkg('HTML::Entities', 'The |h escape flag requires the HTML::Entities module, available from CPAN.');
-		$expr = HTML::Entities::encode($expr);
-	    } elsif ($flag eq 'u') {
-		$expr =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
-	    }
-	}
-    }
-    return $expr;
+sub url_escape
+{
+    $_[0] =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
+
+    return $_[0];
 }
 
 sub coerce_to_array
@@ -321,28 +312,6 @@ Returns a boolean value indicating whether taint mode is on or not.
 
 This function returns something suitable to be passed to the first
 argument of an C<open> function call.
-
-=item escape_perl_expression
-
-Given a scalar and one or more flags as an array, this method does the
-following.
-
-If any of the flags are "n", then no escaping is done.
-
-If it finds the "h" flag, the text is escaped with
-C<HTML::Entities::encode()>.
-
-If it finds the "u" flag, the text is URL-escaped, meaning that all
-characters not matching C<[a-zA-Z0-9_.-]> are replaced by a percent
-sign (%) followed by their hexadecimal ASCII value.
-
-NOTE: This will break miserably given Unicode characters, producing
-something like "%abc7", which is unabashedly incorrect.
-
-NOTE part deux: The URL RFC (1738) does not specify how to handle
-Unicode.
-
-NOTE part trois: The URI RFC (2396) doesn't provide much help either.
 
 =item coerce_to_array
 
