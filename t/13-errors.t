@@ -201,6 +201,19 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'object_exception',
+		      description => "Make sure Mason doesn't co-opt non Exception::Class exception objects",
+		      component => <<'EOF',
+% eval { die bless { foo => 'bar' }, 'FooException' };
+<% ref $@ %>
+EOF
+		      expect => <<'EOF',
+FooException
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
