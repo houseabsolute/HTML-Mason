@@ -9,8 +9,9 @@ use strict;
 use Carp;
 
 use File::Spec;
-use HTML::Mason::Tools qw(read_file);
+use HTML::Mason::Tools qw(read_file compress_path);
 use HTML::Mason::Utils;
+use HTML::Mason::Buffer;
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( aborted
@@ -44,6 +45,7 @@ sub new
 	dhandler_arg => undef,
 	error_flag => undef,
 	out_buffer => '',
+	buffer_stack => undef,
 	stack => undef,
 	wrapper_chain => undef,
 	wrapper_index => undef
@@ -76,12 +78,8 @@ sub _initialize {
     $self->{out_method} = $interp->out_method if !defined($self->{out_method});
     $self->{out_mode} = $interp->out_mode if !defined($self->{out_mode});
 
-    # Allow scalar or code reference as argument to out_method.
-    if (ref(my $ref = $self->{out_method}) eq 'SCALAR') {
-	$self->{out_method} = sub { $$ref .= $_[0] if defined($_[0]) };
-    }
-
     # Initialize other properties
+    $self->{buffer_stack} = [];
     $self->{stack} = [];
 }
 
@@ -148,6 +146,9 @@ sub exec {
     # Fill top_level slots for introspection.
     $self->{top_comp} = $comp;
     $self->{top_args} = \@args;
+
+    # create base buffer
+    $self->{base_buffer} = HTML::Mason::Buffer->new( sink => $self->out_method, mode => $self->out_mode );
 
     # Call the first component.
     my ($result, @result);
@@ -274,7 +275,7 @@ sub caller
 sub callers
 {
     my ($self,$index) = @_;
-    my @caller_stack = reverse(@{$self->stack});
+    my @caller_stack = reverse $self->stack;
     if (defined($index)) {
 	return $caller_stack[$index]->{comp};
     } else {
@@ -288,7 +289,7 @@ sub callers
 sub caller_args
 {
     my ($self,$index) = @_;
-    my @caller_stack = reverse(@{$self->stack});
+    my @caller_stack = reverse $self->stack;
     if (defined($index)) {
 	if (wantarray) {
 	    return @{$caller_stack[$index]->{args}};
@@ -299,36 +300,6 @@ sub caller_args
     } else {
 	die "caller_args expects stack level as argument";
     }
-}
-
-sub call_self
-{
-    my ($self,$cref,$rref) = @_;
-    return 0 if $self->top_stack->{in_call_self_flag};
-
-    #
-    # Reinvoke the component with in_call_self_flag=1. Collect
-    # output and return value in references provided.
-    #
-    my $content;
-    my $lref = $self->top_stack;
-    my %save_locals = %$lref;
-    $lref->{sink} = $self->_new_sink(\$content);
-    $lref->{in_call_self_flag} = 1;
-
-
-    if (ref($rref) eq 'SCALAR') {
-	$$rref = $lref->{comp}->run( @{ $lref->{args} } );
-    } elsif (ref($rref) eq 'ARRAY') {
-	@$rref = $lref->{comp}->run( @{ $lref->{args} } );
-    } else {
-	$lref->{comp}->run( @{ $lref->{args} } );
-    }
-    $self->top_stack({%save_locals});
-    $$cref = $content if ref($cref) eq 'SCALAR';
-    undef $content;
-
-    return 1;
 }
 
 sub comp_exists
@@ -351,7 +322,7 @@ sub decline
 sub depth
 {
     my ($self) = @_;
-    return scalar(@{$self->{stack}});
+    return scalar $self->stack;
 }
 
 sub dhandler_arg { shift->{dhandler_arg} }
@@ -477,11 +448,13 @@ sub file_root
     return shift->interp->static_file_root;
 }
 
-sub out
+sub print
 {
     my $self = shift;
-    $self->current_sink->(@_);
+    $self->top_buffer->receive(@_);
 }
+
+*out = \&print;
 
 sub time
 {
@@ -489,29 +462,6 @@ sub time
     my $time = $self->interp->current_time;
     $time = time() if $time eq 'real';
     return $time;
-}
-
-# Return the current stack as a list ref.
-sub stack
-{
-    my ($self) = @_;
-    return $self->{stack};
-}
-
-# Set or retrieve the hashref at the top of the stack.
-sub top_stack {
-    my ($self,$href) = @_;
-    die "top_stack: nothing on component stack" unless $self->depth > 0;
-    $self->{stack}->[-1] = $href if defined($href);
-    return $self->{stack}->[-1];
-}
-
-#
-# Return the parser associated with this request (by way of interp).
-#
-sub parser
-{
-    return shift->interp->parser;
 }
 
 #
@@ -548,43 +498,38 @@ sub comp {
     # package, as well as the component package if that is different.
     #
     local $HTML::Mason::Commands::m = $self;
-    $interp->set_global('m'=>$self) if ($interp->parser->in_package ne 'HTML::Mason::Commands');
+    $interp->set_global('m'=>$self) if ($interp->compiler->in_package ne 'HTML::Mason::Commands');
 
     #
-    # Determine sink (where output is going).
+    # Create buffer
     #
-    # Look for STORE and scalar reference passed as last two arguments. This is deprecated
-    # and will go away eventually.
-    #
-    my $sink;
-    if (@args >= 2 and $args[-2] eq 'STORE' and ref($args[-1]) eq 'SCALAR' and @args % 2 == 0) {
-	my $store = $args[-1];
-	$$store = '';
-	$sink = $self->_new_sink($store);
-	splice(@args,-2);
-    } elsif ($depth > 0) {
-	$sink = $self->top_stack->{sink};
-    } elsif ($self->out_mode eq 'batch') {
-	$sink = $self->_new_sink(\$self->{out_buffer});
+    my $parent = undef;
+    $parent = $self->top_buffer if $depth;
+    $parent = $self->{base_buffer} unless $parent;
+    my $buffer;
+    if ($mods{scomp}) {
+        $buffer = $parent->new_child( mode => 'batch', ignore_flush => 1 );
     } else {
-	$sink = $self->out_method;
+        $buffer = $parent->new_child();
     }
 
     #
     # Determine base_comp (base component for method and attribute
     # references). Stays the same unless passed in as a modifier.
     #
-    my $base_comp = exists($mods{base_comp}) ? $mods{base_comp} : $self->top_stack->{base_comp};
-    
+    my $base_comp = exists($mods{base_comp}) ? $mods{base_comp} : $self->base_comp;
+
     #
     # Check for maximum recursion.
     #
     die "$depth levels deep in component stack (infinite recursive call?)\n" if ($depth >= $interp->max_recurse);
 
     # Push new frame onto stack.
-    my $stack = $self->stack;
-    my $frame = {'comp'=>$comp,args=>[@args],sink=>$sink,base_comp=>$base_comp};
-    push(@$stack,$frame);
+    $self->push_stack( {comp => $comp,
+			args => [@args],
+			buffer => $buffer,
+			base_comp => $base_comp,
+		       } );
 
     # Call start_comp hooks.
     $self->call_hooks('start_comp');
@@ -607,9 +552,12 @@ sub comp {
     # been done higher up.
     #
     if (my $err = $@) {
-	$self->{error_backtrace} ||= [reverse(map($_->{'comp'},@$stack))];
+	##
+	## any unflushed output is at ${$self->top_buffer->buffer}
+	##
+	$self->{error_backtrace} ||= [reverse(map($_->{'comp'}, $self->stack))];
 	$self->{error_clean}     ||= $err;
-	pop(@$stack);
+	$self->pop_stack;
 	unless ($self->interp->die_handler_overridden) {
 	    $err .= "\n" if $err !~ /\n$/;
 	}
@@ -624,7 +572,13 @@ sub comp {
     #
     # Pop stack and return.
     #
-    pop(@$stack);
+    if ($mods{scomp}) {
+        my $output = $self->top_buffer->output;
+	$self->pop_stack;
+        return $output;
+    }
+    $self->top_buffer->flush;
+    $self->pop_stack;
     return wantarray ? @result : $result;  # Will return undef in void context (correct)
 }
 
@@ -633,12 +587,9 @@ sub comp {
 #
 sub scomp {
     my $self = shift;
-
-    # Set a new top-level sink.
-    my $store = '';
-    local $self->top_stack->{sink} = $self->_new_sink(\$store);
-    $self->comp(@_);
-    return $store;
+    my $hashref = ( ref($_[0]) eq 'HASH' ? shift : {} );
+    $hashref->{scomp} = 1;
+    return $self->comp($hashref,@_);
 }
 
 sub process_comp_path
@@ -684,26 +635,21 @@ sub unsuppress_hook {
     push(@{$self->{"hooks_$args{type}"}},$code);
 }
 
-#
-# Returns a new closure that will write its arguments to the given scalar ref.
-#
-sub _new_sink {
-    shift;  # Don't need $self
-    my $out_ref = shift;
-    return sub { for (@_) { $$out_ref .= $_ if defined } };
-}
-
 sub clear_buffer
 {
-    my ($self) = @_;
-    $self->{out_buffer} = '';
+    my $self = shift;
+    for (reverse $self->buffer_stack) {
+	$_->clear;
+    }
 }
 
 sub flush_buffer
 {
-    my ($self, $content) = @_;
-    $self->out_method->($self->{out_buffer});
-    $self->{out_buffer} = '';    
+    my $self = shift;
+    for (reverse $self->buffer_stack) {
+	last if $_->ignore_flush;
+	$_->flush;
+    }
 }
 
 sub top_args
@@ -726,12 +672,63 @@ sub debug_hook
     1;
 }
 
+
+#
+# stack handling
+#
+
+# Return the current stack as a list ref.
+sub stack {
+    my ($self) = @_;
+    return @{ $self->{stack} };
+}
+
+# Set or retrieve the hashref at the top of the stack.
+sub top_stack {
+    my ($self,$href) = @_;
+    die "top_stack: nothing on component stack" unless $self->depth > 0;
+    $self->{stack}->[-1] = $href if defined($href);
+    return $self->{stack}->[-1];
+}
+
+sub push_stack {
+    my ($self,$href) = @_;
+    if (my $buffer = delete $href->{buffer}) {
+	$self->push_buffer_stack($buffer);
+    }
+    push @{ $self->{stack} }, $href;
+}
+
+sub pop_stack {
+    my ($self) = @_;
+    $self->pop_buffer_stack;
+    pop @{ $self->{stack} };
+}
+
+sub push_buffer_stack {
+    my ($self, $buffer) = @_;
+    push @{ $self->{buffer_stack} }, $buffer;
+}
+
+sub pop_buffer_stack {
+    my ($self) = @_;
+    pop @{ $self->{buffer_stack} };
+}
+
+sub buffer_stack {
+    my ($self) = @_;
+    return @{ $self->{buffer_stack} };
+}
+
+
 #
 # Accessor methods for top of stack elements.
 #
-sub current_comp { return $_[0]->top_stack->{'comp'} }
+sub current_comp { return $_[0]->top_stack->{comp} }
 sub current_args { return $_[0]->top_stack->{args} }
-sub current_sink { return $_[0]->top_stack->{sink} }
+sub current_sink { return $_[0]->{buffer_stack}->[-1]->sink }
+sub top_buffer { return $_[0]->{buffer_stack}->[-1] }
 sub base_comp { return $_[0]->top_stack->{base_comp} }
+
 
 1;
