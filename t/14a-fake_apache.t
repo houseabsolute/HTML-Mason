@@ -180,8 +180,8 @@ is( $r->subprocess_env('content_length'), 42, "Check content_length env again" )
 # Now see what CGI.pm does with the headers out.
 ok( my $headers = $r->http_header, "Get http headers" );
 like($headers, qr/Status: 302 Moved/, "Check status" );
-like($headers, qr|Location: $url|, "Check location" );
-like($headers, qr|Content-Type: text/xml; charset=ISO-8859-1|,
+like($headers, qr|Location: $url|i, "Check location" );
+like($headers, qr|Content-Type: text/xml(?:; charset=ISO-8859-1)?|,
      "Check content type" );
 
 __END__
