@@ -90,8 +90,10 @@ if ($opts{cvs_tag})
     chdir $lib or die "Can't chdir($lib): $!";
     my $cmd = "cvs update $opts{cvs_tag}";
     print "$cmd\n";
-    system($cmd) == 0
-	or die "Error updating from CVS";
+    open my($fh), "$cmd |" or die "Can't execute '$cmd': $!";
+    print while <$fh>;
+    close $fh or die "Can't close command: $!";
+    
     $opts{tag} ||= $opts{cvs_tag};
     chdir $cwd or die "Can't chdir($lib): $!";
 }
