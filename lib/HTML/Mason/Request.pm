@@ -669,8 +669,9 @@ sub call_self
     return if $self->top_stack->{in_call_self};
 
     # If the top buffer has a filter we need to remove it because
-    # we'll be adding the filter buffer again in a moment in order to
-    # capture the _filtered_ component output for caching.
+    # we'll be adding the filter buffer again in a moment.  This is
+    # done because we might have been called via cache_self, and we
+    # want to capture the _filtered_ component ou caching.
     $self->top_buffer->remove_filter
         if $self->top_stack->{comp}->has_filter;
 
