@@ -698,10 +698,6 @@ Interp objects are handed off immediately to an ApacheHandler object
 which internally calls the Interp implementation methods. In that case
 the only user method is the new() constructor.
 
-If you want to call components outside of mod_perl (e.g. from CGI or a
-stand-alone Perl script), see the L<STANDALONE MODE|"STANDALONE MODE">
-section below.
-
 =head1 PARAMETERS FOR new() CONSTRUCTOR
 
 =over
@@ -920,94 +916,6 @@ resolver class which does not have a C<comp_root> method, then this
 convenience method will not work.
 
 =back
-
-=head1 STANDALONE MODE
-
-Although Mason is most commonly used in conjunction with mod_perl,
-there is also a functional API that allows you to use Mason from CGI
-programs or from stand-alone Perl scripts.
-
-When using Mason outside of mod_perl, just create an Interp object;
-you do not need the ApacheHandler object.  Once you've created an
-interpreter, the main thing you'll want to do with it is call a
-component and do something with the output. To call a component, use
-Interp's exec() method:
-
-    $interp->exec(<comp> [,<..list of component params..>]);
-
-where I<comp> is a component path or component object.
-
-Component parameters are given as a series of name/value pairs, just
-as they are with C<$m-E<gt>comp>. exec returns the return value of
-the component. Component output is sent to standard output by default,
-but you can change this by specifying C<out_method>.
-
-=head2 Using Mason from a standalone script
-
-Here is a skeleton script that calls a component and places the output
-in a file:
-
-    my $outbuf;
-    my $interp = new HTML::Mason::Interp (comp_root=>'<component root>',
-					  data_dir=>'<data directory>',
-					  out_method=>\$outbuf);
-    my $retval = $interp->exec('<component path>', <args>...);
-    open(F,">mason.out");
-    print F $outbuf;
-    close(F);
-    print "return value of component was: $retval\n";
-
-This allows you to use Mason as a pure text templating solution --
-like Text::Template and its brethren, but with more power (and of
-course more complexity).
-
-You may also choose not to provide a component root, in which case the
-component root is the root directory of your filesystem.
-
-In this case, the C<< $interp->exec >> method will accept relative
-paths and treat them as being relative to the current directory.
-
-    my $outbuf;
-    my $interp = new HTML::Mason::Interp (data_dir=>'<data directory>',
-					  out_method=>\$outbuf);
-    my $retval = $interp->exec('../foo.comp', <args>...);
-    open(F,">mason.out");
-    print F $outbuf;
-    close(F);
-    print "return value of the ../foo.comp component was: $retval\n";
-
-=head2 Using Mason from a CGI script
-
-The easiest way to use Mason via a CGI script is with the L<CGIHandler
-module|HTML::Mason::CGIHandler> module.
-
-Here is a skeleton CGI script that calls a component and sends the
-output to the browser.
-
-    #!/usr/bin/perl
-    use HTML::Mason::CGIHandler;
-
-    my $h = new HTML::Mason::CGIHandler
-     (
-      data_dir  => '/home/jethro/code/mason_data',
-     );
-
-    $h->handle_request;
-
-The relevant portions of the httpd.conf file look like:
-
-    DocumentRoot /path/to/comp/root
-    ScriptAlias /cgi-bin/ /path/to/cgi-bin/
-
-    Action html-mason /cgi-bin/mason_handler.cgi
-    <FilesMatch "\.html$">
-     SetHandler html-mason
-    </FilesMatch>
-
-This simply causes Apache to call the mason_handler.cgi script every
-time a file under the component root is requested.  This script uses
-the L<CGIHandler class|HTML::Mason::CGIHandler> to do most of the
-heavy lifting.  See that class's documentation ofr more details.
 
 =head1 SEE ALSO
 
