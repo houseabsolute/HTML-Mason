@@ -551,15 +551,17 @@ sub comp {
     #
     my ($result, @result);
     {
-	my $r = $HTML::Mason::Commands::r;
-	# can't put this in if block cause then local is in the wrong scope.
-	# localize and then rebless it.  I'm scaring myself here!
-	local $HTML::Mason::Commands::r = $r if $r;
-	if ($r)
-	{
-	    bless $HTML::Mason::Commands::r, 'HTML::Mason::Apache::Request';
-	    $HTML::Mason::Commands::r->mason_request($self);
-	}
+	my $apache_print = \&Apache::print;
+
+	# It is very important that the original Apache::print sub be
+	# restored inside this closure.  Imagine that we are in stream
+	# mode and the output method is:
+	#
+	# sub { for (@_) { $r->print($_) if defined } }
+	#
+	# If we don't restore the original Apache::print sub then we
+	# end up in an infinite loop.
+	local *Apache::print = sub { shift; local *Apache::print = $apache_print; $self->out(@_) };
 
 	my $obj = tied *STDOUT;
 	tie *STDOUT, 'Tie::Handle::Mason', $self, $obj;
@@ -776,6 +778,8 @@ sub PRINT
     my $self = shift;
 
     {
+	# This needs to be done to avoid an infinite loop because the
+	# ->out method could end up calling print on STDOUT.
 	if ( UNIVERSAL::isa( $self->{object}, 'Apache' ) )
 	{
 	    tie *STDOUT, 'Apache', $self->{object};
@@ -794,32 +798,6 @@ sub PRINTF
     my $self = shift;
 
     $self->print(sprintf(@_));
-}
-
-
-package HTML::Mason::Apache::Request;
-
-@HTML::Mason::Apache::Request::ISA = ('Apache::Request');
-
-my $mason_request;
-
-sub mason_request
-{
-    shift;
-    $mason_request = shift;
-}
-
-sub print
-{
-    my $self = shift;
-
-    bless $self, 'Apache::Request';
-
-    eval { $mason_request->out(@_) };
-
-    bless $self, 'HTML::Mason::Apache::Request';
-
-    die $@ if $@;
 }
 
 1;
