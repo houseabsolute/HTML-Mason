@@ -10,7 +10,23 @@ available at http://www.masonhq.com/code/history.html.
 [ ENHANCEMENTS ]
 
 - Added an $m->notes() method, which is similar to $r->pnotes() but
-may be used outside a mod_perl environment.
+may be used outside a mod_perl environment.  Task id #449.
+
+- Mason will now only convert non-reference exceptions to
+HTML::Mason::Exception objects, so it should cooperate better with
+modules like Error.pm.  Task id #446.
+
+- Added more documentation on Mason's error handling and exception
+system.  Task id #446.
+
+[ BUG FIXES ]
+
+- Mason dies if asked to compile a component that evaluates to a false
+value.  Task id #444.  Reported by David Wheeler.
+
+- Mason now gives a better error message if you try to call a
+component's methods or subcomponents from its <%shared> block.  Task
+id #448.  Reported by Randy Harmon.
 
 
 1.19  March 3, 2003
