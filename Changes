@@ -717,16 +717,14 @@ custom subroutines instead of generic AUTOLOAD, improving performance
 - Code to decline images and other non-text requests was placed in
 default handler.pl and described in documentation (suggested by
 Patrick Kane)
-- Fixed server header output from debug files (suggested by Ewan
-Edwards)
+- Fixed server header output from debug files (suggested by Ewan Edwards)
 - Created a Mason bundle
 - Created a CPAN "alias" from Apache::Mason to HTML::Mason
 
 0.3   November 25, 1999
 - Added optional system logging of page requests, cache activity,
 component loading
-- Deny directory requests so that index files will work in mod_perl
-1.16+
+- Deny directory requests so that index files will work in mod_perl 1.16+
 - Removed reliance on several external packages (Date::Manip,
 CGI::Base, URI::Escape). This should reduce the amount of memory taken
 up by Mason processes and make Mason easier to install.
