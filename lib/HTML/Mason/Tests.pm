@@ -178,9 +178,6 @@ sub add_test
 	    if exists $p{$_} && ! UNIVERSAL::isa( $p{$_}, 'HASH' );
     }
 
-    $p{interp_params}->{error_mode} = 'fatal'
-	if exists $p{expect_error};
-
     push @{ $self->{tests} }, \%p;
 }
 
