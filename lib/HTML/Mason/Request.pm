@@ -1527,7 +1527,9 @@ L<CGIHandler|HTML::Mason::CGIHandler> documentation for more details.
 
 =item redirect ($url)
 
-Given a url, this generates a proper HTTP redirect for that URL.
+Given a url, this generates a proper HTTP redirect for that URL. It
+uses $m->clear_buffer to clear out any previous output, and $m->abort
+to abort the request with an appropriate status code.
 
 =back
 
