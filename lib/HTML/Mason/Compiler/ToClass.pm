@@ -80,7 +80,7 @@ sub _class_name
 {
     my $self = shift;
 
-    my $class_name = $self->{lexer}->file;
+    my $class_name = $self->lexer->name;
     $class_name =~ s,[/\\],::,g;
     $class_name =~ s/([^:\w])/'0x' . hex(ord($1))/eg;
 
@@ -102,6 +102,8 @@ sub _init_method
 {
     my $self = shift;
 
+    my $once = join '', $self->_blocks('once');
+    my $shared = join '', $self->_blocks('shared');
     return ( <<"EOF",
 sub _init
 {
@@ -109,10 +111,10 @@ sub _init
 
     unless ( \$self->{_initialized} )
     {
-        $self->{once};
-        \$self->{initialized} = 1;
+        $once;
+        \$self->{_initialized} = 1;
     }
-    $self->{shared}
+    $shared
 }
 EOF
 	   );
@@ -144,10 +146,10 @@ sub _body
     my \@_args = \@{ \$self->{args} }, \@_;
 EOF
 	     @args,
-	     $self->{filter},
-	     $self->{init},
-	     $self->{body},
-	     $self->{cleanup},
+	     $self->_blocks('filter'),
+	     $self->_blocks('init'),
+	     $self->{current_comp}{body},
+	     $self->_blocks('cleanup'),
 	     '}',
 	   );
 }
@@ -169,21 +171,23 @@ sub _arg_declarations
 	if ( $_->{type} eq '$' )
 	{
 	    push @args,
-		"    my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val : \$ARGS{'$_->{name}'} );";
+		( "    my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
+                  "                                \$ARGS{'$_->{name}'} );" );
 	}
 	# Array
 	elsif ( $_->{type} eq '@' )
 	{
-	    push @args, ( "    my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val : ",
-			  "    UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'}}  : ( \$ARGS{'$_->{name}'} ) );",
+	    push @args, ( "    my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
+			  "                                UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'}}  : ( \$ARGS{'$_->{name}'} ) );",
 			);
 	}
 	# Hash
-	elsif ($_->{type} eq "\%") {
-	    push @args, ( "    my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val : ",
-			  "    UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'} } : ",
-			  "    UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'HASH' ) ? \%{ \$ARGS{'$_->{name}'} } : ",
-			  qq|    die "single value sent for hash parameter '$_->{type}$_->{name}'");|,
+	elsif ( $_->{type} eq "\%" )
+	{
+	    push @args, ( "    my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
+			  "                                UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'} } : ",
+			  "                                UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'HASH' ) ? \%{ \$ARGS{'$_->{name}'} } :",
+			  qq|        die "single value sent for hash parameter '$_->{type}$_->{name}'");|,
 			);
 	}
     }
@@ -198,7 +202,7 @@ sub _subcomponents
     my $class = $self->_class_name;
 
     my @subcomp;
-    while ( my ($name, $data) = each %{ $self->{subcomponents} } )
+    while ( my ($name, $data) = each %{ $self->{current_comp}{subcomponents} } )
     {
 	push @subcomp,
 	    <<"EOF";
@@ -222,7 +226,7 @@ sub _methods
     my $class = $self->_class_name;
 
     my @methods;
-    while ( my ($name, $data) = each %{ $self->{methods} } )
+    while ( my ($name, $data) = each %{ $self->{current_comp}{methods} } )
     {
 	push @methods,
 	    <<"EOF";
