@@ -907,9 +907,31 @@ site in the handler.pl:
         $ah{$site}->handle_request($r);
     }
 
-In this example we assume each virtual server configuration section has a
+We assume each virtual server configuration section has a
 
     PerlSetVar site <site_name>
+
+Above we pre-create all Mason objects in the parent. Another scheme is to
+create objects on demand in the child:
+
+    my (%interp,%ah);
+
+    ...
+
+    sub handler {
+        my $site = $r->dir_config('site');
+        unless exists($interp{$site}) {
+            # get comp_root from PerlSetVar as well
+            my $comp_root = $r->dir_config('comp_root');
+            $interp{$site} = new HTML::Mason::Interp(comp_root=>$comp_root,...);
+            $ah{$site} = new HTML::Mason::ApacheHandler(interp=>$interp{$site},...);
+        }
+    }
+
+The advantage of the second scheme is that you don't have to hardcode
+as much information in the handler.pl. The disadvantage is a slight
+memory and performance impact. On development servers this shouldn't
+matter; on production servers you may wish to profile the two schemes.
 
 =head1 AUTHOR
 

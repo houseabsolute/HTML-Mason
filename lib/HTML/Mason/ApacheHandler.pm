@@ -442,7 +442,7 @@ sub handle_request_1
     # If filename is a directory, then either decline or simply reset
     # the content type, depending on the value of decline_dirs.
     #
-    if (-d $r->filename) {
+    if (-d $r->finfo) {
 	if ($self->decline_dirs) {
 	    return DECLINED;
 	} else {

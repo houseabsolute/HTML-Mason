@@ -489,6 +489,7 @@ sub find_comp_upwards
 
     my $comp;
     my $p = $startpath;
+    $p =~ s/\/$//;
     while (!($comp = $self->load("$p/$name")) && $p) {
 	my ($basename,$dirname) = fileparse($p);
 	$dirname =~ s/^\.//;    # certain versions leave ./ in $dirname
