@@ -1,5 +1,0 @@
-<% $packvar %>
-<%init>
-$HTML::Mason::Commands::packvar = 'commands';
-$HTML::Mason::NewPackage::packvar = 'newpackage';
-</%init>

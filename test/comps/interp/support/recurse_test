@@ -1,9 +1,0 @@
-Entering <% $count %><p>
-% if ($count < $max) {
-<& recurse_test, count=>$count+1, max=>$max &>
-% }
-Exiting <% $count %><p>\
-<%args>
-$count=>0
-$max
-</%args>

@@ -1,3 +1,0 @@
-% $m->decline if $m->dhandler_arg eq 'leaf3';
-dhandler = <% $m->current_comp->title %>
-dhandler arg = <% $m->dhandler_arg %>

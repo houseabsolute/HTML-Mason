@@ -1,2 +1,0 @@
-% my $comp = $m->callers(1);
-My name is <% $comp->path %> and <% $comp->parent ? "my parent is ".$comp->parent->path : "I have no parent" %>.

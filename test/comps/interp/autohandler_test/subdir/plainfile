@@ -1,3 +1,0 @@
-The local autohandler: <% $m->current_comp->path %>
-
-<% $m->call_next %>
