@@ -2,7 +2,7 @@
 
 package Bundle::HTML::Mason;
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 1;
 
