@@ -20,6 +20,7 @@ This option made little sense since components are cached per-process,
 and there's no guarantee that any particular process has cached a
 given component.  Again, this is a feature added in 1.09_01 so this
 change should not cause most people any problems.
+- Renamed CGIHandler's handle_cgi method to handle_comp.
 
 [ ENHANCEMENTS ]
 
