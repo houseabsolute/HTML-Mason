@@ -5,6 +5,7 @@ use 5.004;
 use HTML::Mason;
 use CGI;
 use Carp;
+use File::Spec;
 use Params::Validate qw(:all);
 
 use HTML::Mason::Container;
@@ -62,8 +63,8 @@ sub _handler {
     if ($self->{dev_dirs}) {
 	foreach my $dir (@{$self->{dev_dirs}}) {
 	    if ($component =~ s/^\Q$dir//) {
-		$local_root    = "$self->{interp}{comp_root}$dir";
-		$local_datadir = "$self->{interp}{data_dir}$dir";
+		$local_root    = File::Spec->catdir($self->interp->resolver->comp_root, $dir);
+		$local_datadir = File::Spec->catdir($self->interp->data_dir, $dir);
 		last;
 	    }
 	}
