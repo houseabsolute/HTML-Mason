@@ -163,15 +163,13 @@ sub import
 
     if ( $pack->_in_conf_file )
     {
-	# can't do this stuff for MultipleConfig cause the classes may be
-	# different for each config section
 	my $args_method = $pack->get_param('ArgsMethod');
 
 	$pack->_load_args_method( args_method => $args_method );
 
+	# can't do this stuff for MultipleConfig cause the classes may be
+	# different for each config section
 	$pack->make_ah() if $pack->_in_simple_conf_file;
-
-	return; # all done
     }
     else
     {
