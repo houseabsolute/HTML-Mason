@@ -31,6 +31,8 @@ See CREDITS file for other contributors
           you're now responsible for creating object files.
 	- reduced number of file stats when loading components
           [mschmick]
+        - added ApacheHandler option apache_status_title, cleaned up
+	  status (submitted by Philip Gwyn)
 	- upgraded FakeApache/debug files to work with mod_perl 1.19
 	- added documentation about how debug files work
 	- mentioned mailing lists, masonhq.com web site, and FAQ in
