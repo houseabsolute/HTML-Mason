@@ -241,7 +241,7 @@ C<new_child> method.
 Any subclass of this class you create should declare itself to be a
 subclass of the C<HTML::Mason::Buffer> class.
 
-=head2 ApacheHandler
+=head1 ApacheHandler
 
 The methods that you are mostly to want to subclass are documented in
 the L<C<ApacheHandler class>|HTML::Mason::ApacheHandler>
