@@ -29,18 +29,6 @@ value from C<Interp::exec>; in a web environment, this ultimately
 becomes the HTTP status code. This method is used to implement
 C<mc_abort>.
 
-=item args
-
-Returns a hash of the arguments passed to the current component.
-
-=item autohandler_next
-
-If the request has been intercepted by an autohandler, this method
-returns a reference to a two-element list: the originally invoked
-component, and a hash reference of the original arguments.  Otherwise
-returns undef. This method is used to implement C<mc_auto_comp>
-and C<mc_auto_next>.
-
 =for html <a name="call">
 
 =item call (comp, option=>value, ...[, STORE=>ref])
