@@ -344,6 +344,28 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'multi_filter',
+		      description => 'Test order of multiple filters',
+		      component => <<'EOF',
+<&| .lc &>\
+<&| .uc &>\
+MixeD CAse\
+</&>\
+</&>\
+<%def .uc>\
+<% uc $m->content %>\
+</%def>
+<%def .lc>\
+<% lc $m->content %>\
+</%def>
+EOF
+		      expect => <<'EOF',
+mixed case
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
