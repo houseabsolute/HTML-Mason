@@ -1,4 +1,4 @@
-# Copyright (c) 1998-2001 by Jonathan Swartz. All rights reserved.
+# Copyright (c) 1998-2002 by Jonathan Swartz. All rights reserved.
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
@@ -263,3 +263,103 @@ sub validation_spec
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::Container - base class for other Mason objects
+
+=head1 SYNOPSIS
+
+  package HTML::Mason::FooBar;
+
+  use HTML::Mason::Container;
+  use base qw(HTML::Mason::Container);
+
+=head1 DESCRIPTION
+
+A number of modules in Mason are subclasses of HTML::Mason::Container.
+This is a class that was created to encapsulate some common behaviors
+for Mason objects.  Basically, any Mason object which takes parameters
+to its constructor B<must> inherit from this module.  Of course, since
+all of the classes that you might consider subclassing already inherit
+from HTML::Mason::Container, you shouldn't need to inherit from it
+directly.  However, you may need to use some of its methods.  We will
+cover a few of them here but see the HTML::Mason::Container
+documentation for more details.
+
+The modules in the Mason core distribution that are
+HTML::Mason::Container subclasses are
+HTML::Mason::ApacheHandler, HTML::Mason::CGIHandler,
+HTML::Mason::Compiler, HTML::Mason::Interp,
+HTML::Mason::Lexer, and HTML::Mason::Resolver.
+
+The most important methods that HTML::Mason::Container provides are
+C<valid_params> and C<contained_objects>, both of which are class
+methods.
+
+The first, C<valid_params>, is called in order to register a set of
+parameters which are valid for a class's C<new> constructor.  The
+second method, C<contained_objects>, is used to register what other
+objects, if any, a given class contains.
+
+The second method, C<contained_objects>, is not something you are
+terribly likely to have to use.  It is called with a hash that
+contains as its keys parameter names that the class's constructor
+accepts, and as its values the default name of the contained class.
+
+For example, HTML::Mason::Compiler contains the following code:
+
+  __PACKAGE__->contained_objects( lexer => 'HTML::Mason::Lexer' );
+
+This says that the C<< HTML::Mason::Compiler->new >> method will
+accept a C<lexer> parameter and that, if no such parameter is given,
+then an object of the HTML::Mason::Lexer class will be constructed.
+
+Mason also implements a bit of magic here, so that if C<<
+HTML::Mason::Compiler->new >> is called with a C<lexer_class>
+parameter, it will load the class, instantiate a new object of that
+class, and use that for the lexer.  In fact, Mason is smart enough to
+notice if parameters given C<< HTML::Mason::Compiler->new >> actually
+should go to this subclass, and it will make sure that they get passed
+along.
+
+The C<valid_params> method is generally a bit more complex.  It too
+takes a hash.  The keys of this hash are the names of parameters while
+the values are themselves hash references, each of which defines a
+validation specification for the parameter.
+
+This specification is largely the same as that used by the
+Params::Validate module, with one addition.  Each parameter,
+excluding those that represent contained objects, should also define a
+value for C<parse>.  This tells Mason how to parse this parameter if
+it is defined as part of an Apache configuration file.
+
+The upshot of this is that your subclasses can define their own
+constructor parameters and Mason will then check for these parameters
+in an Apache configuration file.
+
+As an example, HTML::Mason::Compiler contains the following:
+
+  __PACKAGE__->valid_params
+      (
+       allow_globals        => { parse => 'list',   type => ARRAYREF, default => [] },
+       default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
+       lexer                => { isa => 'HTML::Mason::Lexer' },
+       preprocess           => { parse => 'code',   type => CODEREF,  optional => 1 },
+       postprocess_perl     => { parse => 'code',   type => CODEREF,  optional => 1 },
+       postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1 },
+      );
+
+The C<type>, C<default>, and C<optional> parameters are part of the
+validation specification used by C<Params::Validate>.  The various
+constants used, C<ARRAYREF>, C<SCALAR>, etc. are all exported by
+Params::Validate.  These parameters correspond to the
+MasonAllowGlobals, MasonDefaultEscapeFlags, MasonLexerClass (yes,
+B<Class> is added automatically because it was given to the
+C<contained_objects> method.  Whee, magic!)  Don't worry about it too
+much as long as you can see the pattern here.), etc. Apache
+configuration parameters.
+
+=cut

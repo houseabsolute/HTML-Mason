@@ -1,4 +1,4 @@
-# Copyright (c) 1998-2001 by Jonathan Swartz. All rights reserved.
+# Copyright (c) 1998-2002 by Jonathan Swartz. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the same terms as Perl itself.
 
@@ -17,7 +17,7 @@ use HTML::Mason::Exceptions (abbr => ['param_error']);
 
 __PACKAGE__->valid_params
     (
-     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF, optional => 1 },
+     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF },
     );
 
 __PACKAGE__->contained_objects();
@@ -145,3 +145,37 @@ sub file_to_path {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::Resolver::File - translates component paths into filesystem paths
+
+=head1 SYNOPSIS
+
+  my $resolver = HTML::Mason::Resolver::File->new( comp_root => '/var/www/mason' );
+
+  my %comp_info = $resolver->get_info('/some/comp.html');
+
+  my $source = $resolver->get_source(%comp_info);
+
+  my $comp_root = $resolver->comp_root;
+
+  # return "/some/comp.html"
+  my $comp_path = $resolver->file_to_path('/var/www/mason/some/comp.html');
+
+=head1 DESCRIPTION
+
+This HTML::Mason::Resolver subclass is used when components are stored
+on the filesystem, which is the norm for most Mason-based applications.
+
+=head1 CONSTRUCTOR
+
+The C<new> method takes a single parameter.
+
+=head1 ADDITIONAL METHODS
+
+Besides, the methods documented
+
+=cut
