@@ -45,17 +45,16 @@ sub handler
     # This block of code can be enabled to create a session-hash that every
     # component can access.  This is useful for maintaining state across
     # multiple requests.  The Apache::Session module is required.
-    
+    #
     #my %session;
     #my $cookie = $r->header_in('Cookie');
-    #$cookie =~ s#SESSION_ID=(\w*)#$1#;
+    #$cookie =~ s/SESSION_ID=(\w*)/$1/;
     #tie %session, 'Apache::Session::File', $cookie, {'Directory' => '/tmp/session'};
-    #if ( !$cookie ) {
-    #  $r->header_out("Set-Cookie" => "SESSION_ID=$session{_session_id};");
-    #}
+    #$r->header_out("Set-Cookie" => "SESSION_ID=$session{_session_id};") if ( !$cookie );
     
     # This creates a global called %session that is accessible in all components.
-    # Feel free to rename this as needed (%udat, anyone)?
+    # Feel free to rename this as needed.
+    #
     #local *HTML::Mason::Commands::session = \%session;
     
     $ah->handle_request($r);
