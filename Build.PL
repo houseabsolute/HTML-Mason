@@ -8,9 +8,6 @@ use Mason::Build;
 
 use File::Spec;
 
-eval { require mod_perl };
-my $has_only_mp2 = $@ && eval { require Apache2; 1; };
-
 my %prereq = ( 'Apache::Request'  => 0.31,
                'Cache::Cache'     => 1.00,
                'Class::Container' => 0.07,
@@ -21,9 +18,26 @@ my %prereq = ( 'Apache::Request'  => 0.31,
                'Scalar::Util'     => 1.01,
              );
 
+eval { require mod_perl };
+my $has_mod_perl_1 = $@ ? 0 : 1;
+
+if ($has_mod_perl_1)
+{
+    $prereq{mod_perl} = 1.24;
+}
+
+my $has_only_mp2 = ! $has_mod_perl_1 && eval { require Apache2; 1; };
+
 unless ( $@ || $^O =~ /mac|darwin/ || $has_only_mp2 )
 {
     $prereq{'Apache::Request'} = 0.32;
+}
+
+eval { require Apache::Filter };
+
+unless ( $@ || $Apache::Filter::VERSION >= 1.021 )
+{
+    $prereq{'Apache::Filter'} = 1.021;
 }
 
 my $build = Mason::Build->new
