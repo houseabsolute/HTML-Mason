@@ -201,8 +201,8 @@ EOF
 
     if ($mod_perl::VERSION >= 1.24) {
 	$include .= <<'EOF';
-  PerlAddVar  MasonAllowGlobals $foo
-  PerlAddVar  MasonAllowGlobals @bar
+  PerlAddVar  MasonAllowedGlobals $foo
+  PerlAddVar  MasonAllowedGlobals @bar
 EOF
     }
 
@@ -282,9 +282,7 @@ $libs
 use HTML::Mason::ApacheHandler ( args_method => '$args_method' );
 use HTML::Mason;
 
-my \$parser = HTML::Mason::Parser->new;
-my \$interp = HTML::Mason::Interp->new( parser => \$parser,
-				       comp_root => '$APACHE{comp_root}',
+my \$interp = HTML::Mason::Interp->new( comp_root => '$APACHE{comp_root}',
 				       data_dir => '$APACHE{data_dir}' );
 chown Apache->server->uid, Apache->server->gid, \$interp->files_written;
 
