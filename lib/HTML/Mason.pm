@@ -5,7 +5,7 @@ package HTML::Mason;
 
 use 5.005;
 
-$HTML::Mason::VERSION = '1.17';
+$HTML::Mason::VERSION = '1.18';
 
 use HTML::Mason::Interp;
 
