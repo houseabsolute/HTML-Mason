@@ -10,6 +10,8 @@ my %opts;
 GetOptions( \%opts, 'no-prompts' );
 
 require './makeconfig.pl';
+require './apache_tests_helper.pl';
+require './assisted_install_helper.pl';
 
 # These are required modules.
 
@@ -36,6 +38,7 @@ chk_version('Apache::Request' => '0.31') or
 
 make_config();
 setup_mod_perl_tests() unless $opts{'no-prompts'};
+assisted_install_config() unless $opts{'no-prompts'};
 
 # Get these into the MY namespace for the MY::test method
 %MY::APACHE = %APACHE;
