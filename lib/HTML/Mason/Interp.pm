@@ -721,7 +721,8 @@ sub write_object_file
 	if (!-d $dirname) {
 	    unlink($dirname) if (-e $dirname);
 	    push(@newfiles,mkpath($dirname,0,0775));
-	    die "Couldn't create directory $dirname: $!" if (!-d $dirname);
+	    HTML::Mason::Exception::System->throw( error => "Couldn't create directory $dirname: $!" )
+		unless -d $dirname;
 	}
 	rmtree($object_file) if (-d $object_file);
     }
@@ -729,9 +730,12 @@ sub write_object_file
     ($object_file) = $object_file =~ /^(.*)/s if taint_is_on;
 
     my $fh = make_fh();
-    open $fh, ">$object_file" or die "Couldn't write object file $object_file: $!";
-    print $fh $object_text;
-    close $fh or die "Couldn't close object file $object_file: $!";
+    open $fh, ">$object_file"
+	or HTML::Mason::Exception::System->throw( error => "Couldn't write object file $object_file: $!" );
+    print $fh $object_text
+	or HTML::Mason::Exception::System->throw( error => "Couldn't write object file $object_file: $!" );
+    close $fh 
+	or HTML::Mason::Exception::System->throw( error => "Couldn't close object file $object_file: $!" );
     @$files_written = @newfiles if (defined($files_written))
 }
 
