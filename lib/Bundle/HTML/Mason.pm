@@ -2,7 +2,7 @@
 
 package Bundle::HTML::Mason;
 
-$VERSION = '0.06';
+$VERSION = '0.07';
 
 1;
 
@@ -20,7 +20,7 @@ C<perl -MCPAN -e 'install Bundle::HTML::Mason'>
 
 File::Spec  0.8
 
-Params::Validate  0.20
+Params::Validate  0.21
 
 Exception::Class  1.01
 
