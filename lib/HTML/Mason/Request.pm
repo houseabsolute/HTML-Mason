@@ -47,7 +47,7 @@ __PACKAGE__->valid_params
 		       callbacks => { "must be one of 'brief', 'text', 'line', or 'html'" =>
 					  sub { $_[0] =~ /^(?:brief|text|line|html)$/; } },
                        descr => "How error messages are formatted" },
-     error_mode => { parse => 'string', type => SCALAR, default => 'output',
+     error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
 		     callbacks => { "must be one of 'output' or 'fatal'" =>
 					sub { $_[0] =~ /^(?:output|fatal)$/ } },
 		     descr => "How error conditions are returned to the caller" },
@@ -211,7 +211,7 @@ sub exec {
 			($self->{dhandler_arg} = $orig_path) =~ s{^$parent/}{};
 		    }
 		} else {
-		    die $err;
+		    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
 		}
 	    }
 
@@ -254,7 +254,7 @@ sub _handle_error
     if ($self->error_mode eq 'fatal') {
 	die $err;
     } else {
-	$self->out_method->("$err");
+	UNIVERSAL::isa( $self->out_method, 'CODE' ) ? $self->out_method->("$err") : ${ $self->out_method } .= "$err";
     }
 }
 
