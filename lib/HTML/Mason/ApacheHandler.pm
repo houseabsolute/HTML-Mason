@@ -45,6 +45,9 @@ use HTML::Mason::MethodMaker
       read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
 		      qw( ah apache_req ) ] );
 
+# A hack for subrequests
+sub _properties { qw(ah apache_req), shift->SUPER::_properties }
+
 sub new
 {
     my $class = shift;
