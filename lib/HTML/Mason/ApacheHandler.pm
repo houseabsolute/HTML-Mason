@@ -77,7 +77,7 @@ use Apache::URI;
 # use() params. Assign defaults, in case ApacheHandler is only require'd.
 use vars qw($LOADED $ARGS_METHOD);
 $LOADED = 0;
-$ARGS_METHOD = '_cgi_args';
+$ARGS_METHOD = undef;
 
 my @used = ($HTML::Mason::IN_DEBUG_FILE);
 
@@ -525,6 +525,7 @@ sub handle_request_1
     # POST content issues.
     #
     my %args;
+    die "ARGS_METHOD not defined! Did you 'use HTML::Mason::ApacheHandler'?" unless defined($ARGS_METHOD);
     if ($HTML::Mason::IN_DEBUG_FILE) {
 	%args = %{$r->{args_hash}};
     } else {

@@ -4,6 +4,8 @@ HTML::Mason::ApacheHandler - Mason/mod_perl interface
 
 =head1 SYNOPSIS
 
+    use HTML::Mason::ApacheHandler;
+
     my $ah = new HTML::Mason::ApacheHandler (..name/value params..);
     ...
     sub handler {
