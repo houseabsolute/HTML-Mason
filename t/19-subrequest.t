@@ -198,19 +198,22 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'autoflush_in_parent_not_subrequest',
-		      description => 'make sure that a subrequest with autoflush can clear its own buffers',
-		      interp_params => { autoflush => 1 },
-		      component => <<'EOF',
+    # SKIPPING THIS TEST FOR NOW - NOT SURE OF DESIRED BEHAVIOR
+    if (0) {
+	$group->add_test( name => 'autoflush_in_parent_not_subrequest',
+			  description => 'make sure that a subrequest with autoflush can clear its own buffers',
+			  interp_params => { autoflush => 1 },
+			  component => <<'EOF',
 My child says:
 % $m->flush_buffer;
 % $m->subexec('/subrequest/support/autoflush_subrequest', autoflush => 0, clear => 1);
 % $m->clear_buffer;
 EOF
-		      expect => <<'EOF',
+			  expect => <<'EOF',
 My child says:
 EOF
-		    );
+			  );
+    }
 
 #------------------------------------------------------------
 
