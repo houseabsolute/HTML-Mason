@@ -136,7 +136,7 @@ sub exec {
 	unless ($comp) {
 	    if (defined($interp->dhandler_name) and $comp = $interp->find_comp_upwards($path,$interp->dhandler_name)) {
 		my $parent_path = $comp->dir_path;
-		($self->{dhandler_arg} = $path) =~ s{^$parent_path/?}{};
+		($self->{dhandler_arg} = $path) =~ s{^$parent_path/+?}{};
 	    }
 	}
 	unless ($comp) {
@@ -182,12 +182,12 @@ sub exec {
 
     # If declined, try to find the next dhandler.
     if ($self->declined and $path) {
-	$path =~ s/\/[^\/]+$// if defined($self->{dhandler_arg});
+	$path =~ s,/+[^/]+$,, if defined($self->{dhandler_arg});
 	if (defined($interp->dhandler_name) and my $next_comp = $interp->find_comp_upwards($path,$interp->dhandler_name)) {
 	    $comp = $next_comp;
 	    my $parent = $comp->dir_path;
 	    $self->_reinitialize;
-	    ($self->{dhandler_arg} = $orig_path) =~ s{^$parent/}{};
+	    ($self->{dhandler_arg} = $orig_path) =~ s{^$parent/+}{};
 	    goto retry;
 	}
     }
