@@ -79,7 +79,7 @@ EOF
 	      );
 
     write_comp( 'error_as_html', <<'EOF',
-% my $x = undef; @$x;
+% my $x = 
 EOF
 	      );
 
