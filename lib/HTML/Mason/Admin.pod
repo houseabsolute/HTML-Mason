@@ -782,6 +782,10 @@ most useful for an isolated component or a few components in a single
 directory. For more complex applications with a full component tree,
 you will probably want to specify a component root.
 
+It should be noted that relative component paths are resolved based on
+the current working directory I<when the Interpreter was created>.
+Subsequent changes to the current working directory will be ignored.
+
 Because no data directory was specified, object files will not be
 created and data caching will not work in the default manner. If
 performance is an issue, you will want to specify a data directory.
