@@ -1056,6 +1056,8 @@ EOF
 
     ExtUtils::Manifest::maniadd( { map { $_ => '' } @files } );
 
+    $self->add_to_cleanup('MANIFEST.bak');
+
     $self->_cleanup_changes_file;
 }
 
