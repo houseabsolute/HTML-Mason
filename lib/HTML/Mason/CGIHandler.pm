@@ -220,8 +220,9 @@ about the particular details of invoking Mason on each request.
 
 If you want to use Mason components from I<within> a regular CGI
 script (or any other Perl program, for that matter), then you don't
-need this module.  You can simply follow the directions in
-L<HTML::Mason::Interp/"STANDALONE MODE">.
+need this module.  You can simply follow the directions in L<the
+STANDALONE MODE section in
+HTML::Mason::Interp|HTML::Mason::Interp/"STANDALONE MODE">.
 
 This module also provides an C<$r> request object for use inside
 components, similar to the Apache request object under
@@ -265,8 +266,9 @@ as a templating language but not an application server.
 
 C<handle_cgi()> will create a CGI query object, parse the query
 parameters, and send the HTTP header and component output to STDOUT.
-If you want to handle those parts yourself, see
-L<HTML::Mason::Interp/"Using Mason from a standalone script">.
+If you want to handle those parts yourself, see L<Using Mason from a
+standalone script in HTML::Mason::Interp|HTML::Mason::Interp/"Using
+Mason from a standalone script">.
 
 =item * interp()
 
@@ -340,8 +342,8 @@ equally well under CGIHandler and ApacheHandler.
 
 =head1 SEE ALSO
 
-L<HTML::Mason>,
-L<HTML::Mason::Admin>,
-L<HTML::Mason::ApacheHandler>
+L<HTML::Mason|HTML::Mason>,
+L<HTML::Mason::Admin|HTML::Mason::Admin>,
+L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>
 
 =cut
