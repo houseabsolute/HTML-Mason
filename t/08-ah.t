@@ -39,6 +39,7 @@ test_load_apache();
 my $tests = 4; # multi conf tests
 $tests += 57 if my $have_libapreq = have_module('Apache::Request');
 $tests += 40 if my $have_cgi      = have_module('CGI');
+$tests += 15 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
 $tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
 $tests++ if my $have_filter = have_module('Apache::Filter');
 print "1..$tests\n";
@@ -62,6 +63,12 @@ if ($have_libapreq) {        # 57 tests
         filter_tests();      # 1 tests
     }
 }
+
+if ($have_tmp) {
+    cleanup_data_dir();
+    single_level_serverroot_tests();  # 15 tests
+}
+
 
 if ($have_cgi) {             # 40 tests (+ 1?)
     cleanup_data_dir();
@@ -417,6 +424,13 @@ sub no_config_tests
 
     standard_tests(0);
 
+    kill_httpd(1);
+}
+
+sub single_level_serverroot_tests
+{
+    start_httpd('single_level_serverroot');
+    standard_tests(0);
     kill_httpd(1);
 }
 

@@ -159,6 +159,12 @@ EOF
   PerlHandler HTML::Mason::ApacheHandler
 </IfDefine>
 
+<IfDefine single_level_serverroot>
+  ServerRoot /tmp
+  SetHandler perl-script
+  PerlHandler HTML::Mason::ApacheHandler
+</IfDefine>
+
 <IfDefine CGIHandler>
   AddHandler cgi-script .cgi
   Action html-mason /CGIHandler.cgi
