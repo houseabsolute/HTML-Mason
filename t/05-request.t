@@ -669,5 +669,37 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'subcomp_from_shared',
+		      description => 'Test calling a subcomponent inside shared block',
+		      component => <<'EOF',
+<%shared>
+$m->comp('subcomp');
+</%shared>
+<%def subcomp>
+a subcomp
+</%def>
+EOF
+		      expect_error =>
+                      qr/cannot call a method or subcomponent from a <%shared> block/,
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'method_in_shared',
+		      description => 'Test calling a method inside shared block',
+		      component => <<'EOF',
+<%shared>
+$m->comp('SELF:meth');
+</%shared>
+<%method meth>
+a method
+</%method>
+EOF
+		      expect_error =>
+                      qr/cannot call a method or subcomponent from a <%shared> block/,
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
