@@ -5,7 +5,7 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
-1.09_03 (or 1.10?)
+1.10
 
 [ ENHANCEMENTS ]
 
@@ -15,6 +15,12 @@ syntax errors.
 - Method and subcomponent blocks with no name (<%method>) were caught
 as an error, but the error message was very confusing.  This has been
 fixed.
+- Added HTML::Mason::Subclassing, documentation on subclassing Mason
+objects.
+- Added documentation on the interaction between <%once> sections and
+preloading components.
+- Mason automatically calls $m->clear_buffer when $m->decline is
+called.
 
 [ BUG FIXES ]
 
@@ -25,8 +31,8 @@ This was only noticeable if you attempted to provide a subclass of one
 of Mason's classes (like your own Request class) that took its own
 parameters.  Mason was not recognizing those additional parameters as
 valid.
-- Mason automatically calls $m->clear_buffer when $m->decline is
-called.
+- Improved line number reporting from earlier releases.  Line numbers
+are now reported properly for errors in any type of block.
 
 1.09_02  June 4, 2002
 
@@ -187,6 +193,12 @@ For example, the Interp object contains a Resolver object and Request
 objects.  The Interp's new method will accept constructor parameter
 for both the Resolver and Request objects.
 - The ApacheHandler args_method is now a per-object parameter.
+- Mason is now much smarter about recompiling components.  In general,
+it can detect if compiler options for a compiled component are
+different from the current options, and will recompile the component
+if necessary.  The exception to this is that with compiler parameters
+which take callbacks (such as preprocess), Mason can only tell if such
+a parameter is present, not whether the actual callback has changed.
 
 [ BUG FIXES ]
 
@@ -213,6 +225,15 @@ to component paths.
 way as constructor parameters.
 - The component requested and the arguments it was passed are now
 properties of the Request object.
+
+1.05  April 30, 2001
+
+- Fixed improper handling of parameters for non-GET/POST
+request. (submitted by Radu Greab)
+- Fixed Interp to accept a resolver object param. (reported by Bojan
+Jovanovic)
+- Fixed infinite loop when calling $m->decline with // in dhandler
+arg. (reported by Baldur Kristinsson)
 
 1.04  October 30, 2001
 
