@@ -31,17 +31,22 @@ The included pod docs have been pre-converted to HTML for you and
 placed in the htdocs/ directory. The Mason overview (a good place to
 start) is in Mason.html.
 
-USING MASON WITH MOD_PERL AS A DSO - *WARNING*
+WARNINGS!!!
 
-Simply put, this does not work.  Attempting to do this with will cause
-your Apache server to fail silently at startup.
+* Don't use Mason with a mod_perl DSO (dynamic shared object).
 
-Red Hat 6.1 includes an Apache/mod_perl RPM with mod_perl compiled as
-a DSO.  This has caused many users grief.  For more information on
-this issue, please see http://www.masonhq.com/redhat61.html.
+Using Mason with a mod_perl DSO will cause your Apache server to fail
+silently at startup. Red Hat 6.1 is one distribution that includes
+such a mod_perl DSO.
 
 The fix for this problem is to install Apache/mod_perl with mod_perl
-compiled statically into the Apache binary.
+compiled statically into the Apache binary. These are available around
+the net; check http://rpmfind.net/ as a starting point.
+
+* Don't use Mason with taint checking on.
+
+The current version of Mason interacts badly with a nasty taint bug in
+Perl, causing unexpected behavior such as infinite loops.
 
 GETTING HELP
 
