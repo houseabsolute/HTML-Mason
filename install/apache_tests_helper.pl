@@ -5,8 +5,10 @@ use lib 'lib', 't/lib';
 use Cwd;
 use File::Path;
 use File::Basename;
+use File::Spec;
 
-use HTML::Mason::Tools qw(load_pkg);
+# Don't load HTML::Mason::* modules here, because in Makefile.PL we
+# might not yet have the proper prerequisites installed.
 
 use vars qw(%APACHE);
 
@@ -362,6 +364,32 @@ sub _libs
     $libs .= ' );';
 
     return $libs;
+}
+
+# Copied from HTML::Mason::Tools
+sub load_pkg {
+    my ($pkg, $nf_error) = @_;
+
+    my $file = File::Spec->catfile( split /::/, $pkg );
+    $file .= '.pm';
+    return 1 if exists $INC{$file};
+
+    eval "use $pkg";
+
+    if ($@) {
+	if ($@ =~ /^Can\'t locate .* in \@INC/) {
+	    if (defined($nf_error)) {
+		error sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
+			      $pkg, $nf_error, join(" ", @INC));
+	    } else {
+		undef $@;
+		return 0;
+	    }
+	} else {
+	    error $@;
+	}
+    }
+    return 1;
 }
 
 1;
