@@ -16,12 +16,12 @@ which covers these in more detail.
 - ** Errors now report line numbers from the component source file.
 - ** The Parser class has been removed entirely.  Its functionality
 has been split between the Lexer and Compiler objects.  L{Compiler},
-L{Compiler::ToObject} and L{Lexer}.
+L{Compiler::ToObject} and L{Lexer}
 - ** The debug file feature has been removed.
 - ** The previewer has been removed.
 - ** The Interp use_reload_files parameter has been removed.  The new
 static_source parameter provides a useful, and conceptually simpler,
-replacement.  L{Interp/static_source}.
+replacement.  L{Interp/static_source}
 - ** Mason's built in caching now uses Cache::Cache to do all the
 heavy lifting.  This means that parameters for both the $m->cache and
 $m->cache_self methods have changed.
@@ -60,9 +60,9 @@ Mason can now figure this out by itself.
 [ ENHANCEMENTS AND NEW FEATURES ]
 
 - It is now possible to pass chunks of component content as part of a
-component call.  L{Devel/Component Calls with Content}.
+component call.  L{Devel/Component Calls with Content}
 - Mason now supports subrequests via the new $m->subexec and
-$m->make_subrequest methods.  L{Devel/Subrequests}.
+$m->make_subrequest methods.  L{Devel/Subrequests}
 - Mason no longer requires you to specify a component root or data
 directory.  The component root now defaults to your document root in a
 web context, or your filesystem root in a standalone context.  The
@@ -173,7 +173,7 @@ mod_perl installations.
 
 - Implemented configuration of Mason from httpd.conf via PerlSetVar
 directives.  This removes the need for a handler.pl file in many
-cases.  L{Admin/CONFIGURING MASON VIA httpd.conf}.
+cases.  L{Admin/CONFIGURING MASON VIA httpd.conf}
 - Revamped ApacheHandler tests to use a real Apache web server and
 mod_perl (assuming this is installed).  This allows for much better
 testing of Mason.  However, the test suite takes a bit longer to run
