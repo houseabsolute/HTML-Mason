@@ -125,7 +125,7 @@ sub is_maintainer
 {
     return $ENV{MASON_MAINTAINER} if exists $ENV{MASON_MAINTAINER};
 
-    return -d 'CVS';
+    return -d 'CVS' ? 1 : 0;
 }
 
 package MY;
