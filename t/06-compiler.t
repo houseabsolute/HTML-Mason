@@ -4,6 +4,7 @@ use strict;
 
 use Config;
 use HTML::Mason::Tests;
+use HTML::Mason::Tools qw(load_pkg);
 
 my $tests = make_tests();
 $tests->run;
@@ -53,10 +54,12 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'default_escape_flags',
-		      description => 'test that no escaping is done by default',
-		      interp_params => { use_object_files => 0 },
-		      component => <<'EOF',
+    if ( load_pkg('HTML::Entities') )
+    {
+        $group->add_test( name => 'default_escape_flags',
+                          description => 'test that no escaping is done by default',
+                          interp_params => { use_object_files => 0 },
+                          component => <<'EOF',
 Explicitly HTML-escaped: <% $expr |h %><p>
 Explicitly HTML-escaped redundantly: <% $expr |hh %><p>
 Explicitly URL-escaped: <% $expr |u
@@ -68,7 +71,7 @@ Explicitly not escaped: <% $expr | n%><p>
 my $expr = "<b><i>Hello there</i></b>.";
 </%init>
 EOF
-		      expect => <<'EOF',
+                          expect => <<'EOF',
 Explicitly HTML-escaped: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
 Explicitly HTML-escaped redundantly: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
 Explicitly URL-escaped: %3Cb%3E%3Ci%3EHello%20there%3C%2Fi%3E%3C%2Fb%3E.<p>
@@ -76,15 +79,17 @@ No flags: <b><i>Hello there</i></b>.<p>
 No flags again: <b><i>Hello there</i></b>.<p>
 Explicitly not escaped: <b><i>Hello there</i></b>.<p>
 EOF
-		    );
-
+                        );
+    }
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'default_escape_flags_2',
-		      description => 'test that turning on default escaping works',
-		      interp_params => { use_object_files => 0, default_escape_flags => 'h' },
-		      component => <<'EOF',
+    if ( load_pkg('HTML::Entities') )
+    {
+        $group->add_test( name => 'default_escape_flags_2',
+                          description => 'test that turning on default escaping works',
+                          interp_params => { use_object_files => 0, default_escape_flags => 'h' },
+                          component => <<'EOF',
 Explicitly HTML-escaped: <% $expr |h %><p>
 Explicitly HTML-escaped redundantly: <% $expr |hh %><p>
 Explicitly URL-escaped: <% $expr |un
@@ -96,7 +101,7 @@ Explicitly not escaped: <% $expr | n%><p>
 my $expr = "<b><i>Hello there</i></b>.";
 </%init>
 EOF
-		      expect => <<'EOF',
+                          expect => <<'EOF',
 Explicitly HTML-escaped: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
 Explicitly HTML-escaped redundantly: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
 Explicitly URL-escaped: %3Cb%3E%3Ci%3EHello%20there%3C%2Fi%3E%3C%2Fb%3E.<p>
@@ -104,7 +109,8 @@ No flags: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
 No flags again: &lt;b&gt;&lt;i&gt;Hello there&lt;/i&gt;&lt;/b&gt;.<p>
 Explicitly not escaped: <b><i>Hello there</i></b>.<p>
 EOF
-		    );
+                        );
+    }
 
 
 #------------------------------------------------------------
