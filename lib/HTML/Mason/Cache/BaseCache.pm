@@ -21,12 +21,12 @@ sub get
 
     $self->_conditionally_auto_purge_on_get();
 
-    my $object = $self->get_object($key) or
-	return undef;
-
     if (my $sub = $params{expire_if}) {
 	$self->expire_if($key, $sub);
     }
+
+    my $object = $self->get_object($key) or
+	return undef;
 
     if (Cache::BaseCache::Object_Has_Expired($object))
     {
@@ -40,42 +40,6 @@ sub get
     }
 
     return $object->get_data( );
-}
-
-sub get_created_at
-{
-    my ($self, $key) = @_;
-    die "must specify key" unless defined($key);
-
-    if (my $obj = $self->get_object($key)) {
-	return $obj->get_created_at;
-    } else {
-	return undef;
-    }
-}
-
-sub get_accessed_at
-{
-    my ($self, $key) = @_;
-    die "must specify key" unless defined($key);
-
-    if (my $obj = $self->get_object($key)) {
-	return $obj->get_accessed_at;
-    } else {
-	return undef;
-    }
-}
-
-sub get_expires_at
-{
-    my ($self, $key) = @_;
-    die "must specify key" unless defined($key);
-
-    if (my $obj = $self->get_object($key)) {
-	return $obj->get_expires_at;
-    } else {
-	return undef;
-    }
 }
 
 sub expire
@@ -141,21 +105,6 @@ If the cache object exists, call I<sub> with the cache object as a
 single parameter. If I<sub> returns a true value, expire the value.
 
 =back
-
-=item get_created_at (key)
-
-Returns the creation time of the object associated with I<key>, or undef
-if the object does not exist.
-
-=item get_accessed_at (key)
-
-Returns the last accessed time of the object associated with I<key>, or undef
-if the object does not exist.
-
-=item get_expires_at (key)
-
-Returns the expiration time of the object associated with I<key>, or undef
-if the object does not exist.
 
 =item expire (key)
 
