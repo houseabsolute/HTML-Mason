@@ -619,8 +619,8 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'batch_mode',
-		      description => 'Test that batch mode setting works',
+    $group->add_test( name => 'no_autoflush_mode',
+		      description => 'Test that no autoflush (batch) mode setting works',
 		      component => <<'EOF',
 <& mode_test &>
 EOF
