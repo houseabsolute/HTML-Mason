@@ -132,6 +132,13 @@ can be removed.
 instructions on how to replace access_data_cache.
 
 
+Semantics
+
+- In older versions of Mason, calls to $m->flush_buffer when output
+needed to go through a <%filter>.  In 1.1x, the filter may be called
+multiple times, each time with new output.
+
+
 Component Syntax
 
 - The "mc_" style commands, deprecated in 0.8, are no longer supported.
