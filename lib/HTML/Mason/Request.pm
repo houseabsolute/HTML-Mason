@@ -50,42 +50,65 @@ BEGIN
 {
     __PACKAGE__->valid_params
 	(
-	 args  => { type => ARRAYREF, default => [],
-		    descr => "Array of arguments to initial component",
-		    public => 0 },
-	 autoflush  => { parse => 'boolean', default => 0, type => SCALAR,
-			 descr => "Whether output should be buffered or sent immediately" },
-	 comp  => { type => SCALAR | OBJECT, optional => 0,
-		    descr => "Initial component, either an absolute path or a component object",
-		    public => 0 },
-         data_cache_api => { parse => 'string', default => '1.1', type => SCALAR,
-			     callbacks => { "must be one of '1.0' or '1.1'" =>
-				sub { $_[0] eq '1.0' or $_[0] eq '1.1'; } },
-                             descr => "Data cache API to use: 1.0 or 1.1" },
-	 data_cache_defaults => { parse => 'hash_list', type => HASHREF|UNDEF, optional => 1,
-				  descr => "A hash of default parameters for Cache::Cache" },
-	 declined_comps => { type => HASHREF, optional=>1,
-			     descr => "Hash of components that have been declined in previous parent requests",
-			     public => 0 },
-	 dhandler_name => { parse => 'string',  default => 'dhandler', type => SCALAR,
-			    descr => "The filename to use for Mason's 'dhandler' capability" },
-	 interp     => { isa => 'HTML::Mason::Interp',
-			 descr => "An interpreter for Mason control functions",
-			 public => 0 },
-	 error_format => { parse => 'string', type => SCALAR, default => 'text',
-			   callbacks => { "HTML::Mason::Exception->can( method )'" =>
-					  sub { HTML::Mason::Exception->can("as_$_[0]"); } },
-			   descr => "How error conditions are returned to the caller (brief, text, line or html)" },
-	 error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
-			 callbacks => { "must be one of 'output' or 'fatal'" =>
-					sub { $_[0] =~ /^(?:output|fatal)$/ } },
-			 descr => "How error conditions are manifest (output or fatal)" },
-	 max_recurse => { parse => 'string',  default => 32, type => SCALAR,
-			  descr => "The maximum recursion depth for component, inheritance, and request stack" },
-	 out_method => { parse => 'code',    type => CODEREF|SCALARREF,
-			 default => sub { print STDOUT grep {defined} @_ },
-			 descr => "A subroutine or scalar reference through which all output will pass" },
-    );
+	 args =>
+         { type => ARRAYREF, default => [],
+           descr => "Array of arguments to initial component",
+           public => 0 },
+
+	 autoflush =>
+         { parse => 'boolean', default => 0, type => SCALAR,
+           descr => "Whether output should be buffered or sent immediately" },
+
+	 comp =>
+         { type => SCALAR | OBJECT, optional => 0,
+           descr => "Initial component, either an absolute path or a component object",
+           public => 0 },
+
+         data_cache_api =>
+         { parse => 'string', default => '1.1', type => SCALAR,
+           callbacks => { "must be one of '1.0' or '1.1'" =>
+                          sub { $_[0] eq '1.0' or $_[0] eq '1.1'; } },
+           descr => "Data cache API to use: 1.0 or 1.1" },
+
+	 data_cache_defaults =>
+         { parse => 'hash_list', type => HASHREF|UNDEF, optional => 1,
+           descr => "A hash of default parameters for Cache::Cache" },
+
+	 declined_comps =>
+         { type => HASHREF, optional => 1,
+           descr => "Hash of components that have been declined in previous parent requests",
+           public => 0 },
+
+	 dhandler_name =>
+         { parse => 'string', default => 'dhandler', type => SCALAR,
+           descr => "The filename to use for Mason's 'dhandler' capability" },
+
+	 interp =>
+         { isa => 'HTML::Mason::Interp',
+           descr => "An interpreter for Mason control functions",
+           public => 0 },
+
+	 error_format =>
+         { parse => 'string', type => SCALAR, default => 'text',
+           callbacks => { "HTML::Mason::Exception->can( method )'" =>
+                          sub { HTML::Mason::Exception->can("as_$_[0]"); } },
+           descr => "How error conditions are returned to the caller (brief, text, line or html)" },
+
+	 error_mode =>
+         { parse => 'string', type => SCALAR, default => 'fatal',
+           callbacks => { "must be one of 'output' or 'fatal'" =>
+                          sub { $_[0] =~ /^(?:output|fatal)$/ } },
+           descr => "How error conditions are manifest (output or fatal)" },
+
+	 max_recurse =>
+         { parse => 'string', default => 32, type => SCALAR,
+           descr => "The maximum recursion depth for component, inheritance, and request stack" },
+
+	 out_method =>
+         { parse => 'code',type => CODEREF|SCALARREF,
+           default => sub { print STDOUT grep {defined} @_ },
+           descr => "A subroutine or scalar reference through which all output will pass" },
+        );
 
     __PACKAGE__->contained_objects
 	(
