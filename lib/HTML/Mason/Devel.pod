@@ -1275,10 +1275,9 @@ The current valid flags are:
 
 Escape HTML ('<' => '&lt;', etc.) using C<HTML::Entities::encode()>.
 Before Perl 5.8.0 this module assumes that text is in the ISO-8859-1
-character set, and will interact badly with other encodings. See L<the
-next section|HTML::Mason::Interp/"User-defined Escapes"> for how to
-override this escaping. After 5.8.0, the encoding assumes that text is
-in Unicode.
+character set; see L<the next section|HTML::Mason::Devel/"User-defined
+Escapes"> for how to override this escaping. After 5.8.0, the encoding
+assumes that text is in Unicode.
 
 =item * u
 
@@ -1320,10 +1319,11 @@ Besides the default escapes mentioned above, it is possible for the
 user to define their own escapes or to override the built-in 'h' and
 'u' escapes.
 
-This is done via the L<Interp object's C<set_escape()>
-method|HTML::Mason::Interp/item_set_escape>.  Escape names may be any
-number of characters as long as it matches the regex C</^[\w-]+$/>.
-The one exception is that you cannot override the 'n' flag.
+This is done via the Interp object's P<escape_flags> parameter or
+L<set_escape()|HTML::Mason::Interp/item_set_escape> method.  Escape
+names may be any number of characters as long as it matches the regex
+C</^[\w-]+$/>.  The one exception is that you cannot override the 'n'
+flag.
 
 Each escape flag is associated with a subroutine reference.  The
 subroutine should expect to receive a scalar reference, which should
@@ -1339,20 +1339,20 @@ you are using such an encoding and want to switch the 'h' flag to do
 escape just the minimal set of characters (C<E<lt>>, C<E<gt>>, C<&>,
 C<">), put this in your Apache configuration:
 
-    PerlSetVar  MasonEscapeFlags  "h => \&HTML::Mason::Escapes::basic_html_escape"
+   PerlSetVar  MasonEscapeFlags  "h => \&HTML::Mason::Escapes::basic_html_escape"
 
 Or, in a top-level autohandler:
 
-  $m->interp->set_escape( h => \&HTML::Mason::Escapes::basic_html_escape );
+    $m->interp->set_escape( h => \&HTML::Mason::Escapes::basic_html_escape );
 
 Or you could write your own escape function for a particular encoding:
 
-  $ah->interp->set_escape( h => \&my_html_escape );
+    $ah->interp->set_escape( h => \&my_html_escape );
 
 And of course this can be used for all sorts of other things, like a
 naughty words filter for the easily offended:
 
-  $interp->set_escape( 'no-naughty' => \&remove_naughty_words );
+    $interp->set_escape( 'no-naughty' => \&remove_naughty_words );
 
 =head3 Manually applying escapes
 
@@ -1360,7 +1360,7 @@ You can manually apply one or more escapes to text using the L<Interp
 object's C<apply_escapes()>
 method|HTML::Mason::Interp/item_apply_escapes>. e.g.
 
-  $m->interp->apply_escapes( 'some html content', 'h' );
+    $m->interp->apply_escapes( 'some html content', 'h' );
 
 =head2 Backslash at end of line
 
@@ -1597,7 +1597,11 @@ and the cache subclass is C<FileCache>:
         ( { namespace => data_cache_namespace("/foo/bar"),
 	    cache_root => "/usr/local/www/mason/cache" } );
 
+    # Remove one key
     $cache->remove('key1');
+
+    # Remove all keys
+    $cache->clear;
 
 =head2 Mason 1.0x Cache API
 
