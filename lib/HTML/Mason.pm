@@ -7,14 +7,13 @@ use 5.005;
 
 $HTML::Mason::VERSION = '1.1';
 
-use HTML::Mason::Interp;
+# remember to switch this off later.
+$HTML::Mason::DEBUG = 1;
 
-use constant DEBUG => 1;
+use HTML::Mason::Interp;
 
 sub version
 {
-    shift;
-
     return $HTML::Mason::VERSION;
 }
 
