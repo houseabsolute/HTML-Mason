@@ -110,22 +110,45 @@ sub allowed_params
 
     my %p = %{ $class->validation_spec };
 
-    my %c = $class->get_contained_objects($args);
+    my %c = $class->get_contained_objects;
 
     foreach my $name (keys %c)
     {
 	# Can accept a 'foo' parameter - should already be in the validation_spec
-	next if exists $args->{$name};
-	
+	if ( exists $args->{$name} )
+	{
+	    my $subparams = $args->{$name}->allowed_params($args);
+	    @p{keys %$subparams} = values %$subparams;
+	    next;
+	}
+
 	# Can accept a 'foo_class' parameter instead of a 'foo' parameter
 	# If neither parameter is present, give up - perhaps it's optional
 	my $low_class = "${name}_class";
-	next unless exists $args->{$low_class};
 
-	delete $p{$name};
-	$p{$low_class} = { type => STRING, parse => 'string' };  # A loose spec
+	if ( exists $args->{$low_class} )
+	{
+	    delete $p{$name};
+	    $p{$low_class} = { type => STRING, parse => 'string' };  # A loose spec
+	}
 
-	my $subparams = $args->{$low_class}->allowed_params($args);
+	# We have to get the allowed params for the contained object
+	# class.  That class could be overridden, in which case we use
+	# the new class provided.  Otherwise, we use our default.
+	my $contained_class = exists $args{$low_class} ? $args{$low_class} : $c{$name};
+
+	# we have to make sure it is loaded before we try calling
+	# ->allowed_params
+	{
+	    no strict 'refs';
+	    unless ( defined ${ "$contained_class\::VERSION" } )
+	    {
+		eval "use $contained_class";
+		die $@ if $@;
+	    }
+	}
+
+	my $subparams = $contained_class->allowed_params($args);
 	@p{keys %$subparams} = values %$subparams;
     }
 
