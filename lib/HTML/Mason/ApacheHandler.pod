@@ -80,6 +80,16 @@ somewhere below the C<S<package HTML::Mason>> line in C<handler.pl>.
 
 =back
 
+=head1 ACCESSOR METHODS
+
+All of the above properties have standard accessor methods of the
+same name: no arguments retrieves the value, and one argument sets it.
+For example:
+
+    my $ah = new HTML::Mason::ApacheHandler;
+    my $errmode = $ah->error_mode;
+    $ah->error_mode('html');
+
 =head1 AUTHOR
 
 Jonathan Swartz, swartz@transbay.net

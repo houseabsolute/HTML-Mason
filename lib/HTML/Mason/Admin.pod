@@ -671,31 +671,36 @@ to reload it from scratch.)
 
 =head2 Reload file
 
-Even if a component has been preloaded or cached in memory, Mason
-still checks the last modified time of its source file every time it
-runs to see if it needs to be reloaded.  If the average page consists
-of twenty components, that means twenty file stats per page, a
-potential performance concern.
+Normally, every time Mason executes a component, it checks the last
+modified time of its source file to see if it needs to be reloaded.
+These file checks are convenient for development, but for a production
+site they degrade performance unnecessarily.
 
-To prevent these constant file checks, Mason can monitor a single
-"reload file" of modified components.  When a component changes, you
-append its component path to the reload file, one path per line.  At
-the beginning of each request Mason checks to see if the reload file
-has changed; if so, it reads the new paths and invalidates their cache
-entries, which in turn forces a recompile the next time those
-components are requested.
+To remedy this, Mason has an accelerated mode that changes its
+behavior in two ways:
 
-The reload file is kept in C<data_dir/etc/reload.lst>. You can
-activate reload file monitoring with C<interp-E<gt>use_reload_file>.
+1.  Does not check component source files at all, relying solely on
+object files.  This means the developer or an automated system is
+responsible for recompiling any components that change and recreating
+object files, using the Parser L<Parser/parse> method.
 
-The advantage of using a reload file is that Mason stats one file per
-request instead of ten or twenty.  The disadvantage is a major
-increase in maintenance costs as the reload file has to be kept
-up-to-date.  If developers on your site use editorial tools to access
-and trigger components, you can update the reload file as part of
-these tools.  Or you might run a cron job or similar timed task that
-periodically scans the component hierarchy, updating the reload file
-if anything has changed.
+2.  Rather than continuously checking whether object files have
+changed, Mason monitors a "reload file" containing an ever-growing
+list of components that have changed.  Whenever a component changes,
+the developer or an automated system is responsible for appending the
+component path to the reload file. The reload file is kept in
+C<data_dir/etc/reload.lst>.
+
+You can activate this mode with the L<Interp/use_reload_file>
+Interp method.
+
+The advantage of using this mode is that Mason stats one file per
+request instead of ten or twenty.  The disadvantage is a
+increase in maintenance costs as the object and reload files have to
+be kept up-to-date.  Automated editorial tools, and cron jobs that
+periodically scan the component hierarchy for changes, are two
+possible solutions.  The Mason content management system automatically
+handles this task.
 
 =head1 STAGING vs. PRODUCTION
 

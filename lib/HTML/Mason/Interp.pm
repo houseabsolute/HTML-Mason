@@ -524,7 +524,6 @@ sub load {
 	} else {
 	    my ($script,$objtext,$errmsg,$pureTextFlag);
 	    my $success = $self->parser->parse(script_file=>$srcfile,
-					       comp_path=>$path,
 					       result_text=>\$objtext,
 					       error=>\$errmsg,
 					       result_code=>\$sub,

@@ -158,6 +158,41 @@ Called with no arguments, this returns the value of allow_globals as a
 list.  Called with one or more variable names, it appends the names to
 the existing list, removing duplicates if any.
 
+=for html <a name="item_parse">
+
+=item parse ([$script, $script_file, \$result_code, \$result_text, \$pure_text_flag, \$error, $wrap_errors, $save_to])
+
+This method performs the main function of Parser: it compiles a
+component into a Perl subroutine.
+
+The component may be passed in as a string in I<script>, or as a
+filename in I<script_file>.
+
+The subroutine can be output in three ways. I<result_text> is an
+optional scalar reference; if specified, it is filled with a Perl
+script that, when evaluated, returns the new
+subroutine. I<result_code> is an optional code reference filled with
+the new subroutine itself.  I<save_to> is an optional filename for an
+object file.
+
+The method returns 1 on success and 0 if there was an error.  I<error>
+is an optional scalar reference filled with any parsing or compilation
+errors that occur.  Alternatively, if the I<wrap_errors> flag is set
+to true, then any errors that occur are simply wrapped up to be
+displayed by the subroutine -- in this case the method always
+"succeeds" and returns 1.
+
+I<pure_text_flag> is an optional scalar reference filled with a flag
+indicating whether the component was pure text (free of Mason syntax).
+
+Here's an example that creates an object file from a component source
+file:
+
+    $parser->parse(script_file => '/usr/www/docs/template',
+                    save_to => '/usr/www/data/obj/template',
+                    error => \$error)
+         or die "error while compiling component: $error";
+
 =back
 
 =head1 AUTHOR

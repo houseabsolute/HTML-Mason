@@ -87,7 +87,6 @@ sub parse
     my $pureTextFlagRef = $options{pure_text_flag};
     my $errorRef = $options{error};
     my $wrapErrors = $options{wrap_errors};
-    my $compPath = $options{comp_path};
     my $saveTo = $options{save_to};
     my ($sub, $err, $errpos);
     my $pureTextFlag = 1;
@@ -479,10 +478,10 @@ sub parse
 	}
     }
     
-    if (!$parseError && defined($saveTo)) {
+    if (!$err && defined($saveTo)) {
 	File::Path::mkpath(File::Basename::dirname($saveTo));
 	my $fh = new IO::File ">$saveTo" or die "Couldn't write object file $saveTo";
-	print $fh $body;
+	print $fh $body if (!$pureTextFlag);
 	$fh->close;
     }
     $$resultTextRef = $body if !$parseError && defined($resultTextRef);
