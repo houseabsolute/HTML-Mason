@@ -271,6 +271,7 @@ if ( \$ENV{PATH_INFO} =~ s,/handle_component\$,, )
 elsif ( \$ENV{PATH_INFO} =~ s,/handle_cgi_object\$,, )
 {
     my \$cgi = CGI->new;
+    \$cgi->param( 'foo' => 'bar' );
     \$h->handle_cgi_object( \$cgi );
 }
 else
