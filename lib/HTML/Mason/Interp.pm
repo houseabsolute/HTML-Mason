@@ -15,7 +15,7 @@ use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
 use HTML::Mason::Tools qw(make_fh read_file taint_is_on load_pkg);
 
-use HTML::Mason::Exceptions( abbr => [qw(param_error system_error wrong_compiler_error compile_error error)] );
+use HTML::Mason::Exceptions( abbr => [qw(param_error system_error wrong_compiler_error compilation_error error)] );
 
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
@@ -688,7 +688,7 @@ sub eval_object_text
 	    $err =~ s/has too many errors\..*/has too many errors./s;
 	}
 
-	compile_error $err;
+	compilation_error $err;
     } else {
 	return $comp;
     }
@@ -741,7 +741,7 @@ sub _compilation_error {
     my ($self, $filename, $err) = @_;
 
     my $msg = sprintf("Error during compilation of %s:\n%s\n",$filename, $err);
-    compile_error $msg;
+    compilation_error $msg;
 }
 
 

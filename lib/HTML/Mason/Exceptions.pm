@@ -21,12 +21,12 @@ BEGIN
 
 	   'HTML::Mason::Exception::Compiler' =>
 	   { isa => 'HTML::Mason::Exception',
-	     abbr => 'compile_error',
+	     abbr => 'compiler_error',
 	     description => 'error thrown from the compiler' },
 
 	   'HTML::Mason::Exception::Compilation' =>
 	   { isa => 'HTML::Mason::Exception',
-	     abbr => 'compile_error',
+	     abbr => 'compilation_error',
 	     description => "error thrown in eval of the code for a component" },
 
 	   'HTML::Mason::Exception::Compilation::IncompatibleCompiler' =>
@@ -84,7 +84,7 @@ sub import
     if ($args{abbr})
     {
 	my $caller = caller;
-	foreach my $name (@{$args{abbr}}) 
+	foreach my $name (@{$args{abbr}})
 	{
 	    die "Unknown exception abbreviation '$name'" unless exists $abbrs{$name};
 	    no strict 'refs';

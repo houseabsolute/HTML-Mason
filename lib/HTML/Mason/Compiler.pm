@@ -10,7 +10,7 @@ use HTML::Mason::Component::FileBased;
 use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Lexer;
 
-use HTML::Mason::Exceptions( abbr => [qw(param_error compile_error syntax_error)] );
+use HTML::Mason::Exceptions( abbr => [qw(param_error compiler_error syntax_error)] );
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
 
@@ -127,7 +127,7 @@ sub compile
     if ($self->preprocess)
     {
 	eval { $self->preprocess->( \$p{comp_text} ) };
-	compile_error "Error during custom preprocess step: $@" if $@;
+	compiler_error "Error during custom preprocess step: $@" if $@;
     }
 
     $self->lexer->lex( comp_text => $p{comp_text}, name => $p{name}, compiler => $self );
@@ -139,7 +139,7 @@ sub start_component
 {
     my $self = shift;
 
-    compile_error "Cannot start a component while already compiling a component"
+    compiler_error "Cannot start a component while already compiling a component"
         if $self->{current_comp};
 
     $self->{in_main} = 1;
@@ -275,12 +275,12 @@ sub variable_declaration
     my $self = shift;
     my %p = @_;
 
-    compile_error "variable_declaration called inside a $p{block_type} block"
+    compiler_error "variable_declaration called inside a $p{block_type} block"
 	unless $p{block_type} eq 'args';
 
     my $arg = "$p{type}$p{name}";
 
-    compile_error "$arg already defined"
+    compiler_error "$arg already defined"
         if grep { "$_->{type}$_->{name}" eq $arg } @{ $self->{current_comp}{args} };
 
     push @{ $self->{current_comp}{args} }, { type => $p{type},
@@ -293,11 +293,11 @@ sub key_value_pair
     my $self = shift;
     my %p = @_;
 
-    compile_error "key_value_pair called inside a $p{block_type} block"
+    compiler_error "key_value_pair called inside a $p{block_type} block"
 	unless $p{block_type} eq 'flags' || $p{block_type} eq 'attr';
 
     my $type = $p{block_type} eq 'flags' ? 'flag' : 'attribute';
-    compile_error "$p{key} $type already defined"
+    compiler_error "$p{key} $type already defined"
 	if exists $self->{current_comp}{ $p{block_type} }{ $p{key} };
 
     $self->{current_comp}{ $p{block_type} }{ $p{key} } = $p{value}
@@ -339,7 +339,7 @@ sub substitution
 	%flags = map { $_ => 1 } split //, $p{escape} if $p{escape};
 	foreach (keys %flags)
 	{
-	    compile_error "invalid <% %> escape flag: '$_'"
+	    compiler_error "invalid <% %> escape flag: '$_'"
 		unless $valid_escape_flag{$_};
 	}
 	unless ( delete $flags{n} )
@@ -401,7 +401,7 @@ sub component_content_call_end
 {
     my $self = shift;
 
-    compile_error "found component with content ending tag but no beginning tag"
+    compiler_error "found component with content ending tag but no beginning tag"
 	unless @{ $self->{comp_with_content_stack} };
 
     my $call = pop @{ $self->{comp_with_content_stack} };
