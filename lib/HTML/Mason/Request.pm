@@ -1525,6 +1525,13 @@ the component at the bottom of the stack. e.g.
     $m->callers(1)            # component that called us
     $m->callers(-1)           # first component executed
 
+=for html <a name="item_caller"></a>
+
+=item caller
+
+A synonym for C<< $m->caller(1) >>, i.e. the component that called the
+currently executing component.
+
 =for html <a name="item_call_next"></a>
 
 =item call_next ([args...])
