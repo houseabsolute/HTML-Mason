@@ -431,8 +431,9 @@ sub file
     unless (is_absolute_path($file)) {
 	if ($interp->static_file_root) {
 	    $file = $interp->static_file_root . "/" . $file;
-	} elsif (my $dir_path = $self->current_comp->dir_path) {
-	    $file = $interp->comp_root . $dir_path . "/" . $file;
+	} elsif ($self->current_comp->is_file_based) {
+	    my $source_dir = $self->current_comp->source_dir;
+	    $file = "$source_dir/$file";
 	} else {
 	    $file = "/$file";
 	}
