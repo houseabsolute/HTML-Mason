@@ -526,17 +526,15 @@ sub component_call
     my $self = shift;
     my %p = @_;
 
-    my $call = $p{call};
-    for ($call) { s/^ +//; s/ +$//; }
-
-    if ( $call =~ m{^\s*[\w/.:]}s )
+    my ($prespace, $call, $postspace) = ($p{call} =~ /(\s*)(.*)(\s*)/s);
+    if ( $call =~ m,^[\w/.],)
     {
-        # We want to preserve whitespace or else we might throw off
-        # the line numbering.
-        $call =~ s{^(\s*)([\w/.:]+)}{$1'$2'};
+	my $comma = index($call, ',');
+	$comma = length $call if $comma == -1;
+	(my $comp = substr($call, 0, $comma)) =~ s/\s+$//;
+	$call = "'$comp'" . substr($call, $comma);
     }
-
-    my $code = "\$m->comp( $call );\n";
+    my $code = $prespace . "\$m->comp( $call\n); " . $postspace;
     eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
     compiler_error $@ if $@;
 
