@@ -42,7 +42,7 @@ BEGIN
 			 public => 0 },
 	 error_format => { parse => 'string', type => SCALAR, default => 'text',
 			   callbacks => { "must be one of 'brief', 'text', 'line', or 'html'" =>
-					  sub { my $m = "as_$_[0]"; HTML::Mason::Exception->can($m); } },
+					  sub { HTML::Mason::Exception->can("as_$_[0]"); } },
 			   descr => "How error messages are formatted" },
 	 error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
 			 callbacks => { "must be one of 'output' or 'fatal'" =>
