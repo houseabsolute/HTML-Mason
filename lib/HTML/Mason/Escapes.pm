@@ -46,7 +46,7 @@ __END__
 
 =head1 NAME
 
-HTML::Mason::Escapes - Function library used internally in Mason
+HTML::Mason::Escapes - Functions to escape text for Mason
 
 =head1 DESCRIPTION
 
@@ -55,7 +55,7 @@ by other Mason modules.
 
 =item html_entities_escape
 
-This function takes a string reference and HTML-escapes it using the
+This function takes a scalar reference and HTML-escapes it using the
 C<HTML::Entities> module.  By default, this module assumes that the
 string it is escaping is in ISO-8859-1 (pre Perl 5.8.0) or UTF-8 (Perl
 5.8.0 onwards).  If this is not the case for your data, you will want
@@ -72,7 +72,7 @@ sign (%) followed by the hexadecimal number of that character.
 
 =item basic_html_escape
 
-This function takes a string reference and HTML-escapes it, escaping
+This function takes a scalar reference and HTML-escapes it, escaping
 the following characters: '&', '>', '<', and '"'.
 
 It is provided for those who wish to use it to replace (or supplement)
