@@ -1024,6 +1024,22 @@ as much information in the C<handler.pl>. The disadvantage is a slight
 memory and performance impact. On development servers this shouldn't
 matter; on production servers you may wish to profile the two schemes.
 
+=head1 NON-WEB MASON
+
+While most people use Mason for dynamic web applications, that isn't
+all you can do with it.
+
+There are some differences worth briefly noting when using Mason
+outside the web.
+
+=head2 The Component Root
+
+Both the ApacheHandler and CGIHandler modules provide reasonable
+default component roots when none is provided by the user.
+
+When using Mason outside the web, the default component root is simply
+the current working directory of the program that uses Mason.
+
 =head1 AUTHORS
 
 Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams <ken@mathforum.org>
