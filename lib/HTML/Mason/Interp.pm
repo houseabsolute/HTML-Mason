@@ -129,7 +129,7 @@ sub _initialize
 	    $self->push_files_written(@newdirs);
 	}
     } else {
-	$self->use_object_files(0);
+	$self->{use_object_files} = 0;
     }
 
     #
