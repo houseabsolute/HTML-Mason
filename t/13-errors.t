@@ -127,6 +127,30 @@ EOF
 
 #------------------------------------------------------------
 
+    # this is easy to check for as an exact string
+    sub HTML::Mason::Exception::as_munged
+    {
+        my $err = shift->error;
+
+        return $err =~ /^(.+?) at/ ? $1 : $err;
+    }
+
+    $group->add_test( name => 'error_in_subrequest',
+		      description => 'Make sure that an error in a subrequest is propogated back to the main request',
+                      interp_params => { error_format => 'munged',
+                                         error_mode => 'output',
+                                       },
+		      component => <<'EOF',
+Should not appear in output!
+% $m->subexec( '/errors/support/error1' );
+EOF
+                      expect => <<'EOF',
+terrible error
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
