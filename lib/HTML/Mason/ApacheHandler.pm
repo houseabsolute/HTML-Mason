@@ -186,7 +186,7 @@ sub make_ah
 {
     my $package = shift;
 
-    my $comp_root = $package->_get_string_param('MasonCompRoot');
+    my $comp_root = join '', $package->_get_list_param('MasonCompRoot');
 
     use vars qw($AH);
     return $AH if $AH && $AH->{last_comp_root} eq $comp_root;
