@@ -6,6 +6,8 @@ package HTML::Mason::MethodMaker;
 
 use strict;
 
+use Params::Validate qw(validate_pos);
+
 sub import
 {
     my $caller = caller;
@@ -29,14 +31,19 @@ sub import
 	    {
 		my ($name, $spec) = @$rw;
 		no strict 'refs';
+
+		#
+		# copying to @args seems to be necessary to satisfy
+		# the prototype for validate_pos.  Perl's prototype
+		# stuff is a little wacky.  I just do what it makes me
+		# do.
+		#
 		*{"$caller\::$name"} =
 		    sub { my $s = shift;
-			  if (@_)
+			  my @args = @_;
+			  if (@args)
 			  {
-			      # For some reason related to Perl's
-			      # prototype weirdness this doesn't work
-			      # unless this is passed as a reference.
-			      Params::Validate::validate_pos(\@_, $spec);
+			      validate_pos(@args, $spec);
 			      $s->{$name} = shift;
 			  }
 			  return $s->{$name};
@@ -62,14 +69,12 @@ sub import
 		    no strict 'refs';
 		    *{"$caller\::$name"} =
 			sub { my $s = shift;
+			      my @args = @_;
 			      my %new;
-			      if (@_)
+			      if (@args)
 			      {
-				  # For some reason related to Perl's
-				  # prototype weirdness this doesn't work
-				  # unless this is passed as a reference.
-				  Params::Validate::validate_pos(\@_, $spec);
-				  %new = ( $name => $_[0] );
+				  validate_pos(@args, $spec);
+				  %new = ( $name => $args[0] );
 			      }
 			      my %args = $s->delayed_object_params( $object,
 								    %new );
