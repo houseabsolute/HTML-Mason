@@ -118,7 +118,7 @@ sub _initialize
     foreach my $field (qw(data_dir)) {
 	if ($self->{$field}) {
 	    $self->{$field} = File::Spec->canonpath( $self->{$field} );
-	    param_error "$field '".$self->{$field}."' must be an absolute directory"
+	    param_error "$field '$self->{$field}' must be an absolute directory"
 		unless File::Spec->file_name_is_absolute( $self->{$field} );
 	}
     }
