@@ -217,7 +217,7 @@ sub load {
     my $code_cache = $self->code_cache;
     my $resolver = $self->{resolver};
 
-    # If path is not absolute, prepand default_path_prefix.
+    # If path is not absolute, prepend default_path_prefix.
     unless (substr($path, 0, 1) eq '/') {
 	if (my $default_path_prefix = $resolver->default_path_prefix) {
 	    $path = join("/", $default_path_prefix, $path);
@@ -225,7 +225,7 @@ sub load {
 	    error "initial component path must be absolute";
 	}
     }
-    
+
     #
     # Get source info from resolver. Cache the results in fixed_source mode.
     #
