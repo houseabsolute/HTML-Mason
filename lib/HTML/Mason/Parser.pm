@@ -109,10 +109,9 @@ sub parse
 sub parse_component
 {
     my ($self, %options) = @_;
-    my ($script,$scriptFile,$errorRef,$errposRef,$embedded,$fileBased,$compClass) =
-	@options{qw(script script_file error errpos embedded file_based comp_class)};
+    my ($script,$scriptFile,$errorRef,$errposRef,$embedded,$compClass) =
+	@options{qw(script script_file error errpos embedded comp_class)};
     my ($sub, $err, $errpos, $suberr, $suberrpos);
-    $fileBased = 1 if !exists($options{file_based});
     $compClass = 'HTML::Mason::Component' if !exists($options{comp_class});
     my $parseError = 1;
     my $parserVersion = version();
@@ -182,7 +181,7 @@ sub parse_component
 		    $errpos = $begintail;
 		} else {
 		    my $subtext = substr($script,$begintail,$endmark-$begintail);
-		    if (my $objtext = $self->parse_component(script=>$subtext, embedded=>1, file_based=>0, comp_class=>'HTML::Mason::Component::Subcomponent', error=>\$suberr, errpos=>\$suberrpos)) {
+		    if (my $objtext = $self->parse_component(script=>$subtext, embedded=>1, comp_class=>'HTML::Mason::Component::Subcomponent', error=>\$suberr, errpos=>\$suberrpos)) {
 			$subcomps{$name} = $objtext;
 		    } else {
 			$err = "Error while parsing subcomponent '$name':\n$suberr";
