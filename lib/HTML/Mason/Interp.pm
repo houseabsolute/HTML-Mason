@@ -16,7 +16,7 @@ use HTML::Mason::Resolver::File;
 use HTML::Mason::Tools qw(make_fh read_file taint_is_on compress_path);
 
 use Params::Validate qw(:all);
-Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
+Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
 # If this fails we can live with that.
 eval { require Time::HiRes };

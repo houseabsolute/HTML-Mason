@@ -12,7 +12,7 @@ use HTML::Mason::Utils;
 use HTML::Mason::Buffer;
 
 use Params::Validate qw(:all);
-Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
+Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( aborted

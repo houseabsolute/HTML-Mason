@@ -86,7 +86,7 @@ use HTML::Mason::Error qw(error_process error_display_html);
 use HTML::Mason::Tools qw(dumper_method html_escape make_fh pkg_installed);
 use HTML::Mason::Utils;
 use Params::Validate qw(:all);
-Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
+Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
 use Apache;
 use Apache::Status;

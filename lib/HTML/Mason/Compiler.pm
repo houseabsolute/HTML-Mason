@@ -12,7 +12,7 @@ use HTML::Mason::Lexer;
 
 use HTML::Mason::Exceptions;
 use Params::Validate qw(:all);
-Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
+Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
 
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
