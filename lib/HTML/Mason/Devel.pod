@@ -304,7 +304,7 @@ e.g. S<C<< player => 'M. Jordan' >>>.
 comp_path may be a literal string (quotes optional) or a Perl expression
 that evaluates to a string. To eliminate the need for quotes in most
 cases, Mason employs some magic parsing: If the first character is
-one of C<[A-Za-z0-9/_.]>, comp_path is assumed to be a literal
+one of C<[\w/_.]>, comp_path is assumed to be a literal
 string running up to the first comma or &>. Otherwise, comp_path
 is evaluated as an expression.
 
@@ -1017,7 +1017,7 @@ inside the current component. Inside you may place anything that a
 regular component contains, with the exception of C<< <%def> >>, C<< <%method> >>,
 C<< <%once> >>, and C<< <%shared> >> tags.
 
-The I<name> consists of characters in the set C<[A-Za-z0-9._-]>. To
+The I<name> consists of characters in the set C<[\w._-]>. To
 call a subcomponent simply use its name in <& &> or C<< $m->comp >>. A
 subcomponent can only be seen from the surrounding component.
 
