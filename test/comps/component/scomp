@@ -1,8 +1,0 @@
-
-% my $text = $m->scomp('.subcomp', 1,2,3);
---------------------
-<% $text %>
-
-<%def .subcomp>
- Hello, you say <% join '', @_ %>.
-</%def>
