@@ -343,7 +343,7 @@ sub parse
     } else {
 	foreach (@alphasecs) {
 	    my $alpha = substr($script,$_->[0],$_->[1]);
-	    $alpha =~ s/\'/\\\'/g;
+	    $alpha =~ s{([\\'])} {\\$1}g;        # escape backslashes and single quotes
 	    push(@alphatexts,sprintf('$_out->(\'%s\');',$alpha));
 	}
     }
