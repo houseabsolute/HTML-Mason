@@ -61,10 +61,15 @@ sub lex
 {
     my $self = shift;
     my %p = validate(@_,
-		     {comp_source => SCALAR,
+		     {comp_source => SCALAR|SCALARREF,
 		      name => SCALAR,
 		      compiler => {isa => 'HTML::Mason::Compiler'}}
 		    );
+
+    # Note - we could improve memory usage here if we didn't make a
+    # copy of the scalarref, but that will take some more work to get
+    # it working
+    $p{comp_source} = ${$p{comp_source}} if ref $p{comp_source};
 
     # Holds information about the current lex.  Make it local() so
     # we're fully re-entrant.
@@ -97,11 +102,7 @@ sub lex
     # refs inside the compiler
     $current->{compiler}->end_component;
 
-    if ($@)
-    {
-	$@->rethrow if UNIVERSAL::can( $@, 'rethrow' );
-	error $@;
-    }
+    rethrow_exception($@);
 }
 
 sub object_id
