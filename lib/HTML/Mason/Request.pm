@@ -1010,13 +1010,15 @@ component.
 It takes all of the options which can be passed to the cache method,
 plus two additional options:
 
-=over expires_in
+=over
+
+=item expires_in
 
 Indicates when the cache expires - it is passed as the third argument
 to $cache-E<gt>set.  See the Cache::Cache documentation for details on
 what formats it accepts.
 
-=over key
+=item key
 
 An identifier used to uniquely identify the cache results - it is
 passed as the first argument to $cache-E<gt>get and $cache-E<gt>set.
