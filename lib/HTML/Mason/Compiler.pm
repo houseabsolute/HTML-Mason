@@ -8,7 +8,7 @@ use strict;
 
 use Exception::Class qw( Mason::Exception::Compiler );
 
-my %top_level_only_block = map { $_ => 1 } qw( cleanup once shared );
+use HTML::Mason::Tools qw(read_file);
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( allow_globals
@@ -18,20 +18,59 @@ use HTML::Mason::MethodMaker
 		    ],
     );
 
-sub new
+my %fields =
+    ( lexer_class => 'HTML::Mason::Lexer',
+      preprocess => undef,
+    );
+
+my %top_level_only_block = map { $_ => 1 } qw( cleanup once shared );
+
+# called from subclasses to set defaults and to make the lexer object
+sub _init
 {
-    my $proto = shift;
-    my $class = ref $proto || $proto;
+    my $self = shift;
+
     my %p = @_;
 
-    return bless { lexer => $p{lexer} }, $class;
+    foreach ( keys %fields )
+    {
+	$self->{$_} ||= $fields{$_};
+    }
+
+    $self->{lexer} = $self->{lexer_class}->new( compiler => $self );
+}
+
+sub compile
+{
+    my $self = shift;
+    my %p = @_;
+
+    foreach ( qw( comp filename ) )
+    {
+	Mason::Lexer::Exception::Params->throw( error => "No $_ option provided to compile method")
+	    unless defined $p{$_};
+    }
+
+    # Preprocess the script.  The preprocessor routine is handed a
+    # reference to the entire script.
+    if ($self->{preprocess})
+    {
+	eval { $self->{preprocess}->( \$self->{comp} ) };
+	Mason::Exception::Compiler->throw( error => "Error during custom preprocess step: $@" )
+	    if $@;
+    }
+
+    my $comp_class = $p{comp_class} || 'HTML::Mason::Component';
+    $self->{lexer}->lex( comp => $p{comp}, comp_class => $comp_class, filename => $p{filename} );
+
+    return $self->compiled_component;
 }
 
 sub start_component
 {
     my $self = shift;
 
-    Mason::Exception::Compiler->throw( "Cannot start a component while already compiling a component" )
+    Mason::Exception::Compiler->throw( error => "Cannot start a component while already compiling a component" )
         if $self->{current_comp};
 
     $self->{in_main} = 1;
