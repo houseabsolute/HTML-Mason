@@ -284,7 +284,7 @@ sub mc_file ($)
 	}
     }
     $REQ->call_hooks('start_file',$file);
-    my $content = read_file($file);
+    my $content = read_file($file,1);
     $REQ->call_hooks('end_file',$file);
     return $content;
 }
