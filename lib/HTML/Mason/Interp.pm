@@ -161,7 +161,7 @@ sub _initialize
     #
     # Process initial comp_root setting.
     #
-    $self->assign_comp_root($self->{comp_root});
+    $self->_assign_comp_root($self->{comp_root});
 
     #
     # Check that data_dir is absolute.
@@ -176,8 +176,8 @@ sub _initialize
     # Create data subdirectories if necessary. mkpath will die on error.
     #
     if ($self->data_dir) {
-	$self->make_object_dir;
-	$self->make_cache_dir;
+	$self->_make_object_dir;
+	$self->_make_cache_dir;
     } else {
 	$self->{use_object_files} = 0;
     }
@@ -270,7 +270,7 @@ sub object_dir { my $self = shift; return $self->data_dir ? File::Spec->catdir( 
 sub object_create_marker_file { my $self = shift; return $self->object_dir ? File::Spec->catfile($self->object_dir, '.__obj_create_marker') : ''; }
 sub cache_dir  { my $self = shift; return $self->data_dir ? File::Spec->catdir( $self->data_dir, 'cache' ) : ''; }
 
-sub make_data_subdir
+sub _make_data_subdir
 {
     my ($self, $dir) = @_;
 
@@ -287,24 +287,24 @@ sub make_data_subdir
     }
 }
 
-sub make_object_dir
+sub _make_object_dir
 {
     my ($self) = @_;
 
     my $object_dir = $self->object_dir;
-    $self->make_data_subdir($object_dir);
+    $self->_make_data_subdir($object_dir);
     my $object_create_marker_file = $self->object_create_marker_file;
     my $fh = make_fh();
     open($fh, ">$object_create_marker_file")
 	or system_error "Could not create '$object_create_marker_file': $!";
 }
 
-sub make_cache_dir
+sub _make_cache_dir
 {
     my ($self) = @_;
 
     my $cache_dir = $self->cache_dir;
-    $self->make_data_subdir($cache_dir);
+    $self->_make_data_subdir($cache_dir);
 }
 
 #
@@ -526,10 +526,10 @@ sub remove_object_files
 	my $temp_dir = File::Temp::tempdir(DIR => $self->data_dir);
 	rename($object_dir, $temp_dir)
 	    or die "could not rename '$object_dir' to '$temp_dir': $@";
-	$self->make_object_dir();
+	$self->_make_object_dir();
 	rmtree($temp_dir);
     } else {
-	$self->make_object_dir();
+	$self->_make_object_dir();
     }
 }
 
@@ -631,7 +631,7 @@ sub comp_root
     if (my $new_comp_root = shift) {
 	die "cannot assign new comp_root unless dynamic_comp_root parameter is set"
 	  unless $self->dynamic_comp_root;
-	$self->assign_comp_root($new_comp_root);
+	$self->_assign_comp_root($new_comp_root);
     }
     if (@{$self->{comp_root}} == 1 and $self->{comp_root}[0][0] eq 'MAIN') {
 	return $self->{comp_root}[0][1];
@@ -645,7 +645,7 @@ sub comp_root_array
     return @{ $_[0]->{comp_root} };
 }
 
-sub assign_comp_root
+sub _assign_comp_root
 {
     my ($self, $new_comp_root) = @_;
 

@@ -36,6 +36,8 @@ key points, e.g. before and after each request and each component
 call.  See HTML::Mason::Plugin for documentation.
 - Added the ability to change component root(s) on the fly if the
 dynamic_comp_root parameter is turned on.
+- Added static_source_touch_file, making it much easier to update
+a server running in static_source mode.
 - Moved the notion of component roots (single and multiple) from the
 Resolver to the Interpreter. This improved the performance of multiple
 component roots in conjunction with static source mode. Any resolver,

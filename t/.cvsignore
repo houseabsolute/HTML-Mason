@@ -6,3 +6,4 @@ mason_handler_CGI.pl
 mason_handler_mod_perl.pl
 error_log
 CGIHandler.cgi
+mason_tests

@@ -938,7 +938,7 @@ sub depth
 # conversion, and local subcomponents.
 #
 # fetch_comp handles caching if use_internal_component_caches is on.
-# fetch_comp_ does the real work.
+# _fetch_comp does the real work.
 #
 sub fetch_comp
 {
@@ -960,20 +960,20 @@ sub fetch_comp
 	    # which we can create this cache safely.
 	    #
 	    if ($path =~ /^(?:SELF|REQUEST)/) {
-		return $self->fetch_comp_($path, $current_comp);
+		return $self->_fetch_comp($path, $current_comp);
 	    } else {
 		$fetch_comp_cache->{$path} =
-		    $self->fetch_comp_($path, $current_comp);
+		    $self->_fetch_comp($path, $current_comp);
 		Scalar::Util::weaken($fetch_comp_cache->{$path}) if can_weaken;
 	    }
 	}
 	return $fetch_comp_cache->{$path};
     } else {
-	return $self->fetch_comp_($path, $current_comp);
+	return $self->_fetch_comp($path, $current_comp);
     }
 }
 
-sub fetch_comp_
+sub _fetch_comp
 {
     my ($self, $path, $current_comp) = @_;
 

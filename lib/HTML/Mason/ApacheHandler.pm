@@ -200,12 +200,13 @@ BEGIN
 }
 
 #
-# Given an apache request object, return the associated component
-# path or undef if none exists. This is called for top-level web
-# requests that resolve to a particular file.
+# Given an apache request object and a list of component root pairs,
+# return the associated component path or undef if none exists. This
+# is called for top-level web requests that resolve to a particular
+# file.
 #
 sub apache_request_to_comp_path {
-    my ($self, $r) = @_;
+    my ($self, $r, $comp_root_array) = @_;
 
     my $file = $r->filename;
     $file .= $r->path_info unless -f $file;
@@ -216,7 +217,7 @@ sub apache_request_to_comp_path {
     # bug #356).
     $file = File::Spec->canonpath($file);
 
-    foreach my $root (map $_->[1], $self->comp_root_array) {
+    foreach my $root (map $_->[1], $comp_root_array) {
 	if (paths_eq($root, substr($file, 0, length($root)))) {
 	    my $path = substr($file, length $root);
             $path = length $path ? join '/', File::Spec->splitdir($path) : '/';
@@ -836,7 +837,7 @@ sub prepare_request
     #
     # Compute the component path via the resolver. Return NOT_FOUND on failure.
     #
-    my $comp_path = $interp->resolver->apache_request_to_comp_path($r);
+    my $comp_path = $interp->resolver->apache_request_to_comp_path($r, $interp->comp_root_array);
     unless ($comp_path) {
 	#
 	# Append path_info if filename does not represent an existing file
