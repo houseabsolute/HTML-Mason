@@ -102,11 +102,6 @@ sub new
 {
     my $class = shift;
     my $self = $class->SUPER::new(@_);
-    %$self = (%$self,
-		      code_cache => {},
-		      code_cache_current_size => 0,
-		      files_written => [],
-	     );
 
     $self->_initialize;
     return $self;
@@ -117,6 +112,7 @@ sub _initialize
     my ($self) = shift;
     $self->{code_cache} = {};
     $self->{code_cache_current_size} = 0;
+    $self->{files_written} = [];
 
     #
     # Check that data_dir is absolute.
@@ -244,8 +240,14 @@ sub load {
     # If code cache contains an up to date entry for this path, use
     # the cached sub.  Always use the cached sub in static_source mode.
     #
-    return $code_cache->{$comp_id}->{comp}
-	if exists($code_cache->{$comp_id}) and ( $self->static_source || $code_cache->{$comp_id}->{lastmod} >= $srcmod );
+    if ( exists $code_cache->{$comp_id} &&
+         ( $self->static_source || $code_cache->{$comp_id}->{lastmod} >= $srcmod ) )
+    {
+        my $comp = HTML::Mason::Component->from_cache_copy( $code_cache->{$comp_id}->{comp} );
+        $comp->interp($self);
+
+        return $comp;
+    }
 
     if ($self->{use_object_files}) {
 	$objfile = $self->comp_id_to_objfile($comp_id);
@@ -306,7 +308,7 @@ sub load {
     $self->delete_from_code_cache($comp_id);
 
     if ($comp->object_size <= $self->code_cache_max_elem) {
-	$code_cache->{$comp_id} = {lastmod=>$srcmod, comp=>$comp};
+	$code_cache->{$comp_id} = { lastmod => $srcmod, comp => $comp->copy_for_cache };
 	$self->{code_cache_current_size} += $comp->object_size;
     }
     return $comp;

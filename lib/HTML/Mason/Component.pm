@@ -19,7 +19,6 @@ use HTML::Mason::MethodMaker
 			 declared_args
 			 inherit_path
 			 inherit_start_path
-                         interp
                          has_filter
 			 load_time
 			 object_size
@@ -28,6 +27,7 @@ use HTML::Mason::MethodMaker
       read_write => [ [ dynamic_subs_request => { isa => 'HTML::Mason::Request' } ],
 		      [ mfu_count => { type => SCALAR } ],
                       [ filter => { type => CODEREF } ],
+                      [ interp => { isa => 'HTML::Mason::Interp' } ],
 		    ]
       );
 
@@ -74,6 +74,17 @@ sub new
     }
 
     return $self;
+}
+
+sub from_cache_copy {
+    shift; # ignore class
+    my ($obj) = @_;
+
+    # must copy again before it receives an interp because this copy
+    # may stay in the cache
+    my %new = %$obj;
+
+    return bless \%new, ref $obj;
 }
 
 my $comp_count = 0;
@@ -301,6 +312,15 @@ sub parent {
     }
 
     return $comp;
+}
+
+sub copy_for_cache {
+    my ($self) = @_;
+
+    my %copy = %$self;
+    delete $copy{interp};
+
+    return bless \%copy, ref $self;
 }
 
 #
