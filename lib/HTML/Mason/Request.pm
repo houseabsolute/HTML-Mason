@@ -965,6 +965,10 @@ been generated.
 
 The default parameters used when $m->cache is called.
 
+=item dhandler_name
+
+File name used for dhandlers. Default is "dhandler".
+
 =item error_format
 
 The format used to display errors.  The options are 'brief', 'text',
@@ -978,6 +982,12 @@ errors generate an exception.  With 'output' mode, the error is sent
 to the same output as normal component output.  The default is
 'fatal', except when running under ApacheHandler or CGIHandler, in
 which case the output is 'default'.
+
+=item max_recurse
+
+The maximum recursion depth for the component stack, for the request
+stack, and for the inheritance stack. An error is signalled if the
+maximum is exceeded.  Default is 32.
 
 =item out_method
 
