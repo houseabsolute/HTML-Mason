@@ -47,7 +47,7 @@ sub comp_root_array
     if ($_[0]->{comp_root}) {
 	return @{ $_[0]->{comp_root} };
     } else {
-	return ([MAIN => '/']);
+	return ([MAIN => File::Spec->rootdir]);
     }
 }
 
