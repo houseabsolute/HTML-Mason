@@ -2,6 +2,7 @@
 
 use strict;
 
+use Config;
 use HTML::Mason::Tests;
 
 my $tests = make_tests();
@@ -348,6 +349,9 @@ EOF
 
 #------------------------------------------------------------
 
+    my $error =
+	$] >= 5.006 ? qr/Unterminated <>/ : qr/Might be a runaway multi-line <> string/;
+
     $group->add_test( name => 'subcomp_parse_error',
 		      description => 'A misnamed block at the beginning of a component was throwing the lexer into an infinite loop.  Now it should be compiled into a component with a syntax error.',
 		      component => <<'EOF',
@@ -355,28 +359,30 @@ EOF
  <% 5 %>
 </%subcomp>
 EOF
-		      expect_error => qr/Unterminated <>/,
+		      expect_error => $error,
 		    );
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'no_infinite_loop',
-		      description => 'this used to cause an infinite loop for Ken.  It should not do that any more.',
-		      component => <<'EOF',
+    if ( $Config{d_alarm} )
+    {
+	$group->add_test( name => 'infinite_loop',
+			  description => 'this code hangs when Interp.pm attempts to eval it.',
+			  component => <<'EOF',
 <%args>
  $prev
  $next
  $i
 </%args>
-% (my $dir = $i->{dir}) =~ s,/orig,,;
 % (my $p = $r->uri) =~ s,/[^/]+$,/,;
   <% $p %>"><% $dir %>
   <% $i->{fileroot} %>
   <% "foo">large</a
  <% $i->{comment} %>
 EOF
-		      expect_error => qr/Global symbol "\$r"/,
-		    );
+			  expect_error => qr/Attempt to eval code took longer/,
+			);
+    }
 
 #------------------------------------------------------------
 
