@@ -133,14 +133,14 @@ older than 1.24.
 =back
 
 Almost all of Mason's configuration parameters correspond to new()
-parameters for the B<L<HTML::Mason::Parser>>,
+parameters for the B<L<HTML::Mason::Compiler::ToObject>>
 B<L<HTML::Mason::Interp>>, and B<L<HTML::Mason::ApacheHandler>>
 objects. Configuration parameters are named predictably by taking the
 mixed-caps form of the new() parameter and prefixing "Mason".  For
 example, comp_root becomes MasonCompRoot and data_dir becomes
 MasonDataDir.
 
-=head2 Parser Parameters
+=head2 Compiler Parameters
 
 =over 4
 
@@ -151,10 +151,6 @@ Corresponds to the C<allow_globals> parameter.
 =item * MasonDefaultEscapeFlags - string
 
 Corresponds to the C<default_escape_flags> parameter.
-
-=item * MasonIgnoreWarningsExpr - string
-
-Corresponds to the C<ignore_warnings_expr> parameter.
 
 =item * MasonInPackage - string
 
@@ -229,6 +225,10 @@ Corresponds to the C<data_cache_dir> parameter.
 =item * MasonDieHandler - code or 0
 
 Corresponds to the C<die_handler> parameter.
+
+=item * MasonIgnoreWarningsExpr - string
+
+Corresponds to the C<ignore_warnings_expr> parameter.
 
 =item * MasonMaxRecurse - string
 
