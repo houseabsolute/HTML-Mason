@@ -190,7 +190,7 @@ sub compile
 			  } );
     my $src = ref($p{comp_source}) ? $p{comp_source} : \$p{comp_source};
 
-    local $self->{current_comp} = {};
+    local $self->{current_compile} = {};
     local $self->{paused_compiles} = []; # So we're re-entrant in subcomps
 
     # Preprocess the source.  The preprocessor routine is handed a
@@ -209,7 +209,7 @@ sub compile
 sub start_component
 {
     my $self = shift;
-    my $c = $self->{current_comp};
+    my $c = $self->{current_compile};
 
     $c->{in_main} = 1;
     $c->{comp_with_content_stack} = [];
@@ -245,7 +245,7 @@ sub _init_comp_data
 sub end_component
 {
     my $self = shift;
-    my $c = $self->{current_comp};
+    my $c = $self->{current_compile};
 
     $self->lexer->throw_syntax_error("Not enough component-with-content ending tags found")
 	if $c->{comp_with_content_stack} && @{ $c->{comp_with_content_stack} };
@@ -254,7 +254,7 @@ sub end_component
 sub start_block
 {
     my $self = shift;
-    my $c = $self->{current_comp};
+    my $c = $self->{current_compile};
     my %p = @_;
 
     $self->lexer->throw_syntax_error("Cannot define a $p{block_type} section inside a method or subcomponent")
@@ -271,7 +271,7 @@ sub raw_block
     # These blocks contain Perl code - so don't include <%text> and so on.
 
     my $self = shift;
-    my $c = $self->{current_comp};
+    my $c = $self->{current_compile};
     my %p = @_;
 
     eval { $self->postprocess_perl->( \$p{block} ) if $self->postprocess_perl };
@@ -288,7 +288,7 @@ sub raw_block
 	$comment = "#line $line $file\n" if $self->use_source_line_numbers;
     }
 
-    push @{ $self->{current_comp}{blocks}{ $p{block_type} } }, "$comment$p{block}";
+    push @{ $self->{current_compile}{blocks}{ $p{block_type} } }, "$comment$p{block}";
 }
 
 sub doc_block
@@ -303,7 +303,7 @@ sub perl_block
 
     $self->_add_body_code( $p{block} );
 
-    $self->{current_comp}{last_body_code_type} = 'perl_block';
+    $self->{current_compile}{last_body_code_type} = 'perl_block';
 }
 
 sub text
@@ -318,7 +318,7 @@ sub text
 
     $self->_add_body_code("\$m->print( '", $$tref, "' );\n");
 
-    $self->{current_comp}{last_body_code_type} = 'text';
+    $self->{current_compile}{last_body_code_type} = 'text';
 }
 
 sub text_block
@@ -331,7 +331,7 @@ sub text_block
 sub end_block
 {
     my $self = shift;
-    my $c = $self->{current_comp};
+    my $c = $self->{current_compile};
     my %p = @_;
 
     $self->lexer->throw_syntax_error("End of $p{block_type} encountered while in $c->{in_block} block")
@@ -351,9 +351,9 @@ sub variable_declaration
     my $arg = "$p{type}$p{name}";
 
     $self->lexer->throw_syntax_error("$arg already defined")
-        if grep { "$_->{type}$_->{name}" eq $arg } @{ $self->{current_comp}{args} };
+        if grep { "$_->{type}$_->{name}" eq $arg } @{ $self->{current_compile}{args} };
 
-    push @{ $self->{current_comp}{args} }, { type => $p{type},
+    push @{ $self->{current_compile}{args} }, { type => $p{type},
 					     name => $p{name},
 					     default => $p{default},
 					     line => $self->lexer->line_number,
@@ -371,15 +371,15 @@ sub key_value_pair
 
     my $type = $p{block_type} eq 'flags' ? 'flag' : 'attribute';
     $self->lexer->throw_syntax_error("$p{key} $type already defined")
-	if exists $self->{current_comp}{ $p{block_type} }{ $p{key} };
+	if exists $self->{current_compile}{ $p{block_type} }{ $p{key} };
 
-    $self->{current_comp}{ $p{block_type} }{ $p{key} } = $p{value}
+    $self->{current_compile}{ $p{block_type} }{ $p{key} } = $p{value}
 }
 
 sub start_named_block
 {
     my $self = shift;
-    my $c = $self->{current_comp};
+    my $c = $self->{current_compile};
     my %p = @_;
 
     $self->lexer->throw_syntax_error
@@ -399,15 +399,15 @@ sub start_named_block
     $c->{ $p{block_type} }{ $p{name} } = {};
     $self->_init_comp_data( $c->{ $p{block_type} }{ $p{name} } );
     push @{$self->{paused_compiles}}, $c;
-    $self->{current_comp} = $c->{ $p{block_type} }{ $p{name} };
+    $self->{current_compile} = $c->{ $p{block_type} }{ $p{name} };
 }
 
 sub end_named_block
 {
     my $self = shift;
 
-    $self->{current_comp} = pop @{$self->{paused_compiles}};
-    $self->{current_comp}{in_main}++;
+    $self->{current_compile} = pop @{$self->{paused_compiles}};
+    $self->{current_compile}{in_main}++;
 }
 
 sub substitution
@@ -459,7 +459,7 @@ sub substitution
 
     $self->_add_body_code($code);
 
-    $self->{current_comp}{last_body_code_type} = 'substitution';
+    $self->{current_compile}{last_body_code_type} = 'substitution';
 }
 
 sub component_call
@@ -483,13 +483,13 @@ sub component_call
 
     $self->_add_body_code($code);
 
-    $self->{current_comp}{last_body_code_type} = 'component_call';
+    $self->{current_compile}{last_body_code_type} = 'component_call';
 }
 
 sub component_content_call
 {
     my $self = shift;
-    my $c = $self->{current_comp};
+    my $c = $self->{current_compile};
     my %p = @_;
 
     my $call = $p{call};
@@ -509,7 +509,7 @@ sub component_content_call
 sub component_content_call_end
 {
     my $self = shift;
-    my $c = $self->{current_comp};
+    my $c = $self->{current_compile};
 
     $self->lexer->throw_syntax_error("found component with content ending tag but no beginning tag")
 	unless @{ $c->{comp_with_content_stack} };
@@ -546,7 +546,7 @@ sub perl_line
 
     $self->_add_body_code($code);
 
-    $self->{current_comp}{last_body_code_type} = 'perl_line';
+    $self->{current_compile}{last_body_code_type} = 'perl_line';
 }
 
 sub _add_body_code
@@ -559,20 +559,20 @@ sub _add_body_code
     # can break certain constructs like qw() list that spans multiple
     # perl-lines.
     if ( $self->lexer->line_number &&
-         $self->{current_comp}{last_body_code_type} ne 'perl_line' )
+         $self->{current_compile}{last_body_code_type} ne 'perl_line' )
     {
 	my $line = $self->lexer->line_number;
 	my $file = $self->lexer->name;
-	$self->{current_comp}{body} .= "#line $line $file\n" if $self->use_source_line_numbers;
+	$self->{current_compile}{body} .= "#line $line $file\n" if $self->use_source_line_numbers;
     }
 
-    $self->{current_comp}{body} .= $_ foreach @_;
+    $self->{current_compile}{body} .= $_ foreach @_;
 }
 
 sub dump
 {
     my $self = shift;
-    my $c = $self->{current_comp};
+    my $c = $self->{current_compile};
 
     warn "Main component\n";
 
@@ -616,7 +616,7 @@ sub _blocks
 {
     my $self = shift;
 
-    return @{ $self->{current_comp}{blocks}{ shift() } };
+    return @{ $self->{current_compile}{blocks}{ shift() } };
 }
 
 sub HTML::Mason::Parser::new

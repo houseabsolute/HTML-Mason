@@ -151,7 +151,7 @@ sub _output_chunk
 sub compiled_component
 {
     my ($self, %p) = @_;
-    my $c = $self->{current_comp};
+    my $c = $self->{current_compile};
     my $obj_text = '';
 
     local $c->{compiled_def} = $self->_compile_subcomponents if %{ $c->{def} };
@@ -262,9 +262,9 @@ sub _compile_subcomponents_or_methods
     my $type = shift;
 
     my %compiled;
-    foreach ( keys %{ $self->{current_comp}{$type} } )
+    foreach ( keys %{ $self->{current_compile}{$type} } )
     {
-	local $self->{current_comp} = $self->{current_comp}{$type}{$_};
+	local $self->{current_compile} = $self->{current_compile}{$type}{$_};
 	$compiled{$_} = $self->_component_params;
     }
 
@@ -302,7 +302,7 @@ sub _methods_footer
 sub _subcomponent_or_method_footer
 {
     my $self = shift;
-    my $c = $self->{current_comp};
+    my $c = $self->{current_compile};
     my $type = shift;
 
     return '' unless %{ $c->{$type} };
@@ -335,13 +335,13 @@ sub _component_params
 		 );
 
     $params{flags} = join '', "{\n", $self->_flags, "\n}"
-        if keys %{ $self->{current_comp}{flags} };
+        if keys %{ $self->{current_compile}{flags} };
 
     $params{attr}  = join '', "{\n", $self->_attr, "\n}"
-        if keys %{ $self->{current_comp}{attr} };
+        if keys %{ $self->{current_compile}{attr} };
 
     $params{declared_args} = join '', "{\n", $self->_declared_args, "\n}"
-	if @{ $self->{current_comp}{args} };
+	if @{ $self->{current_compile}{args} };
 
     $params{has_filter} = 1 if $self->_blocks('filter');
 
@@ -358,7 +358,7 @@ sub _body
                       $self->_filter,
 		      "\$m->debug_hook( \$m->current_comp->path ) if ( \%DB:: );\n\n",
 		      $self->_blocks('init'),
-		      $self->{current_comp}{body},
+		      $self->{current_compile}{body},
 		      $self->_blocks('cleanup'),
 		      $self->postamble,
 		      "return undef;\n",
@@ -390,7 +390,7 @@ sub _arg_declarations
 
     my $define_args_hash = $self->_define_args_hash;
 
-    unless ( @{ $self->{current_comp}{args} } )
+    unless ( @{ $self->{current_compile}{args} } )
     {
         return unless $define_args_hash;
 
@@ -425,7 +425,7 @@ EOF
     my @required =
         ( map { $_->{name} }
           grep { ! defined $_->{default} }
-          @{ $self->{current_comp}{args} }
+          @{ $self->{current_compile}{args} }
         );
 
     if (@required)
@@ -443,7 +443,7 @@ EOF
 EOF
     }
 
-    foreach ( @{ $self->{current_comp}{args} } )
+    foreach ( @{ $self->{current_compile}{args} } )
     {
 	my $var_name = "$_->{type}$_->{name}";
 	push @decl, $var_name;
@@ -499,7 +499,7 @@ sub _define_args_hash
     foreach ( $self->preamble,
               $self->_blocks('filter'),
               $self->_blocks('init'),
-              $self->{current_comp}{body},
+              $self->{current_compile}{body},
               $self->_blocks('cleanup'),
             )
     {
@@ -544,8 +544,8 @@ sub _flags_or_attr
     my $self = shift;
     my $type = shift;
 
-    return join "\n,", ( map { "$_ => $self->{current_comp}{$type}{$_}" }
-			 keys %{ $self->{current_comp}{$type} } );
+    return join "\n,", ( map { "$_ => $self->{current_compile}{$type}{$_}" }
+			 keys %{ $self->{current_compile}{$type} } );
 }
 
 sub _declared_args
@@ -555,7 +555,7 @@ sub _declared_args
     my @args;
 
     foreach my $arg ( sort {"$a->{type}$a->{name}" cmp "$b->{type}$b->{name}" }
-		      @{ $self->{current_comp}{args} } )
+		      @{ $self->{current_compile}{args} } )
     {
 	my $def = defined $arg->{default} ? "$arg->{default}" : 'undef';
 	$def =~ s,([\\']),\\$1,g;
