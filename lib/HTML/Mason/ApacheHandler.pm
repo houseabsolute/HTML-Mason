@@ -43,8 +43,8 @@ sub new
 # Override flush_buffer to also call $r->rflush
 sub flush_buffer
 {
-    my ($self, $content) = @_;
-    $self->SUPER::flush_buffer($content);
+    my ($self) = @_;
+    $self->SUPER::flush_buffer;
     $self->apache_req->rflush;
 }
 
@@ -490,7 +490,6 @@ sub handle_request {
 	 interp=>$interp,
 	 apache_req=>$apreq,
 	 );
-    
     eval { $retval = $self->handle_request_1($apreq, $request) };
     my $err = $@;
     my $err_code = $request->error_code;
@@ -560,8 +559,7 @@ sub handle_request {
 	    print($err);
 	}
     }
-    undef $request;  # ward off memory leak because of circular
-                     # reference between request and ah
+    undef $request;  # ward off memory leak
 
     $interp->write_system_log('REQ_END', $self->{request_number}, $err_status);
     return ($err) ? &OK : (defined($retval)) ? $retval : &OK;
