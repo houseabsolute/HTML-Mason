@@ -37,7 +37,7 @@ used by end users.
 
 =item * allow_globals
 
-An array of names of Perl variables that are allowed globally within components.
+An array of names of Perl variables that are allowed globally within components
 
 Type:               list
 
@@ -47,7 +47,7 @@ Belongs to:         HTML::Mason::Compiler
 
 =item * apache_status_title
 
-The title of the Apache::Status page.
+The title of the Apache::Status page
 
 Type:               string
 
@@ -59,7 +59,7 @@ Belongs to:         HTML::Mason::ApacheHandler
 
 =item * args_method
 
-Whether to use CGI.pm or Apache::Request for parsing the incoming HTTP request.
+Whether to use CGI.pm or Apache::Request for parsing the incoming HTTP request
 
 Type:               string
 
@@ -71,7 +71,7 @@ Belongs to:         HTML::Mason::ApacheHandler
 
 =item * auto_send_headers
 
-Whether HTTP headers should be auto-generated.
+Whether HTTP headers should be auto-generated
 
 Type:               boolean
 
@@ -83,7 +83,7 @@ Belongs to:         HTML::Mason::Request::ApacheHandler
 
 =item * autoflush
 
-Whether output should be buffered or sent immediately.
+Whether output should be buffered or sent immediately
 
 Type:               boolean
 
@@ -95,7 +95,7 @@ Belongs to:         HTML::Mason::Request
 
 =item * autohandler_name
 
-The filename to use for Mason's 'autohandler' capability.
+The filename to use for Mason's 'autohandler' capability
 
 Type:               string
 
@@ -107,7 +107,7 @@ Belongs to:         HTML::Mason::Interp
 
 =item * buffer_class
 
-This class receives component output and dispatches it appropriately.
+This class receives component output and dispatches it appropriately
 
 Type:               string
 
@@ -119,7 +119,7 @@ This object is created multiple times by its container.
 
 =item * code_cache_max_size
 
-The maximum size of the component code cache.
+The maximum size of the component code cache
 
 Type:               string
 
@@ -131,7 +131,7 @@ Belongs to:         HTML::Mason::Interp
 
 =item * comp_class
 
-The class into which component object should be blessed.
+The class into which component object should be blessed
 
 Type:               string
 
@@ -143,7 +143,7 @@ Belongs to:         HTML::Mason::Compiler::ToObject
 
 =item * comp_root
 
-A string or array of arrays indicating the search path for component calls.
+A string or array of arrays indicating the search path for component calls
 
 Type:               list
 
@@ -155,7 +155,7 @@ Belongs to:         HTML::Mason::Resolver::File
 
 =item * compiler
 
-A Compiler object for compiling components.
+A Compiler object for compiling components
 
 Type:               object
 
@@ -167,7 +167,7 @@ This object is created only once by its container.
 
 =item * compiler_class
 
-This class is used to translate component source into code.
+This class is used to translate component source into code
 
 Type:               string
 
@@ -179,7 +179,7 @@ This object is created only once by its container.
 
 =item * data_cache_defaults
 
-A hash of default parameters for Cache::Cache.
+A hash of default parameters for Cache::Cache
 
 Type:               hash
 
@@ -189,7 +189,7 @@ Belongs to:         HTML::Mason::Request
 
 =item * data_dir
 
-A directory for storing cache files and other state information.
+A directory for storing cache files and other state information
 
 Type:               string
 
@@ -199,7 +199,7 @@ Belongs to:         HTML::Mason::Interp
 
 =item * decline_dirs
 
-Whether Mason should decline to handle requests for directories.
+Whether Mason should decline to handle requests for directories
 
 Type:               boolean
 
@@ -211,7 +211,7 @@ Belongs to:         HTML::Mason::ApacheHandler
 
 =item * default_escape_flags
 
-Escape flags that will apply by default to all Mason tag output.
+Escape flags that will apply by default to all Mason tag output
 
 Type:               string
 
@@ -221,7 +221,7 @@ Belongs to:         HTML::Mason::Compiler
 
 =item * dhandler_name
 
-The filename to use for Mason's 'dhandler' capability.
+The filename to use for Mason's 'dhandler' capability
 
 Type:               string
 
@@ -233,7 +233,7 @@ Belongs to:         HTML::Mason::Interp
 
 =item * error_format
 
-How error messages are formatted.
+How error messages are formatted
 
 Type:               string
 
@@ -245,7 +245,7 @@ Belongs to:         HTML::Mason::Request
 
 =item * error_mode
 
-How error conditions are returned to the caller (brief, text, line or html).
+How error conditions are returned to the caller (brief, text, line or html)
 
 Type:               string
 
@@ -255,21 +255,9 @@ Name in httpd.conf: ErrorMode
 
 Belongs to:         HTML::Mason::Request
 
-=item * static_source
-
-When true, we only compile source files once.
-
-Type:               boolean
-
-Default:            0
-
-Name in httpd.conf: StaticSource
-
-Belongs to:         HTML::Mason::Interp
-
 =item * ignore_warnings_expr
 
-A regular expression describing Perl warning messages to ignore.
+A regular expression describing Perl warning messages to ignore
 
 Type:               regex
 
@@ -281,7 +269,7 @@ Belongs to:         HTML::Mason::Interp
 
 =item * in_package
 
-The package in which component execution should take place.
+The package in which component execution should take place
 
 Type:               string
 
@@ -293,7 +281,7 @@ Belongs to:         HTML::Mason::Compiler::ToObject
 
 =item * interp
 
-A Mason interpreter for processing components.
+A Mason interpreter for processing components
 
 Type:               object
 
@@ -305,7 +293,7 @@ This object is created only once by its container.
 
 =item * interp_class
 
-A Mason interpreter for processing components.
+A Mason interpreter for processing components
 
 Type:               string
 
@@ -317,7 +305,7 @@ This object is created only once by its container.
 
 =item * lexer
 
-A Lexer object that will scan component text during compilation.
+A Lexer object that will scan component text during compilation
 
 Type:               object
 
@@ -329,7 +317,7 @@ This object is created only once by its container.
 
 =item * lexer_class
 
-A Lexer object that will scan component text during compilation.
+A Lexer object that will scan component text during compilation
 
 Type:               string
 
@@ -341,7 +329,7 @@ This object is created only once by its container.
 
 =item * max_recurse
 
-The maximum recursion depth for component, inheritance, and request stack.
+The maximum recursion depth for component, inheritance, and request stack
 
 Type:               string
 
@@ -353,7 +341,7 @@ Belongs to:         HTML::Mason::Interp
 
 =item * out_method
 
-A subroutine or scalar reference through which all output will pass.
+A subroutine or scalar reference through which all output will pass
 
 Type:               code
 
@@ -365,7 +353,7 @@ Belongs to:         HTML::Mason::Request
 
 =item * postamble
 
-A chunk of Perl code to add to the end of each compiled component.
+A chunk of Perl code to add to the end of each compiled component
 
 Type:               string
 
@@ -375,7 +363,7 @@ Belongs to:         HTML::Mason::Compiler::ToObject
 
 =item * postprocess_perl
 
-A subroutine through which all Perl code will be sent during compilation.
+A subroutine through which all Perl code will be sent during compilation
 
 Type:               code
 
@@ -385,7 +373,7 @@ Belongs to:         HTML::Mason::Compiler
 
 =item * postprocess_text
 
-A subroutine through which all plain text will be sent during compilation.
+A subroutine through which all plain text will be sent during compilation
 
 Type:               code
 
@@ -395,7 +383,7 @@ Belongs to:         HTML::Mason::Compiler
 
 =item * preamble
 
-A chunk of Perl code to add to the beginning of each compiled component.
+A chunk of Perl code to add to the beginning of each compiled component
 
 Type:               string
 
@@ -405,7 +393,7 @@ Belongs to:         HTML::Mason::Compiler::ToObject
 
 =item * preloads
 
-A list of components to load immediately when creating the Interpreter.
+A list of components to load immediately when creating the Interpreter
 
 Type:               list
 
@@ -415,7 +403,7 @@ Belongs to:         HTML::Mason::Interp
 
 =item * preprocess
 
-A subroutine through which all component text will be sent during compilation.
+A subroutine through which all component text will be sent during compilation
 
 Type:               code
 
@@ -425,7 +413,7 @@ Belongs to:         HTML::Mason::Compiler
 
 =item * request_class
 
-Objects returned by make_request are members of this class.
+Objects returned by make_request are members of this class
 
 Type:               string
 
@@ -437,7 +425,7 @@ This object is created multiple times by its container.
 
 =item * resolver
 
-A Resolver object for fetching components from storage.
+A Resolver object for fetching components from storage
 
 Type:               object
 
@@ -449,7 +437,7 @@ This object is created only once by its container.
 
 =item * resolver_class
 
-This class is expected to return component information based on a component path.
+This class is expected to return component information based on a component path
 
 Type:               string
 
@@ -459,9 +447,21 @@ Belongs to:         HTML::Mason::Interp
 
 This object is created only once by its container.
 
+=item * static_source
+
+When true, we only compile source files once
+
+Type:               boolean
+
+Default:            0
+
+Name in httpd.conf: StaticSource
+
+Belongs to:         HTML::Mason::Interp
+
 =item * subcomp_class
 
-The class into which subcomponent objects should be blessed.
+The class into which subcomponent objects should be blessed
 
 Type:               string
 
@@ -473,7 +473,7 @@ Belongs to:         HTML::Mason::Compiler::ToObject
 
 =item * use_object_files
 
-Whether to cache component objects on disk.
+Whether to cache component objects on disk
 
 Type:               boolean
 
@@ -485,7 +485,7 @@ Belongs to:         HTML::Mason::Interp
 
 =item * use_strict
 
-Whether to turn on Perl's 'strict' pragma in components.
+Whether to turn on Perl's 'strict' pragma in components
 
 Type:               boolean
 
