@@ -841,7 +841,7 @@ server root such as F</usr>!
 
 In non-Apache environments, data_dir has no default. If it is left
 unspecified, Mason will not use L<object files|HTML::Mason::Admin/object files>, and the default L<data
-cache class|HTML::Mason:Request/item_cache> will be C<MemoryCache>
+cache class|HTML::Mason::Request/item_cache> will be C<MemoryCache>
 instead of C<FileCache>.
 
 =item ignore_warnings_expr
