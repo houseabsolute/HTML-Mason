@@ -304,8 +304,10 @@ sub exec {
 	    my $old = select SELECTED;
 	    if ($wantarray) {
 		@result = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @request_args)};
-	    } else {
+	    } elsif (defined($wantarray)) {
 		$result[0] = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @request_args)};
+	    } else {
+		eval {$self->comp({base_comp=>$request_comp}, $first_comp, @request_args)};
 	    }
 	    select STDOUT;
 	    die $@ if $@;
@@ -330,7 +332,8 @@ sub exec {
     $interp->purge_code_cache;
 
     # Return aborted value or result.
-    return ($self->aborted($err) ? $err->aborted_value : ($wantarray ? @result : $result[0]));
+    @result = ($err->aborted_value) if $self->aborted($err);
+    return $wantarray ? @result : defined($wantarray) ? $result[0] : undef;
 }
 
 #
