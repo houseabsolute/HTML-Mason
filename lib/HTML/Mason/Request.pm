@@ -258,7 +258,7 @@ sub cache_self
 	#
 	my $lref = $self->top_stack;
 	my %save_locals = %$lref;
-	$lref->{sink} = sub { $output .= $_[0] };
+	$lref->{sink} = $self->_new_sink(\$output);
 	$lref->{in_cache_self_flag} = 1;
 
 	my $retval = $lref->{comp}->run( @{ $lref->{args} } );
@@ -349,7 +349,7 @@ sub call_self
     my $content;
     my $lref = $self->top_stack;
     my %save_locals = %$lref;
-    $lref->{sink} = sub { $content .= $_[0] };
+    $lref->{sink} = $self->_new_sink(\$content);
     $lref->{in_call_self_flag} = 1;
 
 
@@ -477,8 +477,8 @@ sub file_root
 
 sub out
 {
-    my ($self,$text) = @_;
-    $self->current_sink->($text) if defined($text);
+    my $self = shift;
+    $self->current_sink->(@_);
 }
 
 sub time
@@ -570,12 +570,12 @@ sub comp1 {
     if (@args >= 2 and $args[-2] eq 'STORE' and ref($args[-1]) eq 'SCALAR' and @args % 2 == 0) {
 	my $store = $args[-1];
 	$$store = '';
-	$sink = sub { $$store .= $_[0] if defined ($_[0]) };
+	$sink = $self->_new_sink($store);
 	splice(@args,-2);
     } elsif ($depth>0) {
 	$sink = $self->top_stack->{sink};
     } elsif ($self->out_mode eq 'batch') {
-	$sink = sub { $self->{out_buffer} .= $_[0] if defined ($_[0]) };
+	$sink = $self->_new_sink(\($self->{out_buffer}));
     } else {
 	$sink = $self->out_method;
     }
@@ -629,18 +629,11 @@ sub comp1 {
 #
 sub scomp {
     my $self = shift;
-    my $store = '';
 
     # Set a new top-level sink.
-    my $save_sink = $self->current_sink;
-    $self->top_stack->{sink} = sub { $store .= $_[0] if defined($_[0]) };
-
-    # Call comp wrapped in an eval so we can pop off sink no matter what happens
-    my $retval = eval { $self->comp(@_) };
-    my $err = $@;
-    $self->top_stack->{sink} = $save_sink;
-    die $err if $err;
-
+    my $store = '';
+    local $self->top_stack->{sink} = $self->_new_sink(\$store);
+    $self->comp(@_);
     return $store;
 }
 
@@ -685,6 +678,15 @@ sub unsuppress_hook {
     my $code = $self->interp->hooks->{$args{type}}->{$args{name}};
     $self->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
     push(@{$self->{"hooks_$args{type}"}},$code);
+}
+
+#
+# Returns a new closure that will write its arguments to the given scalar ref.
+#
+sub _new_sink {
+    shift;  # Don't need $self
+    my $out_ref = shift;
+    return sub { for (@_) { $$out_ref .= $_ if defined } };
 }
 
 sub clear_buffer

@@ -1,0 +1,9 @@
+
+% my $buffy;
+% $m->comp('.subcomp', 1,2,3,4, STORE=>\$buffy);
+--------------------
+<% $buffy %>
+
+<%def .subcomp>
+ Hello, you say <% join '', @_ %>.
+</%def>

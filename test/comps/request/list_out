@@ -1,0 +1,7 @@
+Sending list of arguments:
+
+<% 'blah','boom','bah' %>
+
+<%perl>
+ $m->out(3,4,5);
+</%perl>
