@@ -260,7 +260,7 @@ sub load {
 
 	# I think this is broken.  It should also be assigning things
 	# like comp_root, etc.
-	my $info = HTML::Mason::ComponentInfo->new( friendly_name => $path,
+	my $info = HTML::Mason::ComponentSource->new( friendly_name => $path,
 						    comp_path => $path,
 						    comp_id => $comp_id,
 						    last_modified => time,
@@ -424,7 +424,7 @@ sub make_component {
 
     $p{name} ||= $p{path} ? $p{path} : '<anonymous component>';
 
-    my $source = HTML::Mason::ComponentInfo->new( friendly_name => $p{path} || $p{name},
+    my $source = HTML::Mason::ComponentSource->new( friendly_name => $p{path} || $p{name},
 						  comp_path => $p{name} || $p{path},
 						  comp_id => undef,
 						  last_modified => time,

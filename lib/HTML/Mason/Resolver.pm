@@ -11,7 +11,7 @@ use HTML::Mason::Exceptions( abbr => ['param_error', 'virtual_error'] );
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
 
-use HTML::Mason::ComponentInfo;
+use HTML::Mason::ComponentSource;
 
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
@@ -22,7 +22,7 @@ sub new
     return bless {validate(@_, $class->validation_spec)}, $class;
 }
 
-# Returns HTML::Mason::ComponentInfo object
+# Returns HTML::Mason::ComponentSource object
 sub get_info {
     shift->_virtual;
 }
@@ -101,7 +101,7 @@ will need to override it in your subclass.
 
 =item get_info
 
-Given a component path, returns a new L<C<HTML::Mason::ComponentInfo>>
+Given a component path, returns a new L<C<HTML::Mason::ComponentSource>>
 object.
 
 =item glob_path

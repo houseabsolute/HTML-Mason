@@ -73,7 +73,7 @@ sub get_info {
 	my $base = $key eq 'MAIN' ? '' : "/$key";
 	$key = undef if $key eq 'MAIN';
 
-	return HTML::Mason::ComponentInfo->new( friendly_name => $srcfile,
+	return HTML::Mason::ComponentSource->new( friendly_name => $srcfile,
 						comp_id => "$base$path",
 						last_modified => $modified,
 						comp_path => $path,
