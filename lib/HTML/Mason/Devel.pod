@@ -624,7 +624,7 @@ The following examples illustrate the different ways to pass and receive paramet
 3.  Passing a hash I<grades> with pairs Alice => 92 and Bob => 87.
 
   In a URL: /my/URL?grades=Alice&grades=92&grades=Bob&grades=87
-  In an component call: <& /my/comp', grades => {Alice => 92, Bob => 87} &>
+  In an component call: <& /my/comp, grades => {Alice => 92, Bob => 87} &>
   In the called component, if there is a declared argument named...
     $grades, then $grades will equal {Alice => 92, Bob => 87}
     @grades, then @grades will equal ('Alice', 92, 'Bob', 87)
