@@ -12,7 +12,7 @@
 
 #
 # A much simpler alternative to this is to simply use the
-# HTML::Mason::Request::WithApacheSession code available from CPAN.
+# MasonX::Request::WithApacheSession code available from CPAN.
 #
 
 package MyMason::MyApp;
