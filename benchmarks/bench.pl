@@ -9,6 +9,7 @@ use Cwd;
 use Fcntl qw( O_RDWR O_CREAT );
 use Getopt::Long;
 use MLDBM qw( DB_File Storable );
+use Proc::ProcessTable;
 use File::Path;
 use File::Spec;
 
@@ -104,7 +105,6 @@ require HTML::Mason;
 
 $opts{tag} ||= $HTML::Mason::VERSION;
 
-
 # Clear out the mason-data directory, otherwise we might include
 # compilation in one run and not the next
 my $data_dir = File::Spec->rel2abs( File::Spec->catdir( cwd, 'mason-data' ) );
@@ -125,6 +125,8 @@ my $interp =
                               data_dir  => $data_dir,
                             );
 
+my ($proc) = grep { $_->pid == $$ } @{ Proc::ProcessTable->new->table };
+
 print "\n";
 foreach my $name ( @{ $opts{test} } )
 {
@@ -132,9 +134,11 @@ foreach my $name ( @{ $opts{test} } )
 
     my $per_sec = sprintf( '%.2f', $opts{reps} / ($results->[1] + $results->[2]) );
 
-    my ($rss, $vsz) = `ps -eo rss,vsz -p $$` =~ /(\d+)\s+(\d+)/;
-    print "   Real mem: $rss\n";
-    print "Virtual mem: $vsz\n";
+    my $rss  = sprintf( '%.2f', ( $proc->rss / 1024 ) );
+    my $size = sprintf( '%.2f', ( $proc->size / 1024 ) );
+#    my ($rss, $vsz) = `ps -eo rss,vsz -p $$` =~ /(\d+)\s+(\d+)/;
+    print "   Real mem: $rss MB\n";
+    print "Virtual mem: $size MB\n";
 
     if ( $opts{save} )
     {
