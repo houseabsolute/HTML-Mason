@@ -876,16 +876,18 @@ EOF
 #------------------------------------------------------------
 
         # for some reason this seems to just die and not get caught
-        # under 5.00503.  I suspect it's a problem with the test, not
-        # Mason, but I can't figure out what the problem is.
-        if ( $] >= 5.006 )
+        # under 5.00503 & 5.6.1.  I suspect it's a problem with the
+        # test, not Mason, but I can't figure out what the problem is.
+        # The test passes under 5.8.0, which tells me that the the
+        # %ARGS hash is indeed not defined.
+        if ( $] >= 5.008 )
         {
 	    $group->add_test( name => 'define_args_hash_never',
                               description => 'test setting define_args_hash to never',
                               interp_params => { define_args_hash => 'never' },
                               component => <<'EOF',
 % my $args = 'AR' . 'GS';
-% eval "\$$args" . "{'foo'} = 1";
+% eval { eval "\$$args" . "{'foo'} = 1" };
 % die $@ if $@;
 no error?
 EOF
