@@ -1663,7 +1663,10 @@ this code will only work as long as F</shared/get_user_cookie> doesn't
 output anything (given its functional nature, it shouldn't).
 
 The administrator can turn off automatic header sending via the
-P<auto_send_headers> parameter.
+P<auto_send_headers> parameter. You can also turn it off on
+individual pages with
+
+    $m->auto_send_headers(0);
 
 =head2 Returning HTTP Status
 
