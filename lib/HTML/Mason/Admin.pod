@@ -975,6 +975,9 @@ to an RT installation, so that the error is logged in a bug tracking
 system.  Finally, it displays a less technical error message to the
 user.
 
+For this to work properly, you must set P<error_mode> to "fatal", so
+that Mason doesn't just display its own HTML error page.
+
 =head1 RUNNING OUTSIDE OF MOD_PERL
 
 Although Mason is most commonly used in conjunction with mod_perl, the
