@@ -390,6 +390,19 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'error_in_args',
+		      description => 'Test line number reporting for <%args> block',
+		      component => <<'EOF',
+lalalal
+<%args>
+$foo => this should break
+</%args>
+EOF
+		      expect_error => qr/Bareword "break".*error_in_args line 3/,
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
