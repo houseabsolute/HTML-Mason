@@ -20,7 +20,7 @@ require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(read_file html_escape url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on);
+@EXPORT_OK = qw(read_file html_escape url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on load_pkg);
 
 #
 # Return contents of file. If $binmode is 1, read in binary mode.
@@ -121,6 +121,37 @@ sub pkg_loaded
 }
 
 #
+# Load package file $pkgfile if not already loaded. Return 1 if file
+# was found and loaded successfully. When file is not found: if
+# optional second argument $nf_error is provided, die with that error
+# message, otherwise return 0. Errors while loading the package are
+# always passed through as fatal errors.
+#
+sub load_pkg {
+    my ($pkgfile, $nf_error) = @_;
+    return 1 if exists($INC{$pkgfile});
+
+    eval {
+	require $pkgfile;
+    };
+    if ($@) {
+	if ($@ =~ /^Can\'t locate .* in \@INC/) {
+	    if (defined($nf_error)) {
+		my $error = sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
+				    $pkgfile, $nf_error, join(" ", @INC));
+		die $error;
+	    } else {
+		undef $@;
+		return 0;
+	    }
+	} else {
+	    die $@;
+	}
+    }
+    return 1;
+}
+
+#
 # Determine if taint mode is on.
 #
 sub taint_is_on
@@ -139,7 +170,6 @@ sub make_fh
 #   h - html escape
 #   u - url escape
 #
-my %html_escape = ('&' => '&amp;', '>'=>'&gt;', '<'=>'&lt;', '"'=>'&quot;');
 sub escape_perl_expression
 {
     my ($expr,@flags) = @_;
@@ -149,7 +179,8 @@ sub escape_perl_expression
     if (defined($expr)) {
 	foreach my $flag (@flags) {
 	    if ($flag eq 'h') {
-		$expr =~ s/([<>&\"])/$html_escape{$1}/mgoe;
+		load_pkg('HTML/Entities.pm', 'The |h escape flag requires the HTML::Entities module, available from CPAN.');
+		$expr = HTML::Entities::encode($expr);
 	    } elsif ($flag eq 'u') {
 		$expr =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
 	    }
@@ -160,4 +191,3 @@ sub escape_perl_expression
 
 
 1;
-
