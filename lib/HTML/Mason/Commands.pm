@@ -68,7 +68,7 @@ sub mc_auto_comp
     my $path = $aref->[0]->path;
     
     # return relative path if possible
-    my $curdir = $REQ->comp->parent_path;
+    my $curdir = $REQ->comp->dir_path;
     $path =~ s{^$curdir/}{};
     return $path;
 }
@@ -122,7 +122,7 @@ sub mc_cache_self
     
     my $interp = $REQ->interp;
     return 0 if !$interp->use_data_cache;
-    return 0 if $REQ->stack->[0]->{in_cache_self_flag};
+    return 0 if $REQ->{stack}->[0]->{in_cache_self_flag};
     my (%retrieveOptions,%storeOptions);
     foreach (qw(key expire_if keep_in_memory busy_lock)) {
 	if (exists($options{$_})) {
@@ -139,14 +139,14 @@ sub mc_cache_self
 	#
 	# Reinvoke the component and collect output in $result.
 	#
-	my $lref = $REQ->stack->[0];
+	my $lref = $REQ->{stack}->[0];
 	my %saveLocals = %$lref;
 	$lref->{sink} = sub { $result .= $_[0] };
 	$lref->{in_cache_self_flag} = 1;
-	my $sub = $lref->{comp}->code;
+	my $sub = $lref->{comp}->{code};
 	my %args = %{$lref->{args}};
 	&$sub(%args);
-	$REQ->stack->[0] = {%saveLocals};
+	$REQ->{stack}->[0] = {%saveLocals};
 	mc_cache(action=>'store',value=>$result,%storeOptions);
     } else {
 	$REQ->call_hooks('start_primary');
@@ -170,18 +170,18 @@ sub mc_call_self
 {
     check_request;
     my ($cref,$rref) = @_;
-    return 0 if $REQ->stack->[0]->{in_call_self_flag};
+    return 0 if $REQ->{stack}->[0]->{in_call_self_flag};
     
     #
     # Reinvoke the component with in_call_self_flag=1. Collect
     # output and return value in references provided.
     #
     my $content;
-    my $lref = $REQ->stack->[0];
+    my $lref = $REQ->{stack}->[0];
     my %saveLocals = %$lref;
     $lref->{sink} = sub { $content .= $_[0] };
     $lref->{in_call_self_flag} = 1;
-    my $sub = $lref->{comp}->code;
+    my $sub = $lref->{comp}->{code};
     my %args = %{$lref->{args}};
     if (ref($rref) eq 'SCALAR') {
 	$$rref = &$sub(%args);
@@ -226,7 +226,7 @@ sub mc_comp_source
 sub mc_comp_stack ()
 {
     check_request;
-    return map($_->{comp}->title,@{$REQ->stack});
+    return map($_->{comp}->title,@{$REQ->{stack}});
 }
 
 #
@@ -280,7 +280,7 @@ sub mc_file ($)
 	if ($interp->static_file_root) {
 	    $file = $interp->static_file_root . "/" . $file;
 	} else {
-	    $file = $interp->comp_root . $REQ->comp->parent_path . "/" . $file;
+	    $file = $interp->comp_root . $REQ->comp->dir_path . "/" . $file;
 	}
     }
     $REQ->call_hooks('start_file',$file);

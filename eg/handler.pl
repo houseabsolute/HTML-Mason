@@ -29,8 +29,8 @@ my $ah = new HTML::Mason::ApacheHandler (interp=>$interp);
 # Resets ownership of all files created by Mason at startup. Change
 # these to match your server's 'User' and 'Group'.
 #
-#chown ( [getpwnam('nobody')]->[2], [getgrnam('nobody')]->[2],
-#        $interp->files_written );
+#chown (scalar(getpwnam "nobody"), scalar(getgrnam "nobody"),
+#       $interp->files_written);
 
 sub handler
 {

@@ -23,7 +23,7 @@ my %fields =
      is_subcomp => 0,
      name => undef,
      parent_comp => undef,
-     parent_path => undef,
+     dir_path => undef,
      parser_version => undef,
      run_count => 0,
      subcomps => undef,
@@ -40,6 +40,7 @@ my %fields =
 # Minor speedup: create anon. subs to reduce AUTOLOAD calls
 foreach my $f (keys %fields) {
     no strict 'refs';
+    next if ($f =~ /^subcomps$/);
     *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
 }
 
@@ -63,7 +64,7 @@ sub new
     bless $self, $class;
 
     # Initialize subcomponent properties. Note that other properties
-    # (parent_path, title) are initialized in assign_file_properties.
+    # (dir_path, title) are initialized in assign_file_properties.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
 	# I am a subcomponent
 	$c->{is_subcomp} = 1;
@@ -95,14 +96,23 @@ sub assign_file_properties
     my ($self,$compRoot,$dataDir,$cacheDir,$path) = @_;
     ($self->{is_file_based},$self->{comp_root},$self->{data_dir},$self->{cache_dir},$self->{path},$self->{title}) =
 	(1,$compRoot,$dataDir,$cacheDir,$path,$path);
-    ($self->{parent_path}) = ($path =~ /^(.*)\/[^\/]+$/);
+    ($self->{dir_path}) = ($path =~ /^(.*)\/[^\/]+$/);
     ($self->{name}) = ($path =~ /([^\/]+)$/);
 
     # Initialize subcomponent properties
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
 	$c->{title} = "$path:$name";
-	$c->{parent_path} = $self->{parent_path};
+	$c->{dir_path} = $self->{dir_path};
     }
+}
+
+sub subcomps {
+    my ($self,$key) = @_;
+    if (defined($key)) {
+	return $self->{subcomps}->{$key};
+    } else {
+	return $self->{subcomps};
+    }    
 }
 
 sub source_file { my $self = shift; return ($self->is_file_based) ? ($self->comp_root . $self->path) : undef }

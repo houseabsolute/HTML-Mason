@@ -5,7 +5,7 @@ HTML::Mason::Component - Mason Component Class
 =head1 SYNOPSIS
 
     my $comp1 = $REQ->comp;
-    my $comp2 = $REQ->stack[1]->comp;
+    my $comp2 = $REQ->callers(1);
     my $comp3 = $REQ->fetch_comp('foo/bar');
 
     foreach ($comp1,$comp2,$comp3) {
@@ -44,26 +44,21 @@ directly with a component object.
 =head2 CREATING AND ACCESSING COMPONENTS
 
 Common ways to get handles on existing component objects include the
-L<Request/comp>, L<Request/stack>, and L<Request/fetch_comp> Request methods.
+L<Request/comp>, L<Request/callers>, and L<Request/fetch_comp> Request methods.
 
 There is no published C<new> method, because creating a component
 requires a parser. Use the L<Parser/make_component> Parser method to create a
 new component dynamically.
 
-Similarly, there is no C<execute> method, because executing a
-component requires an interpreter. All of the interfaces for calling a
-component (<& &>, C<mc_comp>, C<$interp-E<gt>exec>, C<$REQ-E<gt>call>) which
-normally take a component path, will also take a component object.
+Similarly, there is no C<execute> or C<call> method, because calling a
+component requires a request. All of the interfaces for calling a
+component (<& &>, C<mc_comp>, C<$interp-E<gt>exec>, C<$REQ-E<gt>call>)
+which normally take a component path, will also take a component
+object.
 
 =head1 METHODS
 
 =over
-
-=item code
-
-Returns the compiled form of the component as a code reference. You
-should never invoke this directly but rather use one of the
-established interfaces for calling components.
 
 =item create_time
 
@@ -95,6 +90,14 @@ For example:
 
   # does $fido have a default value?
   if (defined($comp->declared_args->{'$fido'}->{default})) { ... }
+
+=item dir_path
+
+Returns the component's notion of a current directory, relative to the
+component root; this is used to resolve relative component paths. For
+file-based components this is the full component path minus the final
+piece.  For subcomponents this is the same as its parent component.
+Undefined for anonymous components.
 
 =item first_time
 
@@ -128,13 +131,6 @@ specified in C<E<lt>%defE<gt>>. Undefined for anonymous components.
 Defined only for subcomponents; returns the parent component that this
 subcomponent was defined in.
 
-=item parent_path
-
-Returns the prefix used to resolve relative component paths from this
-component. For file-based components this is the full component path
-minus the final piece.  For subcomponents this is the same as its
-parent component.  Undefined for anonymous components.
-
 =item run_count
 
 Returns the number of times this component has been invoked. In a
@@ -143,8 +139,14 @@ resets every time the component is reloaded.
 
 =item subcomps
 
-Returns a hash containing the subcomponents defined in this component,
-with names as keys and component objects as values.
+With no arguments, returns a hashref containing the subcomponents defined
+in this component, with names as keys and component objects as values.
+With one argument, returns the subcomponent of that name
+or undef if no such subcomponent exists. e.g.
+
+    if (my $subcomp = $comp->subcomps('.link')) {
+        ...
+    }
 
 =item title
 

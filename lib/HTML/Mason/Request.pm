@@ -56,6 +56,19 @@ sub new
 }
 
 #
+# Return a specified component from the stack, or the whole stack as a list.
+#
+sub callers
+{
+    my ($self,$index) = @_;
+    if (defined($index)) {
+	return $self->{stack}->[$index]->{comp};
+    } else {
+	return map($_->{comp},@{$self->{stack}});
+    }
+}
+
+#
 # Return the current number of stack levels. 1 means top level.
 #
 sub depth
@@ -126,7 +139,7 @@ sub call {
     #
     # CODEREF_NAME maps component coderefs to component names (for profiling)
     #
-    my $sub = $comp->code;
+    my $sub = $comp->{code};
     $HTML::Mason::CODEREF_NAME{$sub} = $comp->source_file if $::opt_P && defined($comp->source_file);
 
     #
@@ -223,8 +236,8 @@ sub process_comp_path
 	return $self->comp->path;
     }
     if ($compPath !~ m@^/@) {
-	die "relative component path ($compPath) used from anonymous component with no parent path" if !defined($self->comp->parent_path);
-	$compPath = $self->comp->parent_path . "/" . $compPath;
+	die "relative component path ($compPath) used from anonymous component" if !defined($self->comp->dir_path);
+	$compPath = $self->comp->dir_path . "/" . $compPath;
     }
     while ($compPath =~ s@/[^/]+/\.\.@@) {}
     while ($compPath =~ s@/\./@/@) {}

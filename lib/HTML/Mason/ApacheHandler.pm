@@ -208,6 +208,7 @@ sub handle_request {
     my $argString = '';
     my $outbuf = '';
     my $interp = $self->interp;
+    $self->{request_number}++;
 
     #
     # construct (and truncate if necessary) the request to log at start
@@ -216,7 +217,7 @@ sub handle_request {
 	my $rstring = $req->server->server_hostname . $req->uri;
 	$rstring .= "?".scalar($req->args) if defined(scalar($req->args));
 	$rstring = substr($rstring,0,150).'...' if length($rstring) > 150;
-	$interp->write_system_log('REQ_START', ++$self->{request_number},
+	$interp->write_system_log('REQ_START', $self->{request_number},
 				  $rstring);
     }
 
@@ -490,7 +491,7 @@ sub handle_request_1
     my ($comp,$dhandlerArg);
     if (!($comp = $interp->load($compPath))) {
 	if ($interp->dhandler_name and $comp = $interp->find_comp_upwards($compPath,$interp->dhandler_name)) {
-	    my $remainder = ($comp->parent_path eq '/') ? $compPath : substr($compPath,length($comp->parent_path));
+	    my $remainder = ($comp->dir_path eq '/') ? $compPath : substr($compPath,length($comp->dir_path));
 	    my $pathInfo = $remainder.$r->path_info;
 	    $r->path_info($pathInfo);
 	    $dhandlerArg = substr($pathInfo,1);

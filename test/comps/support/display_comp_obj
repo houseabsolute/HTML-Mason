@@ -13,11 +13,15 @@ My short name is <% $comp->name %>.
 % if (defined($comp->parent_comp)) {
 My parent component is <% $comp->parent_comp->title %>.
 % }
-% if (defined($comp->parent_path)) {
-My parent path is <% $comp->parent_path %>.
+% if (defined($comp->dir_path)) {
+My directory is <% $comp->dir_path %>.
 % }
 I have run <% $comp->run_count %> time(s).
-I have <% scalar(keys(%{$comp->subcomps})) %> subcomponent(s).
+% my @subkeys = keys(%{$comp->subcomps});
+I have <% scalar(@subkeys) %> subcomponent(s).
+% if (@subkeys) {
+Including one called <% $comp->subcomps($subkeys[0])->name %>.
+% }
 My title is <% $comp->title =~ /anon/ ? '[anon something]' : $comp->title %>.
 
 % if (defined($comp->cache_file)) {

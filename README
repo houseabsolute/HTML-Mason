@@ -33,7 +33,7 @@ start) is in Mason.html.
 
 GETTING HELP
 
-The official Mason web site is at http://www.masonhq.com.  There
+The official Mason web site is at http://www.masonhq.com/.  There
 you'll find Mason documentation, news, etc.
 
 A recent copy of the FAQ (Frequently Asked Questions) list is
@@ -41,10 +41,8 @@ included in this release under the faq/ directory.  For the most
 recent version you'll want to go to the web site.
 
 The Mason mailing list, maintained by Kirrily Roberts, is an excellent
-place to ask questions and learn techniques. To subscribe, email
-mason-request@netizen.com.au and put "subscribe" in the body of your
-message. You can search and browse the archives at
-http://www.netizen.com.au/resources/lists/mason/.
+place to ask questions and learn techniques. To subscribe or browse the
+archives, visit http://netizen.com.au/mailman/listinfo/mason.
 
 If the question is more generally about mod_perl, you may wish to post
 additionally (or only) to the mod_perl mailing list at

@@ -32,7 +32,6 @@ C<mc_abort>.
 =item args
 
 Returns a hash of the arguments passed to the current component.
-Equivalent to C<$REQ-E<gt>stack[0]-E<gt>{args}> and C<%ARGS>.
 
 =item autohandler_next
 
@@ -55,12 +54,24 @@ reference provided instead of being sent to the default output stream.
 
 This method is used to implement C<mc_comp> and the <& &> tag.
 
+=for html <a name="callers">
+
+=item callers
+
+With no arguments, returns the current component stack as a list of
+component objects, starting with the current component and ending with
+the top-level component. With one numeric argument, returns the
+component object at that index in the list. e.g.
+
+    $REQ->callers(0)      # current component
+    $REQ->callers(1)      # component that called us
+    $REQ->callers(-1)     # top-level component
+
 =for html <a name="comp">
 
 =item comp
 
-Returns the current component object.  Equivalent to
-C<$REQ-E<gt>stack[0]-E<gt>{comp}>.
+Returns the current component object.
 
 =item count
 
@@ -69,8 +80,8 @@ request and interpreter.
 
 =item depth
 
-Returns the current size of the component stack.  1 indicates we are
-in the top-level component.
+Returns the current size of the component stack.  The lowest possible
+value is 1, which indicates we are in the top-level component.
 
 =item dhandler_arg
 
@@ -99,37 +110,6 @@ Returns the Parser object associated with this request.
 
 Given an absolute or relative component path, returns the
 corresponding absolute component path.
-
-=item sink
-
-Returns the current output method: the function through which
-output is being sent.  Equivalent to C<$REQ-E<gt>stack[0]-E<gt>{sink}>.
-
-=for html <a name="stack">
-
-=item stack
-
-Returns the current component stack as a list of hash references, with
-the top of the stack at index 0. Each hash reference contains
-
-=over 4
-
-=item *
-
-'comp': the component object
-
-=item *
-
-'args': a hash reference of the arguments the component was called with
-
-=item *
-
-'sink': the function through which output is being sent; depends on C<output_mode> and STORE options
-
-=back
-
-You may also access top of the stack through convenience functions
-L<Request/comp>, L<Request/args>, and L<Request/sink>.
 
 =back
 

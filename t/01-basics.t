@@ -51,7 +51,7 @@ foreach my $component ( @comps ) {
 	my ($top) = ($err =~ /(.*\n.*\n)/);
 	$top =~ s{at /.*}{}g;
 	$buf = "ERROR:\n$top";
-#	$buf = "ERROR:\n$err";
+#	$buf .= "\n$err";
     }
     $component =~ s/\//::/g;
     open(F, ">$tmp_dir$component");

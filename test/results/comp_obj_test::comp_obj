@@ -10,9 +10,10 @@ This is my first time.
 I am not a subcomponent.
 I am file-based.
 My short name is comp_obj.
-My parent path is /comp_obj_test.
+My directory is /comp_obj_test.
 I have run 1 time(s).
 I have 1 subcomponent(s).
+Including one called .subcomp.
 My title is /comp_obj_test/comp_obj.
 
 Got a cache file!
@@ -34,7 +35,7 @@ I am a subcomponent.
 I am not file-based.
 My short name is .subcomp.
 My parent component is /comp_obj_test/comp_obj.
-My parent path is /comp_obj_test.
+My directory is /comp_obj_test.
 I have run 0 time(s).
 I have 0 subcomponent(s).
 My title is /comp_obj_test/comp_obj:.subcomp.

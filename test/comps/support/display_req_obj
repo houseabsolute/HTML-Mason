@@ -1,12 +1,11 @@
 My depth is <% $REQ->depth %>.
 
+The top-level component is <% $REQ->callers(-1)->title %>.
+
 My stack looks like:
 -----
-% foreach my $level (@{$REQ->stack}) {
-comp: <% $level->{comp}->title %>
-args:
-% while (my ($key,$val) = each(%{$level->{args}})) {
-<% $key %>=<% $val %>
+% foreach my $comp ($REQ->callers) {
+<% $comp->title %>
 % }
 -----
-% }
+

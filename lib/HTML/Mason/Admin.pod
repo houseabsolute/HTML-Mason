@@ -178,8 +178,8 @@ files created at startup, returning them in response to
 C<$interp-E<gt>files_written>. This list can be fed to a chown() at the
 end of the startup code in C<handler.pl>:
 
-    chown ( [getpwnam('nobody')]->[2], [getgrnam('nobody')]->[2],
-            $interp->files_written );
+    chown (scalar(getpwnam "nobody"), scalar(getgrnam "nobody"),
+            $interp->files_written);
 
 =head2 Persistent user sessions
 

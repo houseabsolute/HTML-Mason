@@ -134,17 +134,15 @@ sub _initialize
 	    $fullPath =~ s@/$@@g;
 	    if (-d $fullPath) {
 		my $sub = sub {
-		    if (-f) {
-			my $file = $_;
-			$file =~ s/^\./$fullPath/;
+		    if (-f $File::Find::name) {
+			my $file = $File::Find::name;
 			my $compPath = substr($file,$slen);
 			$self->load($compPath);
 		    }
 		};
 		find($sub,$fullPath);
 	    } elsif (-f $fullPath) {
-		my $compPath = substr($fullPath,$slen);
-		$self->load($compPath);
+		$self->load($p);
 	    }
 	}
 	$self->{code_cache_mode} = $savemode;	
@@ -199,7 +197,7 @@ sub exec {
 	my $path = $comp;
 	if (!($comp = $self->load($path))) {
 	    if (defined($self->{dhandler_name}) and $comp = $self->find_comp_upwards($path,$self->{dhandler_name})) {
-		my $parent = $comp->parent_path;
+		my $parent = $comp->dir_path;
 		($req->{dhandler_arg} = $path) =~ s{^$parent/}{};
 	    }
 	}
@@ -210,7 +208,7 @@ sub exec {
 
     # Check for autohandler.
     if (defined($self->{autohandler_name})) {
-	my $parent = $comp->parent_path;
+	my $parent = $comp->dir_path;
 	my $autocomp;
 	if (!$self->{allow_recursive_autohandlers}) {
 	    $autocomp = $self->load("$parent/".$self->{autohandler_name});
@@ -244,7 +242,7 @@ sub exec {
 	    my $errmsg = "error while executing ".$req->comp->title.":\n";
 	    $errmsg .= $err."\n";
 	    if ($req->depth > 1) {
-		$errmsg .= "backtrace: " . join(" <= ",map($_->{comp}->title,@{$req->stack}))."\n";
+		$errmsg .= "backtrace: " . join(" <= ",map($_->{comp}->title,@{$req->{stack}}))."\n";
 	    }
 	    die ($errmsg);
 	} else {

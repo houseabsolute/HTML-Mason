@@ -220,9 +220,8 @@ sub parse_component
 	my (@vars);
 	my @decls = split("\n",$sectiontext{args});
 	@decls = grep(/\S/,@decls);
-	my $argsec = "\nmy (\$val);\n";
 	foreach my $decl (@decls) {
-	    my ($var,$default,$defaultClause);
+	    my ($var,$default);
 	    my $split = index($decl,'=>');
             if ($split !=-1) {
 		$var = substr($decl,0,$split);
@@ -235,50 +234,39 @@ sub parse_component
 	    next if ($var eq '%ARGS');
 	    push (@vars,$var);
 	    my $type = substr($var,0,1);
-	    if ($type !~ /[\$\%\@]/) {
-		$err = "unknown type for argument '$var': first character must be \$, \@, or \%";
-		goto parse_error;
-	    }
 	    my $name = substr($var,1);
-
 	    $declaredArgs{$var} = {default=>$default};
 
-	    if (defined($default)) {
-		$defaultClause = "$var = $default";
-                $defaultClause .= "\n" if ($default =~ /\#/);   # allow comments following default
-	    } else {
-		$defaultClause = "die \"no value sent for required parameter '$name'\"";
-	    }
+	    my $defaultVal = defined($default) ? $default : 
+		"die \"no value sent for required parameter '$name'\"";
+	    $defaultVal .= "\n" if (defined($default) && $default =~ /\#/);   # allow comments
 	    
 	    # Scalar
 	    if ($type eq "\$") {
-		my $tmpl = '$val = $ARGS{\'%s\'}; if (!exists($ARGS{\'%s\'})) { %s } else { %s; }';
-		$argsec .= sprintf($tmpl,$name,$name,$defaultClause,
-				   "$var = \$val");
+		$body .= "my $var = (!exists \$ARGS{'$name'} ? $defaultVal : \$ARGS{'$name'});";
 	    }
+		
 	    # Array
-	    if ($type eq "\@") {
-		my $tmpl = '$val = $ARGS{\'%s\'}; if (!exists($ARGS{\'%s\'})) { %s } elsif (ref($val) eq \'ARRAY\') { %s; } else { %s; }';
-		$argsec .= sprintf($tmpl,$name,$name,$defaultClause,
-				   "$var = \@\$val",
-				   "$var = (\$val)");
+	    elsif ($type eq "\@") {
+		$body .= "my $var = (!exists \$ARGS{'$name'} ? $defaultVal : ";
+		$body .= "ref(\$ARGS{'$name'}) eq 'ARRAY' ? \@{\$ARGS{'$name'}} : (\$ARGS{'$name'}));";
 	    }
+	    
 	    # Hash
-	    if ($type eq "\%") {
-		my $tmpl = '$val = $ARGS{\'%s\'}; if (!exists($ARGS{\'%s\'})) { %s } elsif (ref($val) eq \'ARRAY\') { %s; } elsif (ref($val) eq \'HASH\') { %s } else { %s; }';
-		$argsec .= sprintf($tmpl,$name,$name,$defaultClause,
-				   "$var = \@\$val",
-				   "$var = \%\$val",
-				   "die \"single value sent for hash parameter '\%$name'\"");
+	    elsif ($type eq "\%") {
+		$body .= "my $var = (!exists \$ARGS{'$name'} ? $defaultVal : ";
+		$body .= "ref \$ARGS{'$name'} eq 'ARRAY' ? \@{\$ARGS{'$name'}} : ";
+		$body .= "ref \$ARGS{'$name'} eq 'HASH' ? \%{\$ARGS{'$name'}} : ";
+		$body .= "die \"single value sent for hash parameter '$var'\");";
 	    }
-	    $argsec .= "\n";
-	}
 
-	#
-	# Declare the args as lexically scoped locals.
-	#
-	if (@vars) {
-	    $body .= "my (".join(",",@vars).");\n{".$argsec."}\n";
+	    # None of the above
+	    else {
+		$err = "unknown type for argument '$var': first character must be \$, \@, or \%";
+		goto parse_error;
+	    }
+
+	    $body .= "\n";
 	}
     }
 
@@ -402,7 +390,7 @@ sub parse_component
 		    (my $comp = substr($call,0,$comma)) =~ s/\s+$//;
 		    $call = "'$comp'".substr($call,$comma);
 		}
-		$perl = "mc_comp($call);";
+		$perl = "\$REQ->call($call);";
 		$curpos = $c+2+$length+2;
 		$pureTextFlag = 0;
 	    } else {
