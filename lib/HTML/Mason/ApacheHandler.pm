@@ -16,7 +16,6 @@ use vars qw(@ISA);
 # Fields that can be set in new method, with defaults
 my %reqfields =
     (ah => undef,
-     http_input => undef,
      apache_req => undef,
      );
 
@@ -39,7 +38,6 @@ sub new
 # Create generic read-write accessor routines
 
 sub ah { my $s=shift; return @_ ? ($s->{ah}=shift) : $s->{ah} }
-sub http_input { my $s=shift; return @_ ? ($s->{http_input}=shift) : $s->{http_input} }
 sub apache_req { my $s=shift; return @_ ? ($s->{apache_req}=shift) : $s->{apache_req} }
 
 # Override flush_buffer to also call $r->rflush
@@ -633,7 +631,7 @@ sub _cgi_args
     foreach my $key ( $q->param ) {
 	foreach my $value ( $q->param($key) ) {
 	    if (exists($args{$key})) {
-		if (ref($args{$key})) {
+		if (ref($args{$key} eq 'ARRAY')) {
 		    $args{$key} = [@{$args{$key}}, $value];
 		} else {
 		    $args{$key} = [$args{$key}, $value];
@@ -664,7 +662,7 @@ sub _mod_perl_args
     foreach my $key ( $apr->param ) {
 	foreach my $value ( $apr->param($key) ) {
 	    if (exists($args{$key})) {
-		if (ref($args{$key})) {
+		if (ref($args{$key}) eq 'ARRAY') {
 		    $args{$key} = [@{$args{$key}}, $value];
 		} else {
 		    $args{$key} = [$args{$key}, $value];
