@@ -998,7 +998,7 @@ sub _build_body
     }
     else
     {
-	$body .= '%ARGS = @_ unless (@_ % 2);' . "\n";
+	$body .= '{ local $^W; %ARGS = @_ unless (@_ % 2); }' . "\n";
     }
     $body .= 'my $_out = $m->current_sink;'."\n";
     
