@@ -344,8 +344,8 @@ sub _in_simple_conf_file
 {
     my $self = shift;
 
-    my @roots = $self->_get_string_param('MasonCompRoot');
-    return $ENV{MOD_PERL} && @roots;
+    my $roots = $self->_get_list_param('MasonCompRoot');
+    return $ENV{MOD_PERL} && @$roots;
 }
 
 my (%AH, %AH_BY_LOCATION);
@@ -484,13 +484,13 @@ sub get_param {
 sub _get_string_param
 {
     my $self = shift;
-    return $self->_get_val(0, @_);
+    return scalar $self->_get_val(@_);
 }
 
 sub _get_boolean_param
 {
     my $self = shift;
-    return $self->_get_val(0, @_);
+    return scalar $self->_get_val(@_);
 }
 
 sub _get_code_param
@@ -512,7 +512,7 @@ sub _get_code_param
 sub _get_list_param
 {
     my $self = shift;
-    my @val = $self->_get_val(1, @_);
+    my @val = $self->_get_val(@_);
     if (@val == 1 && ! defined $val[0])
     {
 	@val = ();
@@ -524,7 +524,7 @@ sub _get_list_param
 sub _get_hash_list_param
 {
     my $self = shift;
-    my @val = $self->_get_val(1, @_);
+    my @val = $self->_get_val(@_);
     if (@val == 1 && ! defined $val[0])
     {
         return {};
@@ -549,10 +549,10 @@ use constant
 
 sub _get_val
 {
-    my ($self, $is_list, $p, $vals, $config, $r) = @_;
+    my ($self, $p, $vals, $config, $r) = @_;
 
     my @val;
-    if ($is_list || !$config)
+    if (wantarray || !$config)
     {
         if ($config)
         {
