@@ -34,7 +34,7 @@ sub cleanup_files
 {
     foreach ( qw( httpd httpd.conf mason_handler_CGI.pl mason_handler_mod_perl.pl ) )
     {
-	my $file = "t/$_";
+	my $file = File::Spec->catdir( 't', $_ );
 	if ( -e $file )
 	{
 	    unlink $file
@@ -44,7 +44,7 @@ sub cleanup_files
 
     foreach ( qw( comps data ) )
     {
-	my $dir = "t/$_";
+	my $dir = File::Spec->catdir( 't', $_ );
 	if ( -d $dir )
 	{
 	    rmtree( $dir, $ENV{MASON_DEBUG} );
@@ -61,12 +61,12 @@ sub write_apache_conf
     }
 
     my $cwd = cwd();
-    my $conf_file = "$cwd/t/httpd.conf";
+    my $conf_file = File::Spec->catfile( $cwd, 't', 'httpd.conf' );
     $APACHE{apache_dir} = dirname($conf_file);
     $APACHE{apache_dir} =~ s,/$,,;
 
-    $APACHE{comp_root} = "$APACHE{apache_dir}/comps";
-    $APACHE{data_dir} = "$APACHE{apache_dir}/data";
+    $APACHE{comp_root} = File::Spec->catdir( $APACHE{apache_dir}, 'comps' );
+    $APACHE{data_dir} = File::Spec->catdir( $APACHE{apache_dir}, 'data' );
 
     mkdir $APACHE{comp_root}, 0755
 	or die "Can't make dir '$APACHE{comp_root}': $!";
@@ -74,6 +74,17 @@ sub write_apache_conf
 	or die "Can't make dir '$APACHE{data_dir}': $!";
 
     my $libs = _libs();
+
+    my $cgi_handler =
+        File::Spec->catfile( $APACHE{apache_dir}, 'mason_handler_CGI.pl' );
+    my $mod_perl_handler =
+        File::Spec->catfile( $APACHE{apache_dir}, 'mason_handler_mod_perl.pl' );
+
+    my %multiconf;
+    $multiconf{1}{comp_root} = File::Spec->catfile( $APACHE{comp_root}, 'multiconf1' );
+    $multiconf{1}{data_dir}  = File::Spec->catfile( $APACHE{data_dir}, 'multiconf1' );
+    $multiconf{2}{comp_root} = File::Spec->catfile( $APACHE{comp_root}, 'multiconf2' );
+    $multiconf{2}{data_dir}  = File::Spec->catfile( $APACHE{data_dir}, 'multiconf2' );
 
     my $include .= <<"EOF";
 ServerRoot $APACHE{apache_dir}
@@ -84,7 +95,7 @@ ServerRoot $APACHE{apache_dir}
 
 <IfDefine CGI>
   PerlModule  CGI
-  PerlRequire $APACHE{apache_dir}/mason_handler_CGI.pl
+  PerlRequire $cgi_handler
   SetHandler  perl-script
   PerlHandler HTML::Mason
 </IfDefine>
@@ -110,7 +121,7 @@ EOF
 </IfDefine>
 
 <IfDefine mod_perl>
-  PerlRequire $APACHE{apache_dir}/mason_handler_mod_perl.pl
+  PerlRequire $mod_perl_handler
   SetHandler  perl-script
   PerlHandler HTML::Mason
 </IfDefine>
@@ -138,8 +149,8 @@ EOF
   PerlSetVar MasonArgsMethod CGI
 
   <Location /comps/multiconf1>
-    PerlSetVar  MasonCompRoot "$APACHE{comp_root}/multiconf1"
-    PerlSetVar  MasonDataDir  "$APACHE{data_dir}/multiconf1"
+    PerlSetVar  MasonCompRoot "$multiconf{1}{comp_root}"
+    PerlSetVar  MasonDataDir  "$multiconf{1}{data_dir}"
     PerlSetVar  MasonAutohandlerName no_such_file
     SetHandler  perl-script
     PerlModule  HTML::Mason::ApacheHandler
@@ -147,8 +158,8 @@ EOF
   </Location>
 
   <Location /comps/multiconf2>
-    PerlSetVar  MasonCompRoot "$APACHE{comp_root}/multiconf2"
-    PerlSetVar  MasonDataDir  "$APACHE{data_dir}/multiconf2"
+    PerlSetVar  MasonCompRoot "$multiconf{2}{comp_root}"
+    PerlSetVar  MasonDataDir  "$multiconf{2}{data_dir}"
     PerlSetVar  MasonDhandlerName no_such_file
     SetHandler  perl-script
     PerlModule  HTML::Mason::ApacheHandler
@@ -230,7 +241,7 @@ sub setup_handler
     my $args_method = shift;
 
     my $handler = "mason_handler_$args_method.pl";
-    my $handler_file = "$APACHE{apache_dir}/$handler";
+    my $handler_file = File::Spec->catfile( $APACHE{apache_dir}, $handler );
     open F, ">$handler_file"
 	or die "Can't write to '$handler_file': $!";
 
@@ -320,13 +331,13 @@ EOF
 sub write_CGIHandler
 {
     my $handler = "CGIHandler.cgi";
-    my $handler_file = "$APACHE{apache_dir}/$handler";
+    my $handler_file = File::Spec->catfile( $APACHE{apache_dir}, $handler );
     open F, ">$handler_file"
 	or die "Can't write to '$handler_file': $!";
 
     my $libs = _libs();
 
-    my $data_dir = "$APACHE{apache_dir}/data";
+    my $data_dir = File::Spec->catdir( $APACHE{apache_dir}, 'data' );
 
     use Config;
 
@@ -371,7 +382,8 @@ sub _libs
 {
     my $cwd = cwd();
     my $libs = 'use lib qw( ';
-    $libs .= join ' ', "$cwd/blib/lib", "$cwd/t/lib";
+    $libs .= join ' ', ( File::Spec->catdir( $cwd, 'blib', 'lib' ),
+                         File::Spec->catdir( $cwd, 't', 'lib' ) );
     if ($ENV{PERL5LIB})
     {
 	$libs .= ' ';
