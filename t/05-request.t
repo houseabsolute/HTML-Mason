@@ -820,5 +820,22 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'caller_in_subcomp',
+		      description => 'tests $m->caller() in subcomponent',
+		      component => <<'EOF',
+<%def .foo>
+ <% $m->caller->name %>
+</%def>
+<& .foo &>
+EOF
+		      expect => <<'EOF',
+
+ caller_in_subcomp
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     return $group;
 }
