@@ -87,17 +87,6 @@ sub import
 
 package HTML::Mason::Exception;
 
-use overload
-    '""' => \&as_string,
-    fallback => 1;
-
-sub as_string
-{
-    my ($self) = @_;
-
-    return $self->error;
-}
-
 sub filtered_frames
 {
     my ($self) = @_;

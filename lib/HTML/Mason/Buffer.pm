@@ -87,7 +87,6 @@ sub _initialize
 	param_error "Buffering to a default sink only works in batch mode or with a parent buffer."
 	    unless $self->{parent} || $self->{mode} eq 'batch';
 
-
 	if ($self->{mode} eq 'stream')
 	{
 	    $self->{sink} = $self->{parent}->sink;
