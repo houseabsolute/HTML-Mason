@@ -21,8 +21,8 @@ my $class = Module::Build->subclass( code => <<'EOF' );
     my $self = shift;
     
     $self->SUPER::ACTION_install;
-    $self->run_script('install/delete_old_pods.pl');  # These could probably be separate actions.
-    $self->run_script('install/configure_apache.pl');
+    $self->run_perl_script('install/delete_old_pods.pl');  # These could probably be separate actions.
+    $self->run_perl_script('install/configure_apache.pl');
   }
 
   sub ACTION_test
