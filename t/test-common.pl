@@ -37,6 +37,9 @@ sub try_exec {
     
     my $results_dir = "$root/test/results/$branch";
     my $tmp_dir = "$root/test/tmp/$branch";
+    unless (-d $tmp_dir) {
+	mkdir($tmp_dir) or die "could not make directory $tmp_dir: $!";
+    }
     my $buf = "";
     $interp->out_method(\$buf);
     my $result;
