@@ -109,6 +109,24 @@ older than 1.24.
 See L<HTML::Mason::Params|HTML::Mason::Params> for a full list
 of parameters.
 
+There is one special parameter that does not directly correspond to an
+object constructor parameter, C<MasonSetEscape>.  This parameter
+allows you to define escape codes just as if you were calling the
+Interpreter's L<C<set_escape()>
+method|HTML>::Mason::Interp/item_set_escape>.
+
+This can be used as follows:
+
+  PerlSetVar  MasonSetEscape  "escape_name => \&sub_ref"
+
+So, for example, to change Mason's 'h' escape flag to only escape
+'E<gt>', 'E<lt>', '"', and '&', you would do this:
+
+  PerlSetVar  MasonSetEscape  "h => \&HTML::Mason::Tools::html_escape"
+
+This variable can accept multiple parameters, with the C<PerlAddVar>
+directive.
+
 =head2 CONFIGURING VIA HANDLER SCRIPT
 
 For maximum flexibility, you may choose to write a custom script to
