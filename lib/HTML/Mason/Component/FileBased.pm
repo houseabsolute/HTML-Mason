@@ -39,7 +39,7 @@ sub assign_runtime_properties {
     # because URL paths always use '/' as the dir-separator but we
     # could be running on any OS.
     #
-    # The regex itself it taken from File::Basename.
+    # The regex itself is taken from File::Basename.
     #
     @{$self}{ 'dir_path', 'name'} = $info->comp_path =~ m,^(.*/)?(.*),s;
     $self->{dir_path} =~ s,/$,, unless $self->{dir_path} eq '/';
