@@ -50,7 +50,7 @@ use HTML::Mason::Compiler::ToObject;
 use HTML::Mason::Tools qw(read_file taint_is_on);
 
 # Clear alarms, and skip test if alarm not implemented
-my $alarm_works = eval {alarm 0; 1};
+my $alarm_works = eval {alarm 0; 1} || 0;
 plan tests => 8 + $alarm_works;
 
 # These tests depend on taint mode being on
