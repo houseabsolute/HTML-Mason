@@ -551,6 +551,16 @@ sub comp {
     #
     my ($result, @result);
     {
+	my $r = $HTML::Mason::Commands::r;
+	# can't put this in if block cause then local is in the wrong scope.
+	# localize and then rebless it.  I'm scaring myself here!
+	local $HTML::Mason::Commands::r = $r if $r;
+	if ($r)
+	{
+	    bless $HTML::Mason::Commands::r, 'HTML::Mason::Apache::Request';
+	    $HTML::Mason::Commands::r->mason_request($self);
+	}
+
 	my $obj = tied *STDOUT;
 	tie *STDOUT, 'Tie::Handle::Mason', $self, $obj;
 	if (wantarray) {
@@ -786,5 +796,30 @@ sub PRINTF
     $self->print(sprintf(@_));
 }
 
+
+package HTML::Mason::Apache::Request;
+
+@HTML::Mason::Apache::Request::ISA = ('Apache::Request');
+
+my $mason_request;
+
+sub mason_request
+{
+    shift;
+    $mason_request = shift;
+}
+
+sub print
+{
+    my $self = shift;
+
+    bless $self, 'Apache::Request';
+
+    eval { $mason_request->out(@_) };
+
+    bless $self, 'HTML::Mason::Apache::Request';
+
+    die $@ if $@;
+}
 
 1;
