@@ -120,7 +120,7 @@ this:
 causes the return value of $m->base_comp to be the "/some/comp"
 component object inside the "/some/comp" component.  But this:
 
-  <& $somp_comp_obj, foo => 1 &>
+  <& $some_comp_obj, foo => 1 &>
 
 does not change what $m->base_comp returns.
 
