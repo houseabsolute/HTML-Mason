@@ -212,6 +212,28 @@ foreach (keys %ARGS) {
 We should never see this.
 EOF
 	      );
+
+=pod
+
+Hmm, what are the expect correct and double-header-broken outputs
+here?  I don't even get 'I am the target.'
+
+    write_comp( 'internal_redirect', <<'EOF',
+<%init>
+$m->auto_send_headers(0);
+$r->internal_redirect('/comps/redirect_target');
+$m->auto_send_headers(1);
+</%init>
+EOF
+	      );
+
+    write_comp( 'redirect_target', <<'EOF',
+I am the target.
+EOF
+	      );
+
+=cut
+
 }
 
 sub write_comp
@@ -631,6 +653,21 @@ EOF
 						   );
 	ok($success);
     }
+
+=pod
+
+    $path = '/comps/internal_redirect';
+    $path = "/ah=0$path" if $with_handler;
+    $response = Apache::test->fetch($path);
+    $actual = filter_response($response, $with_handler);
+    $success = HTML::Mason::Tests->check_output( actual => $actual,
+						 expect => <<'EOF',
+I dunno
+EOF
+					       );
+
+=cut
+
 }
 
 sub multi_conf_tests
@@ -701,7 +738,8 @@ sub filter_response
 		       'Initial value' ) ) );
     $actual .= "\n";
 
-    # Any headers starting with X-Mason are added, excluding X-Mason-Test, which is handled above
+    # Any headers starting with X-Mason are added, excluding
+    # X-Mason-Test, which is handled above
     my @headers;
     $response->headers->scan( sub { return if $_[0] eq 'X-Mason-Test' || $_[0] !~ /^X-Mason/;
 				    push @headers, [ $_[0], "$_[0]: $_[1]\n" ] } );
