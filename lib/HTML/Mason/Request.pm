@@ -535,6 +535,7 @@ sub comp {
     $self->push_stack( {comp => $comp,
 			args => [@args],
 			base_comp => $base_comp,
+			content => $mods{content},
 		       } );
 
     if ($mods{store}) {
@@ -593,6 +594,7 @@ sub comp {
 	    $err .= "\n" if $err !~ /\n$/;
 	}
 	$self->pop_stack;
+	$self->pop_buffer_stack;
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : HTML::Mason::Exception->throw( error => $err );
     }
 
@@ -607,6 +609,7 @@ sub comp {
         $self->top_buffer->flush;
     }
     $self->pop_stack;
+    $self->pop_buffer_stack;
 
     return wantarray ? @result : $result;  # Will return undef in void context (correct)
 }
@@ -619,6 +622,27 @@ sub scomp {
     my $buf;
     $self->comp({store=>\$buf},@_);
     return $buf;
+}
+
+sub content {
+    my $self = shift;
+    my $content = $self->top_stack->{content};
+    return undef unless defined($content);
+
+    # make the stack frame look like we are still the previous component
+    my $old_frame = $self->pop_stack;
+
+    $self->push_buffer_stack( $self->top_buffer->new_child( mode => 'batch', ignore_flush => 1 ) );
+    eval { $content->(); };
+    my $err = $@;
+
+    my $buffer = $self->pop_buffer_stack;
+
+    $self->push_stack($old_frame);
+
+    die $err if $err;
+
+    return $buffer->output;
 }
 
 sub process_comp_path
@@ -730,8 +754,7 @@ sub push_stack {
 
 sub pop_stack {
     my ($self) = @_;
-    pop @{ $self->{stack} };
-    $self->pop_buffer_stack;
+    return pop @{ $self->{stack} };
 }
 
 sub push_buffer_stack {
@@ -741,7 +764,7 @@ sub push_buffer_stack {
 
 sub pop_buffer_stack {
     my ($self) = @_;
-    my $buffer = pop @{ $self->{buffer_stack} };
+    return pop @{ $self->{buffer_stack} };
 }
 
 sub buffer_stack {
