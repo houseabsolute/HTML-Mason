@@ -90,13 +90,13 @@ EOF
                           description => 'test new escape flags',
                           interp_params => { use_object_files => 0 },
                           component => <<'EOF',
-Explicitly HTML-escaped: <% $expr | html %><p>
-Explicitly HTML-escaped redundantly: <% $expr | html,html %><p>
-Explicitly URL-escaped: <% $expr |url
+Explicitly HTML-escaped: <% $expr | h %><p>
+Explicitly HTML-escaped redundantly: <% $expr | h,h %><p>
+Explicitly URL-escaped: <% $expr |u
 %><p>
 No flags: <% $expr %><p>
 No flags again: <% $expr | %><p>
-Explicitly not escaped: <% $expr | no_defaults %><p>
+Explicitly not escaped: <% $expr | n %><p>
 <%init>
 my $expr = "<b><i>Hello there</i></b>.";
 </%init>
@@ -149,15 +149,15 @@ EOF
         $group->add_test( name => 'default_escape_flags_2_new',
                           description => 'test that turning on default escaping works with new flags',
                           interp_params => { use_object_files => 0,
-                                             default_escape_flags => [ 'html' ] },
+                                             default_escape_flags => [ 'h' ] },
                           component => <<'EOF',
-Explicitly HTML-escaped: <% $expr | html %><p>
-Explicitly HTML-escaped redundantly: <% $expr | html , html %><p>
-Explicitly URL-escaped: <% $expr | url, no_defaults
+Explicitly HTML-escaped: <% $expr | h %><p>
+Explicitly HTML-escaped redundantly: <% $expr | h , h %><p>
+Explicitly URL-escaped: <% $expr | u, n
 %><p>
 No flags: <% $expr %><p>
 No flags again: <% $expr | %><p>
-Explicitly not escaped: <% $expr | no_defaults %><p>
+Explicitly not escaped: <% $expr | n %><p>
 <%init>
 my $expr = "<b><i>Hello there</i></b>.";
 </%init>
