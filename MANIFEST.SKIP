@@ -28,3 +28,6 @@ Events.pm$
 # Module::Build [en]cruft[ed jewels]
 ^Build$
 ^_build
+
+# C source code bits for eventual first-class config directives bits
+^src
