@@ -1071,7 +1071,7 @@ for more information about handling directories with Mason.
 =item interp
 
 The interpreter object to associate with this compiler. By default a
-new object of class P<interp_class> will be created.
+new object of the specified P<interp_class> will be created.
 
 =item interp_class
 
