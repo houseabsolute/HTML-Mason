@@ -67,7 +67,11 @@ sub mc_auto_comp
 {
     die "mc_auto_comp $no_interp_error" if !$INTERP;
     my $aref = $INTERP->{exec_state}->{autohandler_next} or die "mc_auto_comp $no_auto_error";
-    return $aref->[0];
+    my $path = $aref->[0];
+    
+    # return relative path if possible
+    my $curdir = $INTERP->locals->{parentPath};
+    $path =~ s{^$curdir}{};
 }
 
 sub mc_auto_next

@@ -29,9 +29,11 @@ I<Component Developer's Guide> for examples.
 
 =item mc_auto_comp
 
-Returns the absolute path of the component interrupted by an
-autohandler.  See the L<Components/autohandlers> section of the I<Component
-Developer's Guide> for usage and examples.
+Returns the path of the component interrupted by an autohandler.  This
+is generally a relative path; it is only absolute if you call
+C<mc_auto_comp> from a component other than the autohandler and a
+forward relative path cannot be generated. See the L<Components/autohandlers>
+section of the I<Component Developer's Guide> for usage and examples.
 
 =item mc_cache ([action=>'retrieve|store|expire|keys'], [key=>name],
 [value=>data], [keep_in_memory=>0|1], [expire options...])

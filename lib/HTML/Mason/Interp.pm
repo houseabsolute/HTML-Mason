@@ -27,6 +27,7 @@ my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P);
 
 my %fields =
     (alternate_sources => undef,
+     allow_recursive_autohandlers => 0,
      comp_root => undef,
      code_cache_mode => 'all',
      current_time => 'real',
@@ -243,8 +244,18 @@ sub exec_next {
     # Check for autohandler.
     if (!@{$self->{stack}}) {
 	(my $callDir = $callPath) =~ s|/[^/]*$||;
-	if (@info = $self->load("$callDir/autohandler")) {
+	if (!$self->{allow_recursive_autohandlers}) {
+	    @info = $self->load("$callDir/autohandler");
+	} else {
+	    while ($callDir && !(@info = $self->load("$callDir/autohandler"))) {
+		my ($basename,$dirname) = fileparse($callDir);
+		$dirname =~ s/^\.//;    # certain versions leave ./ in $dirname
+		$callDir = substr($dirname,0,-1);
+	    }
+	}
+	if (@info) {
 	    $self->{exec_state}->{autohandler_next} = [$callPath,\%args];
+	    $callPath = "$callDir/autohandler";
 	}
     }
 					   
@@ -432,7 +443,7 @@ sub load {
     my ($self,$path) = @_;
     my ($sub,$err,$maxfilemod,$srcfile,$objfile,$objfilemod,$srcfilemod) =
        (undef);  # kludge to load $sub, prevent "use of uninit .." error
-    my (@srcstat, $srcisfile, @objstat, $objisfile);
+    my (@srcstat, @objstat, $objisfile);
     my $codeCache = $self->{code_cache};
     my $compRoot = $self->comp_root;
     $srcfile = $compRoot . $path;
@@ -478,9 +489,8 @@ sub load {
 	}
     }
     @srcstat = stat $srcfile unless @srcstat;
+    return () unless (-f _);
     $srcfilemod = $srcstat[9];
-    $srcisfile = -f _;
-    return () unless ($srcisfile);
     
     if ($self->use_object_files) {
 	$objfile = $self->object_dir . substr($srcfile,length($compRoot));

@@ -23,6 +23,13 @@ stand-alone Perl script), see the L<STANDALONE MODE> section below.
 
 =over
 
+=item allow_recursive_autohandlers
+
+True or undef, default is undef. If true, autohandlers apply both to
+their own directories and all subdirectories; if undef, only to their
+own directories. See the L<Components/autohandlers> section of the
+Component Developer's Guide for a discussion of the pros and cons.
+
 =item code_cache_mode
 
 Specifies whether components are cached in memory when they are

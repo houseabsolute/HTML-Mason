@@ -432,7 +432,7 @@ The same, using a <%filter> tag:
 
 Most of the time autohandler can simply call C<mc_auto_next> without
 needing to know what component was called. However, should you need
-it, the fully qualified component path is available from C<mc_auto_comp>.
+it, the relative component path is available from C<mc_auto_comp>.
 For example, here we base the page title partly on the component name:
 
     <HTML>
@@ -443,7 +443,7 @@ For example, here we base the page title partly on the component name:
     
     <%init>
     my $comp = mc_auto_comp();
-    my $section = ($comp =~ /mktg.html$/ ? 'Marketing' : ...);
+    my $section = ($comp eq 'mktg.html' ? 'Marketing' : ...);
     </%init>
 
 C<mc_auto_comp> is also necessary for I<suppressing> one or more
@@ -465,50 +465,43 @@ component.
     $refsrc=>undef
     </%args>
 
-Autohandlers apply only to the current directory, not to its
-subdirectories.  Although it was very tempting to implement a single
-autohandler applying to an entire component hierarchy (e.g. for a
-site-wide template), there were several drawbacks.  The first is
-performance: Mason would have to scan not only the current directory
-but all parent directories for a file named "autohandler"; this would
-slow down each request even where autohandlers were not being
-used. The second is readability: someone trying to determine how a
-page is rendered would have to scan through parent directories in the
-right order. That said, we will continue to seek out a reasonable
-solution for this feature.
+By default autohandlers apply only to the current directory, not to
+its subdirectories.  The Mason administrator can turn on the flag
+L<Interp/allow_recursive_autohandlers> that makes autohandlers apply to all
+subdirectories. Be warned that this mode entails a performance and
+readability cost. On every request Mason has to scan not only the
+current directory but all parent directories for a file named
+"autohandler". Likewise, someone trying to determine how a page is
+rendered has to scan through parent directories.
 
-For now, if you want to use the same autohandler in multiple
-subdirectories, there are several alternatives to simply copying
-it. One is to create symbolic links pointing back to the master
-autohandler (assuming your OS supports this); Mason seems to do fine
-with symbolic link components.  Another is to create minimal
-autohandlers of the form:
+That said, the applications of recursive autohandlers (e.g. applying a
+site-wide template) can be compelling enough to overcome these
+disadvantages.
+
+If you have recursive mode turned on but want a particular autohandler
+to apply only to the current directory, use a conditional like this:
 
     <%init>
-    mc_comp('/foo/bar/autohandler',%ARGS');
+    return mc_auto_continue if (mc_auto_comp =~ /\//);
+    ... rest of autohandler ...
     </%init>
 
 =head2 dhandlers vs. autohandlers
 
 dhandlers and autohandlers both provide a way to exert control over a
 large set of URLs. However, each specializes in a very different
-application.  The main differences to keep in mind:
-
-o dhandlers are invoked only when no appropriate component exists;
-autohandlers are invoked only in conjunction with a matching
-component.
-
-o dhandlers can handle any request underneath its directory hierarchy;
-autohandlers will only handle a request in the same directory.
+application.  The key difference is that dhandlers are invoked only
+when no appropriate component exists, while autohandlers are invoked
+only in conjunction with a matching component.
 
 As a rule of thumb: use an autohandler when you have a set of
-components to handle your pages and you simply want to augment them
+components to handle your pages and you want to augment them
 with a template/filter. Use a dhandler when you want to create a set
 of "virtual URLs" that don't correspond to any actual components.
 
 dhandlers and autohandlers can even be used in the same directory. For
-example, you might have a mix of virtual and real URLs to which you
-would like to apply a common template/filter.
+example, you might have a mix of real URLs and virtual URLs to which
+you would like to apply a common template/filter.
 
 Prior to version 0.6, dhandlers were the only way to accomplish tasks
 like applying a standard template across multiple components.
@@ -516,7 +509,7 @@ However, this application of dhandlers has several
 disadvantages. First, you must perversely "hide" your existing
 components so that Mason will not find them and instead invoke the
 dhandler! Second, you must manually check whether the subsequent
-component exists and handle not found errors.  The upshot is that
+component exists and handle "not found" errors.  The upshot is that
 autohandlers are better suited for many tasks previously solved by
 dhandlers.
 
