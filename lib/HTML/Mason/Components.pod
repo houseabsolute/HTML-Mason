@@ -497,7 +497,8 @@ only in conjunction with a matching component.
 As a rule of thumb: use an autohandler when you have a set of
 components to handle your pages and you want to augment them
 with a template/filter. Use a dhandler when you want to create a set
-of "virtual URLs" that don't correspond to any actual components.
+of "virtual URLs" that don't correspond to any actual components,
+or to provide default behavior for a directory.
 
 dhandlers and autohandlers can even be used in the same directory. For
 example, you might have a mix of real URLs and virtual URLs to which
