@@ -89,6 +89,9 @@ sub lex
     # Clean up DOS line endings
     $current->{comp_text} =~ s/\r\n/\n/g;
 
+    # Clean up Mac line endings
+    $current->{comp_text} =~ s/\r/\n/g;
+
     # Initialize lexer state
     $current->{lines} = 1;
     $current->{in_def} = $current->{in_method} = 0;
