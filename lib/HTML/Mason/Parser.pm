@@ -55,10 +55,8 @@ sub version
 sub new
 {
     my $class = shift;
-    my $self = {
-	_permitted => \%fields,
-	%fields,
-    };
+    my $self = {%fields};
+
     my (%options) = @_;
     while (my ($key,$value) = each(%options)) {
 	if (exists($fields{$key})) {

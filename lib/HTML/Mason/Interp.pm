@@ -73,7 +73,6 @@ sub new
 {
     my $class = shift;
     my $self = {
-	_permitted => \%fields,
 	%fields,
 	data_cache_store => {},
         code_cache => {},
