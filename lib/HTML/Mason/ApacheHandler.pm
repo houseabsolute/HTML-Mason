@@ -255,11 +255,10 @@ use HTML::Mason::MethodMaker
 
 use vars qw($AH);
 
-# force import to be called even if we're just required.
-__PACKAGE__->import;
-sub import
 {
-    my $pack = shift;
+    # This is not really ideal cause if someone loads a subclass we
+    # won't know about it.  Oh well.
+    my $pack = __PACKAGE__;
 
     if ( my $args_method = $pack->get_param('ArgsMethod') )
     {
