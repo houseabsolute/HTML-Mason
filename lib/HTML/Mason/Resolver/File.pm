@@ -62,7 +62,7 @@ sub resolve {
     if (!ref($comp_root)) {
 	my $srcfile = File::Spec->catdir( $comp_root, $path );
 	return (-f $srcfile) ? ( path => $path, description => $srcfile, last_modified => (stat _)[9] ) : ();
-    } elsif (UNIVERSAL::isa($comp_root, 'ARRAY')) {
+    } else {
 	foreach my $lref (@$comp_root) {
 	    my ($key,$root) = @$lref;
 	    $key = uc($key);   # Always make key uppercase in fqpath
@@ -72,8 +72,6 @@ sub resolve {
 	    return ( path => $fq_path, description => $srcfile, last_modified => $srcstat[9] ) if (-f _);
 	}
 	return;
-    } else {
-	HTML::Mason::Exception::Params->throw( error => "comp_root must be a scalar or listref" );
     }
 }
 
@@ -90,10 +88,8 @@ sub glob_path {
     my @roots;
     if (!ref($comp_root)) {
 	@roots = ($comp_root);
-    } elsif (ref($comp_root) eq 'ARRAY') {
-	@roots = map($_->[1],@{$comp_root});
     } else {
-	HTML::Mason::Exception::Params->throw( error => "comp_root must be a scalar or listref" );
+	@roots = map($_->[1],@{$comp_root});
     }
     my %path_hash;
     foreach my $root (@roots) {
