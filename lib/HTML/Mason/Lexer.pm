@@ -504,14 +504,14 @@ sub match_text
     # lexeme in the source, so we use a lookahead if we don't want to
     # consume them.  We use a lookbehind when we want to consume
     # something in the matched text, like the newline before a '%'.
-    
     if ( $c->{comp_source} =~ m{
 				\G
 				(.*?)         # anything, followed by:
 				(
 				 (?<=\n)(?=%) # an eval line - consume the \n
 				 |
-				 (?=</?[%&])  # a substitution or block or call start or end  - don't consume
+				 (?=</?[%&])  # a substitution or block or call start or end
+                                              # - don't consume
 				 |
 				 \\\n         # an escaped newline  - throw away
 				 |
@@ -523,9 +523,11 @@ sub match_text
 	# large $1 strings into several pieces and pass the pieces to
 	# compiler->text().  In my testing, this was quite a bit
 	# slower, though.  -Ken 2002-09-19
-
 	$c->{compiler}->text( text => $1 ) if length $1;
-	$c->{lines} += tr/\n// foreach ($1, $2);
+        # Not checking definedness seems to cause extra lines to be
+        # counted with Perl 5.00503.  I'm not sure why - dave
+	$c->{lines} += tr/\n// foreach grep defined, ($1, $2);
+
 	return 1;
     }
     
