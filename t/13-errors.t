@@ -85,7 +85,7 @@ EOF
                           component => <<"EOF",
 <%init>
 chmod 0222, '$file'
-    or die "Cannot chmod \\Q$file\\E: \$!";
+    or die "Cannot chmod file for " . '$file' . ": \$!";
 \$m->comp('support/unreadable');
 </%init>
 EOF
