@@ -282,44 +282,64 @@ sub as_text
 sub as_html
 {
     my ($self) = @_;
-    my $info = $self->analyze_error;
 
     my $out;
-    my $msg = HTML::Mason::Tools::html_escape($self->full_message);
-    $msg =~ s/\n/<br>/g;
-    $out .= qq[<html><body>\n];
-    $out .= qq[<p align="center"><font face="Verdana, Arial, Helvetica, sans-serif"><b>System error</b></font></p>\n];
-    $out .= qq[<table border="0" cellspacing="0" cellpadding="1">\n];
-    $out .= qq[<tr>];
-    $out .= qq[<td nowrap align="left" valign="top"><b>error:</b>&nbsp;</td>\n];
-    $out .= sprintf(qq[<td align="left" valign="top" nowrap>%s</td>\n], $msg);
-    $out .= qq[</tr>\n];
-    $out .= qq[<tr>\n];
-    $out .= qq[<td nowrap align="left" valign="top"><b>context:</b>&nbsp;</td>\n];
-    $out .= qq[<td align="left" valign="top" nowrap><table border="0" cellpadding="0" cellspacing="0">\n];
-    foreach my $entry (@{$info->{context}}) {
-	my ($line_num, $line, $highlight) = @$entry;
-	$line = HTML::Mason::Tools::html_escape($line);
-	$line =~ s/ /&nbsp;/g if defined $line;
-	$out .= qq[<tr>\n];
-	$out .= sprintf(qq[<td nowrap align="left" valign="top"><b>%s</b>&nbsp;</td>\n], $line_num);
-	$out .= sprintf(qq[<td align="left" valign="top" nowrap>%s%s%s</td>\n],
-			($highlight ? "<font color=red>" : ""),
-			defined $line ? $line : '',
-			($highlight ? "</font>" : ""));
-	$out .= qq[</tr>\n];
-    }
-    $out .= qq[</table></td></tr>\n];
-    $out .= qq[<tr>\n];
-    $out .= qq[<td align="left" valign="top" nowrap><b>code stack:</b>&nbsp;</td>\n];
-    $out .= qq[<td align="left" valign="top" nowrap><table border="0" cellpadding="0" cellspacing="0">\n];
-    foreach my $frame (@{$info->{frames}}) {
-	$out .= sprintf(qq[%s:%d\n<br>], HTML::Mason::Tools::html_escape($frame->filename), HTML::Mason::Tools::html_escape($frame->line));
-    }
-    $out .= qq[</td>\n];
-    $out .= qq[</tr>\n];
-    $out =~ s/(<td [^\>]+>)/$1<font face="Verdana, Arial, Helvetica, sans-serif" size="-2">/g;
-    $out =~ s/<\/td>/<\/font><\/td>/g;
+    my $interp = new HTML::Mason::Interp(out_method => \$out);
+    my $comp = $interp->make_component(comp_source => <<'EOF');
+
+<%args>
+ $msg
+ $info
+</%args>
+<%filter>
+ s/(<td [^\>]+>)/$1<font face="Verdana, Arial, Helvetica, sans-serif" size="-2">/g;
+ s/<\/td>/<\/font><\/td>/g;
+</%filter>
+
+% $msg = HTML::Mason::Tools::html_escape($msg);
+% $msg =~ s/\n/<br>/;
+
+<html><body>
+<p align="center"><font face="Verdana, Arial, Helvetica, sans-serif"><b>System error</b></font></p>
+<table border="0" cellspacing="0" cellpadding="1">
+ <tr>
+  <td nowrap align="left" valign="top"><b>error:</b>&nbsp;</td>
+  <td align="left" valign="top" nowrap><% $msg %></td>
+ </tr>
+ <tr>
+  <td nowrap align="left" valign="top"><b>context:</b>&nbsp;</td>
+  <td align="left" valign="top" nowrap><table border="0" cellpadding="0" cellspacing="0">
+   <table>
+
+%   foreach my $entry (@{$info->{context}}) {
+%	my ($line_num, $line, $highlight) = @$entry;
+%	$line = '' unless defined $line;
+    <tr>
+     <td nowrap align="left" valign="top"><b><% $line_num %></b>&nbsp;</td>
+     <td align="left" valign="top" nowrap><% $highlight ? "<font color=red>" : "" %><% $line |h %><% $highlight ? "</font>" : "" %></td>
+    </tr>
+
+%    }
+
+   </table>
+  </td>
+ </tr>
+ <tr>
+  <td align="left" valign="top" nowrap><b>code stack:</b>&nbsp;</td>
+  <td align="left" valign="top" nowrap><table border="0" cellpadding="0" cellspacing="0">
+
+%    foreach my $frame (@{$info->{frames}}) {
+	<% $frame->filename |h %>:<% $frame->line |h %><br>
+%    }
+
+  </td>
+ </tr>
+</table>
+
+</body></html>
+EOF
+
+    $interp->exec($comp, msg => $self->full_message, info => $self->analyze_error);
 
     return $out;
 }
