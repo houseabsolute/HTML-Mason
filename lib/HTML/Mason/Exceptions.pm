@@ -245,6 +245,14 @@ sub get_file_context
     return @context;
 }
 
+# basically the same as as_string in Exception::Class::Base
+sub raw_text
+{
+    my ($self) = @_;
+
+    return $self->full_message . "\n\n" . $self->trace->as_string;
+}
+
 sub as_string
 {
     my ($self) = @_;
@@ -290,6 +298,7 @@ sub as_html
 <%args>
  $msg
  $info
+ $error
 </%args>
 <%filter>
  s/(<td [^\>]+>)/$1<font face="Verdana, Arial, Helvetica, sans-serif" size="-2">/g;
@@ -300,6 +309,7 @@ sub as_html
 % $msg =~ s/\n/<br>/;
 
 <html><body>
+
 <p align="center"><font face="Verdana, Arial, Helvetica, sans-serif"><b>System error</b></font></p>
 <table border="0" cellspacing="0" cellpadding="1">
  <tr>
@@ -334,10 +344,54 @@ sub as_html
  </tr>
 </table>
 
+<a href="#raw">raw error</a><br>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+% my $raw = $error->raw_text;
+% HTML::Mason::Escapes::basic_html_escape(\\$raw);
+% $raw =~ s/\t//g;
+
+<a name="raw"></a>
+
+<% $raw %>
+
 </body></html>
 EOF
 
-    $interp->exec($comp, msg => $self->full_message, info => $self->analyze_error);
+    $interp->exec($comp,
+                  msg => $self->full_message,
+                  info => $self->analyze_error,
+                  error => $self);
 
     return $out;
 }
