@@ -184,12 +184,8 @@ EOF
 
 #------------------------------------------------------------
 
-    # The output we expect from this test depends on how we decide
-    # flush should be handled in the presence of a filter.  The output
-    # expected below assumes that flushes are ignored, but if we
-    # decide otherwise that should be changed.
     $group->add_test( name => 'filter_and_flush',
-                      description => 'test effect of flush with filter present',
+                      description => 'test that flush is ignore with filter present',
                       component => <<'EOF',
 foo
 % $m->flush_buffer;
@@ -204,42 +200,6 @@ EOF
                     );
 
 #------------------------------------------------------------
-
-    # Uh, this is testing with the _opposite_ expectation as the last
-    # test.  Pick one semantic and discard the other test.
-    $group->add_support( path => 'flush_clear_filter_comp',
-			 component => <<'EOF',
-Foo
-% $m->flush_buffer;
-Bar
-% $m->clear_buffer;
-Baz
-<%filter>
-s/^/-/gm;
-</%filter>
-EOF
-		       );
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'flush_clear_filter',
-		      description => 'Flush then clear with filter section',
-		      component => <<'EOF',
-before
-<& flush_clear_filter_comp &>
-after
-EOF
-		      expect => <<'EOF',
-before
--Foo
--Baz
-
-after
-EOF
-		    );
-
-#------------------------------------------------------------
-
 
     $group->add_support( path => 'clear_filter_comp',
 			 component => <<'EOF',
