@@ -378,7 +378,11 @@ can then prevent private components from being served.
 
 One solution is to place all private components inside a directory,
 say /private, that lies under the component root but outside the
-document root.
+document root. e.g.
+
+  component root:     /usr/mason/comps
+  document root:      /usr/mason/comps/htdocs
+  private components: /usr/mason/comps/private
 
 Another solution is to decide on a naming convention, for example,
 that all private components begin with "_", or that all top-level
