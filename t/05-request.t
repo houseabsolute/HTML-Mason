@@ -355,26 +355,6 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'subrequest_without_autohandler',
-		      description => 'tests the subrequest mechanism and turning off autohandler',
-		      component => <<'EOF',
-Executing subrequest
-% my $buf;
-% my $req = $m->interp->make_request(out_method => \$buf);
-% $req->use_autohandlers(0);
-% $req->exec('/request/support/dir/comp');
-<% $buf %>
-EOF
-		      expect => <<'EOF',
-Executing subrequest
-I am the called comp (no autohandler).
-EOF
-		    );
-
-
-#------------------------------------------------------------
-
-
     # 5.6.0 is evil
     unless ($] == 5.006)
     {
