@@ -94,7 +94,7 @@ sub mason_canonpath {
     # Just like File::Spec::canonpath, but we're having trouble
     # getting a patch through to them.
     my $path = shift;
-    $path =~ s|/+|/|g unless($^O eq 'cygwin');       # xx////yy  -> xx/yy
+    $path =~ s|/+|/|g;                               # xx////yy  -> xx/yy
     $path =~ s|(/\.)+/|/|g;                          # xx/././yy -> xx/yy
     {
 	$path =~ s|^(\./)+||s unless $path eq "./";  # ./xx      -> xx
@@ -162,9 +162,6 @@ sub load_pkg {
     return 1;
 }
 
-#
-# Determine if taint mode is on.
-#
 sub taint_is_on
 {
     not eval { "$0$^X" && kill 0; 1 };
@@ -207,10 +204,109 @@ __END__
 
 =head1 NAME
 
-HTML::Mason::Tools - Functions used from various places in Mason
+HTML::Mason::Tools - Function library used internally in Mason
 
 =head1 DESCRIPTION
 
+This module contains exportable functions that are intended to be used
+by other Mason modules.
+
+The documentation here is primarily intended to be used by Mason core
+developers.
+
+Others who choose to use these functions do so at their own risk, as
+they may change from release to release.  You have been warned.
+
 =head1 FUNCTIONS
+
+=over
+
+=item read_file
+
+This function takes a file name and an optional argument indicating
+whether or not to open the final in binary mode.  It will return the
+entire contents of the file as a scalar.
+
+=item html_escape
+
+This function takes a string and returns its HTML-escaped version,
+escaping the following characters: '&', '>', '<', and '"'.
+
+The escaped string is this function's return value.
+
+=item paths_eq
+
+Given to paths, this function indicates whether they represent the
+same location on the filesystem.  It does not account for symlinks.
+
+=item compress_path
+
+This turns a component path into a filesystem-friendly path by
+escaping potentially meaningful characters.
+
+=item absolute_comp_path
+
+Given a component path and a directory path, this function returns the
+absolute component path, prepending the directory path if needed.
+
+=item mason_canonpath
+
+This function cleans up a component path and returns its canonical
+version.  It is largely the same as File::Spec::Unix::canonpath, with
+a few additional cleanups.
+
+=item pkg_installed
+
+Given a module name, this function returns true or false to indicate
+whether or not a corresponding F<.pm> file exists.
+
+=item pkg_loaded
+
+Given a module name, this function returns true or false to indicate
+whether or not the module has been loaded into memory.
+
+=item load_pkg
+
+Given a module name, this function attempts to load it.  It takes an
+additional boolean parameter indicating whether or not to throw an
+exception if the module cannot be found.  By default, if the module
+cannot be found, this function simply returns false.
+
+All errors generate exceptions no matter what.
+
+If the module is loaded successfully, this function returns true.
+
+=item taint_is_on
+
+Returns a boolean value indicating whether taint mode is on or not.
+
+=item make_fh
+
+This function returns something suitable to be passed to the first
+argument of an C<open> function call.
+
+=item escape_perl_expression
+
+Given a scalar and one or more flags as an array, this method does the
+following.
+
+If any of the flags are "n", then no escaping is done.
+
+If it finds the "h" flag, the text is escaped with
+C<HTML::Entities::encode()>.
+
+If it finds the "u" flag, the text is URL-escaped, meaning that all
+characters not matching C<[a-zA-Z0-9_.-]> are replaced by a percent
+sign (%) followed by their hexadecimal ASCII value.
+
+NOTE: This will break miserably given Unicode characters, producing
+something like "%abc7", which is unabashedly incorrect.
+
+NOTE part deux: The URL RFC (1738) does not specify how to handle
+Unicode.
+
+NOTE part trois: The URI RFC (2396) doesn't provide much help either.
+
+=back
 
 =cut
