@@ -126,9 +126,6 @@ sub exec {
 
     my @result;
     eval {
-	# Check if reload file has changed.
-	$interp->check_reload_file if ($interp->use_reload_file);
-
 	# Purge code cache if necessary. Generally happens at the end of
 	# the component; this is just in case many errors are occurring.
 	$interp->purge_code_cache;

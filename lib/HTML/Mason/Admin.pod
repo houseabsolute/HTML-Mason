@@ -258,10 +258,6 @@ Corresponds to the C<system_log_separator> parameter.
 
 Corresponds to the C<use_object_files> parameter.
 
-=item * MasonUseReloadFile - boolean
-
-Corresponds to the C<use_reload_file> parameter.
-
 =back
 
 =head2 ApacheHandler Parameters
@@ -985,40 +981,9 @@ Try to preload components that are used frequently and do not change
 often.  (If a preloaded component changes, all the children will have
 to reload it from scratch.)
 
-=head2 Reload file
+=head2 Compile/resolve once mode
 
-Normally, every time Mason executes a component, it checks the last
-modified time of its source file to see if it needs to be reloaded.
-These file checks are convenient for development, but for a production
-site this can degrade performance unnecessarily.
-
-To remedy this, Mason has an accelerated mode that changes its
-behavior in two ways:
-
-1.  Does not check component source files at all, relying solely on
-object files.  This means the developer or an automated system is
-responsible for recompiling any components that change and recreating
-object files, using the ???.
-
-XXX: How would one do this these days?
-
-2.  Rather than continuously checking whether object files have
-changed, Mason monitors a "reload file" containing an ever-growing
-list of components that have changed.  Whenever a component changes,
-the developer or an automated system is responsible for appending the
-component path to the reload file. The reload file is kept in
-C<data_dir/etc/reload.lst>.
-
-You can activate this mode with the L<Interp/use_reload_file>
-Interp method.
-
-The advantage of using this mode is that Mason stats one file per
-request instead of ten or twenty.  The disadvantage is a
-increase in maintenance costs as the object and reload files have to
-be kept up-to-date.  Automated editorial tools, and cron jobs that
-periodically scan the component hierarchy for changes, are two
-possible solutions.  The Mason content management system automatically
-handles this task.
+XXX: todo
 
 =head1 STAGING vs. PRODUCTION
 

@@ -38,7 +38,7 @@ use HTML::Mason::MethodMaker
 			  max_recurse
 			  resolver
 			  use_object_files
-			  use_reload_file ) ],
+		         ) ],
 
       read_write_contained => { request => [ qw( autoflush
                                                  data_cache_defaults ) ] },
@@ -76,8 +76,6 @@ __PACKAGE__->valid_params
 				       descr => "A string to separate entries in the Mason events log" },
      use_object_files             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF,
 				       descr => "Whether to cache component objects on disk" },
-     use_reload_file              => { parse => 'boolean', default => 0, type => SCALAR|UNDEF,
-				       descr => "Whether to use 'reload files' for freshening components" },
      data_dir                     => { parse => 'string', type => SCALAR,
 				       descr => "A directory for storing cache files and other state information" },
     );
@@ -102,8 +100,6 @@ sub new
 		       code_cache_current_size => 0,
 		       files_written => [],
 		       hooks => {},
-		       last_reload_time => 0,
-		       last_reload_file_pos => 0,
 		       system_log_fh => undef,
 		       system_log_events_hash => undef,
 		     }, $class;
@@ -162,20 +158,12 @@ sub _initialize
 	    foreach (@paths) { $self->load($_) }
 	}
     }
-
-    #
-    # Adjust to current size of reload file
-    #
-    if ($self->use_reload_file && -f $self->reload_file) {
-	@{$self}{qw[last_reload_file_pos last_reload_time]} = (stat _)[7, 9];
-    }
 }
 
 #
 # Shorthand for various data subdirectories and files.
 #
 sub object_dir { return File::Spec->catdir( shift->data_dir, 'obj' ); }
-sub reload_file { return File::Spec->catfile( shift->data_dir, 'etc', 'reload.lst' ); }
 
 #
 # exec is the initial entry point for executing a component
@@ -191,35 +179,6 @@ sub make_request {
     my $self = shift;
 
     return $self->create_delayed_object( 'request', interp => $self, out_method => $self->out_method, @_ );
-}
-
-#
-# Check if reload file has changed. If so, read paths from last read
-# position to end of file and delete those paths from the cache.
-#
-sub check_reload_file {
-    my ($self) = @_;
-    my $reload_file = $self->reload_file;
-    return if (!-f $reload_file);
-    my $lastmod = (stat(_))[9];
-    if ($lastmod > $self->{last_reload_time}) {
-	my $length = (stat(_))[7];
-	$self->{last_reload_file_pos} = 0 if ($length < $self->{last_reload_file_pos});
-	my $fh = make_fh();
-	open $fh, $reload_file or return;
-
-	my $block;
-	my $pos = $self->{last_reload_file_pos};
-	seek ($fh,$pos,0);
-	read($fh,$block,$length-$pos);
-	$self->{last_reload_time} = $lastmod;
-	$self->{last_reload_file_pos} = tell $fh;
-	my @lines = split("\n",$block);
-	foreach my $comp_path (@lines) {
-	    $self->delete_from_code_cache($comp_path);
-	}
-	close $fh;
-    }
 }
 
 sub comp_exists {
@@ -239,36 +198,6 @@ sub load {
     my $code_cache = $self->code_cache;
     my $resolver = $self->{resolver};
 
-    #
-    # If using reload file, assume that we are using object files and
-    # have a cached subroutine or object file.
-    #
-    if ($self->{use_reload_file}) {
-	my $comp_id = $path;   # note - this will foil multiple component roots
-	return $code_cache->{$comp_id}->{comp} if exists($code_cache->{$comp_id});
-
-	$objfile = $self->comp_id_to_objfile($comp_id);
-	return undef unless (-f $objfile);   # component not found
-
-	$self->write_system_log('COMP_LOAD', $comp_id);	# log the load event
-	my $object_code ||= read_file($objfile);
-	my $comp = eval { $self->eval_object_code( object_code => $object_code ) };
-	$self->_compilation_error($objfile, $@) if $@;
-
-	# I think this is broken.  It should also be assigning things
-	# like comp_root, etc.
-	my $info = HTML::Mason::ComponentSource->new( friendly_name => $path,
-						      comp_path => $path,
-						      comp_id => $comp_id,
-						      last_modified => time,
-						      comp_class => 'HTML::Mason::Component',
-						      source_callback => sub { },
-						    );
-	$comp->assign_runtime_properties($self, $info);
-
-	$code_cache->{$comp_id} = {comp=>$comp, type=>'physical'};
-	return $comp;
-    }
 
     if (exists $code_cache->{$path} and $code_cache->{$path}{type} eq 'virtual') {
 	# Don't look for this in the component root
@@ -1052,12 +981,6 @@ True or false, default is true.  Specifies whether Mason creates
 object files to save the results of component parsing. You may want to
 turn off object files for disk space reasons, but otherwise this
 should be left alone.
-
-=item use_reload_file
-
-True or false, default is undef. If true, disables Mason's automatic
-timestamp checking on component source files, relying instead on an
-explicitly updated L<Admin/reload file>.
 
 =back
 
