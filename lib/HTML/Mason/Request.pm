@@ -1507,9 +1507,8 @@ Returns the CGI object used to parse any CGI parameters submitted to
 the component, assuming that you have not changed the default value of
 the ApacheHandler C<args_method> parameter.  If you are using the
 'mod_perl' args method, then calling this method is a fatal error.
-See the L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler> and
-L<HTML::Mason::CGIHandler|HTML::Mason::CGIHandler> documentation for
-more details.
+See the L<ApacheHandler|HTML::Mason::ApacheHandler> and
+L<CGIHandler|HTML::Mason::CGIHandler> documentation for more details.
 
 =back
 
