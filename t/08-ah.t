@@ -36,7 +36,7 @@ local $| = 1;
 kill_httpd(1);
 test_load_apache();
 
-my $tests = 20; # multi conf & taint tests
+my $tests = 19; # multi conf & taint tests
 $tests += 58 if my $have_libapreq = have_module('Apache::Request');
 $tests += 40 if my $have_cgi      = have_module('CGI');
 $tests += 15 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
