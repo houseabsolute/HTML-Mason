@@ -9,6 +9,7 @@ use strict;
 use Fcntl qw(:DEFAULT :flock);
 use File::Basename;
 use File::Path;
+use File::Spec;
 use HTML::Mason::Config;
 use HTML::Mason::Tools qw(date_delta_to_secs);
 use MLDBM ($HTML::Mason::Config{mldbm_use_db}, $HTML::Mason::Config{mldbm_serializer});
@@ -41,7 +42,7 @@ sub access_data_cache
 	my ($base,$lockdir) = fileparse($physFile);
 	$lockdir .= "locks";
 	mkpath($lockdir,0,0755) if (!-d $lockdir);
-	my $lockfile = "$lockdir/$base.lock";
+	my $lockfile = File::Spec->catfile( $lockdir, "$base.lock" );
 
 	# Open file in correct mode for lock type (Tom Hughes)
 	my $lockfh = do { local *FH; *FH; };
@@ -209,7 +210,7 @@ sub access_data_cache
     #
     } elsif ($action eq 'retrieve') {
 	return undef if (!(-e $physFile));
-	my $fileLastModified = [stat($physFile)]->[9];
+	my $fileLastModified = (stat($physFile))[9];
 	my $mem;
 
 	#
