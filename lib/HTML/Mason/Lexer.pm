@@ -374,7 +374,7 @@ sub match_substitute
 
     if ( $self->{current}{comp_source} =~ /\G<%/gcs )
     {
-	if ( $self->{current}{comp_source} =~ /\G(.+?)(\s*\|\s*([\w, \t]+)?\s*)?%>/igcs )
+	if ( $self->{current}{comp_source} =~ /\G(.+?)(\s*(?<!\|)\|\s*([\w, \t]+)\s*)?%>/igcs )
 	{
 	    my ($sub, $escape) = ($1, $3);
 	    $self->{current}{compiler}->substitution( substitution => $sub,
