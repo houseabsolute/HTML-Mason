@@ -31,3 +31,5 @@ Events.pm$
 
 # C source code bits for eventual first-class config directives bits
 ^src
+
+.*/samples/cd-me.*
