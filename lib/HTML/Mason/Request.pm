@@ -708,8 +708,12 @@ sub comp {
     #
     if (my $err = $@) {
 	# any unflushed output is at $self->top_buffer->output
+	$self->flush_buffer if $self->aborted;
+
 	$self->pop_stack;
 	$self->pop_buffer_stack;
+	$self->pop_buffer_stack if ($mods{store});
+
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
     }
 
@@ -995,11 +999,7 @@ through components. The optional argument specifies the return
 value from C<Interp::exec>; in a web environment, this ultimately
 becomes the HTTP status code.
 
-abort() is implemented via die() and can thus be caught by eval(). 
-
-Under the current implementation, any pending C<E<lt>%filterE<gt>> sections will
-not be applied to the output after an abort.  This is a known bug but
-there is no easy workaround.
+abort() is implemented via die() and can thus be caught by eval().
 
 The methods C<aborted> and C<aborted_value> return a boolean
 indicating whether the current request was aborted and the argument
