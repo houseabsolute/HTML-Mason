@@ -1340,6 +1340,16 @@ headers if they haven't been sent and calls C<< $r->rflush >> to flush
 the Apache buffer. Flushing the initial bytes of output can make your
 servers appear more responsive.
 
+Attempts to flush the buffers are ignored within the context of a call
+to C<< $m->scomp >> or when output is being stored in a scalar
+reference, as with the C< { store => \$out } > component call
+modifier.
+
+Additionally, if a component has a C<< <%filter> >> block, that
+component is buffered until its entire output is generated.  This
+means that inside that component and any components that it calls,
+the buffer cannot be flushed.
+
 =for html <a name="item_instance">
 
 =item instance
