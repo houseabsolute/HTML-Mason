@@ -20,9 +20,12 @@ use HTML::Mason::MethodMaker
     ( read_write => [ qw( ah apache_req ) ] );
 
 __PACKAGE__->valid_params
-    ( ah         => { isa => 'HTML::Mason::ApacheHandler' },
-      apache_req => { isa => 'Apache', default => undef },
-      cgi_object => { isa => 'CGI',    default => undef },
+    ( ah         => { isa => 'HTML::Mason::ApacheHandler',
+		      descr => 'An ApacheHandler to handle web requests' },
+      apache_req => { isa => 'Apache', default => undef,
+		      descr => "An Apache request object" },
+      cgi_object => { isa => 'CGI',    default => undef,
+		      descr => "A CGI.pm request object" },
     );
 
 sub new
@@ -108,20 +111,27 @@ use base qw(HTML::Mason::Container);
 
 __PACKAGE__->valid_params
     (
-     apache_status_title   => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason status' },
+     apache_status_title   => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason status',
+			        descr => "The title of the Apache::Status page" },
      args_method           => { parse => 'string',  type => SCALAR,       default => 'mod_perl',
 			        callbacks =>
 				{ "must be either 'CGI' or 'mod_perl'" =>
-				  sub { $_[0] =~ /^(?:CGI|mod_perl)$/ } }
+				  sub { $_[0] =~ /^(?:CGI|mod_perl)$/ } },
+				descr => "Whether to use CGI.pm or Apache::Request for parsing the incoming HTTP request",
                               },
-     auto_send_headers     => { parse => 'boolean', type => SCALAR|UNDEF, default => 1 },
+     auto_send_headers     => { parse => 'boolean', type => SCALAR|UNDEF, default => 1,
+			        descr => "Whether HTTP headers should be auto-generated" },
 
-     decline_dirs          => { parse => 'boolean', type => SCALAR|UNDEF, default => 1 },
-     multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1 },
-     top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1} },
+     decline_dirs          => { parse => 'boolean', type => SCALAR|UNDEF, default => 1,
+			        descr => "Whether Mason should decline to handle requests for directories" },
+     multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1,
+			        descr => "Whether multiple Mason configurations are in effect, such as when using VirtualHosts" },
+     top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1},
+			        descr => "A subroutine that tests whether an HTTP request is valid" },
 
      # the only required param
-     interp                => { isa => 'HTML::Mason::Interp' },
+     interp                => { isa => 'HTML::Mason::Interp',
+			        descr => "A Mason interpreter for processing components" },
     );
 
 __PACKAGE__->contained_objects
