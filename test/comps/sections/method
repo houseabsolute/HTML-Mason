@@ -5,15 +5,18 @@ method Test
 </TITLE>
 </HEAD>
 <BODY>
-<% $m->current_comp->call_method('foo') %>
-% my $out = $m->current_comp->scall_method('bar');
+<% $m->current_comp->call_method('foo',y=>2) %>
+% my $out = $m->current_comp->scall_method('bar',qw(a b c));
 <% uc($out) %>
 </BODY>
 </HTML>
 <%method foo>
-% my $x = 2 + 2;
-2 + 2 = <% $x %>.
+% my $sum = $y + $y;
+<% $y %> + <% $y %> = <% $sum %>.
+<%args>
+$y
+</%args>
 </%method>
 <%method bar>
-The second method.
+The second method. Arguments are <% join(",",@_) %>.
 </%method>
