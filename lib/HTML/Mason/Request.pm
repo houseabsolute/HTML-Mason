@@ -275,6 +275,7 @@ sub exec {
 	# Create initial buffer.
 	my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
 	push @{ $self->{buffer_stack} }, $buffer;
+        push @{ $self->{buffer_stack} }, $buffer->new_child;
 
 	# If there was an error during request preparation, throw it now.
 	if (my $err = $self->{prepare_error}) {
@@ -323,6 +324,7 @@ sub exec {
     my $err = $@;
     if ($err and !$self->aborted($err)) {
 	pop @{ $self->{buffer_stack} };
+	pop @{ $self->{buffer_stack} };
 	$interp->purge_code_cache;
 	$self->_handle_error($err);
 	return;
@@ -330,6 +332,7 @@ sub exec {
 
     # Flush output buffer.
     $self->flush_buffer;
+    pop @{ $self->{buffer_stack} };
     pop @{ $self->{buffer_stack} };
 
     # Purge code cache if necessary. We do this at the end so as not
@@ -968,10 +971,12 @@ sub comp {
                                           ignore_flush => 1,
                                           ignore_clear => 1,
                                         );
+
+        # This extra buffer is here so that flushes get passed through
+        # to the parent (storing buffer) but clears can be handled
+        # properly as well.
+        push @{ $self->{buffer_stack} }, $self->{buffer_stack}[-1]->new_child;
     }
-    # more common case optimizations
-    push @{ $self->{buffer_stack} },
-        $self->{buffer_stack}[-1]->new_child;
 
     my @result;
 
@@ -1000,18 +1005,22 @@ sub comp {
 	$self->flush_buffer if $self->aborted;
 
 	pop @{ $self->{stack} };
-	pop @{ $self->{buffer_stack} };
-	pop @{ $self->{buffer_stack} } if ($mods{store});
+        if ( $mods{store} )
+        {
+            pop @{ $self->{buffer_stack} };
+            pop @{ $self->{buffer_stack} };
+        }
 
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
     }
 
-    # more common case optimizations
-    $self->{buffer_stack}[-1]->flush;
-
     pop @{ $self->{stack} };
-    pop @{ $self->{buffer_stack} };
-    pop @{ $self->{buffer_stack} } if ($mods{store});
+    if ( $mods{store} )
+    {
+        $self->flush_buffer;
+        pop @{ $self->{buffer_stack} };
+        pop @{ $self->{buffer_stack} };
+    }
 
     return wantarray ? @result : $result[0];  # Will return undef in void context (correct)
 }
