@@ -42,6 +42,7 @@ sub assign_runtime_properties {
     # The regex itself it taken from File::Basename.
     #
     @{$self}{ 'dir_path', 'name'} = $info->comp_path =~ m,^(.*/)?(.*),s;
+    $self->{dir_path} =~ s,/$,, unless $self->{dir_path} eq '/';
 
     $self->SUPER::assign_runtime_properties($interp, $info);
 }
