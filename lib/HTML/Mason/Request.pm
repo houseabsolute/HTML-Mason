@@ -664,8 +664,10 @@ sub _run_comp
 {
     my ($self, $wantarray, $comp, @args) = @_;
 
-    my $obj = tied *STDOUT;
-    tie *STDOUT, 'Tie::Handle::Mason', $self, $obj;
+    if ($self->depth == 1) {
+	my $obj = tied *STDOUT;
+	tie *STDOUT, 'Tie::Handle::Mason', $self, $obj;
+    }
 
     my ($result, @result);
     if ($wantarray) {
@@ -675,7 +677,10 @@ sub _run_comp
     } else {
 	eval { $comp->run(@args) };
     }
-    untie *STDOUT;
+
+    if ($self->depth == 1) {
+	untie *STDOUT;
+    }
 
     return wantarray ? @result : $result;
 }
