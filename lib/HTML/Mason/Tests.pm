@@ -98,9 +98,7 @@ sub new
     my $class = shift;
     my %p = @_;
 
-    my $self = bless {}, $class;
-
-    GetOptions( 'create' => \$self->{create},
+    GetOptions( 'create' => \$p{create},
 	      );
 
     die "No group name provided\n"
@@ -109,13 +107,12 @@ sub new
     die "No description for test group provided\n"
 	unless exists $p{description};
 
-    $self->{name} = $p{name};
-    $self->{description} = $p{description};
-
-    $self->{support} = [];
-    $self->{tests} = [];
-
-    return $self;
+    return bless {
+		  interp_class => 'HTML::Mason::Interp',
+		  %p,
+		  support => [],
+		  tests => [],
+		 }, $class;
 }
 
 sub add_support
@@ -382,10 +379,10 @@ sub _make_interp
 	}
     }
 
-    return HTML::Mason::Interp->new( comp_root => $self->comp_root,
-				     data_dir  => $self->data_dir,
-				     %interp_params,
-				   );
+    return $self->{interp_class}->new( comp_root => $self->comp_root,
+				       data_dir  => $self->data_dir,
+				       %interp_params,
+				     );
 }
 
 sub _execute
@@ -403,9 +400,9 @@ sub _run_test
     my $self = shift;
     my $test = $self->{current_test};
 
-    my $buf = '';
+    $self->{buffer} = '';
     my $interp = $self->_make_interp;
-    $interp->out_method( sub { for (@_) { $buf .= $_ if defined $_ } } );
+    $interp->out_method( sub { for (@_) { $self->{buffer} .= $_ if defined $_ } } );
 
     eval { $self->_execute($interp) };
 
@@ -441,11 +438,11 @@ sub _run_test
 
     if ($self->{create})
     {
-	print "Results for $test->{name}:\n$buf\n";
+	print "Results for $test->{name}:\n$self->{buffer}\n";
 	return;
     }
 
-    my $success = $test->{skip_expect} ? 1 : $self->check_output( actual => $buf, expect => $test->{expect} );
+    my $success = $test->{skip_expect} ? 1 : $self->check_output( actual => $self->{buffer}, expect => $test->{expect} );
 
     $success ? $self->_success : $self->_fail;
 }
@@ -574,6 +571,10 @@ The name of the entire group of tests.
 =item * description (required)
 
 What this group tests.
+
+=item * interp_class (optional, default='HTML::Mason::Interp')
+
+Specifies an alternate class for creating the Interpreter.
 
 =head2 add_support
 
