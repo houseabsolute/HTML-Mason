@@ -40,7 +40,7 @@ __END__
 
 =head1 NAME
 
-HTML::Mason::Resolver - base class for component path resolvers
+HTML::Mason::Resolver - Component path resolver base class
 
 =head1 SYNOPSIS
 
