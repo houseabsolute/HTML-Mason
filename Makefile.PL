@@ -28,7 +28,6 @@ WriteMakefile(
     'NAME'    => 'HTML::Mason',
     'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
     'PREREQ_PM' => { MLDBM => 2.0, Data::Dumper => 2.08, 'File::Spec' => 0.8 },
-    'DIR' => \@dirs,
 
     # $COMP_ROOT & $DATA_DIR are globals created when
     # setup_mod_perl_tests() is called.  The code that does this
@@ -38,7 +37,6 @@ WriteMakefile(
     }
 );
 
-
 package MY;
 
 sub test
@@ -46,6 +44,8 @@ sub test
     my $self = shift;
 
     my $test = $self->SUPER::test(@_);
+
+    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE}=\$(TEST_VERBOSE); $1/;
 
     # %APACHE_PARAMS & $APACHE_DIR are globals set in makeconfig.pl.
     # If we are not going to test with Apache there is no harm in
