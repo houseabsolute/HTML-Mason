@@ -41,7 +41,7 @@ $tests += 59 if my $have_libapreq = have_module('Apache::Request');
 $tests += 40 if my $have_cgi      = have_module('CGI');
 $tests += 15 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
 $tests++ if $have_cgi;
-$tests++ if my $have_filter = have_module('Apache::Filter');
+$tests++ if my $have_filter = (have_module('Apache::Filter') && Apache::Filter->VERSION >= 1.021 && $mod_perl::VERSION < 1.99);
 
 plan( tests => $tests);
 
@@ -109,12 +109,12 @@ EOF
     write_comp( 'headers', <<'EOF',
 
 
-% $r->header_out('X-Mason-Test' => 'New value 2');
+% $r->headers_out->{'X-Mason-Test'} = 'New value 2';
 Blah blah
 blah
-% $r->header_out('X-Mason-Test' => 'New value 3');
+% $r->headers_out->{'X-Mason-Test'} = 'New value 3';
 <%init>
-$r->header_out('X-Mason-Test' => 'New value 1');
+$r->headers_out->{'X-Mason-Test'} = 'New value 1';
 $m->abort if $blank;
 </%init>
 <%args>
@@ -226,7 +226,7 @@ EOF
 <%init>
 my $x = 1;
 foreach (sort keys %ARGS) {
-  $r->header_out( 'X-Mason-HEAD-Test' . $x++ => "$_: " . (ref $ARGS{$_} ? 'is a ref' : 'not a ref' ) );
+  $r->headers_out->{'X-Mason-HEAD-Test' . $x++} = "$_: " . (ref $ARGS{$_} ? 'is a ref' : 'not a ref' );
 }
 </%init>
 We should never see this.
@@ -234,14 +234,21 @@ EOF
 	      );
 
     write_comp( 'redirect', <<'EOF',
-<%init>
+% $m->print("\n");  # leading whitespace
+
+<%perl>
+$m->scomp('foo');
 $m->redirect('/comps/basic');
-</%init>
+</%perl>
+<%def foo>
+fum
+</%def>
 EOF
 	      );
 
     write_comp( 'internal_redirect', <<'EOF',
 <%init>
+if ($mod_perl::VERSION >= 1.99) { require Apache::SubRequest; }
 $r->internal_redirect('/comps/internal_redirect_target?foo=17');
 $m->auto_send_headers(0);
 $m->clear_buffer;
