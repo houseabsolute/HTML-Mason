@@ -243,7 +243,7 @@ A Perl section will also work for including local library paths:
   use lib '/path/to/local/lib';
   </Perl>
 
-=head2 Declining Image Requests
+=head2 Limiting URLs Handled by Mason
 
 Mason should be prevented from serving images, tarballs, and other
 binary files as regular components. Not only will performance suffer,
@@ -290,7 +290,7 @@ Make sure this directive comes I<after> any directive which turns
 Mason on for certain locations, as Apache gives the last block defined
 precedence.
 
-=head2 Securing Top-Level Components
+=head3 Securing Top-Level Components
 
 Users may exploit a server-side scripting environment by invoking
 scripts with malicious or unintended arguments. Mason administrators
@@ -609,7 +609,7 @@ this:
       return $ah->handle_request($r);
   }
 
-=head2 Securing Top-Level Components with Code
+=head3 Securing Top-Level Components with Code
 
 Again, as discussed earlier, you will often have components that are
 intended only for use by other components, and you don't want these to
@@ -945,6 +945,19 @@ feedback on the error.  The second behavior is usually desired for
 production so that users are not exposed to messy error messages.  You
 choose the behavior by setting P<error_mode> to "output" or "fatal"
 respectively.
+
+Error formatting is controlled by the P<error_format> parameter.  When
+showing errors in the browser, Mason defaults to the "html" format.
+When the P<error_mode> is set to "fatal", the default format is
+"line", which puts the entire error message on one line in a format
+suitable for web server error logs.  Mason also offers other formats,
+which are covered in the L<Request class|HTML::Mason::Request>
+documentation.
+
+Finally, you can use Apache's C<ErrorDocument> directive to specify a
+custom error handler for 500 errors.  In this case, you'd set the
+P<error_mode> to "fatal".  The URL specified by the C<ErrorDocument>
+directive could point to a Mason component.
 
 =head1 RUNNING OUTSIDE OF MOD_PERL
 
