@@ -585,11 +585,10 @@ package HTML::Mason::Commands;
 use vars qw($REQ);
 sub mc_suppress_http_header
 {
-    my $interp = $REQ->interp;
     if ($_[0]) {
-	$interp->suppress_hook(name=>'http_header',type=>'start_primary');
+	$REQ->suppress_hook(name=>'http_header',type=>'start_primary');
     } else {
-	$interp->unsuppress_hook(name=>'http_header',type=>'start_primary');
+	$REQ->unsuppress_hook(name=>'http_header',type=>'start_primary');
     }
 }
 
