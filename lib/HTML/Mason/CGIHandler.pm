@@ -42,12 +42,6 @@ sub new {
     return $self;
 }
 
-sub exec {
-    my ($self, $component) = (shift, shift);
-    local $self->{exec_args} = [@_];
-    $self->_handler($component);
-}
-
 sub handle_request {
     my $self = shift;
     $self->_handler( { comp_path => $ENV{PATH_INFO} }, @_ );
@@ -84,7 +78,6 @@ sub _handler {
     $self->interp->set_global('$r', $r);
 
     $self->{output} = '';
-    my @params = $self->{exec_args} ? @{$self->{exec_args}} : $r->params;
 
     my $old_root;
     if ($local_root) {
@@ -98,7 +91,7 @@ sub _handler {
     }
 
     $self->interp->delayed_object_params('request', cgi_request => $r);
-    eval { $self->interp->exec($component, @params) };
+    eval { $self->interp->exec($component, $r->params) };
     # save it in case setting one of the attributes below uses eval{}
     my $e = $@;
 
