@@ -1402,69 +1402,21 @@ justification for suppressing headers.)
 
 =head1 USING THE PERL DEBUGGER
 
-The Perl debugger is an indispensable tool for identifying and fixing
-bugs in Perl programs.  Unfortunately, in a mod_perl environment one
-is normally unable to use the debugger since programs are run from a
-browser.  Mason removes this limitation by optionally creating a I<debug
-file> for each page request, allowing the request to be replayed from
-the command line or Perl debugger.
+You can use the perl debugger in conjunction with a live
+mod_perl/Mason server with the help of Apache::DB, available from
+CPAN. Refer to the Apache::DB documentation for details.
 
-Note: in early 1999 a new module, Apache::DB, was released that makes
-it substantially easier to use the Perl debugger directly in
-conjunction with a real Apache server.  Since this mechanism is still
-new, we continue to support Mason debug files, and there may be
-reasons to prefer Mason's method (e.g. no need to start another Apache
-server).  However we acknowledge that Apache::DB may eventually eliminate
-the need for debug files. For now we encourage you to try both methods and
-see which one works best.
-
-=head2 Using debug files
-
-Here is a typical sequence for debugging a Mason page:
-
-=over
-
-=item 1. Find the debug file:
-
-When Mason is running in debug mode, requests generate "debug files",
-cycling through filenames "1" through "20".  To find a request's debug
-file, simply do a "View Source" in your browser after the request and
-look for a comment like this at the very top:
-
-    <!--
-    Debug file is '3'.
-    Full debug path is '/usr/local/mason/debug/anon/3'.
-    -->
-
-=item 2. Run the debug file:
-
-Debug files basically contain two things: a copy of the entire HTTP
-request (serialized with B<Data::Dumper>), and all the plumbing needed
-to route that request through Mason. In other words, if you simply run
-the debug file like this:
-
-    perl /usr/local/mason/debug/anon/3
-
-you should see the HTTP headers and content that the component would
-normally send to the browser.
-
-=item 3. Debug the debug file:
-
-Now you merely add a C<-d> option to run the debug file in Perl's
-debugger -- at which point you have to deal the problem of anonymous
-subroutines.
-
-Mason compiles components down to anonymous subroutines which are not
-easily breakpoint'able (Perl prefers line numbers or named
-subroutines). Therefore, immediately before each component call,
-Mason calls a nonce subroutine called C<debug_hook> just so you can
-breakpoint it like this:
+The only tricky thing about debugging Mason pages is that components
+are implemented by anonymous subroutines, which are not easily
+breakpoint'able. To remedy this, Mason calls the dummy subroutine
+C<debug_hook> at the beginning of each component. You can breakpoint
+this subroutine like so:
 
     b HTML::Mason::Request::debug_hook
 
-debug_hook is called with the component name as the second parameter
-so that you can also breakpoint specific components using a
-conditional on $_[1]:
+debug_hook is called with two parameters: the current Request object
+and the full component path. Thus you can breakpoint specific
+components using a conditional on $_[1]:
 
     b HTML::Mason::Request::debug_hook $_[1] =~ /component name/
 
@@ -1478,105 +1430,6 @@ which reduces the previous examples to just:
 
     mb
     mb $_[1] =~ /component name/
-
-=back
-
-The use of debug files opens lots of other debugging options. For
-instance, you can read a debug file into the Emacs editor, with its
-nifty interface to Perl's debugger.  This allows you to set break
-points visually or (in trace mode) watch a cursor bounce through your
-code in single-step or continue mode.
-
-=head2 Specifying when to create debug files
-
-Details about configuring debug mode can be found in
-B<L<HTML::Mason::Admin>>. In particular, the administrator must decide
-which of three debugging modes to activate:
-
-B<never> (no debug files)
-
-B<always> (create debug files for each request)
-
-B<error> (only generate a debug file when an error occurs)
-
-=head2 How debug files work
-
-To create a debug file, Mason calls almost every one of the
-mod_perl API methods (C<$r-E<gt>xxx>), trapping its result in a hash.  That
-hash is then serialized by Data::Dumper and output into a new debug
-file along with some surrounding code.
-
-When the debug file is executed, a new object is created of the class
-"HTML::Mason::FakeApache", passing the saved hash as
-initialization. The FakeApache object acts as a fake C<$r>, responding to
-each method by getting or setting data in its hash. For most purposes
-it is indistinguishable from the original C<$r> except that print methods
-go to standard output. The debug file then executes your C<handler()>
-function with the simulated C<$r>.
-
-=head2 When debug files don't work
-
-The vast majority of mod_perl API methods are simple get/set functions
-(e.g. C<$r-E<gt>uri>, C<$r-E<gt>content_type>) which are easy to simulate.  Many
-pages only make use of these methods and can be successfully simulated
-in debug mode.
-
-However, a few methods perform tasks requiring the presence of a true
-Apache server. These cannot be properly simulated.  Some, such as
-C<log_error> and C<send_cgi_header>, are generally tangential to the
-debugging effort; for these Mason simply returns without doing
-anything and hopes for the best.  Others, such as C<internal_redirect>
-and C<lookup_uri>, perform such integral functions that they cannot be
-ignored, and for these FakeApache aborts with an error. This category
-includes any method call expected to return an Apache::Table object.
-
-In addition, FakeApache is playing something of a catch-up game: every
-time a new mod_perl release comes out with new API methods, those
-methods will not be recognized by FakeApache until it is updated in
-the next Mason release.
-
-The combination of these problems and the existence of the new
-Apache::DB package may eventually lead us to stop further work on
-FakeApache/debug files.  For now, though, we'll continue to support
-them as best we can.
-
-=head1 USING THE PERL PROFILER
-
-Debug files, mentioned in the previous section, can be used in
-conjunction with Devel::DProf to profile a web request.
-
-To use profiling, pass the C<-p> flag to the debug file:
-
-    % ./3 -p
-
-This executes the debug file under Devel::DProf and, for convenience,
-runs dprofpp.  If you wish you can rerun dprofpp with your choice of
-options.
-
-Because components are implemented as anonymous subroutines, any time
-spent in components would normally be reported under an unreadable
-label like CODE(0xb6cbc).  To remedy this, the C<-p> flag automatically
-adjusts the tmon.out file so that components are reported by their
-component paths.
-
-Much of the time spent in a typical debug file is initialization, such
-as loading Mason and other Perl modules.  The effects of
-initialization can swamp profile results and obscure the time actually
-spent in components. One remedy is to run multiple iterations of the
-request inside the debug file, thus reducing the influence of
-initialization time.  Pass the number of desired iterations via the C<-r>
-flag:
-
-    % ./3 -p -r20
-
-Currently there are no special provisions for other profiling modules such as
-Devel::SmallProf.  You can try simply:
-
-    % perl -d:SmallProf ./3 -r20
-
-However, this crashes on our Unix system -- apparently some bad
-interaction between Mason and SmallProf -- so it is unsupported for
-now.
 
 =head1 THE PREVIEWER
 

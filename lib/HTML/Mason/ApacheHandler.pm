@@ -90,12 +90,6 @@ use HTML::Mason::MethodMaker
     ( read_write => [ qw( apache_status_title
 			  auto_send_headers
 
-			  debug_dir_config_keys
-			  debug_mode
-			  debug_handler_proc
-			  debug_handler_script
-			  debug_perl_binary
-
 			  decline_dirs
 			  error_mode
 			  interp
@@ -105,8 +99,6 @@ use HTML::Mason::MethodMaker
 
 # use() params. Assign defaults, in case ApacheHandler is only require'd.
 use vars qw($LOADED $ARGS_METHOD);
-
-my @used = ($HTML::Mason::IN_DEBUG_FILE);
 
 # Fields that can be set in new method, with defaults
 my %fields =
@@ -118,11 +110,6 @@ my %fields =
      interp => undef,
      output_mode => undef,    # deprecated - now interp->out_mode
      top_level_predicate => undef,
-     debug_mode => 'none',
-     debug_perl_binary => '/usr/bin/perl',
-     debug_handler_script => undef,
-     debug_handler_proc => undef,
-     debug_dir_config_keys => [],
      );
 
 sub import
@@ -216,7 +203,7 @@ sub _initialize {
     #
     # Create data subdirectories if necessary. mkpath will die on error.
     #
-    foreach my $subdir (qw(debug preview)) {
+    foreach my $subdir (qw(preview)) {
 	my @newdirs = mkpath($interp->data_dir."/$subdir",0,0775);
 	$interp->push_files_written(@newdirs);
     }
@@ -297,20 +284,6 @@ sub handle_request {
     }
 
     #
-    # Determine debug file mode. Turn it off regardless if we are
-    # already operating from a debug file.
-    #
-    my $debug_mode = $self->debug_mode;
-    $debug_mode = 'none' if $HTML::Mason::IN_DEBUG_FILE;
-
-    #
-    # Capture debug state as early as possible, before we start messing with $apreq.
-    #
-    my $debug_state;
-    $debug_state = $self->capture_debug_state($apreq)
-	if ($debug_mode eq 'all' or $debug_mode eq 'error');
-
-    #
     # Create an Apache-specific request with additional slots.
     #
     my $request = new HTML::Mason::Request::ApacheHandler
@@ -319,7 +292,7 @@ sub handle_request {
 	 apache_req=>$apreq,
 	 );
     
-    eval { $retval = $self->handle_request_1($apreq, $request, $debug_state) };
+    eval { $retval = $self->handle_request_1($apreq, $request) };
     my $err = $@;
     my $err_code = $request->error_code;
     undef $request;  # ward off memory leak
@@ -361,15 +334,6 @@ sub handle_request {
 		$apreq->send_http_header();
 	    }
 	    print("<h3>System error</h3><p><pre><font size=-1>$err</font></pre>\n");
-	    if ($debug_mode eq 'error' or $debug_mode eq 'all') {
-		my $debug_msg = $self->write_debug_file($apreq,$debug_state);
-		print("<pre><font size=-1>\n$debug_msg\n</font></pre>\n");
-	    }
-	}
-    } else {
-	if ($debug_mode eq 'all') {
-	    my $debug_msg = $self->write_debug_file($apreq,$debug_state);
-	    print "\n<!--\n$debug_msg\n-->\n" if (http_header_sent($apreq) && !$apreq->header_only && $apreq->header_out("Content-type") =~ /text\/html/);
 	}
     }
 
@@ -380,147 +344,11 @@ sub handle_request {
 #
 # Shorthand for various data subdirectories and files.
 #
-sub debug_dir { return shift->interp->data_dir . "/debug" }
 sub preview_dir { return shift->interp->data_dir . "/preview" }
-
-sub write_debug_file
-{
-    my ($self, $r, $dref) = @_;
-    my $user = $r->connection->user || 'anon';
-    my $out_file = sprintf("%d",int(rand(20))+1);
-    my $out_dir = File::Spec->catfile( $self->debug_dir, $user );
-    if (!-d $out_dir) {
-	mkpath($out_dir,0,0755) or die "cannot create debug directory '$out_dir'";
-    }
-    my $out_path = File::Spec->catfile( $out_dir, $out_file );
-    my $outfh = do { local *FH; *FH; };  # double *FH avoids warning
-    unless ( open $outfh, ">$out_path" ) {
-	$r->warn("cannot open debug file '$out_path' for writing");
-	return;
-    }
-
-    my $d = new Data::Dumper ([$dref],['dref']);
-    my $o = '';
-    $o .= "#!".$self->debug_perl_binary."\n";
-    $o .= <<'PERL';
-# -----------------------------
-# Read command-line options for repeat counts (-rX) and profiling via
-# Devel::DProf (-p). As component runs in profile mode, component
-# coderefs are accumulated in %CODEREF_NAME
-# -----------------------------
-BEGIN {
-    use File::Copy;
-    use Getopt::Std;
-    getopt('r');   # r=repeat count, p=user profile req, P=re-entrant profile call
-    $opt_r ||= 1;
-    
-    if ($opt_p) {
-	print STDERR "Profiling request ...";
-	# re-enter with different option (no inf. loops, please)
-	system ("perl", "-d:DProf", $0, "-P", "-r$opt_r")
-            or die "Can't execute perl: $!";
-    
-# -----------------------------
-# When done, merge named coderefs in tmon.mason with those in tmon.out,
-# then run dprofpp
-# -----------------------------
-        my $fh = do { local *FH; *FH; };  # double *FH avoids warning
-        open $fh, '< ./tmon.mason' or die "Missing file: tmon.mason: $!";
-	foreach (<$fh>) { chomp;  my ($k,$v) = split(/\t/);  $::CODEREF_NAME{$k} = $v; }
-	close $fh or die "can't close file: tmon.mason: $!";
-    
-	my $tmonout = do { local *FH; *FH; };
-        open $tmonout, '< ./tmon.out' or die "Missing file: tmon.out: $!";
-	my $tmontmp = do { local *FH; *FH; };
-        open $tmontmp, '> ./tmon.tmp' or die "Couldn't write file: tmon.tmp: $!";
-	my $regex = quotemeta(join('|', keys %::CODEREF_NAME));
-	$regex =~ s/\\\|/|/g;   #un-quote the pipe chars
-	while (<$tmonout>) {
-	    s/HTML::Mason::Commands::($regex)/$::CODEREF_NAME{$1}/;
-	    print $tmontmp $_;
-	}
-	close $tmonout or die "can't close file: tmon.out: $!";
-        close $tmontmp or die "can't close file: tmon.tmp: $!";
-	copy('tmon.tmp' => 'tmon.out') or die "$!";
-	unlink('tmon.tmp') or warn "can't remove file: tmon.tmp: $!";
-        print STDERR "\nRunning dprofpp ...\n";
-	exec('dprofpp') or die "Couldn't execute dprofpp";
-    }
-}
-
-PERL
-    $o .= "BEGIN { \$HTML::Mason::IN_DEBUG_FILE = 1; require '".$self->debug_handler_script."' }\n\n";
-    $o .= <<'PERL';
-if ($opt_P) {
-    open SAVEOUT, ">&STDOUT" or die "Can't open &STDOUT: $!";    # stifle component output while profiling
-    open STDOUT, File::Spec->devnull or die "Can't write to " . File::Spec->devnull . ": $!";
-}
-for (1 .. $opt_r) {
-print STDERR '.' if ($opt_P and $opt_r > 1);
-PERL
-    $o .= "my ";
-    $o .= dumper_method($d);
-    $o .= 'my $r = HTML::Mason::ApacheHandler::simulate_debug_request($dref);'."\n";
-    $o .= 'local %ENV = (%ENV,%{$dref->{ENV}});'."\n";
-    $o .= 'my $status = '.$self->debug_handler_proc."(\$r);\n";
-    $o .= 'print "return status: $status\n";'."\n}\n\n";
-    $o .= <<'PERL';
-if ($opt_P) {
-    my $fh = do { local *FH; *FH; };
-    open $fh, '>./tmon.mason' or die "Couldn't write to file: tmon.mason: $!";
-    print $fh map("$_\t$HTML::Mason::CODEREF_NAME{$_}\n", keys %HTML::Mason::CODEREF_NAME);
-    close $fh or die "Can't close file: tmon.mason: $!";
-}
-PERL
-    print $outfh $o;
-    close $outfh or die "can't close file: $out_path: $!";
-    chmod(0775,$out_path) or die "can't chmod file to 0775: $out_path: $!";
-
-    my $debug_msg = "Debug file is '$out_file'.\nFull debug path is '$out_path'.\n";
-    return $debug_msg;
-}
-
-sub capture_debug_state
-{
-    my ($self, $r) = @_;
-    my (%d);
-
-    eval {
-      foreach my $field (qw(allow_options auth_name auth_type bytes_sent no_cache content_encoding content_languages content_type document_root filename header_only method method_number path_info protocol proxyreq requires status status_line the_request uri as_string get_remote_host get_remote_logname get_server_port is_initial_req is_main)) {
-	$d{$field} = $r->$field();
-      }
-    };
-    warn "error creating debug file: $@\n" if $@;
-
-    my $have_table = pkg_installed('Apache::Table');
-    eval {
-	foreach my $field (qw(headers_in headers_out err_headers_out notes dir_config subprocess_env)) {
-	    $d{$field} = $have_table ? $r->$field() : {};
-	}
-    };
-    warn "error creating debug file: $@\n" if $@;
-    
-    $d{'args@'} = [$r->args];
-    $d{'args$'} = scalar($r->args);
-    
-    $d{server} = {};
-    foreach my $field (qw(server_admin server_hostname port is_virtual names)) {
-	$d{server}->{$field} = $r->server->$field();
-    }
-    
-    $d{connection} = {};
-    foreach my $field (qw(remote_host remote_ip local_addr remote_addr remote_logname user auth_type aborted)) {
-	$d{connection}->{$field} = $r->connection->$field();
-    }
-
-    $d{ENV} = {%ENV};
-
-    return {%d};
-}
 
 sub handle_request_1
 {
-    my ($self,$r,$request,$debug_state) = @_;
+    my ($self,$r,$request) = @_;
     my $interp = $self->interp;
 
     #
@@ -571,18 +399,10 @@ sub handle_request_1
     # (_cgi_args or _mod_perl_args).  We pass a reference to $r because
     # _mod_perl_args upgrades $r to the Apache::Request object.
     # 
-    # When inside debug file, get arguments from special saved hash.
-    # This circumvents POST content issues.
-    #
     my %args;
     die "ARGS_METHOD not defined! Did you 'use HTML::Mason::ApacheHandler'?" unless defined($ARGS_METHOD);
-    if ($HTML::Mason::IN_DEBUG_FILE) {
-	%args = %{$r->{args_hash}};
-    } else {
-	%args = $self->$ARGS_METHOD(\$r,$request);
-    }
-    $debug_state->{args_hash} = \%args if $debug_state;
-
+    %args = $self->$ARGS_METHOD(\$r,$request);
+    
     #
     # Deprecated output_mode parameter - just pass to request out_mode.
     #
@@ -724,27 +544,6 @@ sub _mod_perl_args
     }
 
     return %args;
-}
-
-sub simulate_debug_request
-{
-    my ($infoRef) = @_;
-    my %info = %$infoRef;
-    my $r = new HTML::Mason::FakeApache;
-
-    while (my ($key,$value) = each(%{$info{server}})) {
-	$r->{server}->{$key} = $value;
-    }
-    while (my ($key,$value) = each(%{$info{connection}})) {
-	$r->{connection}->{$key} = $value;
-    }
-    delete($info{server});
-    delete($info{connection});
-    while (my ($key,$value) = each(%info)) {
-	$r->{$key} = $value;
-    }
-    
-    return $r;
 }
 
 #

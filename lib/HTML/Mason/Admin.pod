@@ -271,22 +271,6 @@ Correponds to the C<apache_status_title> parameter.
 
 Correponds to the C<auto_send_headers> parameter.
 
-=item * MasonDebugHandlerProc - string
-
-Correponds to the C<debug_handler_proc> parameter.
-
-=item * MasonDebugHandlerScript - string
-
-Correponds to the C<debug_handler_script> parameter.
-
-=item * MasonDebugMode - string
-
-Correponds to the C<debug_mode> parameter.
-
-=item * MasonDebugPerlBinary - string
-
-Correponds to the C<debug_perl_binary> parameter.
-
 =item * MasonErrorMode - string
 
 Correponds to the C<error_mode> parameter.
@@ -707,56 +691,6 @@ calls to return undef without doing anything.
 
 =back
 
-=head2 Debugging
-
-A debug file is a Perl script that creates a fake Apache request
-object (C<$r>) and calls the same PerlHandler that Apache called.
-Debug files are created under C<data_dir/debug/E<lt>usernameE<gt>> for
-authenticated users, otherwise they are placed in
-C<data_dir/debug/anon>.  Several ApacheHandler parameters are required
-to activate and configure debug files:
-
-=over
-
-=item debug_mode
-
-The debug_mode parameter indicates which requests should produce a
-debug file: "all", "none", or "error" (only if a error occurs).
-
-=item debug_perl_binary
-
-The full path to your Perl binary -- e.g. C</usr/bin/perl>. This is
-used in the Unix "shebang" line at the top of each debug file.
-
-=item debug_handler_script
-
-The full path to your C<handler.pl> script. Debug files invoke
-C<handler.pl> just as Apache does as startup, to load needed modules
-and create Mason objects.
-
-=item debug_handler_proc
-
-The name of the request handler defined in C<handler.pl>. This routine
-is called with the saved Apache request object.
-
-=back
-
-Here's a sample C<ApacheHandler> constructor with all debug options:
-
-    my $ah = new HTML::Mason::ApacheHandler (interp=>$interp,
-               debug_mode=>'all',
-               debug_perl_binary=>'/usr/local/bin/perl',
-               debug_handler_script=>'/usr/local/mason/eg/handler.pl',
-               debug_handler_proc=>'HTML::Mason::handler');
-
-When replaying a request through a debug file, the global variable
-C<$HTML::Mason::IN_DEBUG_FILE> will be set to 1.  This is useful if you
-want to omit certain flags (like preloading) in handler.pl when
-running under debug.  For example:
-
-    my %extra_flags = ($HTML::Mason::IN_DEBUG_FILE) ? () : (preloads=>[...]);
-    my $interp = new HTML::Mason::Interp (..., %extra_flags);
-
 =head2 Previewer
 
 The previewer is a web based utility that allows site developers to:
@@ -1163,15 +1097,6 @@ immediate feedback on the error.  The second option is usually desired
 for production so that users are not exposed to messy error messages.
 You control this option by setting ah->error_mode to "html" or "fatal"
 respectively.
-
-=head2 Debug mode
-
-As discussed in the debugging section, you can control when Mason
-creates a debug file.  While creating a debug file is not incredibly
-expensive, it does involves a bit of work and the creation of a new
-file, so you probably want to avoid doing it on every request to a
-frequently visited site.  I recommend setting debug_mode to 'all' in
-development, and 'error' or 'none' in production.
 
 =head2 Reload files
 
