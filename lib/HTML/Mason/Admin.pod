@@ -181,7 +181,7 @@ end of the startup code in C<handler.pl>:
     chown ( [getpwnam('nobody')]->[2], [getgrnam('nobody')]->[2],
             $interp->files_written );
 
-=head2 Persistent user sessions (new in 0.5)
+=head2 Persistent user sessions
 
 With just a few lines in handler.pl you can make a global hash
 (e.g. I<%session>) available to all components containing persistent user
@@ -202,7 +202,7 @@ This code is customizable; you can change the user ID location
 (e.g. URL instead of cookie), the user data storage mechanism
 (e.g. DBI database), and the name of the global hash.
 
-=head2 Using global variables (new in 0.5)
+=head2 Using global variables
 
 Global variables generally make programs harder to read, maintain, and
 debug, and this is no less true for Mason.  Due to the persistent
@@ -462,7 +462,7 @@ setup.
 To test whether the previewer is working: restart your server, go to the
 previewer interface, and click "View".  You should see your site's home page.
 
-=head2 System logs (new in 0.3)
+=head2 System logs
 
 Mason will log various events to a system log file if you so desire.
 This can be useful for performance monitoring and debugging.

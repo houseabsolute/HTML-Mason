@@ -586,7 +586,7 @@ For such variables you can use the $initialized variable trick:
 This section allows you to filter the output of the component through
 an arbitrary block of code. Upon entry to this code, $_ contains the
 component output, and you are expected to modify it in place.  See
-the L<Filtering> section for usage and examples.
+the L<FILTERING> section for usage and examples.
 
 =head2 E<lt>%docE<gt>
 
@@ -1190,7 +1190,7 @@ Apache::DB package may eventually lead us to stop further work on
 FakeApache/debug files.  For now, though, we'll continue to support
 them as best we can.
 
-=head1 USING THE PERL PROFILER (new in 0.4)
+=head1 USING THE PERL PROFILER
 
 Debug files, mentioned in the previous section, can be used in
 conjunction with Devel::DProf to profile a web request.

@@ -1,149 +1,173 @@
-Revision history for Perl extension HTML::Mason.
+VERSION 0.6
 
-All development by Jonathan Swartz, swartz@transbay.net, unless otherwise noted:
-[mschmick] -- Mark Schmick, mark@webz.com
-[modus] -- Patrick Kane, modus@pr.es.to
-See CREDITS file for other contributors
+- New <& &> tag provides a more convenient way to call components
+inside HTML. (mc_comp still works.) L<Components/Components as Subroutines>
+- The "perl_" prefix has been eliminated from section names: now
+simply use <%init>, <%cleanup>, <%args>, etc. (The old names still
+work.) L<Components/Other Perl sections>
+- The utility bin/convert0.6.pl converts existing components to use
+the above new syntax.
+- New <%once> section contains code that will be executed once when a
+component is loaded.  It is useful for defining persistent variables
+and named subroutines.  L<Components/&lt%once&gt;>
+- New <%text> section allows you to turn off Mason processing for a
+particular section of text.  L<Components/&lt%text&gt;>
+- Implemented first installation test suite. [modus]
+- Handler.pl creation wizard [modus]
+- HEAD optimization: we now automatically abort after headers are sent
+on a HEAD request.
+- Allow arguments to be passed via @_ into component (suggested by Ken
+Williams)
+- New mc_comp_source command returns the source filename of this or
+any component.  L<Commands/item_mc_comp_source_compPath_>
+- mc_file now uses current component path by default if no
+static_file_root defined (suggested by John Landahl)
+- Removed link tags in pods documentation due to 5.004 problems
+- Took out previewer stub from Mason.pm to eliminate "subroutine
+redefined" warning
+- Updated makeconfig.pl to prefer GDBM_File, to avoid a bug in
+Berkeley DB 1.x
+- Cleaned and sped up interp hooks facility
+- Stop substituting control characters for section strings in Parser
+[modus]
+- Changed ignore_warnings default to ignore "subroutine redefined"
+warnings to make <%once> more useful
+- Removed defunct Safe code from Parser
 
-** denotes an incompatible change
+VERSION 0.5.1  Thu Jun 10 23:35:13 PDT 1999
+- Removed leftover "use File::Recurse" in ApacheHandler.pm [modus]
+- Added empty test target to FAQ Makefile, required on certain
+architectures [modus]
 
-0.5.1  Thu Jun 10 23:35:13 PDT 1999
-	- removed leftover "use File::Recurse" in ApacheHandler.pm
-          [modus]
-	- added empty test target to FAQ Makefile, required on certain
-          architectures [modus]
+VERSION 0.5   Thu Jun  3 23:45:09 PDT 1999
+- Removed memory leak associated with "return sub { ... }"
+- Overhauled Config.pm, now maintains previous configuration when
+upgrading Mason (suggested by Patrick Kane)
+- Made filename processing compatible with Windows 32 (suggested by
+Rafael Weinstein)
+- Removed requirement of File::Tools/File::Recurse, replaced with
+standard File::Find
+- Switched output to STDOUT from $r->print, to facilitate chaining
+with other mod_perl tools
+- Switched to standard argument processing code, now handles
+multi-part forms [modus]
+- New preprocess and postprocess Parser options allow you to apply
+auomatic modifications to components, before or after they are compiled
+into code. (submitted by Philip Gwyn) L<Parser/item_preprocess>
+- New in_package Parser option allows components to live in any
+package. (submitted by Philip Gwyn) L<Parser/in_package>
+- Added documentation about using globals in components, and
+some new facilities: Parser option 'allow_globals' and Interp
+method 'set_global'. L<Admin/Using global variables>
+- Documented how to save persistent user information with Apache::Session [modus]
+L<Admin/Persistent user sessions>
+- ** Changed behavior of reload_file mode to read directly from object
+files [mschmick]. If you use reload files, you're now responsible for
+creating object files.
+- Reduced number of file stats when loading components [mschmick]
+- New apache_status_title ApacheHandler option makes it possible to
+use Mason's perl-status page with multiple ApacheHandler objects.
+(submitted by Philip Gwyn) L<ApacheHandler/item_apache_status_title>
+- Upgraded FakeApache/debug files to work with mod_perl 1.19
+- New sections in Component Developer's Guide explain how debug files
+work and some caveats about when they don't. L<Admin/Debugging>
+- Mentioned mailing lists, masonhq.com web site, and FAQ in the
+documentation and README
+- Improved documentation on how to integrate images and non-Mason
+hierarchies with Mason. L<Mason/item_Do_you_plan_to_intermix_images_a>
+- Differentiated mc_cache and mc_cache_self in the commands manual
+(suggested by Tom Hukins)
+- Increased discouraging of SDBM, improved warnings when cache store
+fails (suggested by Patrick Kane)
+- Fixed HTML documentation to work with IE (suggested by Fen Lebalme)
+- Fixed infinite loop in ApacheHandler dhandler search (submitted by
+Chuck O'Donnell)
+- Documented Parser method parse(), which allows you to compile
+components outside of a Interp environment. L<Parser/item_parse>
+- New mc_cache actions 'expire' and 'keys' help you peer into data cache
+files and expire selected keys. L<Components/item_By_Explicit_Action>
+- Corrected Parser to properly handle \ in components (submitted by
+Ken Williams)
+- ** Took Preview out of Mason.pm; ApacheHandler used only if mod_perl
+environment. If you use the previewer, you now have to explicitly "use
+HTML::Mason::Preview" in your handler.pl.
+- Improved documentation about argument/GET/POST handling (suggested
+by Ken Williams) L<Components/passing_parameters>
+- Added cache option 'busy_lock', which prevents multiple processes
+from recomputing an expire cache value at the same time.  (suggested
+by Dennis Watson) L<Components/busy_locks>
+- Inserted work-around for Perl 5.005 $r scoping bug (submitted by
+Rafael Weinstein)
+- Fixed "new CGI" example in Components.pod (submitted by Austin Lin)
+- Fixed "return if content-type..." line in handler.pl and Mason.pod
+(submitted by Patrick Kane)
+- Added CREDITS file
 
-0.5    Thu Jun  3 23:45:09 PDT 1999
-	- removed memory leak associated with "return sub { ... }"
-	- overhauled Config.pm, now maintains previous configuration
-          when upgrading Mason (suggested by Patrick Kane)
-	- made filename processing compatible with Windows 32
-          (suggested by Rafael Weinstein)
-	- removed requirement of File::Tools/File::Recurse, replaced
-          with standard File::Find
-	- switched output to STDOUT from $r->print, to facilitate
-          chaining with other mod_perl tools
-	- switched to standard argument processing code, now handles
-          multi-part forms [modus]
-	- added Parser options 'preprocess' and 'postprocess'
-          (submitted by Philip Gwyn)
-	- added Parser option 'in_package' (submitted by Philip Gwyn)
-	- added facilities for using globals in components: Parser
-          option 'allow_globals' and Interp method 'set_global'
-	- documented how to integrate Mason with Apache::Session
-          [modus]
-	- ** changed behavior of reload_file mode to read directly
-          from object files [mschmick]. If you use reload files,
-          you're now responsible for creating object files.
-	- reduced number of file stats when loading components
-          [mschmick]
-        - added ApacheHandler option apache_status_title, cleaned up
-	  status (submitted by Philip Gwyn)
-	- upgraded FakeApache/debug files to work with mod_perl 1.19
-	- added documentation about how debug files work
-	- mentioned mailing lists, masonhq.com web site, and FAQ in
-          the documentation and README
-	- improved documentation on how to integrate images and
-          non-Mason hierarchies with Mason
-	- differentiated mc_cache and mc_cache_self in the commands
-          manual (suggested by Tom Hukins)
-	- increased discouraging of SDBM, improved warnings when cache
-          store fails (suggested by Patrick Kane)
-	- fixed HTML documentation to work with IE (suggested by Fen
-          Lebalme)
-	- fixed infinite loop in ApacheHandler dhandler search
-          (submitted by Chuck O'Donnell)
-	- documented Parser method parse()
-	- added cache actions 'expire' and 'keys'
-	- corrected Parser to properly handle \ in components
-          (submitted by Ken Williams)
-	- ** took Preview out of Mason.pm; ApacheHandler used only if
-          mod_perl environment. If you use the previewer, you now
-          have to explicitly "use HTML::Mason::Preview" in your
-          handler.pl.
-	- improved documentation about argument/GET/POST handling
-          (suggested by Ken Williams)
-	- added cache option 'busy_lock' (suggested by Dennis Watson)
-	- inserted work-around for Perl 5.005 $r scoping bug
-          (submitted by Rafael Weinstein)
-	- fixed "new CGI" example in Components.pod (submitted by
-          Austin Lin)
-	- fixed "return if content-type..." line in handler.pl and
-          Mason.pod (submitted by Patrick Kane)
-	- added CREDITS file
+VERSION 0.4  Wed Jan 06 10:35:00 PST  1999
+- Added support for using Perl profiler in conjunction with debug
+files
+- Fixed bug in previewer HTML trace introduced in 0.3
+- Created Perl status section for Mason
+- Removed most warnings when PerlWarn is on (suggested by Philip Gwyn)
+- Added code_cache_mode parameter to control caching of components in
+memory
+- Fixed mismatch between documentation and code with regards to cache
+store events in system log.  The real event name is CACHE_WRITE.
+- Changed system logging to use canonical server name when recording
+URI
+- Field access methods inside Mason objects are now handled with
+custom subroutines instead of generic AUTOLOAD, improving performance
+- Information for debug file is no longer collected if debug mode is
+"none"
+- Code to decline images and other non-text requests was placed in
+default handler.pl and described in documentation (suggested by
+Patrick Kane)
+- Fixed server header output from debug files (suggested by Ewan
+Edwards)
+- Created a Mason bundle
+- Created a CPAN "alias" from Apache::Mason to HTML::Mason
 
-0.4  Wed Jan 06 10:35:00 PST  1999
-	- added support for using Perl profiler in conjunction with
-	  debug files
-	- fixed bug in previewer HTML trace introduced in 0.3
-	- created Perl status section for Mason
-	- removed most warnings when PerlWarn is on (suggested by
-	  Philip Gwyn)
-	- added code_cache_mode parameter to control caching of
-	  components in memory
-	- fixed mismatch between documentation and code with regards
-	  to cache store events in system log.  The real event name is
-	  CACHE_WRITE.
-	- changed system logging to use canonical server name when
-	  recording URI
-	- field access methods inside Mason objects are now handled
-	  with custom subroutines instead of generic AUTOLOAD,
-	  improving performance
-	- information for debug file is no longer collected if debug
-	  mode is "none"
-	- code to decline images and other non-text requests was
-	  placed in default handler.pl and described in documentation
-	  (suggested by Patrick Kane)
-	- fixed server header output from debug files (suggested by Ewan
-	  Edwards)
-	- created a Mason bundle
-	- created a CPAN "alias" from Apache::Mason to HTML::Mason
+VERSION 0.3   Wed Nov 25 17:00:34 PST 1998
+- Added optional system logging of page requests, cache activity,
+component loading
+- Deny directory requests so that index files will work in mod_perl
+1.16+
+- Removed reliance on several external packages (Date::Manip,
+CGI::Base, URI::Escape). This should reduce the amount of memory taken
+up by Mason processes and make Mason easier to install.
+- ** Due to the removal of Date::Manip, the mc_date command will no
+longer work unless Date::Manip is explicitly used, and the syntax for
+the expire_at cache parameter and the Interp current_time parameter
+have changed.
+- Added parser taint_check flag which allows Mason to work with taint
+checking on (suggested by Randal Schwartz)
+- Added warning messages when returning 404 from ApacheHandler
+- Improved cache locking with the use of separate lock files
+- Makefile.PL checks for required and optional packages
+- Documentation fixes and improvements
+- Removed obsolete and undocumented commands from Commands.pm
+- Failure to write debug file is now a warning rather than fatal error
+- Augmented "no configuration for previewer port" error
+- Fixed $interp->exec to be able to return list
+- Changed parser to remove ctrl-Ms instead of replacing with spaces
+- Always call http_header hook, not just at top level
+- Added global IN_DEBUG_FILE flag
+- Renamed mc_call_stack to mc_comp_stack to match documentation
 
-0.3   Wed Nov 25 17:00:34 PST 1998
-        - added optional system logging of page requests, cache
-          activity, component loading
-	- deny directory requests so that index files will work in
-          mod_perl 1.16+
-	- removed reliance on several external packages (Date::Manip,
-          CGI::Base, URI::Escape). This should reduce the
-          amount of memory taken up by Mason processes and make Mason
-          easier to install.
-	- INCOMPATIBILITY: due to the removal of Date::Manip, the
-          mc_date command will no longer work unless Date::Manip is
-          explicitly used, and the syntax for the expire_at cache
-          parameter and the Interp current_time parameter have changed.
-	- added parser taint_check flag which allows Mason to work
-          with taint checking on (suggested by Randal Schwartz)
-        - added warning messages when returning 404 from ApacheHandler
-	- improved cache locking with the use of separate lock files
-	- Makefile.PL checks for required and optional packages
-	- documentation fixes and improvements
-	- removed obsolete and undocumented commands from Commands.pm
-        - failure to write debug file is now a warning rather than
-          fatal error
-        - augmented "no configuration for previewer port" error
-        - fixed $interp->exec to be able to return list
-        - changed parser to remove ctrl-Ms instead of replacing with
-          spaces
-        - always call http_header hook, not just at top level
-        - added global IN_DEBUG_FILE flag
-        - renamed mc_call_stack to mc_comp_stack to match
-          documentation
+VERSION 0.2   Fri Aug 21 08:54:13 1998
+- Replaced File::lockf module, which could not port to some systems,
+with simple call to flock
+- Corrected email address in README
+- Fixed undeclared variable bug in preview component
+- The previewer did not work in basic versions of Perl 5.004 due to an
+eval scoping bug. A workaround was put in place.
+- Fixed expire_if cache option to pass correct argument to provided
+subroutine
+- Empty argument section no longer parsing incorrectly
+- Took out directory names from manifest which were causing errors on
+install
+- Debug file is no longer prepared when debug_mode is "none"
+- Use Preview.pm in Mason.pm
 
-0.2   Fri Aug 21 08:54:13 1998
-	- replaced File::lockf module, which could not port to some
-          systems, with simple call to flock
-	- corrected email address in README
-	- fixed undeclared variable bug in preview component
-	- the previewer did not work in basic versions of Perl 5.004
-          due to an eval scoping bug. A workaround was put in place.
-	- fixed expire_if cache option to pass correct argument to
-          provided subroutine
-	- empty argument section no longer parsing incorrectly
-	- took out directory names from manifest which were causing
-          errors on install
-	- debug file is no longer prepared when debug_mode is "none"
-	- use Preview.pm in Mason.pm
-
-0.1   Wed Jul 22 20:53:56 1998
-        - original version; created by h2xs 1.18
+VERSION 0.1   Wed Jul 22 20:53:56 1998
+- Original version; created by h2xs 1.18
