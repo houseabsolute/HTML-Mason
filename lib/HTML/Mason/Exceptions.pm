@@ -323,7 +323,7 @@ sub as_html
  s/<\/td>/<\/font><\/td>/g;
 </%filter>
 
-% HTML::Mason::Escapes::basic_html_escape(\\$msg);
+% HTML::Mason::Escapes::basic_html_escape(\$msg);
 % $msg =~ s/\n/<br>/g;
 
 <html><body>
@@ -396,7 +396,7 @@ sub as_html
 <br>
 
 % my $raw = $error->raw_text;
-% HTML::Mason::Escapes::basic_html_escape(\\$raw);
+% HTML::Mason::Escapes::basic_html_escape(\$raw);
 % $raw =~ s/\t//g;
 
 <a name="raw"></a>
