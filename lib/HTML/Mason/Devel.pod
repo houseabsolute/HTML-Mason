@@ -1002,9 +1002,9 @@ In the current implementation, the scope sharing is done with
 closures, so variables will only be shared if they are visible at
 compile-time in the other parts of the component.  In addition, you
 can't rely on the specific destruction time of the shared variables,
-because the may not be destroyed until the first time the C<<
+because they may not be destroyed until the first time the C<<
 <%shared> >> section executes in a future request.  C<< <%init> >>
-offers more a predictable execution and destruction time.
+offers a more predictable execution and destruction time.
 
 Currently any component with a C<< <%shared> >> section incurs an
 extra performance penalty, because Mason must recreate its
