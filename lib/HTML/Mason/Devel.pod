@@ -543,7 +543,7 @@ as the C<comp> method.
 
 Since subrequests inherit their parent request's parameters, output
 from a component called via a subrequest goes to the same desintation
-as output from components caled during the parent request.  Of course,
+as output from components called during the parent request.  Of course,
 you can change this.
 
 Here are some examples:
