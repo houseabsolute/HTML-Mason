@@ -248,7 +248,7 @@ high-level server root such as F</usr> or F</etc>.
 Mason will create the directory on startup, if necessary, and set its
 permissions according to the web server User/Group.
 
-=head2 Configuration Name
+=head2 Configuration Names
 
 When you configure Mason via your F<httpd.conf> file, Mason has to
 create an ApacheHandler object for each request.  However, as a
