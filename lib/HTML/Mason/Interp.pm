@@ -67,6 +67,7 @@ BEGIN
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code_cache
+			 data_dir
 			 preloads
                          source_cache ) ],
 
@@ -74,7 +75,6 @@ use HTML::Mason::MethodMaker
 		      qw( autohandler_name
 		          code_cache_max_size
 			  compiler
-			  data_dir
 			  dhandler_name
 			  static_source
 			  ignore_warnings_expr
