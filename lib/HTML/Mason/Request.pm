@@ -114,7 +114,7 @@ sub exec {
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
     };
 
-    my ($result, @result);
+    my @result;
     eval {
 	# Check if reload file has changed.
 	$interp->check_reload_file if ($interp->use_reload_file);
@@ -176,7 +176,7 @@ sub exec {
 	    if (wantarray) {
 		@result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
 	    } else {
-		$result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
+		$result[0] = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
 	    }
 	    untie *STDOUT;
 
@@ -224,7 +224,7 @@ sub exec {
     $interp->purge_code_cache;
 
     # Return aborted value or result.
-    return ($self->aborted) ? $self->aborted_value : (wantarray) ? @result : $result;
+    return ($self->aborted) ? $self->aborted_value : (wantarray) ? @result : $result[0];
 }
 
 #
@@ -610,19 +610,20 @@ sub comp {
     # Call start_comp hooks.
     $self->call_hooks('start_comp');
 
-    #
-    # Finally, call component subroutine.
-    #
-    my ($result, @result);
+    my @result;
 
     # The eval block creates a new context so we need to get this
     # here.
     my $wantarray = wantarray;
+
+    #
+    # Finally, call component subroutine.
+    #
     eval {
 	if ($wantarray) {
 	    @result = $comp->run(@args);
 	} elsif (defined wantarray) {
-	    $result = $comp->run(@args);
+	    $result[0] = $comp->run(@args);
 	} else {
 	    $comp->run(@args);
 	}
