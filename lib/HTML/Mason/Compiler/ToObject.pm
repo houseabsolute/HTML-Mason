@@ -284,46 +284,66 @@ sub _finish_filter
 	   );
 }
 
+my %coercion_funcs = ( '@' => 'HTML::Mason::Tools::coerce_to_array',
+		       '%' => 'HTML::Mason::Tools::coerce_to_hash',
+		     );
 sub _arg_declarations
 {
     my $self = shift;
 
-    my @args;
+    my @decl;
+    my @assign;
+    my @required;
+
     foreach ( @{ $self->{current_comp}{args} } )
     {
-	my $default_val = ( defined $_->{default} ?
-			    $_->{default} :
-			    qq|HTML::Mason::Exception::Params->throw( error => "no value sent for required parameter '$_->{name}'" )|,
-			  );
-	# allow for comments after default declaration
-	$default_val .= "\n" if defined $_->{default} && $_->{default} =~ /\#/;
+	push @decl, "$_->{type}$_->{name}";
 
-	if ( $_->{type} eq '$' )
+	my $coerce;
+	if ( $coercion_funcs{ $_->{type} } )
 	{
-	    push @args,
-		( "my $_->{type}$_->{name} = !exists \$ARGS{'$_->{name}'} ? $default_val : \$ARGS{'$_->{name}'};" );
+	    $coerce = $coercion_funcs{ $_->{type} } . "(\$ARGS{'$_->{name}'})";
 	}
-	# Array
-	elsif ( $_->{type} eq '@' )
+	else
 	{
-	    push @args, ( "my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
-			  "UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'}}  : ( \$ARGS{'$_->{name}'} ) );",
-			);
-	}
-	# Hash
-	elsif ( $_->{type} eq "\%" )
-	{
-	    push @args, ( "my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
-			  "UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'} } : ",
-			  "UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'HASH' ) ? \%{ \$ARGS{'$_->{name}'} } : ",
-			  qq|HTML::Mason::Exception::Params->throw( error => "single value sent for hash parameter '$_->{type}$_->{name}'" ) );|,
-			);
+	    $coerce = "\$ARGS{'$_->{name}'}";
 	}
 
-	push @args, "\n";
+	if ( defined $_->{default} )
+	{
+	    my $default_val = $_->{default};
+	    # allow for comments after default declaration
+	    $default_val .= "\n" if defined $_->{default} && $_->{default} =~ /\#/;
+
+	    push @assign,
+		"$_->{type}$_->{name} = exists \$ARGS{'$_->{name}'} ? $coerce : $default_val;\n";
+	}
+	else
+	{
+	    push @required, $_->{name};
+
+	    push @assign,
+		"$_->{type}$_->{name} = $coerce;\n";
+	}
     }
 
-    return @args;
+    # just to be sure
+    local $" = ' ';
+    my @req_check = <<"EOF";
+
+foreach my \$arg ( qw( @required ) )
+{
+    HTML::Mason::Exception::Params->throw
+        ( error => "no value sent for required parameter '\$arg'" )
+        unless exists \$ARGS{\$arg};
+}
+EOF
+
+    my $decl = 'my ( ';
+    $decl .= join ', ', @decl;
+    $decl .= " );\n";
+
+    return @req_check, $decl, @assign;
 }
 
 sub _flags
