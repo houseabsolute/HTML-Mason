@@ -1,0 +1,12 @@
+Caller is /mc_various.
+The full component stack is /support/mc_various_test,/mc_various.
+
+Component mc_various_test exists and has content.
+Component /perl exists and has content.
+Component foobar does not exist.
+Component /support does not exist.
+
+
+Time difference is approximately 2 seconds.
+</%perl>
+

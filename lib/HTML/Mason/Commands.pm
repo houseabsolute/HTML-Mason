@@ -22,7 +22,8 @@ require Exporter;
      mc_auto_next
      mc_cache
      mc_cache_self
-     mc_caller 
+     mc_caller
+     mc_call_self
      mc_comp
      mc_comp_exists
      mc_comp_source
@@ -31,7 +32,6 @@ require Exporter;
      mc_dhandler_arg
      mc_file 
      mc_file_root 
-     mc_filter_self
      mc_out 
      mc_time
      );
