@@ -115,13 +115,24 @@ EOF
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/recursive_caller_1',
-			 component => '<%perl>$m->comp("recursive_caller_2")</%perl>',
+			 component => <<'EOF',
+<%perl>
+$m->comp("recursive_caller_2", %ARGS);
+return;
+</%perl>
+EOF
 		       );
 
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/recursive_caller_2',
-			 component => '<%perl>$m->comp("recursive_caller_1") if $m->depth < 16;</%perl>',
+			 component => <<'EOF',
+<%perl>
+my $anon_comp = $ARGS{anon_comp};
+$m->comp($anon_comp, %ARGS) if $m->depth < 16;
+return;
+</%perl>
+EOF
 		       );
 
 #------------------------------------------------------------
@@ -203,10 +214,17 @@ EOF
 		      component => <<'EOF',
 <%perl>
 HTML::Mason::Component->_clear_destroy_count;
-$m->subexec('support/recursive_caller_1');
+my $anon_comp_text = q|
+<%init>
+$m->comp("/18-leak.t/support/recursive_caller_1", %ARGS);
+return;
+</%init>
+|;
+my $anon_comp = $m->interp->make_component( comp_source => $anon_comp_text );
+$m->subexec('support/recursive_caller_1', anon_comp=>$anon_comp);
 $m->interp->flush_code_cache;
 $m->print("destroy_count = " . HTML::Mason::Component->_destroy_count . "\n");
-$m->subexec('support/recursive_caller_1');
+$m->subexec('support/recursive_caller_1', anon_comp=>$anon_comp);
 $m->interp->flush_code_cache;
 $m->print("destroy_count = " . HTML::Mason::Component->_destroy_count . "\n");
 </%perl>

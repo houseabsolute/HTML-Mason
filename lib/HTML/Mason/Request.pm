@@ -947,7 +947,7 @@ sub fetch_comp
     $current_comp ||= $self->{top_stack}->[STACK_COMP];
     if ($self->{use_internal_component_caches}) {
 	my $fetch_comp_cache = $current_comp->{fetch_comp_cache};
-	unless (exists($fetch_comp_cache->{$path})) {
+	unless (defined($fetch_comp_cache->{$path})) {
 
 	    # Cache the component objects associated with
 	    # uncanonicalized paths like ../foo/bar.html.  SELF and
@@ -1125,14 +1125,16 @@ sub comp {
 
     # Get component path or object. If a path, load into object.
     #
-    my $comp = shift;
     my $path;
+    my $comp = shift;
     if (!ref($comp)) {
+	die "comp called without component - must pass a path or component object"
+	    unless defined($comp);
 	$path = $comp;
 	$comp = $self->fetch_comp($path)
 	    or error "could not find component for path '$path'\n";
     }
-
+    
     # Increment depth and check for maximum recursion. Depth starts at 1.
     #
     my $depth = defined($top_stack) ? $top_stack->[STACK_DEPTH] + 1 : 1;
