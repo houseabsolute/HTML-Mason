@@ -723,8 +723,10 @@ sub set_escape
 
     while ( my ($name, $sub) = each %p )
     {
+        my $flag_regex = $self->compiler->lexer->escape_flag_regex;
+
         param_error "Invalid escape name ($name)"
-            if $name !~ /^[\w-]+$/ || $name =~ /^n$/;
+            if $name !~ /^$flag_regex$/ || $name =~ /^n$/;
 
         my $coderef;
         if ( ref $sub )
@@ -976,7 +978,8 @@ L<subrequests|HTML::Mason::Devel/Subrequests> instead.
 
 This method is called to add an escape flag to the list of known
 escapes for the interpreter.  The flag may only consist of the
-characters matching C<\w> and the dash (-).
+characters matching C<\w> and the dash (-).  It must start with an
+alpha character or an underscore (_).
 
 The right hand side may be one of several things.  It can be a
 subroutine reference.  It can also be a string match C</^\w+$/>, in
