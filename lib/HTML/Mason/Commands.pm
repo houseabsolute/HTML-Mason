@@ -28,6 +28,7 @@ require Exporter;
 	mc_date 
 	mc_file 
 	mc_file_root 
+	mc_filter_self
 	mc_out 
 	mc_time
 );
@@ -131,6 +132,36 @@ sub mc_caller ()
     } else {
 	return $INTERP->{stack}->[1]->{truePath};
     }
+}
+
+sub mc_call_self
+{
+    die "mc_call_self $no_interp_error" if !$INTERP;
+    my ($cref,$rref) = @_;
+    return 0 if $INTERP->locals->{inCallSelfFlag};
+    
+    #
+    # Reinvoke the component with inCallSelfFlag=1. Collect
+    # output and return value in references provided.
+    #
+    my $content;
+    my $lref = $INTERP->{stack}->[0];
+    my %saveLocals = %$lref;
+    $lref->{sink} = sub { $content .= $_[0] };
+    $lref->{inCallSelfFlag} = 1;
+    my $sub = $lref->{callFunc};
+    my %args = %{$lref->{callArgs}};
+    if (ref($rref) eq 'SCALAR') {
+	$$rref = &$sub(%args);
+    } elsif (ref($rref) eq 'ARRAY') {
+	@$rref = &$sub(%args);
+    } else {
+	&$sub(%args);
+    }
+    $INTERP->{stack}->[0] = {%saveLocals};
+    $$cref = $content if ref($cref) eq 'SCALAR';
+
+    return 1;
 }
 
 sub mc_call_stack ()

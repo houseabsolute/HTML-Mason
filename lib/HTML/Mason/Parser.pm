@@ -105,11 +105,11 @@ sub parse
     # names to be prefixed with perl_.  Record all other text ranges
     # in @textsegs.
     #
-    my %sectiontext = (map(($_,''),qw(args cleanup doc init once)));
+    my %sectiontext = (map(($_,''),qw(args cleanup doc filter init once)));
     my $curpos = 0;
     my @textsegs;
     my $scriptlength = length($script);
-    while ($script =~ /(<%(?:perl_)?(args|cleanup|doc|init|once|text)>)/ig) {
+    while ($script =~ /(<%(?:perl_)?(args|cleanup|doc|filter|init|once|text)>)/ig) {
 	my ($begintag,$beginfield) = ($1,lc($2));
 	my $beginmark = pos($script)-length($begintag);
 	my $begintail = pos($script);
@@ -394,6 +394,15 @@ sub parse
     #
     $body .= '$INTERP->debug_hook($INTERP->locals->{truePath}) if (%DB::);'."\n";
     
+    #
+    # Insert <%filter> section.
+    #
+    if ($sectiontext{filter}) {
+	my $ftext = $sectiontext{filter};
+	for ($ftext) { s/^\s+//g; s/\s+$//g }
+	$body .= sprintf('{ my ($_c,$_r); if (mc_call_self(\$_c,\$_r)) { for ($_c) { %s } mc_out($_c); return $_r }};',$ftext);
+    }
+
     #
     # Insert <%init> section.
     #

@@ -71,7 +71,7 @@ parameter, the time when the cache value was last written.
 =item mc_cache_self (... same as mc_cache options...)
 
 Uses mc_cache to cache the entire output of the current component.  It is typically
-used right at the top of a C<E<lt>%init%E<gt>> section:
+used right at the top of an C<E<lt>%init%E<gt>> section:
 
     <%init>
         return if mc_cache_self(expire_in=>'3 hours'[, key=>'fookey']);
@@ -105,6 +105,22 @@ immediately.
 Returns the full path of the component that called this component, or
 undef if this is the top-level component. This is the second element
 of mc_comp_stack.
+
+=item mc_call_self ([output_ref], [retval_ref])
+
+This command allows you to filter both the output and the return value
+of the current component. It is typically called at the top of an
+<%init> section:
+
+    <%init>
+        if mc_call_self(my \$output, my \$retval) {
+            ... < perform filter and return > ...
+        }
+        ... <rest of init> ...
+    </%init>
+
+See the L<Components/filtering> section of the I<Component Developer's Guide>
+for usage and examples.
 
 =item mc_comp (compPath, option=>value, ...[, STORE=>ref])
 
