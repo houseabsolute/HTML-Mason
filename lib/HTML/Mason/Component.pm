@@ -14,17 +14,19 @@ Params::Validate::validation_options( on_fail => sub { param_error join '', @_  
 use HTML::Mason::Exceptions( abbr => ['error'] );
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code
-			 load_time
-			 declared_args
 			 comp_id
+			 compiler_id
+			 declared_args
 			 inherit_path
 			 inherit_start_path
                          interp
+			 load_time
 			 object_size
-			 compiler_id ) ],
+                       ) ],
 
       read_write => [ [ dynamic_subs_request => { isa => 'HTML::Mason::Request' } ],
 		      [ mfu_count => { type => SCALAR } ],
+                      [ filter => { type => CODEREF } ],
 		    ]
       );
 
@@ -114,7 +116,7 @@ sub run {
 
     $self->{mfu_count}++;
 
-    return $self->{code}->(@_) unless exists $self->{filter};
+    return $self->{code}->(@_) unless $self->{has_filter};
 
     my $req = HTML::Mason::Request->instance;
 
@@ -127,9 +129,9 @@ sub run {
     # Note: this must always preserve calling wantarray() context
     eval {
         if ($wantarray) {
-            @result = $self->{code}->(@_);;
+            @result = $self->{code}->(@_);
         } elsif (defined $wantarray) {
-            $result[0] = $self->{code}->(@_);;
+            $result[0] = $self->{code}->(@_);
         } else {
             $self->{code}->(@_);
         }
@@ -141,15 +143,6 @@ sub run {
     die $@ if $@;
 
     return $wantarray ? @result : defined $wantarray ? $result[0] : undef;
-}
-
-sub filter
-{
-    my $self = shift;
-
-    return unless exists $self->{filter};
-
-    return ${ $self->{filter} };
 }
 
 sub dynamic_subs_init {
