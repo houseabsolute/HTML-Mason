@@ -7,7 +7,7 @@ HTML::Mason::Subclassing - Documentation on Subclassing Internal Mason classes
 =head1 DESCRIPTION
 
 This is the deep voodoo guide, for folks who want to create their own
-custom subclasses for parts of Mason, such as the Request or Buffer
+custom subclasses for parts of Mason, such as the Request or Interp
 objects.
 
 =head1 Class::Container
@@ -66,12 +66,6 @@ The compiler takes the parsed chunks from the lexer and gives them
 meaning.  The default compiler, C<HTML::Mason::Compiler::ToObject>,
 turns a Mason component into a Mason "object file", which contains
 actual Perl code.
-
-=item * HTML::Mason::Buffer
-
-Buffers are created and manipulated (mostly) by the request class and
-are responsible for handling output.  Buffers apply filters to output
-and buffer it (surprise) as well.
 
 =item * HTML::Mason::ApacheHandler
 
@@ -240,21 +234,6 @@ If you want to drastically change the behavior, you can subclass
 C<HTML::Mason::Compiler> instead.  An example of this would be
 creating a compiler that generates C<EmbPerl> or C<Apache::ASP> as
 output.
-
-=head1 Buffer
-
-The public API documented in
-L<C<HTML::Mason::Buffer>|HTML::Mason::Buffer> is the complete Buffer
-class API, except for one method, C<_initialize>, which is called as
-part of the buffer's construction, from the C<new> method.
-
-Those interested in subclassing this class should also know that the
-constructor may take an additional parameter, C<parent>, which should
-be a Buffer object.  This parameter is automatically supplied by the
-C<new_child> method.
-
-Any subclass of this class you create should declare itself to be a
-subclass of the C<HTML::Mason::Buffer> class.
 
 =head1 ApacheHandler
 
