@@ -88,7 +88,7 @@ sub assign_runtime_properties {
     # Assign inheritance properties
     if (exists($self->{flags}->{inherit})) {
 	if (defined($self->{flags}->{inherit})) {
-	    $self->{inherit_path} = $interp->process_comp_path($self->{flags}->{inherit},$self->dir_path);
+	    $self->{inherit_path} = $interp->absolute_comp_path($self->{flags}->{inherit},$self->dir_path);
 	}
     } elsif (defined($interp->autohandler_name)) {
 	if ($interp->allow_recursive_autohandlers) {

@@ -221,7 +221,7 @@ sub check_reload_file {
 # Return the absolute version of a component path. Handles . and ..
 # Second argument is directory path to resolve relative paths against.
 #
-sub process_comp_path
+sub absolute_comp_path
 {
     my ($self,$comp_path,$dir_path) = @_;
 
@@ -1155,9 +1155,9 @@ Example of usage:
     $m->comp($anon_comp);
     $m->comp('/hello/world.ma');
 
-=for html <a name="item_process_comp_path">
+=for html <a name="item_absolute_comp_path">
 
-=item process_comp_path (comp_path)
+=item absolute_comp_path (comp_path)
 
 Given a I<comp_path>, returns the corresponding absolute component path.
 
