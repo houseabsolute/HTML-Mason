@@ -224,6 +224,16 @@ sub exec {
 	    $self->{wrapper_index} = {map((($wrapper_chain[$_]->path || '') => $_),(0..$#wrapper_chain))};
 	}
 
+        #
+        # $m is a dynamically scoped global containing this
+        # request. This needs to be defined in the HTML::Mason::Commands
+        # package, as well as the component package if that is different.
+        #
+        local $HTML::Mason::Commands::m = $self;
+        my $interp = $self->interp;
+        $interp->set_global('m'=>$self)
+            if ($interp->compiler->in_package ne 'HTML::Mason::Commands');
+
 	{
 	    local *SELECTED;
 	    tie *SELECTED, 'Tie::Handle::Mason', $self;
@@ -668,16 +678,6 @@ sub comp {
     my $depth = $self->depth;
     error "$depth levels deep in component stack (infinite recursive call?)\n"
         if ($depth >= $self->max_recurse);
-
-    #
-    # $m is a dynamically scoped global containing this
-    # request. This needs to be defined in the HTML::Mason::Commands
-    # package, as well as the component package if that is different.
-    #
-    local $HTML::Mason::Commands::m = $self;
-    my $interp = $self->interp;
-    $interp->set_global('m'=>$self)
-        if ($interp->compiler->in_package ne 'HTML::Mason::Commands');
 
     #
     # Determine base_comp (base component for method and attribute inheritance)
