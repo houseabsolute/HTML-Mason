@@ -46,7 +46,6 @@ Declared args:
 <% $_ %><% (defined($decl{$_}->{default})) ? "=>".$decl{$_}->{default} : "" %>
 % }
 
-This is <% $comp->first_time ? '' : 'not ' %>my first time.
 I am <% $comp->is_subcomp ? '' : 'not ' %>a subcomponent.
 I am <% $comp->is_file_based ? '' : 'not ' %>file-based.
 % if (defined($comp->name)) {
@@ -58,7 +57,6 @@ My parent component is <% $comp->parent_comp->title %>.
 % if (defined($comp->dir_path)) {
 My directory is <% $comp->dir_path %>.
 % }
-I have run <% $comp->run_count %> time(s).
 % my @subkeys = sort keys(%{$comp->subcomps});
 I have <% scalar(@subkeys) %> subcomponent(s).
 % if (@subkeys) {
