@@ -108,7 +108,7 @@ sub glob_path {
     return keys(%path_hash);
 }
 
-sub default_root_path {
+sub default_path_prefix {
     my ($self) = shift;
     if ($self->{comp_root}) {
 	return undef;
