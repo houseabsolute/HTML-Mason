@@ -296,7 +296,7 @@ sub as_html
  s/<\/td>/<\/font><\/td>/g;
 </%filter>
 
-% $msg = HTML::Mason::Escapes::basic_html_escape(\$msg);
+% HTML::Mason::Escapes::basic_html_escape(\\$msg);
 % $msg =~ s/\n/<br>/;
 
 <html><body>
