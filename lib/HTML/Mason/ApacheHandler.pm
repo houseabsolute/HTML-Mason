@@ -120,36 +120,44 @@ sub new
     return $self;
 }
 
+my %status_sub_defined = ();
+
 sub _initialize {
     my ($self) = @_;
 
     my $interp = $self->interp;
 
-    # Add an HTML::Mason menu item to the /perl-status page. Things we report:
-    # -- Interp properties
-    # -- loaded (cached) components
-    my $name = $self->{apache_status_title};
-    my $title;
-    if ($name eq 'mason') {
-        $title='HTML::Mason status';    #item for HTML::Mason module
-    } else {
-        $title=$name;
-        $name=~s/\W/_/g;
+    if ($Apache::Status::VERSION) {
+	# Add an HTML::Mason menu item to the /perl-status page. Things we report:
+	# -- Interp properties
+	# -- loaded (cached) components
+	my $name = $self->apache_status_title;
+	unless ($status_sub_defined{$name}) {
+
+	    my $title;
+	    if ($name eq 'mason') {
+		$title='HTML::Mason status';
+	    } else {
+		$title=$name;
+		$name=~s/\W/_/g;
+	    }
+
+	    my $statsub = sub {
+		my ($r,$q) = @_; # request and CGI objects
+		return [] if !defined($r);
+		my @strings = ();
+
+		push (@strings,
+		      qq(<FONT size="+2"><B>$self->apache_status_title</B></FONT><BR><BR>),
+		      $self->interp_status);
+
+		return \@strings;     # return an array ref
+	    };
+	    Apache::Status->menu_item ($name,$title,$statsub);
+	    $status_sub_defined{$name}++;
+	}
     }
 
-    my $statsub = sub {
-	my($r,$q) = @_; #request and CGI objects
-	return [] if !defined($r);
-	my(@strings);
-
-	push (@strings,
-	      qq(<FONT size="+2"><B>$self->{apache_status}</B></FONT><BR><BR>),
-	      $self->interp_status);
-
-	return \@strings;     #return an array ref
-    };
-    Apache::Status->menu_item ($name,$title,$statsub) if $Apache::Status::VERSION;
-    
     #
     # Create data subdirectories if necessary. mkpath will die on error.
     #
