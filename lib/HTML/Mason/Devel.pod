@@ -1396,7 +1396,7 @@ normally and its output and return value cached.
 It is typically used right at the top of an C<< <%init> >> section:
 
     <%init>
-    return if $m->cache_self(expire_in => '3 hours' [, key => 'fookey' ]);
+    return if $m->cache_self(expires_in => '3 hours' [, key => 'fookey' ]);
      ... <rest of init> ...
     </%init>
 
