@@ -1207,25 +1207,75 @@ Mason has facilities for I<escaping> the output from C<< <% %> >>
 tags, on either a site-wide or a per-expression basis.
 
 Any C<< <% %> >> expression may be terminated by a '|' and one or more
-single-letter escape flags (plus arbitrary whitespace):
+escape flags (plus arbitrary whitespace), separated by commas:
 
     <% $file_data |h %>
 
-The current valid flags are
+The current valid flags are:
 
-    h - escape for HTML ('<' => '&lt;', etc.)
-    u - escape for URL query string (':' => '%3A', etc.) - all but [a-zA-Z0-9_.-]
-    n - turn off default escape flags
+=over
+
+=item * h
+
+Escape HTML ('<' => '&lt;', etc.) using C<HTML::Entities::encode()>.
+The C<HTML::Entities> module assumes that text is in the ISO-8859-1
+character set with all version of Perl before 5.8.0, and Unicode for
+version 5.8.0 and greater.
+
+=item * u
+
+Escape a URL query string (':' => '%3A', etc.) - all but
+[a-zA-Z0-9_.-]
+
+=item * n
+
+This is a special flag indicating that the default escape flags should
+I<not> be used for this substitution.
+
+=back
 
 The administrator may specify a set of default escape flags via the
 P<default_escape_flags> parameter. For example, if the administrator
-sets P<default_escape_flags> to 'h', then all <% %> expressions will
-automatically be HTML-escaped.  In this case you would use the C<n>
-flag to turn off HTML-escaping for a specific expression:
+sets P<default_escape_flags> to C<['h']>, then all <% %> expressions
+will automatically be HTML-escaped.  In this case you would use the
+C<n> flag to turn off HTML-escaping for a specific expression:
 
     <% $html_block |n %>
 
-Future Mason versions will allow user-defined and multi-letter escape flags.
+Multiple escapes can be specified as a list:
+
+    <% $uri | u, n %>
+
+=head3 User-defined Escapes
+
+Besides the default escapes mentioned above, it is possible for the
+user to define their own escapes or to override the built-in 'h' and
+'n' escapes.
+
+This is done via the L<Interp object's add_escape()
+method|HTML::Mason::Interp/item_add_escape>.  Escape names may be any
+number of characters as long as it matches the regex C</^[\w-]$/>.
+The one exception is that you cannot override the 'n' flag.
+
+Each escape flag is associated with a subroutine reference.  The
+subroutine should expect to receive a scalar reference, which should
+be manipulated in place.  Any return value from this subroutine is
+ignored.
+
+Escapes can be defined at any time but using an escape that is not
+defined will cause an error when executing that component.
+
+One possible use for this feature is to override the built-in HTML
+escaping's assumption of the ISO-8859-1 character set.  You could
+override the 'h' flag in a top-level autohandler or a
+ADIMN<handler.pl|"CONFIGURING VIA HANDLER SCRIPT"> script like this:
+
+  $interp->set_escape( h => \&escape_ISO_8859_2 );
+
+And of course this can be used for all sorts of other things, like a
+naughty words filter for the easily offended:
+
+  $interp->set_escape( 'no-naughty' => \&remove_naughty_words );
 
 =head2 Backslash at end of line
 
@@ -1333,10 +1383,9 @@ using the I<expire_if> option:
         expire_if=>sub { $_[0]->get_created_at < (stat($file))[9] });
 
 I<expire_if> takes an anonymous subroutine, which is called with the
-L<cache object|HTML::Mason::Devel/Cache Object> as its only
-parameter. If the subroutine returns a true value, the item is
-expired. In the example above, we expire the item whenever a certain
-file changes.
+L<cache object|"Cache Object"> as its only parameter. If the
+subroutine returns a true value, the item is expired. In the example
+above, we expire the item whenever a certain file changes.
 
 Finally, you can expire a cache item from an external script; see
 L<Accessing a Cache Externally|"Accessing a Cache Externally"> below.
