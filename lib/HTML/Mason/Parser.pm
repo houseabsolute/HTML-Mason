@@ -17,7 +17,6 @@ use File::Find;
 use HTML::Mason::Component;
 use HTML::Mason::Request;
 use HTML::Mason::Tools qw(read_file);
-use vars qw($AUTOLOAD);
 
 my %fields =
     (preamble => '',
@@ -31,7 +30,7 @@ my %fields =
      in_package => 'HTML::Mason::Commands',
      allow_globals => []
      );
-# Minor speedup: create anon. subs to reduce AUTOLOAD calls
+# Create accessor routines
 foreach my $f (keys %fields) {
     next if $f =~ /^allow_globals$/;  # don't overwrite real sub.
     no strict 'refs';
@@ -774,16 +773,6 @@ sub make_dirs
     }
 }
 
-sub AUTOLOAD {
-    my $self = shift;
-    my $type = ref($self) or die "autoload error: bad function $AUTOLOAD";
-
-    my $name = $AUTOLOAD;
-    $name =~ s/.*://;   # strip fully-qualified portion
-    return if $name eq 'DESTROY';
-
-    die "No such function `$name' in class $type";
-}
 1;
 
 __END__

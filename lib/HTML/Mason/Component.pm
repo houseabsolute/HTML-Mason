@@ -11,7 +11,6 @@ require Exporter;
 
 use strict;
 use HTML::Mason::Tools qw(read_file);
-use vars qw($AUTOLOAD);
 
 my %fields =
     (
@@ -37,7 +36,7 @@ my %fields =
      source_ref_start => undef,
      );
 
-# Minor speedup: create anon. subs to reduce AUTOLOAD calls
+# Create accessor routines
 foreach my $f (keys %fields) {
     no strict 'refs';
     next if ($f =~ /^subcomps$/);

@@ -10,7 +10,7 @@ require Exporter;
 @EXPORT_OK = qw();
 
 use strict;
-use vars qw($AUTOLOAD);
+use vars qw($REQ $REQ_DEPTH %REQ_DEPTHS);
 my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P,$HTML::Mason::Commands::REQ);
 
 my %fields =
@@ -62,18 +62,33 @@ sub callers
 {
     my ($self,$index) = @_;
     if (defined($index)) {
-	return $self->{stack}->[$index]->{comp};
+	return $self->stack->[$index]->{comp};
     } else {
-	return map($_->{comp},@{$self->{stack}});
+	return map($_->{comp},@{$self->stack});
     }
 }
 
 #
-# Return the current number of stack levels. 1 means top level.
+# Return the current number of stack levels. 1 means top level, 0
+# means that no component has been called yet.
 #
 sub depth
 {
-    return scalar(@{$_[0]->{stack}});
+    my ($self) = @_;
+    return ($self eq $REQ) ? $REQ_DEPTH : ($REQ_DEPTHS{$self} || 0);
+}
+
+# Return the current stack as a list ref.
+sub stack
+{
+    my ($self) = @_;
+    my $stack = $self->{stack};
+    if ($self eq $REQ and scalar(@$stack) == $REQ_DEPTH) {
+	return $stack;
+    } else {
+	my $depth = $self->depth;
+	return [(@$stack)[0..$depth]];
+    }
 }
 
 #
@@ -85,11 +100,27 @@ sub parser
 }
 
 #
-# Execute the next component in this request.
+# Execute the next component in this request. call() sets up proper
+# dynamically scoped variables and invokes call1() to do the work.
 #
 sub call {
+    my $req = shift(@_);
+
+    if (defined($REQ) and $req eq $REQ) {
+	local $REQ_DEPTH = $REQ_DEPTH + 1;
+	$req->call1(@_);
+    } else {
+	local %REQ_DEPTHS = %REQ_DEPTHS;
+	$REQ_DEPTHS{$REQ} = $REQ_DEPTH if defined($REQ);
+	local $REQ = $req;
+	local $REQ_DEPTH = $REQ_DEPTHS{$REQ} || 1;
+	$req->call1(@_);
+    }
+}
+sub call1 {
     my ($req, $comp, %args) = @_;
     my $interp = $req->{interp};
+    my $depth = $req->depth;
 
     #
     # $comp can be an absolute path or component object.  If a path,
@@ -109,12 +140,6 @@ sub call {
     $interp->set_global(REQ=>$req) if ($interp->parser->{in_package} ne 'HTML::Mason::Commands');
 
     #
-    # Check for maximum recursion.
-    #
-    my $depth = scalar(@{$req->{stack}});
-    die "$depth levels deep in component stack (infinite recursive call?)\n" if ($depth >= $interp->{max_recurse});
-
-    #
     # Determine sink (where output is going).
     #
     my $sink;
@@ -127,10 +152,16 @@ sub call {
     } elsif (!$depth) {
 	$sink = $interp->{out_method};
     } else {
-	$sink = $req->{stack}->[0]->{sink};
+	$sink = $req->stack->[0]->{sink};
     }
 
+    #
+    # Check for maximum recursion.
+    #
+    die "$depth levels deep in component stack (infinite recursive call?)\n" if ($depth >= $interp->{max_recurse});
+
     # Push new frame onto stack.
+    $#(@{$req->{stack}}) = $depth-1;
     unshift(@{$req->{stack}},{comp=>$comp,args=>{%args},sink=>$sink});
 
     # Call start_comp hooks.
@@ -225,9 +256,9 @@ sub debug_hook
 #
 # Accessor methods for top of stack elements.
 #
-sub comp { return $_[0]->{stack}->[0]->{comp} }
-sub args { return $_[0]->{stack}->[0]->{args} }
-sub sink { return $_[0]->{stack}->[0]->{sink} }
+sub comp { return $_[0]->stack->[0]->{comp} }
+sub args { return $_[0]->stack->[0]->{args} }
+sub sink { return $_[0]->stack->[0]->{sink} }
 
 #
 # Abort out of current execution.

@@ -82,7 +82,7 @@ my %fields =
      debug_handler_proc => undef,
      debug_dir_config_keys => [],
      );
-# Minor speedup: create anon. subs to reduce AUTOLOAD calls
+# Create accessor routines
 foreach my $f (keys %fields) {
     no strict 'refs';
     *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
