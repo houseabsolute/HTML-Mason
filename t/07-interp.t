@@ -259,7 +259,7 @@ EOF
     $group->add_test( name => 'max_recurse_1',
 		      description => 'Test that recursion 8 levels deep is allowed',
 		      component => <<'EOF',
-% eval { mc_comp('support/recurse_test', max=>8) };
+% eval { $m->comp('support/recurse_test', max=>8) };
 EOF
 		      expect => <<'EOF',
 Entering 0<p>
@@ -290,7 +290,7 @@ EOF
 		      description => 'Test that recursion is stopped after 32 levels',
 		      interp_params => { out_mode => 'stream' },
 		      component => <<'EOF',
-% eval { mc_comp('support/recurse_test', max=>48) };
+% eval { $m->comp('support/recurse_test', max=>48) };
 <& /shared/check_error, error=>$@ &>
 EOF
 		      expect => <<'EOF',
@@ -337,7 +337,7 @@ EOF
 		      description => 'Test interp max_recurse param',
 		      interp_params => { max_recurse => 50 },
 		      component => <<'EOF',
-% eval { mc_comp('support/recurse_test', max=>48) };
+% eval { $m->comp('support/recurse_test', max=>48) };
 <& /shared/check_error, error=>$@ &>
 EOF
 		      expect => <<'EOF',
@@ -450,7 +450,9 @@ EOF
 			 component => <<'EOF',
 Code cache contains these plain components:
 % my %c = %{$m->interp->{code_cache}};
-<% join("\n",sort(grep(/plain/,keys(%c)))) %>
+% foreach ( sort grep { /plain / } keys %c ) {
+<% $_ %>
+% }
 EOF
 		       );
 
@@ -802,17 +804,17 @@ Code cache contains:
 EOF
 		    );
 
+#------------------------------------------------------------
+
     $interp = HTML::Mason::Interp->new( data_dir => $group->data_dir,
 					comp_root => $group->comp_root,
 					 );
-    $interp->parser->allow_globals( qw($global) );
+    $interp->compiler->set_allowed_globals( qw($global) );
     $interp->set_global( global => 'parsimmon' );
 
 
-#------------------------------------------------------------
-
     $group->add_test( name => 'globals',
-		      description => 'Test setting a global in interp & parser objects',
+		      description => 'Test setting a global in interp & compiler objects',
 		      interp => $interp,
 		      component => <<'EOF',
 <% $global %>
@@ -821,6 +823,8 @@ EOF
 parsimmon
 EOF
 		    );
+
+#------------------------------------------------------------
 
     my $log_file = File::Spec->catfile( $group->base_path, 'system.log' );
     unlink $log_file;
@@ -833,8 +837,6 @@ EOF
 				      );
 
 
-#------------------------------------------------------------
-
     $group->add_test( name => 'system_log',
 		      description => 'Test system log COMP_LOAD event',
 		      interp => $interp,
@@ -845,13 +847,12 @@ open F, '$log_file';
 my \@f = <F>;
 my \@files = map { chomp; my \@i = split /:::/; \$i[3] } \@f;
 </\%perl>
-<% scalar \@files %>
-<% \$files[0] %>
+Number of files: <% scalar \@files %>
+Filename: <% \$files[0] %>
 EOF
 		      expect => <<'EOF',
-
-1
-/interp/system_log
+Number of files: 1
+Filename: /interp/system_log
 EOF
 		    );
 
