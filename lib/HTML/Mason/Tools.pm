@@ -14,7 +14,7 @@ use strict;
 
 use Cwd;
 use File::Spec;
-use HTML::Mason::Exceptions( abbr => [qw(system_error error)] );
+use HTML::Mason::Exceptions( abbr => [qw(system_error param_error error)] );
 
 require Exporter;
 
@@ -195,6 +195,43 @@ sub escape_perl_expression
 	}
     }
     return $expr;
+}
+
+sub coerce_to_array
+{
+    my $val = shift;
+
+    return ($val) unless ref $val;
+
+    if ( UNIVERSAL::isa( $val, 'ARRAY' ) )
+    {
+	return @$val;
+    }
+    elsif ( UNIVERSAL::isa( $val, 'HASH' ) )
+    {
+	return %$val;
+    }
+
+    param_error "Cannot coerce $val to an array";
+}
+
+sub coerce_to_hash
+{
+    my $val = shift;
+
+    param_error "Cannot convert a single value to a hash"
+	unless ref $val;
+
+    if ( UNIVERSAL::isa( $val, 'ARRAY' ) )
+    {
+	return @$val;
+    }
+    elsif ( UNIVERSAL::isa( $val, 'HASH' ) )
+    {
+	return %$val;
+    }
+
+    param_error "Cannot coerce $val to a hash";
 }
 
 
