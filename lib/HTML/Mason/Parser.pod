@@ -101,14 +101,6 @@ it's magic.  The sub is called with a single parameter, a scalar reference
 to the script.  The sub is expected to process the script in-place.   This is
 one way to extend the HTML::Mason syntax with new tags, etc. See L<Parser/postprocess>.
 
-=item taint_check
-
-This flag allows Mason to work when taint checking is on
-(e.g. PerlTaintCheck or C<-T> flag).  If true, Mason will pass all
-component source and filenames through a dummy regular expression
-match to untaint them. In the future this option may become more
-sophisticated to allow stricter checks. Default is false.
-
 =item use_strict
 
 Indicates whether to use strict in compiled subroutines.

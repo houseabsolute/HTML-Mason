@@ -19,7 +19,7 @@ require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(read_file html_escape date_delta_to_secs dumper_method paths_eq compress_path pkg_loaded pkg_installed);
+@EXPORT_OK = qw(read_file html_escape date_delta_to_secs dumper_method paths_eq compress_path pkg_loaded pkg_installed is_taint_on);
 
 #
 # Return contents of file. If $binmode is 1, read in binary mode.
@@ -115,6 +115,14 @@ sub pkg_loaded
 
     my $varname = "${pkg}::VERSION";
     return $$varname ? 1 : 0;
+}
+
+#
+# Determine if taint mode is on.
+#
+sub is_taint_on
+{
+    not eval { "$0$^X" && kill 0; 1 };
 }
 
 1;

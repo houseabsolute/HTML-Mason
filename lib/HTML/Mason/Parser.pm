@@ -13,7 +13,7 @@ use File::Find;
 use HTML::Mason::Component::FileBased;
 use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Request;
-use HTML::Mason::Tools qw(dumper_method read_file);
+use HTML::Mason::Tools qw(dumper_method read_file is_taint_on);
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( default_escape_flags
@@ -23,7 +23,7 @@ use HTML::Mason::MethodMaker
 		      postprocess
 		      preamble
 		      preprocess
-		      taint_check
+		      taint_mode
 		      use_strict ) ]
     );
 
@@ -37,7 +37,6 @@ my %fields =
      postprocess => undef,
      preamble => '',
      preprocess => undef,
-     taint_check => 0,
      use_strict => 1,
      );
 
@@ -66,6 +65,7 @@ sub new
 	    die "HTML::Mason::Parser::new: invalid option '$key'\n";
 	}
     }
+    $self->{taint_mode} = is_taint_on();
     bless $self, $class;
     return $self;
 }
@@ -1160,11 +1160,12 @@ sub eval_object_text
 	my $warnstr = '';
 	local $^W = 1;
 	local $SIG{__WARN__} = $ignore_expr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ } : sub { $warnstr .= $_[0] };
+	# If in taint mode, untaint the object filename or object text
 	if ($object_file) {
-	    ($object_file) = ($object_file =~ /^(.*)$/s) if $self->taint_check;
+	    ($object_file) = ($object_file =~ /^(.*)$/s) if $self->taint_mode;
 	    $comp = do($object_file);
 	} else {
-	    ($object_text) = ($object_text =~ /^(.*)$/s) if $self->taint_check;
+	    ($object_text) = ($object_text =~ /^(.*)$/s) if $self->taint_mode;
 	    $comp = eval($object_text);
 	}
 	$err = $warnstr . $@;

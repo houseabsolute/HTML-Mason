@@ -147,10 +147,6 @@ Corresponds to the C<postamble> parameter.
 
 Corresponds to the C<preamble> parameter.
 
-=item * MasonTaintCheck - boolean
-
-Corresponds to the C<taint_check> parameter.
-
 =item * MasonUseStrict - boolean
 
 Corresponds to the C<use_strict> parameter.
