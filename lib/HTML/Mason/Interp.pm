@@ -990,7 +990,7 @@ configuration file, you can set them like this:
   PerlSetVar  MasonEscapeFlags  "uc    => sub { ${$_[0]} = uc ${$_[0]}; }"
   PerlAddVar  MasonEscapeFlags  "thing => other_thing"
 
-=for html <a name="item_set_escape"></a>
+=for html <a name="item_remove_escape"></a>
 
 =item remove_escape ($name)
 
