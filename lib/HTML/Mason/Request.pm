@@ -337,16 +337,6 @@ sub cache
     load_pkg('Cache::Cache', '$m->cache requires the Cache::Cache module, available from CPAN.');
     load_pkg($cache_class, 'Fix your Cache::Cache installation or choose another cache class.');
 
-    #
-    # This works around some silliness related to handling tainted
-    # strings in Cache::Cache 0.99.  Once DeWitt releases 1.0 we can
-    # remove this evil-ness.
-    #
-    if ( $Cache::Cache::VERSION < 1 ) {
-	local $^W;
-	*Cache::FileBackend::_Untaint_Path = sub { return Cache::FileBackend::_Untaint_String(shift, qr/(.*)/) };
-    }
-
     my $cache = $cache_class->new (\%options)
 	or error "could not create cache object";
 
