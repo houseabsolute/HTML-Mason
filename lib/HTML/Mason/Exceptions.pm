@@ -249,7 +249,7 @@ sub as_string
     my ($self) = @_;
 
     my $stringify_function = "as_" . $self->{format};
-    return $self->$stringify_function;
+    return $self->$stringify_function();
 }
 
 sub as_brief
