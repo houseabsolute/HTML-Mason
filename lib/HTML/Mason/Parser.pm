@@ -1234,8 +1234,8 @@ sub make_dirs
 	if (!-e $objfile) {
 	    $makeflag = 1;
 	} else {
-	    my $srcfilemod = [stat($srcfile)]->[9];
-	    my $objfilemod = [stat($objfile)]->[9];
+	    my $srcfilemod = (stat($srcfile))[9];
+	    my $objfilemod = (stat($objfile))[9];
 	    $makeflag = ($srcfilemod > $objfilemod);
 	}
 	if ($makeflag) {
