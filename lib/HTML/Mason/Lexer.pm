@@ -129,6 +129,10 @@ sub start
 
 	$self->match_perl_line && next;
 
+	$self->match_comp_content_call && next;
+
+	$self->match_comp_content_call_end && next;
+
 	$self->match_text && next;
     }
 
@@ -357,7 +361,7 @@ sub match_comp_call
 
     my $comp = $self->{comp};
     pos($comp) = $self->{pos};
-    if ( $comp =~ /\G<&/gcs )
+    if ( $comp =~ /\G<&(?!\|)/gcs )
     {
 	$self->{pos} = pos($comp);
 	if ( $comp =~ /\G(.*?)&>/gcs )
@@ -375,6 +379,62 @@ sub match_comp_call
 	    my $line = $self->_next_line( $self->{pos} - 2 );
 	    HTML::Mason::Exception::Syntax->throw( error => "'<&' without matching '&>' at $self->{lines}:\n$line" );
 	}
+    }
+}
+
+
+sub match_comp_content_call
+{
+    my $self = shift;
+
+    my $comp = $self->{comp};
+    pos($comp) = $self->{pos};
+    if ( $comp =~ /\G<&\|/gcs )
+    {
+	$self->{pos} = pos($comp);
+	if ( $comp =~ /\G(.*?)&>/gcs )
+	{
+	    $self->{pos} = pos($comp);
+
+	    my $call = $1;
+	    $self->{compiler}->component_content_call( call => $call );
+	    $self->{lines} += $call =~ tr/\n/\n/;
+
+	    return 1;
+	}
+	else
+	{
+	    my $line = $self->_next_line( $self->{pos} - 2 );
+	    HTML::Mason::Exception::Syntax->throw( error => "'<&|' without matching '&>' at $self->{lines}:\n$line" );
+	}
+    }
+}
+
+sub match_comp_content_call_end
+{
+    my $self = shift;
+
+    my $comp = $self->{comp};
+    pos($comp) = $self->{pos};
+
+    if ( $comp =~ m^\G(
+                       </&\|           # '</&|' followed by
+                       (?:
+                        >              # '>' i.e. '</&|>'
+                        |              # or
+                        (.*?)          # anything (name to match with begin tag)
+                        &>             # end of tag '&>'
+                       )
+                      )
+                    ^gcsx )
+    {
+        $self->{pos} = pos($comp);
+
+        $self->{compiler}->component_content_call_end( ending => $2 );
+	my $ending = $1;
+        $self->{lines} += $ending =~ tr/\n/\n/;
+
+        return 1;
     }
 }
 
@@ -411,6 +471,8 @@ sub match_text
                     <\/%       # a tag end
                     |
                     <&         # a comp call
+                    |
+                    <\/&       # a comp end
                     |
                     \z         # or EOF.
                    )
