@@ -9,20 +9,20 @@ available at http://www.masonhq.com/changes.html.
 
 [ INCOMPATIBLE CHANGES ]
 
-- The Component class's create_time method has been renamed as
+- ** The Component class's create_time method has been renamed as
 load_time.
-- Relative component paths in the $interp->exec() method are no longer
-resolved.  All component paths must be absolute.  Relative path
+- ** Relative component paths in the $interp->exec() method are no
+longer resolved.  All component paths must be absolute.  Relative path
 resolution was added in 1.09_01 so this change is unlikely to affect
 most users.
-- Removed option to expire a component from the Apache::Status page.
-This option made little sense since components are cached per-process,
-and there's no guarantee that any particular process has cached a
-given component.  Again, this is a feature added in 1.09_01 so this
-change should not cause most people any problems.
-- Renamed CGIHandler's handle_cgi method to handle_comp.
-- Removed the dev_dirs feature from CGIHandler.
-- The default component root when not using ApacheHandler or
+- ** Removed option to expire a component from the Apache::Status
+page.  This option made little sense since components are cached
+per-process, and there's no guarantee that any particular process has
+cached a given component.  Again, this is a feature added in 1.09_01
+so this change should not cause most people any problems.
+- ** Renamed CGIHandler's handle_cgi method to handle_comp.
+- ** Removed the dev_dirs feature from CGIHandler.
+- ** The default component root when not using ApacheHandler or
 CGIHandler is now the current working directory at the time the
 HTML::Mason::Resolver::File class is loaded.
 
