@@ -216,8 +216,15 @@ sub parse_component
 	    $state->{$t} = '';
 	}
 
+
 	my $comp_names = join '|', @tags;
-	while ( $state->{script} =~
+
+	# Use a scalarref instead of a hash key to get at the script,
+	# because it's faster and works around Perl 5.6 pos() returning
+	# undef after matches.
+	my $scriptref = \$state->{script};
+
+	while ( $$scriptref =~
 		/(                     # $1: the full tag match
                   <%
                    (?:perl_)?          # optional perl_ prefix
@@ -235,7 +242,7 @@ sub parse_component
 	    $section_name = 'def' if substr($section_name,0,3) eq 'def';
 	    $section_name = 'method' if substr($section_name,0,6) eq 'method';
 
-	    my $section_start = pos($state->{script});
+	    my $section_start = pos($$scriptref);
 	    my $section_tag_pos = $section_start - length($1);
 	    my $subcomp_name = $3;
 	    if (defined($subcomp_name)) {
@@ -252,10 +259,10 @@ sub parse_component
 				   startline => $startline )
 		if $curpos < $section_tag_pos;
 
-	    if ($state->{script} =~ m/(<\/%(?:perl_)?$section_name>\n?)/ig) {
+	    if ($$scriptref =~ m/(<\/%(?:perl_)?$section_name>\n?)/ig) {
 		my $ending_tag = $1;
-		my $section_end = pos($state->{script}) - length($ending_tag);
-		my $section = substr($state->{script}, $section_start, $section_end - $section_start);
+		my $section_end = pos($$scriptref) - length($ending_tag);
+		my $section = substr($$scriptref, $section_start, $section_end - $section_start);
 		my $method = '_parse_' . lc $section_name . '_section';
 		if ($section_name eq 'text') {
 		    # Special case for <%text> sections: add a special
@@ -277,7 +284,7 @@ sub parse_component
 		    #}
 		    $self->$method( section => $section );
 		}
-		$curpos = pos($state->{script});
+		$curpos = pos($$scriptref);
 		$startline = substr($ending_tag, -1, 1) eq "\n";
 	    } else {
 		die $self->_make_error( error => "<%$section_name> with no matching </%$section_name>",
@@ -688,15 +695,16 @@ sub _parse_perl_tag
 
     my $s = $self->{parser_state}{text_parse_state};
 
-    pos($params{text}) = $s->{curpos};
-    unless ($params{text} =~ m{</\%perl>}ig) {
+    my $textref = \$params{text};
+    pos($$textref) = $s->{curpos};
+    unless ($$textref =~ m{</\%perl>}ig) {
 	die $self->_make_error( error => "<%perl> with no matching </%perl>",
 				errpos => $params{segbegin} + $params{index} );
     }
 
     # Move cursor to spot of last match (which is immediately after
     # the </%perl> tag
-    $s->{curpos} = pos($params{text});
+    $s->{curpos} = pos($$textref);
 
     # Subtract the index position (where the original match occurred)
     # plus the length of the <%perl> tag from the current position
