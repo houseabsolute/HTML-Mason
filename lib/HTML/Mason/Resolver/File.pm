@@ -111,7 +111,7 @@ __END__
 
 =head1 NAME
 
-HTML::Mason::Resolver::File - translates component paths into filesystem paths
+HTML::Mason::Resolver::File - Component path resolver for file-based components
 
 =head1 SYNOPSIS
 
