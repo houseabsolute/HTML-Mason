@@ -80,9 +80,9 @@ sub new
 	    die "HTML::Mason::Interp::new: invalid option '$key'\n";
 	}
     }
-    $self->{data_cache_dir} ||= ($self->{data_dir} . "/cache");
     die "HTML::Mason::Interp::new: must specify value for comp_root\n" if !$self->{comp_root};
     die "HTML::Mason::Interp::new: must specify value for data_dir\n" if !$self->{data_dir};
+    $self->{data_cache_dir} ||= ($self->{data_dir} . "/cache");
     bless $self, $class;
     $self->out_method($outMethod) if ($outMethod);
     $self->system_log_events($systemLogEvents) if ($systemLogEvents);

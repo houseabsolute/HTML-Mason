@@ -8,10 +8,13 @@
 
 use HTML::Mason;
 use strict;
+use Cwd;
+
 ######################### End of black magic.
 
-my $comp_root = "test/comps/";
-my $data_dir = "test/data/";
+my $pwd = cwd;
+my $comp_root = "$pwd/test/comps";
+my $data_dir = "$pwd/test/data";
 my $results_dir = "test/results/";
 my $tmp_dir = "test/tmp/";
 
