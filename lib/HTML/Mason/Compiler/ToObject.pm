@@ -41,7 +41,7 @@ sub new
 	$self->$_( $p{$_} || $fields{$_} ) unless $self->$_();
     }
 
-    $self->_init;
+    $self->_init(%p);
 
     return $self;
 }
@@ -153,8 +153,8 @@ sub _make_main_header
     return join '', ( "package $pkg;\n",
 		      $self->use_strict ? "use strict;\n" : '',
 		      sprintf( "use vars qw(\%s);\n",
-			       join ' ', '$m', $self->allow_globals ),
-		      "my \$_escape = \\&HTML::Mason::Parser::_escape_perl_expression;\n",
+			       join ' ', '$m', $self->allowed_globals ),
+		      "my \$_escape = \\&HTML::Mason::Tools::escape_perl_expression;\n",
 		      $self->_blocks('once'),
 		    );
 }
