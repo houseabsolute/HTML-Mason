@@ -19,9 +19,9 @@ chk_version('File::Spec' => '0.8') or
 	. "*** Mason requires version 0.8, or later, of File::Spec\n"
 	. "    from CPAN/modules/by-module/File/File-Spec-x.x.tar.gz\n\n";
 
-chk_version('Params::Validate' => '0.14') or
+chk_version('Params::Validate' => '0.15') or
     warn  "\n"
-	. "*** Mason requires version 0.14, or later, of Params::Validate\n"
+	. "*** Mason requires version 0.15, or later, of Params::Validate\n"
 	. "    from CPAN/modules/by-authors/id/D/DR/DROLSKY/Params-Validate-x.x.tar.gz\n\n";
 
 chk_version('Apache::Request' => '0.31') or
