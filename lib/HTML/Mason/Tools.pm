@@ -20,7 +20,7 @@ require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs dumper_method paths_eq is_absolute_path make_absolute_path compress_path mason_canonpath pkg_loaded pkg_installed make_fh taint_is_on);
+@EXPORT_OK = qw(read_file html_escape url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on);
 
 #
 # Return contents of file. If $binmode is 1, read in binary mode.
@@ -51,14 +51,6 @@ sub html_escape
     my $html_escape = join('', keys %html_escape);
     $text =~ s/([$html_escape])/$html_escape{$1}/mgoe;
     return $text;
-}
-
-#
-# Call the XS or normal version of Data::Dumper::Dump depending on what's installed.
-#
-sub dumper_method {
-    my ($d) = @_;
-    return ($HTML::Mason::Config{use_data_dumper_xs} ? $d->Dumpxs : $d->Dump);
 }
 
 #
