@@ -25,10 +25,11 @@ use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
 
-my $ap_req_class;
+my ($ap_req_class, $real_apache_print);
 BEGIN
 {
     $ap_req_class = $mod_perl::VERSION < 1.99 ? 'Apache' : 'Apache::RequestRec';
+    $real_apache_print = \&{"$ap_req_class\::print"};
 
     __PACKAGE__->valid_params
 	( ah         => { isa => 'HTML::Mason::ApacheHandler',
@@ -103,14 +104,19 @@ sub exec
     my $r = $self->apache_req;
     my $retval;
 
-    no strict 'refs';
-    local $HTML::Mason::ApacheHandler::OrigApachePrint = $HTML::Mason::ApacheHandler::OrigApachePrint || \&{"$ap_req_class\::print"};
-    use strict 'refs';
-    
     {
-	# Remap $r->print to Mason's $m->print while executing request
+	# Remap $r->print to Mason's $m->print while executing
+	# request, but just for this $r, in case user does an internal
+	# redirect or apache subrequest.
 	no strict 'refs';
-	local *{"$ap_req_class\::print"} = sub { shift; $self->print(@_) };
+	local *{"$ap_req_class\::print"} = sub {
+	    my $local_r = shift;
+	    if ($local_r eq $r) {
+		$self->print(@_);
+	    } else {
+		$local_r->$real_apache_print(@_);
+	    }
+	};
 	eval { $retval = $self->SUPER::exec(@_) };
     }
 
@@ -756,23 +762,6 @@ sub prepare_request
     #
     $interp->set_global(r=>$r);
 
-    #
-    # Why this strangeness with taking a reference to Apache::print?
-    # See HTML::Mason::Request::ApacheHandler->exec, where a bit of
-    # funkiness is done to catch calls to print and $r->print inside
-    # components.  Without this, calling $m->flush_buffer can lead to
-    # a loop where the content disappears.
-    #
-    # By using the reference to the original function we ensure that
-    # we call the version of the sub that sends its output to the
-    # right place.
-    #
-    my $print;
-    {
-	no strict 'refs';
-	$print = $HTML::Mason::ApacheHandler::OrigApachePrint || \&{"$ap_req_class\::print"};
-    }
-
     # If someone is using a custom request class that doesn't accept
     # 'ah' and 'apache_req' that's their problem.
     #
@@ -795,10 +784,11 @@ sub prepare_request
 	    $sent_headers = 1;
 	}
 
-	# Call $r->print. If request was HEAD, suppress output
-	# but allow the request to continue for consistency.
+	# Call $r->print (using the real Apache method, not our
+	# overriden method). If request was HEAD, suppress output but
+	# allow the request to continue for consistency.
 	unless ($r->method eq 'HEAD') {
-	    $r->$print(grep {defined} @_);
+	    $r->$real_apache_print(grep {defined} @_);
 	}
     };
 
