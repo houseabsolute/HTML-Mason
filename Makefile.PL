@@ -50,6 +50,8 @@ my %prereq = ( 'File::Spec' => {version => 0.8,
 				      where => "CPAN/modules/by-authors/id/K/KW/KWILLIAMS/Class-Container-x.x.tar.gz"},
                'Scalar::Util' => {version => 1.01,
                                   where => "CPAN/modules/by-authors/id/G/GB/GBARR/Scalar-List-Utils-x.x.tar.gz"},
+               'CGI' => {version => 2.89,
+                         where => "CPAN/modules/by-authors/id/G/GB/GBARR/CGI.pm-x.x.tar.gz"},
 	     );
 
 foreach (keys %prereq) {
