@@ -74,9 +74,7 @@ BEGIN { @read_write_params = qw( autoflush
                                  max_recurse
                                  out_method ); }
 use HTML::Mason::MethodMaker
-    ( read_only => [ qw( aborted
-			 aborted_value
-			 count
+    ( read_only => [ qw( count
 			 dhandler_arg
 			 interp
 			 parent_request
@@ -94,10 +92,7 @@ sub new
     my $class = shift;
     my $self = $class->SUPER::new(@_);
 
-    %$self = (%$self, 
-		      aborted => undef,
-		      aborted_value => undef,
-		      buffer_stack => undef,
+    %$self = (%$self, buffer_stack => undef,
 		      count => 0,
 		      dhandler_arg => undef,
 	              execd => 0,
@@ -332,6 +327,9 @@ sub abort
     $self->{aborted_value} = defined $_[1] ? $_[1] : $self->{aborted_value};
     HTML::Mason::Exception::Abort->throw( error => 'Request->abort was called', aborted_value => $self->{aborted_value} );
 }
+
+sub aborted { isa_mason_exception( $@, 'Abort' ) }
+sub aborted_value { shift->aborted && return $@->aborted_value }
 
 #
 # Return a new cache object specific to this component.
