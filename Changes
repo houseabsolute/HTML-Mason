@@ -7,12 +7,12 @@ available at http://www.masonhq.com/changes.html.
 
 0.7
 
-- Reorganized core implementation around two new classes,
+- Improved core implementation with two new classes,
 HTML::Mason::Request and HTML::Mason::Component.  Code is now cleaner
 and more scalable, and the new APIs give developers control and
-introspection over Mason's inner workings.
-L{Devel/component and request objects}
-- Reorganized documentation to accommodate new classes: created
+introspection over Mason's inner workings.  L{Devel/component and
+request objects}
+- Added documentation to accommodate new classes: created
 Request.pod and Component.pod, and moved component developer's guide
 (previously at Components.pod) to Devel.pod to avoid
 confusion. L{Devel/component and request objects}
@@ -26,16 +26,17 @@ without affecting the global component namespace.
 L{Devel/e&lt%defe&gt;}
 - <%args> section now accommodates optional comments for declarations
 L{Devel/e&lt%argse&gt;}
+- Autohandler and dhandler file names are now configurable
+L{Interp/autohandler_name} L{Interp/dhandler_name}
+- Dhandlers, which formerly worked only in mod_perl mode, now work in
+stand-alone mode as well
 - Interp::exec is now re-entrant with all request specific information
 having been moved to Request class.
 - ** Reworked Parser API. parse is now called make_component, has a
 simplified set of options, and returns a component object
 directly. make is now called make_dirs. L{Parser/item_make_component}
 L{Parser/item_make_dirs}
-- Dhandlers, which formerly worked only in mod_perl mode, now work in
-stand-alone mode as well
-- Autohandler and dhandler file names are now configurable
-L{Interp/autohandler_name} L{Interp/dhandler_name}
+- Fixed mc_auto_comp, which never really worked as documented.
 - Removed obsolete and undocumented Interp::vars and mc_var functions
 
 0.6.1  Tue Jul 27 09:34:31 PDT 1999
