@@ -125,10 +125,10 @@ sub exec {
     my ($result, @result);
     if (wantarray) {
 	local $SIG{'__DIE__'} = sub { confess($_[0]) };
-	@result = eval {$self->comp({called_comp=>$comp}, $first_comp, @args)};
+	@result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
     } else {
 	local $SIG{'__DIE__'} = sub { confess($_[0]) };
-	$result = eval {$self->comp({called_comp=>$comp}, $first_comp, @args)};
+	$result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
     }
     my $err = $@;
 
@@ -380,8 +380,8 @@ sub dhandler_arg { shift->{dhandler_arg} }
 
 #
 # Given a component path (absolute or relative), returns a component.
-# Does relative->absolute conversion as well as checking for local
-# subcomponents.
+# Handles SELF and PARENT, comp:method, relative->absolute
+# conversion, and local subcomponents.
 #
 sub fetch_comp
 {
@@ -389,13 +389,26 @@ sub fetch_comp
     die "fetch_comp: requires path as first argument" unless defined($path);
 
     #
-    # Handle special SELF and PARENT paths
+    # Handle paths SELF and PARENT
     #
     if ($path eq 'SELF') {
-	return $self->called_comp or die "SELF designator used when no called component available";
+	return $self->base_comp;
     }
     if ($path eq 'PARENT') {
-	return $self->current_comp->parent or die "PARENT designator used from component with no parent";
+	return $self->current_comp->parent || die "PARENT designator used from component with no parent";
+    }
+
+    #
+    # Handle paths of the form comp_path:method_name
+    #
+    if (index($path,':') != -1) {
+	my $method_comp;
+	my ($owner_path,$method_name) = split(':',$path,2);
+	my $owner_comp = $self->fetch_comp($owner_path)
+	    or die "could not find component for path '$owner_path'\n";
+	$owner_comp->_locate_inherited('methods',$method_name,\$method_comp)
+	    or die "no method '$method_name' for component ".$owner_comp->title;
+	return $method_comp;
     }
     
     #
@@ -508,8 +521,11 @@ sub comp {
 }
 sub comp1 {
     my $self = shift;
+
+    # Get modifiers: optional hash reference passed in as first argument.
     my %mods;
     %mods = %{shift()} if (ref($_[0]) eq 'HASH');
+
     my ($comp,@args) = @_;
     my $interp = $self->{interp};
     my $depth = $REQ_DEPTH;
@@ -521,10 +537,6 @@ sub comp1 {
     #
     if (!ref($comp)) {
 	my $path = $comp;
-	if (my ($owner_path,$method) = ($path =~ /(.*):(.*)/)) {
-	    my $owner_comp = $self->fetch_comp($owner_path) or die "could not find component for path '$owner_path'\n";
-	    return $owner_comp->call_method($method,@args);
-	}
 	$comp = $self->fetch_comp($path) or die "could not find component for path '$path'\n";
     }
 
@@ -556,14 +568,19 @@ sub comp1 {
     }
 
     #
+    # Determine base_comp (base component for method and attribute
+    # references). Stays the same unless passed in as a modifier.
+    #
+    my $base_comp = exists($mods{base_comp}) ? $mods{base_comp} : $self->top_stack->{base_comp};
+    
+    #
     # Check for maximum recursion.
     #
     die "$depth levels deep in component stack (infinite recursive call?)\n" if ($depth >= $interp->{max_recurse});
 
     # Push new frame onto stack and increment (localized) depth.
     my $stack = $self->stack;
-    my $frame = {'comp'=>$comp,args=>[@args],sink=>$sink};
-    $frame->{called_comp} = exists($mods{called_comp}) ? $mods{called_comp} : $comp;
+    my $frame = {'comp'=>$comp,args=>[@args],sink=>$sink,base_comp=>$base_comp};
     push(@$stack,$frame);
     $REQ_DEPTH++;
 
@@ -690,7 +707,7 @@ sub debug_hook
 sub current_comp { return $_[0]->top_stack->{'comp'} }
 sub current_args { return $_[0]->top_stack->{args} }
 sub current_sink { return $_[0]->top_stack->{sink} }
-sub called_comp { return $_[0]->top_stack->{called_comp} }
+sub base_comp { return $_[0]->top_stack->{base_comp} }
 
 # Create generic read-only accessor routines
 

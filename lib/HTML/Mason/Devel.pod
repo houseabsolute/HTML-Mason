@@ -740,10 +740,9 @@ section:
 =head2 E<lt>%sharedE<gt>
 
 Like <%once>, the scope of this section includes all of a component's
-code: the main component, subcomponents, methods, and dynamic
-attributes. However, the code runs once per request (whenever the
-component is used) and its variables last only til the end of the
-request.
+code: the main component, subcomponents, and methods.  However, the
+code runs once per request (whenever the component is used) and its
+variables last only til the end of the request.
 
 Useful for initializing variables needed in, say, the main body and
 one more methods. See L<Devel/Object-Oriented Techniques> for an
@@ -894,24 +893,22 @@ parent; see L<Devel/Object-Oriented Techniques> for examples.
 
 =head2 E<lt>%attrE<gt>
 
-Use this section to assign arbitrary key/value attributes that
-can be queried from other components.
+Use this section to assign static key/value attributes that can be
+queried from other components.
 
     <%attr>
     color=>'blue'
     fonts=>[qw(arial geneva helvetica)]
-    access=>sub { $r->connection->user eq 'joe' ? 1 : 0 }
     </%attr>
-
-If the right-hand value is a subroutine reference (as in the third
-line above), then that subroutine is invoked to determine the
-value each time the attribute is queried.
 
 To query an attribute of a component, use the C<attr> method:
 
     my $color = $comp->attr('color')
 
 where $comp is a component object.
+
+Mason evaluates attribute values once when loading the component.
+This makes them faster but less flexible than methods.
 
 =head1 FILTERING
 
@@ -1675,19 +1672,13 @@ C<$m-E<gt>call_next> passes control to the next component in the chain.  This
 is the familiar autohandler "wrapping" behavior, generalized for any
 number of arbitrarily named templates.
 
-If one of these components has no primary section (no HTML or embedded
-Perl), Mason automatically fills in an implicit
-C<$m-E<gt>call_next>. This is useful for inherited components that
-simply define methods and attributes without adding to the content.
-We'll see an example of this below.
-
 =head2 Accessing methods and attributes
 
 A template can access methods and/or attributes of the requested
-page. First, use C<$m-E<gt>called_comp> to get a handle on the
+page. First, use C<$m-E<gt>base_comp> to get a handle on the
 appropriate component:
 
-    my $self = $m->called_comp;
+    my $self = $m->base_comp;
 
 $self now refers to the component corresponding to the requested page
 (the component at the end of the chain).
@@ -1702,7 +1693,7 @@ or alternatively a path of the form 'SELF:method':
     $m->comp('SELF:header')
 
 In the context of a component path, SELF is shorthand for
-C<$m-E<gt>called_comp>.
+C<$m-E<gt>base_comp>.
 
 Each of the above looks for a method named 'header' in the page
 component.  If no such method exists, the chain of parents is searched
@@ -1739,7 +1730,7 @@ until ultimately an "attribute not found" error occurs. Use
 
 A component's main body and its methods occupy separate lexical
 scopes. Variables declared, say, in the <%init> section of the main
-component cannot be seen from methods or dynamic attributes.
+component cannot be seen from methods.
 
 To share variables, declare them either in the <%once> or <%shared>
 section. Both sections have an all-inclusive scope. The <%once>
@@ -1790,40 +1781,33 @@ and that a request comes in for /products/index.html.
 number of standard methods and attributes for each page:
 
     <head>
-    <title><% $self->attr('title') %></title>
+    <title><& SELF:title &></title>
     </head>
     <body bgcolor="<% $self->attr('bgcolor') %>">
     <& SELF:header &>
-    <table>
-    <tr>
-    <td><& SELF:left_toc &></td>
-    <td>&nbsp;</td>
-    <td>
+    <table><tr><td>
 
     <% $m->call_next %>
 
-    </td>
-    </tr>
-    </table>
+    </td></tr></table>
     <& SELF:footer &>
     </body>
 
     <%init>
-    my $self = $m->called_comp;
+    my $self = $m->base_comp;
     ...
     </%init>
 
     <%attr>
-    title=>'McGuffey Inc.'
     bgcolor=>'white'
     </%attr>
 
-    <%method header>
-    <h2><% $m->called_comp->attr('title') %></h2><p>
+    <%method title>
+    McGuffey Inc.
     </%method>
 
-    <%method left_toc>
-    ...
+    <%method header>
+    <h2><& SELF:title &></h2><p>
     </%method>
 
     <%method footer>
@@ -1835,16 +1819,17 @@ Notice how we provide defaults for each method and attribute, even if blank.
 /products section of the site.
 
     <%attr>
-    title=>'McGuffey Inc.: Products'
+    bgcolor=>'beige'
     </%attr>
-    <%method header>
-    ...
+    <%method title>
+    McGuffey Inc.: Products
     </%method>
 
-Because this autohandler has no primary section - no HTML or embedded
-Perl - Mason automatically skips it when moving down the chain of
-"wrapped" components. It exists solely to inherit methods and
-attributes from.
+    <% $m->call_next %>
+
+An inherited component, even if it only defines attributes and
+methods, must call C<$m-E<gt>call_next> if it wants the rest of the
+chain to run.
 
 /products/index.html might override a few attributes, but mainly provides
 a primary section for the body.
