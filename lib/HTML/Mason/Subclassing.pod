@@ -218,7 +218,7 @@ replace Mason's syntax.
 
 The lexer is called by the compiler via its C<lex> method.  The
 arguments it receives are the component name, source, and the compiler
-object.  See the C<Compiler class|HTML::Mason::Compiler> documentation
+object.  See the L<Compiler class|HTML::Mason::Compiler> documentation
 for details on what methods the lexer can call.
 
 =head1 Compiler
