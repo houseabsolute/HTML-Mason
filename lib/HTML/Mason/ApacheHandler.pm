@@ -82,7 +82,7 @@ sub exec
 
     {
 	# Remap $r->print to Mason's $m->print while executing request
-	local *Apache::print = sub { shift; $request->print(@_) };
+	local *Apache::print = sub { shift; $self->print(@_) };
 	eval { $retval = $self->SUPER::exec(@_) };
     }
 
