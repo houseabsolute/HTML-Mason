@@ -120,6 +120,12 @@ sub output
     return ${$self->{output}};
 }
 
+sub remove_filter
+{
+    my $self = shift;
+    delete $self->{filter_from};
+}
+
 # Makes a reference to the current output and stores in
 # $self->{output}.  Unless there are filters, this will be a reference
 # to the same string as $self->{buffer}.
