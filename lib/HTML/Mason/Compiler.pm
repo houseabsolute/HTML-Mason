@@ -23,7 +23,7 @@ BEGIN
 	(
 	 allow_globals        => { parse => 'list',   type => ARRAYREF, default => [],
 				   descr => "An array of names of Perl variables that are allowed globally within components" },
-	 default_escape_flags => { parse => 'string', type => SCALAR,   default => '',
+	 default_escape_flags => { parse => 'string', type => SCALAR | ARRAYREF,   default => [],
 				   descr => "Escape flags that will apply by default to all Mason tag output" },
 	 lexer                => { isa => 'HTML::Mason::Lexer',
 				   descr => "A Lexer object that will scan component text during compilation" },
@@ -43,8 +43,7 @@ BEGIN
 
 use HTML::Mason::MethodMaker
     ( read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
-		     qw( default_escape_flags
-                          lexer
+                      qw( lexer
                           preprocess
                           postprocess_perl
                           postprocess_text
@@ -52,11 +51,15 @@ use HTML::Mason::MethodMaker
 		    ],
     );
 
+my $old_escape_re = qr/^[hnu]+$/;
 
 sub new
 {
     my $class = shift;
     my $self = $class->SUPER::new(@_);
+
+    $self->default_escape_flags( $self->{default_escape_flags} )
+        if defined $self->{default_escape_flags};
 
     # Verify the validity of the global names
     $self->allow_globals( @{$self->{allow_globals}} );
@@ -103,7 +106,6 @@ sub object_id
 
 my %top_level_only_block = map { $_ => 1 } qw( cleanup once shared );
 my %valid_comp_flag = map { $_ => 1 } qw( inherit );
-my %valid_escape_flag = map { $_ => 1 } qw( h n u );
 
 sub add_allowed_globals
 {
@@ -131,6 +133,36 @@ sub allow_globals
     }
 
     return @{ $self->{allow_globals} };
+}
+
+sub default_escape_flags
+{
+    my $self = shift;
+
+    return $self->{default_escape_flags} unless @_;
+
+    my $flags = shift;
+
+    unless ( defined $flags )
+    {
+        $self->{default_escape_flags} = [];
+        return;
+    }
+
+    # make sure this is always an arrayref
+    unless ( ref $flags )
+    {
+        if ( $flags =~ /^[hu]+$/ )
+        {
+            $self->{default_escape_flags} = [ split //, $flags ];
+        }
+        else
+        {
+            $self->{default_escape_flags} = [ $flags ];
+        }
+    }
+
+    return $self->{default_escape_flags};
 }
 
 sub compile
@@ -356,24 +388,40 @@ sub substitution
     my %p = @_;
 
     my $text = $p{substitution};
-    if ( $p{escape} || $self->default_escape_flags )
+
+    if ( ( exists $p{escape} && defined $p{escape} ) ||
+         @{ $self->{default_escape_flags} }
+       )
     {
-	my %flags;
-	%flags = map { $_ => 1 } split //, $p{escape} if $p{escape};
-	foreach (keys %flags)
-	{
-	    $self->lexer->throw_syntax_error("invalid <% %> escape flag: '$_'")
-		unless $valid_escape_flag{$_};
-	}
-	unless ( delete $flags{n} )
-	{
-	    foreach ( split //, $self->default_escape_flags )
-	    {
-		$flags{$_} = 1;
-	    }
-	}
-	my $flags = join ', ', map { "'$_'" } keys %flags;
-	$text = "\$_escape->( $text, $flags )";
+        my @flags;
+        if ( defined $p{escape} )
+        {
+            $p{escape} =~ s/\s+$//;
+
+            if ( $p{escape} =~ /$old_escape_re/ )
+            {
+                @flags = split //, $p{escape};
+            }
+            else
+            {
+                @flags = split /\s*,\s*/, $p{escape};
+            }
+        }
+
+        # is there any way to check the flags for validity and still
+        # allow them to be dynamically set from components?
+
+        unshift @flags, @{ $self->default_escape_flags }
+            unless grep { $_ eq 'n' } @flags;
+
+        my %seen;
+	my $flags =
+            ( join ', ',
+              map { $seen{$_}++ ? () : "'$_'" }
+              grep { $_ ne 'n' } @flags
+            );
+
+        $text = "\$m->interp->apply_escapes( $text, $flags )" if $text;
     }
 
     my $code = "\$m->print( $text );\n";
