@@ -1102,6 +1102,11 @@ sub scomp {
     return $buf;
 }
 
+sub has_content {
+    my $self = shift;
+    return defined($self->top_stack->{content});
+}
+
 sub content {
     my $self = shift;
     my $content = $self->top_stack->{content};
@@ -1747,6 +1752,13 @@ Evaluates the content (passed between <&| comp &> and </&> tags) of the
 current component, and returns the resulting text.
 
 Returns undef if there is no content.
+
+=for html <a name="has_content"></a>
+
+=item has_content
+
+Returns true if the component was called with content (i.e. with <&| comp &>
+and </&> tags instead of a single <& comp &> tag).
 
 =for html <a name="item_count"></a>
 

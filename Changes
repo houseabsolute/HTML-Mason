@@ -9,6 +9,7 @@ available at http://www.masonhq.com/code/history.html.
 
 [ ENHANCEMENTS ]
 
+- Added $m->has_content to check for content without evaluating it.
 - Comments are now allowed on separate lines inside <%attr> and
 <%flags> blocks.  Task id #475.
 - Documented potential problems if call to $m->redirect is trapped in

@@ -405,6 +405,33 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'has_content',
+		      description => 'Test $m->has_content',
+		      component => <<'EOF',
+<& .show_content &>\
+-----
+<&| .show_content &>\
+This is the content
+</&>
+<%def .show_content>\
+% if ($m->has_content) {
+My content is: 
+<% $m->content %>
+% } else { 
+I have no content.
+% }
+</%def>
+EOF
+		      expect => <<'EOF',
+I have no content.
+-----
+My content is: 
+This is the content
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
