@@ -77,7 +77,7 @@ sub set_allowed_globals
 	HTML::Mason::Exception::Params->throw( error => "allowed_globals: bad parameters '@bad', must begin with one of $, @, %\n" );
     }
 
-    $self->{allowed_globals} = [ keys %{ { map { $_ => 1 } @globals } } ];
+    $self->{allowed_globals} = [ keys %{ { map { $_ => 1 } @globals, @{ $self->{allowed_globals} } } } ];
 }
 
 sub allowed_globals
@@ -282,17 +282,22 @@ sub substitution
     my %p = @_;
 
     my $text = $p{substitution};
-    $p{escape} .= $self->default_escape_flags;
-    if ( $p{escape} )
+    if ( $p{escape} || $self->default_escape_flags )
     {
-	my @flags = keys %{ { map { $_ => 1 } split //, $p{escape} } };
-	foreach (@flags)
+	my %flags = map { $_ => 1 } split //, $p{escape};
+	foreach (keys %flags)
 	{
 	    HTML::Mason::Exception::Compiler->throw( error => "invalid <% %> escape flag: '$_'" )
 		unless $valid_escape_flag{$_};
-	    @flags = () if $_ eq 'n';
 	}
-	my $flags = join ', ', map { "'$_'" } @flags;
+	unless ( delete $flags{n} )
+	{
+	    foreach ( split //, $self->default_escape_flags )
+	    {
+		$flags{$_} = 1;
+	    }
+	}
+	my $flags = join ', ', map { "'$_'" } keys %flags;
 	$text = "\$_escape->( $text, $flags )";
     }
 
