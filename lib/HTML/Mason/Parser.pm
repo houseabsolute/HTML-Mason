@@ -477,7 +477,7 @@ sub make_component
     my @cparams = ("parser_version=>$parserVersion","create_time=>".time());
     push(@cparams,"source_ref_start=>0000000") if $useSourceReference;
     if (@declaredArgs) {
-	my $d = new Data::Dumper ([@declaredArgs]);
+	my $d = new Data::Dumper ([\@declaredArgs]);
 	my $argsDump = $d->Dumpxs;
 	for ($argsDump) { s/\$VAR1\s*=//g; s/;\s*// }
 	push(@cparams,"declared_args=>$argsDump");
@@ -542,7 +542,7 @@ sub make_component
 	$$errorRef = $err if defined($errorRef);
     }
     
-    if (defined($objectFile)) {
+    if (defined($objectFile) && ($success || !$options{no_save_errors})) {
 	my @newfiles = ($objectFile);
 
 	# Create object file.  We attempt to handle several cases
@@ -654,14 +654,13 @@ sub make_dirs
 	return if (!-f $srcfile);
 	return if defined($predicate) && !($predicate->($srcfile));
 	my $compPath = substr($srcfile,length($sourceDir));
- 	my $objfile = $srcfile;
-	$objfile =~ s@^$sourceDir@$objectDir@;
+ 	(my $objfile = $srcfile) =~ s@^$sourceDir@$objectDir@;
 	my ($objfiledir) = dirname($objfile);
 	if (!-d $objfiledir) {
 	    if (defined($dirCreateMode)) {
 		print "creating directory $objfiledir\n" if $verbose;
 		mkpath($objfiledir,0,$dirCreateMode);
-		die "make_dirs: cannot create directory '$objfiledir': $!";
+		die "make_dirs: cannot create directory '$objfiledir': $!" if (!-d $objfiledir);
 	    } else {
 		die "make_dirs: no such directory '$objfiledir'";
 	    }
@@ -675,26 +674,18 @@ sub make_dirs
 	    $makeflag = ($srcfilemod > $objfilemod);
 	}
 	if ($makeflag) {
-	    my ($objtext,$errmsg,$pureTextFlag);
+	    my ($errmsg);
 	    print "compiling $srcfile\n" if $verbose;
-	    if (!$self->parse(script_file=>$srcfile, result_text=>\$objtext, error=>\$errmsg, pure_text_flag=>\$pureTextFlag)) {
+	    if (!$self->make_component(script_file=>$srcfile, object_file=>$objfile, no_save_errors=>1, path=>$compPath, error=>\$errmsg)) {
 		if ($verbose) {
 		    print "error";
 		    if ($errorDir) {
-			my $errfile = $srcfile;
-			$errfile =~ s@^$sourceDir@$errorDir@;
-			my ($errfiledir) = dirname($errfile);
-			mkpath($errfiledir,0,$dirCreateMode);
-			my $outfh = new IO::File ">$errfile" or die "make_dirs: cannot open '$errfile' for writing: $!";
-			$outfh->print($objtext);
+			(my $errfile = $srcfile) =~ s@^$sourceDir@$errorDir@;
+			$self->make_component(script_file=>$srcfile, object_file=>$errfile, path=>$compPath);
 			print " in $errfile";
 		    }
 		    print ":\n$errmsg\n";
 		}
-	    } else {
-		my $outfh = new IO::File ">$objfile" or die "make_dirs: cannot open '$objfile' for writing: $!";
-		$outfh->print($objtext) if (!$pureTextFlag);
-		$relfh->print("$compPath\n") if (defined($relfh));
 	    }
 	}
     };
