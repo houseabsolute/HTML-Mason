@@ -289,6 +289,8 @@ sub check_reload_file {
     }
 }
 
+
+
 #
 # Load <$path> into a component, possibly parsing the source and/or
 # caching the code. Returns a component object or undef if the

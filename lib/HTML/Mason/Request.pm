@@ -145,19 +145,34 @@ sub call {
     #
     # Finally, call component subroutine.
     #
+    # Hate to do an eval for every comp call, but otherwise a die can
+    # fall through to a previous component without ever popping the
+    # stack. Could use a dynamically scoped variable for the
+    # stack, but difficult in case of multiple request objects.
+    #
     $comp->{run_count}++;
     my ($result, @result);
-    if (wantarray) { @result = $sub->(%args) } else { $result = $sub->(%args) }
+    if (wantarray) {
+	eval { @result = $sub->(%args) };
+    } else {
+	eval { $result = $sub->(%args) };
+    }
+    my $err = $@;
 
     #
-    # Call end_comp hooks.
-    #
-    $req->call_hooks('end_comp');
-
-    #
-    # Pop stack and return.
+    # Pop stack.
     #
     shift(@{$req->{stack}});
+
+    #
+    # If error occurred, pass back to previous level.
+    #
+    die $err if $err;
+    
+    #
+    # Otherwise, call end_comp hooks and return.
+    #
+    $req->call_hooks('end_comp');
     return wantarray ? @result : $result;
 }
 
@@ -194,7 +209,7 @@ sub unsuppress_hook {
 	die "unsuppress_hook: must specify $_\n" if !exists($args{$_});
     }
     my $code = $self->interp->{hooks}->{$args{type}}->{$args{name}};
-    $self->interp->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
+    $self->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
     push(@{$self->{"hooks_$args{type}"}},$code);
 }
 
