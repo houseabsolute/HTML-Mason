@@ -147,8 +147,8 @@ sub compiled_component
     my ($self, %p) = @_;
     my $obj_text = '';
 
-    $self->{compiled_def} = $self->_compile_subcomponents if %{ $self->{def} };
-    $self->{compiled_method} = $self->_compile_methods if %{ $self->{method} };
+    local $self->{compiled_def} = $self->_compile_subcomponents if %{ $self->{def} };
+    local $self->{compiled_method} = $self->_compile_methods if %{ $self->{method} };
 
     $self->{current_comp} = $self;
 
