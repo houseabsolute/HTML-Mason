@@ -268,7 +268,7 @@ sub handle_preview_request_1
     }
 
     if ($conf->{output_type} eq 'HTML') {
-        $ah->handle_request($pr);
+        return $ah->handle_request($pr);
     } elsif ($conf->{output_type} eq 'Debug') {
 
 	#
@@ -341,7 +341,7 @@ sub handle_preview_request_1
 	$interp->add_hook(name=>'preview',type=>'end_file',code=>$endFileHook);
 	$interp->out_method(sub { $content .= $_[0] });
 	$ah->output_mode(undef);
-        $ah->handle_request($pr);
+        my $statuscode = $ah->handle_request($pr);
 
 	#
 	# Validate file events. For each startFile event,
@@ -439,41 +439,50 @@ sub handle_preview_request_1
 	#
 	# Initial component trace
 	#
-	$trace = &$createTraceSub(@objects);
-	$pr->print("<h2>Component trace</h2>\n<pre>\n$trace</pre>\n");
+	if (@objects) {
+	    $trace = &$createTraceSub(@objects);
+	    $pr->print("<h2>Component trace</h2>\n<pre>\n$trace</pre>\n");
+	}
 
 	#
 	# Content
 	#
-	$pr->print("<h2>Content</h2>\n<pre>\n");
-	$content =~ s/\cM//g;
-	($content) = html_escape($content);
-	$content =~ s/\cAEVENT/\n\cAEVENT/g;
-	my ($obj);
-	while ($content =~ /(.*)/g) {
-	    my $line = $1;
-	    my $beginFlag = 0;
-	    if ($line =~ /\cAEVENT([0-9]+)\cA/) {
-		$eventnum = $1;
-		my $event = $compEvents[$eventnum];
-		$line =~ s/\cAEVENT[0-9]+\cA//;
-		if (defined($event)) {
-		    if ($event->{type} =~ /^end/ && $obj) {
-			$pr->print(sprintf("<font color=#%s>%5s &lt;&lt;</font>\n",$obj->{color},$obj->{label}));
-		    }
-		    $obj = $objects[$event->{objnum}];
-		    if ($event->{type} =~ /^start/) {
-			$pr->print("<a name=object$obj->{count}>");
-			$beginFlag = 1;
+	if ($content) {
+	    $pr->print("<h2>Content</h2>\n<pre>\n");
+	    $content =~ s/\cM//g;
+	    ($content) = html_escape($content);
+	    $content =~ s/\cAEVENT/\n\cAEVENT/g;
+	    my ($obj);
+	    while ($content =~ /(.*)/g) {
+		my $line = $1;
+		my $beginFlag = 0;
+		if ($line =~ /\cAEVENT([0-9]+)\cA/) {
+		    $eventnum = $1;
+		    my $event = $compEvents[$eventnum];
+		    $line =~ s/\cAEVENT[0-9]+\cA//;
+		    if (defined($event)) {
+			if ($event->{type} =~ /^end/ && $obj) {
+			    $pr->print(sprintf("<font color=#%s>%5s &lt;&lt;</font>\n",$obj->{color},$obj->{label}));
+			}
+			$obj = $objects[$event->{objnum}];
+			if ($event->{type} =~ /^start/) {
+			    $pr->print("<a name=object$obj->{count}>");
+			    $beginFlag = 1;
+			}
 		    }
 		}
+		next if ($line !~ /\S/ && !$obj);
+		my $depth = 0;
+		$pr->print(sprintf("<font color=#%s>%s%5s %s</font>%s%s\n",$obj->{color},(' ' x $depth),$obj->{label},($beginFlag ? '&gt;&gt;' : '  '),(' ' x (4-$depth)),$line));
 	    }
-	    next if ($line !~ /\S/ && !$obj);
-	    my $depth = 0;
-	    $pr->print(sprintf("<font color=#%s>%s%5s %s</font>%s%s\n",$obj->{color},(' ' x $depth),$obj->{label},($beginFlag ? '&gt;&gt;' : '  '),(' ' x (4-$depth)),$line));
+	    $pr->print("\n</pre>\n");
 	}
-	$pr->print("\n</pre>\n");
 
+	#
+	# Status
+	#
+	$pr->print("<h2>Status: $statuscode</h2>\n") if $statuscode && $statuscode != 200;
+	
         #
 	# Headers in
 	#
