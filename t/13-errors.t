@@ -106,5 +106,32 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'bad_source_callback',
+		      description => 'Make sure that a bad source_callback for a ComponentSource object reports a useful error',
+                      interp_params => { resolver_class => 'My::Resolver' },
+		      component => <<'EOF',
+does not matter
+EOF
+		      expect_error => qr/Undefined subroutine.*will_explode/,
+		    );
+
+#------------------------------------------------------------
+
     return $group;
+}
+
+package My::Resolver;
+
+use base 'HTML::Mason::Resolver::File';
+
+sub get_info
+{
+    my $self = shift;
+
+    if ( my $source = $self->SUPER::get_info(@_) )
+    {
+        $source->{source_callback} = sub { will_explode() };
+
+        return $source;
+    }
 }
