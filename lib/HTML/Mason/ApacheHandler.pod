@@ -47,12 +47,6 @@ HTML mode the handler sends a readable HTML version of the error
 message to the client. HTML mode is most useful in combination with
 batch output mode for debugging.
 
-=item head_optimization
-
-True or undef, default is true. Indicates that once headers are sent
-for a HEAD request, Mason should abort so as not to waste time
-generating the content.
-
 =item output_mode
 
 Specifies one of two ways to send output to the client, 'batch' or

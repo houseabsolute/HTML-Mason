@@ -34,7 +34,6 @@ my %fields =
      output_mode => 'batch',
      error_mode => 'html',
      top_level_predicate => sub { return 1 },
-     head_optimization => 1,
      decline_dirs => 1,
      debug_mode => 'none',
      debug_perl_binary => '/usr/bin/perl',
@@ -488,7 +487,7 @@ sub handle_request_1
     my $hdrsub = sub {
 	my ($interp) = @_;
 	$r->send_http_header() if !http_header_sent($r);
-	$interp->abort() if $r->header_only && $self->head_optimization;
+	$interp->abort() if $r->header_only;
 	$interp->suppress_hook(name=>'http_header',type=>'start_primary');
     };
     $interp->add_hook(name=>'http_header',type=>'start_primary',code=>$hdrsub);
