@@ -18,14 +18,20 @@ use HTML::Mason::Exceptions (abbr => ['param_error']);
 
 __PACKAGE__->valid_params
     (
-     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF, default => File::Spec->rel2abs( Cwd::cwd() ),
+     comp_root    => { parse => 'list', type => SCALAR|ARRAYREF, default => File::Spec->rel2abs( File::Spec->rootdir ),
 		       descr => "A string or array of arrays indicating the search path for component calls" },
     );
 
 sub new {
     my $package = shift;
+    my %p = @_;
 
     my $self = $package->SUPER::new(@_);
+
+    #
+    # no comp_root param was provided.
+    #
+    $self->{use_default_path} = ! exists $p{comp_root};
 
     # Put it through the accessor to ensure proper data structure
     $self->comp_root( $self->{comp_root} ) unless ref $self->{comp_root};
@@ -44,11 +50,7 @@ sub new {
 
 sub comp_root_array
 {
-    if ($_[0]->{comp_root}) {
-	return @{ $_[0]->{comp_root} };
-    } else {
-	return ([MAIN => File::Spec->rootdir]);
-    }
+    return @{ $_[0]->{comp_root} };
 }
 
 sub comp_root
@@ -104,6 +106,12 @@ sub glob_path {
 	}
     }
     return keys(%path_hash);
+}
+
+sub default_path_prefix {
+    my $self = shift;
+
+    return File::Spec->rel2abs(cwd) if $self->{use_default_path};
 }
 
 1;
