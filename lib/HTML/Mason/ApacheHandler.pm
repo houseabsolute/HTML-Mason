@@ -175,9 +175,19 @@ sub _in_simple_conf_file
 my %AH;
 sub make_ah
 {
-    my $package = shift;
+    my ($package) = shift;
 
     my %p = $package->_get_mason_params;
+
+    #
+    # We make a special case of this cause the convenience factor is
+    # potentially quite high for users
+    #
+    my $interp_class = $p{interp_class} || 'HTML::Mason::Interp';
+    if ( exists $interp_class->allowed_params( {} )->{comp_root} && Apache->request )
+    {
+	%p = ( comp_root => [ Apache->request->document_root ], %p );
+    }
 
     my $key = '';
     foreach my $k (sort keys %p)
@@ -209,7 +219,8 @@ sub make_ah
 	    }
 	}
     }
-    my $ah = $package->new( %p );
+
+    my $ah = $package->new(%p);
     $AH{$key} = $ah if $key;
 
     # If we're running as superuser, change file ownership to http user & group
