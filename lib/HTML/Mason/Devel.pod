@@ -1294,7 +1294,7 @@ You can fetch all the keys in a cache with
     my @idents = $m->cache->get_keys;
 
 It should be noted that Mason reserves all keys beginning with
-I<__cache_self__> for its own use.
+I<__mason> for its own use.
 
 =head2 Expiration
 
