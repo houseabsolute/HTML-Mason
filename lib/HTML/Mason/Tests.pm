@@ -360,10 +360,22 @@ sub _run_tests
 	    if $VERBOSE;
 
 	$self->{current_test} = $test;
-	$self->_write_test_comp unless $test->{skip_component};
+	$self->_make_component unless $test->{skip_component};
 	$self->_run_test;
 
 	$x++;
+    }
+}
+
+sub _make_component 
+{
+    my $self = shift;
+    my $test = $self->{current_test};
+    if ($test->{is_virtual}) {
+	$test->{interp}->make_component(comp_text => $test->{component},
+					path      => "/$self->{name}/$test->{path}");
+    } else {
+	$self->_write_test_comp;
     }
 }
 
@@ -668,6 +680,12 @@ method.
 =item * interp
 
 Provide an HTML::Mason::Interp object to be used for the test.
+
+=item * is_virtual
+
+If true, this component will be created by the make_component()
+interpreter method.  The default is false, which means a component
+file will be written to disk in the component root.
 
 =back
 
