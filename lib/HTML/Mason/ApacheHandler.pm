@@ -64,6 +64,64 @@ sub cgi_object
     return $self->{cgi_object};
 }
 
+sub _run_comp
+{
+    my ($self, $wantarray, $comp, @args) = @_;
+
+    my $apache_print = $self->{apache_print} = \&Apache::print;
+
+    # It is very important that the original Apache::print sub be
+    # restored inside this closure.  Imagine that we are in stream
+    # mode and the output method is:
+    #
+    # sub { for (@_) { $r->print($_) if defined } }
+    #
+    # If we don't restore the original Apache::print sub then we
+    # end up in an infinite loop.
+    my $w = $^W;
+    $^W = 0;
+    local *Apache::print = sub { shift; local *Apache::print = $apache_print; $self->out(@_) };
+    $^W = $w;
+
+    my $obj = tied *STDOUT;
+    tie *STDOUT, 'Tie::Handle::Mason', $self, $obj;
+
+    my ($result, @result);
+    if ($wantarray) {
+	@result = eval { $comp->run(@args) };
+    } elsif (defined $wantarray) {
+	$result = eval { $comp->run(@args) };
+    } else {
+	eval { $comp->run(@args) };
+    }
+    untie *STDOUT;
+    if ( $obj && UNIVERSAL::isa( $obj, 'Apache' ) ) {
+	tie *STDOUT, 'Apache', $obj;
+    }
+
+    return wantarray ? @result : $result;
+}
+
+sub print
+{
+    my $self = shift;
+
+    my $apache_print = \&Apache::print;
+
+    my $w = $^W;
+    $^W = 0;
+    local *Apache::print = $self->{apache_print} if $self->{apache_print};
+    $^W = $w;
+
+    $self->top_buffer->receive(@_);
+
+    $^W = 0;
+    *Apache::print = $apache_print;
+    $^W = $w;
+}
+
+*out = \&print;
+
 #----------------------------------------------------------------------
 #
 # APACHEHANDLER OBJECT
@@ -338,7 +396,6 @@ sub new
 my $status_name = 'mason0001';
 
 {
-    local $^W; # to avoid subroutine redefined warnings - but this doesn't work!
     Apache::Status->menu_item
 	    ($status_name => __PACKAGE__->allowed_params->{apache_status_title}{default},
 	     sub { ["<b>(no interpreters created in this child yet)</b>"] });
@@ -378,6 +435,7 @@ sub _initialize {
 		    $self->status_as_html,
 		    $self->interp->status_as_html];
 	};
+	local $^W = 0; # to avoid subroutine redefined warnings
 	Apache::Status->menu_item($status_name++, $self->apache_status_title, $statsub);
     }
 
@@ -627,7 +685,20 @@ sub handle_request_1
     #
     $interp->set_global(r=>$r);
 
-    $interp->out_method( sub { $r->print( grep {defined} @_ ) } );
+    #
+    # Why this strangeness?
+    #
+    # See in the HTML::Mason::ApacheHandler::Request class where much
+    # strangeness is done to catch calls to print and $r->print inside
+    # components.  Without this, calling $m->flush_buffer can lead to
+    # a loop where the content basically disappears.
+    #
+    # By using the reference to the original function we ensure that
+    # we call the version of the sub that sends its output to the
+    # right place.
+    #
+    my $print = \&Apache::print;
+    $interp->out_method( sub { warn Devel::StackTrace->new; $r->$print( grep {defined} @_ ) } );
 
     #
     # Craft the out method for this request to handle automatic http
@@ -681,6 +752,7 @@ sub handle_request_1
 	$retval = $request->exec($comp_path, %args);
     }
     undef $request; # ward off leak
+
     return $retval;
 }
 
