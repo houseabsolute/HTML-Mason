@@ -19,7 +19,7 @@ require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs dumper_method paths_eq is_absolute_path make_absolute_path compress_path pkg_loaded pkg_installed);
+@EXPORT_OK = qw(read_file html_escape date_delta_to_secs dumper_method paths_eq compress_path pkg_loaded pkg_installed);
 
 #
 # Return contents of file. If $binmode is 1, read in binary mode.
@@ -39,16 +39,6 @@ sub read_file
 }
 
 #
-# Remove final slash from string, if any; return resulting string.
-#
-sub chop_slash
-{
-    my ($str) = (@_);
-    $str =~ s@/$@@;
-    return $str;
-}
-
-#
 # Escape HTML &, >, <, and " characters. Borrowed from CGI::Base.
 #
 sub html_escape
@@ -58,27 +48,6 @@ sub html_escape
     my $html_escape = join('', keys %html_escape);
     $text =~ s/([$html_escape])/$html_escape{$1}/mgoe;
     return $text;
-}
-
-#
-# Unescape URL-encoded data. Borrowed from CGI.
-#
-sub url_unescape {
-    my $todecode = shift;
-    return undef unless defined($todecode);
-    $todecode =~ tr/+/ /;       # pluses become spaces
-    $todecode =~ s/%([0-9a-fA-F]{2})/pack("c",hex($1))/ge;
-    return $todecode;
-}
-
-#
-# URL-encode data. Borrowed from CGI.
-#
-sub url_escape {
-    my $toencode = shift;
-    return undef unless defined($toencode);
-    $toencode=~s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
-    return $toencode;
 }
 
 #
@@ -122,28 +91,7 @@ sub dumper_method {
 # case-insensitivity in Windows O/S.
 #
 sub paths_eq {
-    return (lc($^O) =~ /^ms(dos|win32)/) ? (lc($_[0]) eq lc($_[1])) : $_[0] eq $_[1];
-}
-
-#
-# Determines whether a pathname is absolute: beginning with / or ~/ or a
-# drive letter (e.g. C:/).
-#
-sub is_absolute_path
-{
-    return $_[0] =~ /^(([A-Za-z]:)|~\w*)?\//;
-}
-    
-#
-# Return an absolute version of a pathname.  No change if already absolute.
-#
-sub make_absolute_path
-{
-    my ($path) = @_;
-    unless (is_absolute_path($path)) {
-	$path = cwd() . $path;
-    }
-    return $path;
+    return File::Spec->case_tolerant ? (lc($_[0]) eq lc($_[1])) : $_[0] eq $_[1];
 }
 
 sub compress_path
