@@ -74,7 +74,7 @@ My argument list is (<% join(",",$m->caller_args(0)) %>).
 The top argument list is (<% join(",",$m->top_args()) %>) or (<% join(",",$m->caller_args(-1)) %>).
 
 % foreach my $path (qw(various_test /request/sections/perl foobar /shared)) {
-%   my $full_path = $m->process_comp_path($path);
+%   my $full_path = $m->interp->absolute_comp_path($path, $m->current_comp->dir_path);
 Trying to fetch <% $path %> (full path <% $full_path %>):
 %   if ($m->comp_exists($path)) {
 %     if (my $comp = $m->fetch_comp($path)) {
