@@ -425,10 +425,15 @@ attribute does not exist.
 Returns true if the specified attribute exists in this component or
 one of its parents, undef otherwise.
 
-=item load_time
+=item call_method (name, args...)
 
-Returns the time (in Perl time() format) when this component object
-was created.
+Looks for the specified user-defined method in this component and its
+parents, calling the first one found. Dies with an error if not found.
+Methods are declared in the C<E<lt>%methodE<gt>> section.
+
+=item create_time
+
+A synonym for L<load_time|HTML::Mason::Component/item_load_time> (deprecated).
 
 =item declared_args
 
@@ -479,16 +484,25 @@ Returns true if this is a subcomponent of another component.
 Returns true if this component was loaded from a source or object
 file.
 
-=item call_method (name, args...)
+=for html <a name="item_load_time"></a>
 
-Looks for the specified user-defined method in this component and its
-parents, calling the first one found. Dies with an error if not found.
-Methods are declared in the C<E<lt>%methodE<gt>> section.
+=item load_time
+
+Returns the time (in Perl time() format) when this component object
+was created.
 
 =item method_exists (name)
 
 Returns true if the specified user-defined method exists in this
 component or one of its parents, undef otherwise.
+
+=item methods
+
+This method works exactly like the
+L<subcomps|HTML::Mason::Component/item_subcomps> method, but it
+returns methods, not subcomponents.
+
+Methods are declared in C<E<lt>%methodE<gt>> sections.
 
 =item name
 
@@ -522,6 +536,8 @@ args...)>, but returns the method output as a string instead of
 printing it. (Think sprintf versus printf.) The method's return value,
 if any, is discarded.
 
+=for html <a name="item_subcomps"></a>
+
 =item subcomps
 
 With no arguments, returns a hashref containing the subcomponents defined
@@ -534,13 +550,6 @@ or undef if no such subcomponent exists. e.g.
     }
 
 Subcomponents are declared in C<E<lt>%defE<gt>> sections.
-
-=item methods
-
-This method works exactly like the subcomps method, but it returns
-methods, not subcomponents.
-
-Methods are declared in C<E<lt>%methodE<gt>> sections.
 
 =item title
 

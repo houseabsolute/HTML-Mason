@@ -1740,23 +1740,6 @@ In 1.1 and on, C<print> and C<$r-E<gt>print> are remapped to C<$m-E<gt>print>,
 so they may be used interchangeably. Before 1.1, one should only use
 C<$m-E<gt>print>.
 
-=for html <a name="item_scomp"></a>
-
-=item scomp (comp, args...)
-
-Like C<$m-E<gt>comp>, but returns the component output as a string
-instead of printing it. (Think sprintf versus printf.) The
-component's return value is discarded.
-
-=for html <a name="item_subexec"></a>
-
-=item subexec (comp, args...)
-
-This method creates a new subrequest with the specified top-level
-component and arguments, and executes it. This is most often used
-to perform an "internal redirect" to a new component such that
-autohandlers and dhandlers take effect.
-
 =for html <a name="item_request_args"></a>
 
 =item request_args
@@ -1775,6 +1758,27 @@ Returns the component originally called in the request. Without
 autohandlers, this is the same as the first component executed.  With
 autohandlers, this is the component at the end of the
 C<$m-E<gt>call_next> chain.
+
+=for html <a name="item_scomp"></a>
+
+=item scomp (comp, args...)
+
+Like C<$m-E<gt>comp>, but returns the component output as a string
+instead of printing it. (Think sprintf versus printf.) The
+component's return value is discarded.
+
+=for html <a name="item_subexec"></a>
+
+=item subexec (comp, args...)
+
+This method creates a new subrequest with the specified top-level
+component and arguments, and executes it. This is most often used
+to perform an "internal redirect" to a new component such that
+autohandlers and dhandlers take effect.
+
+=item time
+
+Returns the interpreter's notion of the current time (deprecated).
 
 =back
 
