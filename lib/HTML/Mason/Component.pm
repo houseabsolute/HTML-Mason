@@ -11,9 +11,6 @@ use HTML::Mason::Tools qw(absolute_comp_path);
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
-use Class::Container;
-use base qw(Class::Container);
-
 use HTML::Mason::Exceptions( abbr => ['error'] );
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code
@@ -30,6 +27,10 @@ use HTML::Mason::MethodMaker
 		      [ mfu_count => { type => SCALAR } ],
 		    ]
       );
+
+=pod
+
+=begin for reference
 
 __PACKAGE__->valid_params
     (
@@ -48,10 +49,23 @@ __PACKAGE__->valid_params
      subcomps           => {type => HASHREF, default => {}, public => 0},
     );
 
+=end
+
+=cut
+
+my %defaults = ( attr              => {},
+                 declared_args     => {},
+                 dynamic_subs_init => sub {},
+                 flags             => {},
+                 methods           => {},
+                 mfu_count         => 0,
+                 object_size       => 0,
+                 subcomps          => {},
+               );
 sub new
 {
     my $class = shift;
-    my $self = $class->SUPER::new(@_);
+    my $self = bless { %defaults, @_ }, $class;
 
     # Initialize subcomponent and method properties.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
