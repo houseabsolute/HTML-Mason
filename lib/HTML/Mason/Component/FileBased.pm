@@ -53,7 +53,7 @@ __END__
 
 =head1 NAME
 
-HTML::Mason::Component::Subcomponent - Mason Subcomponent Class
+HTML::Mason::Component::FileBased - Mason File-Based Component Class
 
 =head1 DESCRIPTION
 
