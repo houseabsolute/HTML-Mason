@@ -318,7 +318,8 @@ sub interp {
 
         $self->{interp} = $_[0];
 
-        Scalar::Util::weaken( $self->{interp} ) if $] >= 5.006;
+        Scalar::Util::weaken( $self->{interp} )
+            if $] >= 5.006 and defined &Scalar::Util::weaken;
     } elsif ( ! defined $self->{interp} ) {
         die "The Interp object that this object contains has gone out of scope.\n";
     }
