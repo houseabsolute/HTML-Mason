@@ -264,7 +264,9 @@ BEGIN
 
     __PACKAGE__->contained_objects
 	(
-	 interp => 'HTML::Mason::Interp',
+	 interp => { class => 'HTML::Mason::Interp',
+                     descr => 'The Interp object is coordinates multiple objects to handle request execution'
+                   },
 	);
 }
 
