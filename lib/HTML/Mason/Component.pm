@@ -231,6 +231,8 @@ sub attr_if_exists {
     my $value;
     if ($self->_locate_inherited('attr',$name,\$value)) {
 	return $value;
+    } else {
+	return undef;
     }
 }
 

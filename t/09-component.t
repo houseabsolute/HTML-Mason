@@ -306,14 +306,14 @@ EOF
 		      description => 'Test attr_if_exists method',
 		      component => <<'EOF',
 have it: <% $m->base_comp->attr_if_exists('have_it') %>
-don't have it: <% $m->base_comp->attr_if_exists('don\'t have_it') %>
+don't have it: <% defined($m->base_comp->attr_if_exists('don\'t have_it')) ? 'defined' : 'undefined' %>
 <%attr>
 have_it => 1
 </%attr>
 EOF
 		      expect => <<'EOF',
 have it: 1
-don't have it: 0
+don't have it: undefined
 EOF
 		    );
 
