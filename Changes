@@ -11,7 +11,7 @@ available at http://www.masonhq.com/code/history.html.
 
 - Added "REQUEST:" as a component specifier for method comp calls,
 similar to "SELF:" and "PARENT:".  "REQUEST:" is short-hand for
-$m->request_comp.  Suggested by Manuel Capinha.
+$m->request_comp.  Suggested by Manuel Capinha, among others.
 - Added $m->call_self.  This was present in Mason pre-1.10, and has
 been added back per Jon Swartz's request.
 - Added $comp->attributes, similar to $comp->methods.  This just
