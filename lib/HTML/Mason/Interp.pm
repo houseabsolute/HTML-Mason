@@ -681,7 +681,7 @@ EOF
     my $comp = $self->make_component(comp_source => $comp_source);
     my $out;
 
-    my $args = {interp => $self, valid => $self->validation_spec, current_url => $current_url};
+    my $args = [interp => $self, valid => $self->validation_spec, current_url => $current_url];
     $self->make_request(comp=>$comp, args=>$args, out_method=>\$out, %p)->exec;
 
     return $out;
