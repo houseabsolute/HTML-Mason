@@ -547,7 +547,7 @@ sub parse_component
 	for ($argsDump) { s/\$VAR1\s*=//g; s/;\s*$// }
 	push(@cparams,"declared_args=>$argsDump");
     }
-    if ($pureTextFlag) {
+    if ($pureTextFlag && $fileBased) {
 	push(@cparams,"code=>\\&HTML::Mason::Commands::pure_text_handler");
     } else {
 	push(@cparams,"code=>sub {\n$body\n}");
