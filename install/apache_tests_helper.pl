@@ -180,6 +180,10 @@ sub setup_handler
     my $libs = _libs();
 
     print F <<"EOF";
+package My::Interp;
+\$My::Interp::VERSION = '0.01';
+\@My::Interp::ISA = 'HTML::Mason::Interp';
+
 package HTML::Mason;
 
 $libs
@@ -189,19 +193,35 @@ use Apache::Constants qw(REDIRECT);
 use HTML::Mason::ApacheHandler;
 use HTML::Mason;
 
-my \@params = ( {},
-                { autoflush => 1 },
-                { decline_dirs => 0 },
-                { error_mode => 'fatal' },
-              );
+my \@ah_params = ( {},
+                   {},
+                   { decline_dirs => 0 },
+                   {}
+                 );
+
+my \@interp_params = ( {},
+                       { autoflush => 1 },
+                       {},
+                       { error_mode => 'fatal' },
+                     );
 
 my \@ah;
-foreach my \$p (\@params)
+for (my \$x = 0; \$x <= \$#ah_params; \$x++)
 {
-    my \$ah = HTML::Mason::ApacheHandler->new( \%\$p,
-                                               args_method => '$args_method',
-                                               comp_root => '$APACHE{comp_root}',
-                                               data_dir => '$APACHE{data_dir}' );
+    my \$ah =
+        HTML::Mason::ApacheHandler->new
+            ( args_method => '$args_method',
+              \%{\$ah_params[\$x]},
+              interp =>
+              # need to duplicate AH provided defaults here
+              My::Interp->new( request_class => 'HTML::Mason::Request::ApacheHandler',
+                               error_mode => 'output',
+                               error_format => 'html',
+                               comp_root => '$APACHE{comp_root}',
+                               data_dir => '$APACHE{data_dir}',
+                               \%{\$interp_params[\$x]},
+                             ),
+            );
 
     chown Apache->server->uid, Apache->server->gid, \$ah->interp->files_written;
 
