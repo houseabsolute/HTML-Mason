@@ -145,7 +145,7 @@ EOF
     }
 
     {
-	my $path = '/comps/print/handle_component';
+	my $path = '/comps/print/handle_comp';
 	my $response = Apache::test->fetch($path);
 	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
 							expect => <<'EOF',

@@ -264,9 +264,9 @@ if ( \$ENV{PATH_INFO} =~ s,/autoflush\$,, )
 
 my \$h = HTML::Mason::CGIHandler->new( data_dir  => '$data_dir', \%p );
 
-if ( \$ENV{PATH_INFO} =~ s,/handle_component\$,, )
+if ( \$ENV{PATH_INFO} =~ s,/handle_comp\$,, )
 {
-    \$h->handle_component( \$ENV{PATH_INFO} );
+    \$h->handle_comp( \$ENV{PATH_INFO} );
 }
 elsif ( \$ENV{PATH_INFO} =~ s,/handle_cgi_object\$,, )
 {

@@ -44,17 +44,17 @@ sub new {
 
 sub handle_request {
     my $self = shift;
-    $self->_handler( { comp_path => $ENV{PATH_INFO} }, @_ );
+    $self->_handler( { comp => $ENV{PATH_INFO} }, @_ );
 }
 
-sub handle_component {
-    my ($self, $component) = (shift, shift);
-    $self->_handler( { comp_path => $component }, @_ );
+sub handle_comp {
+    my ($self, $comp) = (shift, shift);
+    $self->_handler( { comp => $comp }, @_ );
 }
 
 sub handle_cgi_object {
     my ($self, $cgi) = (shift, shift);
-    $self->_handler( { comp_path => $cgi->path_info,
+    $self->_handler( { comp => $cgi->path_info,
 		       cgi       => $cgi },
 		     @_);
 }
@@ -62,11 +62,11 @@ sub handle_cgi_object {
 sub _handler {
     my ($self, $p) = (shift, shift);
 
-    my $component = $p->{comp_path};
+    my $comp = $p->{comp};
     my ($local_root, $local_datadir);
     if ($self->{dev_dirs}) {
 	foreach my $dir (@{$self->{dev_dirs}}) {
-	    if ($component =~ s/^\Q$dir//) {
+	    if ($comp =~ s/^\Q$dir//) {
 		$local_root    = File::Spec->catdir($self->interp->resolver->comp_root, $dir);
 		$local_datadir = File::Spec->catdir($self->interp->data_dir, $dir);
 		last;
@@ -91,7 +91,7 @@ sub _handler {
     }
 
     $self->interp->delayed_object_params('request', cgi_request => $r);
-    eval { $self->interp->exec($component, $r->params) };
+    eval { $self->interp->exec($comp, $r->params) };
     # save it in case setting one of the attributes below uses eval{}
     my $e = $@;
 
@@ -257,7 +257,7 @@ or C<STDIN> and sending headers and component output to C<STDOUT>.
 This method doesn't accept any parameters.  The initial component
 will be the one specified in C<$ENV{PATH_INFO}>.
 
-=item * handle_component()
+=item * handle_comp()
 
 Like C<handle_request()>, but the first (only) parameter is a
 component path or component object.  This is useful within a
