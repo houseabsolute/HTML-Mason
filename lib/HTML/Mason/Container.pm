@@ -55,7 +55,8 @@ sub create_contained_objects
 	my $delayed       = ref($spec) ? $spec->{delayed} : 0;
 	if (exists $args{$name}) {
 	    # User provided an object
-	    die "Cannot provide a '$name' object, its creation is delayed" if $delayed;
+	    HTML::Mason::Exception::Params->throw( error => "Cannot provide a '$name' object, its creation is delayed" )
+		if $delayed;
 	    next;
 	}
 
@@ -64,9 +65,9 @@ sub create_contained_objects
 	next unless $contained_class;
 
 	if ($delayed) {
-	    $args{"_delayed_$name"} = $class->_get_contained_args($name, $contained_class, \%args);
+	    $args{"_delayed_$name"}{args} = $class->_get_contained_args($name, $contained_class, \%args);
 	    #warn "saving delayed '$name' args for $contained_class: (@{[ %{$args{qq[_delayed_$name]}} ]})";
-	    $args{"_delayed_$name"}{_class} = $contained_class;
+	    $args{"_delayed_$name"}{class} = $contained_class;
 	} else {
 	    $args{$name} = $class->_make_contained_object($name, $contained_class, \%args);
 	}
@@ -78,11 +79,15 @@ sub create_contained_objects
 sub create_delayed_object
 {
     my ($self, $name, %args) = @_;
-    my $spec = $self->{"_delayed_$name"}
-	or die "Unknown delayed object '$name'";
-    my %saved_args = %$spec;
-    my $class = delete $saved_args{_class}
-	or die "Unknown class for delayed object '$name'";
+
+    # It just has to exist.  An empty hash is fine.
+    HTML::Mason::Exception::Params->throw( error => "Unknown delayed object '$name'" )
+	unless exists $self->{"_delayed_$name"}{args};
+
+    my %saved_args = %{ $self->{"_delayed_$name"}{args} };
+
+    my $class = $self->{"_delayed_$name"}{class}
+	or HTML::Mason::Exception::Params->throw( error => "Unknown class for delayed object '$name'" );
 
     return $class->new(%saved_args, %args);
 }
@@ -91,14 +96,17 @@ sub _get_contained_args
 {
     my ($class, $name, $contained_class, $args) = @_;
 
-    die "Invalid class name '$contained_class'" unless $contained_class =~ /^[\w:]+$/;
+    HTML::Mason::Exception::Params->throw( error => "Invalid class name '$contained_class'" )
+	unless $contained_class =~ /^[\w:]+$/;
 
     unless ($contained_class->can('new'))
     {
 	no strict 'refs';
 	eval "use $contained_class";
-	die $@ if $@;
+	HTML::Mason::Exception->throw( error => $@ ) if $@;
     }
+
+    return {} unless $contained_class->can('allowed_params');
 
     # Everything this class will accept, including parameters it will
     # pass on to its own contained objects
@@ -172,12 +180,13 @@ sub allowed_params
 
 	# we have to make sure it is loaded before we try calling
 	# ->allowed_params
-	unless ( $contained_class->can('allowed_params') )
+	unless ( $contained_class->can('new') )
 	{
-	    no strict 'refs';
 	    eval "use $contained_class";
-	    die $@ if $@;
+	    HTML::Mason::Exception->throw( error => $@ ) if $@;
 	}
+
+	next unless $contained_class->can('allowed_params');
 
 	my $subparams = $contained_class->allowed_params($args);
 	@p{keys %$subparams} = values %$subparams;
