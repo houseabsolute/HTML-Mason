@@ -14,7 +14,12 @@ use strict;
 
 use Cwd;
 use File::Spec;
-use HTML::Mason::Exceptions;
+use HTML::Mason::Exceptions
+    ( abbr => 
+      { system_error => 'HTML::Mason::Exception::System',
+	error        => 'HTML::Mason::Exception',
+      },
+    );
 
 require Exporter;
 
@@ -29,12 +34,11 @@ use vars qw(@ISA @EXPORT_OK);
 sub read_file
 {
     my ($file,$binmode) = @_;
-    HTML::Mason::Exception->throw( error => "read_file: '$file' does not exist" )
-	unless -e $file;
-    HTML::Mason::Exception->throw( error => "read_file: '$file' is a directory" ) if (-d _);
+    error "read_file: '$file' does not exist" unless -e $file;
+    error "read_file: '$file' is a directory" if (-d _);
     my $fh = make_fh();
     open $fh, $file
-	or HTML::Mason::Exception::System->throw( error => "read_file: could not open file '$file' for reading: $!" );
+	or system_error "read_file: could not open file '$file' for reading: $!";
     binmode $fh if $binmode;
     local $/ = undef;
     my $text = <$fh>;
@@ -140,15 +144,14 @@ sub load_pkg {
     if ($@) {
 	if ($@ =~ /^Can\'t locate .* in \@INC/) {
 	    if (defined($nf_error)) {
-		my $error = sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
-				    $pkg, $nf_error, join(" ", @INC));
-		HTML::Mason::Exception->throw( error => $error );
+		error sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
+			      $pkg, $nf_error, join(" ", @INC));
 	    } else {
 		undef $@;
 		return 0;
 	    }
 	} else {
-	    HTML::Mason::Exception->throw( error => $@ );
+	    error $@;
 	}
     }
     return 1;
