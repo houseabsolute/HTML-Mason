@@ -20,8 +20,7 @@ use HTML::Mason::MethodMaker
 			 inherit_start_path
 			 interp
 			 object_size
-			 parser_version
-			 run_count ) ],
+			 parser_version ) ],
 
       read_write => [ qw ( dynamic_subs_request
 			   mfu_count ) ]
@@ -43,7 +42,6 @@ my %fields =
      mfu_count => 0,
      object_size => 0,
      parser_version => undef,
-     run_count => 0,
      subcomps => undef,
      source_ref_start => undef   # legacy, left in for pre-0.8 obj files
      );
@@ -127,7 +125,7 @@ sub run {
     $HTML::Mason::CODEREF_NAME{$self->{code}} = $self->source_file
 	if $::opt_P && defined($self->source_file);
 
-    $self->{run_count}++; $self->{mfu_count}++;
+    $self->{mfu_count}++;
 
     # Note: this must always preserve calling wantarray() context
     return $self->{code}->(@_);
@@ -175,11 +173,6 @@ sub title { return $_[0]->{designator} }
 sub name { return $_[0]->{designator} }
 sub path { return undef }
 sub dir_path { return undef }
-
-#
-# Is this our first time being run?
-#
-sub first_time { return $_[0]->{run_count} <= 1 }
 
 #
 # Get all subcomps or particular subcomp by name

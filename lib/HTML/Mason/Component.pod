@@ -114,18 +114,6 @@ file-based components this is the full component path minus the final
 piece.  For subcomponents this is the same as its parent component.
 Undefined for anonymous components.
 
-=item first_time
-
-Returns true if this is the first time the component has executed,
-false otherwise.  Useful for initializing persistent component
-lexicals:
-
-  if ($m->current_comp->first_time) {
-     $dbh = DBI->connect(...);
-
-Note that in a web-based environment, this "first time" will
-come once for each child and every time the component is reloaded.
-
 =item flag (name)
 
 Returns the value for the specified system flag.  Flags are declared
@@ -175,12 +163,6 @@ Can be changed via the C<inherit> flag.
 =item path
 
 Returns the absolute path of this component.
-
-=item run_count
-
-Returns the number of times this component has been invoked. In a
-web-based environment, this value is separate for each child and
-resets every time the component is reloaded.
 
 =item scall_method (name, args...)
 
