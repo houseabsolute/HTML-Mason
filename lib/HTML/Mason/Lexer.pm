@@ -466,32 +466,32 @@ sub match_text
     if ( $comp =~ m,\G
                     (.*?)       # anything
 		    (           # followed by
-                     %          # an eval line
+                     \n%        # an eval line
                      |
-                     <%         # a substitution or tag start
+                     (?=</?%)   # a substitution or tag start or end  - don't consume
                      |
-                     </%        # a tag end
+                     (?=</?&)   # a comp call start or end  - don't consume
                      |
-                     <&         # a comp call start
-                     |
-                     </&        # a comp call end
-                     |
-                     \\\n       # an escaped newline
+                     \\\n       # an escaped newline  - throw away
                      |
                      \z         # or EOF.
                     )
                    ,gcsx
        )
     {
-	# put back anything but an escaped newline or EOF
-	pos($comp) -= length $2 if defined $2 && $2 ne "\\\n";
-
-	$self->{pos} = pos($comp);
-
 	my $text = $1;
 
+	# Back up if we were terminated by an eval line
+	if ($2 eq "\n%") {
+	    pos($comp)--;
+	    $text .= "\n";
+	}
+
+	$self->{pos} = pos($comp);
+	
 	$self->{compiler}->text( text => $text );
 	$self->{lines} += $text =~ tr/\n/\n/;
+	return 1;
     }
 }
 
