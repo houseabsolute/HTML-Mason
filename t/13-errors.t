@@ -117,6 +117,16 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'bad_escape_flag',
+		      description => 'Make sure that an invalid escape flag is reported properly',
+		      component => <<'EOF',
+<% 1234 | abc %>
+EOF
+		      expect_error => qr/Invalid escape flag: abc/,
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
