@@ -276,6 +276,13 @@ sub make_subrequest
     return $subreq;
 }
 
+sub is_subrequest
+{
+    my ($self) = @_;
+
+    return $self->parent_request ? 1 : 0;
+}
+
 #
 # Abort out of current execution.
 #
