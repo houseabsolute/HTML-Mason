@@ -91,8 +91,8 @@ EOF
 
     if ($mod_perl::VERSION >= 1.24) {
 	$include .= <<'EOF';
-  PerlAddVar  MasonAllowedGlobals $foo
-  PerlAddVar  MasonAllowedGlobals @bar
+  PerlAddVar  MasonAllowGlobals $foo
+  PerlAddVar  MasonAllowGlobals @bar
 EOF
     }
 

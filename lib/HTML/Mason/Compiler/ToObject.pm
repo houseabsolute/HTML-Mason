@@ -153,7 +153,7 @@ sub _make_main_header
     return join '', ( "package $pkg;\n",
 		      $self->use_strict ? "use strict;\n" : '',
 		      sprintf( "use vars qw(\%s);\n",
-			       join ' ', '$m', $self->allowed_globals ),
+			       join ' ', '$m', $self->allow_globals ),
 		      "my \$_escape = \\&HTML::Mason::Tools::escape_perl_expression;\n",
 		      $self->_blocks('once'),
 		    );

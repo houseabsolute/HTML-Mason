@@ -29,7 +29,7 @@ use HTML::Mason::MethodMaker
 
 __PACKAGE__->valid_params
     (
-     allowed_globals      => { parse => 'list',   type => ARRAYREF, default => [] },
+     allow_globals        => { parse => 'list',   type => ARRAYREF, default => [] },
      default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
      lexer                => { isa => 'HTML::Mason::Lexer' },
      preprocess           => { parse => 'code',   type => CODEREF,  optional => 1 },
@@ -48,7 +48,7 @@ sub new
     my $self = bless {validate(@args, $class->validation_spec)}, $class;
 
     # Verify the validity of the global names
-    $self->allowed_globals( @{$self->{allowed_globals}} );
+    $self->allow_globals( @{$self->{allow_globals}} );
 
     return $self;
 }
@@ -95,25 +95,25 @@ sub add_allowed_globals
     if ( my @bad = grep { ! /^[\$@%]/ } @globals )
     {
 	HTML::Mason::Exception::Params->throw
-		( error => "allowed_globals: bad parameters '@bad', must begin with one of \$, \@, %\n" );
+		( error => "add_allowed_globals: bad parameters '@bad', must begin with one of \$, \@, %\n" );
     }
 
-    $self->{allowed_globals} = [ keys %{ { map { $_ => 1 } @globals, @{ $self->{allowed_globals} } } } ];
-    return @{ $self->{allowed_globals} };
+    $self->{allow_globals} = [ keys %{ { map { $_ => 1 } @globals, @{ $self->{allow_globals} } } } ];
+    return @{ $self->{allow_globals} };
 }
 
-sub allowed_globals
+sub allow_globals
 {
     my $self = shift;
     
     if (@_)
     {
-	$self->{allowed_globals} = [];
+	$self->{allow_globals} = [];
 	return if @_ == 1 and not defined $_[0]; # @_ is (undef)
 	$self->add_allowed_globals(@_);
     }
 
-    return @{ $self->{allowed_globals} };
+    return @{ $self->{allow_globals} };
 }
 
 sub compile

@@ -40,8 +40,8 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'allowed_globals',
-		      description => 'test that declared globals are allows',
-		      interp_params => { use_object_files => 0, allowed_globals => ['$global'] },
+		      description => 'test that declared globals are allowed',
+		      interp_params => { use_object_files => 0, allow_globals => ['$global'] },
 		      component => <<'EOF',
 <% $global = 1 %>
 EOF
@@ -110,7 +110,7 @@ EOF
 
     $group->add_test( name => 'globals_in_default_package',
 		      description => 'tests that components are executed in HTML::Mason::Commands package by default',
-		      interp_params => { use_object_files => 0, allowed_globals => ['$packvar'] },
+		      interp_params => { use_object_files => 0, allow_globals => ['$packvar'] },
 		      component => <<'EOF',
 <% $packvar %>
 <%init>
@@ -128,7 +128,7 @@ EOF
 
     $group->add_test( name => 'globals_in_different_package',
 		      description => 'tests in_package compiler parameter',
-		      interp_params => { use_object_files => 0, allowed_globals => ['$packvar'],
+		      interp_params => { use_object_files => 0, allow_globals => ['$packvar'],
 					 in_package => 'HTML::Mason::NewPackage' },
 		      component => <<'EOF',
 <% $packvar %>
