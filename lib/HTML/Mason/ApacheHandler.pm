@@ -103,15 +103,6 @@ sub _run_comp
     return wantarray ? @result : $result;
 }
 
-sub print
-{
-    my $self = shift;
-
-    $self->top_buffer->receive(@_);
-}
-
-*out = \&print;
-
 #----------------------------------------------------------------------
 #
 # APACHEHANDLER OBJECT
@@ -420,11 +411,11 @@ sub _initialize {
 	    }
 
 	    return ["<center><h2>" . $self->apache_status_title . "</h2></center>" ,
-		    $self->status_as_html,
-		    $self->interp->status_as_html];
+		    $self->status_as_html(apache_req => $r),
+		    $self->interp->status_as_html(ah => $self, apache_req => $r)];
 	};
 	local $^W = 0; # to avoid subroutine redefined warnings
-	Apache::Status->menu_item($status_name++, $self->apache_status_title, $statsub);
+	Apache::Status->menu_item($status_name, $self->apache_status_title, $statsub);
     }
 
     my $interp = $self->interp;
@@ -447,7 +438,7 @@ sub _initialize {
 # This is used in things like Apache::Status reports.
 
 sub status_as_html {
-    my ($self) = @_;
+    my ($self, %p) = @_;
 
     # Should I be scared about this?  =)
 
@@ -455,6 +446,7 @@ sub status_as_html {
 <h3>ApacheHandler properties:</h3>
 <blockquote>
  <tt>
+<table width="75%">
 <%perl>
 foreach my $property (sort keys %$ah) {
     my $val = $ah->{$property};
@@ -468,10 +460,17 @@ foreach my $property (sort keys %$ah) {
 
     $val =~ s,([\x00-\x1F]),'<font color="purple">control-' . chr( ord('A') + ord($1) - 1 ) . '</font>',eg; # does this work for non-ASCII?
 </%perl>
-    <% $property |h %> => <% defined $val ? $val : '<i>undef</i>' %>
-                          <% $val eq $valid{$property}{default} ? '<font color=green>(default)</font>' : '' %>
-		          <br>
+ <tr>
+  <td>
+    <% $property | h %>
+  </td>
+  <td>
+   <% defined $val ? $val : '<i>undef</i>' %>
+   <% ( defined $val && defined $valid{$property}{default} && $val eq $valid{$property}{default} ) || ( ! defined $val && exists $valid{$property}{default} && ! defined $valid{$property}{default} ) ? '<font color=green>(default)</font>' : '' %>
+  </td>
+ </tr>
 % }
+</table>
   </tt>
 </blockquote>
 
@@ -482,10 +481,14 @@ foreach my $property (sort keys %$ah) {
 EOF
 
     my $interp = $self->interp;
-    my $comp = $interp->make_anonymous_component(comp => $comp_text);
+    my $comp = $interp->make_component(comp_text => $comp_text);
     my $out;
     local $interp->{out_method} = \$out;
-    $interp->exec($comp, ah => $self, valid => $interp->allowed_params);
+
+    my $request = $self->interp->make_request( ah => $self,
+					       apache_req => $p{apache_req},
+					     );
+    $request->exec($comp, ah => $self, valid => $interp->allowed_params);
     return $out;
 }
 
@@ -516,7 +519,6 @@ sub handle_request {
     # 'ah' and 'apache_req' that's their problem.
     #
     my $request = $self->interp->make_request( ah => $self,
-					       interp => $interp,
 					       apache_req => $apreq,
 					     );
     eval { $retval = $self->handle_request_1($apreq, $request) };
