@@ -49,6 +49,11 @@ BEGIN
 	     abbr => 'system_error',
 	     description => 'a system call of some sort failed' },
 
+	   'HTML::Mason::Exception::TopLevelNotFound' =>
+	   { isa => 'HTML::Mason::Exception',
+	     abbr => 'top_level_not_found_error',
+	     description => 'the top level component could not be found' },
+
 	   'HTML::Mason::Exception::VirtualMethod' =>
 	   { isa => 'HTML::Mason::Exception',
 	     abbr => 'virtual_error',
@@ -87,8 +92,6 @@ sub import
 
 package HTML::Mason::Exception;
 
-sub as_string { $_[0]->error }
-
 sub filtered_frames
 {
     my ($self) = @_;
@@ -124,7 +127,7 @@ sub analyze_error
     @frames = $self->filtered_frames;
     $msg = $self->error;
     if (UNIVERSAL::isa($self, 'HTML::Mason::Exception::Compilation')) {
-	if ($msg =~ /(.*) at (.*) line (\d+)\./g) {
+	while ($msg =~ /(.*) at (.*) line (\d+)\./g) {
 	    $file = $2;
 	    push(@lines, $3);
 	}
@@ -132,17 +135,61 @@ sub analyze_error
 	$file = $frames[0]->filename;
 	@lines = $frames[0]->line;
     }
-    while ($msg =~ /at .* line (\d+)\./g) {
-	push(@lines, $1);
-    }
-
-    return { file    => $file,
-	     msg     => $msg,
-	     lines   => \@lines,
-	     frames  => \@frames };
+    my @context = $self->get_file_context($file, \@lines);
+    
+    return {
+	file    => $file,
+	frames  => \@frames,
+	lines   => \@lines,
+	msg     => $msg,
+	context => \@context,
+    };
 }
 
-sub as_log_line
+sub get_file_context
+{
+    my ($self, $file, $line_nums) = @_;
+
+    my @context;
+    my $fh = do { local *FH; *FH; };
+    unless (open($fh, $file)) {
+	@context = (['unable to open file', '']);
+    } else {
+	# Put the file into a list, indexed at 1.
+	my @file = <$fh>;
+	chomp(@file);
+	unshift(@file, undef);
+
+	# Mark the important context lines.
+	# We do this by going through the error lines and incrementing hash keys to
+	# keep track of which lines we eventually need to print, and we color the
+	# line which the error actually occured on in red.
+	my (%marks, %red);
+	my $delta = 4;
+	foreach my $line_num (@$line_nums) {
+	    foreach my $l (($line_num - $delta) .. ($line_num + $delta)) {
+		next if ($l <= 0 or $l > @file);
+		$marks{$l}++;
+	    }
+	    $red{$line_num} = 1;
+	}
+
+	# Create the context list.
+	# By going through the keys of the %marks hash, we can tell which lines need
+	# to be printed. We add a '...' line if we skip numbers in the context.
+	my $last_num = 0;
+	foreach my $line_num (sort { $a <=> $b } keys %marks) {
+	    push(@context, ["...", "", 0]) unless $last_num == ($line_num - 1);
+	    push(@context, ["$line_num:", $file[$line_num], $red{$line_num}]);;
+	    $last_num = $line_num;
+	}
+	push(@context, ["...", "", 0]) unless $last_num == @file;
+	close $fh;
+    }
+    return @context;
+}
+
+sub as_string
 {
     my ($self) = @_;
 
@@ -152,8 +199,55 @@ sub as_log_line
     return sprintf("%s\tStack: %s", $msg, $stack);
 }
 
+use overload
+    '""' => \&as_string,
+    fallback => 1;
+
 sub as_html
 {
+    my ($self) = @_;
+    
+    my $info = $self->analyze_error;
+    my $interp = new HTML::Mason::Interp;
+
+    my $out;
+    my $msg = HTML::Mason::Tools::html_escape($info->{msg});
+    $msg =~ s/\n/<br>/g;
+    $out .= qq[<html><body>\n];
+    $out .= qq[<p align="center"><font face="Verdana, Arial, Helvetica, sans-serif"><b>System error</b></font></p>\n];
+    $out .= qq[<table border="0" cellspacing="0" cellpadding="1">\n];
+    $out .= qq[<tr>];
+    $out .= qq[<td nowrap align="left" valign="top"><b>error:</b>&nbsp;</td>\n];
+    $out .= sprintf(qq[<td align="left" valign="top" nowrap>%s</td>\n], $msg);
+    $out .= qq[</tr>\n];
+    $out .= qq[<tr>\n];
+    $out .= qq[<td nowrap align="left" valign="top"><b>context:</b>&nbsp;</td>\n];
+    $out .= qq[<td align="left" valign="top" nowrap><table border="0" cellpadding="0" cellspacing="0">\n];
+    foreach my $entry (@{$info->{context}}) {
+	my ($line_num, $line, $highlight) = @$entry;
+	$line = HTML::Mason::Tools::html_escape($line);
+	$line =~ s/ /&nbsp;/g;
+	$out .= qq[<tr>\n];
+	$out .= sprintf(qq[<td nowrap align="left" valign="top"><b>%s</b>&nbsp;</td>\n], $line_num);
+	$out .= sprintf(qq[<td align="left" valign="top" nowrap>%s%s%s</td>\n],
+			($highlight ? "<font color=red>" : ""),
+			$line,
+			($highlight ? "</font>" : ""));
+	$out .= qq[</tr>\n];
+    }
+    $out .= qq[</table></td></tr>\n];
+    $out .= qq[<tr>\n];
+    $out .= qq[<td align="left" valign="top" nowrap><b>code stack:</b>&nbsp;</td>\n];
+    $out .= qq[<td align="left" valign="top" nowrap><table border="0" cellpadding="0" cellspacing="0">\n];
+    foreach my $frame (@{$info->{frames}}) {
+	$out .= sprintf(qq[%s:%d\n<br>], HTML::Mason::Tools::html_escape($frame->filename), HTML::Mason::Tools::html_escape($frame->line));
+    }
+    $out .= qq[</td>\n];
+    $out .= qq[</tr>\n];
+    $out =~ s/(<td [^\>]+>)/$1<font face="Verdana, Arial, Helvetica, sans-serif" size="-2">/g;
+    $out =~ s/<\/td>/<\/font><\/td>/g;
+
+    return $out;
 }
 
 1;
