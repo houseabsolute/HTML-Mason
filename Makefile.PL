@@ -49,11 +49,15 @@ chk_version('Params::Validate' => '0.16') or
 	. "*** Mason requires version 0.16, or later, of Params::Validate\n"
 	. "    from CPAN/modules/by-authors/id/D/DR/DROLSKY/Params-Validate-x.x.tar.gz\n\n";
 
-chk_version('Apache::Request' => '0.31') or
-    warn  "\n"
-	. "*** If you plan to use Mason with mod_perl,\n"
-        . "    Mason requires version 0.31, or later, of Apache::Request\n"
-	. "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
+eval { require mod_perl };
+unless ($@)
+{
+    chk_version('Apache::Request' => '0.31') or
+	warn  "\n"
+	    . "*** If you plan to use Mason with mod_perl,\n"
+	    . "    Mason requires version 0.31, or later, of Apache::Request\n"
+	    . "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
+}
 
 chk_version('Exception::Class' => '1.01') or
     warn  "\n"
