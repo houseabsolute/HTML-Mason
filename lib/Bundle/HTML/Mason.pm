@@ -2,7 +2,7 @@
 
 package Bundle::HTML::Mason;
 
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 1;
 
@@ -26,7 +26,7 @@ Exception::Class  1.01
 
 Cache::Cache  1.00
 
-Class::Container  0.06
+Class::Container  0.07
 
 HTML::Mason
 
