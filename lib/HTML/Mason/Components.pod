@@ -966,8 +966,7 @@ includes any method call expected to return an Apache::Table object.
 In addition, FakeApache is playing something of a catch-up game: every
 time a new mod_perl release comes out with new API methods, those
 methods will not be recognized by FakeApache until it is updated in
-the next Mason release.  Conversely, when FakeApache is updated, it
-may cease to work with older versions of mod_perl.
+the next Mason release.
 
 The combination of these problems and the existence of the new
 Apache::DB package may eventually lead us to stop further work on
