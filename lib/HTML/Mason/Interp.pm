@@ -25,7 +25,6 @@ use base qw(HTML::Mason::Container);
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code_cache
 			 data_dir
-			 data_cache_dir
 			 die_handler_overridden
 			 hooks
 			 system_log_file
@@ -54,7 +53,6 @@ __PACKAGE__->valid_params
      autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR|UNDEF },
      code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR }, #10M
      compiler                     => { isa => 'HTML::Mason::Compiler' },
-     data_cache_dir               => { parse => 'string',  optional => 1, type => SCALAR },
      dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR|UNDEF },
      die_handler                  => { parse => 'code',    default => \&Carp::confess, type => CODEREF|SCALAR|UNDEF },
      # Object cause qr// returns an object
@@ -108,8 +106,6 @@ sub new
     $self->{autohandler_name} = undef unless $self->{use_autohandlers};
     $self->{dhandler_name} = undef unless $self->{use_dhandlers};
     $self->{die_handler_overridden} = 1 if $self->{die_handler} ne $self->validation_spec->{die_handler}{default}; #Hmm
-
-    $self->{data_cache_dir} ||= ($self->{data_dir} . "/cache");
 
     $self->system_log_events($self->{system_log_events}) if exists $self->{system_log_events};
     $self->_initialize;
@@ -742,14 +738,6 @@ sub object_file {
 	undef;
 }
 
-sub cache_file {
-    my ($self, $comp) = @_;
-    return $comp->persistent ?
-	File::Spec->catdir( $self->data_cache_dir, compress_path($comp->fq_path) ) :
-	undef;
-}    
-
-
 # Generate HTML that describes Interp's current status.
 # This is used in things like Apache::Status reports.  Currently shows:
 # -- Interp properties
@@ -920,7 +908,13 @@ The required Mason data directory. Mason's various data directories
 =item data_cache_defaults
 
 A hash reference of default options to use for the C<$m-E<gt>cache>
-command.
+command. For example, to use the Cache::MemoryCache implementation
+by default,
+
+    data_cache_defaults=>{cache_class=>'MemoryCache'}
+
+These settings are overriden by options given to particular
+C<$m-E<gt>cache> calls.
 
 =item die_handler
 
@@ -1021,13 +1015,6 @@ Separator to use between fields on a line in the system log. Default is ctrl-A (
 
 True or undef, default is true.  If not true, Mason will not attempt
 to use autohandlers.
-
-=item use_data_cache
-
-True or undef, default is true. Specifies whether the $m->cache and
-related commands are operational.  You may need to disable data
-caching temporarily for debugging purposes, but normally this should
-be left alone.
 
 =item use_dhandlers
 
