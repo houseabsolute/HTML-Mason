@@ -24,9 +24,9 @@ chk_version('File::Spec' => '0.8') or
 	. "*** Mason requires version 0.8, or later, of File::Spec\n"
 	. "    from CPAN/modules/by-module/File/File-Spec-x.x.tar.gz\n\n";
 
-chk_version('Params::Validate' => '0.07') or
+chk_version('Params::Validate' => '0.08') or
     warn  "\n"
-	. "*** Mason requires version 0.07, or later, of Params::Validate\n"
+	. "*** Mason requires version 0.08, or later, of Params::Validate\n"
 	. "    from CPAN/modules/by-authors/id/D/DR/DROLSKY/Params-Validate-x.x.tar.gz\n\n";
 
 chk_version('Apache::Request' => '0.31') or
@@ -58,11 +58,13 @@ assisted_install_config() unless $opts{'no-prompts'};
 WriteMakefile(
     'NAME'    => 'HTML::Mason',
     'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
-    'PREREQ_PM' => { 'Data::Dumper' => 2.08, 'File::Spec' => 0.8, 'Params::Validate' => 0.07,
+    'PREREQ_PM' => { 'Data::Dumper' => 2.08,
+		     'File::Spec' => 0.8,
+		     'Params::Validate' => 0.08,
 		     'Apache::Request' => 0.31,
 		     'Exception::Class' => 0.97,
 		     'Cache::Cache' => 0.99,
-		     },
+		   },
 
     # %APACHE is created when setup_mod_perl_tests() is called.  The
     # code that does this creation is in apache_tests_helper.pl.
