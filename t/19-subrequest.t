@@ -286,5 +286,18 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'relative_path_caller',
+		      description => 'call subrequest with relative path',
+		      component => <<'EOF',
+% $m->subexec( 'support/output' );
+EOF
+		      expect => <<'EOF',
+More output
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     return $group;
 }

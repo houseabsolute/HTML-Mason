@@ -397,6 +397,12 @@ sub make_subrequest
     my ($self, %params) = @_;
     my $interp = $self->interp;
 
+    # Coerce the 'comp' parameter into an absolute path.  Don't create
+    # it if it's missing, though - it's required, but for consistency
+    # we let the exception be thrown later if it's missing.
+    $params{comp} = absolute_comp_path($params{comp}, $self->current_comp->dir_path)
+	if exists $params{comp};
+
     # Give subrequest the same values as parent request for read/write params
     my %defaults = map { ($_, $self->$_()) } $self->_properties;
 
@@ -1874,8 +1880,9 @@ This method creates a new Request object which inherits its parent's
 settable properties, such as P<autoflush> and P<out_method>.  These
 values may be overridden by passing parameters to this method.
 
-The "comp" parameter is required, while all other parameters are
-optional.
+The C<comp> parameter is required, while all other parameters are
+optional.  It may be specified as an absolute path or as a path
+relative to C<< $m->current_comp->dir_path >>.
 
 See DEVEL<subrequests> for more information about subrequests.
 
