@@ -290,7 +290,7 @@ The component path. With a leading '/', the path is relative to the
 component root (C<comp_root>). Otherwise, it is relative to the
 location of the calling component.
 
-=item name=>value pairs:
+=item name => value pairs:
 
 Parameters are passed as one or more C<< name => value >> pairs,
 e.g. S<C<< player => 'M. Jordan' >>>.
@@ -1493,7 +1493,7 @@ so the same warnings apply regarding evals.
 There are two ways to perform redirects that are invisible to the
 client.
 
-First, you can use a Mason subrequest (see L<Subrequests>). This only
+First, you can use a Mason subrequest (see L</Subrequests>). This only
 works if you are redirecting to another Mason page.
 
 Second, you can use Apache's internal_redirect method, which works
