@@ -679,53 +679,34 @@ sub handle_request_1
     my $print = \&Apache::print;
     $interp->out_method( sub { $r->$print( grep {defined} @_ ) } );
 
-    #
-    # Craft the out method for this request to handle automatic http
-    # headers.
-    #
     my $retval;
     if ($self->auto_send_headers) {
+
+	# Craft the request's out method to automatically send http
+	# headers.
 	my $headers_sent = 0;
-	my $delay_buf = '';
 	my $out_method = sub {
+	    
 	    # Check to see if the headers have been sent, first by fast
 	    # variable check, then by slightly slower $r check.
 	    unless ($headers_sent) {
 		unless (http_header_sent($r)) {
-		    # If header has not been sent, buffer initial whitespace
-		    # so as to delay headers.
-		    if ($_[0] !~ /\S/) {
-			$delay_buf .= $_[0];
-			return;
-		    } else {
-			$r->send_http_header();
-
-			# If this is a HEAD request and our Mason request is
-			# still active, abort it.
-			if ($r->header_only) {
-			    $request->abort if $request->depth > 0;
-			    return;
-			}
-		    }
-		}
-		unless ($delay_buf eq '') {
-		    $interp->out_method->($delay_buf);
-		    $delay_buf = '';
+		    $r->send_http_header();
 		}
 		$headers_sent = 1;
 	    }
+
+	    # Call the original out method.
 	    $interp->out_method->($_[0]);
 	};
 	$request->out_method($out_method);
 
 	$retval = $request->exec($comp_path, %args);
 
-	# On a success code, send headers and any buffered whitespace
-	# if it has not already been sent. On an error code, leave it
-	# to Apache to send the headers.
-	if (!$headers_sent and (!$retval or $retval==200)) {
-	    $r->send_http_header() unless http_header_sent($r);
-	    $interp->out_method->($delay_buf) unless $delay_buf eq '';
+	# On a success code, send headers if they have not been sent.
+	# On an error code, leave it to Apache to send the headers.
+	if (!$headers_sent and !http_header_sent($r) and (!$retval or $retval==200)) {
+	    $r->send_http_header();
 	}
     } else {
 	$retval = $request->exec($comp_path, %args);
