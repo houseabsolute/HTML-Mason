@@ -128,6 +128,12 @@ some forward slashes in them or also B<all> of your generated object
 files will end up in a single directory, which could affect
 performance.
 
+=item * comp_class
+
+The component class into which this particular component should be
+blessed when it is created.  This must be a subclass of
+C<HTML::Mason::Component>.
+
 =item * friendly_name
 
 This is used when displaying error messages related to the component,
@@ -164,6 +170,8 @@ change in the future).
 
 =item comp_id
 
+=item comp_class
+
 =item friendly_name
 
 =item extra
@@ -171,9 +179,14 @@ change in the future).
 These are all simple accessors that return the value given to the
 constructor.
 
-=item source
+=item comp_source
 
 Returns the source of the component.
+
+=item object_code ( compiler => $compiler )
+
+Given a compiler, this method returns the object code for the
+component.
 
 =back
 
