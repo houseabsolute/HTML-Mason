@@ -560,7 +560,8 @@ sub handle_request {
 	    print($err);
 	}
     }
-    undef $request;  # ward off memory leak
+    undef $request;  # ward off memory leak because of circular
+                     # reference between request and ah
 
     $interp->write_system_log('REQ_END', $self->{request_number}, $err_status);
     return ($err) ? &OK : (defined($retval)) ? $retval : &OK;
@@ -605,7 +606,7 @@ sub handle_request_1
     #
     # Compute the component path via the resolver. Return NOT_FOUND on failure.
     #
-    my $comp_path = $interp->resolver->file_to_path($pathname,$interp);
+    my $comp_path = $interp->resolver->file_to_path($pathname);
     unless ($comp_path) {
 	$r->warn("[Mason] Cannot resolve file to component: $pathname (is file outside component root?)");
 	return NOT_FOUND;
