@@ -145,6 +145,13 @@ sub start
 
 	$self->match_text && next;
 
+	if ( ( $self->{current}{in_def} || $self->{current}{in_method} ) &&
+	     $self->{current}{comp_source} =~ /\G\z/ )
+	{
+	    my $type = $self->{current}{in_def} ? 'def' : 'method';
+	    $self->throw_syntax_error("Component source ending in the middle of $type block");
+	}
+
 	# We should never get here - if we do, we're in an infinite loop.
 	$self->throw_syntax_error("Infinite parsing loop encountered - Lexer bug?");
     }
