@@ -154,8 +154,8 @@ sub mc_cache_self
 	$REQ->stack->[0] = {%saveLocals};
 	mc_cache(action=>'store',value=>$result,%storeOptions);
     } else {
-	$interp->call_hooks('start_primary');
-	$interp->call_hooks('end_primary');
+	$REQ->call_hooks('start_primary');
+	$REQ->call_hooks('end_primary');
     }
     mc_out($result);
     return 1;

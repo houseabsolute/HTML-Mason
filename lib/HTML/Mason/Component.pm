@@ -68,7 +68,7 @@ sub new
 	$c->{subcomps} = $self->{subcomps};
 
 	# Title is a combination of names
-	$c->{title} = $self->{path} . ":" . $name;
+	$c->{title} = $name;
 	$c->{name} = $name;
     }
 
@@ -87,6 +87,12 @@ sub assign_file_properties
 	(1,$compRoot,$dataDir,$path,$path);
     ($self->{parent_path}) = ($path =~ /^(.*)\/[^\/]+$/);
     ($self->{name}) = ($path =~ /([^\/]+)$/);
+
+    # Initialize subcomponent properties
+    while (my ($name,$c) = each(%{$self->{subcomps}})) {
+	$c->{title} = "$path:$name";
+	$c->{parent_path} = $self->{parent_path};
+    }
 }
 
 sub source_file { my $self = shift; return ($self->file_based) ? ($self->comp_root . $self->path) : undef }
