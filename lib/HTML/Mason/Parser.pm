@@ -50,7 +50,7 @@ my %valid_escape_flags = map(($_,1),qw(h n u));
 #
 sub version
 {
-    return 0.8;
+    return "0.8";
 }
 
 sub new
@@ -416,7 +416,7 @@ sub _parse_var_decls
 {
     my ($self, $section) = @_;
 
-    my @decls = grep {/\S/} split /\n/, $section;
+    my @decls = grep {/\S/ && !/^\s*#/} split /\n/, $section;
 
     my @vars;
     foreach my $decl (@decls)
@@ -764,7 +764,7 @@ sub _parse_substitute_tag
 	    die $self->_make_error( error => "invalid <% %> escape flag: '$invalids[0]'",
 				    errpos => $params{segbegin} + $params{index} );
 	}
-	$perl = '$_out->($_escape->('.$expr.','.join(",",map("'$_'",@flag_list)).'));';
+	$perl = '$_out->($_escape->(('.$expr.'),'.join(",",map("'$_'",@flag_list)).'));';
     } else {
 	$perl = '$_out->('.$expr.');';
     }
@@ -1261,6 +1261,7 @@ sub make_dirs
 	    print "compiling $srcfile\n" if $verbose;
 	    if ($self->make_component(script_file=>$srcfile, object_text=>\$objText, error=>\$errmsg)) {
 		$self->write_object_file(object_file=>$objfile, object_text=>$objText);
+		print $relfh $compPath, "\n" if defined $reload_file;
 	    } else {
 		if ($verbose) {
 		    print "error";
