@@ -217,6 +217,7 @@ sub _initialize {
 		    unless ($path eq '/' and $request_comp->name eq $self->dhandler_name) {
 			if ($request_comp->name eq $self->dhandler_name) {
 			    $path =~ s:/[^\/]+$::;
+                            $path ||= '/';
 			}
 		    }
 		    redo search;
