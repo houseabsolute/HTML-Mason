@@ -1059,9 +1059,6 @@ sub comp {
 
     my $err = $@;
 
-    # any unflushed output is at $self->top_buffer->output
-    $self->flush_buffer if $self->aborted;
-
     if ( $comp->has_filter )
     {
         my $buffer = pop @{ $self->{buffer_stack} };
