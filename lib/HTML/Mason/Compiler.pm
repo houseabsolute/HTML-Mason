@@ -297,7 +297,10 @@ sub variable_declaration
 
     push @{ $self->{current_comp}{args} }, { type => $p{type},
 					     name => $p{name},
-					     default => $p{default} };
+					     default => $p{default},
+					     line => $self->lexer->line_number,
+					     file => $self->lexer->name,
+					   };
 }
 
 sub key_value_pair
