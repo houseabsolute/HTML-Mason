@@ -5,7 +5,7 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
-1.20
+1.20  May 1, 2003 (May Day)
 
 [ ENHANCEMENTS ]
 
@@ -43,6 +43,9 @@ id #448.  Reported by Randy Harmon.
 
 - If in_package was set, Mason would die if output was generated after
 a subrequest.  Task id #453.  Reported by David R. Baird.
+
+- If Perl's print() was called after a subrequest, Mason would die
+when run with any Perl before 5.8.0.  Task id #458.
 
 - If a component called $m->cache_self, and then $m->decline, no
 output would be generated.  Task id #454.  Patch by Vadim Ustiansky.
