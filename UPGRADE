@@ -15,6 +15,70 @@ remove the Parser-related code entirely.  Otherwise see the
 HTML::Mason::Compiler and HTML::Mason::Compiler::ToObject
 documentation for more details.
 
+- If your handler.pl file creates an Interp object and then passes
+that object to the ApacheHandler constructor, this will no longer
+work.  Instead, simply pass all of the parameters for both the Interp
+and ApacheHandler to the ApacheHandler constructor.
+
+So this:
+
+  my $interp = HTML::Mason::Interp->new( comp_root => ..., data_dir =>... );
+
+  my $ah = HTML::Mason::ApacheHandler->new( interp => $interp );
+
+becomes this:
+
+  my $ah = HTML::Mason::ApacheHandler->new( comp_root => ..., data_dir =>... );
+
+- The use_reload_file Interp parameter has been removed.  See the
+documentation on the static_source parameter (in HTML::Mason::Interp),
+which is intended to provide a similar performance enhancement.
+
+- Previous versions of Mason split the POD documentation into separate
+.pod files from the code, which was in .pm files.  Now, these have
+been combined into one file, the .pm file.  However, perldoc will look
+for a .pod file before a .pm file.
+
+During the install, we try to find these old .pod files and delete
+them.  However, if that isn't successful, you may see the old
+documentation for the following modules: HTML::Mason::Interp,
+HTML::Mason::Request, HTML::Mason::ApacheHandler,
+HTML::Mason::Component.  If you are experiencing this problem after
+installing this new version of Mason, you will need to delete the old
+.pod files manually.
+
+- The top_args and top_comp methods have been renamed to request_args
+and request_comp, respectively.  The old method names have been
+deprecated but will continue to work until 1.20.
+
+- The run_count and first_time component object methods have been
+removed.
+
+- The Parser's taint_check method no longer exists in any form.  We
+now automatically detect taint mode and act appropriately to untaint
+component source and object files.
+
+- The use_autohandlers, use_dhandlers, and
+allow_recursive_autohandlers Interp parameters have been removed.
+
+- The autohandler_name and dhandler_name Interp parameters no longer
+accept undef as a valid value.  The upshot of these two changes is
+that there is no way to "turn off" autohandlers or dhandlers.  Of
+course, the "inherit" flag for components still works.
+
+- The home-brew caching architecture, using MLDBM, has been replaced
+with one that uses Cache::Cache.  The old $m->cache and $m->cache_self
+methods still exist but their semantics have changed.  Please see the
+Developer's Manual (HTML::Mason::Devel) and Request object docs
+(HTML::Mason::Request) for more details.
+
+- The top_level_predicate ApacheHandler parameter has been removed.
+If you would like to filter requests you can do this via the new
+ApacheHandler prepare_request method, which will give you a Request
+object that you can manipulate before deciding to serve a request.
+See the ApacheHandler docs (HTML::Mason::ApacheHandler) for more
+details.
+
 Version 0.85
 
 - Autohandlers are now recursive by default. If your site uses
