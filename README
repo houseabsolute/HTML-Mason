@@ -66,6 +66,13 @@ Testing with recent mod_perls showed improvements, but because this
 bug can be so intermittent and difficult to spot, mod_perl DSO with
 Mason is still strictly unsupported.
 
+* Don't use Mason with PerlFreshRestart.
+
+The mod_perl PerlFreshRestart directive attempts to reload modules on
+restart in a very simplistic way. Mason cannot be reloaded this way.
+To reliably restart a server using Mason, you must actually stop and
+start the server.
+
 GETTING HELP
 
 The official Mason web site is at http://www.masonhq.com/.  There
