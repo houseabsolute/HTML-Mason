@@ -185,7 +185,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'filter_and_flush',
-                      description => 'test that flush is ignore with filter present',
+                      description => 'test that flush is respected with filter present',
                       component => <<'EOF',
 foo
 % $m->flush_buffer;
@@ -195,7 +195,8 @@ s/(foo)\s+(\S+)/$2$1/;
 </%filter>
 EOF
                       expect => <<'EOF',
-barfoo
+foo
+bar
 EOF
                     );
 
