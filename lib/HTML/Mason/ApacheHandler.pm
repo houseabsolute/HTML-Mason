@@ -176,6 +176,41 @@ sub redirect
 
 #----------------------------------------------------------------------
 #
+# APACHE-SPECIFIC FILE RESOLVER OBJECT
+#
+package HTML::Mason::Resolver::File::ApacheHandler;
+
+use strict;
+
+use HTML::Mason::Tools qw(paths_eq);
+
+use HTML::Mason::Resolver::File;
+use base qw(HTML::Mason::Resolver::File);
+
+#
+# Given an apache request object, return the associated component
+# path or undef if none exists. This is called for top-level web
+# requests that resolve to a particular file.
+#
+sub apache_request_to_comp_path {
+    my ($self, $r) = @_;
+
+    my $file = $r->filename;
+    $file .= $r->path_info unless -f $file;
+
+    foreach my $root (map $_->[1], $self->comp_root_array) {
+	if (paths_eq($root, substr($file, 0, length($root)))) {
+	    my $path = substr($file, ($root eq '/' ? 0 : length($root)));
+	    $path =~ s,\/$,, unless $path eq '/';
+	    return $path;
+	}
+    }
+    return undef;
+}
+
+
+#----------------------------------------------------------------------
+#
 # APACHEHANDLER OBJECT
 #
 package HTML::Mason::ApacheHandler;
@@ -461,7 +496,9 @@ sub new
     # get $r off end of params if its there
     my $r = pop if @_ % 2 == 1;
 
-    my %defaults = ( request_class  => 'HTML::Mason::Request::ApacheHandler' );
+    my %defaults = ( request_class  => 'HTML::Mason::Request::ApacheHandler',
+                     resolver_class => 'HTML::Mason::Resolver::File::ApacheHandler',
+                   );
     my $allowed_params = $class->allowed_params(%defaults, @_);
 
     if ( exists $allowed_params->{comp_root} and
@@ -505,7 +542,7 @@ sub new
 
     my $self = $class->SUPER::new(%defaults, %params);
 
-    unless ( $self->interp->resolver->can('resolve_backwards') )
+    unless ( $self->interp->resolver->can('apache_request_to_comp_path') )
     {
 	error "The resolver class your Interp object uses does not implement " .
               "the 'resolve_backwards' method.  This means that ApacheHandler " .
@@ -676,14 +713,6 @@ sub handle_request
     $req->exec;
 }
 
-sub apache_request_to_comp_path {
-    my ($self, $r) = @_;
-    
-    my $file = $r->filename;
-    $file .= $r->path_info unless -f $file;
-    return $self->interp->resolver->resolve_backwards($file);
-}
-
 sub prepare_request
 {
     my ($self, $r) = @_;
@@ -716,7 +745,7 @@ sub prepare_request
     #
     # Compute the component path via the resolver. Return NOT_FOUND on failure.
     #
-    my $comp_path = $self->apache_request_to_comp_path($r);
+    my $comp_path = $interp->resolver->apache_request_to_comp_path($r);
     unless ($comp_path) {
 	#
 	# Append path_info if filename does not represent an existing file
