@@ -260,7 +260,7 @@ Interp's exec() method:
 where I<comp> is a component path or component object.
 
 Component parameters are given as a series of name/value pairs, just
-as they are with C<$m->comp>. exec returns the return value of
+as they are with C<$m-E<gt>comp>. exec returns the return value of
 the component. Component output is sent to standard output by default,
 but you can change this by specifying C<out_method>.
 
