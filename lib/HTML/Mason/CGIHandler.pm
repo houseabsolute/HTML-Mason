@@ -166,7 +166,7 @@ sub is_main {1}
 sub is_initial_req {1}
 
 # What to do with this?
-sub allowed {}
+# sub allowed {}
 
 sub method {
     shift->query->request_method;
@@ -174,10 +174,10 @@ sub method {
 }
 
 # There mut be a mapping for this.
-sub method_number {}
+# sub method_number {}
 
 # Can CGI.pm tell us this?
-sub bytes_sent {0}
+# sub bytes_sent {0}
 
 # The request line sent by the client." Poached from Apache::Emulator.
 sub the_request {
@@ -188,7 +188,7 @@ sub the_request {
 }
 
 # Is CGI ever a proxy request?
-sub proxy_req {}
+# sub proxy_req {}
 
 sub header_only { $ENV{REQUEST_METHOD} eq 'HEAD' }
 
@@ -204,12 +204,12 @@ sub uri {
 }
 
 # Is this available in CGI?
-sub filename {}
+# sub filename {}
 
 # "The $r->location method will return the path of the
 # <Location> section from which the current "Perl*Handler"
 # is being called." This is irrelevant, I think.
-sub location {}
+# sub location {}
 
 sub path_info { $ENV{PATH_INFO} }
 
@@ -260,10 +260,10 @@ sub header_in {
 #           can only ask for this once, as the entire body is read
 #           from the client.
 # Not sure what to do with this one.
-sub content {}
+# sub content {}
 
 # I think this may be irrelevant under CGI.
-sub read {}
+# sub read {}
 
 # Use LWP?
 sub get_remote_host {}
@@ -284,8 +284,8 @@ sub send_http_header {
 }
 
 # How do we know this under CGI?
-sub get_basic_auth_pw {}
-sub note_basic_auth_failure {}
+# sub get_basic_auth_pw {}
+# sub note_basic_auth_failure {}
 
 # I think that this just has to be empty.
 sub handler {}
@@ -383,15 +383,17 @@ sub print {
     shift->query->print(@_);
 }
 
-# "Send the contents of a file to the client." Do we really want to do this?
-sub send_fd {}
+sub send_fd {
+    my ($self, $fd) = @_;
+    print <$fd>;
+}
 
 # Should this perhaps throw an exception?
-sub internal_redirect {}
-sub internal_redirect_handler {}
+# sub internal_redirect {}
+# sub internal_redirect_handler {}
 
 # Do something with ErrorDocument?
-sub custom_response {}
+# sub custom_response {}
 
 # I think we'ev made this essentially the same thing.
 BEGIN {
@@ -400,9 +402,12 @@ BEGIN {
 }
 
 # Does CGI support logging?
-sub log_reason {}
-sub log_error {}
-sub warn {}
+# sub log_reason {}
+# sub log_error {}
+sub warn {
+    shift;
+    print STDERR @_, "\n";
+}
 
 sub params {
     my $self = shift;
