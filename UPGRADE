@@ -4,6 +4,11 @@ Hints about upgrading to various major revisions of Mason. To be
 completely safe, always read carefully through the Changes file and
 upgrade first on a test server.
 
+Version 1.1
+
+- The HTML::Mason::Commands module has been removed.  None of the old
+'mc_' style commands will work with this version.
+
 Version 0.85
 
 - Autohandlers are now recursive by default. If your site uses
