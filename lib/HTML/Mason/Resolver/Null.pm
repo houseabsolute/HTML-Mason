@@ -9,10 +9,6 @@ use strict;
 use HTML::Mason::Resolver;
 use base qw(HTML::Mason::Resolver);
 
-sub new {
-    return bless {}, shift;
-}
-
 sub get_info {
     return;
 }

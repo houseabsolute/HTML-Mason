@@ -28,11 +28,19 @@ use strict;
 
 use HTML::Mason::Exceptions (abbr => [qw(error param_error)]);
 
-use Params::Validate qw(:types);
+use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
 my %VALID_PARAMS = ();
 my %CONTAINED_OBJECTS = ();
+
+sub new
+{
+    my $proto = shift;
+    my $class = ref $proto || $proto;
+    my @args = $class->create_contained_objects(@_);
+    return bless {validate @args, $class->validation_spec}, $class;
+}
 
 sub all_specs
 {

@@ -93,14 +93,12 @@ use HTML::Mason::MethodMaker
 sub new
 {
     my $class = shift;
-
-    my @args = $class->create_contained_objects(@_);
-
-    my $self = bless { validate( @args, $class->validation_spec ),
-		       code_cache => {},
-		       code_cache_current_size => 0,
-		       files_written => [],
-		     }, $class;
+    my $self = $class->SUPER::new(@_);
+    %$self = (%$self,
+		      code_cache => {},
+		      code_cache_current_size => 0,
+		      files_written => [],
+	     );
 
     $self->_initialize;
     return $self;

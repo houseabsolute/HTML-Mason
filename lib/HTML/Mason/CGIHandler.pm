@@ -31,14 +31,12 @@ __PACKAGE__->contained_objects
 
 sub new {
     my $package = shift;
+    my $self = $package->SUPER::new(comp_root => $ENV{DOCUMENT_ROOT},
+				    request_class => 'HTML::Mason::Request::CGI',
+				    error_mode => 'output',
+				    error_format => 'html',
+				    @_);
 
-    my @my_args = $package->create_contained_objects(comp_root => $ENV{DOCUMENT_ROOT},
-						     request_class => 'HTML::Mason::Request::CGI',
-						     error_mode => 'output',
-						     error_format => 'html',
-						     @_);
-
-    my $self = bless { validate @my_args, $package->validation_spec };
     $self->interp->out_method(\$self->{output});
     $self->interp->compiler->add_allowed_globals('$r');
     

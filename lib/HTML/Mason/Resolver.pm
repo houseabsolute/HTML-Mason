@@ -16,12 +16,6 @@ use HTML::Mason::ComponentSource;
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
-sub new
-{
-    my $class = shift;
-    return bless {validate(@_, $class->validation_spec)}, $class;
-}
-
 # Returns HTML::Mason::ComponentSource object
 sub get_info {
     shift->_virtual;
@@ -83,15 +77,8 @@ implement the following methods.
 
 =item new
 
-This method is optional.  The new method included in this class does
-the following:
-
-  sub new
-  {
-      my $class = shift;
-      return bless {validate(@_, $class->validation_spec)}, $class;
-  }
-
+This method is optional.  The new method included in this class is
+simply inherited from C<HTML::Mason::Container>.
 If you need something more complicated done in your new method you
 will need to override it in your subclass.
 

@@ -483,10 +483,8 @@ sub new
 	$defaults{error_mode} = 'output';
 	$defaults{error_format} = 'html';
     }
-
-    my @args = $class->create_contained_objects(%defaults, @_);
-
-    my $self = bless {validate( @args, $class->validation_spec )}, $class;
+    
+    my $self = $class->SUPER::new(%defaults, @_);
 
     unless ( $self->interp->resolver->can('apache_request_to_comp_path') )
     {

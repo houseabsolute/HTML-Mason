@@ -41,10 +41,7 @@ __PACKAGE__->valid_params
 sub new
 {
     my $class = shift;
-    my @args = $class->create_contained_objects(@_);
-
-    my $self = bless { validate( @args, $class->validation_spec ) }, $class;
-
+    my $self = $class->SUPER::new(@_);
     $self->_initialize;
     return $self;
 }

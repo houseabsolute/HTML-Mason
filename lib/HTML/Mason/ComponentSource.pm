@@ -21,6 +21,8 @@ use HTML::Mason::MethodMaker
                         ) ],
       );
 
+# XXX Should be a HTML::Mason::Container
+
 my %valid_params =
     (
      comp_id       => { type => SCALAR | UNDEF },

@@ -28,6 +28,10 @@ use HTML::Mason::MethodMaker
 		    ]
       );
 
+#  XXX This needs to be a HTML::Mason::Container.
+# Interesting sidenote: more people in Australia than I expected say 
+# the letter H as "Haitch" instead of "Aitch".  Thus "a" instead of "an".
+
 my %valid_params =
     (
      attr               => {type => HASHREF, default => {}},

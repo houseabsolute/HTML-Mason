@@ -84,10 +84,9 @@ use HTML::Mason::MethodMaker
 sub new
 {
     my $class = shift;
+    my $self = $class->SUPER::new(@_);
 
-    my @args = $class->create_contained_objects(@_);
-
-    my $self = bless {validate( @args, $class->validation_spec ),
+    %$self = (%$self, 
 		      aborted => undef,
 		      aborted_value => undef,
 		      buffer_stack => undef,
@@ -98,7 +97,8 @@ sub new
 		      stack => undef,
 		      wrapper_chain => undef,
 		      wrapper_index => undef,
-		     }, $class;
+	     );
+
     $self->{request_comp} = delete($self->{comp});
     $self->{request_args} = delete($self->{args});
     if (UNIVERSAL::isa($self->{request_args}, 'HASH')) {

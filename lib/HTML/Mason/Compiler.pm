@@ -53,10 +53,7 @@ use HTML::Mason::MethodMaker
 sub new
 {
     my $class = shift;
-
-    # Must assign to an actual array for validate() to work
-    my @args = $class->create_contained_objects(@_);
-    my $self = bless {validate(@args, $class->validation_spec)}, $class;
+    my $self = $class->SUPER::new(@_);
 
     # Verify the validity of the global names
     $self->allow_globals( @{$self->{allow_globals}} );
