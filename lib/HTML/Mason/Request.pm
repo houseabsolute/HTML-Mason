@@ -535,7 +535,7 @@ sub comp {
     my $base_comp = exists($mods{base_comp}) ? $mods{base_comp} : $self->base_comp;
     unless ( $mods{base_comp} ||	# base_comp override
 	     !$path || 		# path is undef if $comp is a reference
-	     $path =~ m/^(?:SELF|PARENT)(?::..*)?$/ ) {
+	     $path =~ m/^(?:SELF|PARENT)(?:\:..*)?$/ ) {
 	$base_comp = ( $path =~ m/(.*):/ ?
 		       $self->fetch_comp($1) :
 		       $comp );
