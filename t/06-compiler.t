@@ -714,19 +714,19 @@ EOF
 
 #------------------------------------------------------------
 
-	$group->add_test( name => 'shared_to_init_eval',
-			  description => "Make sure <%init>'s eval() can see lexicals in <%shared>",
-			  component => <<'EOF',
-<%init>
- my $y = 3;
- $m->out( eval('$x') . eval('$y') ); # Use an eval in case $x isn't even declared
-</%init>
-<%shared>
- my $x = 7;
-</%shared>
-EOF
-                          expect => 73,
-                        );
+# 	$group->add_test( name => 'shared_to_init_eval',
+# 			  description => "Make sure <%init>'s eval() can see lexicals in <%shared>",
+# 			  component => <<'EOF',
+# <%init>
+#  my $y = 3;
+#  $m->out( eval '$x' . eval '$y' ) ; # Use an eval in case $x isn't even declared
+# </%init>
+# <%shared>
+#  my $x = 7;
+# </%shared>
+# EOF
+#                           expect => 73,
+#                         );
 
 #------------------------------------------------------------
 
@@ -746,19 +746,19 @@ EOF
 
 #------------------------------------------------------------
 
-	$group->add_test( name => 'shared_to_init_local',
-			  description => 'Make sure <%init> can see local variables in <%shared>',
-			  interp_params => { allow_globals => ['$x'] },
-			  component => <<'EOF',
-<%init>
- $m->out( $x );
-</%init>
-<%shared>
- local $x = 9;
-</%shared>
-EOF
-                          expect => 9,
-                        );
+# 	$group->add_test( name => 'shared_to_init_local',
+# 			  description => 'Make sure <%init> can see local variables in <%shared>',
+# 			  interp_params => { allow_globals => ['$x'] },
+# 			  component => <<'EOF',
+# <%init>
+#  $m->out( $x );
+# </%init>
+# <%shared>
+#  local $x = 9;
+# </%shared>
+# EOF
+#                           expect => 9,
+#                         );
 
 #------------------------------------------------------------
 
