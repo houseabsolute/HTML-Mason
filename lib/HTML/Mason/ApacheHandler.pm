@@ -511,7 +511,7 @@ sub handle_request_1
 	foreach my $key ( $q->param ) {
 	    foreach my $value ( $q->param($key) ) {
 		if (exists($args{$key})) {
-		    if (ref($args{$key})) {
+		    if (ref($args{$key}) eq 'ARRAY') {
 			$args{$key} = [@{$args{$key}}, $value];
 		    } else {
 			$args{$key} = [$args{$key}, $value];
