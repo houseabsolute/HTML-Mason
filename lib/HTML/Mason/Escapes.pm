@@ -85,7 +85,7 @@ potential security risk of allowing cross-site scripting attacks.
 HTML escaping should always be done based on the character set a page
 is in.  Merely escaping the four characters mentioned above is not
 sufficient.  The quick summary of why is that for some character sets,
-characters other than '<' may be interpreter as a "less than" sign,
+characters other than '<' may be interpreted as a "less than" sign,
 meaning that just filtering '<' and '>' will not stop all cross-site
 scripting attacks.  See
 http://www.megasecurity.org/Info/cross-site_scripting.txt for more
