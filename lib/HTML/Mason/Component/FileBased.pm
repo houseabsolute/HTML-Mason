@@ -9,9 +9,10 @@ use strict;
 use File::Basename;
 use File::Spec;
 
-use vars qw(@ISA);
+use HTML::Mason::Component;
+use base qw(HTML::Mason::Component);
 
-@ISA = qw(HTML::Mason::Component);
+use HTML::Mason::Exceptions( abbr => ['error'] );
 
 use HTML::Mason::MethodMaker ( read_only => [ qw( path source_file ) ] );
 
@@ -46,7 +47,7 @@ sub assign_runtime_properties {
 	$self->{'path'} = $fq_path;
     } else {
 	($self->{source_root_key},$self->{'path'}) = ($fq_path =~ m{ ^/([^/]+)(/.*)$ }x)
-	    or HTML::Mason::Exception->throw( error => "could not split FQ path ($fq_path) as expected" );
+	    or error "could not split FQ path ($fq_path) as expected";
 	foreach my $lref (@$comp_root) {
 	    my ($key,$root) = @$lref;
 	    if ($self->{source_root_key} eq uc($key)) {
@@ -54,7 +55,7 @@ sub assign_runtime_properties {
 		last;
 	    }
 	}
-	HTML::Mason::Exception->throw( error => "FQ path ($fq_path) contained unknown source root key" )
+	error "FQ path ($fq_path) contained unknown source root key"
 	    unless $source_root;
     }
     $self->{'source_file'} = File::Spec->canonpath( File::Spec->catfile( $source_root, $self->{'path'} ) );

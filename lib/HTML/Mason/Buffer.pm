@@ -9,8 +9,10 @@ use strict;
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
+use HTML::Mason::Exceptions( abbr => ['param_error'] );
+
 use Params::Validate qw(:all);
-Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
+Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( sink
@@ -66,7 +68,7 @@ sub _initialize
 	}
 	else
 	{
-	    HTML::Mason::Exception::Params->throw( error => "HTML::Mason::Buffer->new requires either a mode, parent, or sink parameter" );
+	    param_error "HTML::Mason::Buffer->new requires either a mode, parent, or sink parameter";
 	}
     }
 
@@ -82,7 +84,7 @@ sub _initialize
     }
     else
     {
-	HTML::Mason::Exception::Params->throw( error => "Buffering to a default sink only works in batch mode or with a parent buffer." )
+	param_error "Buffering to a default sink only works in batch mode or with a parent buffer."
 	    unless $self->{parent} || $self->{mode} eq 'batch';
 
 

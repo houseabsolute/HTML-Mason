@@ -11,8 +11,6 @@ use Params::Validate qw(SCALAR);
 use HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
 
-use HTML::Mason::Exceptions;
-
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( comp_class
                           in_package

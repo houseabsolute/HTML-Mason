@@ -10,9 +10,9 @@ use HTML::Mason::Component::FileBased;
 use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Lexer;
 
-use HTML::Mason::Exceptions;
+use HTML::Mason::Exceptions( abbr => [qw(param_error compile_error syntax_error)] );
 use Params::Validate qw(:all);
-Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
+Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
 
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
@@ -94,8 +94,7 @@ sub add_allowed_globals
 
     if ( my @bad = grep { ! /^[\$@%]/ } @globals )
     {
-	HTML::Mason::Exception::Params->throw
-		( error => "add_allowed_globals: bad parameters '@bad', must begin with one of \$, \@, %\n" );
+	param_error "add_allowed_globals: bad parameters '@bad', must begin with one of \$, \@, %\n";
     }
 
     $self->{allow_globals} = [ keys %{ { map { $_ => 1 } @globals, @{ $self->{allow_globals} } } } ];
@@ -128,8 +127,7 @@ sub compile
     if ($self->preprocess)
     {
 	eval { $self->preprocess->( \$p{comp_text} ) };
-	HTML::Mason::Exception::Compiler->throw( error => "Error during custom preprocess step: $@" )
-	    if $@;
+	compile_error "Error during custom preprocess step: $@" if $@;
     }
 
     $self->lexer->lex( comp_text => $p{comp_text}, name => $p{name}, compiler => $self );
@@ -141,7 +139,7 @@ sub start_component
 {
     my $self = shift;
 
-    HTML::Mason::Exception::Compiler->throw( error => "Cannot start a component while already compiling a component" )
+    compile_error "Cannot start a component while already compiling a component"
         if $self->{current_comp};
 
     $self->{in_main} = 1;
@@ -178,7 +176,7 @@ sub end_component
 {
     my $self = shift;
 
-    HTML::Mason::Exception::Syntax->throw( error => "Not enough component-with-content ending tags found" )
+    syntax_error "Not enough component-with-content ending tags found"
 	if @{ $self->{comp_with_content_stack} };
 
     $self->{current_comp} = undef;
@@ -189,10 +187,10 @@ sub start_block
     my $self = shift;
     my %p = @_;
 
-    HTML::Mason::Exception::Syntax->throw( error => "Cannot define a $p{block_type} section inside a method or subcomponent" )
+    syntax_error "Cannot define a $p{block_type} section inside a method or subcomponent"
 	 if $top_level_only_block{ $p{block_type} } && ! $self->{in_main};
 
-    HTML::Mason::Exception::Syntax->throw( error => "Cannot nest a $p{block_type} inside a $self->{in_block} block: " . $self->lexer->name )
+    syntax_error "Cannot nest a $p{block_type} inside a $self->{in_block} block: " . $self->lexer->name
 	 if $self->{in_block};
 
     $self->{in_block} = $p{block_type};
@@ -266,7 +264,7 @@ sub end_block
     my $self = shift;
     my %p = @_;
 
-    HTML::Mason::Exception::Syntax->throw( error => "end of $p{block_type} encountered while in $self->{in_block} block" )
+    syntax_error "end of $p{block_type} encountered while in $self->{in_block} block"
 	unless $self->{in_block} eq $p{block_type};
 
     $self->{in_block} = undef;
@@ -277,12 +275,12 @@ sub variable_declaration
     my $self = shift;
     my %p = @_;
 
-    HTML::Mason::Exception::Compiler->throw( error => "variable_declaration called inside a $p{block_type} block")
+    compile_error "variable_declaration called inside a $p{block_type} block"
 	unless $p{block_type} eq 'args';
 
     my $arg = "$p{type}$p{name}";
 
-    HTML::Mason::Exception::Compiler->throw( "$arg already defined" )
+    compile_error "$arg already defined"
         if grep { "$_->{type}$_->{name}" eq "$p{type}$p{name}" } @{ $self->{current_comp}{args} };
 
     push @{ $self->{current_comp}{args} }, { type => $p{type},
@@ -295,11 +293,11 @@ sub key_value_pair
     my $self = shift;
     my %p = @_;
 
-    HTML::Mason::Exception::Compiler->throw( error => "key_value_pair called inside a $p{block_type} block")
+    compile_error "key_value_pair called inside a $p{block_type} block"
 	unless $p{block_type} eq 'flags' || $p{block_type} eq 'attr';
 
     my $type = $p{block_type} eq 'flags' ? 'flag' : 'attribute';
-    HTML::Mason::Exception::Compiler->throw( error => "$p{key} $type already defined" )
+    compile_error "$p{key} $type already defined"
 	if exists $self->{current_comp}{ $p{block_type} }{ $p{key} };
 
     $self->{current_comp}{ $p{block_type} }{ $p{key} } = $p{value}
@@ -310,7 +308,7 @@ sub start_named_block
     my $self = shift;
     my %p = @_;
 
-    HTML::Mason::Exception::Syntax->throw( "Cannot define a $p{type} inside a method or subcomponent" )
+    syntax_error "Cannot define a $p{type} inside a method or subcomponent"
         unless $self->{in_main};
 
     $self->{in_main}--;
@@ -341,7 +339,7 @@ sub substitution
 	%flags = map { $_ => 1 } split //, $p{escape} if $p{escape};
 	foreach (keys %flags)
 	{
-	    HTML::Mason::Exception::Compiler->throw( error => "invalid <% %> escape flag: '$_'" )
+	    compile_error "invalid <% %> escape flag: '$_'"
 		unless $valid_escape_flag{$_};
 	}
 	unless ( delete $flags{n} )
@@ -403,7 +401,7 @@ sub component_content_call_end
 {
     my $self = shift;
 
-    HTML::Mason::Exception::Compiler->throw(error=>"found component with content ending tag but no beginning tag")
+    compile_error "found component with content ending tag but no beginning tag"
 	unless @{ $self->{comp_with_content_stack} };
 
     my $call = pop @{ $self->{comp_with_content_stack} };

@@ -9,7 +9,7 @@ use strict;
 use HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
 
-use Exception::Class qw( Mason::Exception::Compiler );
+use HTML::Mason::Exceptions( abbr => ['compile_error'] );
 use Params::Validate qw( :all );
 
 use HTML::Mason::MethodMaker
