@@ -1878,6 +1878,13 @@ C<notes($key)> returns a previously stored value.  C<notes()> without
 any arguments returns a reference to the entire hash of key-value
 pairs.
 
+C<notes()> is similar to the mod_perl method C<< $r->pnotes() >>.  The
+main differences are that this C<notes()> can be used in a
+non-mod_perl environment, and that its lifetime is tied to the
+I<Mason> request object, not the I<Apache> request object.  In
+particular, a Mason subrequest has its own C<notes()> structure, but
+would access the same C<< $r->pnotes() >> structure.
+
 =for html <a name="item_out"></a>
 
 =item out (string)

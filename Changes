@@ -7,6 +7,11 @@ available at http://www.masonhq.com/code/history.html.
 
 1.19  March 3, 2003
 
+[ ENHANCEMENTS ]
+
+- Added an $m->notes() method, which is similar to $r->pnotes() but
+may be used outside a mod_perl environment.
+
 [ BUG FIXES ]
 
 - Fixed a very nasty bug that could cause subcomponents or methods
