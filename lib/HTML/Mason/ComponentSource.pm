@@ -56,7 +56,7 @@ sub comp_source
 
     if (my $err = $@)
     {
-	$err->can('rethrow') ? $err->rethrow : error $err;
+	UNIVERSAL::can( $err, 'rethrow' ) ? $err->rethrow : error $err;
     }
 
     unless ( defined $source )
