@@ -635,11 +635,6 @@ EOF
     return $out;
 }
 
-#
-# Shorthand for various data subdirectories and files.
-#
-sub preview_dir { return shift->interp->data_dir . "/preview" }
-
 sub handle_request
 {
     my ($self, $r) = @_;

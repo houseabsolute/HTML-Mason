@@ -1409,68 +1409,6 @@ which reduces the previous examples to just:
     mb
     mb $_[1] =~ /component name/
 
-=head1 THE PREVIEWER
-
-Mason comes with a web-based debugging utility that lets you test your
-components by throwing fake requests at them. Adjustable parameters
-include: UserAgent, Time, HTTP Referer, O/S and so on. For example,
-imagine a component whose color scheme is supposed to change each
-morning, noon, and night. Using the Previewer, it would be simple to
-set the perceived time forward 1,5 or 8 hours to test the component at
-various times of day.
-
-The Previewer also provides a debug trace of a page, showing all
-components being called and indicating the portion of HTML each
-component is responsible for. For pages constructed from more than a
-few components, these traces are quite useful for finding the
-component that is outputting a particular piece of HTML.
-
-Your administrator will give you the main Previewer URL, and a set of
-preview ports that you will use to view your site under various
-conditions. For the purpose of this discussion we'll assume the
-Previewer is up and working, that the Previewer URL is
-http://www.yoursite.com/preview, and the preview ports are 3001 to
-3005.
-
-Take a look at the main Previewer page.  The top part contains the
-most frequently used options, such as time and display mode.  The
-middle part contains a table of your saved configurations; if this is
-your first time using the Previewer, it will be empty.  The bottom part
-contains less frequently used options, such as setting the user agent
-and referer.
-
-Try clicking "Save".  This will save the displayed settings under the
-chosen preview port, say 3001, and redraw the page. Under "Saved Port
-Settings", you should see a single row showing this configuration.
-Your configurations are saved permanently in a file. If a
-username/password is required to access the Previewer, then each user
-has his/her own configuration file.
-
-The "View" button should display your site's home page.  If not, then
-the Previewer may not be set up correctly; contact your administrator
-or see the Administrator's Guide.
-
-Go back to the main Previewer page, change the display mode from
-"HTML" to "debug", change the preview port to 3002, and click "Save"
-again.  You should now see a second saved configuration.
-
-Click "View".  This time instead of seeing the home page as HTML,
-you'll get a debug trace with several sections.  The first section
-shows a numbered hierarchy of components used to generate this
-page. The second section is the HTML source, with each line annotated
-on the left with the number of the component that generated it.  Try
-clicking on the numbers in the first section; this brings you to the
-place in the second section where that component first appears.  If
-there's a particular piece of HTML you want to change on a page,
-searching in the annotated source will let you quickly determine which
-component is responsible.
-
-The final section of the debug page shows input and output HTTP
-headers.  Note that some of these are simulated due to your Previewer
-settings.  For example, if you specified a particular user agent in
-your Previewer configuration, then the User-Agent header is simulated;
-otherwise it reflects your actual browser.
-
 =head1 OBJECT-ORIENTED TECHNIQUES
 
 Earlier you learned how to assign a common template to an entire

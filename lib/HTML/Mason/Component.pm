@@ -504,7 +504,7 @@ Methods are declared in C<E<lt>%methodE<gt>> sections.
 Returns a printable string denoting this component.  It is intended to
 uniquely identify a component within a given interpreter although this
 is not 100% guaranteed. Mason uses this string in error messages,
-the previewer component trace, and C<$m-E<gt>comp_stack>.
+among other places.
 
 For file-based components this is the component path.  For
 subcomponents this is "parent_component_path:subcomponent_name". For
