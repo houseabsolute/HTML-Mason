@@ -50,8 +50,8 @@ print STDERR "\n";
 write_test_comps();
 
 if ($have_libapreq) {        # 57 tests
-#    cleanup_data_dir();
-#    apache_request_tests(1); # 22 tests
+    cleanup_data_dir();
+    apache_request_tests(1); # 22 tests
 
     cleanup_data_dir();
     apache_request_tests(0); # 21 tests
