@@ -81,6 +81,8 @@ use HTML::Mason::MethodMaker
                       @read_write_params ]
     );
 
+sub _properties { @read_write_params }
+
 sub new
 {
     my $class = shift;
@@ -284,7 +286,7 @@ sub make_subrequest
     my $interp = $self->interp;
 
     # Give subrequest the same values as parent request for read/write params
-    my %defaults = map { ($_, $self->$_()) } @read_write_params;
+    my %defaults = map { ($_, $self->$_()) } $self->_properties;
 
     # Make subrequest, and set parent_request and request_depth appropriately.
     my $subreq = $interp->make_request(%defaults, %params);
