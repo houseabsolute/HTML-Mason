@@ -1290,9 +1290,8 @@ defined will cause an error when executing that component.
 
 One possible use for this feature is to override the built-in HTML
 escaping's assumption of the ISO-8859-1 character set.  You could
-override the 'h' flag in a top-level autohandler or
-L<custom wrapper code|HTML::Mason::Admin/"ADVANCED CONFIGURATION">
-script like this:
+override the 'h' flag in a top-level autohandler or L<custom wrapper
+code|HTML::Mason::Admin/"ADVANCED CONFIGURATION"> like this:
 
   $ah->interp->set_escape( h => \&escape_ISO_8859_2 );
 
