@@ -21,7 +21,6 @@ Events.pm$
 \.cvsignore$
 
 # MakeMaker cruft
-^MANIFEST.SKIP$
 ^Makefile$
 ^blib
 
@@ -34,6 +33,8 @@ Events.pm$
 
 samples/cd-me.*
 
-Build.PL
-
 ^benchmarks
+
+^htpods
+
+^HTML-Mason-
