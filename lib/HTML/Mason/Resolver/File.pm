@@ -22,21 +22,18 @@ __PACKAGE__->valid_params
 
 __PACKAGE__->contained_objects();
 
-use HTML::Mason::MethodMaker
-    ( read_write => ['comp_root'] );
-
 
 sub new {
     my $package = shift;
     my $self = $package->SUPER::new(@_);
 
-    # Is this okay?  It simplifies matters many places in future code.
-    $self->comp_root( [[MAIN => $self->comp_root]] ) unless ref $self->comp_root;
+    # Put it through the accessor to ensure proper data structure
+    $self->comp_root( $self->{comp_root} ) unless ref $self->{comp_root};
 
     #
     # Check that directories are absolute.
     #
-    foreach my $pair (@{$self->comp_root}) {
+    foreach my $pair ($self->comp_root_array) {
 	param_error "Multiple-path component root must consist of a list of two-element lists; see documentation"
 	    if ref($pair) ne 'ARRAY';
 	$pair->[1] = File::Spec->canonpath( $pair->[1] );
@@ -45,6 +42,23 @@ sub new {
     }
 
     return $self;
+}
+
+sub comp_root_array
+{
+    return @{ $_[0]->{comp_root} };
+}
+
+sub comp_root
+{
+    my $self = shift;
+    if (@_)
+    {
+	validate_pos @_, {type => ARRAYREF|SCALAR};
+	$self->{comp_root} = ref($_[0]) ? $_[0] : [[ MAIN => $_[0] ]];
+    }
+    return $self->{comp_root}[1] if @{$self->{comp_root}} == 1 and $self->{comp_root}[0] eq 'MAIN';
+    return $self->{comp_root};
 }
 
 #  get_info() returns a hash:
@@ -59,7 +73,7 @@ sub new {
 sub get_info {
     my ($self, $path) = @_;
 
-    foreach my $lref (@{$self->comp_root}) {
+    foreach my $lref ($self->comp_root_array) {
 	my ($key, $root) = @$lref;
 	my $srcfile = File::Spec->canonpath( File::Spec->catfile( $root, $path ) );
 	next unless -f $srcfile;
@@ -96,7 +110,7 @@ sub comp_class {
 #
 sub glob_path {
     my ($self,$pattern) = @_;
-    my @roots = map $_->[1], @{$self->comp_root};
+    my @roots = map $_->[1], $self->comp_root_array;
 
     my %path_hash;
     foreach my $root (@roots) {
@@ -117,15 +131,8 @@ sub glob_path {
 #
 sub file_to_path {
     my ($self,$file) = @_;
-    my $comp_root = $self->{comp_root};
-    my @roots;
 
-    if (!ref($comp_root)) {
-	@roots = ($comp_root);
-    } else {
-	@roots = map($_->[1],@{$comp_root});
-    }
-    foreach my $root (@roots) {
+    foreach my $root (map $_->[1], $self->comp_root_array) {
 	if (paths_eq($root,substr($file,0,length($root)))) {
 	    my $path = substr($file, ($root eq '/' ? 0 : length($root)));
 	    $path =~ s/\/$// unless $path eq '/';
