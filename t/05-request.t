@@ -12,6 +12,9 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'request',
 					 description => 'request object functionality' );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/support/abort_test',
 			 component => <<'EOF',
 Some more text
@@ -21,6 +24,9 @@ Some more text
 But this will never be seen
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_support( path => '/support/display_req_obj',
 			 component => <<'EOF',
@@ -38,6 +44,9 @@ My stack looks like:
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/support/subrequest_error_test',
 			 component => <<'EOF',
 <& display_req_obj &>
@@ -45,11 +54,17 @@ EOF
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/sections/perl',
 			 component => <<'EOF',
 foo
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_support( path => '/support/various_test',
 			 component => <<'EOF',
@@ -88,6 +103,9 @@ Time difference!
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'abort',
 		      description => 'test $m->abort method',
 		      component => <<'EOF',
@@ -111,6 +129,9 @@ Component aborted with value 50
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'file',
 		      description => 'tests $m->file method',
 		      component => <<'EOF',
@@ -127,6 +148,9 @@ Now I will print myself:
 
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'list_out',
 		      description => 'tests that $m->out can handle a list of arguments',
@@ -148,6 +172,9 @@ blahboombah
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'req_obj',
 		      description => 'tests various operations such as $m->out, comp calls, $m->current_comp',
 		      component => <<'EOF',
@@ -162,21 +189,21 @@ $count
 </%args>
 </%def>
 
-<% '-' x 60 %>
+<% '-' x 10 %>
 
 One level request:
 <& support/display_req_obj &>
 
-<% '-' x 60 %>
+<% '-' x 10 %>
 
 Many level request:
 <& .subcomp, count=>0 &>
 
-<% '-' x 60 %>
+<% '-' x 10 %>
 EOF
 		      expect => <<'EOF',
 
-------------------------------------------------------------
+----------
 
 One level request:
 My depth is 2.
@@ -191,7 +218,7 @@ My stack looks like:
 
 
 
-------------------------------------------------------------
+----------
 
 Many level request:
 
@@ -224,9 +251,12 @@ My stack looks like:
 
 
 
-------------------------------------------------------------
+----------
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'subrequest',
 		      description => 'tests a provisional subrequest mechanism (Jon will explain)',
@@ -262,6 +292,9 @@ My stack looks like:
 
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'subrequest_error',
 		      description => 'check error handling for provision subrequest mechanism',
@@ -304,6 +337,9 @@ My stack looks like:
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'various',
 		      description => 'tests caller, callers, fetch_comp, process_comp_path, comp_exists and scomp',
 		      component => <<'EOF',
@@ -334,6 +370,9 @@ No time difference.
 
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     return $group;
 }

@@ -12,6 +12,9 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'mc',
 					 description => 'test mc_* style command compatibility' );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'support/mc_various_test',
 			 component => <<'EOF',
 Caller is <% mc_caller %>.
@@ -45,6 +48,9 @@ Time difference is <% $diff %> seconds!
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'mc_various',
 		      description => 'mc_* commands',
 		      component => <<'EOF',
@@ -65,6 +71,9 @@ Time difference is approximately 2 seconds.
 
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     return $group;
 }

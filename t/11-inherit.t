@@ -12,6 +12,9 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'inherit',
 					 description => 'Test inheritance' );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'autohandler',
 			 component => <<'EOF',
 <%method m1>m1 from level 1</%method>
@@ -33,12 +36,18 @@ a123=>'a123 from level 1'
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'report_parent',
 			 component => <<'EOF',
 % my $comp = $m->callers(1);
 My name is <% $comp->path %> and <% $comp->parent ? "my parent is ".$comp->parent->path : "I have no parent" %>.
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_support( path => 'variants',
 			 component => <<'EOF',
@@ -68,6 +77,9 @@ my $self = $m->base_comp;
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'subdir/autohandler',
 			 component => <<'EOF',
 <%method m2>m2 from level 2</%method>
@@ -91,6 +103,9 @@ my $self = $m->base_comp;
 </%init>
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'bypass',
 		      description => 'test inheritance that skips one autohandler',
@@ -149,6 +164,9 @@ My name is /inherit/subdir/bypass and my parent is /inherit/autohandler.
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'ignore',
 		      description => 'turning off inheritance',
 		      path => 'subdir/ignore',
@@ -203,6 +221,9 @@ My name is /inherit/subdir/ignore and I have no parent.
 
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'normal',
 		      description => 'normal inheritance path',
@@ -280,6 +301,9 @@ My name is /inherit/subdir/normal and my parent is /inherit/subdir/autohandler.
 
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     return $group;
 }

@@ -20,6 +20,9 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'cache',
 					 description => 'Test caching' );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'support/cache_test',
 			 component => <<'EOF',
 <% $result %>
@@ -39,6 +42,9 @@ unless ($result = $m->cache(key=>'fandango')) {
 </%init>
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'cache',
 		      description => 'basic caching functionality',
@@ -66,6 +72,9 @@ Return value:
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'support/cache_self_test',
 			 component => <<'EOF',
 Hello World! var = <% $var %>
@@ -78,6 +87,9 @@ $var
 
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'cache_self',
 		      description => 'cache_self functionality',
@@ -100,6 +112,9 @@ Hello World! var = 1
 
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'keys',
 		      description => q|test $m->cache( action => 'keys' )|,
@@ -133,6 +148,9 @@ value for bar is undefined
 value for baz is baz
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     return $group;
 }

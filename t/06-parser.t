@@ -12,6 +12,9 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'parser',
 					 description => 'parser object functionality' );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'allow_globals',
 		      description => 'test that undeclared globals cause an error',
 		      interp_params => { use_object_files => 0 }, # force it to parse comp each time
@@ -20,6 +23,9 @@ sub make_tests
 EOF
 		      expect_error => 'Global symbol .* requires explicit package name',
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'allow_globals',
 		      description => 'test that undeclared globals cause an error',
@@ -30,6 +36,9 @@ EOF
 EOF
 		      expect_error => 'Global symbol .* requires explicit package name',
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'allow_globals',
 		      description => 'test that declared globals are allows',
@@ -42,6 +51,9 @@ EOF
 1
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'default_escape_flags',
 		      description => 'test that no escaping is done by default',
 		      interp_params => { use_object_files => 0 },
@@ -66,6 +78,9 @@ No flags again: <b><i>Hello there</i></b>.<p>
 Explicitly not escaped: <b><i>Hello there</i></b>.<p>
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'default_escape_flags',
 		      description => 'test that turning on default escaping works',
@@ -93,6 +108,9 @@ Explicitly not escaped: <b><i>Hello there</i></b>.<p>
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'globals_in_default_package',
 		      description => 'tests that components are executed in HTML::Mason::Commands package by default',
 		      interp_params => { use_object_files => 0 },
@@ -108,6 +126,9 @@ EOF
 commands
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'globals_in_different_package',
 		      description => 'tests in_package parser parameter',
@@ -126,6 +147,9 @@ newpackage
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'preamble',
 		      description => 'tests preamble parser parameter',
 		      parser_params => { preamble => 'my $msg = "This is the preamble.\n"; $m->out($msg);
@@ -138,6 +162,9 @@ This is the preamble.
 This is the body.
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'postamble',
 		      description => 'tests postamble parser parameter',
@@ -152,6 +179,9 @@ This is the postamble.
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'preprocess',
 		      description => 'test preprocess parser parameter',
 		      parser_params => { preprocess => \&brackets_to_lt_gt },
@@ -164,6 +194,9 @@ foo
 bar
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'postprocess1',
 		      description => 'test postprocess parser parameter (alpha blocks)',
@@ -178,6 +211,9 @@ BAR
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'postprocess2',
 		      description => 'test postprocess parser parameter (perl blocks)',
 		      parser_params => { postprocess => \&add_foo_to_perl },
@@ -191,6 +227,9 @@ bar
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'bad_var_name',
 		      description => 'test that invalid Perl variable names are caught',
 		      component => <<'EOF',
@@ -203,6 +242,9 @@ Never get here
 EOF
 		      expect_error => 'Invalid variable name',
 		    );
+
+
+#------------------------------------------------------------
 
     return $group;
 }

@@ -12,6 +12,9 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'sections',
 					 description => 'Tests various <%foo></%foo> sections' );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/support/args_test',
 			 component => <<'EOF',
 <% $message %>\
@@ -20,6 +23,9 @@ $message
 </%args>
 EOF
 		       );
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/support/perl_args_test',
 			 component => <<'EOF',
 a: <% $a %>
@@ -39,6 +45,9 @@ $d=>5    # another comment
 </%args>
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'args',
 		      description => 'tests <%args> block',
@@ -67,6 +76,9 @@ Hello World!
 </HTML>
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'attr',
 		      description => 'tests <%attr> block',
@@ -106,6 +118,9 @@ a
 </HTML>
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'def',
 		      description => 'tests <%def> block',
@@ -150,6 +165,9 @@ I was created by /sections/def.<br>
 --> <a href="http://www.excite.com">Excite</a>
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'doc',
 		      description => 'tests <%doc> section',
 		      component => <<'EOF',
@@ -184,6 +202,9 @@ Hello World!
 
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'filter',
 		      description => 'tests <%filter> section',
 		      component => <<'EOF',
@@ -216,6 +237,9 @@ Hello World!
 
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'flags',
 		      description => 'tests <%flags> section',
 		      component => <<'EOF',
@@ -246,6 +270,9 @@ foo
 </HTML>
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'init',
 		      description => 'tests <%init> section',
 		      component => <<'EOF',
@@ -278,6 +305,9 @@ Hello World!
 
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'method',
 		      description => 'tests <%method> section',
 		      component => <<'EOF',
@@ -322,6 +352,9 @@ THE SECOND METHOD. ARGUMENTS ARE A,B,C.
 </HTML>
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'once',
 		      description => 'tests <%once> block',
 		      component => <<'EOF',
@@ -359,6 +392,9 @@ Hello World!
 
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'perl',
 		      description => 'test <%perl> sections and makes sure block names are case-insensitive',
 		      component => <<'EOF',
@@ -400,6 +436,9 @@ How are you?
 </HTML>
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'perl_args',
 		      description => 'tests old <%perl_args> block',
 		      component => <<'EOF',
@@ -418,6 +457,9 @@ f: bob=2,joe=1
 
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'omitted args',
 		      description => 'tests error message when expect args are not passed',
 		      component => <<'EOF',
@@ -429,6 +471,9 @@ Error: no value sent for required parameter 'a'
 
 EOF
 		      );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'overridden args',
 		      description => 'tests overriding of default args values',
 		      component => <<'EOF',
@@ -445,6 +490,9 @@ f: ralph=15,sue=37
 
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'perl_doc',
 		      description => 'tests old <%perl_doc> section',
 		      component => <<'EOF',
@@ -479,6 +527,9 @@ Hello World!
 
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'perl_init',
 		      description => 'tests old <%perl_init> section',
 		      component => <<'EOF',
@@ -511,6 +562,9 @@ Hello World!
 
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'shared',
 		      description => 'tests <%shared> section',
 		      component => <<'EOF',
@@ -570,6 +624,9 @@ This is the baz subcomponent, Mary.
 
 EOF
 		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'test',
 		      description => 'tests <%text> section',
 		      component => <<'EOF',
@@ -590,6 +647,9 @@ EOF
 <%args>
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'multiple',
 		      description => 'tests repeated blocks of the same type',
@@ -624,6 +684,9 @@ NAME = JOE
 COLOR = BLUE
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     return $group;
 }

@@ -13,6 +13,9 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'interp',
 					 description => 'interp object functionality' );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/autohandler_test/autohandler',
 			 component => <<'EOF',
 The recursive autohandler: <% $m->current_comp->path %>
@@ -20,6 +23,9 @@ The recursive autohandler: <% $m->current_comp->path %>
 <% $m->call_next %>
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'no recursive autohandlers',
 		      description => 'tests turning off recursive autohandlers',
@@ -32,6 +38,9 @@ EOF
 Hello World!
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'no recursive autohandlers',
 		      description => 'tests turning off recursive autohandlers',
@@ -46,6 +55,9 @@ Hello World!
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/autohandler_test/subdir/plainfile',
 			 component => <<'EOF',
 The local autohandler: <% $m->current_comp->path %>
@@ -53,6 +65,9 @@ The local autohandler: <% $m->current_comp->path %>
 <% $m->call_next %>
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'alternate autohandler name',
 		      description => 'tests that providing an alternate name for autohandlers works',
@@ -90,12 +105,18 @@ shared.html in the alternate component root.
 <& showcomp &>
 EOF
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/comp_root_test/showcomp',
 			 component => <<'EOF',
 % my $comp = $m->callers(1);
 <& /shared/display_comp_obj, comp=>$comp &>
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'shared',
 		      description => 'test that component in both comp_roots is called in first comp_root',
@@ -130,6 +151,9 @@ My source dir is /.../comps/interp/comp_root_test
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'private1',
 		      description => 'test that component in first comp_root is found',
 		      call_path => '/comp_root_test/private1',
@@ -162,6 +186,9 @@ My source dir is /.../comps/interp/comp_root_test
 
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'private2',
 		      description => 'test that component in second comp_root is found',
@@ -196,6 +223,9 @@ My source dir is /.../alt_root/interp/comp_root_test
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'current_time',
 		      description => 'test current_time interp param',
 		      interp_params => { current_time => 945526402 },
@@ -206,6 +236,9 @@ EOF
 945526402
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_support( path => 'support/recurse_test',
 			 component => <<'EOF',
@@ -220,6 +253,9 @@ $max
 </%args>
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'max_recurse_1',
 		      description => 'Test that recursion 8 levels deep is allowed',
@@ -247,6 +283,9 @@ Exiting 1<p>
 Exiting 0<p>
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'max_recurse_2',
 		      description => 'Test that recursion is stopped after 32 levels',
@@ -290,6 +329,9 @@ Error: 32 levels deep in component stack (infinite recursive call?)
 
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'max_recurse_3',
 		      description => 'Test interp max_recurse param',
@@ -401,6 +443,9 @@ Exiting 0<p>No error!?
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'code_cache_test/show_code_cache',
 			 component => <<'EOF',
 Code cache contains these plain components:
@@ -408,6 +453,9 @@ Code cache contains these plain components:
 <% join("\n",sort(grep(/plain/,keys(%c)))) %>
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_support( path => 'code_cache_test/plain1',
 			 component => <<'EOF'
@@ -419,6 +467,9 @@ plain1
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'code_cache_test/plain2',
 			 component => <<'EOF'
 plain2
@@ -429,6 +480,9 @@ plain2
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'code_cache_test/plain3',
 			 component => <<'EOF'
 plain3
@@ -438,6 +492,9 @@ plain3
 %#DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_support( path => 'code_cache_test/plain4',
 			 component => <<'EOF'
@@ -461,6 +518,9 @@ plain4
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'code_cache_test/plain5',
 			 component => <<'EOF'
 plain5
@@ -471,6 +531,9 @@ plain5
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'code_cache_test/plain6',
 			 component => <<'EOF'
 plain6
@@ -480,6 +543,9 @@ plain6
 %#DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_support( path => 'code_cache_test/plain7',
 			 component => <<'EOF'
@@ -494,6 +560,9 @@ EOF
     my $interp = HTML::Mason::Interp->new( data_dir => $group->data_dir,
 					   comp_root => $group->comp_root,
 					   code_cache_max_size => 5500 );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'code_cache_test/code_cache_1',
 		      description => 'Run in order to load up code cache',
 		      interp => $interp,
@@ -503,6 +572,9 @@ EOF
 EOF
 		      skip_expect => 1
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'code_cache_test/show_code_cache_1',
 		      description => 'Show code cache size after first usage',
@@ -519,6 +591,9 @@ Code cache contains these plain components:
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'code_cache_test/code_cache_2',
 		      description => 'Run in order to load up code cache',
 		      interp => $interp,
@@ -527,6 +602,9 @@ EOF
 EOF
 		      skip_expect => 1
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'code_cache_test/show_code_cache_2',
 		      description => 'Show code cache size after second usage',
@@ -544,6 +622,9 @@ Code cache contains these plain components:
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'code_cache_test/code_cache_3',
 		      description => 'Run in order to load up code cache',
 		      interp => $interp,
@@ -552,6 +633,9 @@ EOF
 EOF
 		      skip_expect => 1
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'code_cache_test/show_code_cache_3',
 		      description => 'Show code cache size after second usage',
@@ -569,6 +653,9 @@ Code cache contains these plain components:
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'dhandler_name',
 		      description => 'Test that providing an alternate name for dhandlers works',
 		      path => 'dhandler_test/plainfile',
@@ -582,6 +669,9 @@ dhandler arg = foo/blag
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'mode_test',
 			 component => <<'EOF',
 First of all I'd
@@ -592,6 +682,9 @@ Oh never mind.
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'batch_mode',
 		      description => 'Test that batch mode setting works',
 		      component => <<'EOF',
@@ -601,6 +694,9 @@ EOF
 Oh never mind.
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'stream_mode',
 		      description => 'Test that stream mode setting works',
@@ -615,6 +711,9 @@ Oh never mind.
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'preloads_test/show_code_cache',
 			 component => <<'EOF',
 Code cache contains:
@@ -624,17 +723,29 @@ EOF
 		    );
 
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'preloads_test/hello',
 			 component => 'hello',
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_support( path => 'preloads_test/goodbye',
 			 component => 'goodbye',
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'preloads_test/howareyou',
 			 component => 'howareyou',
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'preload_1',
 		      description => 'Make sure no preloading is done by default',
@@ -647,6 +758,9 @@ Code cache contains:
 /interp/preloads_test/show_code_cache
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'preload_2',
 		      description => 'Preload a single component by filename',
@@ -661,6 +775,9 @@ Code cache contains:
 /interp/preloads_test/show_code_cache
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'preload_3',
 		      description => 'Preload all components by glob pattern',
@@ -684,6 +801,9 @@ EOF
     $interp->parser->allow_globals( qw($global) );
     $interp->set_global( global => 'parsimmon' );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'globals',
 		      description => 'Test setting a global in interp & parser objects',
 		      interp => $interp,
@@ -705,6 +825,9 @@ EOF
 					system_log_separator => ':::',
 				      );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'system_log',
 		      description => 'Test system log COMP_LOAD event',
 		      interp => $interp,
@@ -724,6 +847,9 @@ EOF
 /interp/system_log
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     return $group;
 }

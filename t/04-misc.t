@@ -12,6 +12,9 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'misc',
 					 description => 'autohandler and dhandler functionality' );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/autohandler_test/autohandler',
 			 component => <<'EOF',
 <& header &>
@@ -26,6 +29,9 @@ $a=>5
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/autohandler_test/header',
 			 component => <<'EOF',
 <body bgcolor=<% $bgcolor %>>
@@ -37,6 +43,9 @@ $bgcolor=>'white'
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/autohandler_test/footer',
 			 component => <<'EOF',
 <hr>
@@ -44,6 +53,9 @@ Copyright 1999 Schmoopie Inc.
 
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'autohandler',
 		      path => '/autohandler_test/hello',
@@ -78,6 +90,9 @@ EOF
 		    );
 
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/dhandler_test/dhandler',
 			 component => <<'EOF',
 dhandler = <% $m->current_comp->title %>
@@ -89,6 +104,9 @@ $decline=>0
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/dhandler_test/subdir/dhandler',
 			 component => <<'EOF',
 % $m->decline if $m->dhandler_arg eq 'leaf3';
@@ -96,6 +114,9 @@ dhandler = <% $m->current_comp->title %>
 dhandler arg = <% $m->dhandler_arg %>
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'dhandler1',
 		      description => 'tests dhandler against nonexistent comp',
@@ -108,6 +129,9 @@ dhandler arg = foo/bar
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'dhandler2',
 		      description => 'real comp to make sure the real comp is invoked, not the dhandler',
 		      path => '/dhandler_test/subdir/leaf',
@@ -119,6 +143,9 @@ EOF
 I'm leaf
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'dhandler3',
 		      description => 'real comp declines the request to make sure the dhandler is invoked',
@@ -135,6 +162,9 @@ dhandler arg = leaf2
 EOF
 		    );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'dhandler4',
 		      description => 'declines twice to make sure higher level dhandler is called',
 		      path => '/dhandler_test/subdir/leaf3',
@@ -149,6 +179,9 @@ dhandler arg = subdir/leaf3
 
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
     return $group;
 }

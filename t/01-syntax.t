@@ -12,6 +12,9 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'syntax',
 					 description => 'Basic component syntax tests' );
 
+
+#------------------------------------------------------------
+
     $group->add_support( path => '/support/amper_test',
 			 component => <<'EOF',
 amper_test.<p>
@@ -23,6 +26,9 @@ Arguments:<p>
 % }
 EOF
 		       );
+
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'ampersand syntax',
 		      description => 'tests all variations of component call path syntax and arg passing',
@@ -75,6 +81,9 @@ Arguments:<p>
 EOF
 		 );
 
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'replace',
 		      description => 'tests <% %> tag',
 		      component => <<'EOF',
@@ -102,6 +111,9 @@ Hello World!
 </HTML>
 EOF
 		    );
+
+
+#------------------------------------------------------------
 
 	$group->add_test( name => 'percent',
 			  description => 'tests %-line syntax',
@@ -132,6 +144,9 @@ Hello World!
 EOF
 			);
 
+
+
+#------------------------------------------------------------
 
     return $group;
 }
