@@ -5,7 +5,7 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
-0.85
+0.85  Sun May  7 23:37:18 PDT 2000
 
 - Added object-oriented primitives to components. Components can
 define methods and attributes and inherit from parent components.
@@ -43,9 +43,9 @@ use this manual" section.
 - Added section about securing top-level components to
 Admin.pod. (suggested by Sean Cazzell) L{Admin/securing_top_level_components}
 - Added section about declining image requests to Admin.pod. L{Admin/declining_image_requests}
-- Eliminated "Subroutine status_mason redefined" warning when creating multiple ApacheHandlers
+- Eliminated "Subroutine status_mason redefined" warning when creating multiple ApacheHandlers.
 - Updated cookie expiration in CD-ME example. (reported by Renzo Toma)
-- Added a "-f" flag to rm in faq Makefile for perl 5.006. (reported by Jeremy Taylor)
+- Added a "-f" flag to rm in faq Makefile. (reported by Jeremy Taylor)
 
 0.81  Mon Feb 21 12:23:42 PST 2000
 
