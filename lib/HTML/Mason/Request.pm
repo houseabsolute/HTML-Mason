@@ -200,10 +200,10 @@ sub exec {
 	}
     } while ($declined && $path);
 
-    # If an error occurred...
+    # If a non-abort error occurred, just rethrow it.
     if ($err and !$self->aborted) {
 	$self->pop_buffer_stack;
-	$self->_error($err);
+	die $err;
     }
 
     # Flush output buffer for batch mode.
@@ -218,23 +218,6 @@ sub exec {
     return $self->{aborted_value} if ($self->{aborted});
 
     return wantarray ? @result : $result;
-}
-
-sub _error
-{
-    my ($self, $err) = @_;
-
-    # don't mess with error message if default $SIG{__DIE__} was overridden
-    if ($self->interp->die_handler_overridden) {
-	die $err;
-    } else {
-	$err = $self->{error_clean} if $self->{error_clean};
-	if ($self->{error_backtrace}) {
-	    my $title = $self->{error_backtrace}->[0]->title;
-	    $err = "error while executing $title:\n$err";
-	}
-	error($err);
-    }
 }
 
 #
@@ -572,11 +555,6 @@ sub time
 sub comp {
     my $self = shift;
 
-    # Clear error backtrace and message, in case we had an error which
-    # was caught by an eval.
-    undef $self->{error_backtrace};
-    undef $self->{error_clean};
-
     # Get modifiers: optional hash reference passed in as first argument.
     # merge multiple hash references to simplify user and internal usage.
     my %mods = ();
@@ -663,17 +641,10 @@ sub comp {
     # been done higher up.
     #
     if (my $err = $@) {
-	##
-	## any unflushed output is at $self->top_buffer->output
-	##
-	$self->{error_backtrace} ||= [reverse(map($_->{'comp'}, $self->stack))];
-	$self->{error_clean}     ||= $err;
-	unless ($self->interp->die_handler_overridden) {
-	    $err .= "\n" if $err !~ /\n$/;
-	}
+	# any unflushed output is at $self->top_buffer->output
 	$self->pop_stack;
 	$self->pop_buffer_stack;
-	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
+	die $err;
     }
 
     #
