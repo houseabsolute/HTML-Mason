@@ -189,18 +189,11 @@ sub _make_main_header
 
     my $pkg = $self->in_package;
 
-    my @filter;
-    if ( $self->_blocks('filter') )
-    {
-        @filter = "my \$__filter__;\n";
-    }
-
     return join '', ( "package $pkg;\n",
 		      $self->use_strict ? "use strict;\n" : "no strict;\n",
 		      sprintf( "use vars qw(\%s);\n",
 			       join ' ', '$m', $self->allow_globals ),
 		      $self->_blocks('once'),
-                      @filter,
 		    );
 }
 
@@ -261,10 +254,7 @@ sub _component_params
     $params{declared_args} = join '', "{\n", $self->_declared_args, "\n}"
 	if @{ $self->{current_comp}{args} };
 
-    if ( $self->_blocks('filter') )
-    {
-        $params{filter} = '\\$__filter__';
-    }
+    $params{has_filter} = 1 if $self->_blocks('filter');
 
     return \%params;
 }
@@ -378,11 +368,11 @@ sub _filter
         or return;
 
     return ( join '',
-             "\$__filter__ = sub { local \$_ = shift;\n",
+             "\$m->current_comp->filter( sub { local \$_ = shift;\n",
              ( join ";\n", @filter ),
              ";\n",
              "return \$_;\n",
-             "};\n",
+             "} );\n",
            );
 
 }
