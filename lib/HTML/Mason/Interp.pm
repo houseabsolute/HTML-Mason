@@ -60,7 +60,7 @@ __PACKAGE__->valid_params
 				       default => qr/Subroutine .* redefined/i,
 				       descr => "A regular expression describing Perl warning messages to ignore" },
      out_method                   => { parse => 'code',    type => CODEREF|SCALARREF,
-				       default => sub { print grep {defined} @_ },
+				       default => sub { print STDOUT grep {defined} @_ },
 				       descr => "A subroutine or scalar reference through which all output will pass" },
      max_recurse                  => { parse => 'string',  default => 32, type => SCALAR,
 				       descr => "The maximum component stack depth - helps avoid infinite loops" },
