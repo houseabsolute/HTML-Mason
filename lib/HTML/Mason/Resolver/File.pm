@@ -8,7 +8,7 @@ use strict;
 
 use Cwd;
 use File::Spec;
-use HTML::Mason::Tools qw(read_file);
+use HTML::Mason::Tools qw(read_file paths_eq);
 use Params::Validate qw(:all);
 
 use HTML::Mason::ComponentSource;
@@ -57,6 +57,20 @@ sub comp_root
     die "Resolver comp_root is read-only" if @_;
     return $self->{comp_root}[0][1] if @{$self->{comp_root}} == 1 and $self->{comp_root}[0][0] eq 'MAIN';
     return $self->{comp_root};
+}
+
+sub resolve_backwards
+{
+    my ($self, $file) = @_;
+
+    foreach my $root (map $_->[1], $self->comp_root_array) {
+	if (paths_eq($root, substr($file, 0, length($root)))) {
+	    my $path = substr($file, ($root eq '/' ? 0 : length($root)));
+	    $path =~ s,/$,, unless $path eq '/';
+	    return $path;
+	}
+    }
+    return;
 }
 
 sub get_info {
