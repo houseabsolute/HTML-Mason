@@ -1682,15 +1682,6 @@ a primary section for the body.
 
 =over
 
-=item Do not use print or $r->print
-
-Most Mason servers operate in "batch" mode, which means that
-output is stored in a Mason buffer until the end of the request. Output
-sent via print and $r->print, however, skips the Mason buffer and goes
-directly to the client. This will result in output being printed out
-of order. Always use C<$m-E<gt>out> instead of print/$r->print; it does the
-right thing with regards to Mason buffering.
-
 =item Do not call $r->content or "new CGI"
 
 Mason calls C<$r-E<gt>content> itself to read request input, emptying
