@@ -551,6 +551,11 @@ the created request, all in one fell swoop.  This is useful in cases
 where you have no need to override any of the parent request's
 parameters.
 
+By default, output from a subrequest appears inline in the calling
+component, at the point where it is executed.  If you wish to do
+something else, you will need to explicitly override the subrequest's
+C<out_method> parameter.
+
 Mason Request objects are only designed to handle a single call to
 C<exec>.  If you wish to make multiple subrequests, we recommend
 creating a new subrequest object for each one.  The effect of calling
