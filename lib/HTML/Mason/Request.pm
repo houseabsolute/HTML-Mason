@@ -605,8 +605,10 @@ sub comp1 {
     my ($result, @result);
     if (wantarray) {
 	@result = $comp->run(@args);
-    } else {
+    } elsif (defined wantarray) {
 	$result = $comp->run(@args);
+    } else {
+	$comp->run(@args);
     }
 
     #
@@ -618,7 +620,7 @@ sub comp1 {
     # Pop stack and return.
     #
     pop(@$stack);
-    return wantarray ? @result : $result;
+    return wantarray ? @result : $result;  # Will return undef in void context (correct)
 }
 
 #
