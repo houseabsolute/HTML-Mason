@@ -176,7 +176,7 @@ x is <% $x %>
 $x
 </%args>
 <%init>
-return if $m->cache_self( expires_in => '1s' );
+return if $m->cache_self( expires_in => '2s' );
 </%init>
 EOF
 			);
@@ -188,7 +188,7 @@ EOF
 		      component => <<'EOF',
 <& support/cache_self_expires_in, x => 1 &>
 <& support/cache_self_expires_in, x => 2 &>
-% sleep 3;
+% sleep 5;
 <& support/cache_self_expires_in, x => 99 &>
 EOF
 		      expect => <<'EOF',
