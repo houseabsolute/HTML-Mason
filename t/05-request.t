@@ -337,6 +337,24 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'subrequest_with_autohandler',
+		      description => 'tests the subrequest mechanism with an autohandler',
+		      component => <<'EOF',
+Executing subrequest
+% my $buf;
+% my $req = $m->interp->make_request(out_method => \$buf);
+% $req->exec('/request/support/dir/comp');
+<% $buf %>
+EOF
+		      expect => <<'EOF',
+Executing subrequest
+I am the autohandler.
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'subrequest_without_autohandler',
 		      description => 'tests the subrequest mechanism and turning off autohandler',
 		      component => <<'EOF',
