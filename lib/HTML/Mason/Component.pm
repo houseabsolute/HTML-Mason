@@ -131,7 +131,7 @@ sub run {
         } elsif (defined $wantarray) {
             $result[0] = $self->{code}->(@_);;
         } else {
-            $self->{code}->(@_);;
+            $self->{code}->(@_);
         }
     };
 
@@ -140,7 +140,7 @@ sub run {
 
     die $@ if $@;
 
-    return $wantarray ? @result : $result[0];
+    return $wantarray ? @result : defined $wantarray ? $result[0] : undef;
 }
 
 sub dynamic_subs_init {
