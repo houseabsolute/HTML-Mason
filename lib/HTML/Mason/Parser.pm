@@ -80,11 +80,22 @@ sub allow_globals
 sub make_component
 {
     my ($self, %options) = @_;
-    my $script = $options{script};
-    my $scriptFile = $options{script_file};
-    my $errorRef = $options{error};
-    my $objectFile = $options{object_file};
-    my ($sub, $err, $errpos);
+    my ($objectFile, $objectTextRef, $filesWritten) =
+	@options{qw(object_file object_text files_written)};
+
+    my $objectText = $self->parse_component(%options) or return undef;
+    $$objectTextRef = $objectText if defined($objectTextRef);
+    $self->write_object_file(object_text=>$objectText, object_file=>$objectFile, files_written=>$filesWritten) if defined($objectFile);
+    return $self->eval_object_text(object_text=>$objectText,error=>$options{error});
+}
+
+sub parse_component
+{
+    my ($self, %options) = @_;
+    my ($script,$scriptFile,$errorRef,$errposRef,$embedded,$fileBased,$path,$parentPath,$compName) =
+	@options{qw(script script_file error errpos embedded file_based path parent_path name)};
+    my ($sub, $err, $errpos, $suberr, $suberrpos);
+    $fileBased = 1 if !exists($options{file_based});
     my $pureTextFlag = 1;
     my $parseError = 1;
     my $parserVersion = version();
@@ -101,6 +112,16 @@ sub make_component
     # Eliminate DOS ctrl-M chars
     #
     $script =~ s/\cM//g;
+    
+    # Assign default parent path and name
+    if (defined($path)) {
+	if (!defined($parentPath)) {
+	    ($parentPath) = ($path =~ /^(.*)\/[^\/]*$/);
+	}
+	if (!defined($compName)) {
+	    ($compName) = ($path =~ /([^\/]+)$/);
+	}
+    }
 
     #
     # Preprocess the script.  The preprocessor routine is handed a
@@ -121,10 +142,11 @@ sub make_component
     #
     my %sectiontext = (map(($_,''),qw(args cleanup doc filter init once)));
     my $curpos = 0;
-    my @textsegs;
+    my (@textsegs,%subcomps);
     my $scriptlength = length($script);
-    while ($script =~ /(<%(?:perl_)?(args|cleanup|doc|filter|init|once|text)>)/ig) {
-	my ($begintag,$beginfield) = ($1,lc($2));
+    while ($script =~ /(<%(?:perl_)?(args|cleanup|def[ \t]+([^>\n]+)|doc|filter|init|once|text)>)/ig) {
+	my ($begintag,$beginfield,$beginarg) = ($1,lc($2),$3);
+	$beginfield = 'def' if (substr($beginfield,0,3) eq 'def');
 	my $beginmark = pos($script)-length($begintag);
 	my $begintail = pos($script);
 	push(@textsegs,[$curpos,$beginmark-$curpos]);
@@ -135,6 +157,30 @@ sub make_component
 		# Special case for <%text> sections: add a special
 		# segment that won't get parsed
 		push(@textsegs,[$begintail,$endmark-$begintail,'<%text>']);
+	    } elsif ($beginfield eq 'def') {
+		# Special case for <%def> sections: compile section as
+		# component and put object text in subcomps hash,
+		# keyed on def name
+		my $name = $beginarg;
+		if ($name !~ /^[\w\-\.]+$/) {
+		    $err = "invalid subcomponent name '$name': valid characters are [A-Za-z0-9._-]";
+		    $errpos = $begintail;
+		} elsif (exists($subcomps{$name})) {
+		    $err = "multiple definitions for subcomponent '$name'";
+		    $errpos = $begintail;
+		} else {
+		    my $subtext = substr($script,$begintail,$endmark-$begintail);
+		    my %extra;
+		    $extra{path} = "$path:$name" if defined($path);
+		    $extra{parent_path} = $parentPath if defined($parentPath);
+		    if (my $objtext = $self->parse_component(script=>$subtext, name=>$name, embedded=>1, file_based=>0, error=>\$suberr, errpos=>\$suberrpos, %extra)) {
+			$subcomps{$name} = $objtext;
+		    } else {
+			$err = "Error while parsing subcomponent '$name':\n$suberr";
+			$errpos = $begintail+$suberrpos;
+		    }
+		}
+		goto parse_error if ($err);
 	    } else {
 		$sectiontext{lc($beginfield)} .= substr($script,$begintail,$endmark-$begintail);
 	    }
@@ -374,7 +420,7 @@ sub make_component
     # Use source_refer_predicate to determine whether to use source
     # references or directly embedded text.
     #
-    my $useSourceReference = defined($objectFile) && ($pureTextFlag || $self->source_refer_predicate->($scriptlength,$alphalength));
+    my $useSourceReference = $fileBased && ($pureTextFlag || $self->source_refer_predicate->($scriptlength,$alphalength));
     my @alphatexts;
     my $endsec = '';
     if ($useSourceReference) {
@@ -466,16 +512,32 @@ sub make_component
     #
     my $header = "";
     my $pkg = $self->{in_package};
-    $header .= "package $pkg;\n";
-    $header .= "use strict;\n" if $self->use_strict;
-    $header .= sprintf("use vars qw(%s);\n",join(" ","\$REQ",@{$self->{'allow_globals'}}));
-    $header .= "\n".$sectiontext{once}."\n" if $sectiontext{once};
+    if (!$embedded) {
+	$header .= "package $pkg;\n";
+	$header .= "use strict;\n" if $self->use_strict;
+	$header .= sprintf("use vars qw(%s);\n",join(" ","\$REQ",@{$self->{'allow_globals'}}))."\n";
+    }
+    $header .= $sectiontext{once}."\n" if $sectiontext{once};
+
+    #
+    # Add subcomponent (<%def>) sections.
+    #
+    if (%subcomps) {
+	$header .= "my \%_subcomps = (\n";
+	$header .= join(",\n",map("'$_' => do {\n$subcomps{$_}\n}",sort(keys(%subcomps))));
+	$header .= "\n);\n";
+    }
 
     #
     # Assemble parameters for component.
     #
     my @cparams = ("parser_version=>$parserVersion","create_time=>".time());
     push(@cparams,"source_ref_start=>0000000") if $useSourceReference;
+    push(@cparams,"name=>'$compName'") if (defined($compName));
+    push(@cparams,"path=>'$path'") if (defined($path));
+    push(@cparams,"parent_path=>'$parentPath'") if (defined($parentPath));
+    push(@cparams,"source_file=>'$scriptFile'") if (defined($scriptFile));
+    push(@cparams,"subcomps=>{%_subcomps}") if (%subcomps);
     if (@declaredArgs) {
 	my $d = new Data::Dumper ([\@declaredArgs]);
 	my $argsDump = $d->Dumpxs;
@@ -487,12 +549,9 @@ sub make_component
     } else {
 	push(@cparams,"code=>sub {\n$body\n}");
     }
-    push(@cparams,"path=>'$options{path}'") if (defined($options{path}));
-    push(@cparams,"parent_path=>'$options{parent_path}'") if (defined($options{parent_path}));
-    push(@cparams,"source_file=>'$options{script_file}'") if (defined($options{script_file}));
     my $cparamstr = join(",\n",@cparams);
     
-    $body = "\nnew HTML::Mason::Component (\n$cparamstr\n);\n";
+    $body = "new HTML::Mason::Component (\n$cparamstr\n);\n";
     $body = $header . $body;
 
     #
@@ -506,94 +565,95 @@ sub make_component
 	my $srcstart = sprintf("%7d",length($body));
 	$body =~ s/source_ref_start=>0000000,/source_ref_start=>$srcstart,/;
 	$body .= $endsec;
-    }
+    }    
     
     #
-    # Load component, check for errors and warnings.
+    # Process parsing errors.
     #
-    my $comp;
-    my $ignoreExpr = $self->ignore_warnings_expr;
-    {
-	my $warnstr;
-	local $^W = 1;
-	local $SIG{__WARN__} = $ignoreExpr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignoreExpr/ } : sub { $warnstr .= $_[0] };
-	($body) = ($body =~ /^(.*)$/s) if $self->taint_check;
-	$comp = eval($body);
-	$err = $warnstr . $@;
-	# attempt to stem very long eval errors
-	if ($err =~ /has too many errors\./) {
-	    $err =~ s/has too many errors\..*/has too many errors./s;
-	}
-    }
     $parseError = 0;
-
-    #
-    # Process parsing and compilation errors.
-    #
     parse_error:
     my $success = 1;
     if ($err) {
 	if (defined($errpos)) {
 	    my $linenum = (substr($script,0,$errpos) =~ tr/\n//) + 1;
-	    $err .= " (line $linenum)";
+	    if ($embedded) {
+		$err .= " ($compName line $linenum)";
+	    } elsif ($suberr) {
+		$err .= "($compName line $linenum)";
+	    } else {
+		$err .= " (line $linenum)";
+	    }
+	    $$errposRef = $errpos if defined($errposRef);
 	}
 	$err .= "\n";
 	$success = 0;
 	$$errorRef = $err if defined($errorRef);
     }
     
-    if (defined($objectFile) && ($success || !$options{no_save_errors})) {
-	my @newfiles = ($objectFile);
-
-	# Create object file.  We attempt to handle several cases
-	# in which a file already exists and we wish to create a
-	# directory, or vice versa.  However, not every case is
-	# handled; to be complete, mkpath would have to unlink any
-	# existing file in its way.
-	if (!-f $objectFile) {
-	    my ($dirname) = dirname($objectFile);
-	    if (!-d $dirname) {
-		unlink($dirname) if (-e $dirname);
-		push(@newfiles,mkpath($dirname,0,0775));
-		die "Couldn't create directory $dirname: $!" if (!-d $dirname);
-	    }
-	    rmtree($objectFile) if (-d $objectFile);
-	}
-	
-	my $fh = new IO::File ">$objectFile" or die "Couldn't write object file $objectFile: $!";
-	print $fh $body;
-	$fh->close;
-	if (my $lref = $options{files_written}) {
-	    @$lref = @newfiles;
-	}
-	
-	$comp->object_file($objectFile) if $comp;
-    }
-    
-    if ($success) {
-	return $comp;
-    } else {
-	return undef;
-    }
+    return ($success) ? $body : undef;
 }
 
 #
-# Evaluate an object file.  Return a component object or undef if
-# error. Optional second argument is a scalar reference which will be
-# populated with the error message if any.
+# write_object_file
+#   (object_text, object_file, files_written)
+# Save object text in an object file.
 #
-sub eval_object_file
+# We attempt to handle several cases in which a file already exists
+# and we wish to create a directory, or vice versa.  However, not
+# every case is handled; to be complete, mkpath would have to unlink
+# any existing file in its way.
+#
+sub write_object_file
+{
+    my ($self, %options) = @_;
+    my ($objectText,$objectFile,$filesWrittenRef) =
+	@options{qw(object_text object_file files_written)};
+    my @newfiles = ($objectFile);
+
+    if (!-f $objectFile) {
+	my ($dirname) = dirname($objectFile);
+	if (!-d $dirname) {
+	    unlink($dirname) if (-e $dirname);
+	    push(@newfiles,mkpath($dirname,0,0775));
+	    die "Couldn't create directory $dirname: $!" if (!-d $dirname);
+	}
+	rmtree($objectFile) if (-d $objectFile);
+    }
+    
+    my $fh = new IO::File ">$objectFile" or die "Couldn't write object file $objectFile: $!";
+    print $fh $objectText;
+    $fh->close;
+    @$filesWrittenRef = @newfiles if (defined($filesWrittenRef))
+}
+
+#
+# eval_object_text
+#   (object_text, object_file, error)
+# Evaluate an object file or object text.  Return a component object
+# or undef if error.
+#
+sub eval_object_text
 {    
-    my ($self, $objfile, $errref) = @_;
+    my ($self, %options) = @_;
+    my ($objectText,$objectFile,$errref) =
+	@options{qw(object_text object_file error)};
+
+    #
+    # Evaluate object file or text with warnings on
+    #
     my $ignoreExpr = $self->ignore_warnings_expr;
-    ($objfile) = ($objfile =~ /^(.*)$/s) if $self->taint_check;
     my ($comp,$err);
     {
 	my $warnstr;
 	local $^W = 1;
 	local $SIG{__WARN__} = $ignoreExpr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignoreExpr/ } : sub { $warnstr .= $_[0] };
-	($objfile) = ($objfile =~ /^(.*)$/s) if $self->taint_check;
-	$comp = do($objfile);
+	if ($objectFile) {
+	    ($objectFile) = ($objectFile =~ /^(.*)$/s) if $self->taint_check;
+	    $comp = do($objectFile);
+	} else {
+	    ($objectText) = ($objectText =~ /^(.*)$/s) if $self->taint_check;
+	    $comp = eval($objectText);
+	}
 	$err = $warnstr . $@;
     }
 
@@ -603,18 +663,25 @@ sub eval_object_file
     #  -- pre-0.7 files that return code refs
     #  -- valid components but with an earlier parser_version
     #
-    my $parserVersion = version();
-    my $incompat = "Incompatible object file ($objfile);\nobject file was created by %s and you are running parser version $parserVersion.\nAsk your administrator to clear the object directory.\n";
-    $err = sprintf($incompat,"a pre-0.7 parser") if (-z $objfile);
-    if ($comp) {
-	if (ref($comp) eq 'CODE') {
+    if ($objectFile) {
+	my $parserVersion = version();
+	my $incompat = "Incompatible object file ($objectFile);\nobject file was created by %s and you are running parser version $parserVersion.\nAsk your administrator to clear the object directory.\n";
+	if (-z $objectFile) {
 	    $err = sprintf($incompat,"a pre-0.7 parser");
-	} elsif (ref($comp) !~ /HTML::Mason::Component/) {
-	    $err = "object file ($objfile) did not return a component object!";
-	} elsif ($comp->parser_version != $parserVersion) {
-	    $err = sprintf($incompat,"parser version ".$comp->parser_version);
+	} elsif ($comp) {
+	    if (ref($comp) eq 'CODE') {
+		$err = sprintf($incompat,"a pre-0.7 parser");
+	    } elsif (ref($comp) !~ /HTML::Mason::Component/) {
+		$err = "object file ($objectFile) did not return a component object!";
+	    } elsif ($comp->parser_version != $parserVersion) {
+		$err = sprintf($incompat,"parser version ".$comp->parser_version);
+	    }
 	}
     }
+
+    #
+    # Return component or error
+    #
     if ($err) {
 	# attempt to stem very long eval errors
 	if ($err =~ /has too many errors\./) {
@@ -623,7 +690,7 @@ sub eval_object_file
 	$$errref = $err if defined($errref);
 	return undef;
     } else {
-	$comp->object_file($objfile);
+	$comp->object_file($objectFile);
 	return $comp;
     }
 }
@@ -674,14 +741,16 @@ sub make_dirs
 	    $makeflag = ($srcfilemod > $objfilemod);
 	}
 	if ($makeflag) {
-	    my ($errmsg);
+	    my ($errmsg,$objText);
 	    print "compiling $srcfile\n" if $verbose;
-	    if (!$self->make_component(script_file=>$srcfile, object_file=>$objfile, no_save_errors=>1, path=>$compPath, error=>\$errmsg)) {
+	    if ($self->make_component(script_file=>$srcfile, path=>$compPath, object_text=>\$objText, error=>\$errmsg)) {
+		$self->write_object_file(object_file=>$objfile, object_text=>$objText);
+	    } else {
 		if ($verbose) {
 		    print "error";
 		    if ($errorDir) {
 			(my $errfile = $srcfile) =~ s@^$sourceDir@$errorDir@;
-			$self->make_component(script_file=>$srcfile, object_file=>$errfile, path=>$compPath);
+			$self->write_object_file(object_file=>$errfile, object_text=>$objText);
 			print " in $errfile";
 		    }
 		    print ":\n$errmsg\n";

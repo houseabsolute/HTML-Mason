@@ -192,13 +192,16 @@ sub exec {
     } else {
 	$req = new HTML::Mason::Request (interp=>$self);
     }
+    print STDERR "Request: $req\n";
+    print STDERR "Stack: ".$req->{stack}."\n";
+    print STDERR "Stack size: ".scalar(@{$req->stack})."\n";
     
     # $comp can be an absolute path or component object.  If a path,
     # load into object.
     if (!ref($comp) && substr($comp,0,1) eq '/') {
 	my $path = $comp;
 	if (!($comp = $self->load($path))) {
-	    if ($self->{dhandler_name} && $comp = $self->find_comp_upwards($path,$self->{dhandler_name})) {
+	    if ($self->{dhandler_name} and $comp = $self->find_comp_upwards($path,$self->{dhandler_name})) {
 		my $parent = $comp->parent_path;
 		($req->{dhandler_arg} = $path) =~ s{^$parent/}{};
 	    }
@@ -240,12 +243,16 @@ sub exec {
 	my $i = index($err,'HTML::Mason::Interp::exec');
 	$err = substr($err,0,$i) if $i!=-1;
 	$err =~ s/^\s*(HTML::Mason::Commands::__ANON__|HTML::Mason::Request::exec_next).*\n//gm;
-	my $errmsg = "error while executing ".$req->comp->path."\n";
-	$errmsg .= $err."\n";
-	if ($req->depth > 1) {
-	    $errmsg .= "backtrace: " . join(" <= ",map($_->{comp}->path,@{$req->stack}))."\n";
+	if (@{$req->{stack}}) {
+	    my $errmsg = "error while executing ".$req->comp->path.":\n";
+	    $errmsg .= $err."\n";
+	    if ($req->depth > 1) {
+		$errmsg .= "backtrace: " . join(" <= ",map($_->{comp}->path,@{$req->stack}))."\n";
+	    }
+	    die ($errmsg);
+	} else {
+	    die ($err);
 	}
-	die ($errmsg);
     }
 
     return wantarray ? @result : $result;
@@ -301,7 +308,7 @@ sub load {
 	return undef unless (-f $objfile);   # component not found
 	
 	$self->write_system_log('COMP_LOAD', $path);	# log the load event
-	my $comp = $self->{parser}->eval_object_file($objfile,\$err);
+	my $comp = $self->{parser}->eval_object_text(object_file=>$objfile, error=>\$err);
 	die "Error while loading '$objfile' at runtime:\n$err\n" if !$comp;
 	
 	if ($self->{code_cache_mode} eq 'all') {
@@ -356,18 +363,18 @@ sub load {
 
 	my $comp;
 	if ($objfile and $objfilemod >= $srcfilemod) {
-	    $comp = $self->{parser}->eval_object_file($objfile,\$err);
+	    $comp = $self->{parser}->eval_object_text(object_file=>$objfile, error=>\$err);
 	    die "Error while loading '$objfile' at runtime:\n$err\n" if !$comp;
 	} else {
 	    #
 	    # Parse the source file, and possibly save result in object file.
 	    #
-	    if ($objfile) {
+	    my $objText;
+	    $comp = $self->{parser}->make_component(script_file=>$srcfile,path=>$path,error=>\$err,object_text=>\$objText);
+	    if ($objfile && $objText) {
 		my @newfiles;
-		$comp = $self->{parser}->make_component(script_file=>$srcfile,object_file=>$objfile,files_written=>\@newfiles,path=>$path,error=>\$err);
+		$self->{parser}->write_object_file(object_text=>$objText,object_file=>$objfile,files_written=>\@newfiles);
 		$self->push_files_written(@newfiles);
-	    } else {
-		$comp = $self->{parser}->make_component(script_file=>$srcfile,path=>$path,error=>\$err);
 	    }
 	    die "Error during compilation of $srcfile:\n$err\n" if !$comp;
 	}

@@ -178,11 +178,12 @@ sub interp_status
             '<DL><DT><FONT SIZE="+1"><B>Cached components</B></FONT><DD>';
 
     if(%{$interp->{code_cache}})
-    {     
-        push (@strings, map("<TT>$_</TT><BR>\n", 
-                            sort keys %{$interp->{code_cache}} 
-                           )
-             );
+    {
+	my $string;
+	foreach my $key (sort keys %{$interp->{code_cache}}) {
+	    $string .= sprintf("<TT>%s (%s)</TT><BR>\n",$key,scalar(localtime($interp->{code_cache}->{$key}->{lastmod})));
+	}
+	push (@strings, $string);
     } else {
         push @strings, '<I>None</I>';
     }     
@@ -473,7 +474,7 @@ sub handle_request_1
     #
     my ($comp,$dhandlerArg);
     if (!($comp = $interp->load($compPath))) {
-	if ($interp->dhandler_name && $comp = $interp->find_comp_upwards($compPath,$interp->dhandler_name)) {
+	if ($interp->dhandler_name and $comp = $interp->find_comp_upwards($compPath,$interp->dhandler_name)) {
 	    my $remainder = ($comp->parent_path eq '/') ? $compPath : substr($compPath,length($comp->parent_path));
 	    my $pathInfo = $remainder.$r->path_info;
 	    $r->path_info($pathInfo);

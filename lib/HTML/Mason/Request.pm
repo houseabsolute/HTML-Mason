@@ -11,14 +11,14 @@ require Exporter;
 
 use strict;
 use vars qw($AUTOLOAD);
-my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P);
+my @_used = ($HTML::Mason::CODEREF_NAME,$::opt_P,$HTML::Mason::Commands::REQ);
 
 my %fields =
     (autohandler_next => undef,
      count => 0,
      dhandler_arg => undef,
      interp => undef,
-     stack => [],
+     stack => undef,
      );
 # Create accessor routines
 foreach my $f (keys %fields) {
@@ -33,7 +33,6 @@ sub new
 	%fields,
 	abort_flag => undef,
 	abort_retval => undef,
-	req_code_cache => {},
 	error_flag => undef,
     };
     my (%options) = @_;
@@ -50,6 +49,7 @@ sub new
     while (my ($type,$href) = each(%{$interp->{hooks}})) {
 	$self->{"hooks_$type"} = [values(%$href)] if (%$href);
     }
+    $self->{stack} = [];
     $self->{count} = ++($interp->{request_count});
 
     return $self;
@@ -83,9 +83,8 @@ sub exec_next {
     # load into object.
     #
     if (!ref($comp)) {
-	my $path = $req->process_comp_path($comp);
-	$comp = $interp->load($path);
-	die "could not find component for path '$path'\n" if (!$comp);
+	my $path = $comp;
+	$comp = $req->resolve_comp_path($path) or die "could not find component for path '$path'\n";
     }
 
     #
@@ -100,7 +99,7 @@ sub exec_next {
     # Check for maximum recursion.
     #
     my $depth = scalar(@{$req->{stack}});
-    die "$depth levels deep in component stack (infinite recursive call?)\n" if ($depth > $interp->{max_recurse});
+    die "$depth levels deep in component stack (infinite recursive call?)\n" if ($depth >= $interp->{max_recurse});
 
     #
     # Determine sink (where output is going).
@@ -241,6 +240,21 @@ sub process_comp_path
     while ($compPath =~ s@/[^/]+/\.\.@@) {}
     while ($compPath =~ s@/\./@/@) {}
     return $compPath;    
+}
+
+#
+# Given a component path (absolute or relative), returns a component.
+# Does relative->absolute conversion as well as checking for local
+# subcomponents.
+#
+sub resolve_comp_path
+{
+    my ($self,$path) = @_;
+    if (my $comp = $self->comp->subcomps->{$path}) {
+	return $comp;
+    }
+    $path = $self->process_comp_path($path);
+    return $self->{interp}->load($path);
 }
 
 1;

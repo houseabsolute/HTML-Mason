@@ -17,12 +17,15 @@ my %fields =
     (code => undef,
      create_time => undef,
      declared_args => [],
+     name => undef,
+     object_file => undef,
+     parent_comp => undef,
      parent_path => undef,
      parser_version => undef,
      path => undef,
      source_file => undef,
      source_ref_start => undef,
-     object_file => undef,
+     subcomps => {},
      );
 # Minor speedup: create anon. subs to reduce AUTOLOAD calls
 foreach my $f (keys %fields) {
@@ -47,11 +50,15 @@ sub new
     }
     bless $self, $class;
 
-    # Assign default parent path
-    if (defined($self->{path}) && !defined($self->{parent_path})) {
-	($self->{parent_path}) = ($self->path =~ m@^(.*)/[^/]*$@);
-	$self->{parent_path} = '/' if $self->{parent_path} !~ /\S/;
+    # Initialize subcomponent properties
+    foreach my $c (values(%{$self->{subcomps}})) {
+	# Parent points to us
+	$c->{parent_comp} = $self;
+	
+	# It has access to the same subcomps
+	$c->{subcomps} = $self->{subcomps};
     }
+    
     return $self;
 }
 

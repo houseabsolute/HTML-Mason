@@ -1,23 +1,21 @@
-Revision history for Perl extension HTML::Mason.
+Revision history for HTML::Mason.
 
 An HTML version of this file, complete with links to documentation, is
 available at http://www.masonhq.com/changes.html.
 
-All development by Jonathan Swartz, swartz@transbay.net, unless otherwise noted:
-  - [mschmick] Mark Schmick, mark@webz.com
-  - [modus] Patrick Kane, modus@pr.es.to
-See CREDITS file for other contributors.
-
 ** denotes an incompatible change
 
-0.6.1
+0.6.1  Tue Jul 27 09:34:31 PDT 1999
 
 - Added warnings to convert-0.6.pl about occasional erroneous
 component call syntax conversions (reported by Oleg Bartunov)
 - Fixed conversion of <% mc_comp("/foo/$bar") %> (reported by Oleg
 Bartunov)
-- Fixed mc_suppress_http_header(0) which was broken by removal of
-internal unsuppress_hook function (reported by Jim Mortko)
+- Fixed cache access under high concurrencies (reported by Oleg
+Bartunov)
+- Fixed uppercase <%PERL>, broken in 0.6 (reported by Daniel L. Jones)
+- Fixed mc_suppress_http_header(0), broken in 0.6 (reported by Jim
+Mortko)
 
 0.6  Fri Jul 16 08:09:27 PDT 1999
 
