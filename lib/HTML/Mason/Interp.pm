@@ -59,7 +59,7 @@ BEGIN
 		       descr => "This class is expected to return component information based on a component path" },
 	 compiler => { class => 'HTML::Mason::Compiler::ToObject',
 		       descr => "This class is used to translate component source into code" },
-	 request  => { class => ( 'HTML::Mason::Request' ),
+	 request  => { class => 'HTML::Mason::Request',
 		       delayed => 1,
 		       descr => "Objects returned by make_request are members of this class" },
 	);
