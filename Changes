@@ -25,13 +25,15 @@ instead of hash.
 - Fixed expression escape flags to allow arbitrary following
 whitespace.  (reported by Mikhail Zabaluev)
 - Added FAQ on how to handle file uploads.
-- $m->cache returns the value stored on a succesful store action.
+- $m->cache returns the value stored on a successful store action.
 - Reduced memory usage by removing unneeded uses of various modules.
 On my box I see about a 500k or so reduction in memory use (Dave).
+- Removed all uses of the IO::* modules.
 - Mason seems to be working under a mod_perl DSO, at least under
 mod_perl 1.24 and Apache 1.3.12.  This probably has nothing to do with
-Mason but people are encouraged to experiment with a mod_perl DSO and
-report back to the mason list.
+Mason but the very adventurous are encouraged to experiment with a
+mod_perl DSO and report back to the mason list.
+
 
 0.87  Wed May 24 08:49:12 PDT 2000
 
