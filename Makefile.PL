@@ -54,8 +54,6 @@ sub test
 
     my $test = $self->SUPER::test(@_);
 
-    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE}=\$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; $1/;
-
     # %APACHE is set in makeconfig.pl.
     # If we are not going to test with Apache there is no harm in
     # setting this anyway.
@@ -63,7 +61,7 @@ sub test
     # The PORT env var is used by Apache::test.  Don't delete it!
     my $port = $APACHE{port} || 8228;
     $APACHE{apache_dir} ||= '';
-    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE}=\$(TEST_VERBOSE); \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$APACHE{apache_dir}^; $1/;
+    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE} = \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$APACHE{apache_dir}^; $1/;
 
     return $test;
 }
