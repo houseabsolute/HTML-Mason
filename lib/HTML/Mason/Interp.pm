@@ -24,7 +24,6 @@ use HTML::Mason::MethodMaker
 			 comp_root
 			 data_dir
 			 data_cache_dir
-			 die_handler
 			 die_handler_overridden
 			 hooks
 			 system_log_file
@@ -208,6 +207,17 @@ sub _initialize
 #
 sub object_dir { return File::Spec->catdir( shift->data_dir, 'obj' ); }
 sub reload_file { return File::Spec->catfile( shift->data_dir, 'etc', 'reload.lst' ); }
+
+sub die_handler {
+    my $self = shift;
+
+    if (@_) {
+	$self->{die_handler} = shift;
+	$self->{die_handler_overridden} = 1;
+    }
+
+    return $self->{die_handler};
+}
 
 #
 # exec is the initial entry point for executing a component
