@@ -12,54 +12,54 @@ BEGIN
 {
     %e = ( 'HTML::Mason::Exception' =>
 	   { description => 'generic base class for all Mason exceptions',
-	     abbr => 'error'},
+	     alias => 'error'},
 
 	   'HTML::Mason::Exception::Abort' =>
 	   { isa => 'HTML::Mason::Exception',
-	     abbr => 'abort_error',
+	     alias => 'abort_error',
 	     fields => [qw(aborted_value)],
 	     description => 'a component called $m->abort' },
 
 	   'HTML::Mason::Exception::Compiler' =>
 	   { isa => 'HTML::Mason::Exception',
-	     abbr => 'compiler_error',
+	     alias => 'compiler_error',
 	     description => 'error thrown from the compiler' },
 
 	   'HTML::Mason::Exception::Compilation' =>
 	   { isa => 'HTML::Mason::Exception',
-	     abbr => 'compilation_error',
+	     alias => 'compilation_error',
 	     fields => [qw(filename)],
 	     description => "error thrown in eval of the code for a component" },
 
 	   'HTML::Mason::Exception::Compilation::IncompatibleCompiler' =>
 	   { isa => 'HTML::Mason::Exception',
-	     abbr => 'wrong_compiler_error',
+	     alias => 'wrong_compiler_error',
 	     description => "a component was compiled by a compiler/lexer with incompatible options.  recompilation is needed" },
 
 	   'HTML::Mason::Exception::Params' =>
 	   { isa => 'HTML::Mason::Exception',
-	     abbr => 'param_error',
+	     alias => 'param_error',
 	     description => 'invalid parameters were given to a method/function' },
 
 	   'HTML::Mason::Exception::Syntax' =>
 	   { isa => 'HTML::Mason::Exception',
-	     abbr => 'syntax_error',
+	     alias => 'syntax_error',
 	     fields => [qw(source_line comp_name line_number)],
 	     description => 'invalid syntax was found in a component' },
 
 	   'HTML::Mason::Exception::System' =>
 	   { isa => 'HTML::Mason::Exception',
-	     abbr => 'system_error',
+	     alias => 'system_error',
 	     description => 'a system call of some sort failed' },
 
 	   'HTML::Mason::Exception::TopLevelNotFound' =>
 	   { isa => 'HTML::Mason::Exception',
-	     abbr => 'top_level_not_found_error',
+	     alias => 'top_level_not_found_error',
 	     description => 'the top level component could not be found' },
 
 	   'HTML::Mason::Exception::VirtualMethod' =>
 	   { isa => 'HTML::Mason::Exception',
-	     abbr => 'virtual_error',
+	     alias => 'virtual_error',
 	     description => 'a virtual method was not overridden' },
 
 	 );
@@ -68,8 +68,6 @@ BEGIN
 use Exception::Class (%e);
 
 HTML::Mason::Exception->Trace(1);
-
-my %abbrs = map { $e{$_}{abbr} => $_ } grep {exists $e{$_}{abbr}} keys %e;
 
 # The import() method allows this:
 #  use HTML::Mason::Exceptions(abbr => ['error1', 'error2', ...]);
@@ -85,9 +83,9 @@ sub import
     {
 	foreach my $name (@{$args{abbr}})
 	{
-	    die "Unknown exception abbreviation '$name'" unless exists $abbrs{$name};
 	    no strict 'refs';
-	    *{"${caller}::$name"} = sub { $abbrs{$name}->throw( error => shift ) };
+	    die "Unknown exception abbreviation '$name'" unless defined &{$name};
+	    *{"${caller}::$name"} = \&{$name};
 	}
     }
     {
@@ -142,7 +140,8 @@ sub new
 # exceptions can get stringified more than once.
 sub throw
 {
-    my ($class, %params) = @_;
+    my $class = shift;
+    my %params = @_ == 1 ? ( error => $_[0] ) : @_;
 
     if (HTML::Mason::Exceptions::isa_mason_exception($params{error})) {
 	$params{error} = $params{error}->error;
