@@ -7,6 +7,7 @@ package HTML::Mason::Resolver::File;
 use strict;
 
 use Cwd;
+use File::Glob;
 use File::Spec;
 use HTML::Mason::Tools qw(read_file_ref paths_eq);
 use Params::Validate qw(:all);
@@ -106,7 +107,7 @@ sub glob_path {
 
     my %path_hash;
     foreach my $root (@roots) {
-	my @files = glob($root.$pattern);
+	my @files = File::Glob::bsd_glob($root.$pattern);
 	foreach my $file (@files) {
             next unless -f $file;
 	    if (substr($file, 0, length $root) eq $root) {
