@@ -119,9 +119,6 @@ your server through the debugger.
 internals that were changed. It will hopefully return better and
 stronger in a future release.
 
-- The backslash character now eliminates a newline at the end of
-any line, not just before %-lines and section tags.
-
 
 Data Caching
 
@@ -163,6 +160,9 @@ characters properly for ISO-8859-1 pages. However, it will wreak
 havoc with different encodings. You can get the 1.0x behavior with
 
    $ah->interp->set_escape( h => \&HTML::Mason::Escapes::basic_html_escape );
+
+- The backslash character now eliminates a newline at the end of
+any line, not just before %-lines and section tags.
 
 - The run_count and first_time component object methods have been
 deprecated, as they cannot be implemented reliably (see bug #209).
