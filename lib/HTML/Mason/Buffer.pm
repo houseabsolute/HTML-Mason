@@ -24,11 +24,11 @@ use HTML::Mason::MethodMaker
 
 __PACKAGE__->valid_params
     (
-     sink         => { type => SCALARREF | CODEREF, optional => 1,
+     sink         => { parse => 'code', type => SCALARREF | CODEREF, optional => 1,
 		       descr => "A subroutine or scalar reference that will receive the output stream" },
      parent       => { isa => 'HTML::Mason::Buffer', optional => 1,
 		       descr => "A parent buffer of the current buffer" },
-     ignore_flush => { type => SCALAR, default => 0,
+     ignore_flush => { parse => 'boolean', type => SCALAR, default => 0,
 		       descr => "Whether the flush() method is a no-op or actually flushes content" },
      filter       => { type => CODEREF, optional => 1,
 		       descr => "A subroutine through which all output should pass" },
