@@ -954,91 +954,6 @@ as they are with C<$m-E<gt>comp>. exec returns the return value of
 the component. Component output is sent to standard output by default,
 but you can change this by specifying C<out_method>.
 
-=head2 Using Mason from a CGI script
-
-Here is a skeleton CGI script that calls a component and sends the
-output to the browser.
-
-    #!/usr/bin/perl -w
-    use CGI;
-    use HTML::Mason;
-    use HTML::Mason::Utils qw(cgi_request_args);
-
-    my $interp = new HTML::Mason::Interp (comp_root=>'...',
-                                          data_dir=>'...');
-
-    my $q = new CGI;
-    my $comp = $ENV{'PATH_TRANSLATED'};
-    my $root = $interp->resolver->comp_root;
-    $comp =~ s/^$root//
-        or die "Requested file '$comp' is outside component root '$root'";
-    my %args = cgi_request_args($q, $q->request_method);
-    print $q->header;
-
-    $interp->exec($comp, %args);
-
-The relevant portions of the httpd.conf file look like:
-
-    DocumentRoot /path/to/comp/root
-    ScriptAlias /cgi-bin/ /path/to/cgi-bin/
-    Action html-mason /cgi-bin/handler.cgi
-
-    <Directory /path/to/comp/root>
-    SetHandler html-mason
-    </Directory>
-
-This simply causes Apache to call my handler.cgi script every time a
-file under the component root is requested.
-
-It should be noted that because this script simply prints standard
-HTTP headers and then executes a component, there would be no way of
-sending non-OK responses to the browser from your components.
-
-A more complex handler.cgi script might look like this:
-
-    #!/usr/bin/perl -w
-    use CGI;
-    use HTML::Mason;
-    use HTML::Mason::Compiler::ToObject;
-    use HTML::Mason::Utils qw(cgi_request_args);
-    use HTTP::Headers;
-
-    my $compiler = new HTML::Mason::Compiler::ToObject (allow_globals => '$H');
-    my $interp = new HTML::Mason::Interp (comp_root=>'...',
-                                          data_dir=>'...',
-                                          compiler=>$compiler);
-
-    my $q = new CGI;
-    my $comp = $ENV{'PATH_TRANSLATED'};
-    my $root = $interp->resolver->comp_root;
-    $comp =~ s/^$root//
-        or die "Requested file '$comp' is outside component root '$root'";
-    my %args = cgi_request_args($q, $q->request_method);
-
-    # Gather all component output into a buffer.
-    my $buffer;
-    $interp->out_method(\$buffer);
-
-    my $H = new HTTP::Headers;
-    $interp->set_global('$H'=>$H);
-
-    eval { $interp->exec($comp, %args) };
-
-    if ($@) {
-        handle_error($@);
-    } else {
-        unless ($H->header('content-type')) {
-            $H->header('content-type' => 'text/html');
-        }
-        print $H->as_string;
-        print $buffer;
-    }
-
-This script offers components the use of a global named C<$h> which
-can be used to set headers (for example, for a redirect).  It also
-catches errors in the execution of the script and has a routine to
-handle them.
-
 =head2 Using Mason from a standalone script
 
 Here is a skeleton script that calls a component and places the output
@@ -1072,6 +987,39 @@ paths and treat them as being relative to the current directory.
     print F $outbuf;
     close(F);
     print "return value of the ../foo.comp component was: $retval\n";
+
+=head2 Using Mason from a CGI script
+
+The easiest way to use Mason via a CGI script is with the L<CGIHandler
+module|HTML::Mason::CGIHandler> module.
+
+Here is a skeleton CGI script that calls a component and sends the
+output to the browser.
+
+    #!/usr/bin/perl
+    use HTML::Mason::CGIHandler;
+
+    my $h = new HTML::Mason::CGIHandler
+     (
+      data_dir  => '/home/jethro/code/mason_data',
+     );
+
+    $h->handle_request;
+
+The relevant portions of the httpd.conf file look like:
+
+    DocumentRoot /path/to/comp/root
+    ScriptAlias /cgi-bin/ /path/to/cgi-bin/
+
+    Action html-mason /cgi-bin/mason_handler.cgi
+    <FilesMatch "\.html$">
+     SetHandler html-mason
+    </FilesMatch>
+
+This simply causes Apache to call the mason_handler.cgi script every
+time a file under the component root is requested.  This script uses
+the L<CGIHandler class|HTML::Mason::CGIHandler> to do most of the
+heavy lifting.  See that class's documentation ofr more details.
 
 =head1 SEE ALSO
 
