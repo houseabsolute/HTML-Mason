@@ -182,6 +182,29 @@ subcomponent 2
 EOF
                     );
 
+#------------------------------------------------------------
+
+    # The output we expect from this test depends on how we decide
+    # flush should be handled in the presence of a filter.  The output
+    # expected below assumes that flushes are ignored, but if we
+    # decide otherwise that should be changed.
+    $group->add_test( name => 'filter_and_flush',
+                      description => 'test effect of flush with filter present',
+                      component => <<'EOF',
+foo
+% $m->flush_buffer;
+bar
+<%filter>
+s/(foo)\s+(\S+)/$2$1/;
+</%filter>
+EOF
+                      expect => <<'EOF',
+barfoo
+EOF
+                    );
+
+#------------------------------------------------------------
+
         return $group;
 }
 
