@@ -898,7 +898,10 @@ Both the ApacheHandler and CGIHandler modules provide reasonable
 default component roots when none is provided by the user.
 
 When using Mason outside the web, the default component root is simply
-the current working directory of the program that uses Mason.
+the system's root directory.  If you do not provide your own component
+root, Mason will allow you to use relative paths in calls to the
+L<Interp/load> method, in which case the path will be assumed to be
+relative to the current working directory.
 
 =head1 AUTHORS
 
