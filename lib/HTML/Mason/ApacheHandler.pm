@@ -27,11 +27,14 @@ BEGIN
 {
     __PACKAGE__->valid_params
 	( ah         => { isa => 'HTML::Mason::ApacheHandler',
-			  descr => 'An ApacheHandler to handle web requests' },
+			  descr => 'An ApacheHandler to handle web requests',
+			  public => 0 },
 	  apache_req => { isa => 'Apache', default => undef,
-			  descr => "An Apache request object" },
+			  descr => "An Apache request object",
+			  public => 0 },
 	  cgi_object => { isa => 'CGI',    default => undef,
-			  descr => "A CGI.pm request object" },
+			  descr => "A CGI.pm request object",
+			  public => 0 },
 	  auto_send_headers => { parse => 'boolean', type => BOOLEAN, default => 1,
 				 descr => "Whether HTTP headers should be auto-generated" },
 	);
@@ -220,8 +223,6 @@ BEGIN
 				  },
 	 decline_dirs          => { parse => 'boolean', type => BOOLEAN, default => 1,
 				    descr => "Whether Mason should decline to handle requests for directories" },
-	 multiple_config       => { parse => 'boolean', type => BOOLEAN, optional => 1,
-				    descr => "Whether multiple Mason configurations are in effect, such as when using VirtualHosts" },
 	 # the only required param
 	 interp                => { isa => 'HTML::Mason::Interp',
 				    descr => "A Mason interpreter for processing components" },
