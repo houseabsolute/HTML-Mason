@@ -966,7 +966,7 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'escape_falgs',
+    $group->add_test( name => 'escape_flags',
 		      description => 'test setting escape flags via constructor',
                       interp_params =>
                       { escape_flags => { uc => sub { ${$_[0]} = uc ${$_[0]} } } },
