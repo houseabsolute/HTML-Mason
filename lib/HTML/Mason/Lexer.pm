@@ -90,7 +90,7 @@ sub lex
     $current->{comp_text} =~ s/\r\n/\n/g;
 
     # Clean up Mac line endings
-    $current->{comp_text} =~ s/\r/\n/g;
+    $current->{comp_text} =~ tr/\r/\n/;
 
     # Initialize lexer state
     $current->{lines} = 1;
