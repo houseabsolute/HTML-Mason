@@ -12,17 +12,22 @@ use CGI qw(-no_debug);  # Prevent "(offline mode: enter name=value pairs on stan
     use HTML::Mason::Tests;
     use base 'HTML::Mason::Tests';
 
-    my $interp;
-    
     sub _run_test
     {
 	my $self = shift;
 	my $test = $self->{current_test};
-	
+
 	$self->{buffer} = '';
-	$interp ||= HTML::Mason::CGIHandler->new
+
+        my %interp_params = ( exists $test->{interp_params} ?
+                              %{ $test->{interp_params} } :
+                              () );
+
+	my $interp = HTML::Mason::CGIHandler->new
 	    (comp_root => $self->comp_root,
-	     data_dir  => $self->data_dir);
+	     data_dir  => $self->data_dir,
+             %interp_params,
+            );
 	
 	eval { $self->_execute($interp) };
 	
@@ -90,6 +95,28 @@ $group->add_test( name => 'cgi_object',
 		  expect    => "${basic_header}some boohoo cryin'",
 		);
 
+#------------------------------------------------------------
+
+$group->add_test( name => 'fatal_error',
+		  description => 'Test fatal error_mode',
+                  interp_params => { error_mode => 'fatal', error_format => 'text' },
+		  component => q{% die 'dead';},
+		  expect_error => qr/dead at .+/,
+		);
+
+$group->add_test( name => 'headers',
+		  description => 'Test header generation',
+		  component => q{% $r->header_out('foo' => 'bar');},
+		  expect    => qr/Foo: bar/,
+		);
+
+$group->add_test( name => 'redirect headers',
+		  description => 'Test header generation',
+		  component => q{% $m->redirect('/hello.html');},
+		  expect    => qr/Status: 302\s+Location: \/hello\.html|Location: \/hello\.html\s+Status: 302/,
+		);
+
+#------------------------------------------------------------
 
 $group->run;
 
