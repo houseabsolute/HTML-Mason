@@ -17,12 +17,12 @@ component is loaded.  It is useful for defining persistent variables
 and named subroutines.  L<Components/&lt%once&gt;>
 - New <%text> section allows you to turn off Mason processing for a
 particular section of text.  L<Components/&lt%text&gt;>
-- Implemented first installation test suite. [modus]
-- Handler.pl creation wizard [modus]
+- Implemented first installation test suite! [modus]
 - HEAD optimization: we now automatically abort after headers are sent
 on a HEAD request.
-- Component arguments can now be passed in traditional manner via @_
-(suggested by Ken Williams)
+- Documented and updated Parser make() utility. make traverses a tree
+of components, compiling any out-of-date components into object files
+and reporting errors.
 - New mc_comp_source command returns the source filename of this or
 any component.  L<Commands/item_mc_comp_source_compPath_>
 - mc_file now uses current component path by default if no

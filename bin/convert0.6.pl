@@ -6,10 +6,11 @@ use Getopt::Std;
 use IO::File;
 use strict;
 
-my ($HELP, $LOWER, $QUIET, $TEST, $UPPER);
+my ($EXCLUDE, $HELP, $LOWER, $QUIET, $TEST, $UPPER);
 
 my $usage = <<EOF;
-Usage: $0 -hlqtu <directory> [<directory>...]
+Usage: $0 -hlqtu [-e <regexp>] <directory> [<directory>...]
+-e <regexp>: Exclude paths matching <regexp> case-insensitive. e.g. "(.gif|.jpg)$"
 -h: Display help message and exit
 -l: Write all section names as lowercase (<%init>, etc.)
 -q: Quiet mode, do not report normal processing of files
@@ -39,6 +40,11 @@ before running this program for real.  Files are modified
 destructively and no automatic backups are created.
 EOF
 
+my $warning = <<EOF;
+Warning: All directories will be traversed recursively.  Files are
+modified destructively and no automatic backups are created.
+EOF
+
 sub usage
 {
     print $usage;
@@ -48,13 +54,26 @@ sub usage
 sub main
 {
     my (%opts);
-    getopts('hlqtu',\%opts);
-    ($HELP, $LOWER, $QUIET, $TEST, $UPPER) = @opts{qw(h l q t u)};
+    getopts('e:hlqtu',\%opts);
+    ($EXCLUDE, $HELP, $LOWER, $QUIET, $TEST, $UPPER) = @opts{qw(e h l q t u)};
     if ($HELP) { print "$helpmsg\n$usage"; exit }
-    if (!@ARGV) { print "$usage"; exit }
+    if (!@ARGV) { print "$usage\n$helpmsg"; exit }
     my @dirs = @ARGV;
+    
+    if (!$TEST) {
+	print "*** Mason 0.6 Conversion ***\n\n";
+	print "Quiet mode.\n" if defined($QUIET);
+	print "Excluding paths matching ($EXCLUDE).\n" if defined($EXCLUDE);
+	print "Processing ".(@dirs==1 ? "directory " : "directories ").join(",",@dirs)."\n";
+	print $warning;
+	print "\nProceed? [n] ";
+	exit if ((my $ans = <STDIN>) !~ /[Yy]/);
+    }
     my $sub = sub {
-	if (-f $_) { convert($_,"$File::Find::dir/$_") }
+	if (-f $_ && -s _) {
+	    return if defined($EXCLUDE) && "$File::Find::dir/$_" =~ /$EXCLUDE/i;
+	    convert($_,"$File::Find::dir/$_");
+	}
     };
     find($sub,@dirs);
 }
@@ -95,25 +114,29 @@ sub convert
     if (!$TEST) {
 	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*\'([^\']+)\'\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g);
 	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*\"([^\"]+)\"\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g);
-	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g);
+	$c += ($buf =~ s{<%\s*mc_comp\s*\(\s*(.*?)\s*\)\s*%>} {<& $1 &>}g);
     } else {
 	while ($buf =~ m{(<%\s*mc_comp\s*\(\s*\'([^\']+)\'\s*(.*?)\s*\)\s*%>)}g) {
 	    $report->($1,"<& $2$3 &>");
 	}
+	$buf =~ s{<%\s*mc_comp\s*\(\s*\'([^\']+)\'\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g;
 	while ($buf =~ m{(<%\s*mc_comp\s*\(\s*\"([^\"]+)\"\s*(.*?)\s*\)\s*%>)}g) {
 	    $report->($1,"<& $2$3 &>");
 	}
+	$buf =~ s{<%\s*mc_comp\s*\(\s*\"([^\"]+)\"\s*(.*?)\s*\)\s*%>} {<& $1$2 &>}g;
         while ($buf =~ m{(<%\s*mc_comp\s*\((.*?)\s*\)\s*%>)}g) {
 	    $report->($1,"<& $2 &>");
 	}
     }
 
-    if (@changes) {
-	print scalar(@changes)." substitutions in $path:\n";
-	print join("\n",@changes)."\n\n";
+    if ($TEST) {
+	if (@changes) {
+	    print scalar(@changes)." substitutions in $path:\n";
+	    print join("\n",@changes)."\n\n";
+	}
     }
     
-    if ($c) {
+    if ($c && !$TEST) {
 	print "$c substitutions in $path\n" if !$QUIET;
 	my $outfh = new IO::File ">$file";
 	if (!$outfh) { warn "cannot write $path: $!"; return }
