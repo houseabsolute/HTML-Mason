@@ -211,6 +211,32 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'file_in_subcomp',
+		      description => 'tests $m->file method in subcomponent',
+		      component => <<'EOF',
+Here I am:
+
+<& .sub &>
+<%def .sub>
+<% $m->file('file_in_subcomp') %>
+</%def>
+EOF
+		      expect => <<'EOF',
+Here I am:
+
+
+Here I am:
+
+<& .sub &>
+<%def .sub>
+<% $m->file('file_in_subcomp') %>
+</%def>
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'list_out',
 		      description => 'tests that $m->print can handle a list of arguments',
 		      component => <<'EOF',
