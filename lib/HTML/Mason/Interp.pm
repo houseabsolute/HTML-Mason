@@ -824,13 +824,13 @@ File name used for L<autohandlers|HTML::Mason::Devel/autohandlers>. Default is "
 =item code_cache_max_size
 
 Specifies the maximum size, in bytes, of the in-memory code cache
-where components are stored. Default is 10 MB. See ADMIN<code cache>
+where components are stored. Default is 10 MB. See the L<code cache|HTML::Mason::Admin/code cache> section of the administrator's manual
 for further details.
 
 =item compiler
 
 The Compiler object to associate with this Interpreter.  By default
-a new object of class P<compiler_class> will be created.
+a new object of class L<compiler_class|HTML::Mason::Params/compiler_class> will be created.
 
 =item compiler_class
 
@@ -860,7 +860,7 @@ instead of C<FileCache>.
 =item escape_flags
 
 A hash reference of escape flags to set for this object.  See the
-section on the L<C<set_escape()> method|item_set_escape> for more
+section on the L<C<set_escape()> method|set_escape> for more
 details.
 
 =item ignore_warnings_expr
@@ -887,7 +887,7 @@ when the interpreter initializes. e.g.
 
 Default is the empty list.  For maximum performance, this should only
 be used for components that are frequently viewed and rarely updated.
-See ADMIN<preloading> for further details.
+See the L<preloading|HTML::Mason::Admin/preloading> section of the administrator's manual for further details.
 
 As mentioned in the developer's manual, a component's C<< <%once> >>
 section is executed when it is loaded.  For preloaded components, this
@@ -902,7 +902,7 @@ The class to use when creating requests. Defaults to L<HTML::Mason::Request|HTML
 =item resolver
 
 The Resolver object to associate with this Compiler. By default a new
-object of class P<resolver_class> will be created.
+object of class L<resolver_class|HTML::Mason::Params/resolver_class> will be created.
 
 =item resolver_class
 
@@ -1023,16 +1023,16 @@ in the case of a list or hash.  For example:
 
 The global is set in the package that components run in: usually
 C<HTML::Mason::Commands>, although this can be overridden via the
-P<in_package> parameter.
+L<in_package|HTML::Mason::Params/in_package> parameter.
 The lines above, for example, are equivalent to:
 
     $HTML::Mason::Commands::dbh = DBI->connect(...);
     %HTML::Mason::Commands::session = %s;
 
-assuming that P<in_package> has not been changed.
+assuming that L<in_package|HTML::Mason::Params/in_package> has not been changed.
 
 Any global that you set should also be registered with the
-P<allow_globals> parameter; otherwise you'll get warnings from
+L<allow_globals|HTML::Mason::Params/allow_globals> parameter; otherwise you'll get warnings from
 C<strict>.
 
 =for html <a name="item_comp_exists"></a>
