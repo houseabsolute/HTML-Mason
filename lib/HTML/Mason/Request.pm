@@ -1262,7 +1262,7 @@ L<HTML::Mason::Buffer|HTML::Mason::Buffer>.
 
 =item data_cache_api
 
-The $m-E<gt>cache API to use. '1.1', the default, indicates the newer
+The C<$m-E<gt>cache> API to use. '1.1', the default, indicates the newer
 API L<documented in this manual|HTML::Mason::Request/item_cache>.
 '1.0' indicates the old API documented in 1.0x and earlier. This
 compatibility layer is provided as a convenience for users upgrading
@@ -1796,13 +1796,13 @@ Returns the ApacheHandler object associated with this request.
 =item apache_req
 
 Returns the Apache request object.  This is also available in the
-global $r.
+global C<$r>.
 
 =for html <a name="item_auto_send_headers"></a>
 
 =item auto_send_headers
 
-True or undef; default true.  Indicates whether Mason should
+True or false, default is true.  Indicates whether Mason should
 automatically send HTTP headers before sending content back to the
 client. If you set to false, you should call C<$r-E<gt>send_http_header>
 manually.
