@@ -143,13 +143,13 @@ would like to serve these files normally instead of using the HTML::Mason
 handler. One solution is to use a Location directive like:
 
 	<Location /plain>
-		SetHandler */*
+		SetHandler default-handler
 	</Location>
 
 Apparently these will work as well:
 
-	SetHandler default-handler
 	SetHandler text/html
+	SetHandler */*
 
 Another solution is to put a line like this at the top of the handler() 
 subroutine of your handler.pl:

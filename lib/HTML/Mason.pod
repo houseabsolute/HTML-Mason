@@ -268,7 +268,7 @@ don't serve through Mason (e.g. for images), you can put in overrides
 like so:
 
     <Location /plain>
-            SetHandler */*
+            SetHandler default-handler
     </Location>
 
 B<HTML::Mason::Admin> describes how to configure Mason to work with
