@@ -599,14 +599,16 @@ sub new
 	}
     }
 
-    my $self = eval { $class->SUPER::new(%defaults, %params) };
-
-    if ( $@ && isa_mason_exception( $@, 'Params' ) && $@->message =~ /comp_root/ )
+    # Don't allow resolver to get created without comp_root, if it needs one
+    if ( exists $allowed_params->{comp_root} &&
+         ! $defaults{comp_root} &&
+         ! $params{comp_root} )
     {
-        error "No comp_root specified and cannot determine DocumentRoot." .
-              " Please provide an explicit comp_root.";
+	param_error "No comp_root specified and cannot determine DocumentRoot." .
+                    " Please provide comp_root explicitly.";
     }
-    rethrow_exception $@;
+
+    my $self = $class->SUPER::new(%defaults, %params);
 
     unless ( $self->interp->resolver->can('apache_request_to_comp_path') )
     {
