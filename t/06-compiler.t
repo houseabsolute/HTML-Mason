@@ -875,6 +875,36 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'define_args_hash_never',
+			  description => 'test setting define_args_hash to never',
+		          interp_params => { define_args_hash => 'never' },
+			  component => <<'EOF',
+% my $args = 'AR' . 'GS';
+% eval "\$$args" . "{'foo'} = 1";
+% die $@ if $@;
+no error?
+EOF
+
+                          expect_error => qr/Global symbol.*%ARGS/
+                        );
+
+#------------------------------------------------------------
+
+	$group->add_test( name => 'define_args_hash_always',
+			  description => 'test setting define_args_hash to always',
+		          interp_params => { define_args_hash => 'always' },
+			  component => <<'EOF',
+% my $args = 'AR' . 'GS';
+% eval "\$$args" . "{'foo'} = 1";
+<% $@ ? $@ : 'no error' %>
+EOF
+                          expect => <<'EOF',
+no error
+EOF
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
