@@ -310,6 +310,8 @@ sub _arg_declarations
 	    $coerce = "\$ARGS{'$_->{name}'}";
 	}
 
+	push @assign, "#line $_->{line} $_->{file}\n"
+	    if defined $_->{line} && defined $_->{file};
 	if ( defined $_->{default} )
 	{
 	    my $default_val = $_->{default};
