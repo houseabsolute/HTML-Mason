@@ -266,7 +266,10 @@ sub load {
 	my $object ||= read_file($objfile);
 	my $comp = eval { $self->eval_object_text( object => $object ) };
 	$self->_compilation_error($objfile, $@) if $@;
-	$comp->assign_runtime_properties($self,$fq_path);
+
+	# I think this is broken.  It should also be assigning things
+	# like disk_path (for disk-based comps), comp_root, etc.
+	$comp->assign_runtime_properties($self, url_path => $fq_path);
 
 	$code_cache->{$fq_path} = {comp=>$comp, type=>'physical'};
 	return $comp;
@@ -430,7 +433,7 @@ sub make_component {
     my $comp = eval { $self->eval_object_text( object => $object ) };
     $self->_compilation_error( $p{name}, $@ ) if $@;
 
-    $comp->assign_runtime_properties($self) if $comp;
+    $comp->assign_runtime_properties($self, url_path => $p{path}) if $comp;
     if ($p{path}) {
 	$self->code_cache->{$p{path}} = {lastmod=>time(), comp=>$comp, type=>'virtual'};
     }
