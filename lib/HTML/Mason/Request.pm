@@ -38,7 +38,8 @@ BEGIN
 			     descr => "Hash of components that have been declined in previous parent requests",
 			     public => 0 },
 	 interp     => { isa => 'HTML::Mason::Interp',
-			 descr => "An interpreter for Mason control functions" },
+			 descr => "An interpreter for Mason control functions",
+			 public => 0 },
 	 error_format => { parse => 'string', type => SCALAR, default => 'text',
 			   callbacks => { "must be one of 'brief', 'text', 'line', or 'html'" =>
 					  sub { $_[0] =~ /^(?:brief|text|line|html)$/; } },
