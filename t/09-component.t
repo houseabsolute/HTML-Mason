@@ -291,9 +291,6 @@ This is scomp-ed output:
 This is me again
 EOF
 		      expect => <<'EOF',
-This is me
-----------
-This is scomp-ed output:
 
 Foo
 Baz
