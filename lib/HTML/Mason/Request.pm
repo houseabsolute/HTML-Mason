@@ -1545,7 +1545,18 @@ details.
 
 =back
 
-=head1 METHODS
+=head1 ACCESSOR METHODS
+
+All of the above properties have standard accessor methods of the same
+name. In general, no arguments retrieves the value, and one argument
+sets and returns the value.  For example:
+
+    my $max_recurse_level = $m->max_recurse;
+    $m->autoflush(1);
+
+=back
+
+=head1 OTHER METHODS
 
 =over
 
