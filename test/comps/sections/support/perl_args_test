@@ -1,0 +1,15 @@
+a: <% $a %>
+b: <% join(",",@b) %>
+c: <% join(",",map("$_=$c{$_}",sort(keys(%c)))) %>
+d: <% $d %>
+e: <% join(",",@e) %>
+f: <% join(",",map("$_=$f{$_}",sort(keys(%f)))) %>
+
+<%args>
+$a       
+@b       # a comment
+%c
+$d=>5    # another comment
+@e=>('foo','baz')
+%f=>(joe=>1,bob=>2)
+</%args>

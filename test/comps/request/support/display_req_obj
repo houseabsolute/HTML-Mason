@@ -1,0 +1,11 @@
+My depth is <% $m->depth %>.
+
+The top-level component is <% $m->callers(-1)->title %>.
+
+My stack looks like:
+-----
+% foreach my $comp ($m->callers) {
+<% $comp->title %>
+% }
+-----
+

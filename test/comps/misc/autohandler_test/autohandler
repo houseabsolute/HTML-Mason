@@ -1,0 +1,9 @@
+<& header &>
+Autohandler comp: <% mc_auto_comp %>
+% my $buf;
+<% mc_auto_next (b=>$a*2) %>
+<& footer &>
+
+<%args>
+$a=>5
+</%args>

@@ -4,7 +4,7 @@ Executing subrequest
 % # This is still unsupported but will likely be official later
 % my $buf;
 % my $req = new HTML::Mason::Request (interp=>$interp, out_method=>\$buf);
-% $req->exec('/support/display_req_obj');
+% $req->exec('/request/support/display_req_obj');
 <% $buf %>
 </%def>
 

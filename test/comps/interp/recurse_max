@@ -1,2 +1,2 @@
 % eval { mc_comp('support/recurse_test', max=>32) };
-<& support/check_error, error=>$@ &>
+<& /shared/check_error, error=>$@ &>

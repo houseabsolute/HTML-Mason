@@ -1,0 +1,50 @@
+
+------------------------------------------------------------
+
+One level request:
+My depth is 2.
+
+The top-level component is /request/req_obj.
+
+My stack looks like:
+-----
+/request/support/display_req_obj
+/request/req_obj
+-----
+
+
+
+------------------------------------------------------------
+
+Many level request:
+
+
+
+
+
+
+My depth is 8.
+
+The top-level component is /request/req_obj.
+
+My stack looks like:
+-----
+/request/support/display_req_obj
+/request/req_obj:.subcomp
+/request/req_obj:.subcomp
+/request/req_obj:.subcomp
+/request/req_obj:.subcomp
+/request/req_obj:.subcomp
+/request/req_obj:.subcomp
+/request/req_obj
+-----
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------

@@ -1,12 +1,12 @@
 <%def .helper>
 % my $interp = $m->interp;
-% $interp->exec('/support/subrequest_error_test');
+% $interp->exec('/request/support/subrequest_error_test');
 </%def>
 
 Calling helper
 % eval {mc_comp('.helper')};
 % my $error = $@;
-<& support/check_error, error=>$error, lines=>2 &>
+<& /shared/check_error, error=>$error, lines=>2 &>
 
 % if ($error) {
 Back from error, checking request state:

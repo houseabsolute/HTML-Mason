@@ -6,7 +6,7 @@ amper Test
 </HEAD>
 <BODY>
 <& support/amper_test &>
-<& /support/amper_test, message=>'Hello World!'  &>
+<& /syntax/support/amper_test, message=>'Hello World!'  &>
 <& support/amper_test, message=>'Hello World!', to=>'Joe' &>
 <& "support/amper_test" &>
 % my $dir = "support";
