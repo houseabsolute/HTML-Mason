@@ -47,8 +47,9 @@ BEGIN
 	 error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
 			 callbacks => { "must be one of 'output' or 'fatal'" =>
 					sub { $_[0] =~ /^(?:output|fatal)$/ } },
-			 descr => "How error conditions are returned to the caller" },
-	 out_method => { type => SCALARREF | CODEREF,
+			 descr => "How error conditions are returned to the caller (brief, text, line or html)" },
+	 out_method => { parse => 'code',    type => CODEREF|SCALARREF,
+			 default => sub { print STDOUT grep {defined} @_ },
 			 descr => "A subroutine or scalar reference through which all output will pass" },
     );
 
@@ -64,7 +65,7 @@ BEGIN { @read_write_params = qw( autoflush
 				 data_cache_defaults
 				 error_format
 				 error_mode
-				 out_method  ); }
+                                 out_method ); }
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( aborted
 			 aborted_value
@@ -279,7 +280,7 @@ sub make_subrequest
     my ($self, %params) = @_;
     my $interp = $self->interp;
 
-    # Give subrequest the same values as parent request for read/write params.
+    # Give subrequest the same values as parent request for read/write params
     my %defaults = map { ($_, $self->$_()) } @read_write_params;
 
     # Make subrequest, and set parent_request and request_depth appropriately.
@@ -925,6 +926,50 @@ relative to the current component directory.
 
 If the path matches both a subcomponent and file-based component, the
 subcomponent takes precedence.
+
+=back
+
+=head1 CONSTRUCTOR PARAMETERS
+
+=over 4
+
+=item autoflush
+
+Indicates whether or not to delay sending output until all output has
+been generated.
+
+=item data_cache_defaults
+
+The default parameters used when $m->cache is called.
+
+=item error_format
+
+The format used to display errors.  The options are 'brief', 'text',
+'line', and 'html'.  The default is 'text' except when running under
+ApacheHandler, in which case the default is 'html'.
+
+=item error_mode
+
+This can be either 'fatal' or 'output'.  If the mode is 'fatal',
+errors generate an exception.  With 'output' mode, the error is sent
+to the same output as normal component output.  The default is
+'fatal', except when running under ApacheHandler or CGIHandler, in
+which case the output is 'default'.
+
+=item out_method
+
+Indicates where to send output. If out_method is a reference to a
+scalar, output is appended to the scalar.  If out_method is a
+reference to a subroutine, the subroutine is called with each output
+string. For example, to send output to a file called "mason.out":
+
+    my $fh = new IO::File ">mason.out";
+    ...
+    out_method => sub { $fh->print($_[0]) }
+
+By default, out_method prints to standard output.  When the
+HTML::Mason::ApacheHandler module is used, the out method uses the C<<
+$r->print >> method to send output.
 
 =back
 
