@@ -335,24 +335,6 @@ sub simple_fetch {
     $response->is_success;
 }
 
-#even if eval $mod fails, the .pm ends up in %INC
-#so the next eval $mod succeeds, when it shouldnot
-
-my %really_have = (
-   'Apache::Table' => sub { 
-       if ($ENV{MOD_PERL}) {
-	   return Apache::Table->can('TIEHASH');
-       }
-       else {
-	   return $net::callback_hooks{PERL_TABLE_API};
-       }
-   },
-);
-
-for (qw(Apache::Cookie Apache::Request)) {
-    $really_have{$_} = $really_have{'Apache::Table'};
-}
-
 sub have_module {
     my $mod = shift;
     my $v = shift;
@@ -383,9 +365,6 @@ sub have_module {
 	warn "$@\n";
     }
 
-    if (my $cv = $really_have{$mod}) {
-	return 0 unless $cv->();
-    }
 
     print "module $mod is installed\n" unless $ENV{MOD_PERL};
     
