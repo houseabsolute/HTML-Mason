@@ -49,7 +49,7 @@ eval { require mod_perl };
 my $has_only_mp2 = $@ && eval { require Apache2; 1; };
 
 my %prereq = ( 'Apache::Request'  => 0.31,
-               'Cache::Cache' => 1.00,
+               'Cache::Cache'     => 1.00,
                'Class::Container' => 0.07,
                'CGI'              => 2.46,
                'Exception::Class' => 1.14,
