@@ -59,8 +59,11 @@ sub new
     $self->{subcomps} = {} if !defined($self->{subcomps});
     $self->{flags} = {} if !defined($self->{flags});
     
-    # Initialize subcomponent properties.
+    # Initialize subcomponent and method properties.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
+	$c->assign_subcomponent_properties($self,$name);
+    }
+    while (my ($name,$c) = each(%{$self->{methods}})) {
 	$c->assign_subcomponent_properties($self,$name);
     }
 
@@ -150,7 +153,7 @@ sub subcomps {
 sub attr {
     my ($self,$name) = @_;
     my $value;
-    if ($self->_locate_inherited('attrs',$name,\$value)) {
+    if ($self->_locate_inherited('attr',$name,\$value)) {
 	return $value;
     } else {
 	die "no attribute $name for component $self->title";
@@ -162,7 +165,7 @@ sub attr {
 #
 sub attr_exists {
     my ($self,$name) = @_;
-    return $self->_locate_inherited('attrs',$name);
+    return $self->_locate_inherited('attr',$name);
 }
 
 #
@@ -174,7 +177,7 @@ sub call_method {
     if ($self->_locate_inherited('methods',$name,\$method)) {
 	$HTML::Mason::Commands::m->comp({called_comp=>$self},$method,%args);
     } else {
-	die "no method $method for component $self->title";
+	die "no method $name for component ".$self->title;
     }
 }
 
@@ -190,7 +193,7 @@ sub method_exists {
 # Locate a component slot element following inheritance path
 #
 sub _locate_inherited {
-    my ($self,$field,$key,$ref);
+    my ($self,$field,$key,$ref) = @_;
     my $count = 0;
     for (my $comp = $self; $comp; $comp = $comp->parent) {
 	if (exists($comp->{$field}->{$key})) {
