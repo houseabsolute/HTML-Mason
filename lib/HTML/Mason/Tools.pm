@@ -201,7 +201,7 @@ sub _taint_is_on
     else
     {
         local $^W;
-        eval { "$0$^X" && kill 0; 1 };
+        eval { "+$0$^X" && eval 1 };
         return $@ ? 1 : 0;
     }
 }

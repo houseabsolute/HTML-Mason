@@ -133,5 +133,5 @@ ok $@, '', "Unable to eval a tainted object file";
 
 ###########################################################
 sub is_tainted {
-  return not eval { "+@_" && kill 0; 1 };
+  return not eval { "+@_" && eval 1 };
 }
