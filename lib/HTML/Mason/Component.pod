@@ -29,7 +29,8 @@ Subcomponents: embedded components defined with the C<E<lt>%defE<gt>> tag.
 
 =item 3
 
-Anonymous: created on-the-fly with the C<make_component> Parser method.
+Anonymous: created on-the-fly with the C<make_anonymous_component>
+Interp method.
 
 =back
 
