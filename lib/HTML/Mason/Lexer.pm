@@ -126,9 +126,8 @@ sub start
     my $self = shift;
 
     my $end;
-    while ( defined $self->{current}{pos} ?
-	    $self->{current}{pos} < length $self->{current}{comp_source} :
-	    1 )
+    while ( ! defined $self->{current}{pos} ||
+	    $self->{current}{pos} < length $self->{current}{comp_source} )
     {
 	last if $end = $self->match_end;
 
@@ -374,7 +373,7 @@ sub match_substitute
 
     if ( $self->{current}{comp_source} =~ /\G<%/gcs )
     {
-	if ( $self->{current}{comp_source} =~ /\G(.+?)(\s*\|\s*([a-z]+)?\s*)?%>/igcs )
+	if ( $self->{current}{comp_source} =~ /\G(.+?)(\s*\|\s*([\w, \t]+)?\s*)?%>/igcs )
 	{
 	    my ($sub, $escape) = ($1, $3);
 	    $self->{current}{compiler}->substitution( substitution => $sub,
