@@ -68,7 +68,6 @@ I have 1 subcomponent(s).
 Including one called .subcomp.
 My title is /component/comp_obj_test/comp_obj.
 
-My cache file is /.../cache/component+2fcomp_obj_test+2fcomp_obj
 My object file is /.../obj/component/comp_obj_test/comp_obj
 My path is /component/comp_obj_test/comp_obj.
 My fq_path is /component/comp_obj_test/comp_obj.
@@ -92,7 +91,6 @@ My directory is /component/comp_obj_test.
 I have 0 subcomponent(s).
 My title is /component/comp_obj_test/comp_obj:.subcomp.
 
-My cache file is /.../cache/component+2fcomp_obj_test+2fcomp_obj
 My object file is /.../obj/component/comp_obj_test/comp_obj
 My path is /component/comp_obj_test/comp_obj:.subcomp.
 
