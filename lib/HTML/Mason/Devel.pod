@@ -1540,8 +1540,8 @@ and the cache subclass is C<FileCache>:
     use HTML::Mason::Utils qw(data_cache_namespace);
 
     my $cache = new Cache::FileCache
-        (namespace => data_cache_namespace("/foo/bar"),
-	 cache_root => "/usr/local/www/mason/cache");
+        ( { namespace => data_cache_namespace("/foo/bar"),
+	    cache_root => "/usr/local/www/mason/cache" } );
 
     $cache->remove('key1');
 
