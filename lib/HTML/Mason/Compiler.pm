@@ -269,7 +269,7 @@ sub text
     $code = '$m->print( ' unless $self->{current_comp}{dangling_print};
     $code .= "( '$p{text}' ),";
 
-    $self->_add_body_code($code) if $p{text} ne '';
+    $self->_add_body_code($code);
 
     $self->{current_comp}{dangling_print} = 1;
 }
