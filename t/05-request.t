@@ -117,7 +117,7 @@ Some text
 % eval {$m->comp('support/abort_test')};
 % if (my $err = $@) {
 %   if ($m->aborted) {
-Component aborted with value <% $m->aborted_value %>
+Component aborted with value <% $err->aborted_value %>
 %   } else {
 Got error
 %   }
@@ -143,8 +143,8 @@ Some text
 
 % eval {$m->comp('support/abort_test', val => 0)};
 % if (my $err = $@) {
-%   if ($m->aborted) {
-Component aborted with value <% $m->aborted_value %>
+%   if ($m->aborted($err)) {
+Component aborted with value <% $err->aborted_value %>
 %   } else {
 Got error
 %   }
@@ -170,7 +170,7 @@ Some text
 % eval {$m->comp('support/abort_test')};
 % if (my $err = $@) {
 %   if ($m->aborted) {
-Component aborted with value <% $m->aborted_value %>
+Component aborted with value <% $err->aborted_value %>
 %   } else {
 Got error
 %   }
