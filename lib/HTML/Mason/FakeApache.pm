@@ -246,7 +246,9 @@ sub print {
 
 sub send_fd {
     my ($self, $fd) = @_;
-    print <$fd>;
+    local $_;
+    my $p = $self->query->can('print');
+    $p->($_) while defined ($_ = <$fd>);
 }
 
 # Should this perhaps throw an exception?
