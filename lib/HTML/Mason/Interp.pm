@@ -789,9 +789,9 @@ where updates are infrequent and well-controlled.
 
 =item ignore_warnings_expr
 
-Regular expression indicating which warnings to ignore when compiling
+Regular expression indicating which warnings to ignore when loading
 components. Any warning that is not ignored will prevent the
-component from being compiled and executed. For example:
+component from being loaded and executed. For example:
 
     ignore_warnings_expr =>
         'Global symbol.*requires explicit package'
