@@ -2,7 +2,7 @@
 foreach my $key (qw(foo bar baz)) {
     $m->cache(action=>'store',key=>$key,value=>$key);
 }
-my @keys = $m->cache(action=>'keys');
+my @keys = sort $m->cache(action=>'keys');
 $m->out("keys in cache: ".join(",",@keys)."\n");
 foreach my $key (qw(foo bar baz)) {
     my $value = $m->cache(key=>$key) || "undefined";

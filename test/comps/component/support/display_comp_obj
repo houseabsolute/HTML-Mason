@@ -17,7 +17,7 @@ My parent component is <% $comp->parent_comp->title %>.
 My directory is <% $comp->dir_path %>.
 % }
 I have run <% $comp->run_count %> time(s).
-% my @subkeys = keys(%{$comp->subcomps});
+% my @subkeys = sort keys(%{$comp->subcomps});
 I have <% scalar(@subkeys) %> subcomponent(s).
 % if (@subkeys) {
 Including one called <% $comp->subcomps($subkeys[0])->name %>.
