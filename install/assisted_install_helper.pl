@@ -4,7 +4,7 @@ use lib 't/lib';
 
 use Apache::test;
 use Data::Dumper;
-use ExtUtils::MakeMaker qw(prompt);
+use Module::Build;
 use File::Basename;
 use File::Spec;
 
@@ -39,7 +39,7 @@ EOF
 
     print "It appears that this configuration file does " . ($config_params{has_mason} ? '' : 'not ' ) . "have previous Mason configuration directives.\n\n";
 
-    my $yn = prompt( 'Would you like help configuring Apache/mod_perl to use Mason?', $default );
+    my $yn = Module::Build->prompt( 'Would you like help configuring Apache/mod_perl to use Mason?', $default );
 
     return unless $yn =~ /^y/i;
 
@@ -61,7 +61,7 @@ EOF
 
     do
     {
-	$install{comp_root} = prompt( 'Component root?', $config_params{document_root} );
+	$install{comp_root} = Module::Build->prompt( 'Component root?', $config_params{document_root} );
     } until $install{comp_root};
 
     print <<'EOF';
@@ -75,11 +75,11 @@ EOF
 
     do
     {
-	$install{data_dir} = prompt( 'Data directory?',
+	$install{data_dir} = Module::Build->prompt( 'Data directory?',
 				     File::Spec->catdir( $httpd_params{HTTPD_ROOT}, 'mason' ) );
 	if ($install{data_dir} && -e $install{data_dir})
 	{
-	    my $yn = prompt( "This directory ('$install{data_dir}') already exists, is that ok?", 'yes' );
+	    my $yn = Module::Build->prompt( "This directory ('$install{data_dir}') already exists, is that ok?", 'yes' );
 	    delete $install{data_dir} unless $yn =~ /y/;
 	    print "\n";
 	}
@@ -103,7 +103,7 @@ EOF
     my @ext;
     do
     {
-	my $ext = prompt( 'What extensions should the web server recognize as Mason components', 'html' );
+	my $ext = Module::Build->prompt( 'What extensions should the web server recognize as Mason components', 'html' );
 	@ext = map { s/^\.//; $_ } split /\s+/, $ext;
 
 	unless (@ext == 1 && $ext[0] eq '!')

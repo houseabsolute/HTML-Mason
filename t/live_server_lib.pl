@@ -4,12 +4,16 @@ use File::Basename;
 use File::Path;
 use File::Spec;
 
+use Module::Build;
+
+my $notes = Module::Build->instance->notes;
+
 sub write_comp
 {
     my $name = shift;
     my $comp = shift;
 
-    my $file = File::Spec->catfile( $ENV{APACHE_DIR}, 'comps', $name );
+    my $file = File::Spec->catfile( $notes->{test_data}{apache_dir}, 'comps', $name );
     my $dir = dirname($file);
     mkpath( $dir, 0, 0755 ) unless -d $dir;
 
@@ -28,12 +32,12 @@ sub cleanup_data_dir
     return if $ENV{MASON_NO_CLEANUP};
 
     local *DIR;
-    my $dir = File::Spec->catdir( $ENV{APACHE_DIR}, 'data' );
+    my $dir = File::Spec->catdir( $notes->{test_data}{apache_dir}, 'data' );
     opendir DIR, $dir
 	or die "Can't open $$dir dir: $!";
     foreach ( grep { -d File::Spec->catdir( $dir, $_ ) && $_ !~ /^\./ } readdir DIR )
     {
-	rmtree( File::Spec->catdir( $ENV{APACHE_DIR}, 'data', $_ ) );
+	rmtree( File::Spec->catdir( $notes->{test_data}{apache_dir}, 'data', $_ ) );
     }
     closedir DIR;
 }
@@ -41,7 +45,7 @@ sub cleanup_data_dir
 sub get_pid
 {
     local *PID;
-    my $pid_file = File::Spec->catfile( $ENV{APACHE_DIR}, 'httpd.pid' );
+    my $pid_file = File::Spec->catfile( $notes->{test_data}{apache_dir}, 'httpd.pid' );
     open PID, "<$pid_file"
 	or die "Can't open $pid_file: $!";
     my $pid = <PID>;
@@ -62,8 +66,8 @@ sub start_httpd
     my $def = shift;
     $def = "-D$def" if $def;
 
-    my $httpd = File::Spec->catfile( $ENV{APACHE_DIR}, 'httpd' );
-    my $conf_file = File::Spec->catfile( $ENV{APACHE_DIR}, 'httpd.conf' );
+    my $httpd = File::Spec->catfile( $notes->{test_data}{apache_dir}, 'httpd' );
+    my $conf_file = File::Spec->catfile( $notes->{test_data}{apache_dir}, 'httpd.conf' );
     my $cmd ="$httpd $def -f $conf_file";
     print STDERR "Executing $cmd\n";
     system ($cmd)
@@ -86,7 +90,7 @@ sub start_httpd
 sub kill_httpd
 {
     my $wait = shift;
-    my $pid_file = File::Spec->catfile( $ENV{APACHE_DIR}, 'httpd.pid' );
+    my $pid_file = File::Spec->catfile( $notes->{test_data}{apache_dir}, 'httpd.pid' );
     return unless -e $pid_file;
     my $pid = get_pid();
 

@@ -2,7 +2,12 @@
 
 use strict;
 
-unless ($ENV{MASON_MAINTAINER} && -e "$ENV{APACHE_DIR}/CGIHandler.cgi")
+use Module::Build;
+
+my $notes = Module::Build->instance->notes;
+
+unless ($notes->{test_data}{is_maintainer} &&
+	-e "$notes->{test_data}{apache_dir}/CGIHandler.cgi")
 {
     print "1..0\n";
     exit;
@@ -26,6 +31,9 @@ require File::Spec->catfile( 't', 'live_server_lib.pl' );
 
 use Apache::test qw(skip_test have_httpd have_module);
 skip_test unless have_httpd;
+
+# needed for Apache::test->fetch to work
+local $ENV{PORT} = $notes->{test_data}{port};
 
 kill_httpd(1);
 test_load_apache();

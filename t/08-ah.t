@@ -1,9 +1,14 @@
 #!/usr/bin/perl -w
 
+use Module::Build;
+
+my $notes = Module::Build->instance->notes;
+
 # Skip test if no mod_perl
 eval { require mod_perl };
-# need to use it twice to avoid annoying warning
-unless ( $ENV{MASON_MAINTAINER} &&
+
+unless ( $notes->{test_data}{is_maintainer} &&
+# need to use var name twice to avoid annoying warning
          ( $mod_perl::VERSION || $mod_perl::VERSION ) )
 {
     print "1..0\n";
@@ -24,6 +29,9 @@ use Apache::test qw(skip_test have_httpd have_module);
 skip_test unless have_httpd;
 
 local $| = 1;
+
+# needed for Apache::test->fetch to work
+local $ENV{PORT} = $notes->{test_data}{port};
 
 kill_httpd(1);
 test_load_apache();
@@ -81,7 +89,7 @@ cleanup_data_dir();
 # permissions manually.
 if ( $> == 0 || $< == 0 )
 {
-    chmod 0777, File::Spec->catdir( $ENV{APACHE_DIR}, 'data' );
+    chmod 0777, File::Spec->catdir( $notes->{test_data}{apache_dir}, 'data' );
 }
 
 multi_conf_tests();     # 4 tests
