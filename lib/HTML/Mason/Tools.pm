@@ -182,7 +182,8 @@ sub load_pkg {
 }
 
 # This code seems to be very fragile!  Please don't check in changes
-# unless you've tested it with Perl 5.00503, 5.6.1, and 5.8.0
+# unless you've tested it with Perl 5.00503, 5.6.1, and 5.8.0, or at
+# least tell Dave to run the tests.
 my $TaintIsOn;
 sub taint_is_on
 {
