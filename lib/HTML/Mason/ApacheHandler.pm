@@ -387,10 +387,10 @@ sub write_debug_file
     if (!-d $outDir) {
 	mkpath($outDir,0,0755) or die "cannot create debug directory '$outDir'";
     }
-    my $outPath = "$outDir/$outFile";
-    my $outfh = new IO::File ">$outPath";
-    if (!$outfh) {
-	$r->warn("cannot open debug file '$outPath' for writing");
+    my $out_path = "$outDir/$outFile";
+    my $outfh = do { local *FH; *FH; };  # double *FH avoids warning
+    unless ( open $outfh, ">$out_path" ) {
+	$r->warn("cannot open debug file '$out_path' for writing");
 	return;
     }
 
@@ -404,7 +404,6 @@ sub write_debug_file
 # coderefs are accumulated in %CODEREF_NAME
 # -----------------------------
 BEGIN {
-    use IO::File;
     use File::Copy;
     use Getopt::Std;
     getopt('r');   # r=repeat count, p=user profile req, P=re-entrant profile call
@@ -419,21 +418,25 @@ BEGIN {
 # When done, merge named coderefs in tmon.mason with those in tmon.out,
 # then run dprofpp
 # -----------------------------
-	my $fh = new IO::File '< ./tmon.mason' or die "Missing file: tmon.mason";
+        my $fh = do { local *FH; *FH; };  # double *FH avoids warning
+        open $fh, '< ./tmon.mason' or die "Missing file: tmon.mason: $!";
 	foreach (<$fh>) { chomp;  my ($k,$v) = split(/\t/);  $::CODEREF_NAME{$k} = $v; }
-	$fh->close;
+	close $fh or die "can't close file: tmon.mason: $!";
     
-	my $tmonout = new IO::File '< ./tmon.out' or die "Missing file: tmon.out";
-	my $tmontmp = new IO::File '> ./tmon.tmp' or die "Couldn't write file: tmon.tmp";
+	my $tmonout = do { local *FH; *FH; };
+        open $tmonout, '< ./tmon.out' or die "Missing file: tmon.out: $!";
+	my $tmontmp = do { local *FH; *FH; };
+        open $tmontmp, '> ./tmon.tmp' or die "Couldn't write file: tmon.tmp: $!";
 	my $regex = quotemeta(join('|', keys %::CODEREF_NAME));
 	$regex =~ s/\\\|/|/g;   #un-quote the pipe chars
 	while (<$tmonout>) {
 	    s/HTML::Mason::Commands::($regex)/$::CODEREF_NAME{$1}/;
 	    print $tmontmp $_
 	}
-	$tmonout->close; $tmontmp->close;
+	close $tmonout or die "can't close file: tmon.out: $!";
+        close $tmontmp or die "can't close file: tmon.tmp: $!";
 	copy('tmon.tmp' => 'tmon.out') or die "$!";
-	unlink('tmon.tmp');
+	unlink('tmon.tmp') or warn "can't remove file: tmon.tmp: $!"
         print STDERR "\nRunning dprofpp ...\n";
 	exec('dprofpp') or die "Couldn't execute dprofpp";
     }
@@ -457,16 +460,17 @@ PERL
     $o .= 'print "return status: $status\n";'."\n}\n\n";
     $o .= <<'PERL';
 if ($opt_P) {
-    my $fh = new IO::File '>./tmon.mason' or die "Couldn't write tmon.mason";
+    my $fh = do { local *FH; *FH; };
+    open $fh, '>./tmon.mason' or die "Couldn't write to file: tmon.mason: $!";
     print $fh map("$_\t$HTML::Mason::CODEREF_NAME{$_}\n", keys %HTML::Mason::CODEREF_NAME);
-    $fh->close;
+    close $fh or die "Can't close file: tmon.mason: $!";
 }
 PERL
-    $outfh->print($o);
-    $outfh->close();
-    chmod(0775,$outPath);
+    print $outfh $o;
+    close $outfh or die "can't close file: $out_path: $!";
+    chmod(0775,$out_path) or die "can't chmod file to 0775: $out_path: $!";
 
-    my $debugMsg = "Debug file is '$outFile'.\nFull debug path is '$outPath'.\n";
+    my $debugMsg = "Debug file is '$outFile'.\nFull debug path is '$out_path'.\n";
     return $debugMsg;
 }
 
