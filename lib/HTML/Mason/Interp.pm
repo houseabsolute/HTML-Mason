@@ -29,6 +29,7 @@ my %fields =
     (
      allow_recursive_autohandlers => 0,
      autohandler_name => 'autohandler',
+     code_cache_max_size => 10*1024*1024,
      comp_root => undef,
      current_time => 'real',
      data_cache_dir => '',
@@ -56,6 +57,7 @@ sub new
 	%fields,
 	data_cache_store => {},
         code_cache => {},
+        code_cache_current_size => 0,
 	files_written => [],
 	hooks => {},
 	last_reload_time => 0,
@@ -87,6 +89,7 @@ sub _initialize
 {
     my ($self) = shift;
     $self->{code_cache} = {};
+    $self->{code_cache_current_size} = 0;
     $self->{data_cache_store} = {};
 
     #
@@ -203,7 +206,10 @@ sub check_reload_file {
 	$self->{last_reload_file_pos} = $fh->tell;
 	my @lines = split("\n",$block);
 	foreach my $compPath (@lines) {
-	    delete($self->{code_cache}->{$compPath});
+	    if (exists($self->{code_cache}->{$compPath})) {
+		$self->{code_cache_current_size} -= $self->{code_cache}->{$compPath}->{size};
+		delete($self->{code_cache}->{$compPath});
+	    }
 	}
     }
 }
@@ -316,13 +322,54 @@ sub load {
 		or die sprintf("Error during compilation of %s:\n%s\n",$resolver->get_source_description(@lookup_info),$err);
 	}
 	$comp->assign_runtime_properties($self,$fq_path);
-	
+
 	#
-	# Cache code in memory
+	# Cache code in memory, adjusting current cache size appropriately. Don't cache
+	# elements that are too large.
 	#
-	$code_cache->{$fq_path}->{lastmod} = $srcmod;
-	$code_cache->{$fq_path}->{comp} = $comp;
+	$self->{code_cache_current_size} -= $code_cache->{$fq_path}->{comp}->object_size if (exists($code_cache->{$fq_path}));
+	if ($comp->object_size <= $self->code_cache_max_elem) {
+	    $code_cache->{$fq_path} = {lastmod=>$srcmod, comp=>$comp};
+	    $self->{code_cache_current_size} += $comp->object_size;
+	} else {
+	    delete($code_cache->{$fq_path}) if (exists($code_cache->{$fq_path}));
+	}
 	return $comp;
+    }
+}
+
+#
+# If code cache has exceeded maximum, remove least frequently used
+# elements from cache until size falls below minimum.
+#
+sub purge_code_cache {
+    my ($self) = @_;
+
+    if ($self->{code_cache_current_size} > $self->code_cache_max_size) {
+	my $code_cache = $self->{code_cache};
+	my $cur_size = $self->{code_cache_current_size};
+	my $min_size = $self->code_cache_min_size;
+	my $decay_factor = $self->code_cache_decay_factor;
+
+	my @elems;
+	while (my ($path,$href) = each(%{$code_cache})) {
+	    push(@elems,[$path,$href->{comp}->mfu_count,$href->{comp}]);
+	}
+	@elems = sort { $a->[1] <=> $b->[1] } @elems;
+	while (($cur_size > $min_size) and @elems) {
+	    my $elem = shift(@elems);
+	    $cur_size -= $elem->[2]->object_size;
+	    delete($code_cache->{$elem->[0]});
+	}
+	$self->{code_cache_current_size} = $cur_size;
+
+	#
+	# Multiple each remaining cache item's count by a decay factor,
+	# to gradually reduce impact of old information.
+	#
+	foreach my $elem (@elems) {
+	    $elem->[2]->{mfu_count} *= $decay_factor;
+	}
     }
 }
 
@@ -495,10 +542,17 @@ sub write_system_log {
     }
 }
 
+# Code cache parameter methods
+
+sub code_cache_min_size { shift->code_cache_max_size * 0.75 }
+sub code_cache_max_elem { shift->code_cache_max_size * 0.20 }
+sub code_cache_decay_factor { 0.75 }
+
 # Create generic read-write accessor routines
 
 sub allow_recursive_autohandlers { my $s=shift; return @_ ? ($s->{allow_recursive_autohandlers}=shift) : $s->{allow_recursive_autohandlers} }
 sub autohandler_name { my $s=shift; return @_ ? ($s->{autohandler_name}=shift) : $s->{autohandler_name} }
+sub code_cache_max_size { my $s=shift; return @_ ? ($s->{code_cache_max_size}=shift) : $s->{code_cache_max_size} }
 sub data_cache_dir { my $s=shift; return @_ ? ($s->{data_cache_dir}=shift) : $s->{data_cache_dir} }
 sub dhandler_name { my $s=shift; return @_ ? ($s->{dhandler_name}=shift) : $s->{dhandler_name} }
 sub max_recurse { my $s=shift; return @_ ? ($s->{max_recurse}=shift) : $s->{max_recurse} }

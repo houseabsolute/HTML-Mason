@@ -85,33 +85,6 @@ it's magic.  The sub is called with a single parameter, a scalar reference
 to the script.  The sub is expected to process the script in-place.   This is
 one way to extend the HTML::Mason syntax with new tags, etc. See L<Parser/postprocess>.
 
-=item source_refer_predicate
-
-Reference to a subroutine that decides whether a given component
-should be compiled with L<Admin/source references>. The subroutine
-takes two arguments: first, the total number of characters in the
-component source; second, the number of characters devoted to plain
-text. For example, this component:
-
-	% my $noun = "World";
-	Hello, <% $noun %>!
-	How are ya?
-
-Has 51 total bytes, 19 of which are plain text. This allows you to
-adjust the trade-off between the memory savings of source references
-and the performance advantage of in-line plain text. For example, to
-choose only components with at least 50% plain text:
-
-    source_refer_predicate =>
-        sub { return $_[1] / $_[0] >= 0.5 }
-
-The current default is
-
-    sub { return $_[1] >= 500 }
-
-i.e. any component with at least 500 characters. This is an
-experimental setting and may change.
-
 =item taint_check
 
 This flag allows Mason to work when taint checking is on

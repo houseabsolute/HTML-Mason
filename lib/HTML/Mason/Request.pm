@@ -94,6 +94,10 @@ sub exec {
     # Check if reload file has changed.
     $interp->check_reload_file if ($interp->{use_reload_file});
 
+    # Purge code cache if necessary. Generally happens at the end of
+    # the component; this is just in case many errors are occurring.
+    $interp->purge_code_cache;
+    
     # $comp can be an absolute path or component object.  If a path,
     # load into object. If not found, check for dhandler.
     my ($path, $orig_path);
@@ -171,6 +175,10 @@ sub exec {
     # Flush output buffer for batch mode.
     $self->flush_buffer if $self->out_mode eq 'batch';
 
+    # Purge code cache if necessary. We do this at the end so as not
+    # to affect the response of the request as much.
+    $interp->purge_code_cache;
+    
     # Handle abort.
     return $self->{aborted_value} if ($self->{aborted});
 
@@ -543,7 +551,7 @@ sub comp1 {
     #
     # Finally, call component subroutine.
     #
-    $comp->{run_count}++;
+    $comp->{run_count}++; $comp->{mfu_count}++;
     my ($result, @result);
     if (wantarray) {
 	@result = $sub->(@args);

@@ -23,6 +23,8 @@ sub basic_interp {
 
 print "1..17\n";
 
+goto main;
+
 # autohandler_name/allow_recursive_autohandlers
 try_exec_with_interp({},'autohandler_test/subdir/hello',1);
 try_exec_with_interp({allow_recursive_autohandlers=>1},'autohandler_test/subdir/hello',2);
@@ -61,5 +63,16 @@ try_exec_with_interp({preloads=>['/interp/preloads_test/*']},'preloads_test/show
  $interp->parser->allow_globals(qw($global));
  $interp->set_global(global=>'parsimmon');
  try_exec($interp,'set_global');}
+
+main:
+# code cache
+{my $interp = basic_interp();
+ $interp->code_cache_max_size(5000);
+ $interp->exec("/interp/code_cache_test/use1");
+ try_exec($interp,"code_cache_test/show_code_cache",1);
+ $interp->exec("/interp/code_cache_test/use2"); 
+ try_exec($interp,"code_cache_test/show_code_cache",2);
+ $interp->exec("/interp/code_cache_test/use3");
+ try_exec($interp,"code_cache_test/show_code_cache",3);}
 
 1;

@@ -28,7 +28,6 @@ my %fields =
      postprocess => undef,
      preamble => '',
      preprocess => undef,
-     source_refer_predicate => sub { return ($_[1] >= 5000) },
      taint_check => 0,
      use_strict => 1,
      );
@@ -115,7 +114,6 @@ sub parse_component
     my ($sub, $err, $errpos, $suberr, $suberrpos);
     $fileBased = 1 if !exists($options{file_based});
     $compClass = 'HTML::Mason::Component' if !exists($options{comp_class});
-    my $pureTextFlag = 1;
     my $parseError = 1;
     my $parserVersion = version();
 
@@ -197,7 +195,6 @@ sub parse_component
 		$sectiontext{lc($beginfield)} .= substr($script,$begintail,$endmark-$begintail);
 	    }
 	    $curpos = pos($script);
-	    $pureTextFlag = 0;
 	    $startline = (substr($endtag,-1,1) eq "\n");
 	} else {
 	    $err = "<%$beginfield> with no matching </%$beginfield>";
@@ -317,7 +314,6 @@ sub parse_component
 		push(@perltexts,substr($text,$curpos+1,$length));
 		push(@alphasecs,[0,0]);
 		$curpos += $length+1;
-		$pureTextFlag = 0;
 		next;
 	    }
 	    $startline=0;
@@ -336,7 +332,6 @@ sub parse_component
 		$perl = substr($text,$beginline+1,$length-1);
 		$curpos = $endline+1;
 		$startline = 1;
-		$pureTextFlag = 0;
 	    } elsif ($b>-1 && ($c==-1 || $b<$c)) {
 		#
 		# Tag beginning with <%
@@ -376,7 +371,6 @@ sub parse_component
 		    $perl = '$_out->('.substr($text,$b+2,$length).');';
 		    $curpos = $b+2+$length+2;
 		}
-		$pureTextFlag = 0;
 	    } elsif ($c>-1) {
 		#
 		# <& &> section
@@ -400,7 +394,6 @@ sub parse_component
 		}
 		$perl = "\$m->comp($call);";
 		$curpos = $c+2+$length+2;
-		$pureTextFlag = 0;
 	    } else {
 		# No more special characters, take the rest.
 		$alpha = [$curpos,$textlength-$curpos];
@@ -424,28 +417,11 @@ sub parse_component
 	}
     }
 
-    #
-    # Use source_refer_predicate to determine whether to use source
-    # references or directly embedded text.
-    #
-    my $useSourceReference = $fileBased && $self->source_refer_predicate->($scriptlength,$alphalength);
     my @alphatexts;
-    my $endsec = '';
-    if ($useSourceReference) {
-	$body .= 'my $_srctext = $m->current_comp->source_ref_text;'."\n";
-	my $cur = 0;
-	foreach my $sec (@alphasecs) {
-	    $endsec .= substr($script,$sec->[0],$sec->[1])."\n";
-	    push(@alphatexts,sprintf('$_out->(substr($_srctext,%d,%d));',$cur,$sec->[1]));
-	    $cur += $sec->[1] + 1;
-	}
-	$endsec =~ s/\n$//;
-    } else {
-	foreach (@alphasecs) {
-	    my $alpha = substr($script,$_->[0],$_->[1]);
-	    $alpha =~ s{([\\\'])} {\\$1}g;        # escape backslashes and single quotes
-	    push(@alphatexts,sprintf('$_out->(\'%s\');',$alpha));
-	}
+    foreach (@alphasecs) {
+	my $alpha = substr($script,$_->[0],$_->[1]);
+	$alpha =~ s{([\\\'])} {\\$1}g;        # escape backslashes and single quotes
+	push(@alphatexts,sprintf('$_out->(\'%s\');',$alpha));
     }
 
     #
@@ -531,7 +507,6 @@ sub parse_component
     # Assemble parameters for component.
     #
     my @cparams = ("'parser_version'=>$parserVersion","'create_time'=>".time());
-    push(@cparams,"'source_ref_start'=>0000000") if $useSourceReference;
     push(@cparams,"'subcomps'=>{%_subcomps}") if (%subcomps);
     if (%declaredArgs) {
 	my $d = new Data::Dumper ([\%declaredArgs]);
@@ -539,30 +514,14 @@ sub parse_component
 	for ($argsDump) { s/\$VAR1\s*=//g; s/;\s*$// }
 	push(@cparams,"'declared_args'=>$argsDump");
     }
+    push(@cparams,"'code'=>sub {\n$body\n}");
+    push(@cparams,sprintf("'object_size'=>%d",length($header)+length(join("",@cparams))));
 
-    if ($pureTextFlag && $useSourceReference) {
-	push(@cparams,"'code'=>\\&HTML::Mason::Commands::pure_text_handler");
-    } else {
-	push(@cparams,"'code'=>sub {\n$body\n}");
-    }
     my $cparamstr = join(",\n",@cparams);
     
     $body = "new $compClass (\n$cparamstr\n);\n";
     $body = $header . $body;
 
-    #
-    # If using source references, add the source text after the
-    # __END__ tag, then calculate its position for
-    # source_ref_start. This must occur after the component body
-    # is fixed!
-    #
-    if ($useSourceReference) {
-	$body .= "\n__END__\n";
-	my $srcstart = sprintf("%7d",length($body));
-	$body =~ s/'source_ref_start'=>0000000,/'source_ref_start'=>$srcstart,/;
-	$body .= $endsec;
-    }    
-    
     #
     # Process parsing errors.
     #
@@ -774,7 +733,6 @@ sub postamble { my $s=shift; return @_ ? ($s->{postamble}=shift) : $s->{postambl
 sub postprocess { my $s=shift; return @_ ? ($s->{postprocess}=shift) : $s->{postprocess} }
 sub preamble { my $s=shift; return @_ ? ($s->{preamble}=shift) : $s->{preamble} }
 sub preprocess { my $s=shift; return @_ ? ($s->{preprocess}=shift) : $s->{preprocess} }
-sub source_refer_predicate { my $s=shift; return @_ ? ($s->{source_refer_predicate}=shift) : $s->{source_refer_predicate} }
 sub taint_check { my $s=shift; return @_ ? ($s->{taint_check}=shift) : $s->{taint_check} }
 sub use_strict { my $s=shift; return @_ ? ($s->{use_strict}=shift) : $s->{use_strict} }
 

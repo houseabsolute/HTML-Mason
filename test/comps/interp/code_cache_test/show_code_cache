@@ -1,0 +1,3 @@
+Code cache contains these plain components:
+% my %c = %{$m->interp->{code_cache}};
+<% join("\n",sort(grep(/plain/,keys(%c)))) %>

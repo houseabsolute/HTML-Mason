@@ -293,7 +293,7 @@ set it in the component package:
 
    $HTML::Mason::Commands::dbh = DBI->connect(...);
 
-Alternatively you can use the L<Interp/set_global> interpreter method:
+Alternatively you can use the L<Interp/set_global> Interp method:
 
     $interp->set_global(dbh => DBI->connect(...));
 
@@ -630,96 +630,80 @@ to have a beneficial effect. If a particular cache hit rate is too
 low, you may want to consider changing how frequently it is expired or
 whether to use it at all.
 
-Load frequency: COMP_LOAD events are useful for determining which
-components are loaded most often and therefore good candidates for
-preloading.
-
+Load frequency: COMP_LOAD events are useful for monitoring your code
+cache. Too many loads may indicate that your code cache is too small.
+Also, if you turn off the code cache temporarily, COMP_LOAD events
+will tell you which components are loaded most often and thus good
+candidates for preloading.
 
 =head1 PERFORMANCE TUNING
 
 This section explains Mason's various performance enhancements and how
 to administer them.
 
-=head2 Code Caching/Object Files
+=head2 In-Memory Code Cache
 
-When Mason encounters a component for the first time, it compiles the
-component into a Perl subroutine.  To preserve the fruits of its labor,
-Mason will:
+When Mason loads a component, it places it in a memory cache.
+The maximum size of the cache is specified with the
+L<Interp/code_cache_max_size> Interp parameter; default is 10MB.
 
-=over
+When the cache fills up, Mason frees up space by discarding a
+number of components. The discard algorithm is least frequently used
+(LFU), with a periodic decay to gradually eliminate old frequency
+information. In a nutshell, the components called most often in recent
+history should remain in the cache.  Very large components (over 20%
+of the maximum cache size) never get cached, on the theory that they
+would force out too many other components.
 
-=item *
+Note that the "size" of a component in memory cannot literally be
+measured.  It is estimated by the length of the source text plus some
+overhead.  Do not expect your process growth to match the code cache
+size exactly.
 
-store a reference to the subroutine in an in-memory hash table.  The
-current server process can use this for future references to the same
-component.
+You can monitor the performance of the memory cache by turning on
+L<system logs> and counting the COMP_LOAD events. If these are
+occurring frequently even for a long-running process, you may want to
+increase the size of your code cache.
 
-=item *
+You can prepopulate the cache with components that you know will be
+accessed often; see L<Preloading>. Note that preloaded components
+possess no special status in the cache and can be discarded like any
+others.
 
-store the subroutine body in an object file under
-C<data_dir/obj/I<component-path>>.  Future server processes
-can eval the object file and save time on parsing.
+To turn off caching completely, set L<Interp/code_cache_max_size> to
+0.
+
+=head2 Object Files
+
+The in-memory code cache is only useful on a per-process basis.  Each
+process must build and maintain its own cache. Shared memory caches
+are conceivable in the future, but even those will not survive between
+web server restarts.
+
+As a secondary, longer-term cache mechanism, Mason stores a compiled
+form of each component in an object file under
+C<data_dir/obj/I<component-path>>. Any server process can eval the
+object file and save time on parsing the component source file.  The
+object file is recreated whenever the source file changes.
+
 Besides improving performance, object files are essential for
-debugging and interpretation of compilation errors. However, if you
-don't want Mason to create object files (e.g. if disk space is
-scarce), you can turn them off by passing C<use_object_files>=>0 to the
-Interp object.
+debugging and interpretation of compilation errors.  The
+curious-minded can peek inside an object file to see exactly how a
+component is converted into a Perl subroutine.
+
+If for some reason you don't want Mason to create object files, set
+the L<Interp/use_object_files> Interp parameter to 0.
 
 =back
 
 Both entities are recomputed if the component source file changes.
 
-=head2 Source References
-
-Mason's parser translates plain HTML in components to simple print
-statements.  For example, the following component:
-
-    %my $name = "Jon";
-    Hello <% $name %>, how are you?
-
-translates to something like:
-
-    my $name = "Jon";
-    print("Hello ");
-    print($name);
-    print(", how are you?");
-
-The amount of memory taken up by a compiled component is therefore at
-least as large as the combined size of its HTML blocks.  If a
-component has 50K of HTML, that means 50K of storage for each child
-process that loads the component.  Multiply that by ten processes and
-twenty such components and you've got some noticeable memory overhead.
-
-To reduce this overhead Mason generates, in certain cases, code that
-reads from the source file at runtime.  For example, the following
-component:
-
-    <& top &>
-    ... 20K of HTML ...
-    <& center &>
-    ... 30K of HTML ...
-
-translates to something like:
-
-    my $_srctext = $m->file('/usr/local/www/htdocs/foo/bar');
-    $m->comp('top');
-    print(substr($_srctext,18,20498));
-    $m->comp('center');
-    print(substr($_srctext,20520,30720));
-
-The resulting code is a bit slower but more memory efficient. Mason
-decides whether to use these "source references" by first measuring
-both the total size and the amount of HTML in a component. Those
-values are then examined by a customizable "L<Parser/source_refer_predicate>"
-which makes a determination based on local policy, say "more than 50%
-HTML", or "more than 20K of HTML".
-
 =head2 Preloading
 
 You can tell Mason to preload a set of components in the parent
 process, rather than loading them on demand, using C<interp-E<gt>preloads>.
-Each child server will start with those components loaded. The
-trade-offs are:
+Each child server will start with those components loaded in the
+memory cache. The trade-offs are:
 
 =over
 

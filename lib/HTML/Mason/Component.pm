@@ -20,9 +20,10 @@ my %fields =
      declared_args => undef,
      fq_path => undef,
      interp => undef,
+     mfu_count => 0,
+     object_size => undef,
      parser_version => undef,
      run_count => 0,
-     source_ref_start => undef,
      subcomps => undef,
      );
 
@@ -123,16 +124,5 @@ sub subcomps {
 #
 sub object_file { my $self = shift; return ($self->persistent) ? ($self->interp->object_dir . $self->fq_path) : undef }
 sub cache_file { my $self = shift; return ($self->persistent) ? ($self->interp->data_cache_dir . "/" . compress_path($self->fq_path)) : undef }
-
-#
-# Returns source text stored at bottom of object file
-#
-sub source_ref_text
-{
-    my ($self) = @_;
-    return undef unless defined($self->{source_ref_start});
-    my $content = read_file($self->object_file);
-    return substr($content,$self->{source_ref_start});
-}
 
 1;

@@ -42,11 +42,6 @@ require Exporter;
 
 @EXPORT_OK=@EXPORT;
 
-sub pure_text_handler
-{
-    $m->current_sink->($m->current_comp->source_ref_text);
-}
-
 my $no_auto_error = "called when no autohandler invoked";
 
 sub check_request
