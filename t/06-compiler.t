@@ -730,6 +730,18 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'double_pipe_or',
+			  description => 'Make sure || works in a substitution',
+			  component => <<'EOF',
+Should be 1: <% 1 || 2 %>
+EOF
+                          expect => <<'EOF',
+Should be 1: 1
+EOF
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
