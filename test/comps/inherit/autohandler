@@ -1,2 +1,16 @@
-<& report_parent &>
+<%method m1>m1 from level 1</%method>
+<%method m12>m12 from level 1</%method>
+<%method m13>m13 from level 1</%method>
+<%method m123>m123 from level 1</%method>
+
+<%attr>
+a1=>'a1 from level 1'
+a12=>'a12 from level 1'
+a13=>'a13 from level 1'
+a123=>'a123 from level 1'
+</%attr>
+
+<& variants &>
+
 <% $m->call_next %>
+

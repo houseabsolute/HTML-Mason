@@ -6,9 +6,9 @@ attr Test
 </HEAD>
 <BODY>
 foo
-<% $m->called_comp->attr('foo') %>
-<% $m->called_comp->attr('bar')->[1] %>
-<% $m->called_comp->attr('baz')->{b} %>
+<% $m->current_comp->attr('foo') %>
+<% $m->current_comp->attr('bar')->[1] %>
+<% $m->current_comp->attr('baz')->{b} %>
 </BODY>
 </HTML>
 <%attr>

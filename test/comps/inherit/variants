@@ -1,0 +1,23 @@
+% my @variants = qw(1 2 3 12 13 23 123);
+
+Methods (called from <% $m->callers(1)->title %>)
+% foreach my $v (@variants) {
+%   if ($self->method_exists("m$v")) {
+m<% $v %>: <& "SELF:m$v" &>
+%   } else {
+m<% $v %>: does not exist
+%   }
+% }
+
+Attributes (referenced from <% $m->callers(1)->title %>)
+% foreach my $v (@variants) {
+%   if ($self->attr_exists("a$v")) {
+a<% $v %>: <% $self->attr("a$v") %>
+%   } else {
+a<% $v %>: does not exist
+%   }
+% }
+
+<%init>
+my $self = $m->base_comp;
+</%init>

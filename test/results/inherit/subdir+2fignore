@@ -1,3 +1,26 @@
+
+
+
+Methods (called from /inherit/subdir/ignore)
+m1: does not exist
+m2: does not exist
+m3: m3 from level 3
+m12: does not exist
+m13: m13 from level 3
+m23: m23 from level 3
+m123: m123 from level 3
+
+Attributes (referenced from /inherit/subdir/ignore)
+a1: does not exist
+a2: does not exist
+a3: a3 from level 3
+a12: does not exist
+a13: a13 from level 3
+a23: a23 from level 3
+a123: a123 from level 3
+
+
+
 My name is /inherit/subdir/ignore and I have no parent.
 
 

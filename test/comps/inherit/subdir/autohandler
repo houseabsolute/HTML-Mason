@@ -1,2 +1,19 @@
-<& ../report_parent &>
+<%method m2>m2 from level 2</%method>
+<%method m12>m12 from level 2</%method>
+<%method m23>m23 from level 2</%method>
+<%method m123>m123 from level 2</%method>
+
+<%attr>
+a2=>'a2 from level 2'
+a12=>'a12 from level 2'
+a23=>'a23 from level 2'
+a123=>'a123 from level 2'
+</%attr>
+
+<& ../variants &>
+
 <% $m->call_next %>
+
+<%init>
+my $self = $m->base_comp;
+</%init>
