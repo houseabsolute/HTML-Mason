@@ -14,6 +14,7 @@ use strict;
 
 use Cwd;
 use File::Spec;
+use HTML::Mason::Exceptions;
 
 require Exporter;
 
@@ -141,13 +142,13 @@ sub load_pkg {
 	    if (defined($nf_error)) {
 		my $error = sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
 				    $pkg, $nf_error, join(" ", @INC));
-		die $error;
+		HTML::Mason::Exception->throw( error => $error );
 	    } else {
 		undef $@;
 		return 0;
 	    }
 	} else {
-	    die $@;
+	    HTML::Mason::Exception->throw( error => $@ );
 	}
     }
     return 1;
