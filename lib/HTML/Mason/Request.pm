@@ -48,7 +48,7 @@ sub new
     }
     bless $self, $class;
     my $interp = $self->{interp} or die "HTML::Mason::Request::new: must specify interp";
-    $self->{count} = ++($interp->{request_count});
+    ++$self->{count};
     $self->_initialize;
     return $self;
 }
@@ -88,7 +88,7 @@ sub exec {
     my $interp = $self->interp;
     
     # Check if reload file has changed.
-    $interp->check_reload_file if ($interp->{use_reload_file});
+    $interp->check_reload_file if ($interp->use_reload_file);
 
     # Purge code cache if necessary. Generally happens at the end of
     # the component; this is just in case many errors are occurring.
@@ -100,7 +100,7 @@ sub exec {
     if (!ref($comp) && substr($comp,0,1) eq '/') {
 	$orig_path = $path = $comp;
 	if (!($comp = $interp->load($path))) {
-	    if (defined($interp->{dhandler_name}) and $comp = $interp->find_comp_upwards($path,$interp->{dhandler_name})) {
+	    if (defined($interp->dhandler_name) and $comp = $interp->find_comp_upwards($path,$interp->dhandler_name)) {
 		my $parent_path = $comp->dir_path;
 		($self->{dhandler_arg} = $path) =~ s{^$parent_path/?}{};
 	    }
@@ -139,7 +139,7 @@ sub exec {
     # If declined, try to find the next dhandler.
     if ($self->declined and $path) {
 	$path =~ s/\/[^\/]+$// if defined($self->{dhandler_arg});
-	if (defined($interp->{dhandler_name}) and my $next_comp = $interp->find_comp_upwards($path,$interp->{dhandler_name})) {
+	if (defined($interp->dhandler_name) and my $next_comp = $interp->find_comp_upwards($path,$interp->dhandler_name)) {
 	    $comp = $next_comp;
 	    my $parent = $comp->dir_path;
 	    $self->_reinitialize;
@@ -279,11 +279,11 @@ sub call { shift->comp(@_) }
 sub call_dynamic {
     my ($m, $key, @args) = @_;
     my $comp = ($m->current_comp->is_subcomp) ? $m->current_comp->owner : $m->current_comp;
-    if (!defined($comp->{dynamic_subs_request}) or $comp->{dynamic_subs_request} ne $m) {
-	$comp->{dynamic_subs_hash} = $comp->{dynamic_subs_init}->();
-	$comp->{dynamic_subs_request} = $m;
+    if (!defined($comp->dynamic_subs_request) or $comp->dynamic_subs_request ne $m) {
+	$comp->dynamic_subs_hash($comp->{dynamic_subs_init}->());
+	$comp->dynamic_subs_request($m);
     }
-    my $sub = $comp->{dynamic_subs_hash}->{$key} or die "call_dynamic: assert error - could not find code for key $key in component ".$comp->title;
+    my $sub = $comp->dynamic_subs_hash->{$key} or die "call_dynamic: assert error - could not find code for key $key in component ".$comp->title;
     return $sub->(@args);
 }
 
@@ -550,7 +550,7 @@ sub comp1 {
     # package, as well as the component package if that is different.
     #
     local $HTML::Mason::Commands::m = $self;
-    $interp->set_global('m'=>$self) if ($interp->parser->{in_package} ne 'HTML::Mason::Commands');
+    $interp->set_global('m'=>$self) if ($interp->parser->in_package ne 'HTML::Mason::Commands');
 
     #
     # Determine sink (where output is going).
@@ -580,7 +580,7 @@ sub comp1 {
     #
     # Check for maximum recursion.
     #
-    die "$depth levels deep in component stack (infinite recursive call?)\n" if ($depth >= $interp->{max_recurse});
+    die "$depth levels deep in component stack (infinite recursive call?)\n" if ($depth >= $interp->max_recurse);
 
     # Push new frame onto stack and increment (localized) depth.
     my $stack = $self->stack;
@@ -666,7 +666,7 @@ sub suppress_hook {
     foreach (qw(name type)) {
 	die "suppress_hook: must specify $_\n" if !exists($args{$_});
     }
-    my $code = $self->interp->{hooks}->{$args{type}}->{$args{name}};
+    my $code = $self->interp->hooks->{$args{type}}->{$args{name}};
     $self->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
 }
 
@@ -678,7 +678,7 @@ sub unsuppress_hook {
     foreach (qw(name type)) {
 	die "unsuppress_hook: must specify $_\n" if !exists($args{$_});
     }
-    my $code = $self->interp->{hooks}->{$args{type}}->{$args{name}};
+    my $code = $self->interp->hooks->{$args{type}}->{$args{name}};
     $self->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
     push(@{$self->{"hooks_$args{type}"}},$code);
 }
@@ -713,14 +713,18 @@ sub current_args { return $_[0]->top_stack->{args} }
 sub current_sink { return $_[0]->top_stack->{sink} }
 sub base_comp { return $_[0]->top_stack->{base_comp} }
 
+# Create generic read-write accessor routines
+
+sub out_method { my $s=shift; return @_ ? ($s->{out_method}=shift) : $s->{out_method} }
+sub out_mode { my $s=shift; return @_ ? ($s->{out_mode}=shift) : $s->{out_mode} }
+
 # Create generic read-only accessor routines
 
 sub aborted { return shift->{aborted} }
 sub aborted_value { return shift->{aborted_value} }
 sub count { return shift->{count} }
 sub declined { return shift->{declined} }
+sub error_code { return shift->{error_code} }
 sub interp { return shift->{interp} }
-sub out_method { return shift->{out_method} }
-sub out_mode { return shift->{out_mode} }
 
 1;
