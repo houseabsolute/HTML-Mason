@@ -546,7 +546,7 @@ sub find_comp_upwards
     my @p = split /\//, $startpath;
 
     # Don't use File::Spec here, this is a URL path.
-    while ( ! ( $comp = $self->load( '/' . join '/', @p, $name ) ) && @p ) {
+    while ( ! ( $comp = $self->load( join '/', @p, $name ) ) && @p ) {
 	pop @p;
     }
     return $comp;
