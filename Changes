@@ -5,7 +5,7 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
-1.21
+1.21  June 4, 2003
 
 [ INCOMPATIBLE CHANGES ]
 
@@ -27,6 +27,7 @@ eliminated.  As part of eliminating these copies, a new compiler
 parameter has been added, "define_args_hash".  The default setting,
 "auto", should work with all existing Mason components.  See the
 HTML::Mason::Compiler::ToObject docs for details.  Task id #464.
+Suggested by Doug Treder.
 - Add more details about subclassing the compiler to the Subclassing
 documentation.
 - There is now a compiler parameter called "use_source_line_numbers",
@@ -41,6 +42,17 @@ component containing certain kinds of syntax errors would claim that
 any future components also contained syntax errors.  Task id #467.
 - Now assigning runtime properties (such as interp) to method
 component objects as well as subcomponent objects.  Task id #462.
+- Fixed the HTML error display.  Errors were not being properly
+HTML-escaped.  Task id #468.  Reported by Jeremy Blain.
+- A bad interaction between the XS version of Params::Validate, Perl
+5.00503 and taint mode has been "fixed" by requiring Params::Validate
+0.59, where the problem is fixed.  Task id #470.
+- The test suite now runs the taint mode tests is no longer skipped on
+earlier versions of Perl.  Task id #471.
+- The ApacheHandler module would go into an infinite memory-eating
+loop when run in taint mode with Perl 5.6.1.  Task id #469.  Reported
+by William McKee.
+
 
 1.20  May 1, 2003 (May Day)
 
