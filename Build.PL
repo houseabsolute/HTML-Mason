@@ -45,6 +45,7 @@ my $build = Mason::Build->new
    requires    => \%prereq,
    build_requires => {
 		      'Test'          => 0,
+		      'Test::Builder' => 0,
 		     },
    license     => 'perl',
   );

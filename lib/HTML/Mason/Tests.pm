@@ -13,7 +13,11 @@ use HTML::Mason::Tools qw(make_fh);
 
 use Getopt::Long;
 
+use Test::Builder ();
+
 use vars qw($VERBOSE $DEBUG @SHARED);
+
+my $Test = Test::Builder->new;
 
 $VERBOSE = $ENV{MASON_DEBUG} || $ENV{MASON_VERBOSE} || $ENV{TEST_VERBOSE};
 $DEBUG = $ENV{MASON_DEBUG};
@@ -125,7 +129,7 @@ if ($cmd_options{tests_to_run}) {
     for ($cmd_options{tests_to_run}) { s/^\s+//; s/\s+$// }
     my @tests_to_run = sort { $a <=> $b } split(/\s*,\s*/, $cmd_options{tests_to_run});
     %tests_to_run = map { ($_, 1) } @tests_to_run;
-    printf ("Running only test%s %s\n", @tests_to_run == 1 ? "" : "s", join(", ", @tests_to_run));
+    $Test->diag(sprintf("Running only test%s %s\n", @tests_to_run == 1 ? "" : "s", join(", ", @tests_to_run)))
 }
 
 my %tests_to_skip;
@@ -133,7 +137,7 @@ if ($cmd_options{tests_to_skip}) {
     for ($cmd_options{tests_to_skip}) { s/^\s+//; s/\s+$// }
     my @tests_to_skip = split(/\s*,\s*/, $cmd_options{tests_to_skip});
     %tests_to_skip = map { ($_, 1) } @tests_to_skip;
-    printf ("Skipping test%s %s\n", @tests_to_skip == 1 ? "" : "s", join(", ", @tests_to_skip));
+    $Test->diag(printf ("Skipping test%s %s\n", @tests_to_skip == 1 ? "" : "s", join(", ", @tests_to_skip)));
 }
 
 sub new
@@ -185,9 +189,6 @@ sub add_test
     die "no name provided for test\n"
 	unless exists $p{name};
 
-    $self->{test_count}++;
-    
-    
     unless ( exists $p{path} )
     {
 	$p{path} = $p{call_path} || $p{name};
@@ -241,10 +242,8 @@ sub run
 
     if ($DEBUG)
     {
-	print "Will " . ( $self->{create} ? '' : 'not ' ) . "create 'expect' files\n";
+	$Test->diag( "Will " . ( $self->{create} ? '' : 'not ' ) . "create 'expect' files\n" );
     }
-
-    $self->{test_count} = 0;
 
     eval
     {
@@ -270,14 +269,14 @@ sub _make_dirs
 
     unless ( -d $self->comp_root )
     {
-	print "Making comp_root directory: $comp_root\n" if $DEBUG;
+	$Test->diag( "Making comp_root directory: $comp_root\n" ) if $DEBUG;
 	mkpath( $self->comp_root, 0, 0755 )
 	    or die "Unable to make base test directory '$comp_root': $!";
     }
 
     unless ( -d $self->data_dir )
     {
-	print "Making data_dir directory: $data_dir\n" if $DEBUG;
+	$Test->diag( "Making data_dir directory: $data_dir\n" ) if $DEBUG;
 	mkpath( $self->data_dir, 0, 0755 )
 	    or die "Unable to make base test directory '$data_dir': $!";
     }
@@ -335,7 +334,7 @@ sub _write_support_comps
 
     unless ( @{ $self->{support} } )
     {
-	print "No support comps to create\n" if $DEBUG;
+	$Test->diag( "No support comps to create\n" ) if $DEBUG;
 	return;
     }
 
@@ -361,7 +360,7 @@ sub _write_test_comp
     my $dir = File::Spec->catdir( $self->comp_root, $self->{name}, @path );
     unless ( -d $dir )
     {
-	print "Making dir: $dir\n" if $DEBUG;
+	$Test->diag( "Making dir: $dir\n" ) if $DEBUG;
 	mkpath( $dir, 0, 0755 )
 	    or die "Unable to create directory '$dir': $!";
     }
@@ -376,14 +375,14 @@ sub write_comp
 
     unless (-d $dir)
     {
-	print "Making dir: $dir\n" if $DEBUG;
+	$Test->diag( "Making dir: $dir\n" ) if $DEBUG;
 	mkpath( $dir, 0, 0755 )
 	    or die "Unable to create directory '$dir': $!";
     }
 
     my $real_file = File::Spec->catfile( $dir, $file );
 
-    print "Making component $path at $real_file\n"
+    $Test->diag( "Making component $path at $real_file\n" )
 	if $DEBUG;
 
     my $fh = make_fh();
@@ -400,18 +399,18 @@ sub _run_tests
     my $self = shift;
 
     my $count = scalar @{ $self->{tests} };
-    print "\n1..$count\n";
+    $Test->plan( tests => $count );
 
     if ($VERBOSE)
     {
-	print "Running $self->{name} tests ($count tests): $self->{description}\n";
+	$Test->diag( "Running $self->{name} tests ($count tests): $self->{description}\n" );
     }
 
     my $x = 1;
     foreach my $test ( @{ $self->{tests} } )
     {
 	$self->{current_test} = $test;
-	
+
 	#
 	# If tests_to_run or tests_to_skip were specified in the
 	# environment or command line, check them to see whether to
@@ -445,7 +444,7 @@ sub _run_tests
 		next;
 	    }
 	}
-	print "Running $test->{name} (#$x): $test->{description}\n" if $VERBOSE;
+	$Test->diag( "Running $test->{name} (#$x): $test->{description}\n" ) if $VERBOSE;
 	$self->_make_component unless $test->{skip_component};
 	$self->_run_test;
 	$x++;
@@ -471,10 +470,10 @@ sub _make_main_interp
 
     if ($DEBUG && %interp_params)
     {
-	print "Interp params:\n";
+	$Test->diag( "Interp params:\n" );
 	while ( my ($k, $v) = each %interp_params)
 	{
-	    print "  $k => $v\n";
+	    $Test->diag( "  $k => $v\n" );
 	}
     }
 
@@ -509,7 +508,7 @@ sub _execute
     my ($self, $interp) = @_;
     my $test = $self->{current_test};
 
-    print "Calling $test->{name} test with path: $test->{call_path}\n" if $DEBUG;
+    $Test->diag( "Calling $test->{name} test with path: $test->{call_path}\n" ) if $DEBUG;
     $test->{pretest_code}->() if $test->{pretest_code};
     $interp->exec( $test->{call_path}, @{$test->{call_args}} );
 }
@@ -530,31 +529,35 @@ sub check_result {
 	    {
 		if ($VERBOSE)
 		{
-		    print "Got error:\n$error\n...but expected something matching:\n$test->{expect_error}\n";
+		    $Test->diag( "Got error:\n$error\n...but expected something matching:\n$test->{expect_error}\n" );
 		}
 		return $self->_fail;
 	    }
 	}
 	else
 	{
-	    print "Unexpected error running $test->{name}:\n$error" if $VERBOSE;
+	    $Test->diag( "Unexpected error running $test->{name}:\n$error" ) if $VERBOSE;
 	    return $self->_fail;
 	}
 
     }
     elsif ( $test->{expect_error} )
     {
-	print "Expected an error matching '$test->{expect_error}' but no error occurred\n" if $VERBOSE;
+	$Test->diag( "Expected an error matching '$test->{expect_error}' but no error occurred\n" ) if $VERBOSE;
 	return $self->_fail;
     }
 
     if ($self->{create})
     {
-	print "Results for $test->{name}:\n$self->{buffer}\n";
+	$Test->diag( "Results for $test->{name}:\n$self->{buffer}\n" );
 	return;
     }
 
-    my $success = $test->{skip_expect} ? 1 : $self->check_output( actual => $self->{buffer}, expect => $test->{expect} );
+    my $success =
+	( $test->{skip_expect} ?
+	  1 :
+	  $self->check_output( actual => $self->{buffer}, expect => $test->{expect} )
+	);
 
     $success ? $self->_success : $self->_fail;
 }
@@ -572,13 +575,13 @@ sub check_output
     } else {
 	# Whitespace at end can vary.  (Or rather, it is varying in the tests, and
 	# should be made not to vary, but I don't have time to fix it yet.)
-	
+
 	for ($p{actual}, $p{expect}) {  s/\s+$//  }
 	$same = ($p{actual} eq $p{expect});
     }
 
     if (!$same and $VERBOSE) {
-	print "Got ...\n-----\n$p{actual}\n-----\n   ... but expected ...\n-----\n$p{expect}\n-----\n";
+	$Test->diag( "Got ...\n-----\n$p{actual}\n-----\n   ... but expected ...\n-----\n$p{expect}\n-----\n" );
     }
     return $same;
 }
@@ -588,9 +591,7 @@ sub _fail
     my $self = shift;
     my $test = $self->{current_test};
 
-    $self->{test_count}++;
-
-    print "Result for $self->{name}: $test->{name}\nnot ok $self->{test_count}\n";
+    $Test->ok( 0, $test->{name} );
 }
 
 sub _success
@@ -598,9 +599,7 @@ sub _success
     my $self = shift;
     my $test = $self->{current_test};
 
-    $self->{test_count}++;
-
-    print "Result for $self->{name}: $test->{name}\nok $self->{test_count}\n";
+    $Test->ok( 1, $test->{name} );
 }
 
 sub _skip
@@ -608,10 +607,7 @@ sub _skip
     my $self = shift;
     my $test = $self->{current_test};
 
-    $self->{test_count}++;
-
-    die "no test name for " . $self->{test_count} unless $test->{name};
-    print "Result for $self->{name}: $test->{name}\nok $self->{test_count}  # skip Skipped by user\n";
+    $Test->skip;
 }
 
 #
@@ -635,7 +631,7 @@ sub rm_tree {
     } elsif (-f $path) {
 	unlink $path;
     } else {
-	warn "Can't find $path to remove"
+	$Test->diag( "Can't find $path to remove" )
             unless $silent;
     }
 }
