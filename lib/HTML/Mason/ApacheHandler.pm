@@ -80,10 +80,12 @@ use Data::Dumper;
 use File::Path;
 use File::Spec;
 use HTML::Mason::Interp;
-use HTML::Mason::Commands;
-use HTML::Mason::FakeApache;
-use HTML::Mason::Tools qw(dumper_method html_escape pkg_installed);
+use HTML::Mason::Parser;
+use HTML::Mason::Error qw(error_process error_display_html);
+use HTML::Mason::Tools qw(dumper_method html_escape make_fh pkg_installed);
 use HTML::Mason::Utils;
+use Params::Validate qw(:all);
+use Apache;
 use Apache::Status;
 
 use HTML::Mason::MethodMaker
@@ -98,13 +100,15 @@ use HTML::Mason::MethodMaker
       );
 
 # use() params. Assign defaults, in case ApacheHandler is only require'd.
-use vars qw($LOADED $ARGS_METHOD);
+use vars qw($ARGS_METHOD $AH $VERSION);
+
+$VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
 
 # Fields that can be set in new method, with defaults
 my %fields =
     (
      apache_status_title => 'mason',
-     auto_send_headers => 1, 
+     auto_send_headers => 1,
      decline_dirs => 1,
      error_mode => 'html',
      interp => undef,
@@ -112,12 +116,33 @@ my %fields =
      top_level_predicate => undef,
      );
 
+# If loaded via a PerlModule directive in a conf file we are being
+# loaded via 'require', not 'use'.  However, the import routine _must_
+# be called at some point during startup or things go boom.
+
+# If mod_perl <= 1.21 we will call import later (in the handler sub)
+# to make sure we can see the user's MasonArgsMethod setting (if there
+# is one)
+__PACKAGE__->import if $mod_perl::VERSION > 1.21;
+
 sub import
 {
     shift; # class not needed
 
-    return if $LOADED;
+    return if defined $ARGS_METHOD;
+
+    # We were called by the internal call a few lines back and it
+    # seems that we're not being loaded in a conf file.  We will
+    # expect to be called again via a 'use' line in the handler.pl
+    # file.  This is a bit of a hack, I must say.
+    return if caller eq __PACKAGE__ && ! _in_apache_conf_file();
+
     my %params = @_;
+
+    if (_in_apache_conf_file())
+    {
+	$params{args_method} = _get_string_param('ArgsMethod');
+    }
 
     # safe default.
     $params{args_method} ||= 'CGI';
@@ -138,7 +163,201 @@ sub import
 	die "Invalid args_method parameter ('$params{args_method}') given to HTML::Mason::ApacheHandler in 'use'\n";
     }
 
-    $LOADED = 1;
+    _make_ah() if _in_apache_conf_file() && ! _get_boolean_param('MultipleConfig');
+}
+
+# This is my best guess as to whether we are being configured via the
+# conf file or not.  Without a comp root it will blow up sooner or
+# later anyway.  This may not be the case in the future though.
+sub _in_apache_conf_file
+{
+    # We don't want to try to read the configuration til we're in a
+    # request if mod_perl <= 1.21
+    return 0 if $mod_perl::VERSION <= 1.21 && ( $Apache::Server::Starting || $Apache::ServerStarting ||
+						$Apache::Server::ReStarting || $Apache::ServerReStarting );
+    return $ENV{MOD_PERL} && ( _get_list_param('CompRoot') ||
+			       _get_boolean_param('MultipleConfig') );
+}
+
+sub _make_ah
+{
+    return $AH if $AH && ! _get_boolean_param('MultipleConfig');
+
+    my %p;
+
+    $p{apache_status_title} = _get_string_param('ApacheStatusTitle');
+    $p{auto_send_headers} = _get_boolean_param('AutoSendHeaders');
+    $p{debug_handler_proc} = _get_string_param('DebugHandlerProc');
+    $p{debug_handler_script} = _get_string_param('DebugHandlerScript');
+    $p{debug_mode} = _get_string_param('DebugMode');
+    $p{debug_perl_binary} = _get_string_param('DebugPerlBinary');
+    $p{decline_dirs} = _get_boolean_param('DeclineDirs');
+    $p{error_mode} = _get_string_param('ErrorMode');
+    $p{top_level_predicate} = _get_code_param('TopLevelPredicate');
+
+    foreach (keys %p)
+    {
+	delete $p{$_} unless defined $p{$_};
+    }
+
+    $AH = HTML::Mason::ApacheHandler->new( interp => _make_interp(),
+					   %p,
+					 );
+
+    return $AH;
+}
+
+sub _make_interp
+{
+    my %p;
+
+    $p{allow_recursive_autohandlers} = _get_boolean_param('AllowRecursiveAutohandlers');
+    $p{autohandler_name}    = _get_string_param('AutohandlerName');
+    $p{code_cache_max_size} = _get_string_param('CodeCacheMaxSize');
+    $p{current_time}        = _get_string_param('CurrentTime');
+    $p{data_cache_dir}      = _get_string_param('DataCacheDir');
+    $p{dhandler_name}       = _get_string_param('DhandlerName');
+    $p{die_handler}         = _get_code_param('DieHandler');
+    $p{max_recurse}         = _get_string_param('MaxRecurse');
+    $p{out_method}          = _get_code_param('OutMethod');
+    $p{out_mode}            = _get_string_param('OutMode');
+    $p{preloads}              = [ _get_list_param('Preloads') ];
+    delete $p{preloads} unless @{ $p{preloads} };
+    $p{static_file_root}      = _get_string_param('StaticFileRoot');
+    $p{system_log_events}     = _get_string_param('SystemLogEvents');
+    $p{system_log_file}       = _get_string_param('SystemLogFile');
+    $p{system_log_separator}  = _get_string_param('SystemLogSepartor');
+    $p{use_autohandlers}      = _get_boolean_param('UseAutohandlers');
+    $p{use_data_cache}        = _get_boolean_param('UseDataCache');
+    $p{use_dhandlers}         = _get_boolean_param('UseDhandlers');
+    $p{use_object_files}      = _get_boolean_param('UseObjectFiles');
+    $p{use_reload_file}       = _get_boolean_param('UseReloadFile');
+
+    my @comp_root = _get_list_param('CompRoot', 1);
+    if (@comp_root == 1 && $comp_root[0] !~ /=>/)
+    {
+	$p{comp_root} = $comp_root[0];
+    }
+    else
+    {
+	my @root;
+	foreach my $root (@comp_root)
+	{
+	    my ($k, $v) = split /\s*=>\s*/, $root;
+	    die "Configuration parameter MasonCompRoot must be either a singular value or a multiple 'hash' values like 'foo => /home/mason/foo'"
+		unless defined $k && defined $v;
+	    push @{ $p{comp_root} }, [ $k => $v ];
+	}
+    }
+    $p{data_dir} = _get_string_param('DataDir', 1);
+
+    # If not defined we'll use the defaults
+    foreach (keys %p)
+    {
+	delete $p{$_} unless defined $p{$_};
+    }
+
+    my $interp = HTML::Mason::Interp->new( parser => _make_parser(),
+					   %p,
+					 );
+
+    # if version <= 1.21 then these files shouldn't be created til
+    # after a fork so they should have the right ids anyway
+    if ($interp->files_written && $mod_perl::VERSION > 1.21 && ! ($> || $<))
+    {
+	chown Apache->server->uid, Apache->server->gid, $interp->files_written
+	    or die "Can't change ownership of files written by interp object\n";
+    }
+
+    return $interp;
+}
+
+sub _make_parser
+{
+    my %p;
+    $p{allow_globals} = [ _get_list_param('AllowGlobals') ];
+    delete $p{allow_globals} unless @{ $p{allow_globals} };
+
+    $p{default_escape_flags} = _get_string_param('DefaultEscapeFlags');
+    $p{ignore_warnings_expr} = _get_string_param('IgnoreWarningsExpr');
+    $p{in_package} = _get_string_param('InPackage');
+    $p{postamble} = _get_string_param('Postamble');
+    $p{preamble} = _get_string_param('Preamble');
+    $p{taint_check} = _get_boolean_param('TaintCheck') || 0;
+    $p{use_strict} = _get_boolean_param('UseStrict');
+
+    $p{preprocess} = _get_code_param('Preprocess');
+    $p{postprocess} = _get_code_param('Postprocess');
+
+    # If not defined we'll use the defaults
+    foreach (keys %p)
+    {
+	delete $p{$_} unless defined $p{$_};
+    }
+
+    return HTML::Mason::Parser->new(%p);
+}
+
+sub _get_string_param
+{
+    my ($p, $val) = _get_val(@_[0, 1]);
+
+    return $val;
+}
+
+sub _get_boolean_param
+{
+    my ($p, $val) = _get_val(@_[0, 1]);
+
+    return $val;
+}
+
+sub _get_code_param
+{
+    my ($p, $val) = _get_val(@_[0, 1]);
+
+    return unless $val;
+
+    my $sub_ref = eval $val;
+
+    die "Configuration parameter '$p' is not valid perl:\n$@\n"
+	if $@;
+
+    return $sub_ref;
+}
+
+sub _get_list_param
+{
+    my ($p, @val) = _get_val(@_[0,1], 1);
+    if (@val == 1 && ! defined $val[0])
+    {
+	@val = ();
+    }
+
+    return @val;
+}
+
+sub _get_val
+{
+    my ($p, $required, $wantarray) = @_;
+    $p = "Mason$p";
+
+    if ( $mod_perl::VERSION <= 1.21 && ( $Apache::Server::Starting || $Apache::ServerStarting ||
+					 $Apache::Server::ReStarting || $Apache::ServerReStarting ) )
+    {
+	die "Can't get configuration info during server startup with mod_perl <= 1.21";
+    }
+    my $c = Apache->request ? Apache->request : Apache->server;
+
+    my @val = $mod_perl::VERSION < 1.24 ? $c->dir_config($p) : $c->dir_config->get($p);
+
+    die "Only a single value is allowed for configuration parameter '$p'\n"
+	if @val > 1 && ! $wantarray;
+
+    die "Configuration parameter '$p' is required\n"
+	if $required && ! defined $val[0];
+
+    return ($p, $wantarray ? @val : $val[0]);
 }
 
 sub new
@@ -148,15 +367,34 @@ sub new
 	request_number => 0,
 	%fields,
     };
+
+    validate( @_,
+	      { apache_status_title => { type => SCALAR, optional => 1 },
+		auto_send_headers => { type => SCALAR | UNDEF, optional => 1 },
+		decline_dirs => { type => SCALAR | UNDEF, optional => 1 },
+		error_mode => { type => SCALAR, optional => 1 },
+		output_mode => { type => SCALAR | UNDEF, optional => 1 },
+		top_level_predicate => { type => CODEREF | UNDEF, optional => 1 },
+		debug_mode => { type => SCALAR, optional => 1 },
+		debug_perl_binary => { type => SCALAR, optional => 1 },
+		debug_handler_script => { type => SCALAR, optional => 1 },
+		debug_handler_proc => { type => SCALAR, optional => 1 },
+		debug_dir_config_keys => { type => ARRAYREF, optional => 1 },
+
+		# the only required param
+		interp => { isa => 'HTML::Mason::Interp' },
+	      }
+	    );
+
     my (%options) = @_;
+
+    die "error_mode parameter must be one of 'html', 'fatal', 'raw_html', or 'raw_fatal'\n"
+	if exists $options{error_mode} && $options{error_mode} !~ /^(?:html|fatal|raw_html|raw_fatal)$/;
+
     while (my ($key,$value) = each(%options)) {
-	if (exists($fields{$key})) {
-	    $self->{$key} = $value;
-	} else {
-	    die "HTML::Mason::ApacheHandler::new: invalid option '$key'\n";
-	}
+	$self->{$key} = $value;
     }
-    die "HTML::Mason::ApacheHandler::new: must specify value for interp" if !$self->{interp};
+
     bless $self, $class;
     $self->_initialize;
     return $self;
@@ -295,7 +533,6 @@ sub handle_request {
     eval { $retval = $self->handle_request_1($apreq, $request) };
     my $err = $@;
     my $err_code = $request->error_code;
-    undef $request;  # ward off memory leak
     my $err_status = $err ? 1 : 0;
 
     if ($err) {
@@ -319,23 +556,53 @@ sub handle_request {
 	}
 
 	#
-	# Take out date stamp and (eval nnn) prefix
-	# Add server name, uri
+	# Do not process error at all in raw mode or if die handler was overriden.
 	#
-	$err =~ s@^\[[^\]]*\] \(eval [0-9]+\): @@mg;
-	$err = html_escape($err);
-	$err = sprintf("while serving %s %s\n%s",$apreq->server->server_hostname,$apreq->uri,$err);
+	my $raw_err = $err;
+	unless ($self->error_mode =~ /^raw_/ or $interp->die_handler_overridden) {
+	    $err = error_process ($err, $request);
+	}
 
+	#
+	# In fatal/raw_fatal mode, compress error to one line (for Apache logs) and die.
+	# In html/raw_html mode, call error_display_html and print result.
+	# The raw_ modes correspond to pre-1.02 error formats.
+	#
+	# [This is a load of spaghetti. It will be cleaned up in 1.2 when we lose
+	# debug mode and standardize error handling.]
+	#
 	if ($self->error_mode eq 'fatal') {
-	    die ("System error:\n$err\n");
-	} elsif ($self->error_mode eq 'html') {
+	    unless ($interp->die_handler_overridden) {
+		$err =~ s/\n/\t/g;
+		$err =~ s/\t$//g;
+		$err .= "\n" if $err !~ /\n$/;
+	    }
+	    die $err;
+	} elsif ($self->error_mode eq 'raw_fatal') {
+	    die ("System error:\n$raw_err\n");	    
+	} elsif ($self->error_mode =~ /html$/) {
+	    unless ($interp->die_handler_overridden) {
+		my $debug_msg;
+		if ($debugMode eq 'error' or $debugMode eq 'all') {
+		    $debug_msg = $self->write_debug_file($apreq,$debug_state);
+		}
+		if ($self->error_mode =~ /^raw_/) {
+		    $err .= "$debug_msg\n" if $debug_msg;
+		    $err = "<h3>System error</h3><p><pre><font size=-1>$raw_err</font></pre>\n";
+		} else {
+		    $err .= "Debug info: $debug_msg\n" if $debug_msg;
+		    $err = error_display_html($err,$raw_err);
+		}
+	    }
+	    # Send HTTP headers if they have not been sent.
 	    if (!http_header_sent($apreq)) {
 		$apreq->content_type('text/html');
 		$apreq->send_http_header();
 	    }
-	    print("<h3>System error</h3><p><pre><font size=-1>$err</font></pre>\n");
+	    print($err);
 	}
     }
+    undef $request;  # ward off memory leak
 
     $interp->write_system_log('REQ_END', $self->{request_number}, $err_status);
     return ($err) ? &OK : (defined($retval)) ? $retval : &OK;
@@ -402,7 +669,7 @@ sub handle_request_1
     my %args;
     die "ARGS_METHOD not defined! Did you 'use HTML::Mason::ApacheHandler'?" unless defined($ARGS_METHOD);
     %args = $self->$ARGS_METHOD(\$r,$request);
-    
+
     #
     # Deprecated output_mode parameter - just pass to request out_mode.
     #
@@ -550,5 +817,18 @@ sub _mod_perl_args
 # Determines whether the http header has been sent.
 #
 sub http_header_sent { shift->header_out("Content-type") }
+
+#
+# PerlHandler HTML::Mason::ApacheHandler
+#
+sub handler
+{
+    my $r = shift;
+
+    my $ah = _make_ah;
+    __PACKAGE__->import unless $ARGS_METHOD;
+
+    return $ah->handle_request($r);
+}
 
 1;
