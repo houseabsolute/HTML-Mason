@@ -73,6 +73,21 @@ $comp
 </%args>
 EOF
 	    },
+            { path => '/shared/display_req_obj',
+              component => <<'EOF',
+My depth is <% $m->depth %>.
+
+The top-level component is <% $m->request_comp->title %>.
+
+My stack looks like:
+-----
+% foreach my $comp ($m->callers) {
+<% $comp->title %>
+% }
+-----
+
+EOF
+            },
 	  );
 
 sub new
