@@ -381,6 +381,10 @@ sub _initialize {
 	    my ($r,$q) = @_; # request and CGI objects
 	    return [] if !defined($r);
 
+	    if ($r->path_info and $r->path_info =~ /expire_code_cache=(.*)/) {
+		$self->interp->delete_from_code_cache($1);
+	    }
+
 	    return ["<center><h2>" . $self->apache_status_title . "</h2></center>" ,
 		    $self->status_as_html,
 		    $self->interp->status_as_html];

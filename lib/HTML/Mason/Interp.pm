@@ -51,7 +51,7 @@ my %fields =
     (
      allow_recursive_autohandlers => 1,
      autohandler_name => 'autohandler',
-     code_cache_max_size => 10*1024*1024,
+     code_cache_max_size => 10*1024*1024,  # 10M
      compiler => undef,
      comp_root => undef,
      current_time => 'real',
@@ -272,10 +272,7 @@ sub check_reload_file {
 	$self->{last_reload_file_pos} = tell $fh;
 	my @lines = split("\n",$block);
 	foreach my $comp_path (@lines) {
-	    if (exists($self->{code_cache}->{$comp_path})) {
-		$self->{code_cache_current_size} -= $self->{code_cache}->{$comp_path}->{comp}->object_size;
-		delete($self->{code_cache}->{$comp_path});
-	    }
+	    $self->delete_from_code_cache($comp_path);
 	}
 	close $fh;
     }
@@ -408,18 +405,26 @@ sub load {
 	$comp->assign_runtime_properties($self,$fq_path);
 
 	#
-	# Cache code in memory, adjusting current cache size appropriately. Don't cache
-	# elements that are too large.
+	# Delete any stale cached version of this component, then
+	# cache it if it's small enough.
 	#
-	$self->{code_cache_current_size} -= $code_cache->{$fq_path}->{comp}->object_size if (exists($code_cache->{$fq_path}));
+	$self->delete_from_code_cache($fq_path);
+
 	if ($comp->object_size <= $self->code_cache_max_elem) {
 	    $code_cache->{$fq_path} = {lastmod=>$srcmod, comp=>$comp};
 	    $self->{code_cache_current_size} += $comp->object_size;
-	} else {
-	    delete($code_cache->{$fq_path}) if (exists($code_cache->{$fq_path}));
 	}
 	return $comp;
     }
+}
+
+sub delete_from_code_cache {
+    my ($self, $comp) = @_;
+    return unless exists $self->{code_cache}{$comp};
+    
+    $self->{code_cache_current_size} -= $self->{code_cache}{$comp}{comp}->object_size;
+    delete $self->{code_cache}{$comp};
+    return;
 }
 
 #
@@ -431,7 +436,6 @@ sub purge_code_cache {
 
     if ($self->{code_cache_current_size} > $self->code_cache_max_size) {
 	my $code_cache = $self->{code_cache};
-	my $cur_size = $self->{code_cache_current_size};
 	my $min_size = $self->code_cache_min_size;
 	my $decay_factor = $self->code_cache_decay_factor;
 
@@ -440,12 +444,9 @@ sub purge_code_cache {
 	    push(@elems,[$path,$href->{comp}->mfu_count,$href->{comp}]);
 	}
 	@elems = sort { $a->[1] <=> $b->[1] } @elems;
-	while (($cur_size > $min_size) and @elems) {
-	    my $elem = shift(@elems);
-	    $cur_size -= $elem->[2]->object_size;
-	    delete($code_cache->{$elem->[0]});
+	while (($self->{code_cache_current_size} > $min_size) and @elems) {
+	    $self->delete_from_code_cache(shift(@elems)->[0]);
 	}
-	$self->{code_cache_current_size} = $cur_size;
 
 	#
 	# Multiply each remaining cache item's count by a decay factor,
@@ -784,6 +785,9 @@ sub _compilation_error {
 # This is used in things like Apache::Status reports.  Currently shows:
 # -- Interp properties
 # -- loaded (cached) components
+#
+# Note that Apache::Status has an extremely narrow URL API, and I think the only way to 
+# pass info to another request is through PATH_INFO.  That's why the expiration stuff is awkward.
 
 sub status_as_html {
     my ($self) = @_;
@@ -806,9 +810,15 @@ sub status_as_html {
 
  <h4>Components in memory cache:</h4>
  <tt>
-% if (my $cache = $interp->code_cache) {
+% my $cache;
+% if ($cache = $interp->code_cache and %$cache) {
 %   foreach my $key (sort keys %$cache) {
-       <% $key |h%> (modified <% scalar localtime $cache->{$key}->{lastmod} %>)<br>
+      <% $key |h%> (modified <% scalar localtime $cache->{$key}->{lastmod} %>)
+%     if (my $cu = $current_url) {
+%       $cu =~ s,\?,/expire_code_cache=$key?,;
+        <a href="<% $cu %>"><i>expire</i></a>
+%     }
+      <br>
 %   }
 % } else {
     <I>None</I>
@@ -819,13 +829,21 @@ sub status_as_html {
 <%args>
  $interp   # The interpreter we'll elucidate
  %defaults # Default values for interp member data
+ $current_url => ''
 </%args>
 EOF
 
+    my $current_url = '';
+    if (my $r = eval {Apache->request}) {
+	my $path_info = quotemeta $r->path_info;
+	($current_url = $r->uri) =~ s/$path_info$//;
+	$current_url .= '?' . $r->args;
+    }
+    
     my $comp = $self->make_anonymous_component(comp => $comp_text);
     my $out;
     local $self->{out_method} = \$out;
-    $self->exec($comp, interp => $self, defaults => \%fields);
+    $self->exec($comp, interp => $self, defaults => \%fields, current_url => $current_url);
     return $out;
 }         
 
