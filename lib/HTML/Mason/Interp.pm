@@ -549,21 +549,9 @@ sub eval_object_code
 
 sub _do_or_eval
 {
-    my $self = shift;
-    my %p = @_;
+    my ($self, %p) = @_;
 
-    if ( $p{object_file} )
-    {
-        return do $p{object_file};
-    }
-    else
-    {
-        my $extra = '';
-        $extra = 'no strict;'
-            unless $self->compiler->use_strict;
-
-        return eval "$extra$p{object_code}";
-    }
+    return $p{object_file} ? do $p{object_file} : eval $p{object_code};
 }
 
 #
