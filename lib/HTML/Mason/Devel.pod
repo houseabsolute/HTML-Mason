@@ -1708,8 +1708,8 @@ C<< <%filter> >> block if you don't want to run the filter after an abort.
 
 =head2 External Redirects
 
-Because it is so commonly needed, Mason provides an external redirect
-method:
+Because it is so commonly needed, Mason 1.1x and on provides an
+external redirect method:
 
     $m->redirect($url);    # Redirects with 302 status
 
