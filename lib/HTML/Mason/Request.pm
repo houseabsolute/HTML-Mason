@@ -224,7 +224,7 @@ sub exec {
     $interp->purge_code_cache;
 
     # Return aborted value or result.
-    return ($self->aborted) ? $self->aborted_value : (wantarray) ? @result : $result[0];
+    return ($self->aborted ? $self->aborted_value : (wantarray ? @result : $result[0]));
 }
 
 #
