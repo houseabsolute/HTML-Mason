@@ -94,6 +94,11 @@ or httpd.conf, in order to save memory.
 - The ApacheHandler module now uses Apache::Request by default instead
 of CGI.pm.
 
+- There is no more batch vs. stream mode.  In its place, the Request
+object now has an attribute called "autoflush", which is a much
+simpler version of the same idea.  See the Request class documentation
+for details.
+
 - The ApacheHandler module now requires a minimum of mod_perl 1.22
 (though using something more up to date is highly recommended).
 
