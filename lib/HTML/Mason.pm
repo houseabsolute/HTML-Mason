@@ -209,8 +209,8 @@ Whoever is responsible for setting up and tuning Mason should read the
 I<Administrator's Manual> (B<L<HTML::Mason::Admin>>). This document
 covers more advanced configuration scenarios and performance
 optimization. Reference companions to the Administrator's Manual
-include B<L<HTML::Mason::Parser>>, B<L<HTML::Mason::Interp>>, and
-B<L<HTML::Mason::ApacheHandler>>.
+include B<L<HTML::Mason::Compiler>>, B<L<HTML::Mason::Lexer>>,
+B<L<HTML::Mason::Interp>>, and B<L<HTML::Mason::ApacheHandler>>.
 
 Most of this documentation assumes that you're running Mason on top of
 mod_perl, since that is the most common configuration.  If you are
@@ -229,7 +229,8 @@ L<HTML::Mason::Devel>,
 L<HTML::Mason::Request>,
 L<HTML::Mason::Component>,
 L<HTML::Mason::Admin>,
-L<HTML::Mason::Parser>,
+L<HTML::Mason::Compiler>,
+L<HTML::Mason::Lexer>,
 L<HTML::Mason::Interp>,
 L<HTML::Mason::ApacheHandler>
 
