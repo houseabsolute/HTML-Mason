@@ -1235,7 +1235,7 @@ L<Accessing a Cache Externally> below.
 =head2 Caching All Output
 
 Occasionally you will need to cache the complete output of a
-component.  For this purpose, Mason offers the C<< $m->cache_self >
+component.  For this purpose, Mason offers the C<< $m->cache_self >>
 method.  This method causes Mason to check to see if this component
 has already been run and its output cached.  If this is the case, this
 output is simply sent as output.  Otherwise, the component run
