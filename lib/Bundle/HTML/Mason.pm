@@ -2,7 +2,7 @@
 
 package Bundle::HTML::Mason;
 
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 1;
 
@@ -21,6 +21,8 @@ C<perl -MCPAN -e 'install Bundle::HTML::Mason'>
 Data::Dumper
 
 MLDBM
+
+Params::Validate
 
 HTML::Mason
 
