@@ -371,6 +371,8 @@ EOF
 
 #------------------------------------------------------------
 
+=pod
+
     $group->add_support( path => 'code_cache_test/show_code_cache',
 			 component => <<'EOF',
 Code cache contains these plain components:
@@ -584,6 +586,8 @@ EOF
 		    );
 
 
+=cut
+
 #------------------------------------------------------------
 
     $group->add_test( name => 'dhandler_name',
@@ -734,8 +738,8 @@ EOF
 
 #------------------------------------------------------------
 
-    $interp = HTML::Mason::Interp->new( data_dir => $group->data_dir,
-					comp_root => $group->comp_root,
+    my $interp = HTML::Mason::Interp->new( data_dir => $group->data_dir,
+					   comp_root => $group->comp_root,
 					 );
     $interp->compiler->allow_globals( qw($global) );
     $interp->set_global( global => 'parsimmon' );
