@@ -25,12 +25,11 @@ __PACKAGE__->valid_params
 
 sub new {
     my $package = shift;
-    my %p = @_;
 
     my $self = $package->SUPER::new(@_);
 
-    # Put it through the accessor to ensure proper data structure
-    $self->comp_root( $self->{comp_root} ) unless ref $self->{comp_root};
+    # Force comp_root into lol format
+    $self->{comp_root} = [[ MAIN => $self->{comp_root} ]] unless ref $self->{comp_root};
 
     # Check that directories are absolute.
     foreach my $pair ($self->comp_root_array) {
@@ -52,12 +51,7 @@ sub comp_root_array
 sub comp_root
 {
     my $self = shift;
-    if (@_)
-    {
-	validate_pos @_, {type => ARRAYREF|SCALAR};
-	$self->{comp_root} = ref($_[0]) ? $_[0] : [[ MAIN => $_[0] ]];
-    }
-    return unless $self->{comp_root};
+    die "Resolver comp_root is read-only" if @_;
     return $self->{comp_root}[0][1] if @{$self->{comp_root}} == 1 and $self->{comp_root}[0][0] eq 'MAIN';
     return $self->{comp_root};
 }
