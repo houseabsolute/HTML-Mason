@@ -7,6 +7,19 @@ available at http://www.masonhq.com/changes.html.
 
 0.8
 
+- Added multiple component root feature 
+Resolvers (suggested by Digital Work (supported)) 
+Fix output mode and method 
+Improve HTTP header mechanism 
+Allow arguments to be passed via @_ into component (suggested by Ken Williams) 
+decline() request method (suggested by Chuck O'Donnell) 
+Fix bug with eval(mc_comp(...)) 
+Look into apache-1.3.9/mod_perl-1.2.1 problem 
+Fix mc_unsuppress_http_header (again) 
+mc_cache_self should cache return values as well (suggested by Jon Frisby) 
+caller_args() request method (suggested by Lee Semel) 
+Change cache filenames to url-encode format (submitted by Ken Williams) 
+Add more site configuration examples to Admin.pod 
 - Fixed doc_root / comp_root mismatch on case-insensitive O/S
 (reported by John Arnold)
 
