@@ -87,6 +87,31 @@ sub make_component
     return $self->eval_object_text(object_text=>$objectText,error=>$options{error});
 }
 
+#
+# Old parse function, left in for sake of content management
+#
+sub parse
+{
+    my ($self, %options) = @_;
+    my $error;
+    my %subopts = ();
+    foreach my $key (qw(script script_file)) {
+	$subopts{$key} = $options{$key} if exists($options{$key});
+    }
+    my $objectText = $self->parse_component(%subopts,error=>\$error);
+    $self->eval_object_text(object_text=>$objectText,error=>\$error) if $objectText;
+    if ($objectText && !$error && exists($options{save_to})) {
+	$self->write_object_file(object_text=>$objectText,object_file=>$options{save_to});
+    }
+    if ($objectText and my $ref = $options{result_text}) {
+	$$ref = $objectText;
+    }
+    if ($error and my $ref = $options{error}) {
+	$$ref = $error;
+    }
+    return $error ? 0 : 1;
+}
+
 sub parse_component
 {
     my ($self, %options) = @_;
@@ -203,7 +228,7 @@ sub parse_component
 		$var = substr($decl,0,$split);
 		$default = substr($decl,$split+2);
 	    } else {
-		($var) = ($decl =~ /^(\S+)/);
+		($var) = ($decl =~ /^\s*(\S+)/);
 	    }
 	    $var =~ s/\s//g;
 	    # %ARGS is automatic, so ignore explicit declaration.
@@ -438,7 +463,7 @@ sub parse_component
     if ($sectiontext{filter}) {
 	my $ftext = $sectiontext{filter};
 	for ($ftext) { s/^\s+//g; s/\s+$//g }
-	$body .= sprintf('{ my ($_c,$_r); if (mc_call_self(\$_c,\$_r)) { for ($_c) { %s } mc_out($_c); return $_r }};',$ftext);
+	$body .= sprintf(join("\n",'{ my ($_c,$_r);','if (mc_call_self(\$_c,\$_r)) {'.'for ($_c) {',$ftext,'}','mc_out($_c);','return $_r }};'));
     }
 
     #
@@ -524,7 +549,7 @@ sub parse_component
     if (%declaredArgs) {
 	my $d = new Data::Dumper ([\%declaredArgs]);
 	my $argsDump = $d->Dumpxs;
-	for ($argsDump) { s/\$VAR1\s*=//g; s/;\s*// }
+	for ($argsDump) { s/\$VAR1\s*=//g; s/;\s*$// }
 	push(@cparams,"declared_args=>$argsDump");
     }
     if ($pureTextFlag) {
@@ -576,7 +601,7 @@ sub parse_component
 
 #
 # write_object_file
-#   (object_text, object_file, files_written)
+#   (object_text=>..., object_file=>..., files_written=>...)
 # Save object text in an object file.
 #
 # We attempt to handle several cases in which a file already exists

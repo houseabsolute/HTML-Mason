@@ -150,7 +150,7 @@ sub handle_preview_request_1
 {
     my ($r, $ah, %options) = @_;
     my (%simhdr);
-    my $createObjectLink = $options{create_object_link};
+    my $cmHome = $options{cm_home};
     
     #
     # Determine user name and port.
@@ -397,6 +397,7 @@ sub handle_preview_request_1
 	my (@objects,@stack);
 	my $objcount = 0;
 	my $fileroot = $interp->static_file_root();
+	my $comproot = $interp->comp_root();
 	foreach $event (@compEvents) {
 	    next if !defined($event);
 	    my ($type,$path) = ($event->{type},$event->{path});
@@ -418,12 +419,39 @@ sub handle_preview_request_1
 		    $objtype = "file";
 		}
 		my $lastobj = $objects[$objcount-1];
+
+		# Look for repeated entries (equal text and stack
+		# depth) and combine into one line
 		if ($objtext eq $lastobj->{text} && $objtype eq $lastobj->{type} && scalar(@stack) == $lastobj->{depth}) {
 		    $objcount--;
 		    $objects[$objcount]->{repeat}++;
 		} else {
-		    $objdisplay = ($createObjectLink && ($event->{type} eq 'startFile' || $event->{comp}->is_file_based)) ? $createObjectLink->($objtype,$path,scalar(@stack),$objtext) : (('  ' x scalar(@stack)) . $objtext);
-		    $objects[$objcount] = {count=>$objcount,type=>$objtype,text=>$objtext,display=>$objdisplay,label=>$objlabel,color=>'003399',srclink=>$objsrclink,depth=>scalar(@stack),repeat=>1};
+		    my $objdisplay = '';
+
+		    # If Content Management home specified, and we
+		    # have a file based component or a static file
+		    # inside the file root, create content management
+		    # view/edit links.
+		    if ($cmHome &&
+			(($objtype eq 'comp' and $event->{comp}->is_file_based) or
+			 ($objtype eq 'file' and $path =~ m{^$fileroot}))) {
+			my $branch;
+			if ($objtype eq 'comp') {
+			    $path = $comproot.$path;
+			    $branch = 'Components';
+			} else {
+			    $path =~ s{^$fileroot} {};
+			    $objtext =~ s{^$fileroot} {};
+			    $branch = 'Content';
+			}
+			my $spacer = ('  ' x (scalar(@stack)+1));
+			$cmHome =~ s/\/$//;
+			$objdisplay = (qq{<a href="$cmHome/textView?branch=$branch&path=$path">info</a> <a href="$cmHome/editComp?branch=$branch&path=$path">edit</a>}.$spacer.$objtext);
+		    } else {
+			$objdisplay = (('  ' x scalar(@stack)) . $objtext);
+		    }
+		    # Store object info. Some of this is used for repeat comparison.
+		    $objects[$objcount] = {count=>$objcount,type=>$objtype,display=>$objdisplay,label=>$objlabel,text=>$objtext,color=>'003399',srclink=>$objsrclink,depth=>scalar(@stack),repeat=>1};
 		}
 		push(@stack,$objcount);
 	    } elsif ($type =~ /^(endComp|endFile)$/) {

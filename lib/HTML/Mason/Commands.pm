@@ -162,7 +162,7 @@ sub mc_caller ()
     if ($REQ->depth <= 1) {
 	return undef;
     } else {
-	return $REQ->{stack}->[1]->comp->title;
+	return $REQ->{stack}->[1]->{comp}->title;
     }
 }
 
@@ -199,7 +199,7 @@ sub mc_call_self
 sub mc_call_stack ()
 {
     check_request;
-    return map($_->comp->title,@{$REQ->{stack}});
+    return map($_->{comp}->title,@{$REQ->{stack}});
 }
 
 sub mc_comp
@@ -226,7 +226,7 @@ sub mc_comp_source
 sub mc_comp_stack ()
 {
     check_request;
-    return map($_->comp->title,@{$REQ->stack});
+    return map($_->{comp}->title,@{$REQ->stack});
 }
 
 #
