@@ -119,7 +119,7 @@ sub new
     my ($class, %params) = @_;
 
     my $self = $class->SUPER::new(%params);
-    $self->format('brief');
+    $self->format('text');
     return $self;
 }
 
@@ -138,7 +138,6 @@ sub throw
     }
     $class->SUPER::throw(%params);
 }
-
 
 sub filtered_frames
 {
