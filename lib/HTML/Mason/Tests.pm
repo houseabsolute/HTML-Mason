@@ -564,6 +564,8 @@ me!).
 
 Takes the following parameters:
 
+=over 4
+
 =item * name (required)
 
 The name of the entire group of tests.
@@ -575,6 +577,8 @@ What this group tests.
 =item * interp_class (optional, default='HTML::Mason::Interp')
 
 Specifies an alternate class for creating the Interpreter.
+
+=back
 
 =head2 add_support
 
@@ -599,9 +603,13 @@ unless the skip_component parameter is true.
 If true, then the test harness will not write a component to disk for
 this test.
 
+=back
+
 =head2 add_test
 
 Takes the following parameters:
+
+=over 4
 
 =item * name (required)
 
@@ -672,6 +680,8 @@ the test to fail.  This is used in a few situations where it is
 necessary to just run a component as part the preparation for another
 test.
 
+=back
+
 =head2 run
 
 Run the tests in the group.
@@ -682,8 +692,6 @@ Run the tests in the group.
 
 These methods are provided since some tests may need to know these
 values.
-
-=over 4
 
 =head2 base_path
 
@@ -704,13 +712,9 @@ Given the parameters shown above, this method will check to see if the
 two are equal.  If they're not equal, it will print out an error
 message attempting to highlight the difference.
 
-=back
-
 =head1 ADDITIONAL RUN MODES
 
 The following additional modes are available for running tests.
-
-=over 4
 
 =head2 Verbose mode
 
