@@ -163,11 +163,18 @@ sub import
     {
 	$pack->make_ah() unless $pack->get_param('MultipleConfig');
 
-	foreach ( $pack->get_param('interp_class'), $pack->get_param('compiler_class') ) )
+	my $interp_class = $pack->get_param('interp_class');
+	foreach ( $interp_class, $pack->get_param('compiler_class') ) )
 	{
 	    eval "use $p{$_}";
 	    die $@ if $@;
 	}
+
+        my $compiler_class = $self->get_param('CompilerClass', $interp_class->valid_params);
+        eval "use $compiler_class";
+
+        my $lexer_class = $self->get_param('LexerClass', $compiler_class->valid_params);
+        eval "use $lexer_class";
 
 	my $args_method = $pack->get_param('ArgsMethod');
 
@@ -242,7 +249,7 @@ sub _make_interp
 sub _make_compiler
 {
     my ($self, $compiler_class) = @_;
-    eval "use $compiler_class" unless $compiler_class =~ /[^\w:]/;
+
     my %p = $self->get_config($compiler_class->valid_params);
 
     return $compiler_class->new(%p);
