@@ -160,8 +160,8 @@ C<eg/httpd.conf> in your distribution.
     </FilesMatch>
 
 The PerlModule directive simply ensures that the Mason code is loaded
-in the parent process, which can save some memory when running
-mod_perl.
+in the parent process before forking, which can save some memory when
+running mod_perl.
 
 The <FilesMatch> section routes all "\.html$" requests to the Mason
 handler. If you want all Mason pages to have a distinct extension like
