@@ -107,6 +107,23 @@ sub new
     return $self;
 }
 
+# If we create a new exception from a Mason exception, just use the
+# error message, not the stringified exception. Otherwise exceptions
+# can get stringified more than once.
+sub throw
+{
+    my ($class, %params) = @_;
+
+    if (UNIVERSAL::isa($params{error}, 'HTML::Mason::Exception')) {
+	$params{error} = $params{error}->error;
+    }
+    if (UNIVERSAL::isa($params{message}, 'HTML::Mason::Exception')) {
+	$params{message} = $params{message}->error;
+    }
+    $class->SUPER::throw(%params);
+}
+
+
 sub filtered_frames
 {
     my ($self) = @_;
