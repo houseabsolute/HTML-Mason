@@ -5,6 +5,54 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.17
+
+[ ENHANCEMENTS ]
+
+- Added "REQUEST:" as a component specifier for method comp calls,
+similar to "SELF:" and "PARENT:".  "REQUEST:" is short-hand for
+$m->request_comp.  Suggested by Manuel Capinha.
+- Added $m->call_self.  This was present in Mason pre-1.10, and has
+been added back per Jon Swartz's request.
+- Added $comp->attributes, similar to $comp->methods.  This just
+returns attributes for a given component objects.  It doesn't return
+attributes inherited from a parent.  Suggested by Matti Makitalo.
+
+[ BUG FIXES ]
+
+- May have fixed failure of 12-taint.t #7 on Win32 boxes.  Reported by
+Randy Kobes.
+- Without HTML::Entities installed, 13-errors.t #7 fails.  Reported by
+Sam Kington.
+- When $m->cache_self was used for a component with a filter block,
+the output would be cached _before_ filtering, and filtered every time
+it was retrieved from the cache.  This has been fixed, and the
+documentation now specifies that the filtered output is cached.
+- $m->file did not handle relative paths properly when called from a
+subcomponent or method.  Reported by Chris Hutchinson.
+- If $m->abort was called in the shared block of a component that had
+a filter, then a fatal error occured.  Reported by Chris Pudney.
+- Mason was not cooperating with Apache::Filter, and attempts to
+filter Mason's output did not work.  Fixing this also requires
+Apache::Filter 1.021, if you are using Apache::Request to handling
+incoming arguments.  Reported by by Manuel Capinha.
+- Mason assumed that if Scalar::Util loaded without errors, it had a
+weaken() subroutine.  However, Scalar::Util provides a pure Perl
+implementation that does not include this subroutine.  Now we check
+for this subroutine explicitly.  Reported by Autrijus Tang.
+- Some code constructs, such as qw() lists, would end up being turned
+into invalid code during component compilation.  Reported by Robert
+Landrum.
+- Subclassing a subclass of HTML::Mason::Request broke when the class
+between HTML::Mason::Request and your own class called
+alter_superclass.
+
+[ INCOMPATIBLE CHANGES ]
+
+- Removed the long deprecated and undocumented $comp->parent_comp
+method.  Use $comp->owner instead.
+
+
 1.16  December 13, 2002
 
 [ ENHANCEMENTS ]
