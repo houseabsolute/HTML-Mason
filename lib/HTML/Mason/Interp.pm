@@ -1096,8 +1096,13 @@ When using Perl 5.00503 or earlier, using the code cache creates a
 circular reference between Interp and component objects.  This means
 that Interp objects will not be destroyed unless you call
 L<flush_code_cache|HTML::Mason::Interp/flush_code_cache>.  If you are
-using Perl 5.6.0 or greater, Mason uses weak references to prevent
-this problem.
+using Perl 5.6.0 or greater, and you have the XS version of
+Scalar::Util installed, Mason uses weak references to prevent this
+problem.
+
+Win32 users should note that as of this writing, ActiveState's PPD for
+Scalar-List-Utils only includes the pure Perl version of these
+modules, which don't include the weak references functionality.
 
 =head1 SEE ALSO
 
