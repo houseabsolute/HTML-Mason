@@ -371,6 +371,10 @@ Here's how a simple /newsfeeds/dhandler might look:
     return 404 if !$headline;                  # return "not found" if no such story
     </%init>
 
+You can customize the file name used for dhandlers, or turn off
+autohandlers entirely, with the L<Interp/dhandler_name> Interp
+parameter.
+
 =head2 autohandlers
 
 Autohandlers allow you to grab control and perform some action just
@@ -469,6 +473,10 @@ to apply only to the current directory, use a conditional like this:
     return mc_auto_continue if (mc_auto_comp =~ /\//);
     ... rest of autohandler ...
     </%init>
+
+You can customize the file name used for autohandlers, or turn off
+autohandlers entirely, with the L<Interp/autohandler_name>
+Interp parameter.
 
 =head2 dhandlers vs. autohandlers
 
@@ -745,7 +753,7 @@ parent component.  However a subcomponent can declare its own C<E<lt>%argsE<gt>>
 section and have relevant values passed in.
 
 In the following example, we create a ".link" subcomponent to produce a
-standard hyperlink:
+standardized hyperlink:
 
     <%def .link>
     <font size="4" face="Verdana,Arial,Helvetica">

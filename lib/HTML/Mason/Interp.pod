@@ -30,6 +30,11 @@ their own directories and all subdirectories; if undef, only to their
 own directories. See the L<Components/autohandlers> section of the
 Component Developer's Guide for a discussion of the pros and cons.
 
+=item autohandler_name
+
+File name used for autohandlers. Default is "autohandler". If
+undef, Mason will not look for autohandlers.
+
 =item code_cache_mode
 
 Specifies whether components are cached in memory when they are
@@ -64,6 +69,11 @@ report the true time.
 
 The other required argument. Mason's various data directories (obj, cache,
 debug, etc), live within the data_dir.
+
+=item dhandler_name
+
+File name used for dhandlers. Default is "autohandler". If
+undef, Mason will not look for dhandlers.
 
 =item max_recurse
 

@@ -165,7 +165,7 @@ the existing list, removing duplicates if any.
 
 =item make_component ([script=>..., script_file=>..., error=>...])
 
-This method compiles a component source script into an anonymous
+This method compiles a component source script into an
 Component object.  The source may be passed in as a string in
 I<script>, or as a filename in I<script_file>.
 
@@ -184,7 +184,7 @@ Example of usage:
     # Call it from inside another component
     $REQ->call($comp);
 
-=for html <a name="item_make">
+=for html <a name="item_make_dirs">
 
 =item make_dirs (comp_root=>..., data_dir=>..., [paths=>[...], verbose=>0|1, predicate=>sub {...},
 dir_create_mode=>..., update_reload_file=>0|1])
@@ -192,24 +192,24 @@ dir_create_mode=>..., update_reload_file=>0|1])
 make_dirs traverses a tree of components, compiles any out-of-date
 components into object files, and reports errors.
 
-I<$comp_root> and I<$data_dir> contain the Mason component root and data
+I<comp_root> and I<data_dir> contain the Mason component root and data
 directory respectively. These are required.
 
-I<@paths> is a reference to a list of component paths to make
+I<paths> is a reference to a list of component paths to make
 recursively. By default, makes '/' (the entire component tree).
 
-I<$verbose> is a flag indicating whether to report components compiled
+I<verbose> is a flag indicating whether to report components compiled
 and directories created. True by default.
 
-I<$predicate> is a subroutine that takes one argument, the component
+I<predicate> is a subroutine that takes one argument, the component
 source file, and returns true or false indicating whether or not to
-try to compile it.  By default I<$predicate> ignores all filenames
+try to compile it.  By default I<predicate> ignores all filenames
 ending with "~".
 
-I<$dir_create_mode> contains the permissions mode for creating new
+I<dir_create_mode> contains the permissions mode for creating new
 directories, by default 0775.
 
-I<$update_reload_file> is a flag indicating whether to update a reload
+I<update_reload_file> is a flag indicating whether to update a reload
 file in the data directory as components are recompiled. False by
 default.
 

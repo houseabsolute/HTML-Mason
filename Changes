@@ -5,6 +5,35 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+0.7
+
+- Reorganized core implementation around two new classes,
+HTML::Mason::Request and HTML::Mason::Component.  Code is now cleaner
+and more scalable, and the new APIs give developers control and
+introspection over Mason's inner workings.
+L{Devel/component and request objects}
+- Reorganized documentation to accommodate new classes: created
+Request.pod and Component.pod, and moved component developer's guide
+(previously at Components.pod) to Devel.pod to avoid
+confusion. L{Devel/component and request objects}
+- New <%def> section defines a subcomponent embedded inside a larger
+component.  This allows repeated code and HTML to be modularized
+without affecting the global component namespace.
+L{Devel/e&lt%defe&gt;}
+- <%args> section now accommodates optional comments for declarations
+L{Devel/e&lt%argse&gt;}
+- Interp::exec is now re-entrant with all request specific information
+having been moved to Request class.
+- ** Reworked Parser API. parse is now called make_component, has a
+simplified set of options, and returns a component object
+directly. make is now called make_dirs. L{Parser/item_make_component}
+L{Parser/item_make_dirs}
+- Dhandlers, which formerly worked only in mod_perl mode, now work in
+stand-alone mode as well
+- Autohandler and dhandler file names are now configurable
+L{Interp/autohandler_name} L{Interp/dhandler_name}
+- Removed obsolete and undocumented Interp::vars and mc_var functions
+
 0.6.1  Tue Jul 27 09:34:31 PDT 1999
 
 - Added warnings to convert-0.6.pl about occasional erroneous
@@ -20,30 +49,30 @@ Mortko)
 0.6  Fri Jul 16 08:09:27 PDT 1999
 
 - New <& &> tag provides a more convenient way to call components
-inside HTML. mc_comp still works. L{Components/components that output html}
+inside HTML. mc_comp still works. L{Devel/components that output html}
 - The "perl_" prefix has been eliminated from section names: now
 simply use <%init>, <%cleanup>, <%args>, etc. The old names still
-work. L{Components/other perl sections}
+work. L{Devel/other perl sections}
 - The utility bin/convert0.6.pl converts existing components to use
 the above new syntax.
 - New autohandler feature finally provides an easy way to specify a
 common template or behavior for a directory. An autohandler is invoked
 just before any top-level components in its directory begins executing.
 It can display header/footers, apply a filtering function, set up
-globals, etc.  A good complement to dhandlers. L{Components/autohandlers}
+globals, etc.  A good complement to dhandlers. L{Devel/autohandlers}
 - New <%once> section contains code that will be executed once when a
 component is loaded.  It is useful for defining persistent variables
-and named subroutines.  L{Components/e&lt%oncee&gt;}
+and named subroutines.  L{Devel/e&lt%oncee&gt;}
 - New <%filter> section and mc_call_self command allow you to arbitrarily
-filter the output of the current component. L{Components/filtering}
+filter the output of the current component. L{Devel/filtering}
 - New <%text> section allows you to turn off Mason processing for a
-particular section of text.  L{Components/e&lt%texte&gt;}
+particular section of text.  L{Devel/e&lt%texte&gt;}
 - Implemented first installation test suite! [modus]
 - HEAD optimization: we now automatically abort after headers are sent
 on a HEAD request.
 - New Parser make() utility traverses a tree of components, compiling
 any out-of-date components into object files and reporting errors.
-L{Parser/item_make}
+L{Parser/item_make_dirs}
 - New mc_comp_source command returns the source filename of this or
 any component.  L{Commands/item_mc_comp_source_compPath_}
 - mc_file now uses current component path by default for relative paths
@@ -115,17 +144,17 @@ Chuck O'Donnell)
 - Documented Parser method parse(), which allows you to compile
 components outside of a Interp environment. L{Parser/item_parse}
 - New mc_cache actions 'expire' and 'keys' help you peer into data cache
-files and expire selected keys. L{Components/item_By_Explicit_Action}
+files and expire selected keys. L{Devel/item_By_Explicit_Action}
 - Corrected Parser to properly handle \ in components (submitted by
 Ken Williams)
 - ** Took Preview out of Mason.pm; ApacheHandler used only if mod_perl
 environment. If you use the previewer, you now have to explicitly "use
 HTML::Mason::Preview" in your handler.pl.
 - Improved documentation about argument/GET/POST handling (suggested
-by Ken Williams) L{Components/passing_parameters}
+by Ken Williams) L{Devel/passing_parameters}
 - Added cache option 'busy_lock', which prevents multiple processes
 from recomputing an expire cache value at the same time.  (suggested
-by Dennis Watson) L{Components/busy_locks}
+by Dennis Watson) L{Devel/busy_locks}
 - Inserted work-around for Perl 5.005 $r scoping bug (submitted by
 Rafael Weinstein)
 - Fixed "new CGI" example in Components.pod (submitted by Austin Lin)

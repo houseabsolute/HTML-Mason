@@ -198,7 +198,7 @@ sub exec {
     if (!ref($comp) && substr($comp,0,1) eq '/') {
 	my $path = $comp;
 	if (!($comp = $self->load($path))) {
-	    if ($self->{dhandler_name} and $comp = $self->find_comp_upwards($path,$self->{dhandler_name})) {
+	    if (defined($self->{dhandler_name}) and $comp = $self->find_comp_upwards($path,$self->{dhandler_name})) {
 		my $parent = $comp->parent_path;
 		($req->{dhandler_arg} = $path) =~ s{^$parent/}{};
 	    }
@@ -209,7 +209,7 @@ sub exec {
     }
 
     # Check for autohandler.
-    if ($self->{autohandler_name}) {
+    if (defined($self->{autohandler_name})) {
 	my $parent = $comp->parent_path;
 	my $autocomp;
 	if (!$self->{allow_recursive_autohandlers}) {
