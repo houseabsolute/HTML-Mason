@@ -249,6 +249,10 @@ accessed via $m methods.  You'll be introduced to these methods
 throughout this document as they are needed.  For a description of all
 methods see B<L<HTML::Mason::Request|HTML::Mason::Request>>.
 
+Because these are always set inside components, you should not ever
+define other variables with the same name, or else your code may fail
+in strange and mysterious ways.
+
 =head2 System Objects
 
 Five system objects share the work of serving requests in Mason:
