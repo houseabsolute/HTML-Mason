@@ -129,6 +129,8 @@ __PACKAGE__->contained_objects
      interp => 'HTML::Mason::Interp',
     );
 
+use vars qw($AH);
+
 sub import
 {
     my $pack = shift;
@@ -150,7 +152,10 @@ sub import
 	    }
 	}
 
-	$pack->make_ah() if $pack->_in_simple_conf_file;
+	# if we are in a simple conf file (meaning one without
+	# multiple different Mason configs) we make the apachehandler
+	# object now and simply reuse it later in the handler sub
+	$AH = $pack->make_ah() if $pack->_in_simple_conf_file;
     }
 }
 
@@ -171,11 +176,6 @@ sub make_ah
 {
     my $package = shift;
 
-    my $comp_root = join '', @{ $package->_get_list_param('MasonCompRoot') };
-
-    use vars qw($AH);
-    return $AH if $AH && $AH->{last_comp_root} eq $comp_root;
-
     my %p = $package->_get_mason_params;
     if (exists $p{comp_root}) {
 	if (@{$p{comp_root}} == 1 && $p{comp_root}->[0] !~ /=>/) {
@@ -189,18 +189,16 @@ sub make_ah
 	    }
 	}
     }
-    $AH = $package->new( %p );
+    my $ah = $package->new( %p );
 
     # If we're running as superuser, change file ownership to http user & group
-    if (!($> || $<)  and  $AH->interp->files_written)
+    if (!($> || $<) && $ah->interp->files_written)
     {
-	chown Apache->server->uid, Apache->server->gid, $AH->interp->files_written
+	chown Apache->server->uid, Apache->server->gid, $ah->interp->files_written
 	    or system_error( "Can't change ownership of files written by interp object: $!\n" );
     }
 
-    $AH->{last_comp_root} = $comp_root;
-
-    return $AH;
+    return $ah;
 }
 
 # The following routines handle getting information from $r->dir_config
@@ -686,7 +684,7 @@ sub handler ($$)
 {
     my ($package, $r) = @_;
 
-    my $ah = $package->make_ah();
+    my $ah = $AH || $package->make_ah();
 
     return $ah->handle_request($r);
 }
