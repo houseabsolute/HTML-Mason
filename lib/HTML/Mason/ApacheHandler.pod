@@ -47,14 +47,14 @@ if you have the Apache::Request package (or are inclined to fetch it
 from CPAN), you might switch to 'mod_perl' for speed and memory
 efficiency.
 
+When specifying args_method='CGI', the Mason request object ($m)
+will have a method called C<cgi_object> available.  This method
+returns the CGI object used in the ApacheHandler code.
+
 When specifying args_method='mod_perl', the $r global is upgraded
 to an Apache::Request object. This object inherits all Apache
 methods and adds a few of its own, dealing with parameters and
 file uploads. See Apache::Request manual page for more information.
-
-If you specific args_method='CGI', then the HTML::Mason::Request
-object will have a method called C<cgi_object> available.  This method
-will return the CGI object used in the ApacheHandler code.
 
 =back
 

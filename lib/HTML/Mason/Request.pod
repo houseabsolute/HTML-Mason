@@ -383,10 +383,9 @@ global $r.
 =item cgi_object
 
 Returns the CGI object used to parse any CGI parameters submitted to
-the component, if (and only if) you are using the CGI module to do
-this rather than the Apache::Request module.  The default is to use
-the CGI module.  See the L<HTML::Mason::ApacheHandler> documentation
-for more details.
+the component, assuming that you have not changed the default value of
+the ApacheHandler C<args_method> parameter. See the
+L<HTML::Mason::ApacheHandler> documentation for more details.
 
 =back
 
