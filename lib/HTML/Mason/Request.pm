@@ -28,9 +28,8 @@ use HTML::Mason::MethodMaker
 			 interp
 			 top_comp ) ],
 
-      read_write => [ qw( out_method
-			  data_cache_defaults
-			  out_mode ) ],
+      read_write => [ qw( data_cache_defaults
+			  out_method ) ],
     );
 
 __PACKAGE__->valid_params
@@ -40,7 +39,6 @@ __PACKAGE__->valid_params
 		     callbacks => {"must be either 'real' or a numeric value" =>
 				   sub { $_[0] =~ /^(?:real|\d+)$/ }} },
      out_method => { type => SCALARREF | CODEREF, optional => 1 },
-     out_mode   => { type => SCALAR, optional => 1 },
      data_cache_defaults => { type => HASHREF|UNDEF, optional => 1 },
     );
 
@@ -91,7 +89,6 @@ sub _initialize {
 
     # Inherit some properties from interp if not otherwise specified
     $self->{out_method} = $interp->out_method if !defined($self->{out_method});
-    $self->{out_mode} = $interp->out_mode if !defined($self->{out_mode});
 
     # create base buffer
     $self->{buffer_stack} = [];
@@ -157,7 +154,7 @@ sub exec {
     {
 	$declined = 0;
 
-	my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method, mode => $self->out_mode );
+	my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
 	$self->push_buffer_stack($buffer);
 
 	# Build wrapper chain and index.
@@ -208,7 +205,7 @@ sub exec {
     }
 
     # Flush output buffer for batch mode.
-    $self->flush_buffer if $self->out_mode eq 'batch';
+    $self->flush_buffer;
     $self->pop_buffer_stack;
 
     # Purge code cache if necessary. We do this at the end so as not
@@ -506,9 +503,7 @@ sub file
     my ($self,$file) = @_;
     my $interp = $self->interp;
     unless ( File::Spec->file_name_is_absolute($file) ) {
-	if ($interp->static_file_root) {
-	    $file = File::Spec->catfile( $interp->static_file_root, $file );
-	} elsif ($self->current_comp->is_file_based) {
+	if ($self->current_comp->is_file_based) {
 	    my $source_dir = $self->current_comp->source_dir;
 	    $file = File::Spec->catfile( $source_dir, $file );
 	} else {
@@ -519,11 +514,6 @@ sub file
     my $content = read_file($file,1);
     $self->call_hooks('end_file',$file);
     return $content;
-}
-
-sub file_root
-{
-    return shift->interp->static_file_root;
 }
 
 sub print
@@ -1200,17 +1190,8 @@ for usage and examples.
 
 =item file (filename)
 
-Returns the contents of filename as a string. I<filename> may be an
-absolute filesystem path (starting with a '/') or relative (no leading
-'/'). If relative, Mason prepends the static file root, or the current
-component directory if no static file root is defined.
-
-=for html <a name="item_file_root">
-
-=item file_root
-
-Returns the static file root, used by C<$m-E<gt>file> to resolve relative
-filenames.
+Returns the contents of I<filename> as a string. If I<filename> is a
+relative path, Mason prepends the current component directory.
 
 =for html <a name="item_flush_buffer">
 
