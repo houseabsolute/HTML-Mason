@@ -119,7 +119,7 @@ sub run {
 
     $self->{mfu_count}++;
 
-    return $self->{code}->(@_) unless $self->{filter}
+    return $self->{code}->(@_) unless $self->{filter};
 
     my $req = HTML::Mason::Request->instance;
 
