@@ -1,6 +1,6 @@
 use strict;
 use 5.005;
-use Module::Build; # needs 0.19_03;
+use Module::Build; # needs 0.19_05;
 
 use File::Spec;
 
@@ -210,7 +210,11 @@ unless ( $@ || $^O =~ /mac|darwin/ || $has_only_mp2 )
 my $build = $class->new
   (
    module_name => 'HTML::Mason',
-   prereq      => \%prereq,
+   requires    => \%prereq,
+   build_requires => {
+		      'Module::Build' => '0.19_05',
+		      'Test'          => 0,
+		     },
    args => { apache => \%APACHE,
            },
   );
