@@ -302,6 +302,10 @@ Corresponds to the C<data_cache_defaults> parameter.
 
 Correponds to the C<error_mode> parameter.
 
+=item * MasonErrorFormat - string
+
+Correponds to the C<error_format> parameter.
+
 =back
 
 =head1 CONFIGURING VIA A HANDLER SCRIPT
@@ -1040,20 +1044,16 @@ showing a detailed error message in the browser in HTML.
 
 =item *
 
-showing the same message, but in plain text.
-
-=item *
-
 die'ing, which sends a 501 to the browser and lets the error message go to the
 error logs.
 
 =back
 
-The first two options are ideal for development, where you want
-immediate feedback on the error.  The third option is usually desired
-for production so that users are not exposed to messy error messages.
-You control this option by setting request->error_mode to "html",
-"text" or "fatal" respectively.
+The first option is ideal for development, where you want
+immediate feedback on the error.  The second option is usually desired
+for production so that users are not exposed to messy error messages. 
+You control this option by setting request->error_mode to "output"
+or "fatal" respectively.
 
 =head2 Reload files
 
