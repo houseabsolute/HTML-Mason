@@ -298,12 +298,12 @@ sub as_html
     foreach my $entry (@{$info->{context}}) {
 	my ($line_num, $line, $highlight) = @$entry;
 	$line = HTML::Mason::Tools::html_escape($line);
-	$line =~ s/ /&nbsp;/g;
+	$line =~ s/ /&nbsp;/g if defined $line;
 	$out .= qq[<tr>\n];
 	$out .= sprintf(qq[<td nowrap align="left" valign="top"><b>%s</b>&nbsp;</td>\n], $line_num);
 	$out .= sprintf(qq[<td align="left" valign="top" nowrap>%s%s%s</td>\n],
 			($highlight ? "<font color=red>" : ""),
-			$line,
+			defined $line ? $line : '',
 			($highlight ? "</font>" : ""));
 	$out .= qq[</tr>\n];
     }
