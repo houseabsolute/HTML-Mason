@@ -97,7 +97,7 @@ sub _get_contained_args
     HTML::Mason::Exception::Params->throw( error => "Invalid class name '$contained_class'" )
 	unless $contained_class =~ /^[\w:]+$/;
 
-    unless ($contained_class->can('new'))
+    unless ( eval { $contained_class->can('new') } )
     {
 	no strict 'refs';
 	eval "use $contained_class";
@@ -178,7 +178,7 @@ sub allowed_params
 
 	# we have to make sure it is loaded before we try calling
 	# ->allowed_params
-	unless ( $contained_class->can('new') )
+	unless ( eval { $contained_class->can('new') } )
 	{
 	    eval "use $contained_class";
 	    HTML::Mason::Exception->throw( error => $@ ) if $@;
