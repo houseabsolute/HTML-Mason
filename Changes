@@ -12,6 +12,9 @@ available at http://www.masonhq.com/code/history.html.
 - Added $m->has_content to check for content without evaluating it.
 - Comments are now allowed on separate lines inside <%attr> and
 <%flags> blocks.  Task id #475.
+- $m->subexec and $m->make_subrequest now accept relative paths which
+are interpreted relative to the current component directory, like
+$m->comp.
 - Documented potential problems if call to $m->redirect is trapped in
 an eval block, and then output is generated before the exception is
 rethrown.  Task id #477.
