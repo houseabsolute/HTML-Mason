@@ -297,7 +297,7 @@ sub make_subrequest
 
     unless ( $params{out_method} )
     {
-	$defaults{out_method} = sub { $self->print(@_) };
+	$defaults{out_method} = sub { $self->top_buffer->receive(@_) };
     }
 
     # Make subrequest, and set parent_request and request_depth appropriately.
