@@ -105,7 +105,8 @@ the cache class. e.g. for Cache::FileCache, valid options include
 expires_in, max_size, and cache_depth.
 
 See the L<Devel/data caching> section of the I<Component Developer's
-Guide> for examples and caching strategies.
+Guide> for examples and caching strategies. See the Cache::Cache
+documentation for a complete list of options and methods.
 
 =for html <a name="item_caller_args">
 

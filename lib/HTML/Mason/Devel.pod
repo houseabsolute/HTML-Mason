@@ -1117,228 +1117,133 @@ which prints
 
 =head1 DATA CACHING
 
-Mason's C<$m-E<gt>cache> and C<$m-E<gt>cache_self> methods let components
-save and retrieve the results of computation for improved performance.
-Anything may be cached, from a block of HTML to a complex data structure.
+Mason's data caching interface allows components to cache the results
+of computation for improved performance.  Anything may be cached, from
+a block of HTML to a complex data structure.
 
-Each component gets a private data cache. Except under special
-circumstances, one component does not access another component's
-cache. Each cached value may be set to expire under certain conditions
-or at a certain time.
+Each component gets its own private, persistent data cache. Except
+under special circumstances, one component does not access another
+component's cache. Each cached value may be set to expire at a certain
+time.
 
-To use data caching, your Mason installation must be configured
-with a good DBM package like Berkeley DB (DB_File) or GDBM. See
-B<L<HTML::Mason::Admin>> for more information.
+Data caching is implemented with DeWitt Clinton's Cache::Cache
+module. To get the full benefit out of caching you should I<read the
+documentation> for Cache::Cache as well as for relevant subclasses
+(e.g. Cache::FileCache). Our documentation here covers common usage
+but skips many options and features.
+
+To use this feature the administrator will need to obtain Cache::Cache
+from CPAN and may need to change C<Config.pm>.  See L<Admin/Data
+Caching> for more details.
 
 =head2 Basic Usage
 
-Here's the typical usage of C<$m-E<gt>cache>:
+The C<$m-E<gt>cache> method returns an object representing the cache
+for this component. Here's the typical usage of C<$m-E<gt>cache>:
 
-  my $result = $m->cache(action=>'retrieve');
-  if (!defined($result)) {
-      ... compute $result> ...
-      $m->cache(action=>'store', value=>$result);
-  }
+    my $result = $m->cache->get('key');
+    if (!defined($result)) {
+        ... compute $result ...
+        $m->cache->set('key', $result);
+    }
 
-The first C<$m-E<gt>cache> call attempts to retrieve this component's cache
+C<$m-E<gt>cache->get> attempts to retrieve this component's cache
 value. If the value is available it is placed in C<$result>. If the
 value is not available, C<$result> is computed and stored in the
-cache by the second C<$m-E<gt>cache> call.
-
-The default action for C<$m-E<gt>cache> is 'retrieve', so the first line can
-be written as
-
-  my $result = $m->cache;
+cache by C<$m-E<gt>cache->set>.
 
 =head2 Multiple Keys/Values
 
-A cache file can store multiple keys and values. A value can be
-a scalar, list reference, or hash reference:
+A cache can store multiple keys and values. A value can be anything
+serializable by C<Storable>, from a simple scalar to an arbitrary
+complex list or hash reference:
 
-  $m->cache(action=>'store',key=>'name',value=>$name);
-  $m->cache(action=>'store',key=>'friends',value=>\@lst);
-  $m->cache(action=>'store',key=>'map',value=>\%hsh);
-
-The key defaults to 'main' when unspecified, as in the first example
-above.
-
-Mason uses the B<MLDBM> package to store and retrieve from its cache
-files, meaning that Mason can cache arbitrarily deep data structures
-composed of lists, hashes, and simple scalars.
+    $m->cache->set('name', $string);
+    $m->cache->set('friends',\@list);
+    $m->cache->set('map', %hash);
 
 =head2 Expiration
 
-Typical cache items have a useful lifetime after which they must
-expire. Mason supports three types of expiration:
+You may pass an optional third argument to C<$m-E<gt>cache-E<gt>set>
+indicating when the data should expire:
+
+    $m->cache->set('name1', $string1, '5min');   # Expire in 5 minutes
+    $m->cache->set('name2', $string2, '3h');     # Expire in 3 hours
+
+To change the expiration time for a piece of data, call C<set> again
+with the new expiration. To expire an item immediately, use
+C<$m-E<gt>cache-E<gt>remove>.
+
+You can also expire a cache item from an external script; see
+L<Accessing a Cache Externally> below.
+
+=head2 Choosing a Cache Subclass
+
+Cache::Cache is a purely virtual API implemented by a variety of
+subclasses. For example, Cache::FileCache implements the interface with a
+set of directories and files, while Cache::MemoryCache implements the
+interface in memory.
+
+By default C<$m-E<gt>cache> uses Cache::FileCache, but you can override
+this with the I<cache_class> keyword. The value must be the name of a
+Cache::Cache subclass; if it does not contain a "::", the prefix
+"Cache::" is automatically prepended. For example:
+
+  my $result = $m->cache(cache_class=>'MemoryCache')->get('key');
+  $m->cache(cache_class=>'MemoryCache')->set('key', $result);
+
+You can even specify different subclasses for different keys in the
+same component. Just make sure the correct value is passed to all calls
+to C<$m-E<gt>cache>; Mason does not remember which subclass you
+have used for a given component or key.
+
+=head2 Accessing a Cache Externally
+
+To access a component's cache from outside the component (e.g. in an
+external Perl script), you'll need have the following information:
 
 =over
 
-=item By Time
+=item *
 
-(e.g. the item expires in an hour, or at midnight). To expire an item
-by time, pass one of these options to the 'store' action.
+the namespace associated with the component. The function
+HTML::Mason::Utils::data_cache_namespace, given a component path, will
+return the namespace.
 
-I<expire_at>: takes an absolute expiration time, in Perl time() format
-(number of seconds since the epoch)
+=item *
 
-I<expire_in>: takes a relative expiration time of the form
-"<num><unit>", where <num> is a positive number and <unit> is one of
-seconds, minutes, hours, days, weeks, months, years, or any reasonable
-abbreviation thereof (m=month, min=minute).  E.g. "10min", "1hour".
+the username associated with the cache; this is "mason" unless it has
+been changed by the administrator.
 
-I<expire_next>: takes a string, either 'hour' or 'day'. It indicates
-an expiration time at the top of the next hour or day.
+=item *
 
-Examples:
-
-    $m->cache(action=>'store', expire_in=>'2 hours');
-    $m->cache(action=>'store', expire_next=>'hour');
-
-=item By Condition
-
-(e.g. the item expires if a certain file or database table
-changes). To expire an item based on events rather than current time,
-pass the 'expire_if' option to the 'retrieve' action.
-
-I<expire_if>: calls a given anonymous subroutine and expires if the
-subroutine returns a non-zero value. The subroutine is called with one
-parameter, the time when the cache value was last written.
-
-Example:
-
-    # expire the cache if 'myfile' is newer
-    $m->cache(action => 'retrieve',
-          expire_if => sub { (stat 'myfile')[9] > shift });
-
-=item By Explicit Action
-
-(e.g. a shell command or web interface is responsible for explicitly
-expiring the item) To expire an item from a Perl script, for any
-component, use B<access_data_cache>. It takes the same arguments as
-C<$m-E<gt>cache> plus one additional argument, cache_file.  See the
-administration manual for details on where cache files are stored and
-how they are named.
-
-    use HTML::Mason::Utils 'access_data_cache';
-    access_data_cache (cache_file=>'/usr/local/mason/cache/foo+2fbar',
-                       action=>'expire' [, key=>'fookey']);
-
-
-The 'expire' action can also take multiple keys (as a list reference);
-this can be used in conjunction with the 'keys' action to expire all
-keys matching a particular pattern.
-
-    use HTML::Mason::Utils 'access_data_cache';
-    my @keys = access_data_cache (cache_file=>'/usr/local/mason/cache/foo+2fbar',
-                                  action=>'keys');
-    access_data_cache (cache_file=>'/usr/local/mason/cache/foo+2fbar',
-                       action=>'expire', key=>[grep(/^sales/,@keys)]);
-
+the cache_root, for file-based caches only. Defaults to the
+"cache" subdirectory under the Mason data directory.
 
 =back
 
-=head2 Busy Locks
+Given this information you can get a handle on the component's cache.
+For example, the following code expires a cache item for component
+C</foo/bar>, assuming the data directory is C</usr/local/www/mason>
+and the cache subclass is C<Cache::FileCache>:
 
-The code shown in "Basic Usage" above,
-
-  my $result = $m->cache(action=>'retrieve');
-  if (!defined($result)) {
-      ... compute $result ...
-      $m->cache(action=>'store', value=>$result);
-  }
-
-can suffer from a kind of race condition for caches that
-are accessed frequently and take a long time to recompute.
-
-Suppose that a particular cache value is accessed five times a
-second and takes three seconds to recompute.  When the cache expires,
-the first process comes in, sees that it is expired, and starts to
-recompute the value.  The second process comes in and does the same thing.
-This sequence continues until the first process finishes and stores
-the new value.  On average, the value will be recomputed and written
-to the cache 15 times!
-
-The solution here is to have the first process notify the others that
-it has started recomputing.  This can be accomplished with the
-busy_lock flag:
-
-  my $result = $m->cache(action=>'retrieve',busy_lock=>'10sec',...);
-
-With this flag, the first process sets a lock in the cache that
-effectively says "I'm busy recomputing his value, don't bother."
-Subsequent processes see the lock and return the old value.  The lock
-is good for 10 seconds (in this case) and is ignored after that.  Thus
-the time value you pass to busy_lock indicates how long you're willing
-to allow this component to use an expired cache value.
-
-Would some of your caches benefit from busy locks?  One way to find
-out is to turn on cache logging in the Mason system logs.  If you see
-large clusters of writes to the same cache in a short time span, then
-you might want to use busy locks when writing to that cache.
-
-=head2 Keeping In Memory
-
-The keep_in_memory flag indicates that the cache value should be kept
-in memory after it is stored or retrieved.  Since every child
-process will store its own copy, this flag should be used only for
-small, frequently retrieved cache values. If used, this flag should be
-passed to both the store and retrieve commands.
-
-=head2 Caching All Output 
-
-Occasionally you will need to cache the complete output of a
-component.  One way to accomplish this is to replace the component
-with a placeholder that simply calls the component, then caches and
-prints the result. For example, if the component were named "foo", we
-might rename it to "foo_main" and put this component in its place:
-
-    <% $foo_out %>
-    <%init>
-        my $foo_out;
-        if (!defined ($foo_out = $m->cache)) {
-            $m->comp('foo_main', STORE=>\$foo_out);
-            $m->cache(action=>'store',
-                  expire_in=>'3 hours', value=>$foo_out);
-        }
-    </%init>
-
-This works, but is cumbersome. Mason offers a better shortcut: the
-C<$m-E<gt>cache_self> command that lets a component cache it's own
-output and eliminates the need for a dummy component. It is typically
-used right at the top of a C<E<lt>%init%E<gt>> section:
-
-    <%init>
-        return if $m->cache_self(expire_in=>'3 hours'[, key=>'fookey']);
-        ... <rest of init> ...
-    </%init>
-
-C<$m-E<gt>cache_self> is built on top of C<$m-E<gt>cache>, so it inherits all
-the expiration options described earlier. C<$m-E<gt>cache_self> can also
-cache a component's return value; see the reference for details.
+    use HTML::Mason::Utils qw(data_cache_namespace);
+    
+    my $cache = new Cache::FileCache
+        (namespace => data_cache_namespace("/foo/bar"),
+	 cache_root => "/usr/local/www/mason/cache",
+	 username => "mason");
+    $cache->remove('key1');
 
 =head2 Guarantees (or lack thereof)
 
-Mason will make a best effort to cache data until it expires, but will
-not guarantee it.  The data cache is not a permanent reliable store in
-itself; you should not place in the cache critical data (e.g. user
-session information) that cannot be regenerated from another source
-such as a database.  You should write your code as if the cache might
-disappear at any time. In particular,
-
-o If the 'store' action cannot get a write lock on the cache, it simply
-fails quietly.
-
-o If the 'retrieve' action cannot get a shared lock on the cache, it
-simply fails quietly. (This is much more rare.)
-
-o Your Mason administrator will be required to remove cache files
-periodically when they get too large; this can happen any time.
-
-On the other hand, expiration in its various forms is guaranteed,
-because Mason does not want you to rely on bad data to generate your
-content. If you use the 'expire' action and Mason cannot get a write
-lock, it will repeat the attempt several times and finally die with an
-error.
+Cache::Cache will make a best effort to cache data until it expires,
+but will not guarantee it.  The data cache is not a permanent reliable
+store in itself; you should not place in the cache critical data
+(e.g. user session information) that cannot be regenerated from
+another source such as a database.  Write your code assuming that any
+C<set> command could fail, and that the cache could disappear at any
+time.
 
 =head1 SENDING HTTP HEADERS
 
