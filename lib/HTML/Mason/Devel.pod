@@ -112,10 +112,10 @@ Here is a simple component example:
 
     <%perl>
     my $noun = 'World';
-    my @time = split /[\s:]/, localtime;
+    my @time = localtime;
     </%perl>
     Hello <% $noun %>,
-    % if ( $time[3] < 12 ) {
+    % if ( $time[2] < 12 ) {
     good morning.
     % } else {
     good afternoon.
