@@ -30,7 +30,7 @@ local $| = 1;
 kill_httpd(1);
 test_load_apache();
 
-print "1..5\n";
+print "1..6\n";
 
 print STDERR "\n";
 
@@ -55,98 +55,8 @@ Basic test.
 EOF
 	      );
 
-    write_comp( 'headers', <<'EOF',
-
-
-% $r->header_out('X-Mason-Test' => 'New value 2');
-Blah blah
-blah
-% $r->header_out('X-Mason-Test' => 'New value 3');
-<%init>
-$r->header_out('X-Mason-Test' => 'New value 1');
-$m->abort if $blank;
-</%init>
-<%args>
-$blank=>0
-</%args>
-EOF
-	      );
-
-    write_comp( 'cgi_object', <<'EOF',
-<% UNIVERSAL::isa(eval { $m->cgi_object }, 'CGI') ? 'CGI' : 'NO CGI' %>
-EOF
-	      );
-
-    write_comp( 'params', <<'EOF',
-% foreach (sort keys %ARGS) {
-<% $_ %>: <% ref $ARGS{$_} ? join ', ', sort @{ $ARGS{$_} }, 'array' : $ARGS{$_} %>
-% }
-EOF
-	      );
-
-    write_comp( '_underscore', <<'EOF',
-I am underscore.
-EOF
-	      );
-
-    write_comp( 'dhandler/dhandler', <<'EOF',
-I am the dhandler.
-EOF
-	      );
-
-    write_comp( 'die', <<'EOF',
-% die 'Mine heart is pierced';
-EOF
-	      );
-
-    write_comp( 'apache_request', <<'EOF',
-% if ($r->isa('Apache::Request')) {
-Apache::Request
-% }
-EOF
-		  );
-
-    write_comp( 'multiconf1/foo', <<'EOF',
-I am foo in multiconf1
-comp root is <% $m->interp->resolver->comp_root =~ m,/comps/multiconf1$, ? 'multiconf1' : $m->interp->resolver->comp_root %>
-EOF
-	      );
-
-    write_comp( 'multiconf1/autohandler', <<'EOF'
-<& $m->fetch_next, autohandler => 'present' &>
-EOF
-	      );
-
-    write_comp( 'multiconf1/autohandler_test', <<'EOF'
-<%args>
-$autohandler => 'absent'
-</%args>
-autohandler is <% $autohandler %>
-EOF
-	      );
-
-
-    write_comp( 'multiconf2/foo', <<'EOF',
-I am foo in multiconf2
-comp root is <% $m->interp->resolver->comp_root =~ m,/comps/multiconf2$, ? 'multiconf2' : $m->interp->resolver->comp_root %>
-EOF
-	      );
-
-    write_comp( 'multiconf2/dhandler', <<'EOF',
-This should not work
-EOF
-	      );
-
-    write_comp( 'allow_globals', <<'EOF',
-% $foo = 1;
-% @bar = ( qw( a b c ) );
-$foo is <% $foo %>
-@bar is <% @bar %>
-EOF
-	      );
-
-    write_comp( 'decline_dirs', <<'EOF',
-decline_dirs is <% $m->ah->decline_dirs %>
+    write_comp( 'cgi_foo_param', <<'EOF',
+CGI foo param is <% $r->query->param('foo') %>
 EOF
 	      );
 
@@ -154,31 +64,6 @@ EOF
 This is first.
 % print "This is second.\n";
 This is third.
-EOF
-	      );
-
-    write_comp( 'r_print', <<'EOF',
-This is first.
-% $r->print("This is second.\n");
-This is third.
-EOF
-	      );
-
-    write_comp( 'flush_buffer', <<'EOF',
-% $m->print("foo\n");
-% $m->flush_buffer;
-bar
-EOF
-	      );
-
-    write_comp( 'head_request', <<'EOF',
-<%init>
-my $x = 1;
-foreach (keys %ARGS) {
-  $r->header_out( 'X-Mason-HEAD-Test' . $x++ => "$_: " . (ref $ARGS{$_} ? 'is a ref' : 'not a ref' ) );
-}
-</%init>
-We should never see this.
 EOF
 	      );
 }
@@ -281,6 +166,18 @@ EOF
 This is first.
 This is second.
 This is third.
+EOF
+						      );
+
+	ok($success);
+    }
+
+    {
+	my $path = '/comps/cgi_foo_param/handle_cgi_object';
+	my $response = Apache::test->fetch($path);
+	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
+							expect => <<'EOF',
+CGI foo param is bar
 EOF
 						      );
 
