@@ -44,101 +44,78 @@ foreach my $component ( @comps ) {
 # The file comparison subroutines below were taken from Gerald Richter's
 # HTML::Embperl package.
 
-sub chompcr
+sub chompcr {
+  chomp ($_[0]) ;
+  if ($_[0] =~ /(.*?)\s*\r$/) {
+    $_[0] = $1
+  } elsif ($_[0] =~ /(.*?)\s*$/) {
+    $_[0] = $1
+  }
+}
 
-    {
-    chomp ($_[0]) ;
-    if ($_[0] =~ /(.*?)\s*\r$/) 
-	{
-	$_[0] = $1
-	}
-    elsif ($_[0] =~ /(.*?)\s*$/) 
-	{
-	$_[0] = $1
-	}
+sub compareFiles {
+  my ($f1, $f2, $errin) = @_;
+  my $line = 1;
+  my $err  = 0;
+
+  open F1, $f1 || die "***Cannot open $f1"; 
+  if (!$errin) {
+    open F2, $f2 || die "***Cannot open $f2"; 
+  }
+
+  while (defined ($l1 = <F1>)) {
+    chompcr ($l1);
+    if (!$errin) {
+      $l2 = <F2>;
+      chompcr ($l2);
+    }
+    if (!defined ($l2)) {
+      print "\nError in Line $line\nIs:\t$l1\nShould:\t<EOF>\n";
+      return $line;
     }
 
-sub compareFiles
-    {
-    my ($f1, $f2, $errin) = @_ ;
-    my $line = 1 ;
-    my $err  = 0 ;
-
-    open F1, $f1 || die "***Cannot open $f1" ; 
-    if (!$errin)
-	{
-	open F2, $f2 || die "***Cannot open $f2" ; 
-	}
-
-    while (defined ($l1 = <F1>))
-	{
-	chompcr ($l1) ;
-	if (!$errin) 
-	    {
-	    $l2 = <F2> ;
-	    chompcr ($l2) ;
-	    }
-	if (!defined ($l2))
-	    {
-	    print "\nError in Line $line\nIs:\t$l1\nShould:\t<EOF>\n" ;
-	    return $line ;
-	    }
-
-	
-	$eq = 0 ;
-	while (((!$notseen && ($l2 =~ /^\^\^(.*?)$/)) || ($l2 =~ /^\^\-(.*?)$/)) && !$eq)
-	    {
-	    $l2 = $1 ;
-	    if (($l1 =~ /^\s*$/) && ($l2 =~ /^\s*$/))
-                { 
-                $eq = 1 ;
-                }
-            else
-                {
-                $eq = $l1 =~ /$l2/ ;
-                }
-            $l2 = <F2> if (!$eq) ;
-	    chompcr ($l2) ;
-	    }
-
-	if (!$eq)
-	    {
-	    if ($l2 =~ /^\^(.*?)$/)
-		{
-		$l2 = $1 ;
-		$eq = $l1 =~ /$l2/ ;
-		}
-	    else
-		{
-		$eq = $l1 eq $l2 ;
-		}
-	    }
-
-	if (!$eq)
-	    {
-	    print "\nError in Line $line\nIs:\t>$l1<\nShould:\t>$l2<\n" ;
-	    return $line ;
-	    }
-	$line++ ;
-	}
-
-    if (!$errin)
-	{
-	while (defined ($l2 = <F2>))
-	   {
-	   chompcr ($l2) ;
-	   if (!($l2 =~ /^\s*$/))
-		{
-		print "\nError in Line $line\nIs:\t\nShould:\t$l2\n" ;
-		return $line ;
-		}
-	    $line++ ;
-	    }
-	}
-
-    close F1 ;
-    close F2 ;
-
-    return $err ; 
+    $eq = 0;
+    while (((!$notseen && ($l2 =~ /^\^\^(.*?)$/)) || ($l2 =~ /^\^\-(.*?)$/)) && !$eq) {
+      $l2 = $1;
+      if (($l1 =~ /^\s*$/) && ($l2 =~ /^\s*$/)) { 
+        $eq = 1;
+      } else {
+        $eq = $l1 =~ /$l2/;
+      }
+      $l2 = <F2> if (!$eq);
+      chompcr ($l2);
     }
+
+    if (!$eq) {
+      if ($l2 =~ /^\^(.*?)$/) {
+        $l2 = $1;
+        $eq = $l1 =~ /$l2/;
+      } else {
+        $eq = $l1 eq $l2;
+      }
+    }
+
+    if (!$eq) {
+      print "\nError in Line $line\nIs:\t>$l1<\nShould:\t>$l2<\n";
+      return $line;
+    }
+    $line++;
+  }
+
+  if (!$errin) {
+    while (defined ($l2 = <F2>)) {
+      chompcr ($l2);
+      if (!($l2 =~ /^\s*$/)) {
+        print "\nError in Line $line\nIs:\t\nShould:\t$l2\n";
+        return $line;
+      }
+    $line++;
+  }
+}
+
+  close F1;
+  close F2;
+
+  return $err; 
+}
     
