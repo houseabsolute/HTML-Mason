@@ -627,6 +627,24 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'dhandler_name0',
+		      description => 'dhandler_name => 0 should not shut off dhandlers',
+		      path => 'dhandler_test/0',
+		      call_path => 'dhandler_test/foo/blag',
+		      interp_params => { dhandler_name => '0' },
+		      component => <<'EOF',
+dhandler arg = <% $m->dhandler_arg %>
+comp = <% $m->current_comp->name %>
+EOF
+		      expect => <<'EOF',
+dhandler arg = foo/blag
+comp = 0
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'mode_test',
 			 component => <<'EOF',
 First of all I'd
