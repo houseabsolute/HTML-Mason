@@ -9,7 +9,7 @@ eval { require mod_perl };
 my @use = ($mod_perl::VERSION);
 unless ($mod_perl::VERSION) {
     print "1..0";
-    die "";
+    exit;
 }
 
 $branch = "ah";

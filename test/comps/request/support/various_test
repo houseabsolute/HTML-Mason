@@ -19,7 +19,7 @@ Trying to fetch <% $path %> (full path <% $full_path %>):
 
 % $m->out("Output via the out function.");
 
-/request/file outputs <% length($m->scomp("/request/file")) %> characters.
+/request/file outputs <% int(length($m->scomp("/request/file"))/10) %>0+ characters.
 
 % my $diff = time-($m->time);
 % if ($diff <= 2) {
