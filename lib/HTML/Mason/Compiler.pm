@@ -494,7 +494,7 @@ sub component_call
 	$call = "'$comp'" . substr($call, $comma);
     }
 
-    my $code = "\$m->comp( $call );\n";
+    my $code = "\$m->comp( $call\n );\n";
     eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
     compiler_error $@ if $@;
 
@@ -541,7 +541,7 @@ sub component_content_call_end
 	$call = "'$comp'" . substr($call, $comma);
     }
 
-    my $code = "} }, $call );\n";
+    my $code = "} }, $call\n );\n";
 
     eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
     compiler_error $@ if $@;
