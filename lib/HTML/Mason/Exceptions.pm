@@ -98,7 +98,7 @@ sub filtered_frames
 
     my (@frames);
     my $trace = $self->trace;
-    my @ignore_subs =
+    my %ignore_subs = map { $_ => 1 }
 	qw[
 	   (eval)
 	   Exception::Class::Base::throw
@@ -110,7 +110,7 @@ sub filtered_frames
     while (my $frame = $trace->next_frame)
     {
 	last if ($frame->subroutine eq 'HTML::Mason::Request::exec');
-	unless (grep($frame->subroutine eq $_, @ignore_subs) or
+	unless ($ignore_subs{ $frame->subroutine } or
 		($frame->subroutine eq 'HTML::Mason::Request::comp' and $frame->filename =~ /Request\.pm/)) {
 	    push(@frames, $frame);
 	}
@@ -126,17 +126,15 @@ sub analyze_error
 
     @frames = $self->filtered_frames;
     $msg = $self->error;
-    if (UNIVERSAL::isa($self, 'HTML::Mason::Exception::Compilation')) {
-	while ($msg =~ /(.*) at (.*) line (\d+)\./g) {
-	    $file = $2;
-	    push(@lines, $3);
-	}
+    if ($self->isa('HTML::Mason::Exception::Syntax')) {
+	$file = $self->comp_name;
+	push(@lines, $self->line_number);
     } else {
 	$file = $frames[0]->filename;
 	@lines = $frames[0]->line;
     }
     my @context = $self->get_file_context($file, \@lines);
-    
+
     return {
 	file    => $file,
 	frames  => \@frames,
@@ -199,14 +197,10 @@ sub as_string
     return sprintf("%s\tStack: %s\n", $msg, $stack);
 }
 
-use overload
-    '""' => \&as_string,
-    fallback => 1;
-
 sub as_html
 {
     my ($self) = @_;
-    
+
     my $info = $self->analyze_error;
 
     my $out;
@@ -248,5 +242,44 @@ sub as_html
 
     return $out;
 }
+
+package HTML::Mason::Exception::Syntax;
+
+use base qw(HTML::Mason::Exception);
+
+sub new
+{
+    my $proto = shift;
+    my $class = ref $proto || $proto;
+    my %p = @_;
+
+    my $self = $class->SUPER::new(%p);
+
+    $self->{source_line} = $p{source_line};
+    $self->{comp_name} = $p{comp_name},
+    $self->{line_number} = $p{line_number};
+
+    return $self;
+}
+
+sub as_string
+{
+    my $self = shift;
+
+    # unholy intermixing with parent class because we want the trace
+    # to go after the error message but we want to massage the message
+    # first.
+    local $self->{message} = $self->{message};
+    $self->{message} .= " in $self->{comp_name} at $self->{line_number}:\n$self->{source_line}\n";
+
+    return $self->SUPER::as_string;
+}
+
+sub source_line { $_[0]->{source_line} }
+
+sub comp_name { $_[0]->{comp_name} }
+
+sub line_number { $_[0]->{line_number} }
+
 
 1;
