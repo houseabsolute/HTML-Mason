@@ -1038,16 +1038,6 @@ sub _set_mason_req_out_method
 	    # overriden method).
 	    $r->$final_output_method( grep {defined} @_ );
 	    $r->rflush;
-
-            return unless $sent_headers;
-
-            # Now that we know headers have been sent we can use a
-            # simpler, faster out_method for future output.
-            HTML::Mason::Request->instance->out_method
-                ( sub { 
-			$r->$final_output_method( grep { defined } @_ );
-			$r->rflush;
-		} );
         };
 
     }
