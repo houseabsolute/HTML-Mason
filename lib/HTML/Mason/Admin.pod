@@ -39,7 +39,7 @@ forward as the need for flexibility arises.
 
 Mason is very flexible, and you can replace parts of it by creating
 your own classes.  This documentation assumes that you are simply
-using the classes provide in the Mason distribution.  Subclassing is
+using the classes provided in the Mason distribution.  Subclassing is
 covered in the L<Subclassing|HTML::Mason::Subclassing> document.  The
 two topics are orthogonal, as you can mix the configuration techniques
 discussed here with your own custom subclasses.
@@ -201,10 +201,6 @@ In the <%once> section of the component(s) that use the module.
 
 Each method has its own trade-offs:
 
-=over
-
-=item
-
 The first method ensures that the module will be loaded by the Apache
 parent process at startup time, saving time and memory.  The second
 method, in contrast, will cause the modules to be loaded by each
@@ -212,8 +208,6 @@ server child. On the other hand this could save memory if the
 component and module are rarely used. See the mod_perl guide's tuning
 section and Vivek Khera's mod_perl tuning guide for more details on
 this issue.
-
-=item
 
 The second method uses the modules from inside the package used by
 components (C<HTML::Mason::Commands>), meaning that exported method
@@ -232,8 +226,6 @@ namespace, you can do this:
     use LWP;
   }
   </Perl>
-
-=back
 
 =head2 Declining Image Requests
 
@@ -322,8 +314,7 @@ Another solution is to decide on a naming convention, for example,
 that all private components begin with "_", or that all top-level
 components must end in ".html". Then turn all private requests away
 with a 404 NOT_FOUND (rather than, say, a 403 FORBIDDEN which would
-provide more information than necessary). Use either an Apache
-directive:
+provide more information than necessary):
 
     PerlModule  Apache::Constants
 
@@ -453,14 +444,14 @@ subroutine can be a module, or you can simply load a simple file that
 contains this subroutine definition.  The latter solution was, for a
 long time, the I<only> way to configure Mason, and the file used was
 traditionally called F<handler.pl>.  This file was usually placed in
-the Apache configuration directory.  It can be loaded like this:
+the Apache configuration directory and was loaded like this:
 
   PerlRequire  handler.pl
 
-The eg/ directory of the Mason distribution contains a couple sample
-F<handler.pl> scripts.  Let's assume, that like the example, your
-script defines a handler in the package C<MyApp::Mason>.  In this
-case, your Apache configuration would look like this:
+The F<eg/> directory of the Mason distribution contains a couple
+sample F<handler.pl> scripts.  Let's assume that your script, like the
+example script, defines a handler in the package C<MyApp::Mason>.  In
+this case, your Apache configuration would look like this:
 
   PerlRequire  handler.pl
 
@@ -472,6 +463,22 @@ case, your Apache configuration would look like this:
 You may still see references to a F<handler.pl> file in the Mason
 users list archives, as well as the FAQ.  These references will
 generally be applicable to any custom code wrapping Mason.
+
+=head2 Wrapping with a Module
+
+Remember, this wrapper code doesn't I<have> to be in a file
+F<handler.pl>.  You could just as easily create an actual module
+called C<MyApp::Mason>, install it just like any other module, and
+load it with:
+
+  PerlModule  MyApp::Mason
+
+The advantage to this approach is that it uses well-known techniques
+for creating and installing modules, but it does require a bit more
+work than simply dropping a F<handler.pl> file into the Apache
+configuration directory.  But because the process is better defined,
+it may "feel" more solid to some folks than the F<handler.pl>
+approach.
 
 =head2 The Wrapper Code
 
@@ -497,22 +504,6 @@ This wrapper is fully functional, but it doesn't actually do anything
 you couldn't do more easily by configuring Mason via the F<httpd.conf>
 file.  However, it does serve as a good skeleton to which additional
 functionality can easily be added.
-
-=head2 Wrapping with a Module
-
-Remember, this wrapper code doesn't I<have> to be in a file
-F<handler.pl>.  You could just as easily create an actual module
-called C<MyApp::Mason>, install it just like any other module, and
-load it with:
-
-  PerlModule  MyApp::Mason
-
-The advantage to this approach is that it uses well-known techniques
-for creating and installing modules, though it involves a bit more
-work than simply dropping a F<handler.pl> file into the Apache
-configuration directory.  But because the process is better defined,
-it may "feel" more solid to some folks than the F<handler.pl>
-approach.
 
 =head2 External Modules Revisited
 
@@ -602,7 +593,7 @@ add this line to our C<handler()> subroutine:
 
   return DECLINED if $r->uri =~ /\.mas$/;
 
-=head2 More VirtualHosts
+=head2 Wrappers with Virtual Hosts
 
 If you had several virtual hosts, each of which had a separate
 component root, you'd need to create a separate ApacheHandler object
@@ -616,8 +607,6 @@ for each host, one for each host.  Here's some sample code for that:
                   data_dir => "/usr/local/mason/$site" );
     }
 
-    ...
-
     sub handler {
         my ($r) = @_;
 
@@ -629,12 +618,10 @@ for each host, one for each host.  Here's some sample code for that:
     }
 
 This code assumes that you set the C<SiteName> variable via a
-C<PerlSetVar> directive in each VirtualHost block, like this:
+C<PerlSetVar> directive in each C<VirtualHost> block, like this:
 
   <VirtualHost site1.example.com>
     PerlSetVar  SiteName  site1
-
-    ...
 
     <Location />
       SetHandler   perl-script
@@ -649,6 +636,9 @@ like this:
     sub handler {
         my ($r) = @_;
         my $site = $r->dir_config('SiteName');
+
+        return DECLINED unless $site;
+
         unless exists($ah{$site}) {
             $ah{$site} = HTML::Mason::ApacheHandler->new( ... );
         }
@@ -685,20 +675,21 @@ code.  Here's an example C<handler()> subroutine that does this:
         return $return;
     }
 
-Mason throws exceptions to indicate errors so we wrap our call to C<<
-$ah->handle_request() >> in an C<eval {}> block.  If an error occurs,
-we store it in the request object using the C<< $r->pnotes() >>
-method.  Then we change the filename of the request object to point to
-our error-handling component and call C<< $ah->handle_request() >>
-again, with the same request object.  We could have put the exception
-in C<< $r->args >>, but it might be nice to leave this untouched so
-that the error-handling component can see the original arguments.
+Mason throws exceptions to indicate errors so we wrap our call to C<< $ah->handle_request() >>
+in an C<eval {}> block.  If an error occurs, we store it in the
+request object using the C<< $r->pnotes() >> method.  Then we change
+the filename property of the Apache request object to point to our
+error-handling component and call the C<< $ah->handle_request() >>
+method again, passing it the altered request object.  We could have
+put the exception in C<< $r->args >>, but it might be nice to leave
+this untouched so that the error-handling component can see the
+original arguments.
 
 =head3 Other uses for a wrapper
 
 If you have some code which must I<always> run after a request, then
-the only way to guarantee that this happens is to wrap the C<<
-$ah->handle_request() >> call in an C<eval {}> block, as then run the
+the only way to guarantee that this happens is to wrap the C<< $ah->handle_request() >>
+call in an C<eval {}> block, as then run the
 needed code after the request returns.  You can then handle errors
 however, you like.
 
