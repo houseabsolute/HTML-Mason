@@ -130,13 +130,4 @@ sub kill_httpd
 }
 
 
-use vars qw($TESTS);
-
-sub ok
-{
-    my $ok = !!shift;
-    print $ok ? 'ok ' : 'not ok ';
-    print ++$TESTS, "\n";
-}
-
 1;
