@@ -18,6 +18,9 @@ customizing Mason under mod_perl.
 - Added back "raw error" on HTML error page.
 - Replaced FilesMatch with LocationMatch in docs and FAQ, because
 using FilesMatch means you can't use dhandlers.
+- Reduced memory usage when compiling large components.  Memory usage
+for smaller components hasn't changed much, but they weren't really a
+problem in the first place.
 
 [ BUG FIXES ]
 
