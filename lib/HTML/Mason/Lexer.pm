@@ -343,7 +343,7 @@ sub match_block_end
                               : qr,\G\s*</%\Q$p->{block_type}\E>(\n?),is;
     if ( $self->{current}{comp_source} =~ /$re/gc )
     {
-	return $p->{allow_text} ? ($1, $2) : $2;
+	return $p->{allow_text} ? ($1, $2) : $1;
     }
     else
     {
