@@ -103,7 +103,7 @@ another subroutine, and Perl doesn't like that.
 
 You can define anonymous subroutines anywhere:
 
-	my $foo = sub foo {...};
+	my $foo = sub {...};
 
 Finally, consider using a separate component instead of a subroutine;
 they are functionally equivalent, and this is playing to Mason's
