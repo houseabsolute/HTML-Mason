@@ -87,10 +87,10 @@ true time.
 The required Mason data directory. Mason's various data directories
 (obj, cache, debug, etc), live within the data_dir.
 
-=item data_cache_dir
+=item data_cache_defaults
 
-Specifies an absolute directory for data cache files. By default, it lives
-under C<data_dir>/cache.
+A hash reference of default options to use for the C<$m-E<gt>cache>
+command.
 
 =item die_handler
 
@@ -103,7 +103,7 @@ the stack inside the Mason core code.
 If this parameter is false, then $SIG{__DIE__} will not be overridden
 at all.  Defaults to
 
- sub { confess($_[0]) }
+    sub { confess($_[0]) }
 
 =item dhandler_name
 
