@@ -741,6 +741,7 @@ implements the cache API but never stores data.
 
 This section explains Mason's various performance enhancements and how
 to administer them.
+
 =head2 Code Cache
 
 When Mason loads a component, it places it in a memory cache.
