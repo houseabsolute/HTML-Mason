@@ -18,7 +18,8 @@ use HTML::Mason::Tools qw(make_fh read_file taint_is_on compress_path);
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
-require Time::HiRes if $HTML::Mason::Config{use_time_hires};
+# If this fails we can live with that.
+eval { require Time::HiRes };
 
 use base qw(HTML::Mason::Container);
 

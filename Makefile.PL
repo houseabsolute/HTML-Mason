@@ -9,7 +9,6 @@ use vars qw(%APACHE);
 my %opts;
 GetOptions( \%opts, 'no-prompts' );
 
-require './makeconfig.pl';
 require './apache_tests_helper.pl';
 require './assisted_install_helper.pl';
 
@@ -48,7 +47,6 @@ chk_version('Cache::Cache' => '0.99') or
         . "    Mason requires version 0.99, or later, of Cache::Cache\n"
 	. "    from CPAN/modules/by-authors/id/D/DC/DCLINTON/Cache-Cache-x.x.tar.gz\n\n";
 
-make_config();
 setup_mod_perl_tests() unless $opts{'no-prompts'};
 assisted_install_config() unless $opts{'no-prompts'};
 
@@ -67,11 +65,33 @@ WriteMakefile(
 		     },
 
     # %APACHE is created when setup_mod_perl_tests() is called.  The
-    # code that does this creation is in makeconfig.pl.
+    # code that does this creation is in apache_tests_helper.pl.
     clean => {
 	'FILES' => "apache_install.txt lib/HTML/Mason/Config.pm mason_tests $APACHE{apache_dir}/httpd.conf $APACHE{apache_dir}/error_log $APACHE{apache_dir}/httpd $APACHE{apache_dir}/httpd.pid $APACHE{comp_root} $APACHE{data_dir} $APACHE{apache_dir}/mason_handler_CGI.pl $APACHE{apache_dir}/mason_handler_mod_perl.pl",
     }
 );
+
+sub chk_version
+{
+    my ($pkg, $wanted, $msg) = @_;
+
+    local $| = 1;
+    print "Checking for $pkg...";
+
+    eval { my $p; ($p = $pkg . ".pm") =~ s#::#/#g; require $p; };
+
+    my $vstr;
+    my $vnum;
+    {
+	no strict 'refs';
+	$vstr = ${"${pkg}::VERSION"} ? "found v" . ${"${pkg}::VERSION"}	: "not found";
+	$vnum = ${"${pkg}::VERSION"} || 0;
+    }
+
+    print $vnum >= $wanted ? "ok\n" : " " . $vstr . "\n";
+
+    $vnum >= $wanted;
+}
 
 package MY;
 
