@@ -281,7 +281,6 @@ sub parse_component
     # Parse in-line insertions, which take one of five forms:
     #   - Lines beginning with %
     #   - Text delimited by <%perl> </%perl>
-    #   - Text delimited by <%do> </%do>
     #   - Text delimited by <% %> 
     #   - Text delimited by <& &>
     # All else is a string to be delimited by single quotes and output.
@@ -356,24 +355,6 @@ sub parse_component
 		    my $length = $i-($b+7);
 		    $perl = substr($text,$b+7,$length);
 		    $curpos = $b+7+$length+8;
-		} elsif (lc(substr($text,$b,5)) eq '<%do>') {
-		    #
-		    # <%do> section
-		    #
-		    $alpha = [$curpos,$b-$curpos];
-		    if (!($text =~ m{</%do>}ig)) {
-			$err = "<%DO> with no matching </%DO>";
-			$errpos = $segbegin + $b;
-			goto parse_error;
-		    }
-		    my $i = pos($text)-8;
-		    my $length = $i-($b+5);
-		    my $block = substr($text,$b+5,$length);
-		    $perl = '{my $_err;'."\n";
-		    $perl .= sprintf(q{my $_comp = $m->interp->make_component(script=>'%s',error=>\$_err)},$block)."\n";
-		    $perl .= 'die "Error in <%do> block:\n$_err"; unless $_comp'."\n";
-		    $perl .= '$m->comp($_comp);}'."\n";
-		    $curpos = $b+5+$length+6;
 		} else {
 		    #
 		    # <% %> section

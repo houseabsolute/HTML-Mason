@@ -78,6 +78,12 @@ Mason includes a debugging mode whereby HTTP requests can be captured
 to "debug files" for later replay inside Perl's command-line debugger
 (as opposed to the non-interactive mod_perl interpreter).
 
+=item Templating
+
+The autohandler and dhandler features make it easy to apply a common
+header, footer, or filtering function to an entire directory or
+hierarchy of pages.
+
 =item Previewer
 
 Mason includes a powerful previewing utility which acts as a proxy
@@ -122,15 +128,15 @@ Beyond this trivial example, components can also embed serious chunks
 of Perl code (say, to pull records from a database). They can also
 call other components, cache results for later reuse, and perform all
 the tricks you expect from a regular Perl program. See
-B<HTML::Mason::Components> for a full tutorial on building, using and
+B<L<HTML::Mason::Devel>> for a full tutorial on building, using and
 debugging Mason components.
 
 =head1 INSTALLATION 
 
-Mason has been tested under Linux, FreeBSD, and Solaris, but not yet (by us)
-under Win32. As an all-Perl solution, though, it should work on any
-machine that has working versions of Perl 5.004+, mod_perl, and the
-required CPAN modules.
+Mason has been tested under Linux, FreeBSD, Solaris, HPUX, and
+Win32. As an all-Perl solution, it should work on any machine that has
+working versions of Perl 5.004+, mod_perl, and the required CPAN
+modules.
 
 Mason has a standard MakeMaker-driven installation. See the README
 file for details.
@@ -251,8 +257,7 @@ having trouble with your document and component root. Make sure
 the error and check the error log for Mason warnings.  One situation
 that will unfortunately confuse Mason is if your document or component
 root goes through a soft link. Try specifying your document and
-component root settings in terms of the true path. On Win32 systems,
-make sure the document and component roots are spelled with the same case.)
+component root settings in terms of the true path.)
 
 Assuming it worked, you now have a Mason "lens" through which to view
 your HTML tree. Try adding a Mason tag to some HTML file, say <% 2+2
@@ -277,10 +282,10 @@ multiple virtual servers on the same box.
 =head1 DOCUMENTATION ROADMAP 
 
 Once Mason is on its feet, the next step is to write a component or
-two. The I<Mason Developer's Manual> (B<L<HTML::Mason::Components>>) 
+two. The I<Mason Developer's Manual> (B<L<HTML::Mason::Devel>>) 
 is a complete tutorial for writing, using, and debugging components. A
-companion to the Developer's Manual is the Mason commands reference,
-B<L<HTML::Mason::Commands>>.
+reference companion to the Developer's Manual is the Request API
+documentation, B<L<HTML::Mason::Request>>.
 
 Whoever is responsible for setting up and tuning Mason should read the
 I<Administrator's Manual> (B<L<HTML::Mason::Admin>>).  Details of
@@ -301,7 +306,7 @@ Jonathan Swartz, swartz@transbay.net
 =head1 SEE ALSO
 
 L<HTML::Mason::Components>,
-L<HTML::Mason::Commands>,
+L<HTML::Mason::Request>,
 L<HTML::Mason::Parser>,
 L<HTML::Mason::Interp>,
 L<HTML::Mason::ApacheHandler>

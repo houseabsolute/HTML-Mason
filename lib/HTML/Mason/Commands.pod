@@ -94,9 +94,9 @@ C<mc_time> becomes C<$m-E<gt>time>
 
 =item
 
-C<mc_suppress_http_header> (with or without argument) is no longer needed
-and can simply be removed. See L<Devel/Sending HTTP Headers> for
-more information.
+C<mc_suppress_http_header> (with or without argument) no longer has
+any effect and can simply be removed. See L<Devel/Sending HTTP
+Headers> for more information.
 
 =back
 

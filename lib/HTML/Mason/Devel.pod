@@ -194,7 +194,7 @@ This section describes the various objects in the Mason universe.
 If you're just starting out, all you need to worry about initially
 are the request objects.
 
-=head2 REQUEST OBJECTS
+=head2 Request Objects
 
 Two global per-request objects are available to all components: $r and
 $m.
@@ -222,7 +222,7 @@ conversion guide.  There is also a utility provided with the
 distribution, F<bin/convert0.8.pl>, that performs appropriate conversions
 on your existing component tree.
 
-=head2 SYSTEM OBJECTS
+=head2 System Objects
 
 Three system objects share the work of serving requests in Mason:
 Parser, Interp, and ApacheHandler. The administrator creates these
@@ -230,7 +230,7 @@ objects and provides parameters that shape Mason's behavior. As a pure
 component developer you shouldn't need to worry about or access these
 objects, but occasionally we'll mention a relevant parameter.
 
-=head2 COMPONENT OBJECTS
+=head2 Component Objects
 
 Mason provides an object API for components, allowing you to query a
 component's various asociated files, arguments, etc. For a description
@@ -646,8 +646,8 @@ In this case no <%args> section is necessary.
 
 We generally recommend named parameters for the benefits of
 readability, syntax checking, and default value automation.  However
-sticking to @_ may be convenient for very small components, especially
-subcomponents created with the <%def> tag.
+using @_ may be convenient for very small components, especially
+subcomponents created with <%def>.
 
 =head1 OTHER PERL SECTIONS
 
@@ -722,7 +722,7 @@ the end of blocks, <%cleanup> sections are rarely needed.
 
 =head2 E<lt>%argsE<gt>
 
-xxx contains a list of argument declarations, one per line. Each
+This section contains a list of argument declarations, one per line. Each
 declaration contains a type character ($, @, or %), a name, and
 optionally '=>' followed by a default value. The default value must be
 a valid Perl expression of matching type (scalar, list, hash).  Each
@@ -1242,7 +1242,7 @@ To determine the exact header behavior on your system, you need to
 know whether your server's C<out_mode> is 'batch' (meaning all output
 is buffered until the end) or 'stream' (all output is sent
 immediately). Your administrator should have this information. If
-your administrator doesn't know then it is probably
+your administrator hasn't touched out_mode then it is probably
 'batch', the default.
 
 In batch mode the header situation is extremely simple: Mason waits
@@ -1273,9 +1273,14 @@ In batch mode this code will always work.  In stream mode this code
 will work as long as I<get_user_cookie> doesn't output anything besides
 whitespace (and given its functional nature, it shouldn't).
 
-Note to pre-0.8 users: the suppress_http_header command is thankfully
-no longer needed. For backwards compatibility, mc_suppress_http_header
-is still defined but does nothing.
+Note to pre-0.8 users: the mc_suppress_http_header command is no longer needed.
+For backwards compatibility, mc_suppress_http_header is still defined
+but does nothing.
+
+(Rationale: By the nature of HTTP headers mc_suppress_http_header was
+only useful up until the first bytes of content were sent. Since Mason
+now waits that long to send headers anyway, there is never any
+justification for suppressing headers.)
 
 =head1 USING THE PERL DEBUGGER
 
@@ -1520,6 +1525,15 @@ otherwise it reflects your actual browser.
 =head1 TIPS AND TRAPS
 
 =over
+
+=item Do not use print or $r->print
+
+Most Mason servers operate in "batch" mode, which means that
+output is stored in a Mason buffer until the end of the request. Output
+sent via print and $r->print, however, skips the Mason buffer and goes
+directly to the client. This will result in output being printed out
+of order. Always use $m->out instead of print/$r->print; it does the
+right thing with regards to Mason buffering.
 
 =item Do not call $r->content or "new CGI"
 

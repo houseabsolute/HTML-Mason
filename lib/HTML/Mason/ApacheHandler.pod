@@ -38,8 +38,8 @@ automatically send HTTP headers before sending content back to the
 client. If you set to false, you should call $r->send_http_header
 manually.
 
-See L<Devel/sending_http_headers> for details about the automatic
-header feature.
+See the L<Devel/sending_http_headers> of the Component Developer's
+Guide for details about the automatic header feature.
 
 =item debug_handler_proc, debug_handler_script, debug_mode, debug_perl_binary
 
@@ -59,7 +59,7 @@ batch output mode for debugging.
 
 =item output_mode
 
-This parameter has been replaced by an equivalent parameter
+This parameter has been replaced by the equivalent Interp parameter
 L<Interp/out_mode>. For backward compatibility, setting
 C<$ah-E<gt>output_mode> will cause C<$interp-E<gt>out_mode> to be set
 appropriately.

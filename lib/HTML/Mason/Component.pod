@@ -44,7 +44,7 @@ directly with a component object.
 =head2 CREATING AND ACCESSING COMPONENTS
 
 Common ways to get handles on existing component objects include the
-L<Request/comp>, L<Request/callers>, and L<Request/fetch_comp> Request methods.
+L<Request/current_comp>, L<Request/callers>, and L<Request/fetch_comp> Request methods.
 
 There is no published C<new> method, because creating a component
 requires a parser. Use the L<Parser/make_component> Parser method to create a
@@ -74,7 +74,7 @@ was created.
 
 Returns a reference to a hash of hashes representing the arguments
 declared in the C<E<lt>%argsE<gt>> section. The keys of the main hash are the
-variable names including prefix (e.g. C<$foo>, C<@lst>). Each
+variable names including prefix (e.g. C<$foo>, C<@lst>). Each	
 secondary hash contains:
 
 =over 4

@@ -534,7 +534,7 @@ sub handle_request_1
 	 apache_req=>$r
 	 );
 
-    $request->dhandler_arg($dhandlerArg) if (defined($dhandlerArg));
+    $request->{dhandler_arg} = $dhandlerArg if (defined($dhandlerArg));
 
     #
     # Deprecated output_mode parameter - just pass to request out_mode.
