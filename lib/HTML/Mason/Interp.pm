@@ -161,8 +161,8 @@ sub _initialize
     #
     # Process initial comp_root setting.
     #
-    $self->assign_comp_root_($self->{comp_root});
- 
+    $self->assign_comp_root($self->{comp_root});
+
     #
     # Check that data_dir is absolute.
     #
