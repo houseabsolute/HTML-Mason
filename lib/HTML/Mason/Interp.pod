@@ -266,9 +266,9 @@ programs or from stand-alone Perl scripts.  In the latter case Mason can be
 used as a glorified Text::Template, producing a set of
 files from components, or used to generate a flat version of a componentized site.
 
-When using Mason outside of mod_perl, just create a Parser and Interp
-object; you do not need the ApacheHandler object.  Once you've created
-an interpreter, the main thing you'll want to do with it is call a
+When using Mason outside of mod_perl, just create an Interp object;
+you do not need the ApacheHandler object.  Once you've created an
+interpreter, the main thing you'll want to do with it is call a
 component and do something with the output. To call a component, use
 Interp's exec() method:
 
@@ -281,20 +281,88 @@ as they are with C<$m-E<gt>comp>. exec returns the return value of
 the component. Component output is sent to standard output by default,
 but you can change this by specifying C<out_method>.
 
-Here is a skeleton script that calls a component and places the output
-in a file:
+Here is a skeleton CGI script that calls a component and sends the
+output to the browser.
 
-    my $outbuf;
-    my $parser = new HTML::Mason::Parser;
-    my $interp = new HTML::Mason::Interp (parser=>$parser,
-					  comp_root=>'<component root>',
-					  data_dir=>'<data directory>',
-					  out_method=>\$outbuf);
-    my $retval = $interp->exec('<component path>',<args>...);
-    open(F,">mason.out");
-    print F $outbuf;
-    close(F);
-    print "return value of component was: $retval\n";
+    #!/usr/bin/perl -w
+    use CGI;
+    use HTML::Mason;
+    use HTML::Mason::Utils qw(cgi_request_args);
+
+    my $interp = new HTML::Mason::Interp (comp_root=>'...',
+                                          data_dir=>'...');
+
+    my $q = new CGI;
+    my $comp = $ENV{'PATH_TRANSLATED'};
+    my $root = $interp->comp_root;
+    $comp =~ s/^$root//
+        or die "Requested file '$comp' is outside component root '$root'";
+    my %args = cgi_request_args($q, $q->request_method);
+    print $q->header;
+
+    $interp->exec($comp, %args);
+
+The relevant portions of my httpd.conf file look like:
+
+    DocumentRoot /path/to/comp/root
+    ScriptAlias /cgi-bin/ /path/to/cgi-bin/
+    Action html-mason /cgi-bin/handler.cgi
+
+    <Directory /path/to/comp/root>
+    SetHandler html-mason
+    </Directory>
+
+This simply causes Apache to call my handler.cgi script every time a
+file under the component root is requested.
+
+It should be noted that because this script simply prints standard
+HTTP headers and then executes a component, there would be no way of
+sending non-OK responses to the browser from your components.
+
+A more complex handler.cgi script might look like this:
+
+    #!/usr/bin/perl -w
+    use CGI;
+    use HTML::Mason;
+    use HTML::Mason::Compiler::ToObject;
+    use HTML::Mason::Utils qw(cgi_request_args);
+    use HTTP::Headers;
+
+    my $compiler = HTML::Mason::Compiler::ToObject->new( allow_globals => '$H' );
+    my $interp = new HTML::Mason::Interp (comp_root=>'...',
+                                          data_dir=>'...',
+                                          compiler=>$compiler);
+
+    my $q = new CGI;
+    my $comp = $ENV{'PATH_TRANSLATED'};
+    my $root = $interp->comp_root;
+    $comp =~ s/^$root//
+        or die "Requested file '$comp' is outside component root '$root'";
+    my %args = cgi_request_args($q, $q->request_method);
+
+    # Gather all component output into a buffer.
+    my $buffer;
+    $interp->out_method(\$buffer);
+
+    my $H = new HTTP::Headers;
+    $interp->set_global('$H'=>$H);
+
+    eval { $interp->exec($comp, %args) };
+
+    if ($@) {
+        handle_error($@);
+    } else {
+        unless ($H->header('content-type')) {
+            $H->header('content-type' => 'text/html');
+        }
+        print $H->as_string;
+        print $buffer;
+    }
+
+This script offers components the use of a global named C<$h> which
+can be used to set headers (for example, for a redirect).  It also
+catches errors in the execution of the script and has a routine to
+handle them.
 
 =head1 AUTHOR
 
