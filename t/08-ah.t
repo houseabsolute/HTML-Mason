@@ -63,7 +63,7 @@ sub try_exec_with_ah {
     
     # Create new ApacheHandler based on options.
     undef *Apache::Status::status_mason if *Apache::Status::status_mason;
-    my $ah = new HTML::Mason::ApacheHandler(interp=>$interp, error_mode=>'fatal', %$ah_options);
+    my $ah = new HTML::Mason::ApacheHandler(interp=>$interp, error_mode=>'fatal', apache_status_title=>"mason_$test_name", %$ah_options);
 
     # Create fake Apache request.
     my $r = fake_apache ({uri=>$uri, %$r_options});
