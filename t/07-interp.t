@@ -615,6 +615,18 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'dhandler_name2',
+		      description => 'Shut off dhandlers',
+		      path => 'dhandler_test/plainfile',
+		      call_path => 'dhandler_test/foo/blag',
+		      interp_params => { dhandler_name => '' },
+		      component => 'foo',
+		      expect_error => qr{could not find component},
+		    );
+
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'mode_test',
 			 component => <<'EOF',
 First of all I'd
