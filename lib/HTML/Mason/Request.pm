@@ -1240,7 +1240,7 @@ for details on what formats it accepts.
 
 I<key>: An identifier used to uniquely identify the cache results - it
 is passed as the first argument to $cache-E<gt>get and
-$cache-E<gt>set.  A default key will be provided if none is passed.
+$cache-E<gt>set.  The default key is '__mason_cache_self__'.
 
 =back
 
