@@ -1,3 +1,5 @@
+use strict;
+
 my $dbmWarnMsg = <<EOF;
 ==> WARNING: the DBM file format chosen for your system, %s, is
 inadequate for data caching due to size limitations. If you intend to
@@ -72,20 +74,24 @@ sub have_pkg
 
 sub chk_version
 {
- my($pkg,$wanted,$msg) = @_;
+    my($pkg,$wanted,$msg) = @_;
 
- local($|) = 1;
- print "Checking for $pkg...";
+    local($|) = 1;
+    print "Checking for $pkg...";
 
- eval { my $p; ($p = $pkg . ".pm") =~ s#::#/#g; require $p; };
+    eval { my $p; ($p = $pkg . ".pm") =~ s#::#/#g; require $p; };
 
- my $vstr = ${"${pkg}::VERSION"} ? "found v" . ${"${pkg}::VERSION"}
-				 : "not found";
- my $vnum = ${"${pkg}::VERSION"} || 0;
+    my $vstr;
+    my $vnum;
+    {
+	no strict 'refs';
+	$vstr = ${"${pkg}::VERSION"} ? "found v" . ${"${pkg}::VERSION"}	: "not found";
+	$vnum = ${"${pkg}::VERSION"} || 0;
+    }
 
- print $vnum >= $wanted ? "ok\n" : " " . $vstr . "\n";
+    print $vnum >= $wanted ? "ok\n" : " " . $vstr . "\n";
 
- $vnum >= $wanted;
+    $vnum >= $wanted;
 }
 
 sub make_config
@@ -99,7 +105,8 @@ sub make_config
     my %c = %HTML::Mason::Config;
     
     $c{default_cache_tie_class} ||= 'MLDBM';
-    
+
+    my $val;
     if (!defined($c{mldbm_use_db})) {
 	if (defined($MLDBM::UseDB) && $MLDBM::UseDB !~ /^SDBM|ODBM|NDBM/) {
 	    $val = $MLDBM::UseDB;
@@ -147,7 +154,7 @@ sub make_config
 
     if (!defined($c{use_time_hires})) {
 	print "\n";
-	my $h = chk_version(Time::HiRes => '1.19');
+	my $h = chk_version( 'Time::HiRes' => '1.19');
 	print $hiresWarnMsg if !$h;
 	$c{use_time_hires} = $h;
     }
@@ -162,5 +169,215 @@ sub make_config
     print join("\n",grep(/=>/,split("\n",$conf)))."\n\n";
     print $successMsg,"-"x20,"\n";
 }
-    
+
+use lib 'lib', 't/lib';
+
+use Apache::test;
+use Cwd;
+use File::Path;
+use File::Spec;
+
+use vars qw($HAS_APACHE_REQUEST $CONF_DIR $COMP_ROOT $DATA_DIR %APACHE_PARAMS);
+$CONF_DIR = '';
+$DATA_DIR = '';
+
+sub setup_mod_perl_tests
+{
+    # Skip if no mod_perl
+    eval { require mod_perl };
+    # need to use it twice to avoid annoying warning
+    return unless $mod_perl::VERSION || $mod_perl::VERSION;
+
+    $HAS_APACHE_REQUEST = 1;
+    eval { require Apache::Request; };
+    $HAS_APACHE_REQUEST = 0 if $@;
+
+    cleanup_files();
+
+    write_apache_conf();
+    setup_handler('CGI');
+    write_test_comps();
+
+    setup_handler('mod_perl') if $HAS_APACHE_REQUEST;
+}
+
+sub cleanup_files
+{
+    foreach ( qw( httpd httpd.conf mason_handler_CGI.pl mason_handler_mod_perl.pl ) )
+    {
+	my $file = "t/$_";
+	if ( -e $file )
+	{
+	    unlink $file
+		or die "Can't unlink '$file': $!";
+	}
+    }
+
+    foreach ( qw( comps data ) )
+    {
+	my $dir = "t/$_";
+	if ( -d $dir )
+	{
+	    rmtree( $dir, $ENV{MASON_DEBUG} );
+	}
+    }
+}
+
+sub write_apache_conf
+{
+    %APACHE_PARAMS = Apache::test->get_test_params();
+
+    my $conf_file = $APACHE_PARAMS{conf_file} || 't/httpd.conf';
+    $CONF_DIR = ( File::Spec->splitpath($conf_file) )[1];
+    $CONF_DIR =~ s,/$,,;
+
+    my $cwd = cwd();
+    $COMP_ROOT = "$cwd/$CONF_DIR/comps";
+    $DATA_DIR = "$cwd/$CONF_DIR/data";
+
+    mkdir $COMP_ROOT, 0755
+	or die "Can't make dir '$COMP_ROOT': $!";
+    mkdir $DATA_DIR, 0755
+	or die "Can't make dir '$COMP_ROOT': $!";
+
+    my $include = <<"EOF";
+
+<IfDefine CGI>
+  PerlRequire $CONF_DIR/mason_handler_CGI.pl
+
+  <Location /mason>
+    SetHandler perl-script
+    PerlHandler HTML::Mason
+  </Location>
+
+  <Location /mason_stream>
+    SetHandler perl-script
+    PerlHandler HTML::Mason
+  </Location>
+</IfDefine>
+EOF
+
+    $include .= <<"EOF"
+
+<IfDefine mod_perl>
+  PerlRequire $CONF_DIR/mason_handler_mod_perl.pl
+
+  <Location /mason>
+    SetHandler perl-script
+    PerlHandler HTML::Mason
+  </Location>
+
+  <Location /mason_stream>
+    SetHandler perl-script
+    PerlHandler HTML::Mason
+  </Location>
+</IfDefine>
+EOF
+	if $HAS_APACHE_REQUEST;
+
+    local $^W;
+    Apache::test->write_httpd_conf
+	    ( %APACHE_PARAMS,
+	      include => $include
+	    );
+}
+
+sub setup_handler
+{
+    my $args_method = shift;
+
+    my $handler = "mason_handler_$args_method.pl";
+    my $handler_file = "$CONF_DIR/$handler";
+    open F, ">$handler_file"
+	or die "Can't write to '$handler_file': $!";
+    print F <<"EOF";
+package HTML::Mason;
+
+use HTML::Mason::ApacheHandler ( args_method => '$args_method' );
+use HTML::Mason;
+
+my \$parser = HTML::Mason::Parser->new;
+my \$interp = HTML::Mason::Interp->new( parser => \$parser,
+					comp_root => '$COMP_ROOT',
+					data_dir => '$DATA_DIR' );
+
+my \$stream_ah = HTML::Mason::ApacheHandler->new( interp => \$interp,
+                                                  output_mode => 'stream' );
+my \$batch_ah = HTML::Mason::ApacheHandler->new( interp => \$interp,
+                                                 output_mode => 'batch' );
+
+sub handler
+{
+    my \$r = shift;
+    \$r->header_out('X-Mason-Test' => 'Initial value');
+
+    my \$ah = \$r->uri =~ /mason_stream/ ? \$stream_ah : \$batch_ah;
+
+    # strip off stuff just used to figure out what handler to use.
+    my \$filename = \$r->filename;
+    \$filename =~ s,/mason(?:_stream)?\$,,;
+
+    \$filename .= \$r->path_info;
+    \$filename =~ s,//+,/,g;
+
+    \$r->filename(\$filename);
+
+    my \$status = \$ah->handle_request(\$r);
+    \$r->print( "Status code: \$status\\n" );
+}
+EOF
+    close F;
+}
+
+sub write_test_comps
+{
+    write_comp( 'basic', <<'EOF',
+Basic test.
+2 + 2 = <% 2 + 2 %>.
+uri = <% $r->uri =~ /basic$/ ? '/basic' : $r->uri %>.
+method = <% $r->method %>.
+
+
+EOF
+	      );
+
+    write_comp( 'headers', <<'EOF',
+
+
+% $r->header_out('X-Mason-Test' => 'New value 2');
+Blah blah
+blah
+% $r->header_out('X-Mason-Test' => 'New value 3');
+<%init>
+$r->header_out('X-Mason-Test' => 'New value 1');
+$m->abort if $blank;
+</%init>
+<%args>
+$blank=>0
+</%args>
+EOF
+	      );
+
+    write_comp( 'cgi_object', <<'EOF',
+<% $m->cgi_object->isa('CGI') ? 'CGI' : 'NO CGI' %>
+EOF
+	      );
+}
+
+sub write_comp
+{
+    my $name = shift;
+    my $comp = shift;
+
+    my $file = "$COMP_ROOT/$name";
+    open F, ">$file"
+	or die "Can't write to '$file': $!";
+
+    print F $comp;
+
+    close F;
+}
+
+
+
 1;
