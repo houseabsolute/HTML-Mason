@@ -651,12 +651,13 @@ A component or dhandler that does not want to handle a particular
 request may defer control to the next dhandler by calling C<<
 $m->decline >>.
 
-If you are running Mason under mod_perl, you may find that sometimes
+When using dhandlers under mod_perl, you may find that sometimes
 Apache will not set a content type for a response.  This usually
 happens when a dhandler handles a request for a non-existent file or
 directory.  You can add a C<< <Location> >> or C<< <LocationMatch> >>
 block containing a C<SetType> directive to your Apache config file, or
-you can just set the content type dynamically by calling C<< $r->content_type >>.
+you can just set the content type dynamically by calling C<<
+$r->content_type >>.
 
 The administrator can customize the file name used for dhandlers with
 the P<dhandler_name> parameter.
