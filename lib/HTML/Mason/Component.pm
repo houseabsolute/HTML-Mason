@@ -119,12 +119,11 @@ sub run {
 
     $self->{mfu_count}++;
 
+    return $self->{code}->(@_) unless $self->{filter}
+
     my $req = HTML::Mason::Request->instance;
 
-    if ( $self->{filter} )
-    {
-        $req->push_filter_buffer( filter => $self->{filter} );
-    }
+    $req->push_filter_buffer( filter => $self->{filter} );
 
     my @r;
 
@@ -141,11 +140,8 @@ sub run {
         }
     };
 
-    if ( $self->{filter} )
-    {
-        $req->flush_buffer;
-        $req->pop_buffer_stack;
-    }
+    $req->flush_buffer;
+    $req->pop_buffer_stack;
 
     die $@ if $@;
 
