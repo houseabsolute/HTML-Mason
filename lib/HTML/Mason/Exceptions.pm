@@ -17,6 +17,7 @@ BEGIN
 	   'HTML::Mason::Exception::Abort' =>
 	   { isa => 'HTML::Mason::Exception',
 	     abbr => 'abort_error',
+	     fields => [qw(aborted_value)],
 	     description => 'a component called $m->abort' },
 
 	   'HTML::Mason::Exception::Compiler' =>
@@ -27,6 +28,7 @@ BEGIN
 	   'HTML::Mason::Exception::Compilation' =>
 	   { isa => 'HTML::Mason::Exception',
 	     abbr => 'compilation_error',
+	     fields => [qw(filename)],
 	     description => "error thrown in eval of the code for a component" },
 
 	   'HTML::Mason::Exception::Compilation::IncompatibleCompiler' =>
@@ -42,6 +44,7 @@ BEGIN
 	   'HTML::Mason::Exception::Syntax' =>
 	   { isa => 'HTML::Mason::Exception',
 	     abbr => 'syntax_error',
+	     fields => [qw(source_line comp_name line_number)],
 	     description => 'invalid syntax was found in a component' },
 
 	   'HTML::Mason::Exception::System' =>
@@ -92,6 +95,18 @@ sub import
 
 package HTML::Mason::Exception;
 
+use HTML::Mason::MethodMaker
+    ( read_write => [ qw ( format ) ] );
+
+sub new
+{
+    my ($class, %params) = @_;
+    
+    my $self = $class->SUPER::new(%params);
+    $self->format('brief');
+    return $self;
+}
+
 sub filtered_frames
 {
     my ($self) = @_;
@@ -115,20 +130,27 @@ sub filtered_frames
 	    push(@frames, $frame);
 	}
     }
+    @frames = grep { $_->filename !~ /Mason\/Exceptions\.pm/ } $trace->frames if !@frames;
     return @frames;
 }
 
 sub analyze_error
 {
     my ($self) = @_;
+    my ($file, @lines, @frames);
 
-    my ($file, $msg, @lines, @frames);
-
+    return $self->{_info} if $self->{_info};
+    
     @frames = $self->filtered_frames;
-    $msg = $self->error;
     if ($self->isa('HTML::Mason::Exception::Syntax')) {
 	$file = $self->comp_name;
 	push(@lines, $self->line_number);
+    } elsif ($self->isa('HTML::Mason::Exception::Compilation')) {
+	$file = $self->filename;
+	my $msg = $self->error;
+	while ($msg =~ /at .* line (\d+)./g) {
+	    push(@lines, $1);
+	}
     } elsif (@frames) {
 	$file = $frames[0]->filename;
 	@lines = $frames[0]->line;
@@ -136,13 +158,13 @@ sub analyze_error
     my @context;
     @context = $self->get_file_context($file, \@lines) if @lines;
 
-    return {
+    $self->{_info} = {
 	file    => $file,
 	frames  => \@frames,
 	lines   => \@lines,
-	msg     => $msg,
 	context => \@context,
     };
+    return $self->{_info};
 }
 
 sub get_file_context
@@ -192,20 +214,43 @@ sub as_string
 {
     my ($self) = @_;
 
+    my $stringify_function = "as_" . $self->{format};
+    return $self->$stringify_function;
+}
+
+sub as_brief
+{
+    my ($self) = @_;
+    return $self->error;
+}
+
+sub as_line
+{
+    my ($self) = @_;
     my $info = $self->analyze_error;
-    (my $msg = $info->{msg}) =~ s/\n/\t/g;
+    
+    (my $msg = $self->error) =~ s/\n/\t/g;
     my $stack = join(", ", map { sprintf("[%s:%d]", $_->filename, $_->line) } @{$info->{frames}});
     return sprintf("%s\tStack: %s\n", $msg, $stack);
+}
+
+sub as_text
+{
+    my ($self) = @_;
+    my $info = $self->analyze_error;
+
+    my $msg = $self->error;
+    my $stack = join("\n", map { sprintf("  [%s:%d]", $_->filename, $_->line) } @{$info->{frames}});
+    return sprintf("%s\nStack:\n%s\n", $msg, $stack);
 }
 
 sub as_html
 {
     my ($self) = @_;
-
     my $info = $self->analyze_error;
 
     my $out;
-    my $msg = HTML::Mason::Tools::html_escape($info->{msg});
+    my $msg = HTML::Mason::Tools::html_escape($self->error);
     $msg =~ s/\n/<br>/g;
     $out .= qq[<html><body>\n];
     $out .= qq[<p align="center"><font face="Verdana, Arial, Helvetica, sans-serif"><b>System error</b></font></p>\n];
@@ -246,20 +291,20 @@ sub as_html
 
 package HTML::Mason::Exception::Syntax;
 
-sub new
+sub as_string
 {
-    my $proto = shift;
-    my $class = ref $proto || $proto;
-    my %p = @_;
+    my $self = shift;
 
-    my $self = $class->SUPER::new(%p);
+    # unholy intermixing with parent class because we want the trace
+    # to go after the error message but we want to massage the message
+    # first.
+    local $self->{message} = $self->{message};
+    $self->{message} .= sprintf(" at %s line %d", $self->comp_name, $self->line_number);
 
-    $self->{source_line} = $p{source_line};
-    $self->{comp_name} = $p{comp_name},
-    $self->{line_number} = $p{line_number};
-
-    return $self;
+    return $self->SUPER::as_string;
 }
+
+package HTML::Mason::Exception::Compilation;
 
 sub as_string
 {
@@ -269,16 +314,9 @@ sub as_string
     # to go after the error message but we want to massage the message
     # first.
     local $self->{message} = $self->{message};
-    $self->{message} .= " in $self->{comp_name} at $self->{line_number}:\n$self->{source_line}\n";
+    $self->{message} = sprintf("Error during compilation of %s:\n%s\n", $self->filename, $self->{message});
 
     return $self->SUPER::as_string;
 }
-
-sub source_line { $_[0]->{source_line} }
-
-sub comp_name { $_[0]->{comp_name} }
-
-sub line_number { $_[0]->{line_number} }
-
 
 1;
