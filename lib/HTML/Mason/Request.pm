@@ -1022,10 +1022,8 @@ sub scomp {
 sub push_filter_buffer
 {
     my $self = shift;
-    my %p = @_;
 
-    push @{ $self->{buffer_stack} },
-        $self->top_buffer->new_child( filter => $p{filter} );
+    push @{ $self->{buffer_stack} }, $self->top_buffer->new_child(@_);
 }
 
 sub content {
