@@ -18,9 +18,9 @@ my %fields =
      # All components
      code => undef,
      create_time => undef,
-     embedded => 0,
-     file_based => 0,
      declared_args => undef,
+     is_file_based => 0,
+     is_subcomp => 0,
      name => undef,
      parent_comp => undef,
      parent_path => undef,
@@ -32,6 +32,7 @@ my %fields =
      # File-based components
      comp_root => undef,
      data_dir => undef,
+     cache_dir => undef,
      path => undef,
      source_ref_start => undef,
      );
@@ -65,19 +66,18 @@ sub new
     # (parent_path, title) are initialized in assign_file_properties.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
 	# I am a subcomponent
-	$c->{embedded} = 1;
+	$c->{is_subcomp} = 1;
 	
 	# This is my parent
 	$c->{parent_comp} = $self;
 	
-	# Access to the same subcomps and parent path
-	$c->{subcomps} = $self->{subcomps};
-
 	# Title is a combination of names
 	$c->{name} = $name;
     }
 
     $self->{title} = "[anon ". ++$compCount . "]" if !defined($self->{title});
+    $self->{declared_args} = {} if !defined($self->{declared_args});
+    $self->{subcomps} = {} if !defined($self->{subcomps});
     
     return $self;
 }
@@ -93,7 +93,7 @@ sub first_time { return $_[0]->{run_count} <= 1 }
 sub assign_file_properties
 {
     my ($self,$compRoot,$dataDir,$cacheDir,$path) = @_;
-    ($self->{file_based},$self->{comp_root},$self->{data_dir},$self->{cache_dir},$self->{path},$self->{title}) =
+    ($self->{is_file_based},$self->{comp_root},$self->{data_dir},$self->{cache_dir},$self->{path},$self->{title}) =
 	(1,$compRoot,$dataDir,$cacheDir,$path,$path);
     ($self->{parent_path}) = ($path =~ /^(.*)\/[^\/]+$/);
     ($self->{name}) = ($path =~ /([^\/]+)$/);
@@ -105,14 +105,14 @@ sub assign_file_properties
     }
 }
 
-sub source_file { my $self = shift; return ($self->file_based) ? ($self->comp_root . $self->path) : undef }
-sub object_file { my $self = shift; return ($self->file_based) ? ($self->data_dir . "/obj/" . $self->path) : undef }
-sub cache_file { my $self = shift; return ($self->file_based) ? ($self->cache_dir . $self->path) : undef }
+sub source_file { my $self = shift; return ($self->is_file_based) ? ($self->comp_root . $self->path) : undef }
+sub object_file { my $self = shift; return ($self->is_file_based) ? ($self->data_dir . "/obj/" . $self->path) : undef }
+sub cache_file { my $self = shift; return ($self->is_file_based) ? ($self->cache_dir . $self->path) : undef }
 
 sub source_ref_text
 {
     my ($self) = @_;
-    return undef if !$self->file_based || !defined($self->{source_ref_start});
+    return undef if !$self->is_file_based || !defined($self->{source_ref_start});
     my $content = read_file($self->object_file);
     return substr($content,$self->{source_ref_start});
 }

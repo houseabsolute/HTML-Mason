@@ -239,8 +239,16 @@ sub process_comp_path
 sub fetch_comp
 {
     my ($self,$path) = @_;
-    if (my $comp = $self->comp->subcomps->{$path}) {
-	return $comp;
+    if ($path !~ /\//) {
+	# Check my subcomponents.
+	if (my $comp = $self->comp->subcomps->{$path}) {	
+	    return $comp;
+	}
+	# If I am a subcomponent, also check my parent's subcomponents.
+	# This won't work when we go to multiply embedded subcomponents...
+	if ($self->comp->is_subcomp and my $comp = $self->comp->parent_comp->subcomps->{$path}) {
+	    return $comp;
+	}
     }
     $path = $self->process_comp_path($path);
     return $self->{interp}->load($path);

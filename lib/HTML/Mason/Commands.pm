@@ -92,7 +92,7 @@ sub mc_cache
     $options{key} = $options{key} || 'main';
     
     my $comp = $REQ->comp;
-    if ($comp->file_based) {
+    if ($comp->is_file_based) {
 	$options{cache_file} = $interp->data_cache_filename($comp->path);
     } elsif (my $p = $comp->parent_comp) {
 	$options{cache_file} = $interp->data_cache_filename($p->path);

@@ -1,0 +1,31 @@
+<%def .subcomp>
+% my $adj = 'happy';
+I am a <% $adj %> subcomp.
+<%args>
+$crucial
+$useless=>17
+</%args>
+</%def>
+
+% my $anon = $REQ->parser->make_component(script=>join("\n",'% my $adj = "flummoxed";','I am a <% $adj %> anonymous component.'));
+
+<% '-' x 60 %>
+
+File-based:
+<& /support/display_comp_obj, comp=>$REQ->comp &>
+
+<% '-' x 60 %>
+
+Subcomponent:
+<& /support/display_comp_obj, comp=>$REQ->fetch_comp('.subcomp')  &>
+
+<% '-' x 60 %>
+
+Anonymous component:
+<& $anon &>
+<& $anon &>
+<& /support/display_comp_obj, comp=>$anon &>
+
+<%args>
+@animals=>('lions','tigers')
+</%args>

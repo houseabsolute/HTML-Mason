@@ -422,7 +422,7 @@ sub handle_preview_request_1
 		    $objcount--;
 		    $objects[$objcount]->{repeat}++;
 		} else {
-		    $objdisplay = ($createObjectLink && ($event->{type} eq 'startFile' || $event->{comp}->file_based)) ? $createObjectLink->($objtype,$path,scalar(@stack),$objtext) : (('  ' x scalar(@stack)) . $objtext);
+		    $objdisplay = ($createObjectLink && ($event->{type} eq 'startFile' || $event->{comp}->is_file_based)) ? $createObjectLink->($objtype,$path,scalar(@stack),$objtext) : (('  ' x scalar(@stack)) . $objtext);
 		    $objects[$objcount] = {count=>$objcount,type=>$objtype,text=>$objtext,display=>$objdisplay,label=>$objlabel,color=>'003399',srclink=>$objsrclink,depth=>scalar(@stack),repeat=>1};
 		}
 		push(@stack,$objcount);

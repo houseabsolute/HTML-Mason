@@ -1,9 +1,8 @@
 a: fargo
 b: 17,82,16
 c: britain=3,spain=1
-d: 5
-e: foo,baz
-f: bob=2,joe=1
-
+d: 103
+e: a,b,c
+f: ralph=15,sue=37
 
 

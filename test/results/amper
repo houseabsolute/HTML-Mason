@@ -1,10 +1,27 @@
 <HTML>
 <HEAD>
 <TITLE>
-perl_args Test
+amper Test
 </TITLE>
 </HEAD>
 <BODY>
-Hello World!
+amper_test.<p>
+
+amper_test.<p>
+Arguments:<p>
+<b>message</b>: Hello World!<br>
+
+amper_test.<p>
+Arguments:<p>
+<b>to</b>: Joe<br>
+<b>message</b>: Hello World!<br>
+
+amper_test.<p>
+
+amper_test.<p>
+Arguments:<p>
+<b>a</b>: 17<br>
+<b>b</b>: 32<br>
+
 </BODY>
 </HTML>

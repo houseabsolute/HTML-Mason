@@ -45,7 +45,12 @@ foreach my $component ( @comps ) {
     undef $buf;
     my $result;
     eval { $interp->exec("/$component"); };
-    $buf = "ERROR:\n$@" if $@;
+    if (my $err = $@) {
+	my ($top) = ($err =~ /(.*\n.*\n)/);
+	$top =~ s{at /.*}{}g;
+	$buf = "ERROR:\n$top";
+#	$buf = "ERROR:\n$err";
+    }
     $component =~ s/\//::/g;
     open(F, ">$tmp_dir$component");
     print F $buf if defined($buf);
@@ -133,3 +138,5 @@ sub compareFiles {
 
     return $err; 
 }
+
+1;

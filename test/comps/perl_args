@@ -1,10 +1,2 @@
-<HTML>
-<HEAD>
-<TITLE>
-perl_args Test
-</TITLE>
-</HEAD>
-<BODY>
-<& support/perl_args_test, message => 'Hello World!' &>
-</BODY>
-</HTML>
+<& support/perl_args_test, a=>'fargo', b=>[17,82,16], c=>{britain=>3, spain=>1} &>
+

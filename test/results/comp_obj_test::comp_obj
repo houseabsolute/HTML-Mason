@@ -1,0 +1,61 @@
+
+
+------------------------------------------------------------
+
+File-based:
+Declared args:
+@animals=>('lions','tigers')
+
+This is my first time.
+I am not a subcomponent.
+I am file-based.
+My short name is comp_obj.
+My parent path is /comp_obj_test.
+I have run 1 time(s).
+I have 1 subcomponent(s).
+My title is /comp_obj_test/comp_obj.
+
+Got a cache file!
+Got an object file!
+My path is /comp_obj_test/comp_obj.
+Got a source file!
+
+
+
+------------------------------------------------------------
+
+Subcomponent:
+Declared args:
+$useless=>17
+$crucial
+
+This is my first time.
+I am a subcomponent.
+I am not file-based.
+My short name is .subcomp.
+My parent component is /comp_obj_test/comp_obj.
+My parent path is /comp_obj_test.
+I have run 0 time(s).
+I have 0 subcomponent(s).
+My title is /comp_obj_test/comp_obj:.subcomp.
+
+
+
+
+------------------------------------------------------------
+
+Anonymous component:
+I am a flummoxed anonymous component.
+I am a flummoxed anonymous component.
+Declared args:
+
+This is not my first time.
+I am not a subcomponent.
+I am not file-based.
+I have run 2 time(s).
+I have 0 subcomponent(s).
+My title is [anon something].
+
+
+
+

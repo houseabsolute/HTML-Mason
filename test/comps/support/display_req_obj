@@ -1,0 +1,12 @@
+My depth is <% $REQ->depth %>.
+
+My stack looks like:
+-----
+% foreach my $level (@{$REQ->stack}) {
+comp: <% $level->{comp}->title %>
+args:
+% while (my ($key,$val) = each(%{$level->{args}})) {
+<% $key %>=<% $val %>
+% }
+-----
+% }

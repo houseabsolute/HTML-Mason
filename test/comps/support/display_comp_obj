@@ -1,0 +1,38 @@
+Declared args:
+% my %decl = %{$comp->declared_args};
+% while (my ($key,$val) = each(%decl)) {
+<% $key %><% (defined($val->{default})) ? "=>".$val->{default} : "" %>
+% }
+
+This is <% $comp->first_time ? '' : 'not ' %>my first time.
+I am <% $comp->is_subcomp ? '' : 'not ' %>a subcomponent.
+I am <% $comp->is_file_based ? '' : 'not ' %>file-based.
+% if (defined($comp->name)) {
+My short name is <% $comp->name %>.
+% }
+% if (defined($comp->parent_comp)) {
+My parent component is <% $comp->parent_comp->title %>.
+% }
+% if (defined($comp->parent_path)) {
+My parent path is <% $comp->parent_path %>.
+% }
+I have run <% $comp->run_count %> time(s).
+I have <% scalar(keys(%{$comp->subcomps})) %> subcomponent(s).
+My title is <% $comp->title =~ /anon/ ? '[anon something]' : $comp->title %>.
+
+% if (defined($comp->cache_file)) {
+Got a cache file!
+% }
+% if (defined($comp->object_file)) {
+Got an object file!
+% }
+% if (defined($comp->path)) {
+My path is <% $comp->path %>.
+% }
+% if (defined($comp->source_file)) {
+Got a source file!
+% }
+
+<%args>
+$comp
+</%args>

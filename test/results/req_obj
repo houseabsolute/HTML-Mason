@@ -1,0 +1,67 @@
+
+------------------------------------------------------------
+
+One level request:
+My depth is 2.
+
+My stack looks like:
+-----
+comp: /support/display_req_obj
+args:
+-----
+comp: /req_obj
+args:
+-----
+
+
+------------------------------------------------------------
+
+Many level request:
+
+
+
+
+
+
+My depth is 8.
+
+My stack looks like:
+-----
+comp: /support/display_req_obj
+args:
+-----
+comp: /req_obj:.subcomp
+args:
+count=5
+-----
+comp: /req_obj:.subcomp
+args:
+count=4
+-----
+comp: /req_obj:.subcomp
+args:
+count=3
+-----
+comp: /req_obj:.subcomp
+args:
+count=2
+-----
+comp: /req_obj:.subcomp
+args:
+count=1
+-----
+comp: /req_obj:.subcomp
+args:
+-----
+comp: /req_obj
+args:
+-----
+
+
+
+
+
+
+
+
+------------------------------------------------------------
