@@ -158,6 +158,8 @@ sub start
 	    $self->throw_syntax_error("Missing closing </%$type> tag");
 	}
 
+	last if $self->{current}{comp_source} =~ /\G\z/;
+
 	# We should never get here - if we do, we're in an infinite loop.
 	$self->throw_syntax_error("Infinite parsing loop encountered - Lexer bug?");
     }
@@ -201,7 +203,7 @@ sub generic_block
     $self->{current}{compiler}->$method( block_type => $p->{block_type},
 					 block => $block );
 
-    $self->{current}{lines} += $block =~ tr/\n/\n/;
+    $self->{current}{lines} += $block =~ tr/\n//;
     $self->{current}{lines}++ if $nl;
 
     $self->{current}{compiler}->end_block( block_type => $p->{block_type} );
@@ -390,27 +392,40 @@ sub escape_flag_regex { $flag }
 
 sub match_substitute
 {
+    # This routine relies on there *not* to be an opening <%foo> tag
+    # present, so match_block() must happen first.
+    
     my $self = shift;
 
-    if ( $self->{current}{comp_source} =~ /\G<%/gcs )
+    return 0 unless $self->{current}{comp_source} =~ /\G<%/gcs;
+
+    if ( $self->{current}{comp_source} =~
+	 m{
+	   \G
+	   (.+?)                # Substitution body ($1)
+	   (
+	    \s*
+	    (?<!\|)             # Not preceded by a '|'
+	    \|                  # A '|'
+	    \s*
+	    (                   # (Start $3)
+	     $flag              # A flag
+	     (?:\s*,\s*$flag)*  # More flags, with comma separators
+	    )
+	    \s*
+	   )?
+	   %>                   # Closing tag
+	  }xcigs )
     {
-	if ( $self->{current}{comp_source} =~
-             /\G(.+?)(\s*(?<!\|)\|\s*($flag(?:\s*,\s*$flag)*)\s*)?%>/igcs )
-	{
-	    my ($sub, $escape) = ($1, $3);
-	    $self->{current}{compiler}->substitution( substitution => $sub,
-						      escape => $escape );
+	$self->{current}{lines} += tr/\n// foreach grep defined, ($1, $2);
 
-	    # Add it in just to count lines
-	    $sub .= $2 if $2;
-	    $self->{current}{lines} += $sub =~ tr/\n/\n/;
-
-	    return 1;
-	}
-	else
-	{
-	    $self->throw_syntax_error("'<%' without matching '%>'");
-	}
+	$self->{current}{compiler}->substitution( substitution => $1,
+						  escape => $3 );
+	return 1;
+    }
+    else
+    {
+	$self->throw_syntax_error("'<%' without matching '%>'");
     }
 }
 
@@ -424,7 +439,7 @@ sub match_comp_call
 	{
 	    my $call = $1;
 	    $self->{current}{compiler}->component_call( call => $call );
-	    $self->{current}{lines} += $call =~ tr/\n/\n/;
+	    $self->{current}{lines} += $call =~ tr/\n//;
 
 	    return 1;
 	}
@@ -446,7 +461,7 @@ sub match_comp_content_call
 	{
 	    my $call = $1;
 	    $self->{current}{compiler}->component_content_call( call => $call );
-	    $self->{current}{lines} += $call =~ tr/\n/\n/;
+	    $self->{current}{lines} += $call =~ tr/\n//;
 
 	    return 1;
 	}
@@ -485,70 +500,37 @@ sub match_perl_line
 sub match_text
 {
     my $self = shift;
+    my $c = $self->{current};
 
-    #
-    # This regex is a bit weird, to say the least!
-    #
-    # Basically, we need to first check for "text" at the current
-    # position that we don't pass through as text.  This is either an
-    # escaped newline or an EOF.
-    #
-    # If we find one of those, we have matched some "text" but nothing
-    # that we pass through to the compiler.
-    #
-    # Otherwise, we try to match _at least_ one character of text
-    # following by some non-text production, which may be some sort of
-    # Mason syntax or an escaped newline or an EOF.
-    #
-    # It is important that we match at least one character or we can
-    # fail incorrectly on something like this:
-    #
-    #   <%foo>
-    #
-    # It doesn't match any of the previous productions but if found at
-    # the beginning of a component it will not match as text unless we
-    # can consume the first character, "<", before trying to match any
-    # more Mason syntax.
-    #
-    # Otherwise we'd match the empty string at the beginning, followed
-    # by "<%".
-    #
-    # - Dave - 5/6/2002
-    #
-
-    if ( $self->{current}{comp_source} =~ m/\G\z/gc ) {
-	return 0;
-    }
+    # Most of these terminator patterns actually belong to the next
+    # lexeme in the source, so we use a lookahead if we don't want to
+    # consume them.  We use a lookbehind when we want to consume
+    # something in the matched text, like the newline before a '%'.
     
-    if ( $self->{current}{comp_source} =~ m/\G\\\n/gc ) {
-	$self->{current}{lines}++;
-	return 1;
-    }
-
-    if ( $self->{current}{comp_source} =~ m{
-                      \G
-                      (.+?)         # anything
-	              (             # followed by
-                       (?<=\n)(?=%) # an eval line - consume the \n
-                       |
-                       (?=</?[%&])  # a substitution or block or call start or end  - don't consume
-                       |
-                       (\\\n)       # an escaped newline  - throw away
-                       |
-                       \z           # or EOF.
-                      )
-                   }gcsx
-       )
+    if ( $c->{comp_source} =~ m{
+				\G
+				(.*?)         # anything, followed by:
+				(
+				 (?<=\n)(?=%) # an eval line - consume the \n
+				 |
+				 (?=</?[%&])  # a substitution or block or call start or end  - don't consume
+				 |
+				 \\\n         # an escaped newline  - throw away
+				 |
+				 \z           # end of string
+				)
+			       }xcgs )
     {
 	# Note: to save memory, it might be preferable to break very
 	# large $1 strings into several pieces and pass the pieces to
 	# compiler->text().  In my testing, this was quite a bit
 	# slower, though.  -Ken 2002-09-19
 
-	$self->{current}{compiler}->text( text => $1 );
-	$self->{current}{lines} += $1 =~ tr/\n//;
+	$c->{compiler}->text( text => $1 ) if length $1;
+	$c->{lines} += tr/\n// foreach ($1, $2);
 	return 1;
     }
+    
     return 0;
 }
 
@@ -560,14 +542,10 @@ sub match_end
     # also include the needed \G marker
     if ( $self->{current}{comp_source} =~ /($self->{current}{ending})/gcs )
     {
-	my $text = $1;
-	if (defined $text)
-	{
-	    $self->{current}{lines} += $text =~ tr/\n/\n/;
-	}
-
+	$self->{current}{lines} += $1 =~ tr/\n//;
 	return $1 || 1;
     }
+    return 0;
 }
 
 # goes from current pos, skips a newline if its the next character,
