@@ -501,7 +501,7 @@ sub _define_args_hash
               $self->{current_compile}{body},
               $self->_blocks('cleanup'),
               $self->postamble,
-              map { $_->{default} } @{ $self->{current_compile}{args} }
+              grep { defined } map { $_->{default} } @{ $self->{current_compile}{args} }
             )
     {
         return 1 if /ARGS/;
