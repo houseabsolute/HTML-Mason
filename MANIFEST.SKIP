@@ -28,9 +28,6 @@ Events.pm$
 ^Build$
 ^_build
 
-# C source code bits for eventual first-class config directives bits
-^src
-
 samples/cd-me.*
 
 ^benchmarks
@@ -38,3 +35,5 @@ samples/cd-me.*
 ^htpods
 
 ^HTML-Mason-
+
+^pod2htm[di]\.\w+$
