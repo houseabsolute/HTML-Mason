@@ -1,5 +1,6 @@
 use Data::Dumper;
 use DirHandle;
+use File::Path;
 use HTML::Mason;
 use Getopt::Std;
 use strict;
@@ -12,7 +13,13 @@ sub init
     getopts('ct:',\%opts);
 
     $comp_root = "$root/test/comps";
-    $data_dir = "$root/test/data";
+
+    # Assign data directory specific to branch, and clear it 
+    $data_dir = "$root/test/data/$branch";
+    rmtree($data_dir) if $data_dir =~ m{test/data};  # be extra careful
+    die "could not clear data directory $data_dir" if -d $data_dir;
+    mkpath($data_dir);
+    die "could not create data directory $data_dir" unless -d $data_dir;
 
     $comp_pattern = $opts{t};
     $create_mode = $opts{c};
@@ -21,7 +28,6 @@ sub init
 sub try_exec_all
 {
     my $interp = new HTML::Mason::Interp(comp_root => $comp_root, data_dir => $data_dir);
-    clear_cache_dir();
     
     my $listfile = "$root/test/comps/$branch/comps.lst";
     my @comps;
