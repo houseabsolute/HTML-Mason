@@ -6,7 +6,7 @@ package HTML::Mason::Interp;
 
 use strict;
 
-use Carp;
+use Config;
 use File::Basename;
 use File::Path;
 use File::Spec;
@@ -468,9 +468,34 @@ sub eval_object_code
 
     {
 	local $^W = 1;
-	local $SIG{__WARN__} = $ignore_expr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ } : sub { $warnstr .= $_[0] };
+	local $SIG{__WARN__} =
+	    ( $ignore_expr ?
+	      sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ } :
+	      sub { $warnstr .= $_[0] } );
 
-	$comp = eval $object_code;
+	#
+	# We've found at least one generated component that for some
+	# reason never returns from the string eval below.  For
+	# systems that provide alarm we can try to protect against
+	# this.
+	#
+	if ( $Config{d_alarm} )
+	{
+	    my $sec = 5;
+	    eval
+	    {
+		local $SIG{ALRM} =
+		    sub { die "Attempt to eval code took longer than $sec seconds" };
+		alarm $sec;
+		$comp = eval $object_code;
+		alarm 0;
+		die $@ if $@;
+	    };
+	}
+	else
+	{
+	    $comp = eval $object_code;
+	}
     }
 
     $err = $warnstr . $@;
