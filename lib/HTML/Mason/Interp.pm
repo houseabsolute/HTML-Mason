@@ -206,27 +206,22 @@ sub load {
 	return $code_cache->{$path}{comp};
     }
 
+    #
+    # Get source info from resolver. Cache the results in fixed_source mode.
+    #
     my $source;
-    if ($self->{fixed_source} && exists $self->{source_cache}{$path}) {
-	# This path did not resolve on an earlier attempt
-	return unless defined $self->{source_cache}{$path};
-
+    if ($self->{fixed_source}) {
+	unless (exists($self->{source_cache}{$path})) {
+	    $self->{source_cache}{$path} = $resolver->get_info($path);
+	}
 	$source = $self->{source_cache}{$path};
+    } else {
+	$source = $resolver->get_info($path);
     }
-
-    #
-    # Use resolver to look up component and get source info if it
-    # wasn't cached.
-    #
-    $source ||= $resolver->get_info($path);
-
-    $self->{source_cache}{$path} = $source if $self->{fixed_source};
 
     # No component matches this path.
     return unless defined $source;
-
     my $comp_id = $source->comp_id;
-
 
     #
     # Get last modified time of source.
