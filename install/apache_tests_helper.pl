@@ -138,6 +138,8 @@ EOF
   PerlAddVar  MasonCompRoot "root2 => $APACHE{data_dir}"
   PerlSetVar  MasonDataDir  "$APACHE{data_dir}"
   PerlSetVar  MasonDeclineDirs 0
+  # We need to test setting a "code" type parameter
+  PerlSetVar  MasonPreprocess "sub { \${\$_[0]} =~ s/fooquux/FOOQUUX/ }"
 
   PerlSetVar  MasonEscapeFlags "old_h  => \\&HTML::Mason::Escapes::basic_html_escape"
   PerlAddVar  MasonEscapeFlags "old_h2 => basic_html_escape"
