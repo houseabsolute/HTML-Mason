@@ -80,8 +80,7 @@ EOF
 
     $group->add_test( name => 'abort',
 		      description => 'test $m->abort method (autoflush on)',
-		      interp_params => { autoflush => 1, enable_autoflush => 1 },
-
+		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 Some text
 
@@ -435,7 +434,7 @@ EOF
 
     $group->add_test( name => 'autoflush_print',
 		      description => 'Test print function from a component with autoflush on',
-		      interp_params => { autoflush => 1, enable_autoflush => 1 },
+		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 This is first.
 % print "This is second.\n";
@@ -452,7 +451,7 @@ EOF
 
     $group->add_test( name => 'autoflush_printf',
 		      description => 'Test printf function from a component with autoflush on',
-		      interp_params => { autoflush => 1, enable_autoflush => 1 },
+		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 This is first.
 % printf '%s', "This is second.\n";
@@ -486,7 +485,7 @@ EOF
 
     $group->add_test( name => 'flush_print_autoflush',
 		      description => 'Test print function from a component with autoflush on in conjunction with $m->flush_buffer call',
-		      interp_params => { autoflush => 1, enable_autoflush => 1 },
+		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 This is first.
 % print "This is second.\n";
@@ -498,6 +497,17 @@ This is first.
 This is second.
 This is third.
 EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'autoflush_disabled',
+		      description => 'Using autoflush when disabled generates an error',
+		      interp_params => { autoflush => 1, enable_autoflush => 0 },
+		      component => <<'EOF',
+Hi
+EOF
+		      expect_error => qr/Cannot use autoflush unless enable_autoflush is set/,
 		    );
 
 #------------------------------------------------------------

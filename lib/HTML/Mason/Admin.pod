@@ -812,6 +812,15 @@ manage it. Many of Mason's future optimizations will be designed for
 this mode. On development servers, of course, it makes sense to keep
 this off so that components are reloaded automatically.
 
+=head2 Disabling Autoflush
+
+To support the dynamic P<autoflush> feature, Mason has to check for
+autoflush mode after printing every piece of text.  If you can commit
+to not using autoflush, setting P<enable_autoflush> to 0 will allow
+Mason to compile components more efficiently. Consider whether a few
+well-placed C<< $m->flush_buffer >> calls would be just as good as
+P<autoflush>.
+
 =head2 Write a handler subroutine
 
 Writing your own C<handler()> subroutine which uses an ApacheHandler
@@ -844,6 +853,12 @@ modules only in the parent process.
 Try to preload components that are used frequently and do not change
 often.  (If a preloaded component changes, all the children will have
 to reload it from scratch.)
+
+=head2 Preallocating the Output Buffer
+
+You can set P<buffer_preallocate_size> to set the size of the
+preallocated output buffer for each request. This can reduce the
+number of reallocations Perl performs as components output text.
 
 =head1 ERROR REPORTING AND EXCEPTIONS
 

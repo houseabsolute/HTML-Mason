@@ -259,7 +259,7 @@ EOF
 
     $group->add_test( name => 'max_recurse_2',
 		      description => 'Test that recursion is stopped after 32 levels',
-		      interp_params => { autoflush => 1, enable_autoflush => 1  },
+		      interp_params => { autoflush => 1 },
 		      component => '<& support/recurse_test, max=>48 &>',
 		      expect_error => qr{32 levels deep in component stack \(infinite recursive call\?\)},
 		    );
@@ -512,7 +512,7 @@ EOF
 
     $group->add_test( name => 'autoflush_mode',
 		      description => 'Test that autoflush setting works',
-		      interp_params => { autoflush => 1, enable_autoflush => 1 },
+		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 <& mode_test &>
 EOF
@@ -742,7 +742,6 @@ EOF
 
     $group->add_test( name => 'read_write_contained',
 		      description => 'test that we can read/write contained object params',
-                      interp_params => { enable_autoflush => 1 },
 		      component => <<'EOF',
 % $m->autoflush(1);
 % my $req = $m->make_subrequest(comp=>($m->interp->make_component(comp_source => 'hi')));

@@ -152,7 +152,7 @@ EOF
 
     $group->add_test( name => 'autoflush_subrequest',
 		      description => 'make sure that a subrequest respects its parent autoflush setting',
-		      interp_params => { autoflush => 1, enable_autoflush => 1 },
+		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 My child says:
 % $m->flush_buffer;
@@ -185,7 +185,6 @@ EOF
 
     $group->add_test( name => 'autoflush_in_subrequest',
 		      description => 'make sure that a subrequest with autoflush on does not flush parent',
-		      interp_params => { enable_autoflush => 1 },
 		      component => <<'EOF',
 My child says:
 % $m->flush_buffer;
@@ -201,7 +200,7 @@ EOF
 
     $group->add_test( name => 'autoflush_in_parent_not_subrequest',
 		      description => 'make sure that a subrequest with autoflush can clear its own buffers',
-		      interp_params => { autoflush => 1, enable_autoflush => 1 },
+		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 My child says:
 % $m->flush_buffer;

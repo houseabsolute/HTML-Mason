@@ -30,7 +30,7 @@ BEGIN
            descr => "Escape flags that will apply by default to all Mason tag output" },
 
 	 enable_autoflush =>
-	 { parse => 'boolean', type => SCALAR, default => 0,
+	 { parse => 'boolean', type => SCALAR, default => 1,
 	   descr => "Whether to include support for autoflush when compiling components" },
 
 	 lexer =>
@@ -736,9 +736,10 @@ given as a reference to an array of flags.
 
 =item enable_autoflush
 
-True or false, default is false. This flag must be set to true in
-order for P<autoflush> to work. The component can be compiled to a
-more efficient form if it does not have to check for autoflush mode.
+True or false, default is true. Indicates whether components are
+compiled with support for P<autoflush>. The component can be compiled
+to a more efficient form if it does not have to check for autoflush
+mode, so you should set this to 0 if you can.
 
 =item lexer
 

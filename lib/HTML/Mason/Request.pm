@@ -1469,9 +1469,9 @@ buffer (C<$m-E<gt>flush_buffer>) after every string is output. Turn on
 autoflush if you need to send partial output to the client, for
 example in a progress meter.
 
-As of Mason 1.3, autoflush will only work if P<enable_autoflush> has been set.
-This is because components can be compiled more efficiently if they don't
-have to check for autoflush. Before enabling autoflush you might consider
+As of Mason 1.3, autoflush will only work if P<enable_autoflush> has
+been set.  Components can be compiled more efficiently if they don't
+have to check for autoflush. Before using autoflush you might consider
 whether a few manual C<$m-E<gt>flush_buffer> calls would work nearly
 as well.
 
