@@ -54,6 +54,7 @@ The absolutely most minimal configuration looks like this:
         PerlHandler HTML::Mason::ApacheHandler
     </FilesMatch>
 
+All .html files under your document root will be served through Mason.
 The PerlModule line makes sure that mod_perl loads that Mason code
 before the server works, which can end up saving memory.
 
@@ -137,7 +138,7 @@ older than 1.24.
 
 =back
 
-All of the configuration parameters document below correspond to
+All of the configuration parameters documented below correspond to
 constructor parameters for the B<L<HTML::Mason::Compiler::ToObject>>
 B<L<HTML::Mason::Interp>>, B<L<HTML::Mason::Resolver::File>>,
 B<L<HTML::Mason::Request>>, and B<L<HTML::Mason::ApacheHandler>>
@@ -241,18 +242,6 @@ Corresponds to the C<out_method> parameter.
 =item * MasonPreloads - list
 
 Corresponds to the C<preloads> parameter.
-
-=item * MasonSystemLogEvents - string
-
-Corresponds to the C<system_log_events> parameter.
-
-=item * MasonSystemLogFile - string
-
-Corresponds to the C<system_log_file> parameter.
-
-=item * MasonSystemLogSeparator - string
-
-Corresponds to the C<system_log_separator> parameter.
 
 =item * MasonUseObjectFiles - boolean
 
@@ -652,13 +641,10 @@ along with any other options given in the C<< $m->cache >> method.
 You may specify other default constructor options with
 the L<Interp/data_cache_defaults> Interp parameter.  For example,
 
-    my $interp = new HTML::Mason::Interp (
-       ...
-       data_cache_defaults =>
-          { cache_class => 'SizeAwareFileCache',
-            cache_depth => 2,
-            default_expires_in => '1 hour' }
-    );
+    data_cache_defaults =>
+       { cache_class => 'SizeAwareFileCache',
+         cache_depth => 2,
+         default_expires_in => '1 hour' }
 
 Any options passed to individual C<< $m->cache >> calls override these
 defaults.
@@ -672,124 +658,6 @@ If for some reason you want to disable data caching entirely, use
 This subclass faithfully implements the cache API but never stores data.
 
 =back
-
-=head2 System logs
-
-Mason will log various events to a system log file if you so desire.
-This can be useful for performance monitoring and debugging.
-
-The format of the system log was designed to be easy to parse by
-programs, although it is not unduly hard to read for humans.  Every
-event is logged on one line. Each line consists of multiple fields
-delimited by a common separator, by default ctrl-A. The first three
-fields are always the same: time, the name of the event, and the
-current pid ($$).  These are followed by one or more fields specific
-to the event.
-
-The events are:
-
- EVENT NAME	DESCRIPTION			EXTRA FIELDS
-
- REQ_START	start of HTTP request		request number, URL + query string
- REQ_END	end of HTTP request		request number, error flag (1 if
-						error occurred, 0 otherwise)
- CACHE_READ	attempt to read from		component path, cache key, success
-		data cache (C<$m-E<gt>cache>)	flag (1 if item found, 0 otherwise)
- CACHE_STORE	store to data cache		component path, cache key
- COMP_LOAD	component loaded into memory	component path
-		for first time	
-
-The request number is an incremental value that uniquely identifies
-each request for a given child process. Use it to match up
-REQ_START/REQ_END pairs.
-
-To turn on logging, specify a string value to C<system_log_events>
-containing one or more event names separated by '|'. In additional to
-individual event names, the following names can be used to specify
-multiple events:
-
- REQUEST = REQ_START | REQ_END
- CACHE = CACHE_READ | CACHE_STORE
- ALL = All events
-
-For example, to log REQ_START, REQ_END, and COMP_LOAD events, you could use
-    system_log_events => "REQUEST|COMP_LOAD"
-Note that this is a string, not a set of constants or'd together.
-
-B<Configuration Options>
-
-By default, the system log will be placed in
-data_dir/etc/system.log. You can change this with C<system_log_file>.
-
-The default line separator is ctrl-A. The advantage of this separator
-is that it is very unlikely to appear in any of the fields, making it
-easy to split() the line.  The disadvantage is that it will not always
-display, e.g. from a Unix shell, making the log harder to read
-casually.  You can change the separator to any sequence of characters
-with C<system_log_separator>.
-
-The time on each log line will be of the form "seconds.microseconds"
-if you are using Time::HiRes, and simply "seconds" otherwise.  See
-C<Config.pm> section.
-
-B<Sample Log Parser>
-
-Here is a code skeleton for parsing the various events in a log.  You
-can also find this in C<eg/parselog.pl> in the Mason distribution.
-
-   open(LOG,"mason.log");
-   while (<LOG>) {
-       chomp;
-       my (@fields) = split("\cA");
-       my ($time,$event,$pid) = splice(@fields,0,3);
-       if ($event eq 'REQ_START') {
-           my ($reqnum,$url) = @fields;
-           ...
-       } elsif ($event eq 'REQ_END') {
-           my ($reqnum,$errflag) = @fields;
-           ...
-       } elsif ($event eq 'CACHE_READ') {  
-           my ($comp,$key,$hitflag) = @fields;
-           ...
-       } elsif ($event eq 'CACHE_STORE') { 
-           my ($comp,$key) = @fields;
-           ...
-       } elsif ($event eq 'COMP_LOAD') {
-           my ($comp) = @fields;
-           ...
-       } else {
-           warn "unrecognized event type: $event\n";
-       }
-   }
-
-
-B<Suggested Uses>
-
-Performance: REQUEST events are useful for analyzing the performance
-of all Mason requests occurring on your site, and identifying the
-slowest requests. C<eg/perflog.pl> in the Mason distribution is a log
-parser that outputs the average compute time of each unique URL, in
-order from slowest to quickest.
-
-Server activity: REQUEST events are useful for determining what
-your web server children are working on, especially when you have a
-runaway.  For a given process, simply tail the log and find the last
-REQ_START event with that process id. (You can also use the Apache
-status page for this.)
-
-Cache efficiency: CACHE events are useful for monitoring cache "hit
-rates" (number of successful reads over total number of reads) over
-all components that use a data cache.  Because stores to a cache are
-more expensive than reads, a high hit rate is essential for the cache
-to have a beneficial effect. If a particular cache hit rate is too
-low, you may want to consider changing how frequently it is expired or
-whether to use it at all.
-
-Load frequency: COMP_LOAD events are useful for monitoring your code
-cache. Too many loads may indicate that your code cache is too small.
-Also, if you can turn off the code cache for a short time, COMP_LOAD
-events will tell you which components are loaded most often and thus
-good candidates for preloading.
 
 =head1 PERFORMANCE TUNING
 
@@ -859,6 +727,19 @@ to take effect.
 If for some reason you don't want Mason to create object files, set
 the L<Interp/use_object_files> Interp parameter to 0.
 
+=head2 Fixed source mode
+
+As described above, Mason checks the timestamp of a component source
+file every time that component is called. This can add up to a lot
+of file stats.
+
+If you have a live site with infrequent and well-controlled updates,
+you may run in L<Interp/fixed_source> mode. In this mode Mason will
+not check source timestamps when it uses an in-memory cache or object
+file.  The disadvantage is that you must remove object files and
+restart the server whenever you change component source; however this
+process can be easily automated.
+
 =head2 Preloading
 
 You can tell Mason to preload a set of components in the parent
@@ -885,24 +766,7 @@ Try to preload components that are used frequently and do not change
 often.  (If a preloaded component changes, all the children will have
 to reload it from scratch.)
 
-=head2 Compile/resolve once mode
-
-XXX: todo
-
-=head1 STAGING vs. PRODUCTION
-
-Site builders often maintain two versions of their sites: the
-production (published) version visible to the world, and the
-development (staging) version visible internally.  Developers try out
-changes on the staging site and push the pages to production once they
-are satisfied.
-
-The priorities for the staging site are rapid development and easy
-debugging, while the main priority for the production site is
-performance. This section describes various ways to adapt Mason for
-each case.
-
-=head2 Error mode
+=head1 ERROR REPORTING
 
 When an error occurs, Mason can respond by:
 
@@ -924,10 +788,6 @@ immediate feedback on the error.  The second option is usually desired
 for production so that users are not exposed to messy error messages. 
 You control this option by setting request->error_mode to "output"
 or "fatal" respectively.
-
-=head2 Reload files
-
-Consider reload files only for frequently visited production sites.
 
 =head1 CONFIGURING VIRTUAL SITES
 
