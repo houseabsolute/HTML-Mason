@@ -102,8 +102,9 @@ sub flush_internal_caches
     my ($self) = @_;
 
     $self->{fetch_comp_cache} = {};
+    delete($self->{parent_cache});
 }
- 
+
 sub _determine_inheritance {
     my $self = shift;
 
@@ -312,22 +313,33 @@ sub flag {
 }
 
 #
-# Return parent component according to inherit flag
+# Return parent component according to inherit flag.
 #
 sub parent {
     my ($self) = @_;
-    my $interp = $self->interp;
 
-    my $comp;
+    # Return cached value for parent, if any (may be undef)
+    #
+    return $self->{parent_cache} if exists($self->{parent_cache});
+
+    my $interp = $self->interp;
+    my $parent;
     if ($self->inherit_path) {
-	$comp = $interp->load($self->inherit_path)
+	$parent = $interp->load($self->inherit_path)
 	    or error(sprintf("cannot find inherit path '%s' for component '%s'",
 			     $self->inherit_path, $self->title));
     } elsif ($self->inherit_start_path) {
-	$comp = $interp->find_comp_upwards($self->inherit_start_path, $interp->autohandler_name);
+	$parent = $interp->find_comp_upwards($self->inherit_start_path, $interp->autohandler_name);
     }
 
-    return $comp;
+    # Can only cache parent value if interp->{use_internal_component_caches} is on -
+    # see definition in Interp::_initialize.
+    #
+    if ($interp->use_internal_component_caches) {
+	$self->{parent_cache} = $parent;
+    }
+
+    return $parent;
 }
 
 sub interp {
