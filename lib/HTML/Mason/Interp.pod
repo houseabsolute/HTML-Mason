@@ -273,56 +273,39 @@ Any global that you set should also be registered with the Compiler
 parameter L<Compiler/allow_globals>; otherwise you'll get warnings
 from C<strict>.
 
-=item make_anonymous_component (comp=>...)
+=item make_anonymous_component (comp_text=>... [, path=>...])
 
-=item make_anonymous_component (comp_file=>...)
+=item make_anonymous_component (comp_file=>... [, path=>...])
 
 This method compiles Mason component source code and returns a
-Component object.  The source may be passed in as a string in C<comp>,
+Component object.  The source may be passed in as a string in C<comp_text>,
 or as a filename in C<comp_file>.  When using C<comp_file>, the
 filename is specified as a path on the file system, not as a path
 relative to Mason's component root.
 
-If Mason encounters an error during processing, an error will be thrown.
+If you pass a C<path> parameter, the new component will be 'public',
+and callable from other components via the specified path.  Otherwise
+the component will be anonymous, and the only way to access the
+component will be through the returned component object.
 
-The returned value is the only reference to the new component object,
-i.e. Mason will not make the new component available to other components.
-For that behavior, see C<make_component()>.
+If Mason encounters an error during processing, an exception will be thrown.
 
 Example of usage:
 
-    # Make a component
-    my $comp =
-      eval { $interp->make_anonymous_component
+    # Make an anonymous component
+    my $anon_comp =
+      eval { $interp->make_component
                ( comp=>'<%perl>my $name = "World";</%perl>Hello <% $name %>!' ) };
     die $@ if $@;
     
-    $m->comp($comp);
-
-
-=for html <a name="item_make_component">
-
-=item make_component (comp=>..., path=>...)
-
-=item make_component (comp_file=>..., path=>...)
-
-This method compiles Mason component source code just like
-C<make_anonymous_component()>, and then installs the component into
-the interpreter so that it can be called from other components.  The
-Mason calling path is specified via the C<path> parameter.
-
-If Mason encounters an error during processing, an error will be thrown.
-
-Example of usage:
-
-    # Make a component
-    my $comp =
-      eval { $interp->make_component
-               ( comp=>'<%perl>my $name = "World";</%perl>Hello <% $name %>!',
-                 path=>'/hello/world.ma' ) };
+    # Make a public component
+    eval { $interp->make_component
+             ( comp=>'<%perl>my $name = "World";</%perl>Hello <% $name %>!',
+               path=>'/hello/world.ma' ) };
     die $@ if $@;
     
-    $m->comp($comp);
+    $m->comp($anon_comp);
+    $m->comp('/hello/world.ma');
 
 =back
 
