@@ -456,7 +456,8 @@ sub cache
     unless (pkg_loaded($mason_cache_class)) {
 	load_pkg('Cache::Cache', '$m->cache requires the Cache::Cache module, available from CPAN.');
 	load_pkg($cache_class, 'Fix your Cache::Cache installation or choose another cache class.');
-	eval sprintf('package %s; use base qw(HTML::Mason::Cache::BaseCache %s); use vars qw($VERSION); $VERSION = 1.0',
+        # need to break up mention of VERSION var or else CPAN/EU::MM can choke when running 'r'
+	eval sprintf('package %s; use base qw(HTML::Mason::Cache::BaseCache %s); use vars qw($' . 'VERSION); $' . 'VERSION = 1.0;',
 		     $mason_cache_class, $cache_class);
 	die "Error constructing mason cache class $mason_cache_class: $@" if $@;
     }
