@@ -35,11 +35,9 @@ my $interp = new HTML::Mason::Interp (parser=>$parser,
 my $ah = new HTML::Mason::ApacheHandler (interp=>$interp);
 
 # Activate the following if running httpd as root (the normal case).
-# Resets ownership of all files created by Mason at startup. Change
-# these to match your server's 'User' and 'Group'.
+# Resets ownership of all files created by Mason at startup.
 #
-#chown (scalar(getpwnam "nobody"), scalar(getgrnam "nobody"),
-#       $interp->files_written);
+#chown (Apache->server->uid, Apache->server->gid, $interp->files_written);
 
 sub handler
 {
