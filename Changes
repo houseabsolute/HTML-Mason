@@ -1,6 +1,66 @@
 Revision history for Perl extension HTML::Mason.
 
-0.4
+All development by Jonathan Swartz, swartz@transbay.net, unless otherwise noted:
+[mschmick] -- Mark Schmick, mark@webz.com
+[modus] -- Patrick Kane, modus@pr.es.to
+See CREDITS file for other contributors
+
+** denotes an incompatible change
+
+0.5
+	- removed memory leak associated with "return sub { ... }"
+	- overhauled Config.pm, now maintains previous configuration
+          when upgrading Mason (suggested by Patrick Kane)
+	- made filename processing compatible with Windows 32
+          (suggested by Rafael Weinstein)
+	- removed requirement of File::Tools/File::Recurse, replaced
+          with standard File::Find
+	- switched output to STDOUT from $r->print, to facilitate
+          chaining with other mod_perl tools
+	- switched to standard argument processing code, now handles
+          multi-part forms [modus]
+	- added Parser options 'preprocess' and 'postprocess'
+          (submitted by Philip Gwyn)
+	- added Parser option 'in_package' (submitted by Philip Gwyn)
+	- added facilities for using globals in components: Parser
+          option 'allow_globals' and Interp method 'set_global'
+	- ** changed behavior of reload_file mode to read directly
+          from object files [mschmick]
+	- reduced number of file stats when loading components
+          [mschmick]
+	- documented how to integrate Mason with Apache::Session
+          [modus]
+	- upgraded FakeApache/debug files to work with mod_perl 1.19
+	- added documentation about how debug files work
+	- mentioned mailing lists, masonhq.com web site, and FAQ in
+          the documentation and README
+	- improved documentation on how to integrate images and
+          non-Mason hierarchies with Mason
+	- differentiated mc_cache and mc_cache_self in the commands
+          manual (suggested by Tom Higgins)
+	- increased discouraging of SDBM, improved warnings when cache
+          store fails (suggested by Patrick Kane)
+	- fixed HTML documentation to work with IE (suggested by Fen
+          Lebalme)
+	- fixed infinite loop in ApacheHandler dhandler search
+          (submitted by Chuck O'Donnell)
+	- documented Parser method parse()
+	- added cache actions 'expire' and 'keys'
+	- corrected Parser to properly handle \ in components
+          (submitted by Ken Williams)
+	- took Preview out of Mason.pm; ApacheHandler used only if
+          mod_perl environment
+	- improved documentation about argument/GET/POST handling
+          (suggested by Ken Williams)
+	- added cache option 'busy_lock' (suggested by Dennis Watson)
+	- inserted work-around for Perl 5.005 $r scoping bug
+          (submitted by Rafael Weinstein)
+	- fixed "new CGI" example in Components.pod (submitted by
+          Austin Lin)
+	- fixed "return if content-type..." line in handler.pl and
+          Mason.pod (submitted by Patrick Kane)
+
+0.4  Wed Jan 06 10:35:00 PST  1999
 	- added support for using Perl profiler in conjunction with
 	  debug files
 	- fixed bug in previewer HTML trace introduced in 0.3
