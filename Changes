@@ -20,40 +20,55 @@ policy. L{Devel/autohandlers}
 - Integrated a revamped parse_component that is cleaner, more modular
 and easier to subclass. Courtesy of Dave Rolsky.
 - New <%shared> section contains code that executes once per request
-and whose declarations are visible from the main component, methods and
-subcomponents alike. L{Devel/e_lt_sharede_gt_}
-- Added escape flags for <% %> output. Can now HTML-escape or URI-escape
-expressions on a site-wide or per-expression basis. L{Devel/escaping_expressions}
-- Added choice of CGI or Apache::Request when using ApacheHandler. (submitted by Dave Rolsky) 
+and whose declarations are visible from the main component, methods
+and subcomponents alike. L{Devel/e_lt_sharede_gt_}
+- Added escape flags for <% %> output. Can now HTML-escape or
+URI-escape expressions on a site-wide or per-expression
+basis. L{Devel/escaping_expressions}
+- Added choice of CGI or Apache::Request when using
+ApacheHandler. (submitted by Dave Rolsky)
 L{ApacheHandler/parameters_to_the_use_declarat}
-- Documented $m->clear_buffer, which removes all pending output from the buffer.
-L{Request/item_clear_buffer}
-- Fixed keys and expires cache actions from m->cache interface. (suggested by Matt Hoskins) 
-- dhandlers can now serve their own directory; added documentation about handling directories.
-L{Admin/allowing_directory_requests}
+- Documented $m->clear_buffer, which removes all pending output from
+the buffer.  L{Request/item_clear_buffer}
+- Fixed keys and expires cache actions from m->cache
+interface. (suggested by Matt Hoskins)
+- dhandlers can now serve their own directory; added documentation
+about handling directories.  L{Admin/allowing_directory_requests}
 - Fixed dhandler bug introduced in 0.81 whereby $m->dhandler_arg only
 contains the first branch of a multi-branch argument.
 - Removed memory leak in ApacheHandler::handle_request_1. (submitted
 by Pascal Eeftinck and Renzo Toma)
-- Changed parent_comp() to owner() for subcomponents/methods. L{Component/item_owner}
+- Changed parent_comp() to owner() for subcomponents/methods.
+L{Component/item_owner}
 - Increased maximum recurse level from 16 to 32.
 - Reorganized syntax section of developer's manual and added a "how to
 use this manual" section.
 - Added an UPGRADE guide to distribution.
 - Added section about securing top-level components to
-Admin.pod. (suggested by Sean Cazzell) L{Admin/securing_top_level_components}
-- Added section about declining image requests to Admin.pod. L{Admin/declining_image_requests}
-- Eliminated "Subroutine status_mason redefined" warning when creating multiple ApacheHandlers.
+Admin.pod. (suggested by Sean Cazzell)
+L{Admin/securing_top_level_components}
+- Added section about declining image requests to
+Admin.pod. L{Admin/declining_image_requests}
+- Eliminated "Subroutine status_mason redefined" warning when creating
+multiple ApacheHandlers.
 - Updated cookie expiration in CD-ME example. (reported by Renzo Toma)
 - Added a "-f" flag to rm in faq Makefile. (reported by Jeremy Taylor)
 
-0.81  Mon Feb 21 12:23:42 PST 2000
+0.81  Sun Feb 20 23:39:05 PST 2000
 
-- Now sends headers even when content is blank or all whitespace.
-- Fixed default system log, broken in 0.8. (reported by Renzo Toma)
-- Removed remaining traces of dhandler processing from ApacheHandler.
-- ** PATH_INFO no longer contains the dhandler argument; use
-$m->dhandler_arg instead.
+- Fixed small 0.8 bugs with automatic header sending. Headers are now
+sent for blank pages and are not sent on an error status code.
+- Fixed bug with default system log file. (submitted by Renzo Toma)
+- Eliminated memory leak introduced in 0.8 for a few Linux platforms.
+(submitted by Renzo Toma and Pascal Eeftinck)
+- Fixed bug with component paths displaying two leading slashes.
+- Fixed $comp->source_file when multiple comp roots declared.
+- Fixed $m->decline in mod_perl mode.
+- Removed legacy dhandler code from ApacheHandler.
+- Replaced $r->filename with $r->finfo in ApacheHandler.
+(submitted by Dennis Watson)
+- Added dynamic virtual server configuration example to Admin.pod.
+(submitted by Caleb Crome)
 
 0.8  Sun Jan 23 16:48:46 PST 2000
 
