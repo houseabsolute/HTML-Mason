@@ -147,6 +147,9 @@ sub start
 	$self->match_comp_content_call_end && next;
 
 	$self->match_text && next;
+
+	# We should never get here - if we do, we're in an infinite loop.
+	HTML::Mason::Exception::Syntax->throw( error => "Infinite parsing loop encountered - Lexer bug?" );
     }
 
     if ( $self->{in_def} || $self->{in_method} )
@@ -446,7 +449,7 @@ sub match_perl_line
 
     my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
-    if ( $comp =~ /\G(?:(?<=\n)|\A)%([^\n]+)(?:\n|\z)/gcs )
+    if ( $comp =~ /\G%([^\n]*)(?:\n|\z)/gcs )
     {
 	$self->{pos} = pos($comp);
 
@@ -482,6 +485,8 @@ sub match_text
 	$self->{pos} = pos($comp);
 	
 	my $consumed = "$1$2";
+	return 0 unless length $consumed;
+
 	$self->{compiler}->text( text => "$1" );
 	$self->{lines} += $consumed =~ tr/\n/\n/;
 	return 1;
