@@ -243,14 +243,17 @@ sub parse_component
 					   startline => 0,
 					   noparse => 1 );
 		} elsif ( $section_name eq 'def' || $section_name eq 'method' ) {
+		    if ($state->{embedded}) {
+			die $self->_make_error( error => "<%$section_name> not allowed inside <%def> or <%method>",
+						errpos => $section_tag_pos );
+		    }
 		    my $method = '_parse_' . lc $section_name . '_section';
 		    $self->$method( name => $subcomp_name,
 				    section => $section,
 				    section_start => $section_start,
 				  );
 		} else {
-		    if ( $state->{ lc $section_name } )
-		    {
+		    if ( $state->{ lc $section_name } ) {
 			die $self->_make_error( error => "repeated <%$section_name> section",
 						errpos => $section_tag_pos );
 		    }
@@ -461,6 +464,8 @@ sub _parse_once_section
     $state->{once} = $params{section}."\n";
 }
 
+my %valid_flags = (map(($_,1),qw(inherit)));
+
 sub _parse_flags_section
 {
     my $self = shift;
@@ -469,6 +474,9 @@ sub _parse_flags_section
     my $state = $self->{parser_state};
 
     my $hash = $self->_parse_hash_pairs($params{section});
+    foreach my $key (@keys(%$hash)) {
+	die $self->_make_error( error => "invalid flag '$key'" ) unless $valid_flags{$key};
+    }    
 
     $state->{flags} = "'flags' => { $hash }";
 }
@@ -878,8 +886,7 @@ sub _build_params_string
     push @cparams, sprintf( "'object_size'=>%d",
 			    length($header) + length (join ",\n", @cparams) );
 
-    my $cparamstr = join(",\n",@cparams);
-
+    return join(",\n",@cparams);
 }
 
 sub _build_body
