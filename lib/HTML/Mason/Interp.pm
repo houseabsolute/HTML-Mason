@@ -8,7 +8,6 @@ package HTML::Mason::Interp;
 
 use strict;
 
-use Config;
 use File::Basename;
 use File::Path;
 use File::Spec;
