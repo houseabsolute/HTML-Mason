@@ -43,7 +43,7 @@ my %prereq = ( 'File::Spec' => 0.8,
 	       'Params::Validate' => 0.24,
 	       'Exception::Class' => 1.01,
 	       'Cache::Cache' => 1.00,
-               'Class::Container' => 0.06,
+               'Class::Container' => 0.07,
 	     );
 
 chk_version('File::Spec' => '0.8') or
@@ -79,9 +79,9 @@ chk_version('Cache::Cache' => '1.00') or
         . "    Mason requires version 1.00, or later, of Cache::Cache\n"
 	. "    from CPAN/modules/by-authors/id/D/DC/DCLINTON/Cache-Cache-x.x.tar.gz\n\n";
 
-chk_version('Class::Container' => '0.06') or
+chk_version('Class::Container' => '0.07') or
     warn  "\n"
-	. "*** Mason requires version 0.06, or later, of Class::Container\n"
+	. "*** Mason requires version 0.07, or later, of Class::Container\n"
 	. "    from CPAN/modules/by-authors/id/K/KW/KWILLIAMS/Class-Container-x.x.tar.gz\n\n";
 
 setup_mod_perl_tests() unless $opts{'no-prompts'};
