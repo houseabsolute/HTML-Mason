@@ -304,6 +304,20 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'content_comp_wrong_error',
+		      description => "Make sure syntax error inside <&|> </&> tags is thrown correctly",
+		      component => <<'EOF',
+<&| ttt &>
+<%
+</&>
+<%def ttt>
+</%def>
+EOF
+		      expect_error => qr/'<%' without matching '%>'/,
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 

@@ -97,11 +97,15 @@ sub lex
 	$current->{compiler}->start_component;
 	$self->start;
     };
-    # Call this out here because it may be needed to break circular
-    # refs inside the compiler
-    $current->{compiler}->end_component;
+    my $err = $@;
+    # Always call end_component, but throw the first error
+    eval
+    {
+        $current->{compiler}->end_component;
+    };
+    $err ||= $@;
 
-    rethrow_exception $@;
+    rethrow_exception $err;
 }
 
 sub object_id
