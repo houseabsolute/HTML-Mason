@@ -1494,7 +1494,7 @@ automatic header feature.
 =head1 APACHE- OR CGI-ONLY METHOD
 
 This method is available when Mason is running under either the
-ApacheHandler or CGIHandle rmodules.
+ApacheHandler or CGIHandler modules.
 
 =over 4
 
