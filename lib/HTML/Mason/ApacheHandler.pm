@@ -70,11 +70,8 @@ sub cgi_object
 #
 package HTML::Mason::ApacheHandler;
 
-#JS - 6/30 - seems to infinite loop when using debug...help?!
-#use Apache::Constants qw(OK DECLINED SERVER_ERROR NOT_FOUND);
 sub OK { return 0 }
 sub DECLINED { return -1 }
-sub SERVER_ERROR { return 500 }
 sub NOT_FOUND { return 404 }
 use File::Path;
 use File::Spec;
@@ -121,11 +118,6 @@ __PACKAGE__->valid_params
                               },
      auto_send_headers     => { parse => 'boolean', type => SCALAR|UNDEF, default => 1 },
 
-     debug_dir_config_keys => { parse => 'list',    type => ARRAYREF,     optional => 1 },
-     debug_handler_proc    => { parse => 'string',  type => SCALAR,       optional => 1 },
-     debug_handler_script  => { parse => 'string',  type => SCALAR,       optional => 1 },
-     debug_mode            => { parse => 'string',  type => SCALAR,       optional => 1 },
-     debug_perl_binary     => { parse => 'string',  type => SCALAR,       optional => 1 },
      decline_dirs          => { parse => 'boolean', type => SCALAR|UNDEF, default => 1 },
      error_mode            => { parse => 'string',  type => SCALAR,       default => 'html',
 				callbacks =>
@@ -530,9 +522,6 @@ sub handle_request {
 	# In html/raw_html mode, call error_display_html and print result.
 	# The raw_ modes correspond to pre-1.02 error formats.
 	#
-	# [This is a load of spaghetti. It will be cleaned up in 1.2 when we lose
-	# debug mode and standardize error handling.]
-	#
 	if ($self->error_mode eq 'fatal') {
 	    unless ($interp->die_handler_overridden) {
 		$err =~ s/\n/\t/g;
@@ -544,12 +533,9 @@ sub handle_request {
 	    die ("System error:\n$raw_err\n");
 	} elsif ($self->error_mode =~ /html$/) {
 	    unless ($interp->die_handler_overridden) {
-		my $debug_msg;
 		if ($self->error_mode =~ /^raw_/) {
-		    $err .= "$debug_msg\n" if $debug_msg;
 		    $err = "<h3>System error</h3><p><pre><font size=-1>$raw_err</font></pre>\n";
 		} else {
-		    $err .= "Debug info: $debug_msg\n" if $debug_msg;
 		    $err = error_display_html($err,$raw_err);
 		}
 	    }
