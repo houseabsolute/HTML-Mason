@@ -522,17 +522,6 @@ sub handle_request {
     }
 
     #
-    # Construct (and truncate if necessary) the request to log at start
-    #
-    if ($interp->system_log_event_check('REQ_START')) {
-	my $rstring = $apreq->server->server_hostname . $apreq->uri;
-	$rstring .= "?".scalar($apreq->args) if defined(scalar($apreq->args));
-	$rstring = substr($rstring,0,150).'...' if length($rstring) > 150;
-	$interp->write_system_log('REQ_START', $self->{request_number},
-				  $rstring);
-    }
-
-    #
     # If someone is using a custom request class that doesn't accept
     # 'ah' and 'apache_req' that's their problem.
     #
@@ -605,7 +594,6 @@ sub handle_request {
     }
     undef $request;  # ward off memory leak
 
-    $interp->write_system_log('REQ_END', $self->{request_number}, $err_status);
     return ($err) ? &OK : (defined($retval)) ? $retval : &OK;
 }
 
