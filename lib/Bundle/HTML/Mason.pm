@@ -18,8 +18,6 @@ C<perl -MCPAN -e 'install Bundle::HTML::Mason'>
 
 =head1 CONTENTS
 
-Data::Dumper
-
 File::Spec  0.8
 
 Params::Validate  0.13
@@ -28,7 +26,7 @@ Apache::Request  0.31
 
 Exception::Class  1.00
 
-Cache::Cache  0.99
+Cache::Cache  1.00
 
 HTML::Mason
 
