@@ -192,6 +192,11 @@ sub methods {
 }
 
 #
+# Get all attributes
+#
+sub attributes { $_[0]->{attr} }
+
+#
 # Get attribute by name
 #
 sub attr {
@@ -421,6 +426,12 @@ attribute does not exist.
 Returns true if the specified attribute exists in this component or
 one of its parents, undef otherwise.
 
+=item attributes
+
+Returns a hashref containing the attributes defined in this component,
+with the attribute names as keys.  This does not return attributes
+inherited from parent components.
+
 =item call_method (name, args...)
 
 Looks for the specified user-defined method in this component and its
@@ -502,7 +513,8 @@ component or one of its parents, undef otherwise.
 
 This method works exactly like the
 L<subcomps|HTML::Mason::Component/item_subcomps> method, but it
-returns methods, not subcomponents.
+returns methods, not subcomponents.  This does not return methods
+inherited from parent components.
 
 Methods are declared in C<E<lt>%methodE<gt>> sections.
 
