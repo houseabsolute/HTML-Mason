@@ -82,6 +82,7 @@ use Apache::Request;
 use Data::Dumper;
 use File::Path;
 use File::Spec;
+use HTML::Mason::Exceptions;
 use HTML::Mason::Interp;
 use HTML::Mason::Error qw(error_process error_display_html);
 use HTML::Mason::Tools qw(dumper_method html_escape make_fh pkg_installed);
@@ -120,6 +121,12 @@ my %fields =
      output_mode => undef,    # deprecated - now interp->out_mode
      top_level_predicate => undef,
      );
+
+__PACKAGE__->import if $mod_perl::VERSION > 1.21;
+sub import
+{
+    _make_ah() if _in_apache_conf_file() && ! _get_boolean_param('MultipleConfig');
+}
 
 # This is my best guess as to whether we are being configured via the
 # conf file or not.  Without a comp root it will blow up sooner or
