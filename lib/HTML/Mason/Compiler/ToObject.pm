@@ -386,7 +386,7 @@ sub _set_buffer
     my $self = shift;
 
     if ($self->enable_autoflush) {
-	return;
+	return '';
     } else {
 	return 'my $_outbuf = $m->{top_stack}->[HTML::Mason::Request::STACK_BUFFER];' . "\n";
     }
