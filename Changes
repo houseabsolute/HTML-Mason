@@ -8,15 +8,15 @@ available at http://www.masonhq.com/changes.html.
 0.71  Tue Sep 14 13:12:17 PDT 1999
 
 - Logic of top_level_predicate was reversed in 0.7; fixed.
-L{Reported by Tom Hughes, Eric Hammond}
+(Reported by Tom Hughes, Eric Hammond)
 - mc_suppress_http_header(0) was broken in 0.7; fixed.
-L{Reported by Michael Alan Dorman}
+(Reported by Michael Alan Dorman)
 - Fixed bug in parser section that determines whether % is at the
-beginning of a line.  L{Reported by Tom Hughes}
+beginning of a line.  (Reported by Tom Hughes)
 - Parser no longer inadvertently accepts argument names with
-whitespace.  L{Reported by Phillip Gwyn}
+whitespace.  (Reported by Phillip Gwyn)
 
-0.7  Thu Aug 12 14:22:50 PDT 1999
+0.7  Wed Sep 1 10:12:55 PDT 1999
 
 - Improved core implementation with two new classes,
 HTML::Mason::Request and HTML::Mason::Component.  Code is now cleaner
@@ -54,6 +54,14 @@ references.
 - Removed obsolete and undocumented Interp::vars and mc_var functions
 - Simplified chown/getpwuid usage in handler.pl (submitted by Randal
 Schwartz)
+
+0.6.2  Fri Aug 20 09:02:59 PDT 1999
+
+- Fixed problem with shared data cache locks over NFS (submitted by
+Tom Hughes)
+- Fixed mc_auto_comp, which never really worked as documented
+- Fixed preloading for directories (submitted by Dennis Watson)
+- Added back Utils::get_lock, which is used by content management
 
 0.6.1  Tue Jul 27 09:34:31 PDT 1999
 
