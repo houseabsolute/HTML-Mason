@@ -188,7 +188,7 @@ sub load {
     # Path must be absolute.
     #
     unless (substr($path, 0, 1) eq '/') {
-	error "Component path given to Interp->load must be absolute";
+	error "Component path given to Interp->load must be absolute (was given $path)";
     }
 
     #
