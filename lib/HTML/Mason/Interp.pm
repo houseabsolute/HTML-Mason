@@ -29,30 +29,50 @@ BEGIN
     # Fields that can be set in new method, with defaults
     __PACKAGE__->valid_params
 	(
-	 autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR,
-					   descr => "The filename to use for Mason's 'autohandler' capability" },
-	 code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR,  # 10M
-					   descr => "The maximum size of the component code cache" },
-	 compiler                     => { isa => 'HTML::Mason::Compiler',
-					   descr => "A Compiler object for compiling components" },
-	 current_time                 => { parse => 'string', default => 'real', optional => 1,
-					   type => SCALAR, descr => "Current time (deprecated)" },
-	 data_dir                     => { parse => 'string', optional => 1, type => SCALAR,
-					   descr => "A directory for storing cache files and other state information" },
-         escape_flags                 => { parse => 'hash_list', optional => 1, type => HASHREF,
-                                           descr => "A list of escape flags to set (as if calling the set_escape() method" },
-	 static_source                => { parse => 'boolean', default => 0, type => BOOLEAN,
-					   descr => "When true, we only compile source files once" },
+	 autohandler_name =>
+         { parse => 'string',  default => 'autohandler', type => SCALAR,
+           descr => "The filename to use for Mason's 'autohandler' capability" },
+
+	 code_cache_max_size =>
+         { parse => 'string',  default => 10*1024*1024, type => SCALAR,  # 10M
+           descr => "The maximum size of the component code cache" },
+
+	 compiler =>
+         { isa => 'HTML::Mason::Compiler',
+           descr => "A Compiler object for compiling components" },
+
+	 current_time =>
+         { parse => 'string', default => 'real', optional => 1,
+           type => SCALAR, descr => "Current time (deprecated)" },
+
+	 data_dir =>
+         { parse => 'string', optional => 1, type => SCALAR,
+           descr => "A directory for storing cache files and other state information" },
+
+         escape_flags =>
+         { parse => 'hash_list', optional => 1, type => HASHREF,
+           descr => "A list of escape flags to set (as if calling the set_escape() method" },
+
+	 static_source =>
+         { parse => 'boolean', default => 0, type => BOOLEAN,
+           descr => "When true, we only compile source files once" },
+
 	 # OBJECT cause qr// returns an object
-	 ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
-					   default => qr/Subroutine .* redefined/i,
-					   descr => "A regular expression describing Perl warning messages to ignore" },
-	 preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF,
-					   descr => "A list of components to load immediately when creating the Interpreter" },
-	 resolver                     => { isa => 'HTML::Mason::Resolver',
-					   descr => "A Resolver object for fetching components from storage" },
-	 use_object_files             => { parse => 'boolean', default => 1, type => BOOLEAN,
-					   descr => "Whether to cache component objects on disk" },
+	 ignore_warnings_expr =>
+         { parse => 'string',  type => SCALAR|OBJECT, default => qr/Subroutine .* redefined/i,
+           descr => "A regular expression describing Perl warning messages to ignore" },
+
+	 preloads =>
+         { parse => 'list', optional => 1, type => ARRAYREF,
+           descr => "A list of components to load immediately when creating the Interpreter" },
+
+	 resolver =>
+         { isa => 'HTML::Mason::Resolver',
+           descr => "A Resolver object for fetching components from storage" },
+
+	 use_object_files =>
+         { parse => 'boolean', default => 1, type => BOOLEAN,
+           descr => "Whether to cache component objects on disk" },
 	);
 
     __PACKAGE__->contained_objects
