@@ -68,12 +68,8 @@ I have 1 subcomponent(s).
 Including one called .subcomp.
 My title is /component/comp_obj_test/comp_obj.
 
-My object file is /.../obj/component/comp_obj_test/comp_obj
 My path is /component/comp_obj_test/comp_obj.
 My comp_id is /component/comp_obj_test/comp_obj.
-My source file is /.../comps/component/comp_obj_test/comp_obj
-My source dir is /.../comps/component/comp_obj_test
-
 
 
 ------------------------------------------------------------
@@ -91,10 +87,8 @@ My directory is /component/comp_obj_test.
 I have 0 subcomponent(s).
 My title is /component/comp_obj_test/comp_obj:.subcomp.
 
-My object file is /.../obj/component/comp_obj_test/comp_obj
 My path is /component/comp_obj_test/comp_obj:.subcomp.
 My comp_id is [subcomponent '.subcomp' of /component/comp_obj_test/comp_obj].
-
 
 
 ------------------------------------------------------------
