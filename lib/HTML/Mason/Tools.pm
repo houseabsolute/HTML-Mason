@@ -195,7 +195,7 @@ sub taint_is_on
     else
     {
         local $^W;
-        return eval { $Taint = 0; "$0$^X" && kill 0; $Taint = 1 };
+        return eval { $Taint = 0; local $^W; "$0$^X" && kill 0; $Taint = 1 };
     }
 }
 
