@@ -75,7 +75,7 @@ sub _handle_error
 {
     my ($self, $err) = @_;
 
-    if (UNIVERSAL::isa($err, 'HTML::Mason::Exception::TopLevelNotFound')) {
+    if (isa_mason_exception($err, 'TopLevelNotFound')) {
 	die $err;
     } else {
 	$self->SUPER::_handle_error($err);
@@ -619,7 +619,7 @@ sub handle_request {
 	# of POST we must trick Apache into not reading POST content
 	# again. Wish there were a more standardized way to do this...
 	#
-	if (UNIVERSAL::isa($err, 'HTML::Mason::Exception::TopLevelNotFound')) {
+	if (isa_mason_exception($err, 'TopLevelNotFound')) {
 	    if ($apreq->method eq 'POST') {
 		$apreq->method('GET');
 		$apreq->headers_in->unset('Content-length');

@@ -327,7 +327,7 @@ sub load {
 		$comp = eval { $self->eval_object_code( object_code => $object_code ) };
 
 		if ($@) {
-		    if (UNIVERSAL::isa($@, 'HTML::Mason::Exception::Compilation::IncompatibleCompiler')) {
+		    if (isa_mason_exception($@, 'Compilation::IncompatibleCompiler')) {
 			$objfilemod = 0;
 			undef $object_code;
 		    } else {

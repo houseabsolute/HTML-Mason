@@ -79,17 +79,33 @@ my %abbrs = map { $e{$_}{abbr} => $_ } grep {exists $e{$_}{abbr}} keys %e;
 sub import
 {
     my ($class, %args) = @_;
-    return unless %args;
 
+    my $caller = caller;
     if ($args{abbr})
     {
-	my $caller = caller;
 	foreach my $name (@{$args{abbr}})
 	{
 	    die "Unknown exception abbreviation '$name'" unless exists $abbrs{$name};
 	    no strict 'refs';
 	    *{"${caller}::$name"} = sub { $abbrs{$name}->throw( error => shift ) };
 	}
+    }
+    {
+	no strict 'refs';
+	*{"${caller}::isa_mason_exception"} = \&isa_mason_exception;
+    }
+}
+
+sub isa_mason_exception
+{
+    my ($err, $name) = @_;
+
+    if ($name) {
+	my $class = "HTML::Mason::Exception::$name";
+	die "no such exception class $class" unless defined(${"${class}::VERSION"});
+	return UNIVERSAL::isa($err, "HTML::Mason::Exception::$name");
+    } else {
+	return UNIVERSAL::isa($err, "HTML::Mason::Exception");
     }
 }
 
@@ -114,10 +130,10 @@ sub throw
 {
     my ($class, %params) = @_;
 
-    if (UNIVERSAL::isa($params{error}, 'HTML::Mason::Exception')) {
+    if (isa_mason_exception($params{error})) {
 	$params{error} = $params{error}->error;
     }
-    if (UNIVERSAL::isa($params{message}, 'HTML::Mason::Exception')) {
+    if (isa_mason_exception($params{message})) {
 	$params{message} = $params{message}->error;
     }
     $class->SUPER::throw(%params);
