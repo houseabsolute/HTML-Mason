@@ -204,14 +204,13 @@ sub handle_request {
     # -jswartz 5/23
     #
     my ($self,$req) = @_;
-    my ($outsub, $retval, $debugMsg, $q);
-    my $argString = '';
+    my ($outsub, $retval);
     my $outbuf = '';
     my $interp = $self->interp;
     $self->{request_number}++;
 
     #
-    # construct (and truncate if necessary) the request to log at start
+    # Construct (and truncate if necessary) the request to log at start
     #
     if ($interp->system_log_event_check('REQ_START')) {
 	my $rstring = $req->server->server_hostname . $req->uri;
@@ -235,27 +234,29 @@ sub handle_request {
     }
 
     #
-    # Create query object and get argument string. Skip if GET with no
-    # query string.  Special case for debug files w/POST -- standard
-    # input not available for CGI to read in this case.
+    # Determine debug file mode. Turn it off regardless if we are
+    # already operating from a debug file.
     #
-    unless ($req->method eq 'GET' && !scalar($req->args)) {
-	if ($HTML::Mason::IN_DEBUG_FILE && $req->method eq 'POST') {
-	    $q = new CGI ($req->content);
-	} else {
-	    $q = new CGI;
-	}
-	$argString = $q->query_string;
-    }
-
     my $debugMode = $self->debug_mode;
-    $debugMode = 'none' if (ref($req) eq 'HTML::Mason::FakeApache');
+    $debugMode = 'none' if $HTML::Mason::IN_DEBUG_FILE;
 
-    my $debugState = $self->capture_debug_state($req,$argString)
+    #
+    # Capture debug state as early as possible, before we start messing with $req.
+    #
+    my $debugState;
+    $debugState = $self->capture_debug_state($req)
 	if ($debugMode eq 'all' or $debugMode eq 'error');
-    $debugMsg = $self->write_debug_file($req,$debugState) if ($debugMode eq 'all');
 
-    eval { $retval = handle_request_1($self, $req, $argString, $q) };
+    #
+    # Write debug file as early as possible if debug mode is
+    # 'all'. However, we must unfortunatly wait in the case of POSTs
+    # because we don't yet have the stdin content.
+    #
+    my $debugMsg;
+    $debugMsg = $self->write_debug_file($req,$debugState)
+	if ($debugMode eq 'all' && $req->method ne 'POST');
+
+    eval { $retval = handle_request_1($self, $req, $debugState) };
     my $err = $@;
     my $err_status = $err ? 1 : 0;
 
@@ -278,10 +279,11 @@ sub handle_request {
 		$req->send_http_header();
 	    }
 	    print("<h3>System error</h3><p><pre><font size=-1>$err</font></pre>\n");
-	    $debugMsg = $self->write_debug_file($req,$debugState) if ($debugMode eq 'error');
+	    $debugMsg = $self->write_debug_file($req,$debugState) if ($debugMode eq 'error' || ($debugMode eq 'all' && $req->method eq 'POST'));
 	    print("<pre><font size=-1>\n$debugMsg\n</font></pre>\n") if defined($debugMsg);
 	}
     } else {
+	$debugMsg = $self->write_debug_file($req,$debugState) if ($debugMode eq 'all' && $req->method eq 'POST');
 	print("\n<!--\n$debugMsg\n-->\n") if defined($debugMsg) && http_header_sent($req) && !$req->header_only && $req->header_out("Content-type") =~ /text\/html/;
 	print($outbuf) if $self->output_mode eq 'batch';
     }
@@ -390,7 +392,7 @@ PERL
 
 sub capture_debug_state
 {
-    my ($self, $r, $argString) = @_;
+    my ($self, $r) = @_;
     my (%d,$expr);
 
     $expr = '';
@@ -417,10 +419,6 @@ sub capture_debug_state
     
     $d{'args$'} = scalar($r->args);
     
-    if ($r->method eq 'POST') {
-	$d{content} = $argString;
-    }
-
     $expr = '';
     $d{server} = {};
     foreach my $field (qw(server_admin server_hostname port is_virtual names)) {
@@ -454,7 +452,7 @@ sub send_headers_hook
 
 sub handle_request_1
 {
-    my ($self,$r,$argString,$q) = @_;
+    my ($self,$r,$debugState) = @_;
     my $interp = $self->interp;
     my $compRoot = $interp->comp_root;
 
@@ -513,11 +511,27 @@ sub handle_request_1
     }
     
     #
+    # Create query object and get argument string. Skip if GET with no
+    # query string.  Special case for debug files w/POST -- standard
+    # input not available for CGI to read in this case.
+    #
+    my $q;
+    unless ($r->method eq 'GET' && !scalar($r->args)) {
+	if ($HTML::Mason::IN_DEBUG_FILE && $r->method eq 'POST') {
+	    $q = new CGI ($r->content);
+	} else {
+	    $q = new CGI;
+	}
+	# For POSTs, we finally store the content in the debug state
+	# if debug mode is on.
+	$debugState->{content} = $q->query_string if $debugState && $r->method eq 'POST';
+    }
+
+    #
     # Parse arguments into key/value pairs. Represent multiple valued
     # keys with array references.
     #
     my (%args);
-
     if ($q) {
 	foreach my $key ( $q->param ) {
 	    foreach my $value ( $q->param($key) ) {
@@ -542,7 +556,7 @@ sub handle_request_1
     my $request = new HTML::Mason::Request::ApacheHandler
 	(ah=>$self,
 	 interp=>$interp,
-	 http_input=>($argString || ''),
+	 http_input=>($q ? $q->query_string : ''),
 	 apache_req=>$r
 	 );
 

@@ -10,6 +10,8 @@ require Exporter;
 @EXPORT_OK = ();
 
 use mod_perl;
+use strict;
+use vars (qw($AUTOLOAD));
 
 sub new {
     my $class = shift;
@@ -49,17 +51,19 @@ sub access_table {
 	return $self->{$field};
 	# die "FakeApache is unable to simulate the Apache::Table class for the `$field' method called in scalar context.  You'll need to temporarily remove or comment out that method call to use debug files.\n";
     } elsif (@_==3) {
-	return $self->{$key};
+	return $self->{$field}->{$key};
     } else {
-	return ($self->{$key} = $value);
+	return ($self->{$field}->{$key} = $value);
     }
 }
 
 sub args {
+    my $self = shift;
     return (wantarray) ? @{$self->{'args@'}} : $self->{'args$'};
 }
 
 sub get_basic_auth_pw {
+    my $self = shift;
     return @{$self->{get_basic_auth_pw}};
 }
 
@@ -130,6 +134,7 @@ sub AUTOLOAD {
 }
 
 package HTML::Mason::FakeApache::Server;
+use vars (qw($AUTOLOAD));
 sub new {
     my $class = shift;
     my $self = {
@@ -165,6 +170,7 @@ sub AUTOLOAD {
 }
 
 package HTML::Mason::FakeApache::Connection;
+use vars (qw($AUTOLOAD));
 sub new {
     my $class = shift;
     my $self = {
