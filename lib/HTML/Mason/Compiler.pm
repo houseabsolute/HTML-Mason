@@ -530,6 +530,14 @@ __END__
 
 HTML::Mason::Compiler - Compile Mason component source
 
+=head1 SYNOPSIS
+
+  package My::Funky::Compiler;
+
+  use base qw(HTML::Mason::Compiler);
+
+=head1 DESCRIPTION
+
 ... Ken will be adding these docs (from Appendix A of the book) as
 soon as the text has been looked at a little bit.
 
@@ -538,3 +546,5 @@ soon as the text has been looked at a little bit.
 L<HTML::Mason>,
 L<HTML::Mason::Admin>,
 L<HTML::Mason::Interp>
+
+=cut
