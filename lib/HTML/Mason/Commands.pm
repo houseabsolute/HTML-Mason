@@ -2,6 +2,11 @@
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
+#
+# Old-style mc_ commands left in for backwards compatibility. All are now
+# implemented in terms of Request methods.
+#
+
 package HTML::Mason::Commands;
 
 use strict;
