@@ -756,9 +756,9 @@ sub object_file {
 # -- Interp properties
 # -- loaded (cached) components
 #
-# Note that Apache::Status has an extremely narrow URL API, and I think the only way to 
-# pass info to another request is through PATH_INFO.  That's why the expiration stuff is awkward.
-
+# Note that Apache::Status has an extremely narrow URL API, and I
+# think the only way to pass info to another request is through
+# PATH_INFO.  That's why the expiration stuff is awkward.
 sub status_as_html {
     my ($self, %p) = @_;
 
@@ -769,27 +769,49 @@ sub status_as_html {
 <blockquote>
  <h4>Startup options:</h4>
  <tt>
-<table width="75%">
+<table width="100%">
 <%perl>
 foreach my $property (sort keys %$interp) {
     my $val = $interp->{$property};
-    # only object can ->can, others die
-    eval { $val->can('anything') };
-    if (ref $val ) {
-        $val = '<font color="darkred">' . (ref $val);
-        $val .= $@ ? ' reference' : ' object';
-        $val .= '</font>';
+
+    my $default = ( defined $val && defined $valid{$property}{default} && $val eq $valid{$property}{default} ) || ( ! defined $val && exists $valid{$property}{default} && ! defined $valid{$property}{default} );
+
+    my $display = $val;
+    if (ref $val) {
+        $display = '<font color="darkred">';
+        # only object can ->can, others die
+        my $is_object = eval { $val->can('anything'); 1 };
+        if ($is_object) {
+            $display .= ref $val . ' object';
+        } else {
+            if (UNIVERSAL::isa($val, 'ARRAY')) {
+                $display .= 'ARRAY reference - [ ';
+                $display .= join ', ', @$val;
+                $display .= '] ';
+            } elsif (UNIVERSAL::isa($val, 'HASH')) {
+                $display .= 'HASH reference - { ';
+                my @pairs;
+                while (my ($k, $v) = each %$val) {
+                   push @pairs, "$k => $v";
+                }
+                $display .= join ', ', @pairs;
+                $display .= ' }';
+            } else {
+                $display = ref $val . ' reference';
+            }
+        }
+        $display .= '</font>';
     }
 
-    defined $val && $val =~ s,([\x00-\x1F]),'<font color="purple">control-' . chr( ord('A') + ord($1) - 1 ) . '</font>',eg; # does this work for non-ASCII?
+    defined $display && $display =~ s,([\x00-\x1F]),'<font color="purple">control-' . chr( ord('A') + ord($1) - 1 ) . '</font>',eg; # does this work for non-ASCII?
 </%perl>
- <tr>
+ <tr valign="top" cellspacing="10">
   <td>
     <% $property | h %>
   </td>
   <td>
-   <% defined $val ? $val : '<i>undef</i>' %>
-   <% ( defined $val && defined $valid{$property}{default} && $val eq $valid{$property}{default} ) || ( ! defined $val && exists $valid{$property}{default} && ! defined $valid{$property}{default} ) ? '<font color=green>(default)</font>' : '' %>
+   <% defined $display ? $display : '<i>undef</i>' %>
+   <% $default ? '<font color=green>(default)</font>' : '' %>
   </td>
  </tr>
 % }
