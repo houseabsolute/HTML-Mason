@@ -12,7 +12,8 @@ $tests->run;
 sub make_tests
 {
     my $group = HTML::Mason::Tests->new( name => 'interp',
-					 description => 'interp object functionality' );
+					 description => 'interp object functionality',
+                                         pre_test_cleanup => 0 );
 
 #------------------------------------------------------------
 
