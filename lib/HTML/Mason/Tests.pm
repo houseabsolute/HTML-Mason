@@ -45,6 +45,7 @@ Declared args:
 % }
 
 I am <% $comp->is_subcomp ? '' : 'not ' %>a subcomponent.
+I am <% $comp->is_method ? '' : 'not ' %>a method.
 I am <% $comp->is_file_based ? '' : 'not ' %>file-based.
 % if (defined($comp->name)) {
 My short name is <% $comp->name =~ /anon/ ? '[anon something]' : $comp->name %>.
