@@ -737,6 +737,4 @@ the test harness will simply output its results.  This allows you to
 cut and paste these results back into the test file (assuming they are
 correct!).
 
-=back
-
 =cut
