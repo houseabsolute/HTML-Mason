@@ -288,6 +288,11 @@ sub make_subrequest
     # Give subrequest the same values as parent request for read/write params
     my %defaults = map { ($_, $self->$_()) } $self->_properties;
 
+    unless ( $params{out_method} )
+    {
+	$defaults{out_method} = sub { $self->top_buffer->receive(@_) };
+    }
+
     # Make subrequest, and set parent_request and request_depth appropriately.
     my $subreq = $interp->make_request(%defaults, %params);
     $subreq->{parent_request} = $self;
