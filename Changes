@@ -7,8 +7,30 @@ available at http://www.masonhq.com/changes.html.
 
 1.09_02
 
+[ INCOMPATIBLE CHANGES ]
+
+- The Component class's create_time method has been renamed as
+load_time.
+- Relative component paths are no longer resolved.  All component
+paths must be absolute.  Relative path resolution was added in 1.09_01
+so this change is unlikely to affect most users.
+- Removed option to expire a component from the Apache::Status page.
+This option made little sense since components are cached per-process,
+and there's no guarantee that any particular process has cached a
+given component.  Again, this is a feature added in 1.09_01 so this
+change should not cause most people any problems.
+
+[ ENHANCEMENTS ]
+
+- All the modules included with Mason are now documented.
+- Various pieces of existing documentation have been tweaked and
+modified.
+
 [ BUG FIXES ]
 
+- $m->flush_buffer was sending out '' to the buffer, even if no output
+existed.  This caused ApacheHandler to send headers, which broke
+redirects, for example.
 - Fix broken Apache::Status page  (reported by Thomas A. Lowery).
 
 1.09_01  April 4, 2002
