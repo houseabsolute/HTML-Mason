@@ -155,7 +155,7 @@ sub test
     my $is_maintainer = -d 'CVS' ? 1 : 0;
 
     # This works for older MakeMakers
-    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE} == \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; \$|$ENV{MASON_MAINTAINER}=$is_maintainer; $1/;
+    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE} == \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; \$\$ENV{PORT}=$port; \$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; \$\$ENV{MASON_MAINTAINER}=$is_maintainer; $1/;
 
     # This works for newer MakeMakers (5.48_01 +)
     $test =~ s/("-MExtUtils::Command::MM" "-e" ")(test_harness\(\$\(TEST_VERBOSE\).*?\)" \$\(TEST_FILES\))/$1 \\\$\$ENV{MASON_VERBOSE} == \$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \\\$\$ENV{MASON_VERBOSE}; \\\$\$ENV{PORT}=$port; \\\$\$ENV{APACHE_DIR}=q^$MY::APACHE{apache_dir}^; \\\$\$ENV{MASON_MAINTAINER}=$is_maintainer; $2/;
