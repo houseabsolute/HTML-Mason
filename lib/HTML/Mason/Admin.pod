@@ -7,81 +7,98 @@ HTML::Mason::Admin - Mason Administrator's Guide
 This guide is intended for the sys admin/web master in charge of
 installing, configuring, or tuning a Mason system.
 
-=head1 GLOBAL SETTINGS FILE
+=head1 GLOBAL SETTINGS
 
-Mason/Config.pm contains global settings for your system, such as the
-presence or absence of certain optional modules.
+The C<Config.pm> file contains global settings for your system, such
+as the presence or absence of certain optional modules.
 
-Makefile.PL initially creates Config.pm based on your environment,
+C<Makefile.PL> initially creates C<Config.pm> based on your environment,
 placing it in the C<lib/HTML/Mason> subdirectory of the distribution.
 After that, you can edit it by hand, following the comments inside.
+In most cases, you will not need to edit it.
 
-"make install" copies Config.pm to your Perl library directory
+"make install" copies C<Config.pm> to your Perl library directory
 (e.g. C</usr/lib/perl5/site_perl/HTML/Mason>) along with the other module
 files. This allows Mason internally to grab the configuration data
 with "C<use HTML::Mason::Config>".
 
 When upgrading from a previous version, "make install" will
-maintain the previous Config.pm values.
+maintain the previous C<Config.pm> values.
 
 =head1 SITE CONFIGURATION METHODS
 
-The next three sections discuss ways to configure a Mason site:
+There are three ways to configure a Mason site:
 
-* Minimal configuration, relying on default Mason behavior. Simplest and least flexible.
+=over
 
-* Configuration via httpd.conf directives. Medium complexity and flexibility.
+=item *
 
-* Configuration via handler.pl. Most complex but most flexible.
+Minimal configuration, relying on default Mason behavior. Simplest and least flexible.
 
-We recommend that you start with the simplest method and work your
-way forward as the need for flexibility arises.
+=item *
+
+Configuration via httpd.conf directives. Medium complexity and flexibility.
+
+=item *
+
+Configuration via a handler script (handler.pl). Most complex but most flexible.
+
+=back
+
+The next three sections discuss these methods in detail. We recommend
+that you start with the simplest method and work your way forward as
+the need for flexibility arises.
+
+It is important to note that you cannot mix httpd.conf configuration
+directives with a handler script.  Depending on how you declare your
+C<PerlHandler>, one or the other will always take precedence and the
+other will be ignored.
 
 =head1 MINIMAL CONFIGURATION
 
-Directives must be added to httpd.conf or srm.conf to specify which
-requests to handle through Mason. A simple configuration looks like:
+A simple configuration looks like:
 
     DocumentRoot /usr/local/www/htdocs
-    PerlRequire /usr/local/mason/handler.pl
-    DefaultType text/html
-    <Location />
+    PerlSetVar MasonCompRoot /usr/local/www/htdocs
+    PerlSetVar MasonDataDir /usr/local/www/mason
+    PerlModule HTML::Mason::ApacheHandler
+
+    <FilesMatch "*.html">
         SetHandler perl-script
-        PerlHandler HTML::Mason
-        MasonCompRoot "/usr/local/www/htdocs"
-        MasonDataDir "/usr/local/www/mason"
-    </Location>
+        PerlHandler HTML::Mason::ApacheHandler
+    </FilesMatch>
 
-The I<component root> (specified by MasonCompRoot) is the top of your
-tree of component source files. In simple configurations the component
-root is the same as the server's DocumentRoot.  More complex
-configurations may specify several different DocumentRoots under a
-single component root.
+C<MasonCompRoot> specifies the I<component root>, the top of your
+component source tree. In simple configurations the component root is
+the same as the server's C<DocumentRoot>. (See L<CONFIGURING VIRTUAL
+SITES> to understand why the component root and C<DocumentRoot> might
+differ.)
 
-When Mason handles a request, the request filename
-(C<$r-E<gt>filename>) must be underneath your component root -- that
-way Mason has a legitimate component to start with.  If the filename
-is not underneath the component root, Mason will place a warning in
-the error logs and return 404.
+When Mason handles a request, the requested filename must be
+underneath your component root -- that gives Mason a legitimate
+component to start with.  If the filename is not underneath the
+component root, Mason will place a warning in the error logs and
+return 404.
 
-The I<data directory> (specified by MasonDataDir) is a writable
-directory that Mason uses to implement various features and
-optimizations. Mason will create the directory on startup, if necessary,
-and set its permissions according to the web server User/Group.
+C<MasonDataDir> specifies the I<data directory>, a writable directory
+that Mason uses for various features and optimizations. Mason will
+create the directory on startup, if necessary, and set its permissions
+according to the web server User/Group.
 
-=head2 CONFIGURATION VIA httpd.conf DIRECTIVES
+=head1 CONFIGURATION VIA httpd.conf DIRECTIVES
 
 Mason's configuration parameters are set via mod_perl's C<PerlSetVar>
-and C<PerlAddVar> directives.  Though these parameters are all strings,
-Mason treats them in different ways.  The different parameter types
-are:
+and C<PerlAddVar> directives.  The latter directive is only available
+in mod_perl version 1.24 and greater.  Though these parameters are all
+strings, Mason treats them in different ways.  The different parameter
+types are:
 
 =over 4
 
 =item * string
 
 The variable's value is simply taken literally and used.  Quotes are
-necessary if the string contains spaces.
+necessary if the string contains whitespace.
 
 =item * boolean
 
@@ -91,23 +108,27 @@ rules on truth/falseness.  It is recommended that you use 0 (false) or
 
 =item * code
 
-The string is treated as a piece of code.  This is used for parameters
-that expect code references.  For example, an anonymous subroutine
-might look like:
+The string is treated as a piece of code and C<eval>'ed.  This is used
+for parameters that expect subroutine references.  For example, an
+anonymous subroutine might look like:
 
  PerlSetVar  MasonDieHandler  "sub { die join ' -- ', @_ }"
 
-A named subroutine call must be wrapped in an anonymous subroutine:
+A named subroutine call would look like this:
 
- PerlSetVar  MasonDieHandler  "sub { Carp::croak(@_) }"
+ PerlSetVar  MasonDieHandler  "\&Carp::croak"
 
 =item * list
 
-To set a list parameter, use C<PerlSetVar> for the first value and
-then C<PerlAddVar> for all subsequent values, like this:
+To set a list parameter, use C<PerlAddVar> for the values, like this:
 
- PerlSetVar  MasonPreloads  /foo/bar/baz.comp
+ PerlAddVar  MasonPreloads  /foo/bar/baz.comp
  PerlAddVar  MasonPreloads  /foo/bar/quux.comp
+
+As noted above, C<PerlAddVar> is only available in mod_perl 1.24 and
+up.  This means that it is only possible to assign a single value
+(using C<PerlSetVar>) to list parameters if you are using a mod_perl
+older than 1.24.
 
 =back
 
@@ -147,6 +168,10 @@ Corresponds to the C<postamble> parameter.
 
 Corresponds to the C<preamble> parameter.
 
+=item * MasonTaintCheck - boolean
+
+Corresponds to the C<taint_check> parameter.
+
 =item * MasonUseStrict - boolean
 
 Corresponds to the C<use_strict> parameter.
@@ -171,7 +196,7 @@ Correponds to the C<comp_root> parameter.  This parameter can either
 be a single value, such as '/foo/comp/root', or a list of keys and
 values such as:
 
- PerlSetVar  MasonCompRoot  "root1 => /foo/comp/root1"
+ PerlAddVar  MasonCompRoot  "root1 => /foo/comp/root1"
  PerlAddVar  MasonCompRoot  "shared => /my/shared/comps"
 
 See the L<Multiple component roots> section for more details on
@@ -322,6 +347,167 @@ well-placed Perl in your handler.pl.  In this section we present the
 basics of setting up handler.pl as well as some ideas for more
 advanced applications.
 
+=======
+=item * MasonDataCacheDir - string
+
+Corresponds to the C<data_cache_dir> parameter.
+
+=item * MasonDieHandler - code or 0
+
+Corresponds to the C<die_handler> parameter.
+
+=item * MasonMaxRecurse - string
+
+Corresponds to the C<max_recurse> parameter.
+
+=item * MasonOutMethod - code
+
+Corresponds to the C<out_method> parameter.
+
+=item * MasonOutMode - string
+
+Corresponds to the C<out_mode> parameter.
+
+=item * MasonPreloads - list
+
+Corresponds to the C<preloads> parameter.
+
+=item * MasonStaticFileRoot - string
+
+Corresponds to the C<static_file_root> parameter.
+
+=item * MasonSystemLogEvents - string
+
+Corresponds to the C<system_log_events> parameter.
+
+=item * MasonSystemLogFile - string
+
+Corresponds to the C<system_log_file> parameter.
+
+=item * MasonSystemLogSeparator - string
+
+Corresponds to the C<system_log_separator> parameter.
+
+=item * MasonUseAutohandlers - boolean
+
+Corresponds to the C<use_autohandlers> parameter.
+
+=item * MasonUseDataCache - boolean
+
+Corresponds to the C<use_data_cache> parameter.
+
+=item * MasonUseDhandlers - boolean
+
+Corresponds to the C<use_dhandlers> parameter.
+
+=item * MasonUseObjectFiles - boolean
+
+Corresponds to the C<use_object_files> parameter.
+
+=item * MasonUseReloadFile - boolean
+
+Corresponds to the C<use_reload_file> parameter.
+
+=back
+
+=head2 ApacheHandler Parameters
+
+=over 4
+
+=item * MasonApacheStatusTitle - string
+
+Correponds to the C<apache_status_title> parameter.
+
+=item * MasonAutoSendHeaders - boolean
+
+Correponds to the C<auto_send_headers> parameter.
+
+=item * MasonDebugHandlerProc - string
+
+Correponds to the C<debug_handler_proc> parameter.
+
+=item * MasonDebugHandlerScript - string
+
+Correponds to the C<debug_handler_script> parameter.
+
+=item * MasonDebugMode - string
+
+Correponds to the C<debug_mode> parameter.
+
+=item * MasonDebugPerlBinary - string
+
+Correponds to the C<debug_perl_binary> parameter.
+
+=item * MasonErrorMode - string
+
+Correponds to the C<error_mode> parameter.
+
+=item * MasonTopLevelPredicate - code
+
+Correponds to the C<top_level_predicate> parameter.
+
+=back
+
+=head2 Special Parameters
+
+These are the only parameters that do I<not> correspond to new() parameters.
+
+=over 4
+
+=item * MasonArgsMethod - string
+
+Valid values for this parameter are C<CGI> or C<mod_perl>.  This
+determines whether to use the C<CGI> or C<Apache::Request> module for
+argument handling.  Please see L<HTML::Mason::ApacheHandler/PARAMETERS TO THE use() DECLARATION>
+for more details.
+
+This can only be set once, regardless of how you set
+MasonMultipleConfig.
+
+Defaults to C<CGI>.
+
+=item * MasonMultipleConfig - boolean
+
+If this parameter is true, Mason assumes that you may have multiple
+sets of configuration directives defined, perhaps for multiple
+locations or virtual hosts.  This means that Mason will create a new
+set of parser/interp/handler objects for every request.  If this
+parameter is false, Mason simply creates a single set at server
+startup to maximize shared memory. Defaults to false.
+
+If you set this option, the Apache child processes will need
+the proper permissions to create the data directories.
+
+=back
+
+=head2 Memory Usage
+
+To maximize shared memory, you should put your Mason configuration
+directives in the configuration file B<before> you load the
+C<HTML::Mason::ApacheHandler> module via a C<PerlModule> directive.
+
+Because certain features were not available in mod_perl before
+1.21_01, Mason will be less memory efficient when using those older
+versions.
+
+=head1 CONFIGURING VIA A HANDLER SCRIPT
+
+For maximum flexibility, you may choose to write a custom script to
+create your Mason objects and handle requests. In our documentation
+and examples we call this script C<handler.pl>, though you may name it
+whatever you like.
+
+The C<handler.pl> file is responsible for creating the three Mason
+objects and supplying the many parameters that control how your
+components are parsed and executed. It also provides the opportunity
+to execute arbitrary code at three important junctures: the server
+initialization, the beginning of a request, and the end of a request.
+A wide set of behaviors can be implemented with a mere few lines of
+well-placed Perl in your C<handler.pl>.  In this section we present the
+basics of setting up C<handler.pl> as well as some ideas for more
+advanced applications.
+
+>>>>>>> 1.35.4.2.2.28
 =head2 Creating the Mason objects
 
 C<handler.pl> creates three Mason objects: the Parser, Interpreter,
@@ -409,7 +595,7 @@ This lets you know which version of the component was running.
 =head2 External modules
 
 Components will often need access to external Perl modules. Any such
-modules that export symbols should be listed in handler.pl, rather
+modules that export symbols should be listed in C<handler.pl>, rather
 than the standard practice of using a PerlModule configuration
 directive. This is because components are executed inside the
 B<HTML::Mason::Commands> package, and can only access symbols exported
@@ -444,16 +630,16 @@ end of the startup code in C<handler.pl>:
 
 =head2 Persistent user sessions
 
-With just a few lines in handler.pl you can make a global hash
+With just a few lines in C<handler.pl> you can make a global hash
 (e.g. I<%session>) available to all components containing persistent user
 session data.  If you set a value in the hash, you will see the change
 in future visits by the same user.  The key piece is Jeffrey Baker's
 B<Apache::Session> module, available from CPAN.
 
-The file F<eg/session_handler.pl> in the distribution contains the
+The file C<eg/session_handler.pl> in the distribution contains the
 lines to activate cookie-based sessions using Apache::Session and
-CGI::Cookie. You can use F<eg/session_handler.pl> as your new handler.pl
-base, or just copy out the appropriate pieces to your existing handler.pl.
+CGI::Cookie. You can use C<eg/session_handler.pl> as your new C<handler.pl>
+base, or just copy out the appropriate pieces to your existing C<handler.pl>.
 
 The session code is customizable; you can change the user ID location
 (e.g. URL instead of cookie), the user data storage mechanism
@@ -473,7 +659,7 @@ is very little need for globals at all.
 That said, there are times when it is very useful to make a value
 available to all Mason components: a DBI database handler, a hash of
 user session information, the server root for forming absolute URLs.
-Usually you initialize the global in your handler.pl, either outside
+Usually you initialize the global in your C<handler.pl>, either outside
 the handler() subroutine (if you only need to set it once) or inside
 (if you need to set it every request).
 
@@ -495,7 +681,7 @@ The only advantage to C<allow_globals> is that it will do
 the right thing if you've chosen a different package for components
 to run in (via the L<Parser/in_package> Parser parameter.)
 
-Similarly, to initialize the variable in handler.pl, you need to
+Similarly, to initialize the variable in C<handler.pl>, you need to
 set it in the component package:
 
    $HTML::Mason::Commands::dbh = DBI->connect(...);
@@ -524,7 +710,7 @@ One way is with a line at the top of handler(), e.g.:
     return -1 if $r->content_type && $r->content_type !~ m|^text/|i;
 
 This line allows text/html and text/plain to pass through but not much
-else.  It is included (commented out) in the default handler.pl.
+else.  It is included (commented out) in the default C<handler.pl>.
 
 Another way is specifying a filename pattern in the Apache
 configuration, e.g.:
@@ -576,7 +762,7 @@ provide more information than necessary). Use either an Apache directive
     PerlInitHandler Apache::Constants::NOT_FOUND
     </FilesMatch>
 
-or a handler.pl directive:
+or a C<handler.pl> directive:
 
     return 404 if $r->filename =~ m{^_[^/]+$};
 
@@ -601,7 +787,7 @@ following:
 
 1. Set the L<ApacheHandler/decline_dirs> ApacheHandler parameter to 0.
 
-2. If your handler.pl contains the standard "return -1" line to
+2. If your C<handler.pl> contains the standard "return -1" line to
 decline non-text requests (as given in the previous section), add a
 clause allowing directory types:
 
@@ -821,7 +1007,7 @@ C<Config.pm> section.
 B<Sample Log Parser>
 
 Here is a code skeleton for parsing the various events in a log.  You
-can also find this in F<eg/parselog.pl> in the Mason distribution.
+can also find this in C<eg/parselog.pl> in the Mason distribution.
 
    open(LOG,"mason.log");
    while (<LOG>) {
@@ -853,7 +1039,7 @@ B<Suggested Uses>
 
 Performance: REQUEST events are useful for analyzing the performance
 of all Mason requests occurring on your site, and identifying the
-slowest requests. F<eg/perflog.pl> in the Mason distribution is a log
+slowest requests. C<eg/perflog.pl> in the Mason distribution is a log
 parser that outputs the average compute time of each unique URL, in
 order from slowest to quickest.
 
@@ -1076,25 +1262,21 @@ respectively.
 
 Consider reload files only for frequently visited production sites.
 
-=head1 CONFIGURING VIRTUAL SITES 
+=head1 CONFIGURING VIRTUAL SITES
 
-These examples extend the L<Mason/single site configuration>
-example in B<HTML::Mason>.
+These examples extend the single site configurations given so far.
 
 =head2 Multiple sites, one component root
 
 If you want to share some components between your sites, arrange your
 httpd.conf so that all DocumentRoots live under a single component space:
 
-    # httpd.conf
-    PerlRequire /usr/local/mason/handler.pl
-
     # Web site #1
     <VirtualHost www.site1.com>
         DocumentRoot /usr/local/www/htdocs/site1
         <Location />
             SetHandler perl-script
-            PerlHandler HTML::Mason
+            PerlHandler HTML::Mason::ApacheHandler
         </Location>
     </VirtualHost>
 
@@ -1103,15 +1285,16 @@ httpd.conf so that all DocumentRoots live under a single component space:
         DocumentRoot /usr/local/www/htdocs/site2
         <Location />
             SetHandler perl-script
-            PerlHandler HTML::Mason
+            PerlHandler HTML::Mason::ApacheHandler
         </Location>
     </VirtualHost>
 
 In handler.pl:
 
-    my $interp = new HTML::Mason::Interp (parser=>$parser,
-                    comp_root=>'/usr/local/www/htdocs'
-                    data_dir=>'/usr/local/mason');
+    # Mason configuration
+    PerlSetVar MasonCompRoot "/usr/local/www/htdocs"
+    PerlSetVar MasonDataDir "/usr/local/mason"
+    PerlModule HTML::Mason::ApacheHandler
 
 The directory structure for this scenario might look like:
 
@@ -1133,10 +1316,10 @@ hierarchies, e.g. if you are providing Mason ISP services for multiple
 users. In this case the component root must change depending on the
 site requested. Since you can't change an interpreter's component root
 dynamically, you need to maintain separate Mason objects for each
-site in the handler.pl:
+site in your C<handler.pl>:
 
     my (%interp,%ah);
-    foreach my $site qw(site1 site2 site3) {
+    foreach my $site (qw(site1 site2 site3)) {
         $interp{$site} = new HTML::Mason::Interp
             (comp_root => "/usr/local/www/$site",
              data_dir => "/usr/local/mason/$site");
@@ -1147,6 +1330,7 @@ site in the handler.pl:
     ...
 
     sub handler {
+        my ($r) = @_;
         my $site = $r->dir_config('site');
         $ah{$site}->handle_request($r);
     }
@@ -1163,6 +1347,7 @@ create objects on demand in the child:
     ...
 
     sub handler {
+        my ($r) = @_;        
         my $site = $r->dir_config('site');
         unless exists($interp{$site}) {
             # get comp_root from PerlSetVar as well
@@ -1173,13 +1358,13 @@ create objects on demand in the child:
     }
 
 The advantage of the second scheme is that you don't have to hardcode
-as much information in the handler.pl. The disadvantage is a slight
+as much information in the C<handler.pl>. The disadvantage is a slight
 memory and performance impact. On development servers this shouldn't
 matter; on production servers you may wish to profile the two schemes.
 
-=head1 AUTHOR
+=head1 AUTHORS
 
-Jonathan Swartz, swartz@pobox.com
+Jonathan Swartz, swartz@pobox.com and Dave Rolsky, autarch@urth.org
 
 =head1 SEE ALSO
 
