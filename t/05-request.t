@@ -509,20 +509,22 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'abort_and_filter',
-		      description => 'Test that an abort in a filtered component still generates _some_ output',
+		      description => 'Test that an abort in a filtered component still generates _some_ output, and that filter is run only once',
 		      component => <<'EOF',
 filter
 
 % eval { $m->comp('support/abort_test') };
 <%filter>
-return uc $_;
+$_ = uc $_;
+$_ =~ s/\s+$//;
+$_ .= "\nfilter ran once";
 </%filter>
 EOF
 		      expect => <<'EOF',
 FILTER
 
 SOME MORE TEXT
-
+filter ran once
 EOF
 		    );
 
