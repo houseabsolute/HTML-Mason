@@ -32,7 +32,8 @@ __PACKAGE__->contained_objects
 sub new {
     my $package = shift;
 
-    my @my_args = $package->create_contained_objects(request_class => 'HTML::Mason::Request::CGI',
+    my @my_args = $package->create_contained_objects(comp_root => $ENV{document_root},
+						     request_class => 'HTML::Mason::Request::CGI',
 						     @_);
 
     my $self = bless { validate @my_args, $package->validation_spec };
