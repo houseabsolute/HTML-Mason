@@ -108,27 +108,32 @@ sub get_test_params {
     
     my %conf;
     
-    my $httpd = $ENV{'APACHE'} || which('apache') || which('httpd') || '/usr/lib/httpd/httpd';
+    my $httpd = $pkg->_find_mod_perl_httpd(1);
 
-    $httpd = _ask("\n", $httpd, 1, '!');
-    if ($httpd eq '!') {
-	print "Skipping.\n";
-	return;
-    }
+    my $found;
+    do
+    {
+	$httpd = _ask("\n", $httpd, 1, '!');
+	if ($httpd eq '!') {
+	    print "Skipping.\n";
+	    return;
+	}
+
+	if ($pkg->_httpd_has_mod_perl($httpd)) {
+	    $found = 1;
+	} else {
+	    warn("$httpd does not appear to have been compiled with\n",
+		 "mod_perl as a static or dynamic module\n");
+	    $httpd = $pkg->_find_mod_perl_httpd(0);
+	}
+    } until ($found);
     system "$Config{lns} $httpd t/httpd";
 
     # Default: search for dynamic dependencies if mod_so is present, don't bother otherwise.
     my $default = (`t/httpd -l` =~ /mod_so\.c/ ? 'y' : 'n');
     if (lc _ask("Search existing config file for dynamic module dependencies?", $default) eq 'y') {
-	my %compiled;
-	for (`t/httpd -V`) {
-	    if (/([\w]+)="(.*)"/) {
-		$compiled{$1} = $2;
-	    }
-	}
-	$compiled{SERVER_CONFIG_FILE} =~ s,^,$compiled{HTTPD_ROOT}/,
-	    unless $compiled{SERVER_CONFIG_FILE} =~ m,^/,;
-	
+	my %compiled = $pkg->_get_compilation_params('t/httpd');
+
 	my $file = _ask("  Config file", $compiled{SERVER_CONFIG_FILE}, 1);
 	$conf{modules} = $pkg->_read_existing_conf($file);
     }
@@ -145,25 +150,57 @@ sub get_test_params {
     return %conf;
 }
 
+sub _get_compilation_params {
+    my ($self, $httpd) = @_;
+
+    my %compiled;
+    for (`$httpd -V`) {
+	if (/([\w]+)="(.*)"/) {
+	    $compiled{$1} = $2;
+	}
+    }
+    $compiled{SERVER_CONFIG_FILE} =~ s,^,$compiled{HTTPD_ROOT}/,
+	unless $compiled{SERVER_CONFIG_FILE} =~ m,^/,;
+
+    return %compiled;
+}
+
 sub _read_existing_conf {
     # Returns some "(Add|Load)Module" config lines, generated from the
     # existing config file and a few must-have modules.
-    my ($self, $server_conf) = @_;
-    
+    my ($self, $server_conf, $default_root, $is_include) = @_;
+
     open SERVER_CONF, $server_conf or die "Couldn't open $server_conf: $!";
     my @lines = grep {!m/^\s*\#/} <SERVER_CONF>;
     close SERVER_CONF;
-    
+
+    my @includes;
+    foreach my $include (grep /^\s*Include\s+\S+/, @lines) {
+	my ($file) = $include =~ /^\s*Include\s+(\S+)/;
+	$file =~ s/^"//;
+	$file =~ s/"//;
+	push @includes, $file;
+	warn "ADDED INC $file\n";
+    }
+
     my @modules       =   grep /^\s*(Add|Load)Module/, @lines;
+
     my ($server_root) = (map /^\s*ServerRoot\s*(\S+)/, @lines);
     $server_root =~ s/^"//;
     $server_root =~ s/"$//;
+
+    $server_root ||= $default_root;
 
     # Rewrite all modules to load from an absolute path.
     foreach (@modules) {
 	s!(\s)([^/\s]\S+/)!$1$server_root/$2!;
     }
-    
+    # And do the same for includes.
+    foreach (@includes) {
+	s!^([^/])!$server_root/$1!;
+	warn "$_\n";
+    }
+
     my $static_mods = $self->static_modules('t/httpd');
     
     my @load;
@@ -174,15 +211,21 @@ sub _read_existing_conf {
 	    push @load, $module;
 	}
     }
-    
+
+    # Follow each include recursively to find needed modules
+    foreach my $include (@includes) {
+	push @modules, $self->_read_existing_conf($include, $server_root, 1);
+    }
+    # The last bits only need to be done once.
+    return @modules if $is_include;
+
     # Directories where apache DSOs live.
-    my @module_dirs = map {m,(/\S*/),} @modules;
+    my @module_dirs = map {m,(/\S*)/,} @modules;
     
     # Finally compute the directives to load modules that need to be loaded.
  MODULE:
     foreach my $module (@load) {
 	foreach my $module_dir (@module_dirs) {
-	   $module_dir =~ s,/$,,;
            foreach my $filename ("mod_$module.so", "lib$module.so", "ApacheModule\u$module.dll") {
                if (-e "$module_dir/$filename") {
                    push @modules, "LoadModule ${module}_module $module_dir/$filename\n"; next MODULE;
@@ -191,8 +234,10 @@ sub _read_existing_conf {
 	}
        warn "Warning: couldn't find anything to load for 'mod_$module'.\n";
     }
-    
-    print "Adding the following dynamic config lines: \n@modules";
+
+    print "Adding the following dynamic config lines: \n";
+    print join '', @modules;
+    print "\n\n";
     return join '', @modules;
 }
 
@@ -205,12 +250,42 @@ sub static_modules {
     return {map {lc($_) => 1} map /(\S+)\.c/, @l};
 }
 
-# Find an executable in the PATH.
-sub which {
-    foreach (map { "$_/$_[0]" } split /:/, $ENV{PATH}) {
-	next unless m,^/,;
-	return $_ if -x;
+sub _find_mod_perl_httpd {
+    my ($self, $respect_env) = @_;
+
+    return $ENV{'APACHE'} if $ENV{'APACHE'} && $respect_env;
+
+    foreach ( '/usr/local/apache/bin/httpd',
+	      '/usr/local/apache_mp/bin/httpd',
+	      '/opt/apache/bin/httpd',
+	      $self->_which('httpd'),
+	      $self->_which('apache'),
+	    ) {
+	return $_ if -x $_ && $self->_httpd_has_mod_perl($_);
     }
+}
+
+sub _httpd_has_mod_perl {
+    my ($self, $httpd) = @_;
+
+    return 1 if `$httpd -l` =~ /mod_perl\.c/;
+
+    my %compiled = $self->_get_compilation_params($httpd);
+
+    if ($compiled{SERVER_CONFIG_FILE}) {
+	local *SERVER_CONF;
+	open SERVER_CONF, $compiled{SERVER_CONFIG_FILE} or die "Couldn't open $compiled{SERVER_CONFIG_FILE}: $!";
+	my @lines = grep {!m/^\s*\#/} <SERVER_CONF>;
+	close SERVER_CONF;
+
+	return 1 if grep { /mod_perl/ } grep /^\s*(Add|Load)Module/, @lines;
+    }
+
+    return 0;
+}
+
+sub _which {
+    return grep {-x $_} map { "$_/$_[1]" } split /:/, $ENV{PATH};
 }
 
 sub test { 
@@ -518,7 +593,7 @@ __END__
 
 =head1 NAME
 
-Apache::Test - Facilitates testing of Apache::* modules
+Apache::test - Facilitates testing of Apache::* modules
 
 =head1 SYNOPSIS
 
@@ -529,7 +604,9 @@ Apache::Test - Facilitates testing of Apache::* modules
  *MY::test = sub { Apache::test->MM_test(%params) };
 
  # In t/*.t script (or test.pl)
- (Some methods of Doug's that I haven't reviewed or documented yet)
+ use Apache::test qw(skip_test have_httpd);
+ skip_test unless have_httpd;
+ (Some more methods of Doug's that I haven't reviewed or documented yet)
 
 =head1 DESCRIPTION
 

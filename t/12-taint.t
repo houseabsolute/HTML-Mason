@@ -2,10 +2,34 @@
 
 use strict;
 
-$ENV{PATH} = '';
+BEGIN
+{
+    $ENV{PATH} = '';
 
-use lib 'blib/lib';
+    my $libs = 'use lib qw( ';
+    $libs .= join ' ', "./blib/lib", "./t/lib";
+    if ($ENV{PERL5LIB})
+    {
+	$libs .= ' ';
+	$libs .= join ' ', (split /:|;/, $ENV{PERL5LIB});
+    }
+    $libs .= ' );';
+
+    ($libs) = $libs =~ /(.*)/;
+
+    # explicitly use these because otherwise taint mode causes them to
+    # be ignored
+    eval $libs;
+}
+
 use HTML::Mason::Parser;
+
+# Clear alarms, and skip test if alarm not implemented
+eval {alarm 0};
+if ($@) {
+    print "1..0\n";
+    exit;
+}
 
 print "1..1\n";
 
@@ -38,3 +62,4 @@ else
 {
     print "ok 1\n";
 }
+

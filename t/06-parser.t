@@ -82,7 +82,7 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'default_escape_flags',
+    $group->add_test( name => 'default_escape_flags_2',
 		      description => 'test that turning on default escaping works',
 		      interp_params => { use_object_files => 0 },
 		      parser_params => { default_escape_flags => 'h' },
@@ -242,7 +242,6 @@ Never get here
 EOF
 		      expect_error => 'Invalid variable name',
 		    );
-
 
 #------------------------------------------------------------
 

@@ -12,6 +12,32 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'errors',
 					 description => 'Test that errors are generated properly' );
 
+#------------------------------------------------------------
+
+    $group->add_support( path => '/support/error_helper',
+			 component => <<'EOF',
+<%init>
+eval { $m->comp('error1')  };
+$m->comp('error2');
+</%init>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/support/error1',
+			 component => <<'EOF',
+% die "terrible error";
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/support/error2',
+			 component => <<'EOF',
+% die "horrible error";			 
+EOF
+		       );
 
 #------------------------------------------------------------
 
@@ -25,6 +51,17 @@ EOF
 		      expect_error => quotemeta q|unknown type for argument/attribute 'foo': first character must be $, @, or %|
 		    );
 
+#------------------------------------------------------------
+
+    $group->add_test( name => 'backtrace',
+		      description => 'Make sure trace for second error is accurate when first error is caught by eval',
+		      component => <<'EOF',
+<%init>
+$m->comp('support/error_helper');
+</%init>
+EOF
+		      expect_error => q|horrible error.*|
+		    );
 
 #------------------------------------------------------------
 

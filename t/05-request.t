@@ -145,15 +145,18 @@ EOF
 		      component => <<'EOF',
 Now I will print myself:
 
-<% $m->file("file") %>
+% my $output = $m->file("file");
+% $output =~ s/\cM//g;
+<% $output %>
 EOF
 		      expect => <<'EOF',
 Now I will print myself:
 
 Now I will print myself:
 
-<% $m->file("file") %>
-
+% my $output = $m->file("file");
+% $output =~ s/\cM//g;
+<% $output %>
 EOF
 		    );
 
@@ -304,9 +307,13 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'subrequest_error',
-		      description => 'check error handling for provision subrequest mechanism',
-		      component => <<'EOF',
+
+    # 5.6.0 is evil
+    unless ($] == 5.006)
+    {
+	$group->add_test( name => 'subrequest_error',
+			  description => 'check error handling for provision subrequest mechanism',
+			  component => <<'EOF',
 <%def .helper>
 % my $interp = $m->interp;
 % $interp->exec('/request/support/subrequest_error_test');
@@ -315,19 +322,18 @@ EOF
 Calling helper
 % eval {$m->comp('.helper')};
 % my $error = $@;
-<& /shared/check_error, error=>$error, lines=>2 &>
+<& /shared/check_error, error=>$error, lines=>1 &>
 
 % if ($error) {
 Back from error, checking request state:
 <& support/display_req_obj &>
 % }
 EOF
-		      expect => <<'EOF',
+			  expect => <<'EOF',
 
 Calling helper
 
 Error: error while executing /request/support/subrequest_error_test:
-whoops! 
 
 
 Back from error, checking request state:
@@ -343,8 +349,8 @@ My stack looks like:
 
 
 EOF
-		    );
-
+			);
+    }
 
 #------------------------------------------------------------
 
@@ -371,7 +377,7 @@ Trying to fetch /shared (full path /shared):
 /shared does not exist.
 
 Output via the out function.
-/request/file outputs 70+ characters.
+/request/file outputs 120+ characters.
 
 No time difference.
 
@@ -403,6 +409,7 @@ Remaining chain: <% join(',',map($_->title,$m->fetch_next_all)) %>
 <& $m->fetch_next, level => 2 &>\
 EOF
 		       );
+>>>>>>> 1.5.2.5.2.4
 
 #------------------------------------------------------------
 
@@ -435,4 +442,3 @@ EOF
 
     return $group;
 }
-
