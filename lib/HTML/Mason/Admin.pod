@@ -56,11 +56,8 @@ other will be ignored.
 
 =head1 MINIMAL CONFIGURATION
 
-A simple configuration looks like:
+The absolutely most minimal configuration looks like this:
 
-    DocumentRoot /usr/local/www/htdocs
-    PerlSetVar MasonCompRoot /usr/local/www/htdocs
-    PerlSetVar MasonDataDir /usr/local/www/mason
     PerlModule HTML::Mason::ApacheHandler
 
     <FilesMatch "\.html$">
@@ -68,11 +65,13 @@ A simple configuration looks like:
         PerlHandler HTML::Mason::ApacheHandler
     </FilesMatch>
 
-C<MasonCompRoot> specifies the I<component root>, the top of your
-component source tree. In simple configurations the component root is
-the same as the server's C<DocumentRoot>. (See L<CONFIGURING VIRTUAL
-SITES> to understand why the component root and C<DocumentRoot> might
-differ.)
+With this configuration, your I<component root> will be the same as
+the C<DocumentRoot> setting, and your Idata directory> will be a
+directory called "mason" located under your server root.
+
+The I<component root> is the top of your component source tree.  See
+L<CONFIGURING VIRTUAL SITES> to understand why the component root and
+C<DocumentRoot> might differ.
 
 When Mason handles a request, the requested filename must be
 underneath your component root -- that gives Mason a legitimate
@@ -80,10 +79,21 @@ component to start with.  If the filename is not underneath the
 component root, Mason will place a warning in the error logs and
 return 404.
 
-C<MasonDataDir> specifies the I<data directory>, a writable directory
-that Mason uses for various features and optimizations. Mason will
-create the directory on startup, if necessary, and set its permissions
-according to the web server User/Group.
+The I<data directory> is a writable directory that Mason uses for
+various features and optimizations. Mason will create the directory on
+startup, if necessary, and set its permissions according to the web
+server User/Group.
+
+You can, of course, manually specify these variables:
+
+    PerlSetVar MasonCompRoot /usr/local/www/htdocs
+    PerlSetVar MasonDataDir /var/mason
+    PerlModule HTML::Mason::ApacheHandler
+
+    <FilesMatch "\.html$">
+        SetHandler perl-script
+        PerlHandler HTML::Mason::ApacheHandler
+    </FilesMatch>
 
 =head1 CONFIGURATION VIA httpd.conf DIRECTIVES
 
@@ -338,19 +348,20 @@ HTML::Mason::ApacheHandler.
 
 =head2 Creating the Mason objects
 
-C<handler.pl> creates three Mason objects: the Parser, Interpreter,
-and ApacheHandler. The Parser compiles components into Perl
-subroutines; the Interpreter executes those compiled components; and
-the Apache handler routes mod_perl requests to Mason.  These objects
-are created once in the parent httpd and then copied to each child
-process.
+C<handler.pl> explicitly creates just one Mason objects, the
+ApacheHandler. This object routes mod_perl requests to Mason.  It, in
+turn, creates the Interp object, which creates a number of other
+objects, including the Compiler, Lexer, Resolver, and Request.  These
+objects, excluding the Request, are created once in the parent httpd
+and then copied to each child process.
 
-These objects have a fair number of possible parameters. Only two of
-them are required, I<comp_root> and I<data_dir>; these are discussed
-in the next two subsections. The various parameters are documented in
-the individual reference manuals for each object:
-B<L<HTML::Mason::Parser>>, B<L<HTML::Mason::Interp>>, and
-B<L<HTML::Mason::ApacheHandler>>.
+These objects have a fair number of possible parameters, which are
+discussed in the next two subsections. The various parameters are
+documented in the individual reference manuals for each object:
+B<L<HTML::Mason::Interp>>, B<L<HTML::Mason::ApacheHandler>>,
+B<L<HTML::Mason::Request>>, B<L<HTML::Mason::Compiler::ToObject>>, and
+B<L<HTML::Mason::Resolver::File>>. The B<L<HTML::Mason::Lexer>> takes
+no parameters.
 
 The advantage of embedding these parameters in objects is that
 advanced configurations can create more than one set of objects,
@@ -360,14 +371,10 @@ server, distinguishing between them with a configuration variable
 called C<version>:
 
     # Create Mason objects for staging site
-    my $parser1 = new HTML::Mason::Parser;
-    my $interp1 = new HTML::Mason::Interp (parser=>$parser1, ...);
-    my $ah1 = new HTML::Mason::ApacheHandler (interp=>$interp1);
+    my $ah1 = new HTML::Mason::ApacheHandler (comp_root => '/var/www/staging');
 
     # Create Mason objects for production site
-    my $parser2 = new HTML::Mason::Parser;
-    my $interp2 = new HTML::Mason::Interp (parser=>$parser2, ...);
-    my $ah2 = new HTML::Mason::ApacheHandler (interp=>$interp2);
+    my $ah2 = new HTML::Mason::ApacheHandler (comp_root => '/var/www/prod');
 
     sub handler {
         ...
@@ -454,7 +461,7 @@ files created at startup, returning them in response to
 C<interp-E<gt>files_written>. This list can be fed to a chown() at the
 end of the startup code in C<handler.pl>:
 
-    chown (Apache->server->uid, Apache->server->gid, $interp->files_written);
+    chown (Apache->server->uid, Apache->server->gid, $ah->interp->files_written);
 
 =head2 Persistent user sessions
 
@@ -500,14 +507,14 @@ package that components execute in, by default B<HTML::Mason::Commands>:
       use vars qw($dbh %session);
     }
 
-Alternatively you can use the L<Parser/allow_globals> parameter or method:
+Alternatively you can use the L<Compiler/allow_globals> parameter:
 
-    my $parser = new HTML::Mason::Parser (..., allow_globals => [qw($dbh %session)]);
-    $parser->allow_globals(qw($foo @bar))
+    my $ah = new HTML::Mason::ApacheHandler (..., allow_globals => [qw($dbh %session)]);
 
-The only advantage to C<allow_globals> is that it will do
-the right thing if you've chosen a different package for components
-to run in (via the L<Parser/in_package> Parser parameter.)
+The only advantage to C<allow_globals> is that it will do the right
+thing if you've chosen a different package for components to run in
+(via the L<Compiler::ToObject/in_package> Compiler::ToObject
+parameter.)
 
 Similarly, to initialize the variable in C<handler.pl>, you need to
 set it in the component package:
@@ -516,7 +523,7 @@ set it in the component package:
 
 Alternatively you can use the L<Interp/set_global> Interp method:
 
-    $interp->set_global(dbh => DBI->connect(...));
+    $ah->interp->set_global(dbh => DBI->connect(...));
 
 Again, C<set_global> will do the right thing if you've chosen a
 different package for components.
@@ -745,8 +752,6 @@ above. Your handler should end up looking like this:
 
         # Handle previewer request on special ports
         if ($port >= 3001 && $port <= 3005) {
-            my $parser = new HTML::Mason::Parser(...);
-            my $interp = new HTML::Mason::Interp(...);
             my $ah = new HTML::Mason::ApacheHandler (...);
             return HTML::Mason::Preview::handle_preview_request($r,$ah);
         } else {
@@ -950,8 +955,9 @@ messages are given in terms of the object file. The curious-minded can
 peek inside an object file to see exactly how Mason converted
 a given component to a Perl object.
 
-If you change any Parser options, you must remove object files
-previously created under that parser for the changes to take effect.
+If you change any Compiler or Lexer options, you must remove object
+files previously created under that compiler or lexer for the changes
+to take effect.
 
 If for some reason you don't want Mason to create object files, set
 the L<Interp/use_object_files> Interp parameter to 0.
@@ -995,7 +1001,7 @@ behavior in two ways:
 1.  Does not check component source files at all, relying solely on
 object files.  This means the developer or an automated system is
 responsible for recompiling any components that change and recreating
-object files, using the L<Parser/make_component> Parser method.
+object files, using the L<Interp/make_component> Interp method.
 
 2.  Rather than continuously checking whether object files have
 changed, Mason monitors a "reload file" containing an ever-growing
@@ -1081,8 +1087,6 @@ httpd.conf so that all DocumentRoots live under a single component space:
             PerlHandler HTML::Mason::ApacheHandler
         </Location>
     </VirtualHost>
-
-In handler.pl:
 
     # Mason configuration
     PerlSetVar MasonCompRoot "/usr/local/www/htdocs"
