@@ -161,8 +161,8 @@ sub _initialize
     # Adjust to current size of reload file
     #
     if ($self->use_reload_file && -f $self->reload_file) {
-	$self->{last_reload_file_pos} = [stat($self->reload_file)]->[7];
-	$self->{last_reload_time} = [stat($self->reload_file)]->[9];
+	$self->{last_reload_file_pos} = (stat(_))[7];
+	$self->{last_reload_time} = (stat(_))[9];
     }
 }
 
@@ -270,14 +270,15 @@ sub check_reload_file {
     my ($self) = @_;
     my $reloadFile = $self->reload_file;
     return if (!-f $reloadFile);
-    my $lastmod = [stat($reloadFile)]->[9];
+    my $lastmod = (stat(_))[9];
     if ($lastmod > $self->{last_reload_time}) {
 	my ($block);
-	my $length = [stat($reloadFile)]->[7];
+	my $length = (stat(_))[7];
+	$self->{last_reload_file_pos} = 0 if ($length < $self->{last_reload_file_pos});
 	my $fh = new IO::File $reloadFile;
 	return if !$fh;
 	my $pos = $self->{last_reload_file_pos};
-	$fh->seek(&SEEK_SET,$pos);
+	$fh->seek($pos,&SEEK_SET);
 	read($fh,$block,$length-$pos);
 	$self->{last_reload_time} = $lastmod;
 	$self->{last_reload_file_pos} = $fh->tell;
