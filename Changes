@@ -13,6 +13,11 @@ available at http://www.masonhq.com/changes.html.
 an incompatible compiler/lexer, even if the object file contains
 syntax errors.
 
+[ BUG FIXES ]
+
+- Fix a bug in the lexer that made it think it had found a Perl-line
+where none existed.
+
 1.09_02  June 4, 2002
 
 [ INCOMPATIBLE CHANGES ]
