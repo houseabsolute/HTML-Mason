@@ -15,7 +15,7 @@ $m->request_comp.  Suggested by Manuel Capinha, among others.
 - Added $m->call_self.  This was present in Mason pre-1.10, and has
 been added back per Jon Swartz's request.
 - Added $comp->attributes, similar to $comp->methods.  This just
-returns attributes for a given component objects.  It doesn't return
+returns attributes for a given component object.  It doesn't return
 attributes inherited from a parent.  Suggested by Matti Makitalo.
 
 [ BUG FIXES ]
