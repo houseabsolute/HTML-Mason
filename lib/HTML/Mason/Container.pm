@@ -82,6 +82,7 @@ sub all_specs
 
 	    my $descr = $spec->{descr} || '(No description available)';
 	    $out{$class}{valid_params}{$name} = { type => $type,
+						  pv_type => $spec->{type},
 						  default => $default,
 						  descr => $descr,
 						  required => defined $default || $spec->{optional} ? 0 : 1,
