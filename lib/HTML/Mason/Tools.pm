@@ -344,6 +344,24 @@ Unicode.
 
 NOTE part trois: The URI RFC (2396) doesn't provide much help either.
 
+=item coerce_to_array
+
+Given a scalar, which may be a reference, this function attempts to
+return an array.  It throws an HTML::Mason::Exception::Params
+exception if this can't be done.
+
+This function is called from the generated component code as part of a
+component's argument handling.
+
+=item coerce_to_hash
+
+Given a scalar, which may be a reference, this function attempts to
+return a hash.  It throws an HTML::Mason::Exception::Params exception
+if this can't be done.
+
+This function is called from the generated component code as part of a
+component's argument handling.
+
 =back
 
 =cut
