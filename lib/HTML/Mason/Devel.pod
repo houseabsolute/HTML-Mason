@@ -1322,16 +1322,6 @@ and the cache subclass is C<Cache::FileCache>:
 	 username => "mason");
     $cache->remove('identifier1');
 
-=head2 Guarantees (or lack thereof)
-
-C<Cache::Cache> will make a best effort to cache data until it expires,
-but will not guarantee it.  The data cache is not a permanent reliable
-store in itself; you should not place in the cache critical data
-(e.g. user session information) that cannot be regenerated from
-another source such as a database.  Write your code assuming that any
-C<set> command could fail, and that the cache could disappear at any
-time.
-
 =head1 SENDING HTTP HEADERS
 
 Mason automatically sends HTTP headers via $r->send_http_header. It
