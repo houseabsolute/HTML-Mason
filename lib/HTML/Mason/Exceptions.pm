@@ -16,9 +16,13 @@ BEGIN
 
 	   'HTML::Mason::Exception::Abort' =>
 	   { isa => 'HTML::Mason::Exception',
-	     alias => 'abort_error',
 	     fields => [qw(aborted_value)],
 	     description => 'a component called $m->abort' },
+
+	   'HTML::Mason::Exception::Decline' =>
+	   { isa => 'HTML::Mason::Exception',
+	     fields => [qw(declined_value)],
+	     description => 'a component called $m->decline' },
 
 	   'HTML::Mason::Exception::Compiler' =>
 	   { isa => 'HTML::Mason::Exception',
@@ -470,7 +474,11 @@ The C<< $m->abort >> method was called.
 
 Exceptions in this class contain the field C<aborted_value>.
 
-Abbreviated as C<abort_error>.
+=item HTML::Mason::Exception::Decline
+
+The C<< $m->decline >> method was called.
+
+Exceptions in this class contain the field C<declined_value>.
 
 =item HTML::Mason::Exception::Compilation
 
