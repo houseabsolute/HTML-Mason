@@ -73,7 +73,7 @@ cleanup_data_dir();
 # permissions manually.
 if ( $> == 0 || $< == 0 )
 {
-    chmod 0777, File::Spec->( $ENV{APACHE_DIR}, 'data' );
+    chmod 0777, File::Spec->catdir( $ENV{APACHE_DIR}, 'data' );
 }
 
 multi_conf_tests();     # 4 tests
