@@ -178,14 +178,14 @@ sub _handle_error
 
 sub redirect
 {
-    my ($self, $url) = @_;
+    my ($self, $url, $status) = @_;
     my $r = $self->apache_req;
-    
+
     $self->clear_buffer;
     $r->method('GET');
     $r->headers_in->unset('Content-length');
     $r->err_header_out( Location => $url );
-    $self->abort(REDIRECT);
+    $self->abort($status || REDIRECT);
 }
 
 #----------------------------------------------------------------------
