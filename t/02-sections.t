@@ -317,7 +317,7 @@ method Test
 </TITLE>
 </HEAD>
 <BODY>
-<% $m->current_comp->call_method('foo','y'=>2) %>
+% $m->current_comp->call_method('foo','y'=>2);
 % my $out = $m->current_comp->scall_method('bar',qw(a b c));
 <% uc($out) %>
 </BODY>
@@ -343,7 +343,6 @@ method Test
 <BODY>
 
 2 + 2 = 4.
-
 
 THE SECOND METHOD. ARGUMENTS ARE A,B,C.
 
