@@ -712,5 +712,43 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/support/autoflush_subrequest',
+			 component => <<'EOF',
+here is the child
+% $m->clear_buffer;
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'autoflush_subrequest',
+		      description => 'make sure that a subrequest respects its parent autoflush setting',
+		      interp_params => { autoflush => 1 },
+		      component => <<'EOF',
+My child says:
+% $m->subexec('/request/support/autoflush_subrequest');
+EOF
+		      expect => <<'EOF',
+My child says:
+here is the child
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'no_autoflush_subrequest',
+		      description => 'make sure that a subrequest respects its parent autoflush setting',
+		      interp_params => { autoflush => 0 },
+		      component => <<'EOF',
+My child says:
+% $m->subexec('/request/support/autoflush_subrequest');
+EOF
+		      expect => <<'EOF',
+My child says:
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
