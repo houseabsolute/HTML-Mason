@@ -17,7 +17,7 @@ sub import
 	foreach my $ro ( ref $p{read_only} ? @{ $p{read_only} } : $p{read_only} )
 	{
 	    no strict 'refs';
-	    *{"$caller\::$ro"} = sub { return shift->{$ro} };
+	    *{"$caller\::$ro"} = sub { return $_[0]->{$ro} };
 	}
     }
 
