@@ -31,6 +31,10 @@ sub glob_path {
     shift->_virtual;
 }
 
+sub default_path_prefix {
+    return undef;
+}
+
 sub _virtual
 {
     my $self = shift;
@@ -109,6 +113,12 @@ list of component paths for components which match this glob pattern.
 For example, the filesystem resolver simply appends this pattern to
 each component root in turn and calls the Perl C<glob()> function to
 find matching files on the filesystem.
+
+=item default_path_prefix
+
+Returns the prefix to be prepended to initial relative component paths
+before they are passed into get_info. Returning undef indicates that
+initial component paths must be absolute (the default).
 
 =back
 
