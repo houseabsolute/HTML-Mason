@@ -63,7 +63,7 @@ top-level components.  A top-level component might consist purely of static
 HTML.
 
 Other components are support components, which are called by top-level
-compoennts or other support components.  These components are analogous to
+components or other support components.  These components are analogous to
 perl subroutines -- they allow you to create small packages of code that you
 can reuse throughout your project.
 
@@ -105,6 +105,11 @@ Installation/handler.pl" section of the administration manual (Admin.pod).
 
 =head2 Can I define subroutines in components?
 
+First, consider using a separate component. They are functionally
+equivalent, and this is playing to Mason's strengths.  If the
+subroutine is small, or limited in scope, consider using a <%def>
+subcomponent.
+
 You can define named subroutines inside the <%once> section of any
 component.  Defining the subroutine in a <%perl> or <%init> section is
 not reliable because such a definition would end up residing inside
@@ -113,11 +118,6 @@ another subroutine, and Perl doesn't like that.
 You can define anonymous subroutines anywhere:
 
 	my $foo = sub {...};
-
-Finally, consider using a separate component, if the subroutine is large
-enough, instead of a subroutine; they are functionally equivalent, and this
-is playing to Mason's strengths.  If the subroutine is small, or limited in
-scope, consider using <%def> subcomponents.
 
 =head2 Can I serve images through a HTML::Mason server?
 
@@ -195,16 +195,18 @@ dynamic content unnecessarily.
 =head2 Does Mason leak memory?
 
 The last known Mason-specific leak was fixed in 0.5.  We are not aware of
-any current leaks in Mason itself, although some recent Linux/mod_perl
-installations have been reported to leak continuously even when the server
-is not answering requests. And of course it is always possible for your own
-component code to leak.
+any current leaks in Mason itself. If you are using RedHat's mod_perl RPM,
+or another DSO mod_perl installation, you will leak memory and should switch
+to a statically compiled mod_perl.
+
+Of course it is always possible for your own component code to leak, e.g.
+by creating and not cleaning up global variables.
 
 =head2 Can I run HTML::Mason outside a web server?
 
 Yes, in fact HTML::Mason can be useful for generating a set of web pages
-offline or as a general templating tool.  See "running HTML::Mason
-stand-alone" in the administration manual (Admin.pm).
+offline or as a general templating tool.  See "standalone mode"
+in the interpreter manual (Interp.pm).
 
 =head2 Can I run HTML::Mason via CGI?
 
@@ -246,13 +248,13 @@ symbolic links in either of these configuration items.
 
 =head2 How do I exit from all components including the ones that called me?
 
-Use mc_abort, documented in the commands manual (Commands.pm).
+Use $m->abort, documented in the Request manual (Request.pm).
 
 =head2 How do I access GET or POST arguments?
 
 GET and POST arguments are automatically parsed and placed into named
 component arguments just as if you had called the component with <& &>
-or mc_comp.  So you can get at GET/POST data by pre-declaring argument
+or $m->comp.  So you can get at GET/POST data by pre-declaring argument
 names and/or using the %ARGS hash which is always available.
 
 =head2 Should I use CGI.pm to read GET/POST arguments?
@@ -274,21 +276,23 @@ arguments.
 To print HTML constructs returned by CGI functions, just enclose them in
 <%%>, e.g.
 
-	<%$query->radio_group(...)%>
+	<% $query->radio_group(...) %>
 
 =head2 How do I modify the outgoing HTTP headers?
 
-Use the usual Apache.pm functions, such as $r->header_out, from within the 
-top component's <%init> section.  See the "Sending HTTP Headers" 
-section in the component developers manual (Devel.pod).
+Use the usual Apache.pm functions, such as $r->header_out.  See the
+"Sending HTTP Headers" section in the component developers manual
+(Devel.pod).
 
 =head2 How do I do an external redirect?
 
-<%init>
-  $r->content_type('text/html');
-  $r->header_out(Location=>$url);
-  mc_abort(302);
-</%init>
+Here's how to redirect to $url:
+
+	<%init>
+	$r->content_type('text/html');
+	$r->header_out(Location=>$url);
+	$m->abort(302);
+	</%init>
 
 =head2 Some of my pages are being served with content type xxx instead of text/html.  How do I get HTML::Mason to properly set the content type?
 
@@ -315,11 +319,11 @@ component is called dynamicImage.html.
 
 =item *
 
-Put general comments in the <%perl_doc> section.
+Put general comments in the <%doc> section.
 
 =item *
 
-In the <%perl_init> and <%perl_cleanup> sections, and in a <%perl> block, 
+In the <%init> and <%cleanup> sections, and in a <%perl> block, 
 use standard Perl comments ('#').
 
 =item *
@@ -350,19 +354,17 @@ The ad will still be fetched and counted, but not displayed!
 
 A better way to block out a section is if (0):
 
-	%if (0) {
+	% if (0) {
 		...
-	%}
+	% }
 
 Code blocked out in this way will neither be executed nor displayed, and 
 multiple if (0) blocks can be nested inside each other (unlike HTML comments).
 
-=head2 How can I capture the output of a component (and modify it, etc.) instead of having it automatically output?
+=head2 How can I capture the output of a component (and modify it,
+etc.) instead of having it automatically output?
 
-Use the STORE option to mc_comp.  STORE takes a scalar reference as a
-parameter; the output of the component and all its children will be placed
-in the scalar instead of being output.  See the mc_comp section of the
-commands manual (Commands.pm).
+Use $m->scomp. See the $m->scomp section of the Request manual (Request.pm).
 
 =head2 Can I use globals in components?
 
@@ -395,3 +397,27 @@ trouble down the road.
 
 As of Mason 0.8, yes!  Consult the Component roots (multiple) section in the
 Mason Administrators guide (Admin.pod).
+
+=head2 Do data cache files expire automatically when a component or its dependencies 
+change?
+
+Eventually, but not right now. Unfortunately, it is difficult for Mason to 
+check this efficiently in the current implementation.  But you can use the 
+following idiom to say "expire when my component source file changes":
+
+    $m->cache(..., expire_if=>sub { (stat($m->source_file))[9] > $_[0] } )
+
+=head2 Why does the order of output get mixed up when I use print or $r->print?
+
+Since your server is most likely in batch mode, all Mason output gets
+buffered.  print and $r->print circumvent the buffer and thus come out
+before other Mason output.
+
+Solution: don't use print or $r->print. Use $m->out if you must output
+inside a Perl section. See the section on output mode:
+
+   http://www.masonhq.com/docs/manual/Admin.html#out_mode
+
+and $m->out:
+
+   http://www.masonhq.com/docs/manual/Commands.html#item_out_string_

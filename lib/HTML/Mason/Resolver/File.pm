@@ -17,7 +17,7 @@ use strict;
 # Public API
 
 #
-# Given a component path, return the fully-qualified path, plus plus
+# Given a component path, return the fully-qualified path, plus
 # auxiliary information that will be passed to the get_* methods
 # below.
 #
