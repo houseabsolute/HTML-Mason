@@ -272,19 +272,19 @@ sub allowed_params
 
 	# Can accept a 'foo_class' parameter instead of a 'foo' parameter
 	# If neither parameter is present, give up - perhaps it's optional
-	my $low_class = "${name}_class";
+	my $class_param = "${name}_class";
 
-	if ( exists $args->{$low_class} )
+	if ( exists $args->{$class_param} )
 	{
 	    delete $p{$name};
-	    $p{$low_class} = { type => SCALAR, parse => 'string' };  # A loose spec
+	    $p{$class_param} = { type => SCALAR, parse => 'string' };  # A loose spec
 	}
 
 	# We have to get the allowed params for the contained object
 	# class.  That class could be overridden, in which case we use
 	# the new class provided.  Otherwise, we use our default.
-	my $spec = exists $args->{$low_class} ? $args->{$low_class} : $c{$name};
-	my $contained_class = ref($spec) ? $spec->{class}   : $spec;
+	my $spec = exists $args->{$class_param} ? $args->{$class_param} : $c{$name};
+	my $contained_class = ref($spec) ? $spec->{class} : $spec;
 
 	# we have to make sure it is loaded before we try calling
 	# ->allowed_params
