@@ -295,7 +295,7 @@ sub _httpd_has_mod_perl {
     my %compiled = $self->get_compilation_params($httpd);
 
     if ($compiled{SERVER_VERSION} =~ m/^2\./) {
-	warn("Apache $compiled{SERVER_VERSION} detected. WARNING: Apache2 support is still experimental!\n");
+	warn("Apache $compiled{SERVER_VERSION} detected. Report problems to mason-users\@lists.sourceforge.net\n");
     }
 
     if ($compiled{SERVER_CONFIG_FILE}) {
