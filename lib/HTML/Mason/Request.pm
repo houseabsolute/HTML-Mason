@@ -1998,10 +1998,9 @@ to C<< $m->scomp >> or when output is being stored in a scalar
 reference, as with the C< { store =E<gt> \$out } > component call
 modifier.
 
-Additionally, if a component has a C<< <%filter> >> block, that
-component is buffered until its entire output is generated.  This
-means that inside that component and any components that it calls,
-the buffer cannot be flushed.
+C<< <%filter> >> blocks will process the output whenever the buffers
+are flushed.  If C<autoflush> is on, your data may be filtered in 
+small pieces.
 
 =item instance
 
