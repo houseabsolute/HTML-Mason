@@ -107,7 +107,7 @@ sub install
 
     $install .= "\nconfigure_apache :\n\t\$(PERL) install/configure_apache.pl\n";
 
-    $install .= "\ndelete_old_docs :\n\t\$(PERL) install/delete_old_pods.pl \$(INSTALLSITELIB)\n";
+    $install .= "\ndelete_old_docs :\n\t\$(PERL) install/delete_old_pods.pl\n";
 
     return $install;
 }
