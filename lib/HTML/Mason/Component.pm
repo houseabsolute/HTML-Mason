@@ -23,8 +23,7 @@ use HTML::Mason::MethodMaker
 			 parser_version
 			 run_count ) ],
 
-      read_write => [ qw ( dynamic_subs_request
-			   dynamic_subs_hash ) ]
+      read_write => [ qw ( dynamic_subs_request ) ]
       );
 
 my %fields =
@@ -118,8 +117,7 @@ sub assign_runtime_properties {
     }
 }
 
-sub run
-{
+sub run {
     my $self = shift;
 
     #
@@ -131,6 +129,23 @@ sub run
     $self->{run_count}++; $self->{mfu_count}++;
 
     return wantarray ? $self->{code}->(@_) : scalar $self->{code}->(@_);
+}
+
+sub dynamic_subs_init {
+    my $self = shift;
+
+    $self->{dynamic_subs_hash} = $self->{dynamic_subs_init}->();
+
+    
+}
+
+sub run_dynamic_sub {
+    my ($self, $key, @args) = @_;
+
+    die "call_dynamic: assert error - could not find code for key $key in component " . $self->title
+	unless exists $self->{dynamic_subs_hash}->{$key};
+
+    $self->{dynamic_subs_hash}->{$key}->(@args);
 }
 
 # Legacy, left in for pre-0.8 obj files

@@ -288,11 +288,11 @@ sub call_dynamic {
     my ($m, $key, @args) = @_;
     my $comp = ($m->current_comp->is_subcomp) ? $m->current_comp->owner : $m->current_comp;
     if (!defined($comp->dynamic_subs_request) or $comp->dynamic_subs_request ne $m) {
-	$comp->dynamic_subs_hash($comp->{dynamic_subs_init}->());
+	$comp->dynamic_subs_init;
 	$comp->dynamic_subs_request($m);
     }
-    my $sub = $comp->dynamic_subs_hash->{$key} or die "call_dynamic: assert error - could not find code for key $key in component ".$comp->title;
-    return $sub->(@args);
+
+    return $comp->run_dynamic_sub($key, @args);
 }
 
 sub call_next {
