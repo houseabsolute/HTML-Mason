@@ -2,6 +2,31 @@
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
+
+#
+# A note about the internals:
+#
+# Because request is the single most intensively used piece of the
+# Mason architecture, this module is often the best target for
+# optimization.
+#
+# By far, the two methods called most often are comp() and print().
+# We have attempted to optimize the parts of these methods that handle
+# the _normal_ path through the code.
+#
+# Code paths that are followed less frequently (like the path that
+# handles the $mods{store} parameter in comp, for example) are
+# intentionally not optimized.
+#
+# Many of the optimizations consist of ignoring defined interfaces for
+# accessing parts of the request object's internal data structure, and
+# instead accessing it directly.
+#
+# We have attempted to comment these various optimizations
+# appropriately, so that future hackers understand that we did indeed
+# mean to not use the relevant interface in that particular spot.
+#
+
 package HTML::Mason::Request;
 
 use strict;
@@ -691,7 +716,13 @@ sub comp {
     # Don't change on SELF:x and PARENT:x calls
     # Assume they know what they are doing if a component ref is passed in
     #
-    my $base_comp = exists($mods{base_comp}) ? $mods{base_comp} : $self->base_comp;
+    my $base_comp =
+        ( exists($mods{base_comp}) ?
+          $mods{base_comp} :
+          # access data structure directly to optimize common case
+          $self->{stack}[-1]{base_comp}
+        );
+
     unless ( $mods{base_comp} ||	# base_comp override
 	     !$path || 		# path is undef if $comp is a reference
 	     $path =~ m/^(?:SELF|PARENT)(?:\:..*)?$/ ) {
@@ -715,7 +746,9 @@ sub comp {
         push @{ $self->{buffer_stack} },
             $self->top_buffer->new_child( sink => $mods{store}, ignore_flush => 1 );
     }
-    push @{ $self->{buffer_stack} }, $self->top_buffer->new_child;
+    # more common case optimizations
+    push @{ $self->{buffer_stack} },
+        $self->{buffer_stack}[-1]->new_child;
 
     my @result;
 
@@ -750,7 +783,8 @@ sub comp {
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
     }
 
-    $self->top_buffer->flush;
+    # more common case optimizations
+    $self->{buffer_stack}[-1]->flush;
     pop @{ $self->{stack} };
     pop @{ $self->{buffer_stack} };
     pop @{ $self->{buffer_stack} } if ($mods{store});
