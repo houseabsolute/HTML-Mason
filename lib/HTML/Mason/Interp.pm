@@ -463,15 +463,35 @@ sub purge_code_cache {
 #
 sub make_component {
     my $self = shift;
+    validate(@_, {path =>      { type => SCALAR },
+		  comp =>      { type => SCALAR, optional => 1 },
+		  comp_file => { type => SCALAR, optional => 1 }});
+
     my %p = @_;
+    $p{comp} = read_file(delete $p{comp_file}) if exists $p{comp_file};
 
+    my $object = $self->compiler->compile( name => $p{path}, @_ );
+    my $object_file = File::Spec->catfile( $self->object_dir, $p{path} );
+  warn "object file is '$object_file'";
+    $self->write_object_file(object_text=>$object, object_file=>$object_file);
+    
     my $err;
-
-    my $object = $self->compiler->compile( comp => ${ $p{object_text} }, name => $p{script_file}, comp_class => $p{comp_class} );
-    $self->write_object_file(object_text=>$object, object_file=>$p{script_file});
-
     my $comp = $self->eval_object_text(object=>$object, error=>\$err);
     $comp->assign_runtime_properties($self) if $comp;
+    $self->code_cache->{$p{path}} = {lastmod=>time(), comp=>$comp};
+    return $comp;
+}
+
+sub make_anonymous_component
+{
+    my $self = shift;
+
+    my $object = $self->compiler->compile( name => '<anonymous component>', @_ );
+
+    my $error;
+    my $comp = $self->eval_object_text( object => $object, error => \$error );
+    $self->_compilation_error( '<anonymous component>', $error ) if $error;
+
     return $comp;
 }
 
@@ -590,20 +610,6 @@ sub find_comp_upwards
 	$p = File::Spec->canonpath($dirname);    # certain versions leave ./ in $dirname
 	last if $p eq $last_p;  # last dir was something like '/' and so is this one
     }
-    return $comp;
-}
-
-sub make_anonymous_component
-{
-    my $self = shift;
-    my %p = @_;
-
-    my $object = $self->compiler->compile( %p, name => '<anonymous component>' );
-
-    my $error;
-    my $comp = $self->eval_object_text( object => $object, error => \$error );
-    $self->_compilation_error( '<<anonymous component>>', $error ) if $error;
-
     return $comp;
 }
 
