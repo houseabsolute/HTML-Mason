@@ -165,7 +165,7 @@ sub _make_main_header
 
     my $pkg = $self->in_package;
     return join '', ( "package $pkg;\n",
-		      $self->use_strict ? "use strict;\n" : '',
+		      $self->use_strict ? "use strict;\n" : "no strict;\n",
 		      sprintf( "use vars qw(\%s);\n",
 			       join ' ', '$m', $self->allow_globals ),
 		      $self->_blocks('once'),
@@ -193,28 +193,24 @@ sub _subcomponent_or_method_footer
 
     return '' unless %{ $self->{current_comp}{$type} };
 
-    return join '', ( "my %_$type =\n(\n",
-		      join ( ",\n",
-			     map { "'$_' => " .
-				   $self->_constructor( $self->{subcomp_class},
-							$self->{"compiled_$type"}{$_} ) }
-			     keys %{ $self->{"compiled_$type"} }
-			   ),
-		      "\n);\n"
-		    );
+    return join('',
+		"my %_$type =\n(\n",
+		map( {("'$_' => " ,
+		       $self->_constructor( $self->{subcomp_class},
+					    $self->{"compiled_$type"}{$_} ) ,
+		       ",\n")} keys %{ $self->{"compiled_$type"} } ) ,
+		"\n);\n"
+	       );
 }
 
 sub _constructor
 {
-    my $self = shift;
-    my $class = shift;
-    my $params = shift;
+    my ($self, $class, $params) = @_;
 
-    return join '', ( "$class\->new\n(\n",
-		      join ( ",\n",
-			     map {"'$_' => $params->{$_}" } sort keys %$params ),
-		      "\n)\n",
-		    );
+    return ("${class}->new(\n",
+	    map( {("'$_' => ", $params->{$_}, ",\n")} sort keys %$params ),
+	    "\n)\n",
+	   );
 }
 
 sub _component_params
