@@ -637,9 +637,11 @@ sub print
 {
     my $self = shift;
 
-    $self->top_buffer->receive(@_);
+    # direct access for optimization cause $m->print is called a lot
+    $self->{buffer_stack}[-1]->receive(@_);
 
-    $self->flush_buffer if $self->autoflush;
+    # ditto
+    $self->flush_buffer if $self->{autoflush};
 }
 
 *out = \&print;
