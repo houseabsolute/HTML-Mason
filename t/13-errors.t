@@ -48,7 +48,7 @@ EOF
 foo
 </%args>
 EOF
-		      expect_error => quotemeta q|unknown type for argument/attribute 'foo': first character must be $, @, or %|
+		      expect_error => quotemeta q|Invalid <%args> section line at line 2|
 		    );
 
 #------------------------------------------------------------
