@@ -277,8 +277,7 @@ sub call_next {
     my ($self,@extra_args) = @_;
     my $comp = $self->fetch_next
 	or HTML::Mason::Exception->throw( error => "call_next: no next component to invoke" );
-    my @args = (@{$self->current_args},@extra_args);
-    return $self->comp($comp, @args);
+    return $self->comp($comp, @{$self->current_args}, @extra_args);
 }
 
 sub caller
