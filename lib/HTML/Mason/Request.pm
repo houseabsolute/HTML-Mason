@@ -436,9 +436,14 @@ sub is_subrequest
     return $self->parent_request ? 1 : 0;
 }
 
-#
-# Abort out of current execution.
-#
+sub clear_and_abort
+{
+    my $self = shift;
+
+    $self->clear_buffer;
+    $self->abort(@_);
+}
+
 sub abort
 {
     my ($self, $aborted_value) = @_;
@@ -1472,6 +1477,15 @@ C<abort>.
 If C<abort> is called from a component that has a C<< <%filter> >>,
 than any output generated up to that point is filtered, I<unless>
 C<abort> is called from a C<< <%shared> >> block.
+
+=for html <a name="item_clear_and_abort"></a>
+
+=item clear_and_abort ([return value])
+
+This method is syntactic sugar for calling C<clear_buffer()> and then
+C<abort()>.  If you are aborting the request because of an error, you
+will often want to clear the buffer first so that any output generated
+up to that point is not sent to the client.
 
 =for html <a name="item_aborted"></a>
 

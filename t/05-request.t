@@ -571,6 +571,21 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'clear_and_abort',
+		      description => 'Test the clear_and_abort() method',
+		      component => <<'EOF',
+Some output
+% $m->flush_buffer;
+More output
+% $m->clear_and_abort();
+EOF
+		      expect => <<'EOF',
+Some output
+EOF
+		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'reexec',
 		      description => 'test that $m cannot be reexecuted',
 		      component => <<'EOF',
