@@ -189,31 +189,6 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'STORE',
-		      description => 'Test STORE parameter to component call',
-		      component => <<'EOF',
-
-% my $buffy;
-% $m->comp('.subcomp', 1,2,3,4, STORE=>\$buffy);
------
-<% $buffy %>
-
-<%def .subcomp>
- Hello, you say <% join '', @_ %>.
-</%def>
-EOF
-		      expect => <<'EOF',
-
------
-
- Hello, you say 1234.
-
-
-EOF
-		    );
-
-#------------------------------------------------------------
-
     $group->add_test( name => 'mfu_count',
 		      description => 'Test mfu_count component method',
 		      component => <<'EOF',
