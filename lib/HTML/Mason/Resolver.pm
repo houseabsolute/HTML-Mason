@@ -138,7 +138,14 @@ simply be the same as the "url_path" key or it can be any other id you
 wish.
 
 This value will be used when constructing filesystem paths so it needs
-to be something that works on different filesystems.
+to be something that works on different filesystems.  If it contains
+forward slashes, these will be converted to the appropriate
+filesystem-specific path separator.
+
+In fact, we encourage you to make sure that your component ids have
+some forward slashes in them or also B<all> of your generated object
+files will end up in a single directory, which could affect
+performance.
 
 =back
 
