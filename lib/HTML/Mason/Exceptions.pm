@@ -87,6 +87,8 @@ sub import
 
 package HTML::Mason::Exception;
 
+sub as_string { $_[0]->error }
+
 sub filtered_frames
 {
     my ($self) = @_;
