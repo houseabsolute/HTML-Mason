@@ -22,7 +22,8 @@ chk_version(Params::Validate => '0.04') or
 
 chk_version(Apache::Request => '0.31') or
     warn  "\n"
-	. "*** Mason requires version 0.31, or later, of Apache::Request\n"
+	. "*** If you plan to use Mason with mod_perl,\n"
+        . "    Mason requires version 0.31, or later, of Apache::Request\n"
 	. "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
 
 make_config();
@@ -36,7 +37,7 @@ setup_mod_perl_tests();
 WriteMakefile(
     'NAME'    => 'HTML::Mason',
     'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
-    'PREREQ_PM' => { Data::Dumper => 2.08, 'File::Spec' => 0.8, 'Params::Validate' => 0.04, Apache::Request => 0.31 },
+    'PREREQ_PM' => { Data::Dumper => 2.08, 'File::Spec' => 0.8, 'Params::Validate' => 0.04 },
 
     # %APACHE is created when setup_mod_perl_tests() is called.  The
     # code that does this creation is in makeconfig.pl.
