@@ -459,10 +459,19 @@ sub check_output
 {
     my ($self, %p) = @_;
 
-    # Whitespace at end can vary.  (Or rather, it is varying in the tests, and
-    # should be made not to vary, but I don't have time to fix it yet.)
-    for ($p{actual}, $p{expect}) {  s/\s+$//  }
-    my $same = ($p{actual} eq $p{expect});
+    my $same;
+
+    # Allow a regex for $p{expect}
+    if (ref $p{expect}) {
+	$same = ($p{actual} =~ /$p{expect}/);
+
+    } else {
+	# Whitespace at end can vary.  (Or rather, it is varying in the tests, and
+	# should be made not to vary, but I don't have time to fix it yet.)
+	
+	for ($p{actual}, $p{expect}) {  s/\s+$//  }
+	$same = ($p{actual} eq $p{expect});
+    }
 
     if (!$same and $VERBOSE) {
 	print "Got ...\n-----\n$p{actual}\n-----\n   ... but expected ...\n-----\n$p{expect}\n-----\n";
