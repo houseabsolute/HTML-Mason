@@ -290,7 +290,8 @@ sub parse
 		    $errpos = $segbegin + $d;
 		    goto parse_error;
 		}
-		push(@alphasecs,[$curpos, $d-$curpos]); # Nasty, but necessary?
+		push(@alphasecs,[$curpos, $d-$curpos]);
+                puhs(@perltexts,"");
 		my $length = $i-($d+11);
 		$alpha = [$d+11,$length];
 		$curpos = $d+11+$length+12;
