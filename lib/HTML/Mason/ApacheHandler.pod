@@ -34,10 +34,11 @@ with default settings. e.g.
 
 =item args_method
 
-Method to use for unpacking GET and POST arguments. The valid
-options are 'CGI' and 'mod_perl'; these indicate that a
-CGI.pm or Apache::Request object (respectively) will be
-created for the purposes of argument handling.
+Method to use for unpacking GET and POST arguments. The valid options
+are 'CGI' and 'mod_perl'; these indicate that a CGI.pm or
+Apache::Request object (respectively) will be created for the purposes
+of argument handling. These objects are, unfortunately, not yet
+accessible from components.
 
 CGI is the default and comes with most Perl systems. You may wish to
 switch to Apache::Request (available from CPAN) for speed and memory
