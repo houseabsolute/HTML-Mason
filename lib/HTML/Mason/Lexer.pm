@@ -291,7 +291,7 @@ sub key_val_block
 
     my $ending = qr, (?: \n |           # newline or
                          (?= </%\Q$p->{block_type}\E> ) )   # end of block (don't consume it)
-                   ,x;
+                   ,ix;
 
     while ( $self->{current}{comp_source} =~ /
                       \G
