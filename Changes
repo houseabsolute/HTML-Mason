@@ -26,12 +26,18 @@ more times for each component call. The unnecessary copies have been
 eliminated.  As part of eliminating these copies, a new compiler
 parameter has been added, "define_args_hash".  The default setting,
 "auto", should work with all existing Mason components.  See the
-HTML::Mason::Compiler::ToObject docs for details.
+HTML::Mason::Compiler::ToObject docs for details.  Task id #464.
+- Add more details about subclassing the compiler to the Subclassing
+documentation.
+- There is now a compiler parameter called "use_source_line_numbers",
+which can be used to turn off line numbering based on the source file.
+This can be useful when single stepping a component through the
+debugger.  Task id #461.
 
 [ BUG FIXES ]
 
 - Now assigning runtime properties (such as interp) to method
-component objects as well as subcomponent objects. Task id #462.
+component objects as well as subcomponent objects.  Task id #462.
 
 1.20  May 1, 2003 (May Day)
 
