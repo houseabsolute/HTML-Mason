@@ -158,7 +158,8 @@ To cache the component's output:
 To cache the component's return value:
 
     <%init>
-        my ($retval,$cached) = $m->cache_self(expire_in=>'3 hours'[, key=>'fookey']);
+        my ($retval,$cached) = $m->cache_self
+            (expire_in=>'3 hours'[, key=>'fookey']);
         return $retval if $cached;
         ... <rest of init> ...
     </%init>

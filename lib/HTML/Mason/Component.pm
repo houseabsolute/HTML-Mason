@@ -19,12 +19,12 @@ use HTML::Mason::MethodMaker
 			 inherit_path
 			 inherit_start_path
 			 interp
-			 mfu_count
 			 object_size
 			 parser_version
 			 run_count ) ],
 
-      read_write => [ qw ( dynamic_subs_request ) ]
+      read_write => [ qw ( dynamic_subs_request
+			   mfu_count ) ]
       );
 
 my %fields =

@@ -21,6 +21,8 @@ use HTML::Mason::MethodMaker
     ( read_only => [ qw( code_cache
 			 comp_root
 			 data_dir
+			 die_handler
+			 die_handler_overridden
 			 hooks
 			 system_log_file
 			 system_log_separator
@@ -53,6 +55,8 @@ my %fields =
      data_cache_dir => '',
      data_dir => undef,
      dhandler_name => 'dhandler',
+     die_handler => sub { confess($_[0]) },
+     die_handler_overridden => 0,
      system_log_file => undef,
      system_log_separator => "\cA",
      max_recurse => 32,
@@ -92,6 +96,8 @@ sub new
 	    die "HTML::Mason::Interp::new: invalid option '$key'\n";
 	}
     }
+    $self->{die_handler_overridden} = 1 if exists $options{die_handler};
+
     die "HTML::Mason::Interp::new: must specify value for data_dir\n" if !$self->{data_dir};
     $self->{data_cache_dir} ||= File::Spec->catdir( $self->{data_dir}, 'cache' );
     bless $self, $class;
@@ -398,11 +404,11 @@ sub purge_code_cache {
 	$self->{code_cache_current_size} = $cur_size;
 
 	#
-	# Multiple each remaining cache item's count by a decay factor,
+	# Multiply each remaining cache item's count by a decay factor,
 	# to gradually reduce impact of old information.
 	#
 	foreach my $elem (@elems) {
-	    $elem->[2]->{mfu_count} *= $decay_factor;
+	    $elem->[2]->mfu_count( $elem->[2]->mfu_count * $decay_factor );
 	}
     }
 }

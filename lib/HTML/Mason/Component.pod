@@ -184,9 +184,9 @@ resets every time the component is reloaded.
 
 =item scall_method (name, args...)
 
-Like L<Component/call_method>, but returns the method output as a
-string instead of printing it. (Think sprintf versus printf.) The
-method's return value is discarded.
+Like L<Component/call_method (name, args...)>, but returns the method
+output as a string instead of printing it. (Think sprintf versus
+printf.) The method's return value is discarded.
 
 =item subcomps
 

@@ -972,7 +972,7 @@ In handler.pl:
 
     my $interp = new HTML::Mason::Interp (parser=>$parser,
                     comp_root=>'/usr/local/www/htdocs'
-                    data_dir=>'/usr/local/mason/');
+                    data_dir=>'/usr/local/mason');
 
 The directory structure for this scenario might look like:
 
@@ -997,9 +997,12 @@ dynamically, you need to maintain separate Mason objects for each
 site in the handler.pl:
 
     my (%interp,%ah);
-    foreach my $site qw(...) {
-        $interp{$site} = new HTML::Mason::Interp  (comp_root=>"/usr/local/www/$site",...);
-        $ah{$site} = new HTML::Mason::ApacheHandler (interp=>$interp{$site},...);
+    foreach my $site qw(site1 site2 site3) {
+        $interp{$site} = new HTML::Mason::Interp
+            (comp_root => "/usr/local/www/$site",
+             data_dir => "/usr/local/mason/$site");
+        $ah{$site} = new HTML::Mason::ApacheHandler
+            (interp => $interp{$site});
     }
 
     ...

@@ -146,10 +146,10 @@ sub exec {
     # Call the first component.
     my ($result, @result);
     if (wantarray) {
-	local $SIG{'__DIE__'} = sub { confess($_[0]) };
+	local $SIG{'__DIE__'} = $interp->die_handler if $interp->die_handler;
 	@result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
     } else {
-	local $SIG{'__DIE__'} = sub { confess($_[0]) };
+	local $SIG{'__DIE__'} = $interp->die_handler if $interp->die_handler;
 	$result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
     }
     my $err = $@;
@@ -168,18 +168,24 @@ sub exec {
 
     # If an error occurred...
     if ($err and !$self->aborted) {
-	my $i = index($err,'HTML::Mason::Interp::exec');
-	$err = substr($err,0,$i) if $i!=-1;
-	$err =~ s/^\s*(HTML::Mason::Commands::__ANON__|HTML::Mason::Request::call).*\n//gm;
-	# Salvage what was left in the request stack for backtrace information
-	if (@{$self->{stack_array}}) {
-	    my @titles = map($_->{comp}->title,@{$self->{stack_array}});
-	    my $errmsg = "error while executing $titles[-1]:\n";
-	    $errmsg .= $err."\n";
-	    $errmsg .= "backtrace: " . join(" <= ",reverse(@titles)) . "\n" if @titles > 1;
-	    die ($errmsg);
+	if ($interp->die_handler_overridden) {
+	    # the default $SIG{__DIE__} was overridden so let's not
+	    # mess with the error message
+	    die $err;
 	} else {
-	    die ($err);
+	    my $i = index($err,'HTML::Mason::Interp::exec');
+	    $err = substr($err,0,$i) if $i!=-1;
+	    $err =~ s/^\s*(HTML::Mason::Commands::__ANON__|HTML::Mason::Request::call).*\n//gm;
+	    # Salvage what was left in the request stack for backtrace information
+	    if (@{$self->{stack_array}}) {
+		my @titles = map($_->{comp}->title,@{$self->{stack_array}});
+		my $errmsg = "error while executing $titles[-1]:\n";
+		$errmsg .= $err."\n";
+		$errmsg .= "backtrace: " . join(" <= ",reverse(@titles)) . "\n" if @titles > 1;
+		die ($errmsg);
+	    } else {
+		die ($err);
+	    }
 	}
     }
 

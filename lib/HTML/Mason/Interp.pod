@@ -65,7 +65,8 @@ component title, as in an error message.
 
 For example:
 
-    comp_root => [['private', '/usr/home/joe/comps'], ['main', '/usr/local/www/htdocs']]
+    comp_root => [['private', '/usr/home/joe/comps'],
+                  ['main', '/usr/local/www/htdocs']]
 
 This specifies two component roots, a main component tree and a
 private tree which overrides certain components.  The order is
@@ -90,6 +91,19 @@ The required Mason data directory. Mason's various data directories
 
 Specifies an absolute directory for data cache files. By default, it lives
 under C<data_dir>/cache.
+
+=item die_handler
+
+Specifies a subroutine reference to be used to override $SIG{__DIE__}
+when components are being executed.  If this parameter is specified
+then it will override the normal error handling done by Mason.  The
+default error handler produces a stack trace that excludes the part of
+the stack inside the Mason core code.
+
+If this parameter is false, then $SIG{__DIE__} will not be overridden
+at all.  Defaults to
+
+ sub { confess($_[0]) }
 
 =item dhandler_name
 

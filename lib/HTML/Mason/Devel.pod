@@ -422,7 +422,8 @@ Here's how a simple /newsfeeds/dhandler might look:
     my $arg = $m->dhandler_arg;                # get rest of path
     my ($section,$story) = split("/",$arg);    # split out pieces
     my $sth = $DBH->prepare
-	("SELECT headline,body FROM news WHERE section='$section' AND story='$story'");
+	(qq{SELECT headline,body FROM news
+            WHERE section='$section' AND story='$story'});
     my ($headline,$body) = $sth->fetchrow_array;
     return 404 if !$headline;                  # return "not found" if no such story
     </%init>
@@ -1062,7 +1063,7 @@ single-letter escape flags (plus arbitrary whitespace):
 The current valid flags are
 
     h - escape for HTML ('<' => '&lt;', etc.)
-    u - escape for URL query parameter (':' => '%3A', etc.) - all chars but [a-zA-Z0-9_.-]
+    u - escape for URL query string (':' => '%3A', etc.) - all but [a-zA-Z0-9_.-]
     n - turn off default escape flags
 
 The administrator may specify a set of default escape flags via
