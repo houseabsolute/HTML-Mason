@@ -40,6 +40,10 @@ list despite my foot-dragging, and I'm eternally grateful.
 Matt Jalbert (mjalbert@exuberance.com) lent his artistic flair to
 the MasonHQ web site design.
 
+Gordon Henriksen (gordon@actifunds.com) did some preliminary work on a
+new lexer and compiler for Mason.  We stole the general design concept
+and many code snippets.
+
 The Internet technology team at CMP was supportive and patient with me
 as I brought down the systems with my periodic Mason "improvements".
 
@@ -48,8 +52,9 @@ listed in the Changes file:
 
 John Arnold (John_Arnold@dtc.org)
 Oleg Bartunov (oleg@sai.msu.su)
+John BEPPU <beppu@lineo.com>
 Sean Cazzell (cazzell@eng.usf.edu)
-Michael Abraham Shulman (mas@kurukshetra.cjb.net)
+Caleb Crome <ccrome@yahoo.com>
 Michael Alan Dorman (mdorman-perl.mason@debian.org)
 Joe Edmonds (jedmonds@stamps.com)
 Ewan Edwards (eskwayrd@csp.net)
@@ -70,7 +75,9 @@ Dave Rolsky (autarch@urth.org)
 Aaron Ross (ross@forum.swarthmore.edu)
 Paul Schilling (pfschill@bigfoot.com)
 Randal Schwartz (merlyn@stonehenge.com)
+Michael Abraham Shulman (mas@kurukshetra.cjb.net)
 Jeremy Taylor (jtaylor@brite.net)
+John Tobey (john.tobey@isay.com)
 Renzo Toma (renzo.toma@veronica.nl)
 Lee Semel (lsemel@igicom.com)
 Michael Shulman (viritrilbia@kurukshetra.cjb.net)
