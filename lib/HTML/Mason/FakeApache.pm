@@ -54,6 +54,7 @@ sub access_table {
 	return $self->{$key};
     } else {
 	return ($self->{$key} = $value);
+    }
 }
 
 sub args {

@@ -563,7 +563,8 @@ sub make {
 	if (-f $fullpath) {
 	    $compilesub->($fullpath);
 	} elsif (-d $fullpath) {
-	    find {$compilesub->($_) if -f} $fullpath;
+	    my $sub = sub {$compilesub->($_) if -f};
+	    find($sub,$fullpath);
 	} else {
 	    die "make: no such file or directory '$fullpath'\n";
 	}

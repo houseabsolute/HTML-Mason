@@ -135,7 +135,7 @@ sub access_data_cache
 		or die "cache: cannot create/open cache file '$cacheFile'\n";
 
 	# Expire key or keys
-	@keys = (ref($key) eq 'ARRAY') ? @$key : ($key);
+	my @keys = (ref($key) eq 'ARRAY') ? @$key : ($key);
 	foreach my $key (@keys) {
 	    $out{"$key.expires"} = $time;
 	    $out{"$key.lastmod"} = $time;

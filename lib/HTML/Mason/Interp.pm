@@ -134,14 +134,15 @@ sub _initialize
 	    my $fullPath = $self->comp_root . $p;
 	    $fullPath =~ s@/$@@g;
 	    if (-d $fullPath) {
-		find {
+		my $sub = sub {
 		    if (-f) {
 			my $file = $_;
 			$file =~ s/^\./$fullPath/;
 			my $compPath = substr($file,$slen);
 			$self->load($compPath);
 		    }
-		} $fullPath;
+		};
+		find($sub,$fullPath);
 	    } elsif (-f $fullPath) {
 		my $compPath = substr($fullPath,$slen);
 		$self->load($compPath);
