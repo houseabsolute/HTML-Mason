@@ -633,10 +633,6 @@ sub cache_self {
             };
             $retval = \@result;
 
-            # We do this in case the component stuck a filtering buffer
-            # after our caching buffer
-            $self->top_buffer->flush;
-
             #
             # Whether there was an error or not we need to pop the buffer
             # stack.
