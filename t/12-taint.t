@@ -45,7 +45,7 @@ if ($alarm_works)
     $SIG{ALRM} = sub { $alarm = 1; die "alarm"; };
 
     my $comp = read_file('t/taint.comp');
-    eval { alarm 5; local $^W; $comp = $compiler->compile( comp_text => $comp, name => 't/taint.comp' ); };
+    eval { alarm 5; local $^W; $comp = $compiler->compile( comp_source => $comp, name => 't/taint.comp' ); };
 
     if ( $alarm || $@ || ! defined $comp )
     {
@@ -96,9 +96,9 @@ else
 }
 
 my $cwd = getcwd(); # tainted
-my $text = "my \$x = '$cwd';"; # also tainted
+my $code = "my \$x = '$cwd';"; # also tainted
 
-eval { $interp->eval_object_text( object => $text ) };
+eval { $interp->eval_object_code( object_code => $code ) };
 
 if (! $@)
 {
