@@ -35,9 +35,10 @@ BEGIN
 				   descr => "A subroutine through which all plain text will be sent during compilation" },
 	);
 
-    __PACKAGE__->contained_objects( lexer => 'HTML::Mason::Lexer',
-                                    descr => "This class generates compiler events based on the components source" },
- );
+    __PACKAGE__->contained_objects
+        ( lexer => { class => 'HTML::Mason::Lexer',
+                     descr => "This class generates compiler events based on the components source" },
+        );
 }
 
 use HTML::Mason::MethodMaker
