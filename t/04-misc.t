@@ -2,6 +2,7 @@
 
 use strict;
 
+use File::Spec;
 use HTML::Mason::Tests;
 
 my $tests = make_tests();
@@ -278,7 +279,8 @@ EOF
 #------------------------------------------------------------
 
     # this is sneaky and bad!
-    $group->add_support( path => '../dhandler',
+    my $updir = File::Spec->updir;
+    $group->add_support( path => "$updir/dhandler",
 			 component => <<'EOF',
 top-level dhandler
 EOF
