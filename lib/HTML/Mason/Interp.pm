@@ -348,6 +348,12 @@ sub comp_id_to_objfile {
     return File::Spec->catfile( $self->object_dir, split /\//, $comp_id );
 }
 
+# User method for emptying code cache - useful for preventing memory leak
+sub flush_code_cache {
+    $self->{code_cache} = {};
+    $self->{code_cache_current_size} = 0;
+}
+
 #
 # If code cache has exceeded maximum, remove least frequently used
 # elements from cache until size falls below minimum.
@@ -922,24 +928,22 @@ sets and returns the value.  For example:
 The following properties can be queried but not modified: data_dir,
 preloads.
 
-=head1 OTHER METHODS
+=head1 ESCAPE FLAG METHODS
 
-=over
+=for html <a name="item_apply_escapes"></a>
 
-=for html <a name="item_exec"></a>
+=item apply_escapes ($text, $flags, [more flags...])
 
-=item exec (comp, args...)
+This method applies a one or more escapes to a piece of text.  The
+escapes are specified by giving their flag.  Each escape is applied to
+the text in turn, after which the now-modified text is returned.
 
-Creates a new HTML::Mason::Request object for the given I<comp> and
-I<args>, and executes it. The return value is the return value of
-I<comp>, if any.
+=for html <a name="item_remove_escape"></a>
 
-This is useful for running Mason outside of a web environment.
-See L<HTML::Mason::Admin/Using Mason from a standalone script>
-for examples.
+=item remove_escape ($name)
 
-This method isn't generally useful in a mod_perl environment; see
-L<subrequests|HTML::Mason::Devel/Subrequests> instead.
+Given an escape name, this removes that escape from the interpreter's
+known escapes.  If the name is not recognized, it is simply ignored.
 
 =for html <a name="item_set_escape"></a>
 
@@ -964,20 +968,81 @@ configuration file, you can set them like this:
   PerlSetVar  MasonEscapeFlags  "uc    => sub { ${$_[0]} = uc ${$_[0]}; }"
   PerlAddVar  MasonEscapeFlags  "thing => other_thing"
 
-=for html <a name="item_remove_escape"></a>
+=head1 OTHER METHODS
 
-=item remove_escape ($name)
+=over
 
-Given an escape name, this removes that escape from the interpreter's
-known escapes.  If the name is not recognized, it is simply ignored.
+=for html <a name="item_comp_exists"></a>
 
-=for apply_escapes <a name="item_apply_escapes"></a>
+=item comp_exists (path)
 
-=item apply_escapes ($text, $flags, [more flags...])
+Given an I<absolute> component path, this method returns a boolean
+value indicating whether or not a component exists for that path.
 
-This method applies a one or more escapes to a piece of text.  The
-escapes are specified by giving their flag.  Each escape is applied to
-the text in turn, after which the now-modified text is returned.
+=for html <a name="item_comp_root"></a>
+
+=item comp_root (comp_root)
+
+This is a convenience method which simply calls the C<comp_root>
+method in the resolver object.  Obviously, if you are using a custom
+resolver class which does not have a C<comp_root> method, then this
+convenience method will not work.
+
+=for html <a name="item_exec"></a>
+
+=item exec (comp, args...)
+
+Creates a new HTML::Mason::Request object for the given I<comp> and
+I<args>, and executes it. The return value is the return value of
+I<comp>, if any.
+
+This is useful for running Mason outside of a web environment.
+See L<HTML::Mason::Admin/Using Mason from a standalone script>
+for examples.
+
+This method isn't generally useful in a mod_perl environment; see
+L<subrequests|HTML::Mason::Devel/Subrequests> instead.
+
+=for html <a name="flush_code_cache"></a>
+
+=item flush_code_cache
+
+Empties the component cache. When using Perl 5.00503 or earlier, you
+should call this when finished with an interpreter, in order to remove
+circular references that would prevent the interpreter from being
+destroyed.
+
+=for html <a name="item_load"></a>
+
+=item load (path)
+
+Returns the component object corresponding to an absolute component
+C<path>, or undef if none exists.
+
+=for html <a name="item_make_component"></a>
+
+=item make_component (comp_source => ... )
+
+=item make_component (comp_file => ... )
+
+This method compiles Mason component source code and returns a
+Component object.  The source may be passed in as a string in C<comp_source>,
+or as a filename in C<comp_file>.  When using C<comp_file>, the
+filename is specified as a path on the file system, not as a path
+relative to Mason's component root (see 
+L<$m-E<gt>fetch_comp|HTML::Mason::Request/item_fetch_comp> for that).
+
+If Mason encounters an error during processing, an exception will be thrown.
+
+Example of usage:
+
+    # Make an anonymous component
+    my $anon_comp =
+      eval { $interp->make_component
+               ( comp_source => '<%perl>my $name = "World";</%perl>Hello <% $name %>!' ) };
+    die $@ if $@;
+
+    $m->comp($anon_comp);
 
 =for html <a name="item_set_global"></a>
 
@@ -1009,62 +1074,16 @@ Any global that you set should also be registered with the
 P<allow_globals> parameter; otherwise you'll get warnings from
 C<strict>.
 
-=for html <a name="item_comp_exists"></a>
-
-=item comp_exists (path)
-
-Given an I<absolute> component path, this method returns a boolean
-value indicating whether or not a component exists for that path.
-
-=for html <a name="item_make_component"></a>
-
-=item make_component (comp_source => ... )
-
-=item make_component (comp_file => ... )
-
-This method compiles Mason component source code and returns a
-Component object.  The source may be passed in as a string in C<comp_source>,
-or as a filename in C<comp_file>.  When using C<comp_file>, the
-filename is specified as a path on the file system, not as a path
-relative to Mason's component root (see 
-L<$m-E<gt>fetch_comp|HTML::Mason::Request/item_fetch_comp> for that).
-
-If Mason encounters an error during processing, an exception will be thrown.
-
-Example of usage:
-
-    # Make an anonymous component
-    my $anon_comp =
-      eval { $interp->make_component
-               ( comp_source => '<%perl>my $name = "World";</%perl>Hello <% $name %>!' ) };
-    die $@ if $@;
-
-    $m->comp($anon_comp);
-
-=for html <a name="item_load"></a>
-
-=item load (path)
-
-Returns the component object corresponding to an absolute component
-C<path>, or undef if none exists.
-
-=for html <a name="item_comp_root"></a>
-
-=item comp_root (comp_root)
-
-This is a convenience method which simply calls the C<comp_root>
-method in the resolver object.  Obviously, if you are using a custom
-resolver class which does not have a C<comp_root> method, then this
-convenience method will not work.
-
 =back
 
 =head1 MEMORY LEAK WARNING
 
-When using Perl 5.00503, using the code cache creates a circular
-reference between Interp and component objects.  This means that
-Interp objects will never be destroyed.  If you are using Perl 5.6.0
-or greater, Mason uses weak references to prevent this problem.
+When using Perl 5.00503 or earlier, using the code cache creates a
+circular reference between Interp and component objects.  This means
+that Interp objects will not be destroyed unless you call
+L<flush_code_cache|HTML::Mason::Interp/flush_code_cache>.  If you are
+using Perl 5.6.0 or greater, Mason uses weak references to prevent
+this problem.
 
 =head1 SEE ALSO
 
