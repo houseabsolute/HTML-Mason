@@ -44,6 +44,7 @@ sub read_file
 sub html_escape
 {
     my ($text) = @_;
+    return unless defined $text;
     my %html_escape = ('&' => '&amp;', '>'=>'&gt;', '<'=>'&lt;', '"'=>'&quot;');
     my $html_escape = join('', keys %html_escape);
     $text =~ s/([$html_escape])/$html_escape{$1}/mgoe;
