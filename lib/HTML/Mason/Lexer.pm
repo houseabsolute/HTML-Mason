@@ -86,11 +86,8 @@ sub lex
     local $self->{current} = \%p;
     my $current = $self->{current}; # For convenience
 
-    # Clean up DOS line endings
-    $current->{comp_text} =~ s/\r\n/\n/g;
-
-    # Clean up Mac line endings
-    $current->{comp_text} =~ tr/\r/\n/;
+    # Clean up Mac and DOS line endings
+    $current->{comp_text} =~ s/\r\n?/\n/g;
 
     # Initialize lexer state
     $current->{lines} = 1;
