@@ -807,7 +807,7 @@ EOF
 	$current_url .= '?' . $r->args;
     }
     
-    my $comp = $self->make_anonymous_component(comp => $comp_text);
+    my $comp = $self->make_component(comp => $comp_text);
     my $out;
     local $self->{out_method} = \$out;
     $self->exec($comp, interp => $self, valid => $self->validation_spec, current_url => $current_url);
@@ -1084,15 +1084,16 @@ Any global that you set should also be registered with the Compiler
 parameter L<Compiler/allow_globals>; otherwise you'll get warnings
 from C<strict>.
 
-=item make_anonymous_component (comp_text=>... [, path=>...])
+=item make_component (comp_text=>... [, path=>...])
 
-=item make_anonymous_component (comp_file=>... [, path=>...])
+=item make_component (comp_file=>... [, path=>...])
 
 This method compiles Mason component source code and returns a
 Component object.  The source may be passed in as a string in C<comp_text>,
 or as a filename in C<comp_file>.  When using C<comp_file>, the
 filename is specified as a path on the file system, not as a path
-relative to Mason's component root.
+relative to Mason's component root (see 
+L<HTML::Mason::Request/fetch_comp> for that).
 
 If you pass a C<path> parameter, the new component will be 'public',
 and callable from other components via the specified path.  Otherwise
