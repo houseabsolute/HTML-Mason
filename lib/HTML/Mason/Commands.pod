@@ -1,6 +1,6 @@
 =head1 NAME
 
-HTML::Mason::Commands - Mason command reference
+HTML::Mason::Commands - Old Mason command reference
 
 =head1 DESCRIPTION
 
@@ -61,7 +61,9 @@ C<mc_comp_source()> becomes C<$m-E<gt>current_comp-E<gt>source_file>
 
 =item
 
-C<mc_comp_source(path)> becomes C<$m-E<gt>fetch_comp(path)-E<gt>source_file>
+C<mc_comp_source(path)> becomes
+C<$m-E<gt>fetch_comp(path)-E<gt>source_file>. This no longer
+works with nonexistent components as it used to.
 
 =item
 

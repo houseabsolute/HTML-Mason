@@ -251,13 +251,12 @@ all goes well you should see the same page as without the "/mason"
 prefix. If not, recheck your Apache config files and C<handler.pl>,
 and also tail your server's error log.
 
-(If you are getting erroneous "404 Not Found" errors, Mason may be
-having trouble with your document and component root. Make sure
-"LogLevel warn" is in your Apache configuration file, then regenerate
-the error and check the error log for Mason warnings.  One situation
-that will unfortunately confuse Mason is if your document or component
-root goes through a soft link. Try specifying your document and
-component root settings in terms of the true path.)
+If you are getting erroneous "404 Not Found" errors, Mason may be
+having trouble with your document and component root. Remember that
+all files handled by Mason must fall underneath the component root.
+One situation that will unfortunately confuse Mason is if your
+document or component root goes through a soft link. Try specifying
+your document and component root settings in terms of the true path.
 
 Assuming it worked, you now have a Mason "lens" through which to view
 your HTML tree. Try adding a Mason tag to some HTML file, say <% 2+2

@@ -229,14 +229,14 @@ Because HTML::Mason consists of only Perl code (no C), it should work
 anywhere Perl runs.  If it doesn't work on your operating system, let us
 know.
 
-=head2 I'm getting a warning "Mason: filename xxx is outside component root; returning 404" in the error logs. What does it mean?
+=head2 I'm getting 404 errors for pages that clearly exist.
 
-This means that the filename that Apache has resolved to does not fall
-underneath the component root you specified when you created the interpreter
-in handler.pl.  HTML::Mason requires the file to fall under the component
-root so that it can call it as a top-level component.  (For various reasons,
-such as object file creation, HTML::Mason cannot treat files outside the
-component root as a component.)
+The filename that Apache has resolved to may not fall underneath the
+component root you specified when you created the interpreter in
+handler.pl.  HTML::Mason requires the file to fall under the component
+root so that it can call it as a top-level component.  (For various
+reasons, such as object file creation, HTML::Mason cannot treat files
+outside the component root as a component.)
 
 If you believe the file is in fact inside the component root and HTML::Mason
 is in error, it may be because you're referring to the Apache document root

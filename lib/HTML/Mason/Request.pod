@@ -17,8 +17,8 @@ access the current request object via the global C<$m>.
 
 =head1 COMPONENT PATHS
 
-The methods C<comp>, C<comp_exists>, C<fetch_comp>, and
-C<process_comp_path> take a component path as argument.
+The methods L<Request/comp>, L<Request/comp_exists>, L<Request/fetch_comp>, and
+L<Request/process_comp_path> take a component path as argument.
 
 =over
 
@@ -102,7 +102,7 @@ parameter, the time when the cache value was last written.
 
 =for html <a name="item_cache_self">
 
-=item cache_self (... same as $m->cache options...)
+=item cache_self (... same as cache options...)
 
 Uses C<$m-E<gt>cache> to cache the entire output and/or the return value of
 the current component.  It is typically used right at the top of an

@@ -1274,6 +1274,9 @@ In batch mode this code will always work.  In stream mode this code
 will work as long as I<get_user_cookie> doesn't output anything besides
 whitespace (and given its functional nature, it shouldn't).
 
+The administrator can turn off automatic header sending via the
+L<ApacheHandler/auto_send_headers> ApacheHandler parameter.
+
 Note to pre-0.8 users: the mc_suppress_http_header command is no longer needed.
 For backwards compatibility, mc_suppress_http_header is still defined
 but does nothing.
@@ -1583,6 +1586,6 @@ Jonathan Swartz, swartz@transbay.net
 =head1 SEE ALSO
 
 L<HTML::Mason>,
-L<HTML::Mason::Commands>
+L<HTML::Mason::Request>
 
 =cut

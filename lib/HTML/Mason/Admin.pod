@@ -668,7 +668,7 @@ others.
 Naturally, a cache entry is invalidated if the corresponding component
 source file changes.
 
-To turn off caching completely, set L<Interp/code_cache_max_size> to
+To turn off code caching completely, set L<Interp/code_cache_max_size> to
 0.
 
 =head2 Object files
