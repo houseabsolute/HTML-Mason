@@ -612,7 +612,10 @@ sub cache_self {
             my @args = @{ $top_stack->{args} };
 
             push @{ $self->{buffer_stack} },
-                $self->top_buffer->new_child(sink => \$output, ignore_flush => 1);
+                $self->top_buffer->new_child( sink => \$output,
+                                              ignore_flush => 1,
+                                              ignore_clear => 1,
+                                            );
 
             local $top_stack->{in_cache_self} = 1;
             #
@@ -957,7 +960,10 @@ sub comp {
 	# The component's main buffer can then be cleared without
 	# affecting previously flushed output.
         push @{ $self->{buffer_stack} },
-            $self->top_buffer->new_child( sink => $mods{store}, ignore_flush => 1 );
+            $self->top_buffer->new_child( sink => $mods{store},
+                                          ignore_flush => 1,
+                                          ignore_clear => 1,
+                                        );
     }
     # more common case optimizations
     push @{ $self->{buffer_stack} },
@@ -1050,7 +1056,7 @@ sub clear_buffer
 {
     my $self = shift;
     for ($self->buffer_stack) {
-	last if $_->ignore_flush;
+	last if $_->ignore_clear;
 	$_->clear;
     }
 }
