@@ -40,6 +40,7 @@ my $tests = 4; # multi conf tests
 $tests += 54 if my $have_libapreq = have_module('Apache::Request');
 $tests += 40 if my $have_cgi      = have_module('CGI');
 $tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
+$tests++ if my $have_filter = have_module('Apache::Filter');
 print "1..$tests\n";
 
 print STDERR "\n";
@@ -47,6 +48,11 @@ print STDERR "\n";
 write_test_comps();
 
 if ($have_libapreq) {        # 54 tests
+    if ($have_filter) {
+        cleanup_data_dir();
+        filter_tests();      # 1 tests
+    }
+
     cleanup_data_dir();
     apache_request_tests(1); # 22 tests
 
@@ -55,6 +61,7 @@ if ($have_libapreq) {        # 54 tests
 
     cleanup_data_dir();
     no_config_tests();       # 15 tests
+
 }
 
 if ($have_cgi) {             # 40 tests (+ 1?)
@@ -737,6 +744,31 @@ EOF
     $actual = filter_response($response, 0);
     ok( $actual =~ /404 not found/i,
 	"Attempt to request a non-existent component should not work with incorrect dhandler_name" );
+
+    kill_httpd(1);
+}
+
+sub filter_tests
+{
+    start_httpd('filter_tests');
+
+    my $path = '/comps/basic';
+
+    my $response = Apache::test->fetch($path);
+    my $actual = filter_response($response, 0);
+    my $success = HTML::Mason::Tests->check_output( actual => $actual,
+						    expect => <<'EOF',
+X-Mason-Test: Initial value
+BASIC TEST.
+2 + 2 = 4.
+URI = /BASIC.
+METHOD = GET.
+
+
+Status code: 0
+EOF
+                                                  );
+    ok($success);
 
     kill_httpd(1);
 }
