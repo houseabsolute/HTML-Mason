@@ -8,8 +8,11 @@ use Carp;
 use Params::Validate qw(:all);
 
 use HTML::Mason::Container;
-use HTML::Mason::Request;
-use base qw(HTML::Mason::Container HTML::Mason::Request);
+use base qw(HTML::Mason::Container);
+
+use HTML::Mason::MethodMaker
+    ( read_write => [ qw( interp ) ] );
+
 
 __PACKAGE__->valid_params
     (
@@ -34,6 +37,12 @@ sub new {
     $self->interp->compiler->add_allowed_globals('$r');
     
     return $self;
+}
+
+sub exec {
+    my ($self, $component) = (shift, shift);
+    local $self->{exec_args} = [@_];
+    $self->_handler($component);
 }
 
 sub handle_request {
@@ -71,7 +80,8 @@ sub _handler {
     $self->interp->set_global('$r', $r);
     
     $self->{output} = '';
-    $self->interp->exec($component, $r->params);
+    my @params = $self->{exec_args} ? @{$self->{exec_args}} : $r->params;
+    $self->interp->exec($component, @params);
 
     if (@_) {
 	# This is a secret feature, and should stay secret (or go away) because it's just a hack for the test suite.
@@ -82,9 +92,8 @@ sub _handler {
     }
 }
 
-sub interp { $_[0]->{interp} }
-
 package HTML::Mason::CGIRequest;
+# Analogous to Apache request object, not HTML::Mason::Request object
 
 sub new {
     my $class = shift;
