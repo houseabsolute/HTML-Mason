@@ -7,7 +7,6 @@ package HTML::Mason::Resolver::File;
 use strict;
 
 use File::Spec;
-use HTML::Mason::Resolver;
 use HTML::Mason::Tools qw(paths_eq read_file);
 use Params::Validate qw(:all);
 
