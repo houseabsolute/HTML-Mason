@@ -60,6 +60,16 @@ object.
 
 =over
 
+=item attr (name)
+
+Looks for the specified attribute in this component and its parents,
+returning the first value found. Dies with an error if not
+found. Attributes are declared in the <%attr> section.
+
+=item attr_exists (name)
+
+Returns true if the specified attribute exists in this component or
+one of its parents, undef otherwise.
 
 =item cache_file
 
@@ -116,6 +126,11 @@ lexicals:
 Note that in a web-based environment, this "first time" will
 come once for each child and every time the component is reloaded.
 
+=item flag (name)
+
+Returns the value for the specified system flag.  Flags are declared
+in the <%flags> section and affect the behavior of the component.
+
 =item is_subcomp
 
 Returns true if this is a subcomponent of another component.
@@ -124,6 +139,17 @@ Returns true if this is a subcomponent of another component.
 
 Returns true if this component was loaded from a source or object
 file.
+
+=item call_method (name)
+
+Looks for the specified user-defined method in this component and its
+parents, calling the first one found. Dies with an error if not found.
+Methods are declared in the <%method> section.
+
+=item method_exists (name)
+
+Returns true if the specified user-defined method exists in this
+component or one of its parents, undef otherwise.
 
 =item name
 
@@ -156,6 +182,12 @@ Returns the number of times this component has been invoked. In a
 web-based environment, this value is separate for each child and
 resets every time the component is reloaded.
 
+=item scall_method (name)
+
+Like L<Component/call_method>, but returns the method output as a
+string instead of printing it. (Think sprintf versus printf.) The
+method's return value is discarded.
+
 =item subcomps
 
 With no arguments, returns a hashref containing the subcomponents defined
@@ -166,6 +198,8 @@ or undef if no such subcomponent exists. e.g.
     if (my $subcomp = $comp->subcomps('.link')) {
         ...
     }
+
+Subcomponents are declared in the <%def> section.
 
 =item title
 
