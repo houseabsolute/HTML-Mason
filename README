@@ -62,16 +62,8 @@ A recent copy of the FAQ (Frequently Asked Questions) list is
 included in this release under the faq/ directory.  The most
 recent version is always available on the web site.
 
-The Mason mailing list, maintained by Kirrily Roberts, is an excellent
-place to ask questions and learn techniques. To subscribe or browse the
-archives, visit http://netizen.com.au/mailman/listinfo/mason.
-
-If the question is more generally about mod_perl, you may wish to post
-additionally (or only) to the mod_perl mailing list at
-modperl@apache.org.
-
-If you have a question or comment that you don't feel is appropriate
-for the group, write to the author at swartz@transbay.net.
+Several mailing lists exist for Mason users and developers. Full
+information can be found at http://www.masonhq.com/maillist.html.
 
 CODE EXAMPLES
 
@@ -122,4 +114,4 @@ distribution.
 AUTHOR
 
 Jonathan Swartz
-swartz@transbay.net
+swartz@pobox.com
