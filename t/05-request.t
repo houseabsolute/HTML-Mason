@@ -290,7 +290,6 @@ EOF
 		      component => <<'EOF',
 <%def .helper>
 Executing subrequest
-% # This is still unsupported but will likely be official later
 % my $buf;
 % my $req = $m->interp->make_request(out_method => \$buf);
 % $req->exec('/request/support/display_req_obj');
@@ -316,6 +315,41 @@ My stack looks like:
 
 
 
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/support/dir/autohandler',
+			 component => <<'EOF',
+I am the autohandler.
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/support/dir/comp',
+			 component => <<'EOF',
+I am the called comp (no autohandler).
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'subrequest_without_autohandler',
+		      description => 'tests the subrequest mechanism and turning off autohandler',
+		      component => <<'EOF',
+Executing subrequest
+% my $buf;
+% my $req = $m->interp->make_request(out_method => \$buf);
+% $req->use_autohandlers(0);
+% $req->exec('/request/support/dir/comp');
+<% $buf %>
+EOF
+		      expect => <<'EOF',
+Executing subrequest
+I am the called comp (no autohandler).
 EOF
 		    );
 
