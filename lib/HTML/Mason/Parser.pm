@@ -13,7 +13,6 @@ use strict;
 use File::Path;
 use File::Basename;
 use File::Find;
-use Safe;
 use HTML::Mason::Tools qw(read_file);
 use vars qw($AUTOLOAD);
 
@@ -24,15 +23,14 @@ my %fields =
      postprocess => undef,
      use_strict => 1,
      source_refer_predicate => sub { return ($_[1] >= 5000) },
-     ignore_warnings_expr => undef,
+     ignore_warnings_expr => 'Subroutine .* redefined',
      taint_check => 0,
-     safe_compartment => undef,
      in_package => 'HTML::Mason::Commands',
      allow_globals => []
      );
 # Minor speedup: create anon. subs to reduce AUTOLOAD calls
 foreach my $f (keys %fields) {
-    next if $f =~ /^safe_compartment|allow_globals$/;  # don't overwrite real sub.
+    next if $f =~ /^allow_globals$/;  # don't overwrite real sub.
     no strict 'refs';
     *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
 }
@@ -54,16 +52,6 @@ sub new
     }
     bless $self, $class;
     return $self;
-}
-
-sub safe_compartment
-{
-    my ($self, $cpt) = @_;
-    if (defined($cpt)) {
-	$cpt->share_from($self->{in_package},[qw($INTERP mc_comp mc_file)]);
-	$self->{safe_compartment} = $cpt;
-    }
-    return $self->{safe_compartment};
 }
 
 sub allow_globals
@@ -101,10 +89,8 @@ sub parse
     }
 
     #
-    # Pre-process all the file
-    # this allows one to extend the syntax, and other possibilities
-    # The preprocessor routine is handed a reference to the entire
-    # file's contents.  This way we avoid copying it around too much
+    # Preprocess the script.  The preprocessor routine is handed a
+    # reference to the entire script.
     #
     if ($self->{preprocess}) {
         eval {$self->{preprocess}->(\$script)};
@@ -115,52 +101,30 @@ sub parse
     }
     
     #
-    # Pre-substitute \cA and \cB for %PERL and /%PERL to ease parsing.
+    # Extract special sections. For backward compatibility, allow
+    # names to be prefixed with perl_.  Record all other text ranges
+    # in @textsegs.
     #
-    my $perlbeginmark = "<%perl>";
-    my $perlendmark = "</%perl>";
-    my $perloffbeginmark = "<%perl_off>";
-    my $perloffendmark = "</%perl_off>";
-    $script =~ s@<%PERL>@$perlbeginmark@gei;
-    $script =~ s@</%PERL>@$perlendmark@gei;
-    $script =~ s@<%PERL_OFF>@$perloffbeginmark@gei;
-    $script =~ s@</%PERL_OFF>@$perloffendmark@gei;
-    
-    #
-    # Extract perl_init, perl_cleanup, perl_args, and documentation sections.
-    # Record all other text ranges in @textsegs.
-    #
-    my %sectiontext = (perl_init=>'',perl_cleanup=>'',perl_args=>'',perl_doc=>'');
+    my %sectiontext = (map(($_,''),qw(args cleanup doc init once)));
     my $curpos = 0;
     my @textsegs;
     my $scriptlength = length($script);
-    while ($script =~ /<%perl_/ig) {
-	my $beginmark = pos($script)-7;
-	my $begintail = index($script,'>',$beginmark+7);
-	next if $begintail==-1;
-	my $beginfield = lc(substr($script,$beginmark+2,$begintail-($beginmark+2)));
-	next if ($beginfield !~ /^(perl_init|perl_cleanup|perl_args|perl_doc)$/);
-
-	pos($script) = $begintail;
-	if ($script =~ m@</%perl_@ig) {
-	    my $endmark = pos($script)-8;
-	    my $endtail = index($script,'>',$endmark+8);
-	    if ($endtail==-1) {
-		$err = "<%$beginfield> with no matching </%$beginfield>";
-		$errpos = $beginmark;
-		goto parse_error;
+    while ($script =~ /(<%(?:perl_)?(args|cleanup|doc|init|once|text)>)/ig) {
+	my ($begintag,$beginfield) = ($1,lc($2));
+	my $beginmark = pos($script)-length($begintag);
+	my $begintail = pos($script);
+	push(@textsegs,[$curpos,$beginmark-$curpos]);
+	if ($script =~ m/(<\/%(?:perl_)?$beginfield>\n?)/ig) {
+	    my $endtag = $1;
+	    my $endmark = pos($script)-length($endtag);
+	    if ($beginfield eq 'text') {
+		# Special case for <%text> sections: add a special
+		# segment that won't get parsed
+		push(@textsegs,[$begintail,$endmark-$begintail,'<%text>']);
+	    } else {
+		$sectiontext{lc($beginfield)} .= substr($script,$begintail,$endmark-$begintail);
 	    }
-	    my $endfield = lc(substr($script,$endmark+3,$endtail-($endmark+3)));
-	    if ($endfield ne $beginfield) {
-		$err = "section begins with <%$beginfield> and ends with </%$endfield>";
-		$errpos = $beginmark;
-		goto parse_error;
-	    }
-	    $sectiontext{$beginfield} .= substr($script,$begintail+1,($endmark-($begintail+1)));
-	    push(@textsegs,[$curpos,$beginmark-$curpos]);
-	    $curpos = $endtail+1;
-	    $curpos++ if (substr($script,$curpos,1) eq "\n");
-	    pos($script) = $curpos;
+	    $curpos = pos($script);
 	    $pureTextFlag = 0;
 	} else {
 	    $err = "<%$beginfield> with no matching </%$beginfield>";
@@ -180,9 +144,9 @@ sub parse
     #
     # Process args section.
     #
-    if ($sectiontext{perl_args}) {
+    if ($sectiontext{args}) {
 	my (@vars);
-	my @decls = split("\n",$sectiontext{perl_args});
+	my @decls = split("\n",$sectiontext{args});
 	@decls = grep(/\S/,@decls);
 	my $argsec = "\nmy (\$val);\n";
 	foreach my $decl (@decls) {
@@ -242,16 +206,15 @@ sub parse
 	    $body .= "my (".join(",",@vars).");\n{".$argsec."}\n";
 	}
     }
-    
+
     #
-    # Parse perl insertions.
-    # Perl insertions take one of three forms:
+    # Parse in-line insertions, which take one of four forms:
     #   - Lines beginning with %
-    #   - Text delimited by <%PERL> </%PERL>
-    #   - Text delimited by <% %> - evaluated and output
+    #   - Text delimited by <%perl> </%perl>
+    #   - Text delimited by <% %> 
+    #   - Text delimited by <& &>
     # All else is a string to be delimited by single quotes and output.
     #
-    # Pre-substituted \cA and \cB for %PERL to ease parsing.
     # $startline keeps track of whether the first character is the
     # start of a line.
     # $curpos keeps track of where we are in $text.
@@ -260,7 +223,14 @@ sub parse
     #
     my $startline = 1;
     my (@alphasecs, @perltexts);
+
     foreach my $textseg (@textsegs) {
+	# Special case for <%text> sections
+	if (@{$textseg}>2 && $textseg->[2] eq '<%text>') {
+	    push(@alphasecs,[$textseg->[0],$textseg->[1]]);
+	    push(@perltexts,'');
+	    next;
+	}
 	my $segbegin = $textseg->[0];
 	my $textlength = $textseg->[1];
 	my $text = substr($script,$segbegin,$textlength);
@@ -280,23 +250,12 @@ sub parse
 	    }
 	    $startline=0;
 	    my $a = index($text,"\n%",$curpos);
-	    my $b = index($text,$perlbeginmark,$curpos);
-	    my $c = index($text,"<%",$curpos);
-            my $d = index($text,$perloffbeginmark,$curpos);
-            if ( $d>-1 && ($a==-1 || $d<$a) && ($b==-1 || $d<=$b) && ($c==-1 || $d<=$c) ) {
-		my $i = index($text,$perloffendmark,$d+11);
-		if ($i==-1) {
-		    $err = "<%PERL_OFF> with no matching </%PERL_OFF>";
-		    $errpos = $segbegin + $d;
-		    goto parse_error;
-		}
-		push(@alphasecs,[$curpos, $d-$curpos]);
-                puhs(@perltexts,"");
-		my $length = $i-($d+11);
-		$alpha = [$d+11,$length];
-		$curpos = $d+11+$length+12;
-	    } elsif ($a>-1 && ($b==-1 || $a<$b) && ($c==-1 || $a<$c) && ($d==-1 || $a<$d)) {
+	    my $b = index($text,"<%",$curpos);
+	    my $c = index($text,"<&",$curpos);
+	    if ($a>-1 && ($b==-1 || $a<$b) && ($c==-1 || $a<$c)) {
+		#
 		# Line beginning with %
+		#
 		my $beginline = $a+1;
 		$alpha = [$curpos,$beginline-$curpos];
 		my $endline = index($text,"\n",$beginline);
@@ -306,38 +265,83 @@ sub parse
 		$curpos = $endline+1;
 		$startline = 1;
 		$pureTextFlag = 0;
-	    } elsif ($b>-1 && ($a==-1 || $b<$a) && ($c==-1 || $b<=$c) && ($d==-1 || $b<$d)) {
-		# Text delimited by <%PERL> </%PERL>
-		$alpha = [$curpos,$b-$curpos];
-		my $i = index($text,$perlendmark,$b+7);
-		if ($i==-1) {
-		    $err = "<%PERL> with no matching </%PERL>";
-		    $errpos = $segbegin + $b;
-		    goto parse_error;
+	    } elsif ($b>-1 && ($c==-1 || $b<$c)) {
+		#
+		# Tag beginning with <%
+		#
+		if (substr($text,$b,7) eq '<%perl>') {
+		    #
+		    # <%perl> section
+		    #
+		    $alpha = [$curpos,$b-$curpos];
+		    if (!($text =~ m{</%perl>}ig)) {
+			$err = "<%PERL> with no matching </%PERL>";
+			$errpos = $segbegin + $b;
+			goto parse_error;
+		    }
+		    my $i = pos($text)-8;
+		    my $length = $i-($b+7);
+		    $perl = substr($text,$b+7,$length);
+		    $curpos = $b+7+$length+8;
+		} else {
+		    #
+		    # <% %> section
+		    #
+		    $alpha = [$curpos,$b-$curpos];
+		    # See if this is a mistaken <%xxx> command
+		    if (substr($text,$b+2,20) =~ /^(\w+)>/) {
+			$err = "unknown section <%$1>";
+			$errpos = $segbegin + $b;
+			goto parse_error;
+		    }
+		    my $i = index($text,"%>",$b+2);
+		    if ($i==-1) {
+			$err = "'<%' with no matching '%>'";
+			$errpos = $segbegin + $b;
+			goto parse_error;
+		    }
+		    my $length = $i-($b+2);
+		    $perl = '$_out->('.substr($text,$b+2,$length).');';
+		    $curpos = $b+2+$length+2;
 		}
-		my $length = $i-($b+7);
-		$perl = substr($text,$b+7,$length);
-		$curpos = $b+7+$length+8;
 		$pureTextFlag = 0;
-	    } elsif ($c>-1 && ($a==-1 || $c<$a) && ($b==-1 || $c<$b) && ($d==-1 || $c<$d)) {
-		# Text delimited by <% %>
+	    } elsif ($c>-1) {
+		#
+		# <& &> section
+		#
 		$alpha = [$curpos,$c-$curpos];
-		# See if this is a mistaken <%xxx> command
-		if (substr($text,$c+2,20) =~ /^(\w+)>/) {
-		    $err = "unknown section <%$1>";
-		    $errpos = $segbegin + $c;
-		    goto parse_error;
-		}
-		my $i = index($text,"%>",$c+2);
+		my $i = index($text,"&>",$c+2);
 		if ($i==-1) {
-		    $err = "'<%' with no matching '%>'";
+		    $err = "'<&' with no matching '&>'";
 		    $errpos = $segbegin + $c;
 		    goto parse_error;
 		}
 		my $length = $i-($c+2);
-		$perl = '$_out->('.substr($text,$c+2,$length).');';
+		(my $call = substr($text,$c+2,$length)) =~ s/^\s+//;
+		my ($comp,$arglist);
+		if ((my $quotemark = (substr($call,0,1))) =~ /[\'\"]/) {
+		    # component path delimited by quotes
+		    my $j = index($call,$quotemark,1);
+		    if ($j==-1) {
+			$err = "<& &> section starts with unmatched quote ($quotemark)";
+			$errpos = $segbegin + $c;
+			goto parse_error;
+		    }
+		    $comp = substr($call,1,$j-1);
+		    $arglist = substr($call,$j+1);
+		    $arglist =~ s/^\s*,//;
+		} else {
+		    # no quotes
+		    ($comp,$arglist) = split(',',$call);
+		    $comp =~ s/\s+$//;
+		    if ($comp =~ /\s/) {
+			$err = "comp path ($comp) cannot contain whitespace; did you forget a comma?";
+			$errpos = $segbegin + $c;
+			goto parse_error;
+		    }
+		}
+		$perl = (defined($arglist) && $arglist =~ /\S/) ? "mc_comp('$comp',$arglist);" : "mc_comp('$comp');";
 		$curpos = $c+2+$length+2;
-		#$curpos++ if (substr($text,$curpos,1) eq "\n");
 		$pureTextFlag = 0;
 	    } else {
 		# No more special characters, take the rest.
@@ -391,9 +395,9 @@ sub parse
     $body .= '$INTERP->debug_hook($INTERP->locals->{truePath}) if (%DB::);'."\n";
     
     #
-    # Insert begin section.
+    # Insert <%init> section.
     #
-    $body .= $sectiontext{perl_init}."\n";
+    $body .= $sectiontext{init}."\n";
 
     #
     # Call start_primary hooks.
@@ -433,9 +437,9 @@ sub parse
     $body .= "\$INTERP->call_hooks('end_primary');\n";
     
     #
-    # Insert end section.
+    # Insert <%cleanup> section.
     #
-    $body .= $sectiontext{perl_cleanup}."\n";
+    $body .= $sectiontext{cleanup}."\n";
 
     #
     # Insert user postamble and return undef by default.
@@ -444,15 +448,14 @@ sub parse
     $body .= "return undef;\n";
 
     #
-    # Wrap body in subroutine and add header.
+    # Wrap body in subroutine and add header, including <%once> section.
     #
     my $header = "";
-    if (!$self->safe_compartment) {
-	my $pkg = $self->{in_package};
-	$header .= "package $pkg;\n";
-	$header .= "use strict;\n" if $self->use_strict;
-	$header .= sprintf("use vars qw(%s);\n",join(" ","\$INTERP",@{$self->{'allow_globals'}}));
-    }
+    my $pkg = $self->{in_package};
+    $header .= "package $pkg;\n";
+    $header .= "use strict;\n" if $self->use_strict;
+    $header .= sprintf("use vars qw(%s);\n",join(" ","\$INTERP",@{$self->{'allow_globals'}}));
+    $header .= "\n".$sectiontext{once}."\n" if $sectiontext{once};
     $body = "$header\nsub {\n$body\n};\n";
 
     #
@@ -506,24 +509,15 @@ sub evaluate
     {
 	my $warnstr;
 	local $^W = 1;
-	local $SIG{__WARN__} = $ignoreExpr ? sub { $warnstr .= $_[0] if $_[0] =~ /$ignoreExpr/ } : sub { $warnstr .= $_[0] };
-	my $cpt = $self->safe_compartment;
+	local $SIG{__WARN__} = $ignoreExpr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignoreExpr/ } : sub { $warnstr .= $_[0] };
 	if ($options{script}) {
 	    my $script = $options{script};
 	    ($script) = ($script =~ /^(.*)$/s) if $self->taint_check;
-	    if (!$cpt) {
-		$sub = eval($script);
-	    } else {
-		$sub = $cpt->reval($script);
-	    }
+	    $sub = eval($script);
 	} elsif ($options{script_file}) {
 	    my $file = $options{script_file};
 	    ($file) = ($file =~ /^(.*)$/s) if $self->taint_check;
-	    if (!$cpt) {
-		$sub = do($file);
-	    } else {
-		$sub = $cpt->rdo($file);
-	    }
+	    $sub = do($file);
 	} else {
 	    die "evaluate: must specify script or script_file";
 	}
