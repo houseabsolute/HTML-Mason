@@ -53,6 +53,19 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => 'filter_test/repeat2',
+			 component => <<'EOF',
+<%args>
+@list
+</%args>
+% foreach (@list) {
+<% $m->content %>
+% }
+EOF
+		       );
+
+#------------------------------------------------------------
+
     $group->add_support( path => 'filter_test/null',
 			 component => <<'EOF',
 EOF
@@ -314,6 +327,20 @@ don't worry, be happy!
 why worry? I can't help it!
 EOF
 		);
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'dollar_underscore',
+		      description => 'Test using $_ in a filter',
+		      component => <<'EOF',
+<&| filter_test/repeat2, list => [1,2,3] &>$_ is <% $_ %></&|>
+EOF
+		      expect => <<'EOF',
+$_ is 1
+$_ is 2
+$_ is 3
+EOF
+		    );
 
 #------------------------------------------------------------
 
