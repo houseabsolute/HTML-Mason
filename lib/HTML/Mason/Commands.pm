@@ -62,7 +62,7 @@ sub mc_abort { check_request; $m->abort(@_) }
 sub mc_auto_comp
 {
     check_request;
-    my $comp = $m->auto_comp or die "mc_auto_comp $no_auto_error";
+    my $comp = $m->fetch_next or die "mc_auto_comp $no_auto_error";
     my $path = $comp->path;
     
     # return relative path if possible
@@ -71,7 +71,7 @@ sub mc_auto_comp
     return $path;
 }
 
-sub mc_auto_next { check_request; $m->auto_next(@_) }
+sub mc_auto_next { check_request; $m->call_next(@_) }
 sub mc_cache { check_request; $m->cache(@_) }
 sub mc_cache_self { check_request; $m->cache_self(@_) }
 sub mc_caller { check_request; $m->caller->path }

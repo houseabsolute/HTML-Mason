@@ -17,7 +17,7 @@ use File::Find;
 use HTML::Mason::Component::FileBased;
 use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Request;
-use HTML::Mason::Tools qw(read_file);
+use HTML::Mason::Tools qw(dumper_method read_file);
 
 # Fields that can be set in new method, with defaults
 my %fields =
@@ -554,7 +554,7 @@ sub parse_component
     push(@cparams,"'subcomps'=>{%_subcomps}") if (%subcomps);
     if (%declaredArgs) {
 	my $d = new Data::Dumper ([\%declaredArgs]);
-	my $argsDump = $d->Dumpxs;
+	my $argsDump = dumper_method($d);
 	for ($argsDump) { s/\$VAR1\s*=//g; s/;\s*$// }
 	push(@cparams,"'declared_args'=>$argsDump");
     }

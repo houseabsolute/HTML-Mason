@@ -1,3 +1,3 @@
 The recursive autohandler: <% $m->current_comp->path %>
 
-<% $m->auto_next %>
+<% $m->call_next %>

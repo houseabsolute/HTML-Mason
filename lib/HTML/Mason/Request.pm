@@ -188,15 +188,15 @@ sub abort
     croak "abort() called";
 }
 
-sub auto_comp {
+sub fetch_next {
     my ($self) = @_;
-    my $aref = $self->{autohandler_next} or die "auto_next: no autohandler invoked";
+    my $aref = $self->{autohandler_next} or die "fetch_next: no autohandler invoked";
     return $aref ? $aref->[0] : undef;
 }
 
-sub auto_next {
+sub call_next {
     my ($self,@extra_args) = @_;
-    my $aref = $self->{autohandler_next} or die "auto_next: no autohandler invoked";
+    my $aref = $self->{autohandler_next} or die "call_next: no autohandler invoked";
     my ($comp, $args_ref) = @$aref;
     my @args = (@$args_ref,@extra_args);
     return $self->comp($comp, @args);

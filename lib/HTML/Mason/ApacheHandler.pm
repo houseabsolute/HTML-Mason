@@ -74,7 +74,7 @@ use File::Path;
 use HTML::Mason::Interp;
 use HTML::Mason::Commands;
 use HTML::Mason::FakeApache;
-use HTML::Mason::Tools qw(html_escape url_unescape pkg_installed);
+use HTML::Mason::Tools qw(dumper_method html_escape url_unescape pkg_installed);
 use HTML::Mason::Utils;
 use Apache::Status;
 use CGI qw(-private_tempfiles);
@@ -366,7 +366,7 @@ for (1 .. $opt_r) {
 print STDERR '.' if ($opt_P and $opt_r > 1);
 PERL
     $o .= "my ";
-    $o .= $d->Dumpxs;
+    $o .= dumper_method($d);
     $o .= 'my $r = HTML::Mason::ApacheHandler::simulate_debug_request($dref);'."\n";
     $o .= 'local %ENV = (%ENV,%{$dref->{ENV}});'."\n";
     $o .= 'my $status = '.$self->debug_handler_proc."(\$r);\n";

@@ -4,12 +4,15 @@ HTML::Mason::Request - Mason Request Class
 
 =head1 SYNOPSIS
 
-    $m->...
+    $m->abort (...)
+    $m->comp (...)
+    etc.
 
 =head1 DESCRIPTION
 
-Mason creates one Request object for every web request (or, in
-stand-alone mode, every C<Interp::exec> call). Inside a component you
+The Request API is your gateway to all Mason features not provided by
+syntactic tags. Mason creates a new Request object for every web
+request. Inside a component you
 access the current request object via the global C<$m>.
 
 =head1 METHODS
@@ -22,21 +25,6 @@ Ends the current request, finishing the page without returning
 through components. The optional argument specifies the return
 value from C<Interp::exec>; in a web environment, this ultimately
 becomes the HTTP status code.
-
-=item auto_comp
-
-Returns the component object intercepted by an autohandler.  See the
-L<Devel/autohandlers> section of the I<Component Developer's Guide>
-for usage and examples.
-
-=item auto_next ([args...])
-
-Calls the component intercepted by an autohandler.  With no arguments,
-the original arguments are passed to the component.  Any arguments
-specified here serve to augment and override (in case of conflict) the
-original arguments. Works like $m->comp in terms of return value and
-scalar/list context.  See the L<Devel/autohandlers> section of the
-I<Component Developer's Guide> for examples.
 
 =item cache ([action=>'retrieve|store|expire|keys'], [key=>name],
 [value=>data], [keep_in_memory=>0|1], [expire options...])
@@ -154,6 +142,15 @@ component object at that index in the list. e.g.
     $m->callers(1)      # component that called us
     $m->callers(-1)     # top-level component
 
+=item call_next ([args...])
+
+Calls the component intercepted by an autohandler.  With no arguments,
+the original arguments are passed to the component.  Any arguments
+specified here serve to augment and override (in case of conflict) the
+original arguments. Works like $m->comp in terms of return value and
+scalar/list context.  See the L<Devel/autohandlers> section of the
+I<Component Developer's Guide> for examples.
+
 =for html <a name="comp">
 =item comp (comp, option=>value, ...)
 
@@ -187,9 +184,9 @@ Returns the current component object.
 
 =item decline
 
-Generally called from a top-level component or dhandler. Aborts the
-current request and restarts with the next applicable dhandler,
-working up the tree. If no dhandler is available, returns NOT_FOUND.
+Used from a top-level component or dhandler, this method aborts the
+current request and restarts with the next applicable dhandler
+up the tree. If no dhandler is available, returns NOT_FOUND.
 
 =item depth
 
@@ -210,16 +207,18 @@ Given an absolute or relative component path, returns the
 corresponding component object or undef if no such component exists.
 Looks for subcomponents as well as file-based components.
 
+=item fetch_next
+
+Returns the component object intercepted by an autohandler.  See the
+L<Devel/autohandlers> section of the I<Component Developer's Guide>
+for usage and examples.
+
 =item file (filename)
 
 Returns the contents of filename as a string. I<filename> may be an
 absolute filesystem path (starting with a '/') or relative (no leading
 '/'). If relative, Mason prepends the static file root, or the current
 component directory if no static file root is defined.
-
-Developers are encouraged to use relative paths whenever possible.
-This eliminates the need for component updates when content files are
-moved (the administrator just updates the static file root).
 
 =item file_root
 
@@ -228,9 +227,10 @@ filenames.
 
 =item flush_buffer
 
-Flushes the Mason output buffer. Under mod_perl, also calls $r->rflush
-to flush the Apache buffer. Useful for making your servers seem more
-responsive, especially for the initial bytes of output.
+Flushes the Mason output buffer. Under mod_perl, also sends HTTP
+headers if they haven't been sent and calls $r->rflush to flush the
+Apache buffer. Flushing the initial bytes of output can make your
+servers appear more responsive.
 
 =item interp
 
@@ -268,8 +268,9 @@ two-item list.
 Returns the interpreter's notion of the current time in Perl time()
 format (number of seconds since the epoch).
 
-To allow time and date simulations in the previewer, components should
-use $m->time() rather than calling time() directly.
+By using $m->time() rather than calling time() directly, you enable
+the option of previewer or port-based time/date simulations. e.g.
+a port that looks one day into the future.
 
 =back
 

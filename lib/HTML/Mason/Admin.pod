@@ -136,8 +136,8 @@ soft link, Mason will have trouble comparing the paths and will return
 If you are just starting out it is probably safe to skip this section initially.
 
 Starting in Mason 0.8 it is now possible to specify multiple component
-roots in the spirit of Perl's @INC. To do so you must specify a list
-of lists:
+roots to be searched in the spirit of Perl's @INC. To do so you must
+specify a list of lists:
     
     comp_root => [[key1, root1], [key2, root2], ...]
 

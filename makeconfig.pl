@@ -27,7 +27,6 @@ my $confFile = <<EOF;
 # This is the global configuration file for HTML::Mason.
 
 \%HTML::Mason::Config = (
-    
     # Default cached tie class. Change this to tie cache files to
     # something other than MLDBM.  Normally this should be left alone.
     #
@@ -50,6 +49,10 @@ my $confFile = <<EOF;
     # Data::Dumper, Storable, or FreezeThaw.
     #
     'mldbm_serializer'        => '%s',
+
+    # Do we have the XS version of Data::Dumper?
+    #
+    'use_data_dumper_xs'      => %d,
 
     # Determines whether to use Time::HiRes to record microsecond time
     # values in the system log. If this is 0, times will be recorded
@@ -126,6 +129,22 @@ sub make_config
 	$c{mldbm_serializer} = $MLDBM::Serializer || 'Data::Dumper';
     }
 
+    if (!defined($c{use_data_dumper_xs})) {
+	print "Checking for Data::Dumper->Dumpxs...";
+	eval {
+	    require Data::Dumper;
+	    my $d = new Data::Dumper([[1,2,3]]);
+	    $d->Dumpxs;
+	};
+	if ($@) {
+	    print "not found.\n";
+	    $c{use_data_dumper_xs} = 0;
+	} else {
+	    print "found.\n";
+	    $c{use_data_dumper_xs} = 1;
+	}
+    }
+
     if (!defined($c{use_time_hires})) {
 	print "\n";
 	my $h = chk_version(Time::HiRes => '1.19');
@@ -134,7 +153,7 @@ sub make_config
     }
 
     open(F,">lib/HTML/Mason/Config.pm") or die "\nERROR: Cannot write lib/HTML/Mason/Config.pm. Check directory permissions and rerun.\n";
-    my $conf = sprintf($confFile,@c{qw(default_cache_tie_class mldbm_file_ext mldbm_use_db mldbm_serializer use_time_hires)});
+    my $conf = sprintf($confFile,@c{qw(default_cache_tie_class mldbm_file_ext mldbm_use_db mldbm_serializer use_data_dumper_xs use_time_hires)});
     print F $conf;
     print "\nWriting lib/HTML/Mason/Config.pm.\n";
     close(F);

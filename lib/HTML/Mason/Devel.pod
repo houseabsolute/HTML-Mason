@@ -420,12 +420,12 @@ global variables.
 Autohandlers are directory based.  When Mason determines the top-level
 component, it checks that directory for a component called
 "autohandler"; if it exists, it is called instead.  After performing
-its actions, the autohandler typically calls C<$m->auto_next> to
+its actions, the autohandler typically calls C<$m->call_next> to
 transfer control to the original intended component.
 
-C<$m->auto_next> works just like C<$m->comp> except that the component path
+C<$m->call_next> works just like C<$m->comp> except that the component path
 and arguments are implicit. You can pass additional arguments to
-C<$m->auto_next>; these are merged with the original arguments, taking
+C<$m->call_next>; these are merged with the original arguments, taking
 precedence in case of conflict.  This allows you, for example, to
 override arguments passed in the URL.
 
@@ -436,7 +436,7 @@ page in the directory:
     <HEAD><TITLE>McHuffy Incorporated</TITLE></HEAD>
     <BODY BGCOLOR="salmon">
     
-    <% $m->auto_next %>
+    <% $m->call_next %>
     
     <HR>
     Copyright 1999 McHuffy Inc.
@@ -447,35 +447,35 @@ Same idea, with separate components for header/footer in the same
 directory:
 
     <& header &>
-    <% $m->auto_next %>
+    <% $m->call_next %>
     <& footer &>
 
 The next autohandler applies a filter to its pages, adding an absolute
 hostname to relative image URLs:
 
-    <% $m->auto_next %>
+    <% $m->call_next %>
     
     <%filter>
     s{(<img\s+src=\")/} {$1http://images.mysite.com}ig;
     </%filter>
 
-Most of the time autohandler can simply call C<$m->auto_next> without
+Most of the time autohandler can simply call C<$m->call_next> without
 needing to know what component was called. However, should you need
-it, the component object is available from C<$m->auto_comp>.  For
+it, the component object is available from C<$m->fetch_next>.  For
 example, here we base the page title partly on the component name:
 
     <HTML>
     <HEAD><TITLE>McHuffy Incorporated: <% $section %></TITLE></HEAD>
-    <% $m->auto_next %>
+    <% $m->call_next %>
     </BODY>
     </HTML>
     
     <%init>
-    my $comp = $m->auto_comp();
+    my $comp = $m->fetch_next();
     my $section = ($comp->name eq 'mktg.html' ? 'Marketing' : ...);
     </%init>
 
-C<$m->auto_comp> is also useful for calling the component manually,
+C<$m->fetch_next> is also useful for calling the component manually,
 e.g. if you want to suppress some original arguments or if you want
 to use C<$m->scomp> to store and process the output.
 
@@ -496,7 +496,7 @@ If you have recursive mode turned on but want a particular autohandler
 to apply only to the current directory, use a conditional like this:
 
     <%init>
-    return $m->auto_next if ($m->auto_comp->dir_path eq $m->current_comp->dir_path);
+    return $m->call_next if ($m->fetch_next->dir_path eq $m->current_comp->dir_path);
     ... rest of autohandler ...
     </%init>
 

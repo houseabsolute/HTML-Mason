@@ -4,269 +4,95 @@ HTML::Mason::Commands - Mason command reference
 
 =head1 DESCRIPTION
 
-The following commands may be used within Mason components. See
-B<HTML::Mason::Devel> (the I<Mason Developer's Guide>), for usage
-examples.
+This was the documentation for the C<mc_> command set. In Mason 0.8 and
+beyond, C<mc_> commands have been merged into the new Request API. e.g.
 
-=head1 COMMAND REFERENCE
+   mc_comp becomes $m->comp
+   mc_file becomes $m->file
+   etc.
+
+Below is a description of how to convert your C<mc_> commands to C<$m>
+methods. There is also a utility provided with the distribution,
+bin/convert0.8.pl, that performs most of these conversions for you.
+For backwards compatibility C<mc_> commands still work for a
+limited time but will eventually go away.
 
 =over
 
-=item $m->abort ([return value])
+=item
 
-Ends the current request, finishing the page without returning
-through components. In a web environment, the optional return value is
-used as the HTTP status code.
+C<mc_abort> becomes C<$m-E<gt>abort>
 
-=item $m->auto_next ([args...])
+=item
 
-Calls the component interrupted by an autohandler.  With no arguments,
-the original arguments are passed to the component.  Any arguments
-specified here serve to augment and override (in case of conflict) the
-original arguments. Works like $m->comp in terms of return value and
-scalar/list context.  See the L<Devel/autohandlers> section of the
-I<Component Developer's Guide> for examples.
+C<mc_auto_comp> becomes C<$m-E<gt>fetch_next-E<gt>path>
 
-=item $m->auto_comp
+=item
 
-Returns the path of the component interrupted by an autohandler.  This
-is generally a relative path; it is only absolute if you call
-C<$m->auto_comp> from a component other than the autohandler and a
-forward relative path cannot be generated. See the L<Devel/autohandlers>
-section of the I<Component Developer's Guide> for usage and examples.
+C<mc_auto_next> becomes C<$m-E<gt>call_next>
 
-=item $m->cache ([action=>'retrieve|store|expire|keys'], [key=>name],
-[value=>data], [keep_in_memory=>0|1], [expire options...])
+=item
 
-$m->cache() lets you store and retrieve the results
-of computation for improved performance. Each component has its own
-data cache for storing one or more key/value pairs. The cache is
-implemented as a DBM database. See the L<Devel/data caching>
-section of the I<Component Developer's Guide> for examples
-and caching strategies.
+C<mc_cache> becomes C<$m-E<gt>cache>
 
-The argument to I<action> is one of:
+=item
 
-o I<retrieve>: returns the cache value if successful, or C<undef>
-if there was no value or if it has expired.
+C<mc_cache_self> becomes C<$m-E<gt>cache_self>
 
-o I<store>: stores a new cache value under the given key.
-Default key is 'main'.
+=item
 
-o I<expire>: expires a given cache value or values.
-key may be a single key or a list reference. Default key is 'main'.
+C<mc_caller> becomes C<$m-E<gt>callers(1)-E<gt>path>
 
-o I<keys>: returns a list of all the keys in the cache.
+=item
 
-I<value> defines what to store. It can be a scalar or a reference to
-an arbitrary data structure. The allowable size depends on your DBM
-implementation.
+C<mc_call_self> becomes C<$m-E<gt>call_self>
 
-I<keep_in_memory> indicates whether to save the value in memory once it is
-retrieved. Default is 0, meaning that the value will be retrieved from
-the cache file each time. If 1, each child server that retrieves this
-value will save its own copy, which can result in substantial memory
-usage for larger values. Use sparingly.
+=item
 
-The various expiration options are:
+C<mc_comp> becomes C<$m-E<gt>comp>
 
-o I<expire_at>: takes an absolute expiration time, in Perl time() format
-(number of seconds since the epoch)
+=item
 
-o I<expire_in>: takes a relative expiration time of the form
-"<num><unit>", where <num> is a positive number and <unit> is one of
-seconds, minutes, hours, days, or weeks, or any abbreviation thereof.
-E.g. "10min", "30m", "1hour".
+C<mc_comp_exists> becomes C<$m-E<gt>comp_exists>
 
-o I<expire_next>: takes a string, either 'hour' or 'day'. It indicates
-an expiration time at the top of the next hour or day.
+=item
 
-o I<expire_if>: calls a given anonymous subroutine and expires if the
-subroutine returns a non-zero value. The subroutine is called with one
-parameter, the time when the cache value was last written.
+C<mc_comp_source()> becomes C<$m-E<gt>current_comp-E<gt>source_file>
 
-=item $m->cache_self (... same as $m->cache options...)
+=item
 
-Uses $m->cache to cache the entire output and/or the return value of
-the current component.  It is typically used right at the top of an
-C<E<lt>%init%E<gt>> section.
+C<mc_comp_source(path)> becomes C<$m-E<gt>fetch_comp(path)-E<gt>source_file>
 
-To cache the component's output:
+=item
 
-    <%init>
-        return if $m->cache_self(expire_in=>'3 hours'[, key=>'fookey']);
-        ... <rest of init> ...
-    </%init>
+C<mc_comp_stack> becomes C<map($_-E<gt>path,$m-E<gt>callers)>
 
-To cache the component's return value:
+=item
 
-    <%init>
-        my ($retval,$cached) = $m->cache_self(expire_in=>'3 hours'[, key=>'fookey']);
-        return $retval if $cached;
-        ... <rest of init> ...
-    </%init>
+C<mc_date> goes away, this was a legacy function anyway. Replace by
+calling the date formatting function of your choice on C<$m-E<gt>time>.
 
-This only works with scalar and reference return values.
+=item
 
-$m->cache_self handles both the retrieve and store, so you can pass
-both kinds of options to it. See $m->cache for an explanation of
-options.
+C<mc_dhandler_arg> becomes C<$m-E<gt>dhandler_arg>
 
-$m->cache_self uses a bit of magic to accomplish everything in one
-line.  You can use it without understanding it, but if you're
-curious, here's how it works:
+=item
 
-o A component foo calls $m->cache_self for the first time.
+C<mc_file> becomes C<$m-E<gt>file>
 
-o $m->cache_self sees that the cache is empty and calls foo again
-recursively, with a STORE option to capture its content into a buffer.
+=item
 
-o foo again calls $m->cache_self, which immediately returns 0 this time.
+C<mc_file_root> becomes C<$m-E<gt>file_root>
 
-o foo goes about its business and generates content into the $m->cache_self buffer.
+=item
 
-o When control is returned to $m->cache_self, it stores the content and
-return value in the cache and also outputs the content normally.
-Finally $m->cache_self returns the list (retval,1) which in turn
-causes foo to return immediately.
+C<mc_out> becomes C<$m-E<gt>out>
 
-=item $m->caller ()
+=item
 
-Returns the full path of the component that called this component, or
-undef if this is the top-level component. This is the second element
-of $m->comp_stack.
-
-=item $m->call_self ([output_ref], [retval_ref])
-
-This command allows you to filter both the output and the return value
-of the current component. It is typically called at the top of an
-<%init> section:
-
-    <%init>
-        if $m->call_self(my \$output, my \$retval) {
-            ... < perform filter and return > ...
-        }
-        ... <rest of init> ...
-    </%init>
-
-See the L<Devel/filtering> section of the I<Component Developer's Guide>
-for usage and examples.
-
-=item $m->comp =for html <a name="comp">
-
-Calls the component designated by I<comp> with the specified
-option/value pairs. I<comp> may be a component path or a component
-object. If the component path is absolute (starting with a '/'), then
-the component is found relative to the component root.  Relative
-component paths (no leading '/') are relative to the current component
-directory.
-
-Components work exactly like Perl subroutines in terms of return
-values and context. A component can return any type of value, which is
-then returned from the $m->comp call.
-
-If you want to capture the output of a component in a string, send a
-scalar reference with the STORE option. The output will be placed in
-the scalar instead of being sent to the default output stream.
-
-The <& &> tag provides a convenient shortcut for $m->comp.
-
-=item $m->comp_exists (compPath)
-
-Returns 1 if I<compPath> is a valid component path, 0 otherwise. 
-
-=item $m->comp_source ([compPath])
-
-Returns the full source filename for I<compPath>, which may be
-absolute or relative. With no arguments, defaults to the current
-component. For example, to get the last modified time of this
-component:
-
-    my $lastmod = (stat($m->comp_source))[9];
-
-=item $m->comp_stack ()
-
-Returns the list of components in the call stack, starting with the
-current component and ending with the top-level component.
-
-=item $m->date (format)
-
-This command is provided for backward compatibility with early
-versions of Mason that automatically used the Date::Manip package.
-Returns the interpreter's notion of the current time or date in the
-specified format. This works like Date::Manip::UnixDate (see
-B<Date::Manip> for valid formats). To use this command you must now
-explicitly "use Date::Manip" inside the HTML::Mason::Commands package.
-E.g. in your handler.pl,
-
-    { package HTML::Mason::Commands;
-      use Date::Manip; }
-
-To allow time and date simulations in the previewer, components should
-use $m->date() rather than UnixDate directly.
-
-$m->date() works faster than UnixDate for some formats by caching results. 
-
-=item $m->dhandler_arg ()
-
-If the request has been handled by a dhandler, this method returns the
-remainder of the URI beyond the dhandler directory.  Similar to the
-PATH_INFO except without the leading slash. See the
-L<Devel/dhandlers> section of the I<Component Developer's Guide>
-for examples.
-
-=item $m->file (filename)
-
-Returns the contents of filename as a string. I<filename> may be an
-absolute filesystem path (starting with a '/') or relative (no leading
-'/'). If relative, Mason prepends the static file root, or the current
-component directory if no static file root is defined.
-
-Developers are encouraged to use relative paths whenever possible.
-This eliminates the need for component updates when content files are
-moved (the administrator just updates the static file root).
-
-=item $m->file_root ()
-
-Returns the static file root, used by $m->file() to resolve relative
-filenames.
-
-=item $m->out (string)
-
-Print the given string. Rarely needed, since normally all HTML is just
-placed in the component body and output implicitly. $m->out is useful
-if you need to output something in the middle of a Perl block.
-
-$m->out() should be favored over C<print> or C<$r-E<gt>print>,
-since $m->out() may be redirected or buffered depending on the
-current state of the interpreter.
-
-=item $m->time ()
-
-Returns the interpreter's notion of the current time in Perl time()
-format (number of seconds since the epoch).
-
-To allow time and date simulations in the previewer, components should
-use $m->time() rather than calling time() directly.
+C<mc_time> becomes C<$m-E<gt>time>
 
 =back
-
-=head2 Web-only Commands
-
-The following commands are only available when Mason is running in a
-Web environment.
-
-=over
-
-=item $m->suppress_http_header (0|1)
-
-Mason normally emits any pending HTTP headers just before entering
-the primary section of a component. To prevent this, call
-$m->suppress_http_header(1) somewhere in the C<E<lt>%init%E<gt>>
-block. You can call $m->suppress_http_header(0) to cancel.
-
-=back
-
 
 =head1 AUTHOR
 
