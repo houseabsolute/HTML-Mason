@@ -115,7 +115,9 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'abort',
-		      description => 'test $m->abort method',
+		      description => 'test $m->abort method (stream mode)',
+		      interp_params => { out_mode => 'stream' },
+
 		      component => <<'EOF',
 Some text
 
@@ -132,6 +134,30 @@ EOF
 Some text
 
 Some more text
+
+Component aborted with value 50
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'abort',
+		      description => 'test $m->abort method (batch mode)',
+		      component => <<'EOF',
+Some text
+
+% eval {$m->comp('support/abort_test')};
+% if (my $err = $@) {
+%   if ($m->aborted) {
+Component aborted with value <% $m->aborted_value %>
+%   } else {
+Got error
+%   }
+% }
+EOF
+		      expect => <<'EOF',
+Some text
 
 Component aborted with value 50
 EOF
@@ -332,7 +358,6 @@ EOF
 			  expect => <<'EOF',
 
 Calling helper
-
 Error: error while executing /request/support/subrequest_error_test:
 
 
@@ -409,7 +434,6 @@ Remaining chain: <% join(',',map($_->title,$m->fetch_next_all)) %>
 <& $m->fetch_next, level => 2 &>\
 EOF
 		       );
->>>>>>> 1.5.2.5.2.4
 
 #------------------------------------------------------------
 
