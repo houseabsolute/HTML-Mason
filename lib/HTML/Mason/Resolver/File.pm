@@ -84,11 +84,11 @@ sub get_info {
                     );
     }
 
-    # convert path to real filesystem path
+    # see if path corresponds to real filesystem path, a common new user mistake
     my $fs_path = File::Spec->catfile( split /\//, $path );
-    if ( -e $path )
+    if ( -e $fs_path )
     {
-        warn "Your component path ($path) matches a real file on disk ($fs_path).  Have you read about the component root in the Admin guide (HTML::Mason::Admin)?";
+        warn "Your component path ($path) matches a real file on disk ($fs_path).  Have you read about the component root in the Administrator's Manual (HTML::Mason::Admin)?";
     }
 
     return;
