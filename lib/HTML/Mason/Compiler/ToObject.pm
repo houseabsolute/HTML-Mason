@@ -351,9 +351,12 @@ sub _arg_declarations
 	}
     }
 
-    # just to be sure
-    local $" = ' ';
-    my @req_check = <<"EOF";
+    my @req_check;
+    if (@required)
+    {
+        # just to be sure
+        local $" = ' ';
+        @req_check = <<"EOF";
 
 foreach my \$arg ( qw( @required ) )
 {
@@ -362,6 +365,7 @@ foreach my \$arg ( qw( @required ) )
         unless exists \$ARGS{\$arg};
 }
 EOF
+    }
 
     my $decl = 'my ( ';
     $decl .= join ', ', @decl;
