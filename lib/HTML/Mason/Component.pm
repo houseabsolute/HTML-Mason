@@ -89,7 +89,7 @@ sub assign_runtime_properties {
 	    $self->{inherit_path} = $interp->process_comp_path($self->{flags}->{inherit},$self->dir_path);
 	}
     } elsif (defined($interp->autohandler_name)) {
-	if ($interp->{allow_recursive_autohandlers}) {
+	if ($interp->allow_recursive_autohandlers) {
 	    if ($self->name eq $interp->autohandler_name) {
 		unless ($self->dir_path eq '/') {
 		    $self->{inherit_start_path} = dirname($self->dir_path);
@@ -256,6 +256,10 @@ sub parent {
 #
 sub object_file { my $self = shift; return ($self->persistent) ? ($self->interp->object_dir . $self->fq_path) : undef }
 sub cache_file { my $self = shift; return ($self->persistent) ? ($self->interp->data_cache_dir . "/" . compress_path($self->fq_path)) : undef }
+
+# Create generic read-write accessor routines
+sub dynamic_subs_request { my $s=shift; return @_ ? ($s->{dynamic_subs_request}=shift) : $s->{dynamic_subs_request} }
+sub dynamic_subs_hash { my $s=shift; return @_ ? ($s->{dynamic_subs_hash}=shift) : $s->{dynamic_subs_hash} }
 
 #
 # Create generic read-only accessor routines
