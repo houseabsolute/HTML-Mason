@@ -4,30 +4,91 @@
 <title>Mason Documentation</title>
 </head>
 
-<body bgcolor="#f5f5f5">
+<body bgcolor=white>
 
-<font color="#993300" size="4" face="Verdana,Arial,Helvetica"><b>Mason Documentation</b></font><br>
+<h3>Mason Documentation</h3>
 
-<font size="3" face="Verdana,Arial,Helvetica">
-<ul>
-<li><a href="Mason.html">Introduction</a><p>
-<li><a href="Devel.html">Component Developer's Manual</a><p>
-<li><a href="Admin.html">Administrator's Manual</a><p>
-<li>Mason Object Reference:
-<ul>
-<li><a href="Request.html">Request</a>
-<li><a href="Component.html">Component</a>
-<li><a href="Parser.html">Parser</a>
-<li><a href="Interp.html">Interp</a>
-<li><a href="ApacheHandler.html">ApacheHandler</a>
-</ul>
-</ul>
-<p>
+<table width="100%" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="50%" valign="top">
+     <h4>Manuals</h4>
+      <table border=0>
 
-</font>
+        <tr>
+        <td valign=top>&nbsp;&#149;</td>
+        <td><a href="Mason.html">Introduction</a><br>
+        Introduction and basic installation.
+        </td>
+        </tr>
+
+        <tr>
+        <td valign=top>&nbsp;&#149;</td>
+        <td><a href="Devel.html">Developer's Manual</a><br>
+        This manual is written for the Mason developer. It describes how to
+        write, run, and debug Mason components.
+        </td>
+        </tr>
+
+        <tr>
+        <td valign=top>&nbsp;&#149;</td>
+        <td><a href="Admin.html">Administrator's Manual</a><br>
+        This manual is written for the web master or system administrator. It
+        describes how to install, configure, and tune a Mason system.
+        </td>
+        </tr>
+        
+      </table>
+    </td>
+
+    <td width="50%" valign="top">
+     <h4>Reference</h4>
+      <table border=0>
+
+        <tr>
+        <td valign=top>&nbsp;&#149;</td>
+        <td><a href="Params.html">Parameters</a><br>
+        List of all configuration parameters.
+        </td>
+        </tr>
+        
+        <tr>
+        <td valign=top>&nbsp;&#149;</td>
+        <td><a href="Request.html">Request</a><br>
+        The Request API is the gateway to all Mason features not provided by syntactic tags.
+        </td>
+        </tr>
+        
+        
+        <tr>
+        <td valign=top>&nbsp;&#149;</td>
+        <td><a href="Component.html">Component</a><br>
+        The Component API allows you to examine components loaded into memory.
+        </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+
+  <tr><td>&nbsp;</td></tr>
+
+  <tr>
+    <td width="50%" valign="top">
+     <h4>Advanced</h4>
+     <table border=0>
+
+        <tr>
+        <td valign=top>&nbsp;&#149;</td>
+        <td><a href="Resolver.html">Resolver</a><br>
+        The Resolver converts component paths to components. You can
+        subclass this to change where components come from.
+        </td>
+        </tr>
+
+      </table>
+    </td>
+
+</table>
 
 </body>
-
 </html>
-
-
