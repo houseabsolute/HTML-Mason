@@ -227,6 +227,7 @@ sub _initialize {
 	    $request_comp =~ s{/+}{/}g;
 	    $self->{top_path} = $path = $request_comp;
 
+	    my $retry_count = 0;
 	    search: {
 		$request_comp = $self->interp->load($path);
 
@@ -240,15 +241,22 @@ sub _initialize {
 		    }
 		}
 
-		# If the component was declined previously in this request,
-		# look for the next dhandler up the tree.
+		# If the component was declined previously in this
+		# request, look for the next dhandler up the
+		# tree. 
 		if ($request_comp and $self->{declined_comps}->{$request_comp->comp_id}) {
 		    $path = $request_comp->dir_path;
-		    unless ($path eq '/' and $request_comp->name eq $self->dhandler_name) {
-			if ($request_comp->name eq $self->dhandler_name) {
+		    if ($request_comp->name eq $self->dhandler_name) {
+			if ($path eq '/') {
+			    undef $request_comp;
+			    last search;  # End search if /dhandler declined
+			} else {
 			    $path =~ s:/[^\/]+$::;
-                            $path ||= '/';
+			    $path ||= '/';
 			}
+		    }
+		    if ($retry_count++ > $self->max_recurse) {
+			error "could not find dhandler after " . $self->max_recurse . " tries (infinite loop bug?)";
 		    }
 		    redo search;
 		}
@@ -2009,9 +2017,11 @@ Returns the current component object.
 
 Used from a top-level component or dhandler, this method clears the
 output buffer, aborts the current request and restarts with the next
-applicable dhandler up the tree. If no dhandler is available, an error
-occurs.  This method bears no relation to the Apache DECLINED status
-except in name.
+applicable dhandler up the tree. If no dhandler is available, a
+not-found error occurs.
+
+This method bears no relation to the Apache DECLINED status except in
+name.
 
 =item declined ([$err])
 
