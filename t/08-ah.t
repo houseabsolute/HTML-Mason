@@ -33,8 +33,8 @@ local $| = 1;
 kill_httpd(1);
 test_load_apache();
 
-my $tests = 4;
-$tests += 33 if my $have_libapreq = have_module('Apache::Request');
+my $tests = 4; # multi conf tests
+$tests += 44 if my $have_libapreq = have_module('Apache::Request');
 $tests += 33 if my $have_cgi      = have_module('CGI');
 $tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
 print "1..$tests\n";
@@ -43,20 +43,23 @@ print STDERR "\n";
 
 write_test_comps();
 
-if ($have_libapreq) {        # 31 tests
+if ($have_libapreq) {        # 44 tests
     cleanup_data_dir();
-    apache_request_tests(1); # 18 tests
+    apache_request_tests(1); # 19 tests
 
     cleanup_data_dir();
-    apache_request_tests(0); # 13 tests
+    apache_request_tests(0); # 14 tests
+
+    cleanup_data_dir();
+    no_comp_root_tests();    # 11 tests
 }
 
-if ($have_cgi) {             # 31 tests
+if ($have_cgi) {             # 34 tests
     cleanup_data_dir();
-    cgi_tests(1);            # 18 tests
+    cgi_tests(1);            # 20 tests
 
     cleanup_data_dir();
-    cgi_tests(0);            # 13 tests
+    cgi_tests(0);            # 14 tests
 }
 
 cleanup_data_dir();
@@ -354,6 +357,15 @@ EOF
 						   );
 	ok($success);
     }
+
+    kill_httpd(1);
+}
+
+sub no_comp_root_tests
+{
+    start_httpd('no_comp_root');
+
+    standard_tests(0);
 
     kill_httpd(1);
 }
