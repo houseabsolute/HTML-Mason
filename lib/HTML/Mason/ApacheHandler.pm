@@ -105,6 +105,8 @@ sub exec
     my $retval;
 
     {
+        local $^W = 0;
+
 	# Remap $r->print to Mason's $m->print while executing
 	# request, but just for this $r, in case user does an internal
 	# redirect or apache subrequest.
