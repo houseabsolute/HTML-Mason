@@ -102,6 +102,9 @@ for details.
 - The ApacheHandler module now requires a minimum of mod_perl 1.22
 (though using something more up to date is highly recommended).
 
+- The ApacheHandler module will take care of chown'ing files created
+during server startup, when needed.
+
 - The MasonMultipleConfig parameter is no longer needed, and will
 cause an error if given.  Mason can now figure out for itself whether
 or not multiple ApacheHandler objects should be created.
