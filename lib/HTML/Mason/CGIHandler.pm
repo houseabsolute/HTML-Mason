@@ -24,6 +24,8 @@ __PACKAGE__->valid_params
 __PACKAGE__->contained_objects
     (
      interp => 'HTML::Mason::Interp',
+     cgi_request => { class   => 'HTML::Mason::CGIRequest', # $r
+		      delayed => 1 },
     );
 
 
@@ -31,7 +33,9 @@ sub new {
     my $package = shift;
     
     # If no comp_root given, use DOCUMENT_ROOT
-    my @my_args = $package->create_contained_objects(comp_root => $ENV{DOCUMENT_ROOT}, @_);
+    my @my_args = $package->create_contained_objects(comp_root => $ENV{DOCUMENT_ROOT}, 
+						     request_class => 'HTML::Mason::Request::CGI',
+						     @_);
 
     my $self = bless { validate @my_args, $package->validation_spec };
     $self->interp->out_method(\$self->{output});
@@ -70,7 +74,7 @@ sub _handler {
 	}
     }
 
-    my $r = 'HTML::Mason::CGIRequest'->new();
+    my $r = $self->create_delayed_object('cgi_request', );
     $self->interp->set_global('$r', $r);
 
     $self->{output} = '';
@@ -105,8 +109,25 @@ sub _handler {
     }
 }
 
+###########################################################
+package HTML::Mason::Request::CGI;
+# Subclass for HTML::Mason::Request object $m
+
+use HTML::Mason::Request;
+use base qw(HTML::Mason::Request);
+
+#__PACKAGE__->valid_params( cgi_request => {isa => 'HTML::Mason::CGIRequest'} );
+
+sub cgi_object {
+    my $self = shift;
+    return $self->{cgi_request}->query(@_);
+}
+
+###########################################################
 package HTML::Mason::CGIRequest;
-# Analogous to Apache request object, not HTML::Mason::Request object
+# Analogous to Apache request object $r (but not an actual Apache subclass)
+
+use HTML::Mason::MethodMaker(read_write => [qw(query headers)]);
 
 sub new {
     my $class = shift;
@@ -120,36 +141,34 @@ sub header_out {
     my ($self, $header) = (shift, shift);
 
     return $self->_set_header($header, shift) if @_;
-    return $self->{ headers }{$header};
+    return $self->headers->{$header};
 }
 
 sub content_type {
     my $self = shift;
 
     return $self->_set_header('Content-type', shift) if @_;
-    return $self->{ headers }{'Content-type'};
+    return $self->headers->{'Content-type'};
 }
 
 sub _set_header {
     my ($self, $header, $value) = @_;
-    delete $self->{headers}{$header}, return unless defined $value;
-    return $self->{headers}{$header} = $value;
+    delete $self->headers->{$header}, return unless defined $value;
+    return $self->headers->{$header} = $value;
 }
 
 sub http_header {
     my $self = shift;
-    my $method = exists $self->{headers}{'-location'} ? 'redirect' : 'header';
-    return $self->{query}->$method(%{$self->{headers}});
+    my $method = exists $self->headers->{'-location'} ? 'redirect' : 'header';
+    return $self->query->$method(%{$self->headers});
 }
 
 sub params {
     my $self = shift;
-    my @input = map {$_, [$self->{query}->param($_)]} $self->{query}->param;
+    my @input = map {$_, [$self->query->param($_)]} $self->query->param;
     foreach (@input) {$_ = $_->[0] if ref($_) and @$_==1}  # Unwrap single-element array refs
     return @input;
 }
-
-sub query { $_[0]->{query} }
 
 1;
 
@@ -205,6 +224,9 @@ L<HTML::Mason::Interp/"STANDALONE MODE">.
 This module also provides an C<$r> request object for use inside
 components, similar to the Apache request object under
 C<HTML::Mason::ApacheHandler>, but limited in functionality.
+
+Finally, this module alters the C<HTML::Mason::Request> object C<$m> to
+provide direct access to the CGI query, should such access be necessary.
 
 =head2 C<HTML::Mason::CGIHandler> Methods
 
@@ -289,14 +311,31 @@ already been set is undefined - currently it returns C<undef>.
 If no content type is set during the request, the default MIME type
 C<text/html> will be used.
 
-=item * query()
+=back
 
-Returns the C<CGI> query object for the current request.  It's
-inadvisable to over-use the query object directly - if you find
-yourself doing so a lot, it probably means that C<$r> could use some
-extra functionality.
+=head2 Added C<$m> methods
+
+The C<$m> object provided in components has all the functionality of
+the regular C<HTML::Mason::Request> object C<$m>, and the following:
+
+=over 4
+
+=item * cgi_object()
+
+Returns the current C<CGI> request object.  This is handy for
+processing cookies or perhaps even doing HTML generation (but is that
+I<really> what you want to do?).  If you pass an argument to this
+method, you can set the request object to the argument passed.  Use
+this with care, as it may affect components called after the current
+one (they may check the content length of the request, for example).
+
+Note that the ApacheHandler class (for using Mason under mod_perl)
+also provides a C<cgi_object()> method that does the same thing as
+this one.  This makes it easier to write components that function
+equally well under CGIHandler and ApacheHandler.
 
 =back
+
 
 =head1 AUTHOR
 
