@@ -557,9 +557,8 @@ something else, you will need to explicitly override the subrequest's
 C<out_method> parameter.
 
 Mason Request objects are only designed to handle a single call to
-C<exec>.  If you wish to make multiple subrequests, we recommend
-creating a new subrequest object for each one.  The effect of calling
-C<exec> more than once on a given object is not predictable.
+C<exec>.  If you wish to make multiple subrequests, you must create
+a new subrequest object for each one.
 
 =head1 TOP-LEVEL COMPONENTS
 
@@ -1488,6 +1487,25 @@ method:
 
 This method uses the clear_buffer/abort technique mentioned above,
 so the same warnings apply regarding evals.
+
+=head2 Internal Redirects
+
+There are two ways to perform redirects that are invisible to the
+client.
+
+First, you can use a Mason subrequest (see L<Subrequests>). This only
+works if you are redirecting to another Mason page.
+
+Second, you can use Apache's internal_redirect method, which works
+whether or not the new URL will be handled by Mason.  Use it this way:
+
+    $r->internal_redirect($url);
+    $m->auto_send_headers(0);
+    $m->clear_buffer;
+    $m->abort;
+
+The last three lines prevent the original request from accidentally
+generating extra headers or content.
 
 =head1 USING THE PERL DEBUGGER
 
