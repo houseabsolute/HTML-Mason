@@ -382,9 +382,9 @@ sub _arg_declarations
 {
     my $self = shift;
 
-    my @init;
+    my $init;
     my @args_hash;
-    my @pos;
+    my $pos;
     my @req_check;
     my @decl;
     my @assign;
@@ -400,7 +400,7 @@ sub _arg_declarations
                );
     }
 
-    @init = <<'EOF';
+    $init = <<'EOF';
 HTML::Mason::Exception::Params->throw
     ( error =>
       "Odd number of parameters passed to component expecting name/value pairs"
@@ -412,8 +412,9 @@ EOF
         @args_hash = "my \%ARGS = \@_;\n";
     }
 
-    # opening brace will be closed later
-    @pos = <<'EOF';
+    # opening brace will be closed later.  we want this in a separate
+    # block so that the rest of the component can't see %pos
+    $pos = <<'EOF';
 {
     my %pos;
     for ( my $x = 0; $x < @_; $x += 2 )
@@ -486,7 +487,7 @@ EOF
     $decl .= " );\n";
 
     # closing brace closes opening of @pos
-    return @init, @args_hash, $decl, @pos, @req_check, @assign, "}\n";
+    return $init, @args_hash, $decl, $pos, @req_check, @assign, "}\n";
 }
 
 sub _define_args_hash
