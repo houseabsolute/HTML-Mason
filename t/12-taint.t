@@ -13,9 +13,23 @@ BEGIN
     }
 
     $ENV{PATH} = '';
+}
+
+# Cwd has to be loaded after sanitizing $ENV{PATH}
+use Cwd;
+use File::Spec;
+
+BEGIN
+{
+    my $curdir = File::Spec->curdir;
 
     my $libs = 'use lib qw( ';
-    $libs .= join ' ', "./blib/lib", "./t/lib";
+    $libs .=
+        ( join ' ',
+          File::Spec->catdir( $curdir, 'blib', 'lib' ),
+          File::Spec->catdir( $curdir, 't', 'lib' )
+        );
+
     if ($ENV{PERL5LIB})
     {
 	$libs .= ' ';
@@ -29,9 +43,6 @@ BEGIN
     # be ignored
     eval $libs;
 }
-
-use Cwd;
-use File::Spec;
 
 use HTML::Mason::Interp;
 use HTML::Mason::Compiler::ToObject;
@@ -52,8 +63,11 @@ if ($alarm_works)
     my $alarm;
     $SIG{ALRM} = sub { $alarm = 1; die "alarm"; };
 
-    my $comp = read_file('t/taint.comp');
-    eval { alarm 5; local $^W; $comp = $compiler->compile( comp_source => $comp, name => 't/taint.comp' ); };
+    my $comp = read_file( File::Spec->catfile( File::Spec->curdir, 't', 'taint.comp' ) );
+    eval { alarm 5;
+           local $^W;
+           $comp = $compiler->compile( comp_source => $comp, name => 't/taint.comp' );
+       };
 
     if ( $alarm || $@ || ! defined $comp )
     {
@@ -89,9 +103,10 @@ my $interp = HTML::Mason::Interp->new( comp_root => $comp_root,
 $data_dir = File::Spec->catdir( getcwd(), 'mason_tests', 'data' );
 
 # this is tainted, as is anything with return val from getcwd()
-my $comp2 = read_file('t/taint.comp');
+my $comp2 = read_file( File::Spec->catfile( File::Spec->curdir, 't', 'taint.comp' ) );
 eval { $interp->write_object_file( object_code => $comp2,
-				   object_file => "$data_dir/taint_write_test",
+				   object_file =>
+                                   File::Spec->catfile( $data_dir, 'taint_write_test' ),
 				 ); };
 
 if (! $@)
