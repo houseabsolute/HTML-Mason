@@ -174,6 +174,39 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'check_exec_not_found',
+                      description => 'Request to non-existent component',
+                      component => <<'EOF',
+% $m->subexec("/does/not/exist");
+EOF
+                      expect_error => qr{could not find component for initial path}is,
+		      );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'check_exec_not_found_html_format',
+                      description => 'Request to non-existent component in html format',
+                      interp_params => { error_format => 'html',
+                                         error_mode => 'output',
+                                       },
+                      component => <<'EOF',
+% $m->subexec("/does/not/exist");
+EOF
+                      expect => qr{^\s+<html>.*could not find component for initial path}is,
+		      );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'check_comp_not_found',
+                      description => 'Component call to non-existent component',
+                      component => <<'EOF',
+% $m->comp("/does/not/exist");
+EOF
+                      expect_error => qr{could not find component for path}is,
+		      );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'change_error_format',
 		      description => 'Make sure setting $m->error_format($foo) works on the fly',
                       interp_params => { error_format => 'html',
