@@ -179,16 +179,6 @@ sub make_ah
 
     my %p = $package->_get_mason_params;
 
-    #
-    # We make a special case of this cause the convenience factor is
-    # potentially quite high for users
-    #
-    my $interp_class = $p{interp_class} || 'HTML::Mason::Interp';
-    if ( exists $interp_class->allowed_params( {} )->{comp_root} && Apache->request )
-    {
-	%p = ( comp_root => [ Apache->request->document_root ], %p );
-    }
-
     my $key = '';
     foreach my $k (sort keys %p)
     {
