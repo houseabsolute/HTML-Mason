@@ -16,6 +16,10 @@ L{Devel/component and request objects}
 Request.pod and Component.pod, and moved component developer's guide
 (previously at Components.pod) to Devel.pod to avoid
 confusion. L{Devel/component and request objects}
+- Object files have changed significantly (they now return a
+component object).  Pre-0.7 object files will be detected and
+automatically updated, unless you are running in reload file mode
+in which case you are responsible for generating new object files.
 - New <%def> section defines a subcomponent embedded inside a larger
 component.  This allows repeated code and HTML to be modularized
 without affecting the global component namespace.

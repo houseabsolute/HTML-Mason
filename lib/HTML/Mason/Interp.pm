@@ -305,8 +305,8 @@ sub load {
 	return undef unless (-f $objfile);   # component not found
 	
 	$self->write_system_log('COMP_LOAD', $path);	# log the load event
-	my $comp = $self->{parser}->eval_object_text(object_file=>$objfile, error=>\$err);
-	die "Error while loading '$objfile' at runtime:\n$err\n" if !$comp;
+	my $comp = $self->{parser}->eval_object_text(object_file=>$objfile, error=>\$err)
+	    or die "Error while loading '$objfile' at runtime:\n$err\n";
 	$comp->assign_file_properties($self->comp_root,$self->data_dir,$self->data_cache_dir,$path);
 	
 	if ($self->{code_cache_mode} eq 'all') {
@@ -362,13 +362,23 @@ sub load {
 	    # We are using object files.  Update object file if necessary
 	    # and load component from there.
 	    #
+	    update_object:
 	    if ($objfilemod < $srcfilemod) {
 		my @newfiles;
 		my $objText = $parser->parse_component(script_file=>$srcfile,error=>\$err) or die "Error during compilation of $srcfile:\n$err\n";
 		$parser->write_object_file(object_text=>$objText, object_file=>$objfile, files_written=>\@newfiles);
 		$self->push_files_written(@newfiles);
 	    }
-	    $comp = $parser->eval_object_text(object_file=>$objfile, error=>\$err) or die "Error while loading '$objfile' at runtime:\n$err\n";
+	    $comp = $parser->eval_object_text(object_file=>$objfile, error=>\$err);
+	    if (!$comp) {
+		# If this is a pre-0.7 object file, replace it.
+		if ($err =~ /object file was created by a pre-0\.7 parser/) {
+		    $objfilemod = 0;
+		    goto update_object;
+		} else {
+		    die "Error while loading '$objfile' at runtime:\n$err\n";
+		}
+	    }
 	} else {
 	    #
 	    # No object files. Load component directly into memory.
