@@ -31,7 +31,7 @@ __PACKAGE__->valid_params
     (
      allow_globals        => { parse => 'list',   type => ARRAYREF, default => [] },
      default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
-     lexer                => { can => [ 'lex', 'object_id' ] },
+     lexer                => { can => [ 'lex', 'object_id', 'named_block_types', 'simple_block_types', 'line_count' ] },
      preprocess           => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_perl     => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1 },
@@ -231,9 +231,13 @@ sub init_block
     my $self = shift;
     my %p = @_;
 
-    my $line = $self->lexer->line_count;
-    my $file = $self->lexer->name;
-    my $comment = "#line $line $file\n";
+    my $comment = '';
+    if ( $self->lexer->line_count )
+    {
+	my $line = $self->lexer->line_count;
+	my $file = $self->lexer->name;
+	$comment = "#line $line $file\n";
+    }
 
     push @{ $self->{current_comp}{blocks}{ $p{block_type} } }, "$comment$p{block}";
 }
@@ -436,11 +440,15 @@ sub _add_body_code
     my $self = shift;
     my $code = shift;
 
-    my $line = $self->lexer->line_count;
-    my $file = $self->lexer->name;
-    my $comment = "#line $line $file\n";
+    my $comment = '';
+    if ( $self->lexer->line_count )
+    {
+	my $line = $self->lexer->line_count;
+	my $file = $self->lexer->name;
+	$comment = "#line $line $file\n";
+    }
 
-    $self->{current_comp}{body} .= join '', $comment, $code;
+    $self->{current_comp}{body} .= "comment$code";
 }
 
 sub dump
