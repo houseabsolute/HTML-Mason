@@ -235,14 +235,14 @@ sub cache_self
     my $interp = $self->interp;
     return undef unless $interp->use_data_cache;
     return undef if $self->top_stack->{in_cache_self_flag};
-    my (%retrieveOptions,%storeOptions);
+    my (%retrieve_options,%store_options);
     foreach (qw(key expire_if keep_in_memory busy_lock)) {
-	$retrieveOptions{$_} = $options{$_} if (exists($options{$_}));
+	$retrieve_options{$_} = $options{$_} if (exists($options{$_}));
     }
     foreach (qw(key expire_at expire_next expire_in)) {
-	$storeOptions{$_} = $options{$_} if (exists($options{$_}));
+	$store_options{$_} = $options{$_} if (exists($options{$_}));
     }
-    my $result = $self->cache(action=>'retrieve',%retrieveOptions);
+    my $result = $self->cache(action=>'retrieve',%retrieve_options);
     my ($output,$retval);
     
     #
@@ -256,18 +256,17 @@ sub cache_self
 	# value ($retval).
 	#
 	my $lref = $self->top_stack;
-	my %saveLocals = %$lref;
+	my %save_locals = %$lref;
 	$lref->{sink} = sub { $output .= $_[0] };
 	$lref->{in_cache_self_flag} = 1;
-	my $sub = $lref->{comp}->{code};
-	my @args = @{$lref->{args}};
-	$retval = &$sub(@args);
-	$self->top_stack({%saveLocals});
+
+	my $retval = $lref->{comp}->run( @{ $lref->{args} } );
+	$self->top_stack({%save_locals});
 
 	#
 	# Store output and return value as a two-item listref.
 	#
-	$self->cache(action=>'store',value=>[$output,$retval],%storeOptions);
+	$self->cache(action=>'store',value=>[$output,$retval],%store_options);
     } else {
 	($output,$retval) = @$result;
     }
@@ -348,19 +347,19 @@ sub call_self
     #
     my $content;
     my $lref = $self->top_stack;
-    my %saveLocals = %$lref;
+    my %save_locals = %$lref;
     $lref->{sink} = sub { $content .= $_[0] };
     $lref->{in_call_self_flag} = 1;
-    my $sub = $lref->{comp}->{code};
-    my @args = @{$lref->{args}};
+
+
     if (ref($rref) eq 'SCALAR') {
-	$$rref = &$sub(@args);
+	$$rref = $lref->{comp}->run( @{ $lref->{args} } );
     } elsif (ref($rref) eq 'ARRAY') {
-	@$rref = &$sub(@args);
+	@$rref = $lref->{comp}->run( @{ $lref->{args} } );
     } else {
-	&$sub(@args);
+	$lref->{comp}->run( @{ $lref->{args} } );
     }
-    $self->top_stack({%saveLocals});
+    $self->top_stack({%save_locals});
     $$cref = $content if ref($cref) eq 'SCALAR';
 
     return 1;
@@ -536,8 +535,7 @@ sub comp1 {
     my $self = shift;
 
     # Get modifiers: optional hash reference passed in as first argument.
-    my %mods;
-    %mods = %{shift()} if (ref($_[0]) eq 'HASH');
+    my %mods = %{shift()} if (ref($_[0]) eq 'HASH');
 
     my ($comp,@args) = @_;
     my $interp = $self->{interp};
@@ -563,6 +561,7 @@ sub comp1 {
 
     #
     # Determine sink (where output is going).
+    #
     # Look for STORE and scalar reference passed as last two arguments. This is deprecated
     # and will go away eventually.
     #
