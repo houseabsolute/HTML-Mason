@@ -198,6 +198,8 @@ different from the current options, and will recompile the component
 if necessary.  The exception to this is that with compiler parameters
 which take callbacks (such as preprocess), Mason can only tell if such
 a parameter is present, not whether the actual callback has changed.
+- The ApacheHandler object will chown any files created during server
+startup as needed.
 
 [ BUG FIXES ]
 
