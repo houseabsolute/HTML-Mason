@@ -91,16 +91,16 @@ sub new
 
 my $comp_count = 0;
 sub assign_runtime_properties {
-    my ($self, $interp, $info) = @_;
+    my ($self, $interp, $source) = @_;
     $self->interp($interp);
-    $self->{comp_id} = defined $info->comp_id ? $info->comp_id : "[anon ". ++$comp_count . "]";
+    $self->{comp_id} = defined $source->comp_id ? $source->comp_id : "[anon ". ++$comp_count . "]";
 
-    $self->{path} = $info->comp_path;
+    $self->{path} = $source->comp_path;
 
     $self->_determine_inheritance;
 
     foreach my $c (values(%{$self->{subcomps}})) {
-	$c->assign_runtime_properties($interp, $info);
+	$c->assign_runtime_properties($interp, $source);
     }
 }
 
