@@ -5,6 +5,12 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+1.09_02
+
+[ BUG FIXES ]
+
+- Fix broken Apache::Status page  (reported by Thomas A. Lowery).
+
 1.09_01  April 4, 2002
 
 This is a big release and there are a lot of backwards
@@ -31,7 +37,7 @@ removed.
 - ** The Interp's taint_check parameter has been removed.  Mason now
 simply determines whether or not it is running in taint mode and acts
 appropriately without user intervention.
-- ** Mason now uses Apache::Request as the default argument processing
+- ** Mason now uses Apache::Request as its default argument processing
 module.  You can explicitly use CGI.pm if you prefer.
 - ** The ApacheHandler module no longers accepts parameters when
 imported.  Instead, you specify this parameter via the ApacheHandler
