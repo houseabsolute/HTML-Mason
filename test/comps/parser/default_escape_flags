@@ -1,0 +1,9 @@
+Explicitly HTML-escaped: <% $expr |h %><p>
+Explicitly HTML-escaped redundantly: <% $expr |hh %><p>
+Explicitly URL-escaped: <% $expr |nu %><p>
+No flags: <% $expr %><p>
+No flags again: <% $expr | %><p>
+Explicitly not escaped: <% $expr | n%><p>
+<%init>
+my $expr = "<b><i>Hello there</i></b>.";
+</%init>

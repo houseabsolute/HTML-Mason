@@ -46,7 +46,7 @@ sub try_exec_with_parser {
     try_exec($interp,$test,$iteration);
 }
 
-print "1..7\n";
+print "1..9\n";
 
 # allow_globals
 undef(*HTML::Mason::Commands::global);
@@ -55,6 +55,10 @@ undef(*HTML::Mason::Commands::global);
 try_parse({},'allow_globals',1,'Global symbol .* requires explicit package name');
 undef(*HTML::Mason::Commands::global);
 try_parse({allow_globals=>[qw($global)]},'allow_globals',0);
+
+# default_escape_flags
+try_exec_with_parser({},'default_escape_flags',1);
+try_exec_with_parser({default_escape_flags=>'h'},'default_escape_flags',2);
 
 # ignore_warnings_expr: Can't come up with a good example to test!
 

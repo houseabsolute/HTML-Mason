@@ -18,6 +18,7 @@ use HTML::Mason::Tools qw(dumper_method read_file);
 # Fields that can be set in new method, with defaults
 my %fields =
     (allow_globals => [],
+     default_escape_flags => '',
      ignore_warnings_expr => 'Subroutine .* redefined',
      in_package => 'HTML::Mason::Commands',
      postamble => '',
@@ -27,6 +28,8 @@ my %fields =
      taint_check => 0,
      use_strict => 1,
      );
+
+my %valid_escape_flags = map(($_,1),qw(h n u));
 
 #
 # This version number, less than or equal to the Mason version, marks the
@@ -676,7 +679,28 @@ sub _parse_substitute_tag
     }
     my $length = $close - ($params{index} + 2);
 
-    my $perl = '$_out->('. substr($params{text}, $params{index} + 2, $length) . ');';
+    # Process escape flags, default and/or provided.
+    my $expr = substr($params{text}, $params{index} + 2, $length);
+    my $escape_flags = $self->default_escape_flags;
+    if (my ($extra_escape_flags) = ($expr =~ /\|([A-Za-z ]+)$/)) {
+	$expr = substr($expr,0,length($expr)-length($extra_escape_flags)-1);
+	$escape_flags = '' if ($extra_escape_flags =~ /n/);
+	$extra_escape_flags =~ s/[ n]//g;
+	$escape_flags .= $extra_escape_flags;
+    }
+    my $perl;
+    if ($escape_flags) {
+	my %uniqf = map(($_,1),split('',$escape_flags));
+	my @flag_list = keys(%uniqf);
+	if (my (@invalids) = grep(!$valid_escape_flags{$_},@flag_list)) {
+	    die $self->_make_error( error => "invalid <% %> escape flag: '$invalids[0]'",
+				    errpos => $params{segbegin} + $params{index} );
+	}
+	$perl = '$_out->($_escape->('.$expr.','.join(",",map("'$_'",@flag_list)).'));';
+    } else {
+	$perl = '$_out->('.$expr.');';
+    }
+
     $perl = $self->{postprocess}->($perl, 'perl') if $self->{postprocess};
     $self->_add_output_section($perl);
 
@@ -880,7 +904,8 @@ sub _build_body
 	$body .= '%ARGS = @_ unless (@_ % 2);' . "\n";
     }
     $body .= 'my $_out = $m->current_sink;'."\n";
-
+    $body .= 'my $_escape = \&HTML::Mason::Parser::_escape_perl_expression;'."\n";
+    
     $body .= '$m->debug_hook($m->current_comp->path) if (%DB::);' . "\n\n";
     $body .= $state->{filter} if $state->{filter};
     $body .= $state->{init} if $state->{init};
@@ -945,6 +970,25 @@ sub _handle_parse_error
     }
     $err->{error} .= "\n";
     ${ $state->{error_ref} } = $err->{error} if exists $state->{error_ref};
+}
+
+#
+# Process escape flags in <% %> tags
+#   h - html escape
+#   u - url escape
+#
+my %html_escape = ('&' => '&amp;', '>'=>'&gt;', '<'=>'&lt;', '"'=>'&quot;');
+sub _escape_perl_expression
+{
+    my ($expr,@flags) = @_;
+    foreach my $flag (@flags) {
+	if ($flag eq 'h') {
+	    $expr =~ s/([<>&\"])/$html_escape{$1}/mgoe;
+	} elsif ($flag eq 'u') {
+	    $expr =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
+	}
+    }
+    return $expr;
 }
 
 #
@@ -1128,6 +1172,7 @@ sub make_dirs
 
 # Create generic read-write accessor routines
 
+sub default_escape_flags { my $s=shift; return @_ ? ($s->{default_escape_flags}=shift) : $s->{default_escape_flags} }
 sub ignore_warnings_expr { my $s=shift; return @_ ? ($s->{ignore_warnings_expr}=shift) : $s->{ignore_warnings_expr} }
 sub in_package { my $s=shift; return @_ ? ($s->{in_package}=shift) : $s->{in_package} }
 sub postamble { my $s=shift; return @_ ? ($s->{postamble}=shift) : $s->{postamble} }

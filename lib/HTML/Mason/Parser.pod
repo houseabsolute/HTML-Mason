@@ -27,6 +27,17 @@ granted a reprieve via a "use vars" statement. For example:
 In a mod_perl environment, C<$r> (the request object) is automatically
 added to this list.
 
+=item default_escape_flags
+
+Escape flags to apply to all <% %> expressions by default. The current
+valid flags are
+
+    h - escape for HTML ('<' => '&lt;', etc.)
+    u - escape for URL (':' => '%3A', etc.)
+
+The developer can override default escape flags on a per-expression
+basis; see L<Devel/escaping_expressions>.
+
 =item ignore_warnings_expr
 
 Regular expression indicating which warnings to ignore when compiling
