@@ -174,7 +174,7 @@ sub add_test
     die "'$p{name}' test has no 'expect' or 'expect_error' key\n"
 	unless exists $p{expect} || exists $p{expect_error} || $p{skip_expect} || $self->{create};
 
-    foreach ( qw( parser_params interp_params ) )
+    foreach ( qw( lexer_params compiler_params interp_params ) )
     {
 	die "$_ must be a hash reference"
 	    if exists $p{$_} && ! UNIVERSAL::isa( $p{$_}, 'HASH' );
@@ -441,27 +441,34 @@ sub _run_test
     $test->{pretest_code}->() if $test->{pretest_code};
     eval { $interp->exec( $test->{call_path}, @{$test->{call_args}} ); };
 
-    if ( $@ && ! $test->{expect_error} )
+    if ($@)
     {
-	print "Error running $test->{name}: $@" if $VERBOSE;
-	return $self->_fail($test);
-    }
-    elsif ( $test->{expect_error} )
-    {
-	if ( $@ =~ /$test->{expect_error}/ )
+	if ( $test->{expect_error} )
 	{
-	    $self->_success
+	    if ( $@ =~ /$test->{expect_error}/ )
+	    {
+		return $self->_success
+	    }
+	    else
+	    {
+		if ($VERBOSE)
+		{
+		    print "Got error:\n$@\n...but expected something matching:\n$test->{expect_error}\n";
+		}
+		return $self->_fail;
+	    }
 	}
 	else
 	{
-	    if ($VERBOSE)
-	    {
-		print "Got error:\n$@\n...but expected something matching:\n$test->{expect_error}\n";
-	    }
-	    $self->_fail;
+	    print "Unexpected error running $test->{name}:\n$@" if $VERBOSE;
+	    return $self->_fail;
 	}
 
-	return;
+    }
+    elsif ( $test->{expect_error} )
+    {
+	print "Expected an error matching '$test->{expect_error}' but no error occurred\n" if $VERBOSE;
+	return $self->_fail;
     }
 
     if ($self->{create})
@@ -481,7 +488,7 @@ sub check_output
     my %p = @_;
 
     my @actual = split /\n/, $p{actual};
-    my @expect = split /\n/, $p{expect};
+    my @expect = split /\n/, $p{expect} if $p{expect};
 
     my $diff;
     if (@expect > @actual)
