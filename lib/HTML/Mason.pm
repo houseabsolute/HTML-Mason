@@ -23,7 +23,7 @@ __END__
 
 =head1 NAME
 
-Mason - High-performance, dynamic web site authoring system 
+Mason - High-performance, dynamic web site authoring system
 
 =head1 SYNOPSIS
 
@@ -38,6 +38,11 @@ Mason is a tool for building, serving and managing large web
 sites. Its features make it an ideal backend for high load sites
 serving dynamic content, such as online newspapers or database driven
 e-commerce sites.
+
+Actually, Mason can be used to generate any sort of text, whether for
+a web site or not.  But it was originally built for web sites and
+since that's why most people are interested in it, that is the focus
+of this documentation.
 
 Mason's various pieces revolve around the notion of "components''. A
 component is a mix of HTML, Perl, and special Mason commands, one
@@ -127,7 +132,7 @@ debugging Mason components.
 
 Mason has been tested under Linux, FreeBSD, Solaris, HPUX, and
 Win32. As an all-Perl solution, it should work on any machine that has
-working versions of Perl 5.004+, mod_perl, and the required CPAN
+working versions of Perl 5.00503+, mod_perl, and the required CPAN
 modules.
 
 Mason has a standard MakeMaker-driven installation. See the README
@@ -150,21 +155,10 @@ C<eg/httpd.conf> in your distribution.
         PerlHandler HTML::Mason::ApacheHandler
     </FilesMatch>
 
-The first directive specifies the I<component root>, the top of your
-component source tree. In simple configurations this is the same as
-your DocumentRoot.
-
-The second directive specifies the I<data directory>, where Mason
-maintains various subdirectories and data files at runtime. Mason will
-create this directory on startup if necessary.
-
-The third directive loads Mason with Apache support. Mason
-must be installed somewhere in your Perl @INC for this to work.
-
-Finally, the <FilesMatch> section routes all "\.html$" requests to the
-Mason handler. If you want all Mason pages to have a distinct
-extension like ".mcomp", use that instead. If you wish to restrict
-Mason to one subdirectory at first, do this:
+The <FilesMatch> section routes all "\.html$" requests to the Mason
+handler. If you want all Mason pages to have a distinct extension like
+".mcomp", use that instead. If you wish to restrict Mason to one
+subdirectory at first, do this:
 
     <Directory /path/to/subdirectory>
         <FilesMatch "\.html$">
@@ -180,11 +174,10 @@ as before. If not, recheck your Apache config files and also tail your
 server's error log.
 
 If you are getting "404 Not Found" errors even when the files clearly
-exist, Mason may be having trouble with your document and component
-root. One situation that will unfortunately confuse Mason is if your
-document or component root goes through a symbolic link. Try
-expressing both your document and component root in terms of the true
-filesystem path.
+exist, Mason may be having trouble with your document root. One
+situation that will unfortunately confuse Mason is if your document
+root goes through a symbolic link. Try expressing your document root
+in terms of the true filesystem path.
 
 Next, try adding the tag <% 2+2 %> at the top of some HTML file. If you
 reload this page and see a "4", Mason is working!
@@ -192,8 +185,8 @@ reload this page and see a "4", Mason is working!
 =head1 DOCUMENTATION ROADMAP
 
 Once Mason is on its feet, the next step is to write a component or
-two. The I<Mason Developer's Manual> (B<L<HTML::Mason::Devel>>) 
-is a complete tutorial for writing, using, and debugging components. A
+two. The I<Mason Developer's Manual> (B<L<HTML::Mason::Devel>>) is a
+complete tutorial for writing, using, and debugging components. A
 reference companion to the Developer's Manual is the Request API
 documentation, B<L<HTML::Mason::Request>>.
 
@@ -201,8 +194,9 @@ Whoever is responsible for setting up and tuning Mason should read the
 I<Administrator's Manual> (B<L<HTML::Mason::Admin>>). This document
 covers more advanced configuration scenarios and performance
 optimization. Reference companions to the Administrator's Manual
-include B<L<HTML::Mason::Compiler>>, B<L<HTML::Mason::Lexer>>,
-B<L<HTML::Mason::Interp>>, and B<L<HTML::Mason::ApacheHandler>>.
+include B<L<HTML::Mason::Request>>, B<L<HTML::Mason::Compiler>>,
+B<L<HTML::Mason::Component>>, B<L<HTML::Mason::Interp>>, and
+B<L<HTML::Mason::ApacheHandler>>, B<L<HTML::Mason::Lexer>>,.
 
 Most of this documentation assumes that you're running Mason on top of
 mod_perl, since that is the most common configuration.  If you are
