@@ -15,12 +15,10 @@ use Getopt::Long;
 
 use vars qw($VERBOSE $DEBUG @SHARED);
 
-BEGIN
-{
-    $VERBOSE = $ENV{MASON_DEBUG} || $ENV{MASON_VERBOSE};
-    $DEBUG = $ENV{MASON_DEBUG};
+$VERBOSE = $ENV{MASON_DEBUG} || $ENV{MASON_VERBOSE};
+$DEBUG = $ENV{MASON_DEBUG};
 
-    $| = 1;
+$| = 1;
 
 @SHARED = ( { path => '/shared/check_error',
 	      component => <<'EOF',
@@ -91,7 +89,6 @@ $comp
 EOF
 	    },
 	  );
-}
 
 sub new
 {
