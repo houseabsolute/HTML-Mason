@@ -39,8 +39,7 @@ with default settings. e.g.
 Method to use for unpacking GET and POST arguments. The valid options
 are 'CGI' and 'mod_perl'; these indicate that a CGI.pm or
 Apache::Request object (respectively) will be created for the purposes
-of argument handling. These objects are, unfortunately, not yet
-accessible from components.
+of argument handling.
 
 'CGI' is the default and should work on most Perl systems. However,
 if you have the Apache::Request package (or are inclined to fetch it
