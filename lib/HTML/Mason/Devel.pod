@@ -504,17 +504,47 @@ list_items component:
     <% $m->content %>
     % }
 
-=head2 Components that compute values
+=head2 Components that Return Values
 
 So far you have seen components used solely to output HTML.  However,
-components may also be used to compute a value. For example, you might
-have a component C<is_netscape> that analyzes the user agent to
-determine whether it is a Netscape browser:
+components may also be used to return values.
 
-    <%perl>
+While we will demonstrate how this is done, we strongly encourage you
+to put code like this in modules instead.  There are several reasons
+why this is a good idea:
+
+=over 4
+
+=item *
+
+You can re-use this code outside of Mason.
+
+=item *
+
+It is easy to preload module code when running under mod_perl, which
+can lower memory usage.
+
+=item *
+
+Using Mason components as subroutines is slower than just using
+modules to do the same thing.
+
+=item *
+
+It's easier to regression test module code.
+
+=back
+
+With that being said, there are times when you may want to write a
+component which returns a value.
+
+As an example, you might have a component C<is_netscape> that analyzes
+the user agent to determine whether it is a Netscape browser:
+
+    <%init>
     my $ua = $r->header_in('User-Agent');
     return ($ua =~ /Mozilla/i && $ua !~ /MSIE/i) ? 1 : 0;
-    </%perl>
+    </%init>
 
 Because components are implemented underneath with Perl subroutines,
 they can return values and even understand scalar/list
@@ -534,12 +564,12 @@ provide an empty default return value. To return your own value from a
 component, you I<must> use an explicit C<return> statement. You cannot
 rely on the usual Perl trick of letting return values "fall through".
 
-Generally components are divided into two types: those that output
-HTML, and those that return a value. There is very little reason for
-a component to do both. For example, it would not be very friendly
-for C<is_netscape> to output "hi Mom" while it was computing its value,
-thereby surprising the C<if> statement! Conversely, any value returned
-by an HTML component would typically be discarded by the <& &> tag
+While it is possible for a component to generate output B<and> return
+values, there is very little reason for a component to do both. For
+example, it would not be very friendly for C<is_netscape> to output
+"hi Mom" while it was computing its value, thereby surprising the
+C<if> statement! Conversely, any value returned by an output
+generating component would typically be discarded by the <& &> tag
 that invoked it.
 
 =head2 Subrequests
