@@ -223,7 +223,7 @@ for details on what methods the lexer can call.
 
 =head1 Compiler
 
-See the C<Compiler class|HTML::Mason::Compiler> documentation for
+See the L<Compiler class|HTML::Mason::Compiler> documentation for
 details on what methods a subclass of this class needs to provide.
 
 =head1 Buffer
