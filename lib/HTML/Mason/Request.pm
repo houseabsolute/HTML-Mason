@@ -550,12 +550,20 @@ sub comp {
     # Finally, call component subroutine.
     #
     my ($result, @result);
-    if (wantarray) {
-	@result = eval { $comp->run(@args) };
-    } elsif (defined wantarray) {
-	$result = eval { $comp->run(@args) };
-    } else {
-	eval { $comp->run(@args) };
+    {
+	my $obj = tied *STDOUT;
+	tie *STDOUT, 'Tie::Handle::Mason', $self, $obj;
+	if (wantarray) {
+	    @result = eval { $comp->run(@args) };
+	} elsif (defined wantarray) {
+	    $result = eval { $comp->run(@args) };
+	} else {
+	    eval { $comp->run(@args) };
+	}
+	untie *STDOUT;
+	if ( UNIVERSAL::isa( $obj, 'Apache' ) ) {
+	    tie *STDOUT, 'Apache', $obj;
+	}
     }
 
     #
@@ -739,6 +747,45 @@ sub current_args { return $_[0]->top_stack->{args} }
 sub current_sink { return $_[0]->{buffer_stack}->[-1]->sink }
 sub top_buffer { return $_[0]->{buffer_stack}->[-1] }
 sub base_comp { return $_[0]->top_stack->{base_comp} }
+
+
+package Tie::Handle::Mason;
+
+sub TIEHANDLE
+{
+    my $class = shift;
+
+    my $req = shift;
+    my $object = shift;
+
+    return bless { request => $req,
+		   object => $object }, $class;
+}
+
+sub PRINT
+{
+    my $self = shift;
+
+    {
+	if ( UNIVERSAL::isa( $self->{object}, 'Apache' ) )
+	{
+	    tie *STDOUT, 'Apache', $self->{object};
+	}
+	else
+	{
+	    untie *STDOUT;
+	}
+	$self->{request}->out(@_);
+	tie *STDOUT, 'Tie::Handle::Mason', $self->{request}, $self->{object};
+    }
+}
+
+sub PRINTF
+{
+    my $self = shift;
+
+    $self->print(sprintf(@_));
+}
 
 
 1;
