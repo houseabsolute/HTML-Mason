@@ -264,7 +264,7 @@ sub end_block
     my $self = shift;
     my %p = @_;
 
-    syntax_error "end of $p{block_type} encountered while in $self->{in_block} block"
+    syntax_error "End of $p{block_type} encountered while in $self->{in_block} block"
 	unless $self->{in_block} eq $p{block_type};
 
     $self->{in_block} = undef;
