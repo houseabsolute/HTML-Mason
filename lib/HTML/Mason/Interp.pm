@@ -878,7 +878,7 @@ when the interpreter initializes. e.g.
 
 Default is the empty list.  For maximum performance, this should only
 be used for components that are frequently viewed and rarely updated.
-See ADMIN<preloading> for further details.
+See ADMIN<preloading components> for further details.
 
 As mentioned in the developer's manual, a component's C<< <%once> >>
 section is executed when it is loaded.  For preloaded components, this
