@@ -92,8 +92,8 @@ sub make_component
 sub parse_component
 {
     my ($self, %options) = @_;
-    my ($script,$scriptFile,$errorRef,$errposRef,$embedded,$fileBased,$path,$parentPath,$compName) =
-	@options{qw(script script_file error errpos embedded file_based path parent_path name)};
+    my ($script,$scriptFile,$errorRef,$errposRef,$embedded,$fileBased) =
+	@options{qw(script script_file error errpos embedded file_based)};
     my ($sub, $err, $errpos, $suberr, $suberrpos);
     $fileBased = 1 if !exists($options{file_based});
     my $pureTextFlag = 1;
@@ -113,16 +113,6 @@ sub parse_component
     #
     $script =~ s/\cM//g;
     
-    # Assign default parent path and name
-    if (defined($path)) {
-	if (!defined($parentPath)) {
-	    ($parentPath) = ($path =~ /^(.*)\/[^\/]*$/);
-	}
-	if (!defined($compName)) {
-	    ($compName) = ($path =~ /([^\/]+)$/);
-	}
-    }
-
     #
     # Preprocess the script.  The preprocessor routine is handed a
     # reference to the entire script.
@@ -170,14 +160,12 @@ sub parse_component
 		    $errpos = $begintail;
 		} else {
 		    my $subtext = substr($script,$begintail,$endmark-$begintail);
-		    my %extra;
-		    $extra{path} = "$path:$name" if defined($path);
-		    $extra{parent_path} = $parentPath if defined($parentPath);
-		    if (my $objtext = $self->parse_component(script=>$subtext, name=>$name, embedded=>1, file_based=>0, error=>\$suberr, errpos=>\$suberrpos, %extra)) {
+		    if (my $objtext = $self->parse_component(script=>$subtext, embedded=>1, file_based=>0, error=>\$suberr, errpos=>\$suberrpos)) {
 			$subcomps{$name} = $objtext;
 		    } else {
 			$err = "Error while parsing subcomponent '$name':\n$suberr";
 			$errpos = $begintail+$suberrpos;
+			$suberr =~ s/(line .*)\n$/($name line .*)\n/;
 		    }
 		}
 		goto parse_error if ($err);
@@ -533,10 +521,6 @@ sub parse_component
     #
     my @cparams = ("parser_version=>$parserVersion","create_time=>".time());
     push(@cparams,"source_ref_start=>0000000") if $useSourceReference;
-    push(@cparams,"name=>'$compName'") if (defined($compName));
-    push(@cparams,"path=>'$path'") if (defined($path));
-    push(@cparams,"parent_path=>'$parentPath'") if (defined($parentPath));
-    push(@cparams,"source_file=>'$scriptFile'") if (defined($scriptFile));
     push(@cparams,"subcomps=>{%_subcomps}") if (%subcomps);
     if (@declaredArgs) {
 	my $d = new Data::Dumper ([\@declaredArgs]);
@@ -576,10 +560,8 @@ sub parse_component
     if ($err) {
 	if (defined($errpos)) {
 	    my $linenum = (substr($script,0,$errpos) =~ tr/\n//) + 1;
-	    if ($embedded) {
-		$err .= " ($compName line $linenum)";
-	    } elsif ($suberr) {
-		$err .= "($compName line $linenum)";
+	    if ($suberr) {
+		$err .= " (main script line $linenum)";
 	    } else {
 		$err .= " (line $linenum)";
 	    }
@@ -743,7 +725,7 @@ sub make_dirs
 	if ($makeflag) {
 	    my ($errmsg,$objText);
 	    print "compiling $srcfile\n" if $verbose;
-	    if ($self->make_component(script_file=>$srcfile, path=>$compPath, object_text=>\$objText, error=>\$errmsg)) {
+	    if ($self->make_component(script_file=>$srcfile, object_text=>\$objText, error=>\$errmsg)) {
 		$self->write_object_file(object_file=>$objfile, object_text=>$objText);
 	    } else {
 		if ($verbose) {

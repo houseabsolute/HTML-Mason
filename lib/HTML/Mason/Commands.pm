@@ -93,20 +93,29 @@ sub mc_cache
     my (%options) = @_;
     my $interp = $REQ->interp;
     return undef if !$interp->use_data_cache;
-    $options{cache_file} = $interp->data_cache_filename($REQ->comp->path);
+    $options{action} = $options{action} || 'retrieve';
+    $options{key} = $options{key} || 'main';
+    
+    my $comp = $REQ->comp;
+    if ($comp->file_based) {
+	$options{cache_file} = $interp->data_cache_filename($comp->path);
+    } elsif (my $p = $comp->parent_comp) {
+	$options{cache_file} = $interp->data_cache_filename($p->path);
+	$options{key} = "subcomp:" . $comp->name . ":" . $options{key};
+    } else {
+	die "mc_cache: no data cache for anonymous component ".$comp->title;
+    }
     if ($options{keep_in_memory}) {
 	$options{memory_cache} = $interp->{data_cache_store};
 	delete($options{keep_in_memory});
     }
     
-    $options{action} = $options{action} || 'retrieve';
-    $options{key} = $options{key} || 'main';
     my $results = HTML::Mason::Utils::access_data_cache(%options);
     if ($options{action} eq 'retrieve') {
-	$interp->write_system_log('CACHE_READ',$REQ->comp->path,$options{key},
+	$interp->write_system_log('CACHE_READ',$comp->title,$options{key},
 				  defined $results ? 1 : 0);
     } elsif ($options{action} eq 'store') {
-	$interp->write_system_log('CACHE_WRITE',$REQ->comp->path,$options{key});
+	$interp->write_system_log('CACHE_WRITE',$comp->title,$options{key});
     }
     return $results;
 }
@@ -158,7 +167,7 @@ sub mc_caller ()
     if ($REQ->depth <= 1) {
 	return undef;
     } else {
-	return $REQ->{stack}->[1]->comp->path;
+	return $REQ->{stack}->[1]->comp->title;
     }
 }
 
@@ -195,7 +204,7 @@ sub mc_call_self
 sub mc_call_stack ()
 {
     check_request;
-    return map($_->comp->path,@{$REQ->{stack}});
+    return map($_->comp->title,@{$REQ->{stack}});
 }
 
 sub mc_comp
@@ -241,7 +250,7 @@ sub mc_comp_source
 sub mc_comp_stack ()
 {
     check_request;
-    return map($_->comp->path,@{$REQ->stack});
+    return map($_->comp->title,@{$REQ->stack});
 }
 
 #

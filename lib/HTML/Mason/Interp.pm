@@ -241,10 +241,10 @@ sub exec {
 	$err = substr($err,0,$i) if $i!=-1;
 	$err =~ s/^\s*(HTML::Mason::Commands::__ANON__|HTML::Mason::Request::exec_next).*\n//gm;
 	if (@{$req->{stack}}) {
-	    my $errmsg = "error while executing ".$req->comp->path.":\n";
+	    my $errmsg = "error while executing ".$req->comp->title.":\n";
 	    $errmsg .= $err."\n";
 	    if ($req->depth > 1) {
-		$errmsg .= "backtrace: " . join(" <= ",map($_->{comp}->path,@{$req->stack}))."\n";
+		$errmsg .= "backtrace: " . join(" <= ",map($_->{comp}->title,@{$req->stack}))."\n";
 	    }
 	    die ($errmsg);
 	} else {
@@ -307,6 +307,7 @@ sub load {
 	$self->write_system_log('COMP_LOAD', $path);	# log the load event
 	my $comp = $self->{parser}->eval_object_text(object_file=>$objfile, error=>\$err);
 	die "Error while loading '$objfile' at runtime:\n$err\n" if !$comp;
+	$comp->assign_file_properties($self->comp_root,$self->data_dir,$path);
 	
 	if ($self->{code_cache_mode} eq 'all') {
 	    $codeCache->{$path}->{comp} = $comp;
@@ -350,31 +351,31 @@ sub load {
 	$objfilemod = (defined($objfile) and $objisfile) ? $objstat[9] : 0;
 	
 	#
-	# Determine a subroutine.
-	#
-	# If an object file exists, and it is up to date with the
-	# source file, eval the file. A blank object file signifies
-	# a pure text component.
+	# Load the component from source or object file.
 	#
 	$self->write_system_log('COMP_LOAD', $path);	# log the load event
 
 	my $comp;
-	if ($objfile and $objfilemod >= $srcfilemod) {
-	    $comp = $self->{parser}->eval_object_text(object_file=>$objfile, error=>\$err);
-	    die "Error while loading '$objfile' at runtime:\n$err\n" if !$comp;
-	} else {
+	my $parser = $self->{parser};
+	if ($objfile) {
 	    #
-	    # Parse the source file, and possibly save result in object file.
+	    # We are using object files.  Update object file if necessary
+	    # and load component from there.
 	    #
-	    my $objText;
-	    $comp = $self->{parser}->make_component(script_file=>$srcfile,path=>$path,error=>\$err,object_text=>\$objText);
-	    if ($objfile && $objText) {
+	    if ($objfilemod < $srcfilemod) {
 		my @newfiles;
-		$self->{parser}->write_object_file(object_text=>$objText,object_file=>$objfile,files_written=>\@newfiles);
+		my $objText = $parser->parse_component(script_file=>$srcfile,error=>\$err) or die "Error during compilation of $srcfile:\n$err\n";
+		$parser->write_object_file(object_text=>$objText, object_file=>$objfile, files_written=>\@newfiles);
 		$self->push_files_written(@newfiles);
 	    }
-	    die "Error during compilation of $srcfile:\n$err\n" if !$comp;
+	    $comp = $parser->eval_object_text(object_file=>$objfile, error=>\$err) or die "Error while loading '$objfile' at runtime:\n$err\n";
+	} else {
+	    #
+	    # No object files. Load component directly into memory.
+	    #
+	    $comp = $parser->make_component(script_file=>$srcfile,error=>\$err) or die "Error during compilation of $srcfile:\n$err\n";
 	}
+	$comp->assign_file_properties($self->comp_root,$self->data_dir,$path);
 	
 	#
 	# Cache code in memory

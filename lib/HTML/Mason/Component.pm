@@ -14,24 +14,33 @@ use HTML::Mason::Tools qw(read_file);
 use vars qw($AUTOLOAD);
 
 my %fields =
-    (code => undef,
+    (
+     # All components
+     code => undef,
      create_time => undef,
-     declared_args => [],
+     file_based => 0,
+     declared_args => undef,
      name => undef,
-     object_file => undef,
      parent_comp => undef,
      parent_path => undef,
      parser_version => undef,
+     subcomps => undef,
+     title => undef,
+
+     # File-based components
+     comp_root => undef,
+     data_dir => undef,
      path => undef,
-     source_file => undef,
      source_ref_start => undef,
-     subcomps => {},
      );
+
 # Minor speedup: create anon. subs to reduce AUTOLOAD calls
 foreach my $f (keys %fields) {
     no strict 'refs';
     *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
 }
+
+my $compCount = 0;
 
 sub new
 {
@@ -51,22 +60,42 @@ sub new
     bless $self, $class;
 
     # Initialize subcomponent properties
-    foreach my $c (values(%{$self->{subcomps}})) {
+    while (my ($name,$c) = each(%{$self->{subcomps}})) {
 	# Parent points to us
 	$c->{parent_comp} = $self;
 	
 	# It has access to the same subcomps
 	$c->{subcomps} = $self->{subcomps};
+
+	# Title is a combination of names
+	$c->{title} = $self->{path} . ":" . $name;
+	$c->{name} = $name;
     }
+
+    $self->{title} = "[anon ". ++$compCount . "]" if !defined($self->{title});
     
     return $self;
 }
 
+#
+# For file-based components
+#
+sub assign_file_properties
+{
+    my ($self,$compRoot,$dataDir,$path) = @_;
+    ($self->{file_based},$self->{comp_root},$self->{data_dir},$self->{path},$self->{title}) =
+	(1,$compRoot,$dataDir,$path,$path);
+    ($self->{parent_path}) = ($path =~ /^(.*)\/[^\/]+$/);
+    ($self->{name}) = ($path =~ /([^\/]+)$/);
+}
+
+sub source_file { my $self = shift; return ($self->file_based) ? ($self->comp_root . $self->path) : undef }
+sub object_file { my $self = shift; return ($self->file_based) ? ($self->data_dir . "/obj/" . $self->path) : undef }
+
 sub source_ref_text
 {
     my ($self) = @_;
-    die "source_ref_text: component has no object file!?" if !defined($self->object_file);
-    die "source_ref_text: component does not use source references!?" if !defined($self->{source_ref_start});
+    return undef if !$self->file_based || !defined($self->{source_ref_start});
     my $content = read_file($self->object_file);
     return substr($content,$self->{source_ref_start});
 }
