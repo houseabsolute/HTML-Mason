@@ -13,7 +13,9 @@ use File::Find;
 use HTML::Mason::Component::FileBased;
 use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Request;
-use HTML::Mason::Tools qw(dumper_method read_file is_taint_on);
+use HTML::Mason::Tools qw(dumper_method make_fh read_file is_taint_on);
+use HTML::Mason::Tools qw(dumper_method make_fh read_file);
+use Params::Validate qw(:all);
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( default_escape_flags
@@ -57,13 +59,23 @@ sub new
     my $class = shift;
     my $self = {%fields};
 
+    validate( @_,
+	      { allow_globals => { type => ARRAYREF, optional => 1 },
+		default_escape_flags => { type => SCALAR | UNDEF, optional => 1 },
+		ignore_warnings_expr => { type => SCALAR | UNDEF, optional => 1 },
+		in_package => { type => SCALAR, optional => 1 },
+		postamble => { type => SCALAR | UNDEF, optional => 1 },
+		postprocess => { type => CODEREF | UNDEF, optional => 1 },
+		preamble => { type => SCALAR | UNDEF, optional => 1 },
+		preprocess => { type => CODEREF | UNDEF, optional => 1 },
+		taint_check => { type => SCALAR | UNDEF, optional => 1 },
+		use_strict => { type => SCALAR | UNDEF, optional => 1 },
+	      }
+	    );
+
     my (%options) = @_;
     while (my ($key,$value) = each(%options)) {
-	if (exists($fields{$key})) {
-	    $self->{$key} = $value;
-	} else {
-	    die "HTML::Mason::Parser::new: invalid option '$key'\n";
-	}
+	$self->{$key} = $value;
     }
     $self->{taint_mode} = is_taint_on();
     bless $self, $class;
@@ -1132,7 +1144,7 @@ sub write_object_file
 	rmtree($object_file) if (-d $object_file);
     }
     
-    my $fh = do { local *FH; *FH; };
+    my $fh = make_fh();
     open $fh, ">$object_file" or die "Couldn't write object file $object_file: $!";
     print $fh $object_text;
     close $fh or die "Couldn't close object file $object_file: $!";
@@ -1175,7 +1187,7 @@ sub eval_object_text
 	# have a prematurely-exited <%once> section or other syntax
 	# accident.
 	#
-	unless ($err or (defined($comp) and (UNIVERSAL::isa($comp, 'HTML::Mason::Component') or ref($comp) eq 'CODE'))) {
+	unless (1 or $err or (defined($comp) and (UNIVERSAL::isa($comp, 'HTML::Mason::Component') or ref($comp) eq 'CODE'))) {
 	    $err = "could not generate component object (return() in a <%once> section or extra close brace?)";
 	}
     }
@@ -1232,7 +1244,7 @@ sub make_dirs
     my $reload_file = $options{update_reload_file} ? File::Spec->catfile( $data_dir, 'etc', 'reload.lst' ) : undef;
     my ($relfh);
     if (defined($reload_file)) {
-	$relfh = do { local *FH; *FH; };
+	$relfh = make_fh();
 	open $relfh, ">>$reload_file" or die "make_dirs: cannot open '$reload_file' for writing: $!";
 	my $oldfh = select $relfh;
 	$|++;
@@ -1283,17 +1295,21 @@ sub make_dirs
 	}
     };
 
-    foreach my $path (@paths) {
-	my $fullpath = File::Spec->canonpath( File::Spec->catdir( $source_dir, $path ) );
-	if (-f $fullpath) {
-	    $compilesub->($fullpath);
-	} elsif (-d $fullpath) {
-	    my $sub = sub {$compilesub->($_) if -f};
-	    find($sub,$fullpath);
-	} else {
-	    die "make_dirs: no such file or directory '$fullpath'";
+    eval {
+	foreach my $path (@paths) {
+	    my $fullpath = File::Spec->canonpath( File::Spec->catdir( $source_dir, $path ) );
+	    if (-f $fullpath) {
+		$compilesub->($fullpath);
+	    } elsif (-d $fullpath) {
+		my $sub = sub {$compilesub->($_) if -f};
+		find($sub,$fullpath);
+	    } else {
+		die "make_dirs: no such file or directory '$fullpath'";
+	    }
 	}
-    }
+    };
+    close $relfh;
+    die $@ if $@;
 }
 
 1;
