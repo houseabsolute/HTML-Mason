@@ -977,14 +977,13 @@ component is preloaded.
 
 =head2 <%shared>
 
-As with C<< <%once> >>, variables declared in this section can be seen
-in all of a component's code: the main component, subcomponents, and
-methods.  But unlike C<< <%once> >>, this only applies to I<lexical>
-(C<my>) variables.  Also unlike C<< <%once> >>, the code runs once per
-request (whenever the component is used) and its variables last only
-til the end of the request.
+As with C<< <%once> >>, lexical (C<my>) variables declared in this
+section can be seen in all the rest of a component's code: the main
+body, subcomponents, and methods.  However, unlike C<< <%once> >>, the
+code runs once per request (whenever the component is used) and its
+variables last only until the end of the request.
 
-This section is useful for initializing variables needed in, say, the
+A C<< <%shared> >> section is useful for initializing variables needed in, say, the
 main body and one more subcomponents or methods. See L<Object-Oriented
 Techniques|"Object-Oriented Techniques"> for an example of usage.
 
@@ -997,16 +996,23 @@ docs|HTML::Mason::Request/"request_args">.
 Avoid using C<< <%shared> >> for side-effect code that needs to run at a
 predictable time during page generation. You may assume only that
 C<< <%shared> >> runs just before the first code that needs it and runs at
-most once per request. C<< <%init> >> offers more a predictable execution
-time.
+most once per request.
 
-Any component with a C<< <%shared> >> section incurs an extra performance
-penalty, because (as currently implemented) Mason must recreate its
+In the current implementation, the scope sharing is done with
+closures, so variables will only be shared if they are visible at
+compile-time in the other parts of the component.  In addition, you
+can't rely on the specific destruction time of the shared variables,
+because the may not be destroyed until the first time the C<<
+<%shared> >> section executes in a future request.  C<< <%init> >>
+offers more a predictable execution and destruction time.
+
+Currently any component with a C<< <%shared> >> section incurs an
+extra performance penalty, because Mason must recreate its
 anonymous subroutines the first time each new request uses the
 component.  The exact penalty varies between systems and for most
 applications will be unnoticeable. However, one should avoid using
-C<< <%shared> >> when patently unnecessary, e.g. when an C<< <%init> >> would work
-as well.
+C<< <%shared> >> when patently unnecessary, e.g. when an C<< <%init> >>
+would work just as well.
 
 Do not attempt to C<return()> from a C<< <%shared> >> section; the
 current compiler cannot properly handle it.
