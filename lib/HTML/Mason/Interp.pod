@@ -98,7 +98,7 @@ undef, Mason will not look for dhandlers.
 =item max_recurse
 
 The maximum component stack depth the interpreter is allowed to
-descend before signalling an error.  Default is 16.
+descend before signalling an error.  Default is 32.
 
 =item out_method
 
