@@ -27,9 +27,9 @@ my %blocks = ( args    => 'variable_list_block',
 	       filter  => 'raw_block',
 	       init    => 'raw_block',
 	       once    => 'raw_block',
-	       perl    => 'perl_block',
+	       perl    => 'raw_block',
 	       shared  => 'raw_block',
-	       text    => 'text_block',
+	       text    => 'raw_block',
 	     );
 
 my $blocks_re;
@@ -74,7 +74,9 @@ sub lex
     my %p = @_;
 
     $self->{comp} = $p{comp};
-    $self->{filename} = $p{filename};
+    $self->{comp} =~ s/\r//g;
+
+    $self->{name} = $p{name};
     $self->{lines} = 1;
 
     # This will be overridden if entering a def or method section.
@@ -98,7 +100,7 @@ sub start
     my $self = shift;
 
     my $end;
-    while ( defined pos( $self->{comp} ) ? pos( $self->{comp} ) < length $self->{comp} : 1 )
+    while ( defined  $self->{pos} ? $self->{pos} < length $self->{comp} : 1 )
     {
 	last if $end = $self->match_end;
 
@@ -131,9 +133,13 @@ sub match_block
 {
     my $self = shift;
 
-    if ( $self->{comp} =~ /\G<%($blocks_re)>/igcs )
+    my $comp = $self->{comp};
+    pos($comp) = $self->{pos};
+    if ( $comp =~ /\G<%($blocks_re)>/igcs )
     {
-	my $type = $1;
+	$self->{pos} = pos($comp);
+
+	my $type = lc $1;
 	$self->{compiler}->start_block( block_type => $type );
 
 	my $method = $blocks{$type};
@@ -148,14 +154,18 @@ sub raw_block
     my $self = shift;
     my %p = @_;
 
-    if ( $self->{comp} =~ m,\G(.*?)</%\Q$p{block_type}\E>,igs )
+    my $comp = $self->{comp};
+    pos($comp) = $self->{pos};
+    if ( $comp =~ m,\G(.*?)</%\Q$p{block_type}\E>,igs )
     {
+	$self->{pos} = pos($comp);
+
 	my $block = $1;
 	if (defined $block)
 	{
 	    $self->{compiler}->raw_block( block_type => $p{block_type},
 					  block => $block );
-	    $self->{lines} += $block =~ tr/\n/\n/;
+	    $self->{lines} += $block =~ tr/\n\r/\n\n/;
 	}
 
 	$self->{compiler}->end_block( block_type => $p{block_type} );
@@ -171,23 +181,31 @@ sub variable_list_block
     my $self = shift;
     my %p = @_;
 
-    while ( $self->{comp} =~ m,\G               # last pos matched
-                               [ \t]*
-                               ( [\$\@\%] )     # variable type
-                               ( [^\W\d]\w* ) # only allows valid Perl variable names
-                               [ \t]*
-			       (?:              # this entire entire piece is optional
-			        =>
-                                ( [^\n]+ )      # default value
-			       )?
-                               \n
-                               |
-                               \G\n             # or a blank line
-                               |
-                               \G\s*\#[^\n]*\n  # a comment line
-                              ,xgcs
+    my $comp = $self->{comp};
+    pos($comp) = $self->{pos};
+    while ( $comp =~ m,\G               # last pos matched
+                       (?:
+                        [ \t]*
+                        ( [\$\@\%] )    # variable type
+                        ( [^\W\d]\w* )  # only allows valid Perl variable names
+                        [ \t]*
+			(?:             # this entire entire piece is optional
+			 =>
+                         ( [^\n]+ )     # default value
+		        )?
+                        |
+                        [ \t]*          # a comment line
+                        \#
+                        [^\n]*
+                        |
+                        [ \t]*          # just space
+                       )
+                       \n
+                      ,xgcs
 	  )
     {
+	$self->{pos} = pos($comp);
+
 	if ( $1 && $2 )
 	{
 	    $self->{compiler}->variable_declaration( block_type => $p{block_type},
@@ -199,8 +217,9 @@ sub variable_list_block
 	$self->{lines}++;
     }
 
-    if ( $self->{comp} =~ m,\G</%\Q$p{block_type}\E>,gcs )
+    if ( $comp =~ m,\G</%\Q$p{block_type}\E>,gcs )
     {
+	$self->{pos} = pos($comp);
 	$self->{compiler}->end_block( block_type => $p{block_type} );
     }
     else
@@ -215,7 +234,9 @@ sub key_val_block
     my $self = shift;
     my %p = @_;
 
-    while ( $self->{comp} =~ /\G
+    my $comp = $self->{comp};
+    pos($comp) = $self->{pos};
+    while ( $comp =~ /\G
                               [ \t]*
                               (\w+)             # identifier
                               [ \t]*=>[ \t]*    # separator
@@ -225,6 +246,7 @@ sub key_val_block
                               \G\n
                             /gcx )
     {
+	$self->{pos} = pos($comp);
 	if ($1 && $2)
 	{
 	    $self->{compiler}->key_value_pair( block_type => $p{block_type},
@@ -235,8 +257,9 @@ sub key_val_block
 	$self->{lines}++;
     }
 
-    if ( $self->{comp} =~ m,\G</%\Q$p{block_type}\E>,gcs )
+    if ( $comp =~ m,\G</%\Q$p{block_type}\E>,gcs )
     {
+	$self->{pos} = pos($comp);
 	$self->{compiler}->end_block( block_type => $p{block_type} );
     }
     else
@@ -251,8 +274,11 @@ sub match_named_block
     my $self = shift;
     my %p = @_;
 
-    if ( $self->{comp} =~ /\G<%(def|method)\s+([^\n]+)>/igcs )
+    my $comp = $self->{comp};
+    pos($comp) = $self->{pos};
+    if ( $comp =~ /\G<%(def|method)\s+([^\n]+?)>/igcs )
     {
+	$self->{pos} = pos($comp);
 	my ($type, $name) = ($1, $2);
 	$self->{compiler}->start_named_block( block_type => $type,
 					      name => $name );
@@ -277,23 +303,27 @@ sub match_substitute
 {
     my $self = shift;
 
-    if ( $self->{comp} =~ /\G<%/gcs )
+    my $comp = $self->{comp};
+    pos($comp) = $self->{pos};
+    if ( $comp =~ /\G<%/gcs )
     {
-	if ( $self->{comp} =~ /\G(.+?)(\s*\|\s*([a-z]+)\s*)?%>/gcs )
+	$self->{pos} = pos($comp);
+	if ( $comp =~ /\G(.+?)(\s*\|\s*([a-z]+)\s*)?%>/gcs )
 	{
+	    $self->{pos} = pos($comp);
 	    my ($sub, $escape) = ($1, $3);
 	    $self->{compiler}->substitution( substitution => $sub,
 					     escape => $escape );
 
 	    # Add it in just to count lines
 	    $sub .= $2 if $2;
-	    $self->{lines} += $sub =~ tr/\n/\n/;
+	    $self->{lines} += $sub =~ tr/\n\r/\n\n/;
 
 	    return 1;
 	}
 	else
 	{
-	    my $line = $self->_next_line( pos( $self->{comp} ) - 2 );
+	    my $line = $self->_next_line( $self->{comp} - 2 );
 	    Mason::Exception::Lexer->throw( error => "'<%' without matching '%>' at $self->{lines}:\n$line" );
 	}
     }
@@ -303,19 +333,24 @@ sub match_comp_call
 {
     my $self = shift;
 
-    if ( $self->{comp} =~ /\G<&/gcs )
+    my $comp = $self->{comp};
+    pos($comp) = $self->{pos};
+    if ( $comp =~ /\G<&/gcs )
     {
-	if ( $self->{comp} =~ /\G(.*?)&>/gcs )
+	$self->{pos} = pos($comp);
+	if ( $comp =~ /\G(.*?)&>/gcs )
 	{
+	    $self->{pos} = pos($comp);
+
 	    my $call = $1;
 	    $self->{compiler}->component_call( call => $call );
-	    $self->{lines} += $call =~ tr/\n/\n/;
+	    $self->{lines} += $call =~ tr/\n\r/\n\n/;
 
 	    return 1;
 	}
 	else
 	{
-	    my $line = $self->_next_line( pos( $self->{comp} ) - 2 );
+	    my $line = $self->_next_line( $self->{pos} - 2 );
 	    Mason::Exception::Lexer->throw( error => "'<&' without matching '&>' at $self->{lines}:\n$line" );
 	}
     }
@@ -325,8 +360,12 @@ sub match_perl_line
 {
     my $self = shift;
 
-    if ( $self->{comp} =~ /\G%([^\n]+)\n?/gcs )
+    my $comp = $self->{comp};
+    pos($comp) = $self->{pos};
+    if ( $comp =~ /\G(?:(?<=\n)|\A)%([^\n]+)(?:\n|\z)/gcs )
     {
+	$self->{pos} = pos($comp);
+
 	$self->{compiler}->perl_line( line => $1 );
 	$self->{lines}++;
 
@@ -338,14 +377,16 @@ sub match_text
 {
     my $self = shift;
 
-    if ( $self->{comp} =~ /\G
+    my $comp = $self->{comp};
+    pos($comp) = $self->{pos};
+    if ( $comp =~ /\G
                            (.+?)        # anything
 			   (?=          # followed by (use lookahead so as to not consume text)
                              %          # an eval line
                              |
                              <%         # a substitution or tag start
                              |
-                             <\/%
+                             <\/%       # a tag end
                              |
                              <&         # a comp call
                              |
@@ -354,9 +395,11 @@ sub match_text
                           /gcsx
        )
     {
+	$self->{pos} = pos($comp);
+
 	my $text = $1;
 	$self->{compiler}->text( text => $text );
-	$self->{lines} += $text =~ tr/\n/\n/;
+	$self->{lines} += $text =~ tr/\n\r/\n\n/;
     }
 }
 
@@ -364,13 +407,18 @@ sub match_end
 {
     my $self = shift;
 
-    # $self->{ending} is a qr// 'string'.  No need to escape.
-    if ( $self->{comp} =~ /($self->{ending})/gcs )
+    # $self->{ending} is a qr// 'string'.  No need to escape.  It will
+    # also include the needed \G marker
+    my $comp = $self->{comp};
+    pos($comp) = $self->{pos};
+    if ( $comp =~ /($self->{ending})/gcs )
     {
+	$self->{pos} = pos($comp);
+
 	my $text = $1;
 	if (defined $text)
 	{
-	    $self->{lines} += $text =~ tr/\n/\n/;
+	    $self->{lines} += $text =~ tr/\n\r/\n\n/;
 	}
 
 	return $1 || 1;
@@ -387,14 +435,14 @@ sub _next_line
 
     $pos = ( defined $pos ?
 	     $pos :
-	     ( substr( $self->{comp}, pos( $self->{comp} ), 1 ) eq "\n" ?
-	       pos( $self->{comp} ) + 1 :
-	       pos( $self->{comp} ) ) );
+	     ( substr( $self->{comp}, $self->{pos}, 1 ) =~ /\n/ ?
+	       $self->{pos} + 1 :
+	       $self->{pos} ) );
 
-    my $eol = ( index( $self->{comp}, "\n", $pos ) != -1 ?
-		( index( $self->{comp}, "\n" , $pos ) ) - $pos :
-		length $self->{comp} );
-    return substr( $self->{comp}, $pos, $eol );
+    my $to_eol = ( index( $self->{comp}, "\n", $pos ) != -1 ?
+		   ( index( $self->{comp}, "\n" , $pos ) ) - $pos :
+		   length $self->{comp} );
+    return substr( $self->{comp}, $pos, $to_eol );
 }
 
 sub line_count
@@ -404,11 +452,11 @@ sub line_count
     return $self->{lines};
 }
 
-sub file
+sub name
 {
     my $self = shift;
 
-    return $self->{filename};
+    return $self->{name};
 }
 
 1;
