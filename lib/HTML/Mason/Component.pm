@@ -129,7 +129,8 @@ sub run {
 
     $self->{run_count}++; $self->{mfu_count}++;
 
-    return wantarray ? $self->{code}->(@_) : scalar $self->{code}->(@_);
+    # Note: this must always preserve calling wantarray() context
+    return $self->{code}->(@_);
 }
 
 sub dynamic_subs_init {
