@@ -4,7 +4,7 @@
 #
 # For something a little more involved, check out session_handler.pl
 
-package HTML::Mason;
+package MyMason::MyApp;
 
 # Bring in main Mason package.
 use HTML::Mason;
