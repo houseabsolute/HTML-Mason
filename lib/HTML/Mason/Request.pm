@@ -16,7 +16,8 @@
 #
 # Code paths that are followed less frequently (like the path that
 # handles the $mods{store} parameter in comp, for example) are
-# intentionally not optimized.
+# intentionally not optimized because doing so would clutter the code
+# while providing a minimal benefit.
 #
 # Many of the optimizations consist of ignoring defined interfaces for
 # accessing parts of the request object's internal data structure, and
