@@ -1342,6 +1342,48 @@ whenever a particular C<$file> changes:
 You can also expire a cache item from an external script; see
 L<Accessing a Cache Externally|"Accessing a Cache Externally"> below.
 
+=head2 Avoiding Concurrent Recomputation
+
+The code shown in "Basic Usage" above,
+
+   my $result = $m->cache->get('key');
+   if (!defined($result)) {
+       ... compute $result ...
+       $m->cache->set('key', $result);
+   }
+
+can suffer from a kind of race condition for caches that
+are accessed frequently and take a long time to recompute.
+
+Suppose that a particular cache value is accessed five times a
+second and takes three seconds to recompute.  When the cache expires,
+the first process comes in, sees that it is expired, and starts to
+recompute the value.  The second process comes in and does the same thing.
+This sequence continues until the first process finishes and stores
+the new value.  On average, the value will be recomputed and written
+to the cache 15 times!
+
+One solution is to have the first process set the expiration time of
+the value ahead a few minutes, so that the other processes use the old
+value instead of also recomputing it:
+
+   my $result = $m->cache->get('key');
+   if (!defined($result)) {
+       if (my $o = $m->cache->get_object('key')) {
+           $o->set_expiration_time(time + 2*60);
+       }
+       ... compute $result ...
+       $m->cache->set('key', $result);
+   }
+
+Of course, this solution will only work if it is acceptable for a
+component to get a slightly stale cache value for a few minutes.
+
+Mason 1.0x and earlier had a feature called "busy locks" that
+addressed the same problem in an admittedly more compact fashion.
+This feature is not currently supported, although a version of it may
+be added to C<Cache::Cache> in the future.
+
 =head2 Caching All Output
 
 Occasionally you will need to cache the complete output of a
