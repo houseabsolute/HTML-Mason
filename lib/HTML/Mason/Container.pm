@@ -26,9 +26,10 @@ use strict;
 # in the return value.  This lets the creator be totally ignorant of
 # the creation parameters of any objects it creates.
 
-use Params::Validate qw(SCALAR HASHREF);
-
 use HTML::Mason::Exceptions (abbr => [qw(error param_error)]);
+
+use Params::Validate qw(SCALAR HASHREF);
+Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
 my %VALID_PARAMS = ();
 my %CONTAINED_OBJECTS = ();
