@@ -366,6 +366,45 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'clear_in_filter',
+		      description => 'Test clear_buffer in a filtered call',
+		      component => <<'EOF',
+<&| .lc &>\
+MIXED case
+% $m->clear_buffer;
+mixed CASE
+</&>
+<%def .lc>\
+<% lc $m->content %>\
+</%def>
+EOF
+		      expect => <<'EOF',
+mixed case
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'flush_in_filter',
+		      description => 'Test flush_buffer in a filtered call',
+		      component => <<'EOF',
+<&| .lc &>\
+Should do nothing
+% $m->flush_buffer;
+so both should appear
+</&>
+<%def .lc>\
+<% lc $m->content %>\
+</%def>
+EOF
+		      expect => <<'EOF',
+should do nothing
+so both should appear
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
