@@ -62,27 +62,12 @@ Including one called <% $comp->subcomps($subkeys[0])->name %>.
 % }
 My title is <% $comp->title =~ /anon/ ? '[anon something]' : $comp->title %>.
 
-% if (defined($comp->object_file)) {
-%   my ($subfile) = ($comp->object_file =~ m{data/(?:[^/]+/)?(obj/.*?)$});
-%   if (defined($subfile)) {
-My object file is /.../<% $subfile %>
-%   }
-% }
 % if (defined($comp->path)) {
 My path is <% $comp->path %>.
 % }
 % if (defined($comp->comp_id)) {
 My comp_id is <% $comp->comp_id =~ /anon/ ? '[anon something]' : $comp->comp_id %>.
 % }
-% if ($comp->is_file_based and defined($comp->source_file)) {
-%   my ($subfile) = ($comp->source_file =~ m{((alt_root|comps)/.*?)$});
-My source file is /.../<% $subfile %>
-% }
-% if ($comp->is_file_based and defined($comp->source_dir)) {
-%   my ($subfile) = ($comp->source_dir =~ m{((alt_root|comps)/.*?)$});
-My source dir is /.../<% $subfile %>
-% }
-
 <%args>
 $comp
 </%args>
