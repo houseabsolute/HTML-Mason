@@ -18,9 +18,12 @@ BEGIN
 
 use File::Basename;
 use File::Path;
+use File::Spec;
 use HTML::Mason::Tests;
 
-use lib 'lib', 't/lib';
+use lib 'lib', File::Spec->catdir('t', 'lib');
+
+require File::Spec->catfile( 't', 'live_server_lib.pl' );
 
 use Apache::test qw(skip_test have_httpd have_module);
 skip_test unless have_httpd;
@@ -35,15 +38,6 @@ print "1..6\n";
 print STDERR "\n";
 
 write_test_comps();
-
-# This is a hack but otherwise the following tests fail if the Apache
-# server runs as any user other than root.  In real life, a user using
-# the multi-config option with httpd.conf must handle the file
-# permissions manually.
-if ( $> == 0 || $< == 0 )
-{
-    chmod 0777, "$ENV{APACHE_DIR}/data";
-}
 
 run_tests();
 
@@ -68,40 +62,9 @@ EOF
 	      );
 }
 
-sub write_comp
-{
-    my $name = shift;
-    my $comp = shift;
-
-    my $file = "$ENV{APACHE_DIR}/comps/$name";
-    my $dir = dirname($file);
-    mkpath( $dir, 0, 0755 ) unless -d $dir;
-
-    open F, ">$file"
-	or die "Can't write to '$file': $!";
-
-    print F $comp;
-
-    close F;
-}
-
-# by wiping out the subdirectories here we can catch permissions
-# issues if some of the tests can't write to the data dir.
-sub cleanup_data_dir
-{
-    local *DIR;
-    opendir DIR, "$ENV{APACHE_DIR}/data"
-	or die "Can't open $ENV{APACHE_DIR}/data dir: $!";
-    foreach ( grep { -d "$ENV{APACHE_DIR}/data/$_" && $_ !~ /^\./ } readdir DIR )
-    {
-	rmtree("$ENV{APACHE_DIR}/data/$_");
-    }
-    closedir DIR;
-}
-
 sub run_tests
 {
-    start_httpd();
+    start_httpd('CGIHandler');
 
     {
 	my $path = '/comps/basic';
@@ -186,96 +149,6 @@ EOF
 
     kill_httpd();
 }
-
-sub get_pid {
-    local *PID;
-    open PID, "$ENV{APACHE_DIR}/httpd.pid"
-	or die "Can't open '$ENV{APACHE_DIR}/httpd.pid': $!";
-    my $pid = <PID>;
-    close PID;
-    chomp $pid;
-    return $pid;
-}
-
-sub test_load_apache
-{
-    print STDERR "\nTesting whether Apache can be started\n";
-    start_httpd('');
-    kill_httpd(1);
-}
-
-sub start_httpd
-{
-    my $cmd ="$ENV{APACHE_DIR}/httpd -DCGIHandler -f $ENV{APACHE_DIR}/httpd.conf";
-    print STDERR "Executing $cmd\n";
-    system ($cmd)
-	and die "Can't start httpd server as '$cmd': $!";
-
-    my $x = 0;
-    print STDERR "Waiting for httpd to start.\n";
-    until ( -e 't/httpd.pid' )
-    {
-	sleep (1);
-	$x++;
-	if ( $x > 10 )
-	{
-	    die "No t/httpd.pid file has appeared after 10 seconds.  ",
-		"There is probably a problem with the configuration file that was generated for these tests.";
-	}
-    }
-}
-
-sub kill_httpd
-{
-    my $wait = shift;
-    return unless -e "$ENV{APACHE_DIR}/httpd.pid";
-    my $pid = get_pid();
-
-    print STDERR "Killing httpd process ($pid)\n";
-    my $result = kill 'TERM', $pid;
-    if ( ! $result and $! =~ /no such (?:file|proc)/i )
-    {
-	# Looks like apache wasn't running, so we're done
-	unlink "$ENV{APACHE_DIR}/httpd.pid" or warn "Couldn't remove '$ENV{APACHE_DIR}/httpd.pid': $!";
-	return;
-    }
-    die "Can't kill process $pid: $!" if !$result;
-
-    if ($wait)
-    {
-	print STDERR "Waiting for httpd to shut down\n";
-	my $x = 0;
-	while ( -e "$ENV{APACHE_DIR}/httpd.pid" )
-	{
-	    sleep (1);
-	    $x++;
-	    if ( $x > 10 )
-	    {
-		my $result = kill 'TERM', $pid;
-		if ( ! $result and $! =~ /no such (?:file|proc)/i )
-		{
-		    # Looks like apache wasn't running, so we're done
-		    unlink "$ENV{APACHE_DIR}/httpd.pid" or warn "Couldn't remove '$ENV{APACHE_DIR}/httpd.pid': $!";
-		    return;
-		}
-		else
-		{
-		    die "$ENV{APACHE_DIR}/httpd.pid file still exists after 10 seconds.  Exiting.";
-		}
-	    }
-	}
-    }
-}
-
-use vars qw($TESTS);
-
-sub ok
-{
-    my $ok = !!shift;
-    print $ok ? 'ok ' : 'not ok ';
-    print ++$TESTS, "\n";
-}
-
 
 __END__
 
