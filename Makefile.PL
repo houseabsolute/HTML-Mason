@@ -40,10 +40,10 @@ EOF
 # These are required modules.
 
 my %prereq = ( 'File::Spec' => 0.8,
-	       'Params::Validate' => 0.22,
+	       'Params::Validate' => 0.23,
 	       'Exception::Class' => 1.01,
 	       'Cache::Cache' => 1.00,
-               'Class::Container' => 0.02,
+               'Class::Container' => 0.06,
 	     );
 
 chk_version('File::Spec' => '0.8') or
@@ -51,9 +51,9 @@ chk_version('File::Spec' => '0.8') or
 	. "*** Mason requires version 0.8, or later, of File::Spec\n"
 	. "    from CPAN/modules/by-module/File/File-Spec-x.x.tar.gz\n\n";
 
-chk_version('Params::Validate' => '0.22') or
+chk_version('Params::Validate' => '0.23') or
     warn  "\n"
-	. "*** Mason requires version 0.22, or later, of Params::Validate\n"
+	. "*** Mason requires version 0.23, or later, of Params::Validate\n"
 	. "    from CPAN/modules/by-authors/id/D/DR/DROLSKY/Params-Validate-x.x.tar.gz\n\n";
 
 eval { require mod_perl };
@@ -79,9 +79,9 @@ chk_version('Cache::Cache' => '1.00') or
         . "    Mason requires version 1.00, or later, of Cache::Cache\n"
 	. "    from CPAN/modules/by-authors/id/D/DC/DCLINTON/Cache-Cache-x.x.tar.gz\n\n";
 
-chk_version('Class::Container' => '0.02') or
+chk_version('Class::Container' => '0.06') or
     warn  "\n"
-	. "*** Mason requires version 0.02, or later, of Class::Container\n"
+	. "*** Mason requires version 0.06, or later, of Class::Container\n"
 	. "    from CPAN/modules/by-authors/id/K/KW/KWILLIAMS/Class-Container-x.x.tar.gz\n\n";
 
 setup_mod_perl_tests() unless $opts{'no-prompts'};
