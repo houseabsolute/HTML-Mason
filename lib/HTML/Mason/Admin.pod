@@ -306,6 +306,14 @@ Corresponds to the C<data_cache_defaults> parameter.
 
 Correponds to the C<error_mode> parameter.
 
+=item * MasonUseAutohandlers - boolean
+
+Correponds to the C<use_autohandlers> parameter.
+
+=item * MasonUseDhandlers - boolean
+
+Correponds to the C<use_dhandlers> parameter.
+
 =back
 
 =head1 CONFIGURING VIA A HANDLER SCRIPT
