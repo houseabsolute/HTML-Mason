@@ -682,7 +682,7 @@ sub request_args
 	$cgi_object = CGI->new;
 	%args = $self->_cgi_args($r, $cgi_object);
     }
-    return \%args;
+    return (\%args, $r, $cgi_object);
 }
 
 sub prepare_request
@@ -730,7 +730,7 @@ sub prepare_request
 	return $self->return_not_found($r);
     }
 
-    my $args = $self->request_args($r);
+    (my $args, $r, my $cgi_object) = $self->request_args($r);
 
     #
     # Set up interpreter global variables.
