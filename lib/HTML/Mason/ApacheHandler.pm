@@ -220,9 +220,10 @@ sub apache_request_to_comp_path {
 
     foreach my $root (map $_->[1], $self->comp_root_array) {
 	if (paths_eq($root, substr($file, 0, length($root)))) {
-	    my $path = substr($file, ($root eq '/' ? 0 : length($root)));
-	    $path =~ s,\/$,, unless $path eq '/';
-	    return $path;
+	    my $path = substr($file, length $root);
+            $path = length $path ? join '/', File::Spec->splitdir($path) : '/';
+
+            return $path;
 	}
     }
     return undef;
