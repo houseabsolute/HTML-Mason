@@ -25,6 +25,7 @@ my %fields =
      parser_version => undef,
      run_count => 0,
      subcomps => undef,
+     source_ref_start => undef   # legacy, left in for pre-0.8 obj files
      );
 
 # Create accessor routines

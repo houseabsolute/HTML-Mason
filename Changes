@@ -5,7 +5,7 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
-0.8
+0.8  Sun Jan 23 16:48:46 PST 2000
 
 - New integrated request API. $m replaces $REQ as the global variable
 containing the current request object. All mc_ commands have been
@@ -37,7 +37,7 @@ discards the most infrequently used components as needed.  You can
 specify the cache size with interp->max_code_cache_size.  L{Admin/Code
 cache}
 - ** Eliminated the now unnecessary interp->code_cache_mode.
-- Eliminated the "source references" optimization, a common source of
+- ** Eliminated the "source references" optimization, a common source of
 bugs, no longer needed with the new code cache.
 - Allow arguments to be accessed via @_ as in regular subroutines; no
 longer required to be in hash form. (suggested by Ken Williams)
@@ -58,7 +58,8 @@ in the stack. (suggested by Lee Semel) L{Request/item_caller_args}
 style for Win32 compatibility. (submitted by Ken Williams)
 L{Admin/data_caching}
 - Added improved, separate session_handler.pl for session handling.
-- ** Rmoved mc_date legacy command.
+- ** mc_comp_source no longer works for non-existent components.
+- ** Removed mc_date legacy command.
 - Added warnings about using Mason with mod_perl DSO.
 - Added more site configuration examples to Admin.pod.
 L{Admin/configuring virtual sites} 
