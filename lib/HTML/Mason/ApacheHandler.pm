@@ -698,7 +698,7 @@ sub handle_request_1
     # right place.
     #
     my $print = \&Apache::print;
-    $interp->out_method( sub { warn Devel::StackTrace->new; $r->$print( grep {defined} @_ ) } );
+    $interp->out_method( sub { $r->$print( grep {defined} @_ ) } );
 
     #
     # Craft the out method for this request to handle automatic http
