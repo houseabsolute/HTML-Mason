@@ -550,18 +550,11 @@ sub find_comp_upwards
 
     # $startpath is a URL path so we split it on / and rejoin it in
     # the native filesystem way
-    my $p = File::Spec->catdir( split /\//, $startpath );
+    my @p = split /\//, $startpath;
 
     my $last_p;
-    while (!($comp = $self->load( File::Spec->catfile( $p, $name ) )) && $p) {
-	my $last_p = $p;
-
-	# certain versions of dirname leave ./ in $dirname so we use
-	# canonpath
-	$p = File::Spec->canonpath( dirname($p) );
-
-	# last dir was something like '/' and so is this one
-	last if $p eq $last_p;
+    while (!($comp = $self->load( File::Spec->catfile( @p, $name ) )) && @p) {
+	pop @p;
     }
     return $comp;
 }
