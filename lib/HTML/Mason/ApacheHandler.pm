@@ -426,15 +426,6 @@ sub _initialize {
     my $interp = $self->interp;
 
     #
-    # If the default was overridden we won't touch it (users who
-    # provide their own request class should have subclassed
-    # HTML::Mason::Request::ApacheHandler
-    #
-    if ( $interp->request_class eq 'HTML::Mason::Request' ) {
-	$interp->request_class('HTML::Mason::Request::ApacheHandler');
-    }
-
-    #
     # Create data subdirectories if necessary. mkpath will die on error.
     #
     foreach my $subdir (qw(preview)) {
@@ -531,10 +522,10 @@ sub handle_request {
     # If someone is using a custom request class that doesn't accept
     # 'ah' and 'apache_req' that's their problem.
     #
-    my $request = $self->interp->request_class->new( ah => $self,
-						     interp => $interp,
-						     apache_req => $apreq,
-						   );
+    my $request = $self->interp->make_request( ah => $self,
+					       interp => $interp,
+					       apache_req => $apreq,
+					     );
     eval { $retval = $self->handle_request_1($apreq, $request) };
     my $err = $@;
     my $err_code = $request->error_code;
