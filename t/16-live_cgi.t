@@ -33,7 +33,7 @@ local $| = 1;
 kill_httpd(1);
 test_load_apache();
 
-print "1..6\n";
+print "1..7\n";
 
 print STDERR "\n";
 
@@ -58,6 +58,13 @@ EOF
 This is first.
 % print "This is second.\n";
 This is third.
+EOF
+	      );
+
+    write_comp( 'redirect', <<'EOF',
+<%init>
+$m->redirect('/comps/basic');
+</%init>
 EOF
 	      );
 }
@@ -141,6 +148,19 @@ EOF
 	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
 							expect => <<'EOF',
 CGI foo param is bar
+EOF
+						      );
+
+	ok($success);
+    }
+
+    {
+	my $path = '/comps/redirect';
+	my $response = Apache::test->fetch($path);
+	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
+							expect => <<'EOF',
+Basic test.
+2 + 2 = 4.
 EOF
 						      );
 
