@@ -704,7 +704,6 @@ sub call_self
               undef
             );
 
-        my @result;
         eval {
             if ($wantarray) {
                 @$retval = $comp->run(@args);
