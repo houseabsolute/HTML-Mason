@@ -29,7 +29,9 @@ my %valid_params =
     (
      allowed_globals      => { parse => 'list',   type => ARRAYREF, default => [] },
      default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
-     lexer_class          => { parse => 'string', isa => 'HTML::Mason::Lexer', default => 'HTML::Mason::Lexer' },
+     lexer_class          => { parse => 'string',
+			       can => [ qw( new lex named_block_types simple_block_types name line_count ) ],
+			       default => 'HTML::Mason::Lexer' },
      preprocess           => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_perl     => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1 },
