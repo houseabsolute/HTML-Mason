@@ -25,8 +25,8 @@ sub glob_path {
 }
 
 sub file_to_path {
-    my ($self,$path,$interp) = @_;    
-    return $path;
+    my ($self,$file,$interp) = @_;    
+    return $file;
 }
 sub get_last_modified {
     return 0;
