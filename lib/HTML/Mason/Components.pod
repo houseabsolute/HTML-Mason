@@ -78,21 +78,19 @@ profile their performance.
 Here is a simple component example:
 
     <%perl>
-        my $noun = 'World';
-        my @time = split /[\s:]/, localtime;
+    my $noun = 'World';
+    my @time = split /[\s:]/, localtime;
     </%perl>
     Hello <% $noun %>,
     % if ( $time[3] < 12 ) {
     good morning.
-    % } elsif ( $time[3] > 12 and $time[3] < 18 ) {
-    good afternoon.
     % } else {
-    good evening.
+    good afternoon.
     % }
 
-After 6 pm, the output of this component is:
+After 12 pm, the output of this component is:
 
-    Hello world, good evening.
+    Hello world, good afternoon.
 
 This short example demonstrates the three primary "in-line" Perl
 sections. In-line sections are generally embedded within HTML and
@@ -202,61 +200,12 @@ B<&lt;%perl&gt; xxx &lt;%/perl&gt;>
 Useful for Perl blocks of more than a few lines. For a very small
 block, consider using % lines.
 
-=head1 HOW COMPONENTS ARE INVOKED
-
-Components are invoked in two ways: top-level components respond
-directly to HTTP requests, while other, subordinate components are
-called more or less like subroutines, using the <& &> tag.
-Top-level components must reside within the server's
-DocumentRoot, while other components can live anywhere within
-Mason's component root (these may or may not be the same).
-
-=head2 Top-level Components
-
-A top-level component is simply one that's called from an URL, such
-as:
-
-    http://www.foo.com/mktg/prods.html
-
-Apache resolves this URL to a filename,
-e.g. /usr/local/www/htdocs/mktg/prods.html.  Mason loads and executes
-that file as a component.  It might in turn call other components and
-execute some Perl code, or it might be nothing more than static HTML.
-
-=head2 dhandlers
-
-What happens when a user requests a component that doesn't exist? In
-this case Mason scans backward through the URI, checking each
-directory for a component named I<dhandler> ("default handler").  If
-found, the dhandler is invoked and is expected to use
-C<$r-E<gt>path_info> (the virtual location) as the parameter to some
-access function, perhaps a database lookup or location in another
-filesystem. In a sense, dhandlers are similar in spirit to Perl's
-AUTOLOAD feature; they are the "component of last resort" when a URL
-points to a non-existent component.
-
-Consider the following URL, in which C<newsfeeds/> exists but not the
-subdirectory C<LocalNews> nor the component C<locStory1.html>:
-
-    http://myserver/newsfeeds/LocalNews/locStory1.html,
-
-In this case Mason constructs the following search path:
-
-    /newsfeeds/LocalNews/locStory1.htm  => no such thing
-    /newsfeeds/LocalNews/dhandler       => no such thing
-    /newsfeeds/dhandler                 => found! (search ends)
-    /dhandler
-
-The found dhandler would read "/LocalNews/locStory1.html" from
-C<$r-E<gt>path_info> and use it as a retrieval key. Optionally, the
-Mason command C<mc_dhandler_arg()> returns the same path_info stripped
-of the leading slash ("LocalNews/locStory1.html"). This is sometimes
-more useful that the absolute path returned by C<$r-E<gt>path_info>.
-
-=head2 Components as Subroutines
+=head1 CALLING COMPONENTS
 
 Mason pages often are built not from a single component, but from
 multiple components that call each other in a hierarchical fashion.
+
+=head2 Components that output HTML
 
 To call one component from another, use the <& &> tag:
 
@@ -315,7 +264,7 @@ Here are some examples:
     # begin with a letter or number; delimit with () to remedy this
     <& (rand(2) ? 'thiscomp' : 'thatcomp'), id=>123 &>
 
-=head2 Return Values and Context
+=head2 Components that compute values
 
 So far you have seen components used solely to output HTML.  However,
 components may also be used to compute a value. For example, you might
@@ -356,8 +305,220 @@ for outputting HTML:
     <% mc_comp('/shared/masthead', color=>'salmon') %>
 
 This is still legal, although <& &> is the official syntax.  If you
-have pre-0.6 components that you'd like to convert, a convenient
-utility exists in F<bin/convert0.6.pl>.
+have pre-0.6 components that you'd like to convert to use <& &>, check
+out the utility F<bin/convert0.6.pl>.
+
+=head1 TOP-LEVEL COMPONENTS
+
+The first component invoked for a page (the "top-level component")
+resides within the DocumentRoot and is chosen based on the URL. For
+example:
+
+    http://www.foo.com/mktg/products?id=372
+
+Apache resolves this URL to a filename,
+e.g. /usr/local/www/htdocs/mktg/prods.html.  Mason loads and executes
+that file as a component. In effect, Mason calls
+
+    mc_comp('/mktg/products', id=>372)
+
+This component might in turn call other components and execute some Perl
+code, or it might be nothing more than static HTML.
+
+=head2 dhandlers
+
+What happens when a user requests a component that doesn't exist? In
+this case Mason scans backward through the URI, checking each
+directory for a component named I<dhandler> ("default handler").  If
+found, the dhandler is invoked and is expected to use
+C<$r-E<gt>path_info> (the virtual location) as the parameter to some
+access function, perhaps a database lookup or location in another
+filesystem. In a sense, dhandlers are similar in spirit to Perl's
+AUTOLOAD feature; they are the "component of last resort" when a URL
+points to a non-existent component.
+
+Consider the following URL, in which C<newsfeeds/> exists but not the
+subdirectory C<LocalNews> nor the component C<Story1>:
+
+    http://myserver/newsfeeds/LocalNews/Story1
+
+In this case Mason constructs the following search path:
+
+    /newsfeeds/LocalNews/Story1         => no such thing
+    /newsfeeds/LocalNews/dhandler       => no such thing
+    /newsfeeds/dhandler                 => found! (search ends)
+    /dhandler
+
+The found dhandler would read "/LocalNews/Story1" from
+C<$r-E<gt>path_info> and use it as a retrieval key into a
+database of stories. Optionally, the Mason command
+C<mc_dhandler_arg()> returns the same path_info stripped of the
+leading slash ("LocalNews/locStory1.html").
+
+Here's how a simple /newsfeeds/dhandler might look:
+
+    <& header &>
+    <b><% $headline %></b><p>
+    <% $body %>
+    <& footer &>
+    
+    <%init>
+    my $arg = mc_dhandler_arg();               # get rest of path
+    my ($section,$story) = split("/",$arg);    # split out pieces
+    my $sth = $DBH->prepare
+	("SELECT headline,body FROM news WHERE section='$section' AND story='$story'");
+    my ($headline,$body) = $sth->fetchrow_array;
+    return 404 if !$headline;                  # return "not found" if no such story
+    </%init>
+
+=head2 autohandlers
+
+Autohandlers allow you to grab control and perform some action just
+before Mason calls the top-level component.  This might mean adding a
+standard header and footer, applying an output filter, or setting up
+global variables.
+
+Autohandlers are directory based.  When Mason determines the top-level
+component, it checks that directory for a component called
+"autohandler"; if it exists, it is called instead.  After performing
+its actions, the autohandler typically calls C<mc_auto_next> to
+transfer control to the original intended component.
+
+C<mc_auto_next> works just like C<mc_comp> except that the component path
+and arguments are implicit. You can pass additional arguments to
+C<mc_auto_next>; these are merged with the original arguments, taking
+precedence in case of conflict.  This allows you, for example, to
+override arguments passed in the URL. The STORE option also works if
+you want to store and process the component output.
+
+Here is an autohandler that adds a common header and footer to each
+page in the directory:
+
+    <HTML>
+    <HEAD><TITLE>McHuffy Incorporated</TITLE></HEAD>
+    <BODY BGCOLOR="salmon">
+    
+    <% mc_auto_next %>
+    
+    <HR>
+    Copyright 1999 McHuffy Inc.
+    </BODY>
+    </HTML>
+
+Same idea, with separate components for header/footer in the same
+directory:
+
+    <& header &>
+    <% mc_auto_next %>
+    <& footer &>
+
+The next autohandler applies a filter to its pages, adding an absolute
+hostname to relative image URLs:
+
+    <%init>
+    my $buf;
+    mc_auto_next(STORE=>\$buf);
+    $buf =~ s{(<img\s+src=\")/} {$1http://images.mysite.com}ig;
+    mc_out($buf);
+    </%init>
+
+The same, using a <%filter> tag:
+
+    <% mc_auto_next %>
+    
+    <%filter>
+    s{(<img\s+src=\")/} {$1http://images.mysite.com}ig;
+    </%filter>
+
+Most of the time autohandler can simply call C<mc_auto_next> without
+needing to know what component was called. However, should you need
+it, the fully qualified component path is available from C<mc_auto_comp>.
+For example, here we base the page title partly on the component name:
+
+    <HTML>
+    <HEAD><TITLE>McHuffy Incorporated: <% $section %></TITLE></HEAD>
+    <% mc_auto_next %>
+    </BODY>
+    </HTML>
+    
+    <%init>
+    my $comp = mc_auto_comp();
+    my $section = ($comp =~ /mktg.html$/ ? 'Marketing' : ...);
+    </%init>
+
+C<mc_auto_comp> is also necessary for I<suppressing> one or more
+original arguments, something that C<mc_auto_next> does not let you
+do.  Below, the C<$refsrc> variable is used solely by the
+autohandler, which removes it from the arguments sent to the next
+component.
+
+    <& (mc_auto_comp()), %ARGS &>
+    
+    <%init>
+    if ($refsrc) {
+       ...
+    }
+    delete($ARGS{refsrc});
+    </%init>
+    
+    <%args>
+    $refsrc=>undef
+    </%args>
+
+Autohandlers apply only to the current directory, not to its
+subdirectories.  Although it was very tempting to implement a single
+autohandler applying to an entire component hierarchy (e.g. for a
+site-wide template), there were several drawbacks.  The first is
+performance: Mason would have to scan not only the current directory
+but all parent directories for a file named "autohandler"; this would
+slow down each request even where autohandlers were not being
+used. The second is readability: someone trying to determine how a
+page is rendered would have to scan through parent directories in the
+right order. That said, we will continue to seek out a reasonable
+solution for this feature.
+
+For now, if you want to use the same autohandler in multiple
+subdirectories, there are several alternatives to simply copying
+it. One is to create symbolic links pointing back to the master
+autohandler (assuming your OS supports this); Mason seems to do fine
+with symbolic link components.  Another is to create minimal
+autohandlers of the form:
+
+    <%init>
+    mc_comp('/foo/bar/autohandler',%ARGS');
+    </%init>
+
+=head2 dhandlers vs. autohandlers
+
+dhandlers and autohandlers both provide a way to exert control over a
+large set of URLs. However, each specializes in a very different
+application.  The main differences to keep in mind:
+
+o dhandlers are invoked only when no appropriate component exists;
+autohandlers are invoked only in conjunction with a matching
+component.
+
+o dhandlers can handle any request underneath its directory hierarchy;
+autohandlers will only handle a request in the same directory.
+
+As a rule of thumb: use an autohandler when you have a set of
+components to handle your pages and you simply want to augment them
+with a template/filter. Use a dhandler when you want to create a set
+of "virtual URLs" that don't correspond to any actual components.
+
+dhandlers and autohandlers can even be used in the same directory. For
+example, you might have a mix of virtual and real URLs to which you
+would like to apply a common template/filter.
+
+Prior to version 0.6, dhandlers were the only way to accomplish tasks
+like applying a standard template across multiple components.
+However, this application of dhandlers has several
+disadvantages. First, you must perversely "hide" your existing
+components so that Mason will not find them and instead invoke the
+dhandler! Second, you must manually check whether the subsequent
+component exists and handle not found errors.  The upshot is that
+autohandlers are better suited for many tasks previously solved by
+dhandlers.
 
 =head1 PASSING PARAMETERS
 
@@ -384,13 +545,6 @@ Consider a CGI-style URL with a query string:
 or an HTTP request with some POST content. Mason automatically parses
 the GET/POST values and makes them available to the component as
 parameters.
-
-In fact, internally Mason just treats an HTTP request as a first
-component call! The URL above is effectively translated to:
-
-    mc_comp('/mktg/prods.html', str=>'dog', lst=>[2,3,4])
-
-assuming that component root = document root.
 
 =head2 Accessing Parameters
 
@@ -942,12 +1096,10 @@ The following examples would generally appear at the top of a <%init>
 section.  Here is a no-op mc_call_self that leaves the output and
 return value untouched:
 
-    if (mc_call_self(my \$output, my \$retval)) {
+    if (mc_call_self(my \$output, my \$retval)) {  # assumes Perl 5.005 or greater
         mc_out($output);
         return $retval;
     }
-
-(This assumes Perl 5.005. In 5.004 and earlier, the first line must be split into two.)
 
 Here is a simple output filter that makes the output all uppercase,
 just like the <%filter> example above. Note that we ignore both
@@ -1016,7 +1168,7 @@ sampling of methods useful to component developers:
     $r->server->port    # (note two arrows!) port # (usu. 80)
     $r->content_type    # set or retrieve content-type
 
-    $r->content()       # don't use this one! (see Tips and Traps)
+    $r->content         # don't use this one! (see Tips and Traps)
 
 =head1 SENDING HTTP HEADERS
 
@@ -1029,7 +1181,9 @@ in the C<E<lt>%init%E<gt>> section. You send headers with Apache
 commands headers_out and send_http_header.
 
 To prevent Mason from sending out the default header, call
-C<mc_suppress_http_header(1)>. Here's an example:
+C<mc_suppress_http_header(1)>. You only need to do this if you
+are going to call a component before sending your header.
+Here's an example:
 
     <%init>
     ...

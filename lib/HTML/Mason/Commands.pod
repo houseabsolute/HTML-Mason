@@ -18,6 +18,21 @@ Ends the current execution, finishing the page without returning
 through components. In a web environment, the optional return value is
 used as the HTTP status code.
 
+=item mc_auto_next ([args...])
+
+Calls the component interrupted by an autohandler.  With no arguments,
+the original arguments are passed to the component.  Any arguments
+specified here serve to augment and override (in case of conflict) the
+original arguments. Works like mc_comp in terms of return value and
+scalar/list context.  See the L<Components/autohandlers> section of the
+I<Component Developer's Guide> for examples.
+
+=item mc_auto_comp
+
+Returns the absolute path of the component interrupted by an
+autohandler.  See the L<Components/autohandlers> section of the I<Component
+Developer's Guide> for usage and examples.
+
 =item mc_cache ([action=>'retrieve|store|expire|keys'], [key=>name],
 [value=>data], [keep_in_memory=>0|1], [expire options...])
 
@@ -198,8 +213,8 @@ Print the given string. Rarely needed, since normally all HTML is just
 placed in the component body and output implicitly. mc_out is useful
 if you need to output something in the middle of a Perl block.
 
-mc_out() should be favored over the lower-level C<$r-E<gt>print>,
-since mc_out() may be redirected or buffered, depending on the
+mc_out() should be favored over C<print> or C<$r-E<gt>print>,
+since mc_out() may be redirected or buffered depending on the
 current state of the interpreter.
 
 =item mc_time ()
