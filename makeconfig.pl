@@ -154,7 +154,7 @@ sub make_config
 
     if (!defined($c{use_time_hires})) {
 	print "\n";
-	my $h = chk_version( 'Time::HiRes' => '1.19');
+	my $h = chk_version('Time::HiRes' => '1.19');
 	print $hiresWarnMsg if !$h;
 	$c{use_time_hires} = $h;
     }
@@ -193,9 +193,6 @@ sub setup_mod_perl_tests
 
     write_apache_conf();
     setup_handler('CGI');
-    write_test_comps();
-
-
     setup_handler('mod_perl') if $APACHE{has_apache_request};
 }
 
@@ -246,38 +243,15 @@ sub write_apache_conf
 
 <IfDefine CGI>
   PerlRequire $APACHE{apache_dir}/mason_handler_CGI.pl
-
-  <Location /mason>
-    SetHandler perl-script
-    PerlHandler HTML::Mason
-  </Location>
-
-  <Location /mason_stream>
-    SetHandler perl-script
-    PerlHandler HTML::Mason
-  </Location>
 </IfDefine>
-EOF
-
-    if ($APACHE{has_apache_request})
-    {
-	$include .= <<"EOF"
 
 <IfDefine mod_perl>
   PerlRequire $APACHE{apache_dir}/mason_handler_mod_perl.pl
-
-  <Location /mason>
-    SetHandler perl-script
-    PerlHandler HTML::Mason
-  </Location>
-
-  <Location /mason_stream>
-    SetHandler perl-script
-    PerlHandler HTML::Mason
-  </Location>
 </IfDefine>
+
+SetHandler perl-script
+PerlHandler HTML::Mason
 EOF
-    }
 
     local $^W;
     Apache::test->write_httpd_conf
@@ -313,94 +287,49 @@ use HTML::Mason;
 
 my \$parser = HTML::Mason::Parser->new;
 my \$interp = HTML::Mason::Interp->new( parser => \$parser,
-					comp_root => '$APACHE{comp_root}',
-					data_dir => '$APACHE{data_dir}' );
+				       comp_root => '$APACHE{comp_root}',
+				       data_dir => '$APACHE{data_dir}' );
 
-my \$stream_ah = HTML::Mason::ApacheHandler->new( interp => \$interp,
-                                                 output_mode => 'stream' );
-my \$batch_ah = HTML::Mason::ApacheHandler->new( interp => \$interp,
-                                                output_mode => 'batch' );
+my \@ah = ( HTML::Mason::ApacheHandler->new( interp => \$interp,
+                                            output_mode => 'batch' ),
+           HTML::Mason::ApacheHandler->new( interp => \$interp,
+                                            output_mode => 'stream' ),
+	   HTML::Mason::ApacheHandler->new( interp => \$interp,
+					    top_level_predicate => sub { \$_[0] =~ m,/_.*, ? 0 : 1 },
+                                            output_mode => 'batch' ),
+	   HTML::Mason::ApacheHandler->new( interp => \$interp,
+                                            decline_dirs => 0,
+                                            output_mode => 'batch' ),
+	   HTML::Mason::ApacheHandler->new( interp => \$interp,
+                                            error_mode => 'fatal',
+                                            output_mode => 'batch' ),
+	 );
 
 sub handler
 {
     my \$r = shift;
     \$r->header_out('X-Mason-Test' => 'Initial value');
 
-    my \$ah = \$r->uri =~ /mason_stream/ ? \$stream_ah : \$batch_ah;
+    my (\$ah_index) = \$r->uri =~ /ah=(\\d+)/;
+
+    unless (\$ah[\$ah_index])
+    {
+        \$r->print( "No ApacheHandler object at index #\$ah_index" );
+        return;
+    }
 
     # strip off stuff just used to figure out what handler to use.
     my \$filename = \$r->filename;
-    \$filename =~ s,/mason(?:_stream)?\$,,;
-
+    \$filename =~ s,/ah=\\d+,,;
     \$filename .= \$r->path_info;
     \$filename =~ s,//+,/,g;
-
     \$r->filename(\$filename);
 
-    my \$status = \$ah->handle_request(\$r);
+    my \$status = \$ah[\$ah_index]->handle_request(\$r);
     \$r->print( "Status code: \$status\\n" );
 }
 EOF
     close F;
 }
-
-sub write_test_comps
-{
-    write_comp( 'basic', <<'EOF',
-Basic test.
-2 + 2 = <% 2 + 2 %>.
-uri = <% $r->uri =~ /basic$/ ? '/basic' : $r->uri %>.
-method = <% $r->method %>.
-
-
-EOF
-	      );
-
-    write_comp( 'headers', <<'EOF',
-
-
-% $r->header_out('X-Mason-Test' => 'New value 2');
-Blah blah
-blah
-% $r->header_out('X-Mason-Test' => 'New value 3');
-<%init>
-$r->header_out('X-Mason-Test' => 'New value 1');
-$m->abort if $blank;
-</%init>
-<%args>
-$blank=>0
-</%args>
-EOF
-	      );
-
-    write_comp( 'cgi_object', <<'EOF',
-<% $m->cgi_object->isa('CGI') ? 'CGI' : 'NO CGI' %>
-EOF
-	      );
-
-    if ($APACHE{has_apache_request})
-    {
-	write_comp( 'apache_request', <<'EOF',
-<% ref $r %>
-EOF
-		  );
-    }
-}
-
-sub write_comp
-{
-    my $name = shift;
-    my $comp = shift;
-
-    my $file = "$APACHE{comp_root}/$name";
-    open F, ">$file"
-	or die "Can't write to '$file': $!";
-
-    print F $comp;
-
-    close F;
-}
-
-
 
 1;
