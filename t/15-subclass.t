@@ -92,9 +92,12 @@ EOF
 
 #------------------------------------------------------------
 
+    # We don't use object files, because we want to catch the output
+    # of compiled_component() instead of writing it to a file
     $group->add_test( name => 'compiler_subclass',
 		      description => 'use a HTML::Mason::Compiler subclass',
 		      interp_params => { compiler_class => 'HTML::Mason::Compiler::ToObject::Test',
+					 use_object_files => 0,
 					 baz_val => 75 },
 		      component => <<'EOF',
 baz is !!BAZ!!
