@@ -55,7 +55,7 @@ BEGIN
 		    public => 0 },
 	 autoflush  => { parse => 'boolean', default => 0, type => SCALAR,
 			 descr => "Whether output should be buffered or sent immediately" },
-	 comp  => { type => SCALAR | HASHREF, optional => 0,
+	 comp  => { type => SCALAR | OBJECT, optional => 0,
 		    descr => "Initial component, either an absolute path or a component object",
 		    public => 0 },
          data_cache_api => { parse => 'string', default => '1.1', type => SCALAR,
