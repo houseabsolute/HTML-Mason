@@ -131,8 +131,9 @@ sub exec {
 	{
 	    local $SIG{'__DIE__'} = $interp->die_handler if $interp->die_handler;
 	    eval { $comp = $interp->load($path) };
-	    $err = $@;
-	    UNIVERSAL::can( $err, 'rethrow' ) ? $err->rethrow : error($err);
+	    if ($err = $@) {
+		UNIVERSAL::can( $err, 'rethrow' ) ? $err->rethrow : error($err);
+	    }
 	}
 	unless ($comp) {
 	    if (defined($interp->dhandler_name) and $comp = $interp->find_comp_upwards($path,$interp->dhandler_name)) {
