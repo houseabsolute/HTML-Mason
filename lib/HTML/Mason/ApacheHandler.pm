@@ -14,8 +14,7 @@ use vars qw(@ISA);
 @ISA = qw(HTML::Mason::Request);
 
 use HTML::Mason::MethodMaker
-    ( read_only => 'cgi_object',
-      read_write => [ qw( ah apache_req ) ] );
+    ( read_write => [ qw( ah apache_req ) ] );
 
 # Fields that can be set in new method, with defaults
 my %reqfields =
@@ -48,6 +47,21 @@ sub flush_buffer
     $self->apache_req->rflush;
 }
 
+sub cgi_object
+{
+    my ($self) = @_;
+
+    if ($HTML::Mason::ApacheHandler::ARGS_METHOD eq 'CGI')
+    {
+	$self->{cgi_object} ||= CGI->new('');
+    }
+    else
+    {
+	die "Can't call cgi_object method unless CGI.pm was used to handle incoming arguments.\n";
+    }
+
+    return $self->{cgi_object};
+}
 
 #----------------------------------------------------------------------
 #
