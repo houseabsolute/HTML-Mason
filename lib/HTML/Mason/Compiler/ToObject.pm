@@ -65,6 +65,7 @@ sub compiled_component
 
     # The '!' char will not appear in a md5 hex checksum
     my $id = $self->object_id;
+    $id =~ s,([\\']),\\$1,g;
     $params->{compiler_id} = "'$id'";
     $params->{create_time} = time;
 
