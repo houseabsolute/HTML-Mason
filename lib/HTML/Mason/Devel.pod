@@ -999,8 +999,8 @@ comment may follow each line.
 Use this section to set official Mason flags that affect the current
 component's behavior.
 
-Currently there is only one flag, <tt>inherit</tt>, which specifies
-the component's <i>parent</i> in the form of a relative or absolute
+Currently there is only one flag, C<inherit>, which specifies
+the component's I<parent> in the form of a relative or absolute
 component path. A component inherits methods and attributes from its
 parent; see L<Devel/Object-Oriented Techniques> for examples.
 
