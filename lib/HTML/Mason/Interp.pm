@@ -810,6 +810,12 @@ be used for components that are frequently viewed and rarely updated.
 See the L<preloading section in the I<Admin
 Guide>|HTML::Mason::Admin/preloading> for further details.
 
+As mentioned in the developer's guide, a component's C<< <%once> >>
+section is executed when it is loaded.  For preloaded components, this
+means that this section will be executed before a Mason or Apache
+request exist, so preloading a component that uses C<$m> or C<$r> in a
+C<< <%once> >> section will fail.
+
 =item resolver
 
 The Resolver object to associate with this Interpreter.  If none is
