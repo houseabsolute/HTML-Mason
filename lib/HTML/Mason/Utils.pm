@@ -136,13 +136,15 @@ sub access_data_cache
 	    $msg .= "Original error message:\n$err";
 	    die $msg;
 	}
+	my $return;
 	if (defined($memCache)) {
-	    $memCache->{$path}->{$key} = {expires=>$expireTime,lastModified=>$time,lastUpdated=>$time,contents=>$options{value}};
+	    $return = $memCache->{$path}->{$key} = {expires=>$expireTime,lastModified=>$time,lastUpdated=>$time,contents=>$options{value}};
 	}
 	
 	untie(%out);
 	$lockfh->close();
 
+	return $options{value};
     #
     # Expire
     #
