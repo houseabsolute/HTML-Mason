@@ -204,6 +204,7 @@ foreach (keys %ARGS) {
   $r->header_out( 'X-Mason-HEAD-Test' . $x++ => "$_: " . (ref $ARGS{$_} ? 'is a ref' : 'not a ref' ) );
 }
 </%init>
+We should never see this.
 EOF
 	      );
 }
@@ -283,11 +284,11 @@ EOF
     $path = "/ah=0$path" if $with_handler;
     $response = Apache::test->fetch( { uri => $path, method => 'HEAD' } );
 
-    # We pretend that this request is always being done with a
-    # handler.pl file in order to avoid having "Status code: 0"
-    # appended onto the return.  This is because with a handler.pl
-    # (which normally calls $r->print to append that text), $r->print
-    # won't actually do anything for a HEAD request. - dave
+    # We pretend that this request is always being done without in
+    # order to make sure "Status code: 0" is appended onto the return.
+    # This is because with a handler.pl (which normally calls
+    # $r->print to append that text), $r->print won't actually do
+    # anything for a HEAD request. - dave
     $actual = filter_response($response, 0);
     $success = HTML::Mason::Tests->check_output( actual => $actual,
 						 expect => <<'EOF',
