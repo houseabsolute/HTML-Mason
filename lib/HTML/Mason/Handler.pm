@@ -28,7 +28,7 @@ sub prepare_request
     virtual_error "The prepare_request method must be overridden in a handler subclass.";
 }
 
-sub request_ARGS
+sub request_args
 {
     virtual_error "The request_args method must be overridden in a handler subclass.";
 }
