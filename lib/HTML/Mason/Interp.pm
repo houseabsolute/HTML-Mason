@@ -135,8 +135,6 @@ BEGIN {
 	eval 'sub PERL_BUG_INFINITE_LOOP () { 0 }';
     }
 }
-	
-
 
 sub new
 {
@@ -529,19 +527,20 @@ sub eval_object_code
     $self->compiler->assert_creatorship(\%p);
 
     #
-    # Evaluate object file or text with warnings on
+    # Evaluate object file or text with warnings on, unless
+    # ignore_warnings_expr is '.'.
     #
     my $ignore_expr = $self->ignore_warnings_expr;
     my ($comp, $err);
     my $warnstr = '';
 
     {
-	local $^W = 1;
+	local $^W = 1 unless $ignore_expr eq '.';
 	local $SIG{__WARN__} =
 	    ( $ignore_expr ?
 	      sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ } :
-	      sub { $warnstr .= $_[0] } );
-
+	      sub { $warnstr .= $_[0] } ) unless $ignore_expr eq '.';
+	
 	local $SIG{ALRM} = sub { die $warnstr } if PERL_BUG_INFINITE_LOOP;
 	alarm 5 if PERL_BUG_INFINITE_LOOP;
 	
@@ -859,7 +858,8 @@ component from being loaded and executed. For example:
     ignore_warnings_expr =>
         'Global symbol.*requires explicit package'
 
-If undef, all warnings are heeded; if '.', all warnings are ignored.
+If set to undef, all warnings are heeded. If set to '.', warnings
+are turned off completely as a specially optimized case.
 
 By default, this is set to 'Subroutine .* redefined'.  This allows you
 to declare global subroutines inside <%once> sections and not receive
