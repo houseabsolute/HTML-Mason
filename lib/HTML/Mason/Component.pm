@@ -3,7 +3,6 @@
 # under the same terms as Perl itself.
 
 package HTML::Mason::Component;
-require 5.004;
 
 use strict;
 use File::Basename;

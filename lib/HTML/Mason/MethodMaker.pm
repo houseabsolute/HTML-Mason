@@ -3,7 +3,6 @@
 # under the same terms as Perl itself.
 
 package HTML::Mason::MethodMaker;
-require 5.004;
 
 use strict;
 
@@ -31,6 +30,8 @@ sub import
 	}
     }
 }
+
+1;
 
 =pod
 
