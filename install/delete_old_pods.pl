@@ -9,7 +9,7 @@ foreach ( qw( Interp ApacheHandler Request Component ) )
 
     if ( $pod_file =~ /\.pod$/ )
     {
-	print "Found $pod_file\n";
+	print STDERR "Removing $pod_file\n";
 	unlink $pod_file or die "Cannot unlink $pod_file: $!";
     }
 }
