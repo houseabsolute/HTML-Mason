@@ -830,6 +830,25 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'ignore_all_warnings',
+		      description => 'test ignoring all warnings',
+                      interp_params =>
+                      { ignore_warnings_expr => '.' },
+		      component => <<'EOF',
+<%once>
+sub foo { 1 }
+sub foo { 1 }
+</%once>
+foo
+EOF
+		      expect => <<'EOF',
+foo
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'make_anonymous_component',
 		      description => 'test make_component() without a path',
 		      component => <<'EOF',
@@ -987,7 +1006,6 @@ EOF
 
 
 #------------------------------------------------------------
-
 
     return $group;
 }
