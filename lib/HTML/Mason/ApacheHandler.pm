@@ -16,7 +16,9 @@ use base qw(HTML::Mason::Request);
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 
-use constant NOT_FOUND => 404;
+use constant OK         => 0;
+use constant DECLINED   => -1;
+use constant NOT_FOUND  => 404;
 
 BEGIN
 {
@@ -93,19 +95,15 @@ sub exec
     if ($@) {
 	if (isa_mason_exception($@, 'TopLevelNotFound')) {
 	    my $r = $self->apache_req;
-	    if ($r->method eq 'POST') {
-		$r->method('GET');
-		$r->headers_in->unset('Content-length');
-	    }
-	    
 	    # Log the error the same way that Apache does (taken from default_handler in http_core.c)
 	    $r->log_error("[Mason] File does not exist: ", $r->filename . ($r->path_info ? $r->path_info : ""));
-	    return NOT_FOUND;
+	    return $self->return_not_found($r);
 	} else {
 	    die $@;
 	}
     }
-    return $retval;
+    
+    return defined($retval) ? $retval : OK;
 }
 
 #
@@ -621,10 +619,11 @@ EOF
     my $out;
     local $interp->{out_method} = \$out;
 
-    my $request = $self->interp->make_request( ah => $self,
+    my $request = $self->interp->make_request( comp => $comp,
+					       args => [ah => $self, valid => $interp->allowed_params],
+					       ah => $self,
 					       apache_req => $p{apache_req},
 					     );
-    $request->exec($comp, ah => $self, valid => $interp->allowed_params);
     return $out;
 }
 
@@ -634,6 +633,13 @@ EOF
 sub preview_dir { return shift->interp->data_dir . "/preview" }
 
 sub handle_request
+{
+    my ($self, $r) = @_;
+
+    $self->prepare_request($r)->exec;
+}
+
+sub prepare_request
 {
     my ($self, $r) = @_;
 
@@ -675,7 +681,7 @@ sub handle_request
 	$pathname .= $r->path_info unless $is_file;
 
 	$r->warn("[Mason] Cannot resolve file to component: $pathname (is file outside component root?)");
-	return NOT_FOUND;
+	return $self->return_not_found($r);
     }
 
     #
@@ -683,22 +689,19 @@ sub handle_request
     #
     if ($is_file and !$self->top_level_predicate->($r->filename)) {
 	$r->warn("[Mason] File fails top level predicate: ".$r->filename);
-	return NOT_FOUND;
+	return $self->return_not_found($r);
     }
 
-    # If someone is using a custom request class that doesn't accept
-    # 'ah' and 'apache_req' that's their problem.
     #
-    my $request = $interp->make_request( ah => $self,
-					 apache_req => $r,
-				       );
-
-    my %args;
+    # Get arguments from Apache::Request or CGI.
+    #
+    my (%args, $cgi_object);
     if ($self->args_method eq 'mod_perl') {
 	$r = Apache::Request->new($r);
-	%args = $self->_mod_perl_args($r, $request);
+	%args = $self->_mod_perl_args($r);
     } else {
-	%args = $self->_cgi_args($r, $request);
+	$cgi_object = CGI->new;
+	%args = $self->_cgi_args($r);
     }
 
     #
@@ -739,18 +742,19 @@ sub handle_request
 	    $r->$print(grep {defined} @_);
 	}
     };
-    $request->out_method($out_method);
 
-    my $retval = $request->exec($comp_path, %args);
-
-    # On a success code, send headers if they have not been sent.
-    # On an error code, leave it to Apache to send the headers.
-    if ($must_send_headers and !http_header_sent($r) and (!$retval or $retval==200)) {
-	$r->send_http_header();
-    }
-    undef $request; # ward off leak
-
-    return defined($retval) ? $retval : &OK;
+    # If someone is using a custom request class that doesn't accept
+    # 'ah' and 'apache_req' that's their problem.
+    #
+    my $request = $interp->make_request( comp => $comp_path,
+					 args => [%args],
+					 ah => $self,
+					 apache_req => $r,
+					 out_method => $out_method
+					 );
+    $request->cgi_object($cgi_object) if $cgi_object;
+    
+    return $request;
 }
 
 #
@@ -758,14 +762,11 @@ sub handle_request
 #
 sub _cgi_args
 {
-    my ($self, $r, $request) = @_;
+    my ($self, $r, $q) = @_;
 
     # For optimization, don't bother creating a CGI object if request
     # is a GET with no query string
     return if $r->method eq 'GET' && !scalar($r->args);
-
-    my $q = CGI->new;
-    $request->cgi_object($q);
 
     return HTML::Mason::Utils::cgi_request_args($q, $r->method);
 }
@@ -790,6 +791,19 @@ sub _mod_perl_args
 # Determines whether the http header has been sent.
 #
 sub http_header_sent { shift->header_out("Content-type") }
+
+# Utility function to prepare $r before returning NOT_FOUND.
+sub return_not_found
+{
+    my ($self, $r) = @_;
+
+    if ($r->method eq 'POST') {
+	$r->method('GET');
+	$r->headers_in->unset('Content-length');
+    }
+    return NOT_FOUND;
+}
+
 
 #
 # PerlHandler HTML::Mason::ApacheHandler
