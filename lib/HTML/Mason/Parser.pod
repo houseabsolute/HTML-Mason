@@ -13,6 +13,11 @@ are typically embedded within (and used by) Interp objects.
 
 =head1 PARAMETERS FOR new() CONSTRUCTOR	
 
+These parameters affect the way that components are translated into
+Perl code. If you change a Parser's options, you must remove any
+previously created object files for the changes to take effect.
+See also L<Admin/Object files>.
+
 =over
 
 =item allow_globals
