@@ -1309,10 +1309,6 @@ configuration file, you can set them like this:
 Given an I<absolute> component path, this method returns a boolean
 value indicating whether or not a component exists for that path.
 
-=over
-
-=item * as a way to distinguish component caches between different component roots
-
 =item exec (comp, args...)
 
 =for html <a name="item_exec"></a>
