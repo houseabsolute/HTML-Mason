@@ -135,8 +135,8 @@ sub get_test_params {
     if (lc _ask("Search existing config file for dynamic module dependencies?", $default) eq 'y') {
 	my %compiled = $pkg->get_compilation_params('t/httpd');
 
-	my $file = _ask("  Config file", $compiled{SERVER_CONFIG_FILE}, 1);
-	$conf{modules} = $pkg->_read_existing_conf($file);
+	$conf{config_file} = _ask("  Config file", $compiled{SERVER_CONFIG_FILE}, 1);
+	$conf{modules} = $pkg->_read_existing_conf($conf{config_file});
     }
 
     # Get default user (apache doesn't like to run as root, special-case it)
