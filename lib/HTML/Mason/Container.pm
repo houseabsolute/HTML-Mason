@@ -115,12 +115,7 @@ sub allowed_params
     foreach my $name (keys %c)
     {
 	# Can accept a 'foo' parameter - should already be in the validation_spec
-	if ( exists $args->{$name} )
-	{
-	    my $subparams = $args->{$name}->allowed_params($args);
-	    @p{keys %$subparams} = values %$subparams;
-	    next;
-	}
+	next if exists $args->{$name};
 
 	# Can accept a 'foo_class' parameter instead of a 'foo' parameter
 	# If neither parameter is present, give up - perhaps it's optional
