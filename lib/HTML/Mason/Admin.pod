@@ -878,7 +878,8 @@ context such as the middle of a table which never gets closed. In batch
 mode, the error message is output neatly and alone.
 
 Batch mode also offers more flexibility in controlling HTTP
-headers. See L<Devel/sending_http_headers>.
+headers (see L<Devel/sending_http_headers>) and in handling
+mid-request error conditions (see L<Request/clear_buffer>).
 
 Stream mode may help get data to the browser more quickly, allowing
 server and browser to work in parallel. It also prevents memory
