@@ -105,7 +105,7 @@ sub _reinitialize {
 	$self->{$field} = undef;
     }
 
-    $self->pop_buffer_stack while $self->buffer_stack;
+    $self->{buffer_stack} = [];
 }
 
 sub exec {
@@ -764,7 +764,7 @@ sub unsuppress_hook {
 sub clear_buffer
 {
     my $self = shift;
-    for (reverse $self->buffer_stack) {
+    for ($self->buffer_stack) {
 	last if $_->ignore_flush;
 	$_->clear;
     }
@@ -773,7 +773,7 @@ sub clear_buffer
 sub flush_buffer
 {
     my $self = shift;
-    for (reverse $self->buffer_stack) {
+    for ($self->buffer_stack) {
 	last if $_->ignore_flush;
 	$_->flush;
     }
@@ -844,7 +844,7 @@ sub pop_buffer_stack {
 
 sub buffer_stack {
     my ($self) = @_;
-    return @{ $self->{buffer_stack} };
+    return reverse @{ $self->{buffer_stack} };
 }
 
 
