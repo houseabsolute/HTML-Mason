@@ -25,3 +25,14 @@ sub handler
 }
 
 1;
+
+
+__END__
+
+In your httpd.conf, add something like this:
+
+ PerlRequire /path/to/handler.pl
+ <FilesMatch "\.html$">
+   SetHandler perl-script
+   PerlHandler MyMason::MyApp
+ </FilesMatch>
