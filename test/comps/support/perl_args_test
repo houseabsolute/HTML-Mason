@@ -1,0 +1,4 @@
+<% $message %>\
+<%perl_args>
+$message
+</%perl_args>
