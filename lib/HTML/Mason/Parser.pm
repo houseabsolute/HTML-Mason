@@ -84,11 +84,11 @@ sub allow_globals
 sub make_component
 {
     my ($self, %options) = @_;
-    my $objectTextRef = $options{object_text};
+    my $object_text_ref = $options{object_text};
 
-    my $objectText = $self->parse_component(%options) or return undef;
-    $$objectTextRef = $objectText if defined($objectTextRef);
-    return $self->eval_object_text(object_text=>$objectText,error=>$options{error});
+    my $object_text = $self->parse_component(%options) or return undef;
+    $$object_text_ref = $object_text if defined($object_text_ref);
+    return $self->eval_object_text(object_text=>$object_text,error=>$options{error});
 }
 
 #
@@ -102,13 +102,13 @@ sub parse
     foreach my $key (qw(script script_file)) {
 	$subopts{$key} = $options{$key} if exists($options{$key});
     }
-    my $objectText = $self->parse_component(%subopts,error=>\$error);
-    $self->eval_object_text(object_text=>$objectText,error=>\$error) if $objectText;
-    if ($objectText && !$error && exists($options{save_to})) {
-	$self->write_object_file(object_text=>$objectText,object_file=>$options{save_to});
+    my $object_text = $self->parse_component(%subopts,error=>\$error);
+    $self->eval_object_text(object_text=>$object_text,error=>\$error) if $object_text;
+    if ($object_text && !$error && exists($options{save_to})) {
+	$self->write_object_file(object_text=>$object_text,object_file=>$options{save_to});
     }
-    if ($objectText and my $ref = $options{result_text}) {
-	$$ref = $objectText;
+    if ($object_text and my $ref = $options{result_text}) {
+	$$ref = $object_text;
     }
     if ($error and my $ref = $options{error}) {
 	$$ref = $error;
@@ -1101,24 +1101,25 @@ sub _escape_perl_expression
 sub write_object_file
 {
     my ($self, %options) = @_;
-    my ($objectText,$objectFile,$filesWrittenRef) =
+    my ($object_text,$object_file,$files_written) =
 	@options{qw(object_text object_file files_written)};
-    my @newfiles = ($objectFile);
+    my @newfiles = ($object_file);
 
-    if (!-f $objectFile) {
-	my ($dirname) = dirname($objectFile);
+    if (!-f $object_file) {
+	my ($dirname) = dirname($object_file);
 	if (!-d $dirname) {
 	    unlink($dirname) if (-e $dirname);
 	    push(@newfiles,mkpath($dirname,0,0775));
 	    die "Couldn't create directory $dirname: $!" if (!-d $dirname);
 	}
-	rmtree($objectFile) if (-d $objectFile);
+	rmtree($object_file) if (-d $object_file);
     }
     
-    my $fh = new IO::File ">$objectFile" or die "Couldn't write object file $objectFile: $!";
-    print $fh $objectText;
-    $fh->close;
-    @$filesWrittenRef = @newfiles if (defined($filesWrittenRef))
+    my $fh = do { local *FH; *FH; };
+    open $fh, ">$object_file" or die "Couldn't write object file $object_file: $!";
+    print $fh $object_text;
+    close $fh or die "Couldn't close object file $object_file: $!";
+    @$files_written = @newfiles if (defined($files_written))
 }
 
 #
@@ -1130,24 +1131,24 @@ sub write_object_file
 sub eval_object_text
 {    
     my ($self, %options) = @_;
-    my ($objectText,$objectFile,$errref) =
+    my ($object_text,$object_file,$errref) =
 	@options{qw(object_text object_file error)};
 
     #
     # Evaluate object file or text with warnings on
     #
-    my $ignoreExpr = $self->ignore_warnings_expr;
+    my $ignore_expr = $self->ignore_warnings_expr;
     my ($comp,$err);
     {
 	my $warnstr = '';
 	local $^W = 1;
-	local $SIG{__WARN__} = $ignoreExpr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignoreExpr/ } : sub { $warnstr .= $_[0] };
-	if ($objectFile) {
-	    ($objectFile) = ($objectFile =~ /^(.*)$/s) if $self->taint_check;
-	    $comp = do($objectFile);
+	local $SIG{__WARN__} = $ignore_expr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ } : sub { $warnstr .= $_[0] };
+	if ($object_file) {
+	    ($object_file) = ($object_file =~ /^(.*)$/s) if $self->taint_check;
+	    $comp = do($object_file);
 	} else {
-	    ($objectText) = ($objectText =~ /^(.*)$/s) if $self->taint_check;
-	    $comp = eval($objectText);
+	    ($object_text) = ($object_text =~ /^(.*)$/s) if $self->taint_check;
+	    $comp = eval($object_text);
 	}
 	$err = $warnstr . $@;
     }
@@ -1158,17 +1159,17 @@ sub eval_object_text
     #  -- pre-0.7 files that return code refs
     #  -- valid components but with an earlier parser_version
     #
-    if ($objectFile) {
-	my $parserVersion = version();
-	my $incompat = "Incompatible object file ($objectFile);\nobject file was created by %s and you are running parser version $parserVersion.\nAsk your administrator to clear the object directory.\n";
-	if (-z $objectFile) {
+    if ($object_file) {
+	my $parser_version = version();
+	my $incompat = "Incompatible object file ($object_file);\nobject file was created by %s and you are running parser version $parser_version.\nAsk your administrator to clear the object directory.\n";
+	if (-z $object_file) {
 	    $err = sprintf($incompat,"a pre-0.7 parser");
 	} elsif ($comp) {
 	    if (ref($comp) eq 'CODE') {
 		$err = sprintf($incompat,"a pre-0.7 parser");
 	    } elsif (ref($comp) !~ /HTML::Mason::Component/) {
-		$err = "object file ($objectFile) did not return a component object!";
-	    } elsif ($comp->parser_version != $parserVersion) {
+		$err = "object file ($object_file) did not return a component object!";
+	    } elsif ($comp->parser_version != $parser_version) {
 		$err = sprintf($incompat,"parser version ".$comp->parser_version);
 	    }
 	}
@@ -1192,35 +1193,38 @@ sub eval_object_text
 sub make_dirs
 {
     my ($self, %options) = @_;
-    my $compRoot = $options{comp_root} or die "make_dirs: must specify comp_root\n";
-    my $dataDir = $options{data_dir} or die "make_dirs: must specify data_dir\n";
-    die "make_dirs: source_dir '$compRoot' does not exist\n" if (!-d $compRoot);
-    die "make_dirs: object_dir '$dataDir' does not exist\n" if (!-d $dataDir);
-    my $sourceDir = $compRoot;
-    my $objectDir = "$dataDir/obj";
-    my $errorDir = "$dataDir/errors";
+    my $comp_root = $options{comp_root} or die "make_dirs: must specify comp_root\n";
+    my $data_dir = $options{data_dir} or die "make_dirs: must specify data_dir\n";
+    die "make_dirs: source_dir '$comp_root' does not exist\n" if (!-d $comp_root);
+    die "make_dirs: object_dir '$data_dir' does not exist\n" if (!-d $data_dir);
+    my $source_dir = $comp_root;
+    my $object_dir = "$data_dir/obj";
+    my $error_dir = "$data_dir/errors";
     my @paths = (exists($options{paths})) ? @{$options{paths}} : ('/');
     my $verbose = (exists($options{verbose})) ? $options{verbose} : 1;
     my $predicate = $options{predicate} || sub { $_[0] !~ /\~/ };
-    my $dirCreateMode = $options{dir_create_mode} || 0775;
-    my $reloadFile = $options{update_reload_file} ? "$dataDir/etc/reload.lst" : undef;
+    my $dir_create_mode = $options{dir_create_mode} || 0775;
+    my $reload_file = $options{update_reload_file} ? "$data_dir/etc/reload.lst" : undef;
     my ($relfh);
-    if (defined($reloadFile)) {
-	$relfh = new IO::File ">>$reloadFile" or die "make_dirs: cannot open '$reloadFile' for writing: $!";
-	$relfh->autoflush(1);
+    if (defined($reload_file)) {
+	$relfh = do { local *FH; *FH; };
+	open $relfh, ">>$reload_file" or die "make_dirs: cannot open '$reload_file' for writing: $!";
+	my $oldfh = select $relfh;
+	$|++;
+	select $oldfh;
     }
     
     my $compilesub = sub {
 	my ($srcfile) = $File::Find::name;
 	return if (!-f $srcfile);
 	return if defined($predicate) && !($predicate->($srcfile));
-	my $compPath = substr($srcfile,length($sourceDir));
- 	(my $objfile = $srcfile) =~ s@^$sourceDir@$objectDir@;
+	my $compPath = substr($srcfile,length($source_dir));
+ 	(my $objfile = $srcfile) =~ s@^$source_dir@$object_dir@;
 	my ($objfiledir) = dirname($objfile);
 	if (!-d $objfiledir) {
-	    if (defined($dirCreateMode)) {
+	    if (defined($dir_create_mode)) {
 		print "creating directory $objfiledir\n" if $verbose;
-		mkpath($objfiledir,0,$dirCreateMode);
+		mkpath($objfiledir,0,$dir_create_mode);
 		die "make_dirs: cannot create directory '$objfiledir': $!" if (!-d $objfiledir);
 	    } else {
 		die "make_dirs: no such directory '$objfiledir'";
@@ -1242,8 +1246,8 @@ sub make_dirs
 	    } else {
 		if ($verbose) {
 		    print "error";
-		    if ($errorDir) {
-			(my $errfile = $srcfile) =~ s@^$sourceDir@$errorDir@;
+		    if ($error_dir) {
+			(my $errfile = $srcfile) =~ s@^$source_dir@$error_dir@;
 			$self->write_object_file(object_file=>$errfile, object_text=>$objText);
 			print " in $errfile";
 		    }
@@ -1254,7 +1258,7 @@ sub make_dirs
     };
 
     foreach my $path (@paths) {
-	my $fullpath = $sourceDir . $path;
+	my $fullpath = $source_dir . $path;
 	$fullpath =~ s@/$@@g;
 	if (-f $fullpath) {
 	    $compilesub->($fullpath);
