@@ -81,11 +81,9 @@ sub allowed_globals
 sub compile
 {
     my $self = shift;
-    my %p = @_;
-
-    validate( @_, { comp_text => { type => SCALAR },
-		    name => { type => SCALAR },
-		  } );
+    my %p = validate( @_, { comp_text => { type => SCALAR },
+			    name => { type => SCALAR },
+			  } );
 
     # Preprocess the script.  The preprocessor routine is handed a
     # reference to the entire script.
