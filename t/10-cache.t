@@ -144,7 +144,7 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_support ( path => 'support/cache_self_expires',
+    $group->add_support ( path => 'support/cache_self_expires_in',
 			  component => <<'EOF',
 x is <% $x %>
 <%args>
@@ -158,17 +158,88 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'cache_self_expiration',
+    $group->add_test( name => 'cache_self_expires_in',
 		      description => 'test that $m->cache_self respects expires_in parameter',
 		      component => <<'EOF',
-<& support/cache_self_expires, x => 1 &>
+<& support/cache_self_expires_in, x => 1 &>
+<& support/cache_self_expires_in, x => 2 &>
 % sleep 3;
-<& support/cache_self_expires, x => 99 &>
+<& support/cache_self_expires_in, x => 99 &>
 EOF
 		      expect => <<'EOF',
 x is 1
 
+x is 1
+
 x is 99
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_support ( path => 'support/cache_self_expire_in',
+			  component => <<'EOF',
+x is <% $x %>
+<%args>
+$x
+</%args>
+<%init>
+return if $m->cache_self( expire_in => '1s' );
+</%init>
+EOF
+			);
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'cache_self_expire_in',
+		      description => 'test that $m->cache_self respects expire_in parameter',
+		      component => <<'EOF',
+<& support/cache_self_expire_in, x => 1 &>
+<& support/cache_self_expire_in, x => 2 &>
+% sleep 3;
+<& support/cache_self_expire_in, x => 99 &>
+EOF
+		      expect => <<'EOF',
+x is 1
+
+x is 1
+
+x is 99
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_support ( path => 'support/cache_self_expire_if',
+			  component => <<'EOF',
+x is <% $x %>
+<%args>
+$x
+</%args>
+<%init>
+return if $m->cache_self( expire_if => sub { $x == 3 } );
+</%init>
+EOF
+			);
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'cache_self_expire_if',
+		      description => 'test that $m->cache_self respects expire_if parameter',
+		      component => <<'EOF',
+<& support/cache_self_expire_if, x => 1 &>
+<& support/cache_self_expire_if, x => 2 &>
+<& support/cache_self_expire_if, x => 3 &>
+<& support/cache_self_expire_if, x => 4 &>
+EOF
+		      expect => <<'EOF',
+x is 1
+
+x is 1
+
+x is 3
+
+x is 3
 EOF
 		    );
 
@@ -305,7 +376,7 @@ my $value3 = $cache->get('main');
 </%init>
 EOF
 		      expect => <<'EOF',
-gardenia, gardenia, undef
+gardenia, undef, undef
 EOF
 		    );
 
