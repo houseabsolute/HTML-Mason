@@ -188,35 +188,25 @@ $libs
 use HTML::Mason::ApacheHandler;
 use HTML::Mason;
 
-my \@interps;
-foreach ( 0, 1, 0, 0 )
+my \@params = ( {},
+                { autoflush => 1 },
+                { top_level_predicate => sub { \$_[0] =~ m,/_.*, ? 0 : 1 } },
+                { decline_dirs => 0 },
+                { error_mode => 'fatal' },
+              );
+
+my \@ah;
+foreach my \$p (\@params)
 {
-    push \@interps, HTML::Mason::Interp->new( comp_root => '$APACHE{comp_root}',
-				              data_dir => '$APACHE{data_dir}',
-                                              autoflush => \$_ );
+    my \$ah = HTML::Mason::ApacheHandler->new( \%\$p,
+                                               args_method => '$args_method',
+                                               comp_root => '$APACHE{comp_root}',
+                                               data_dir => '$APACHE{data_dir}' );
 
-    chown Apache->server->uid, Apache->server->gid, \$interps[-1]->files_written;
+    chown Apache->server->uid, Apache->server->gid, \$ah->interp->files_written;
+
+    push \@ah, \$ah;
 }
-
-push \@interps, HTML::Mason::Interp->new( comp_root => '$APACHE{comp_root}',
-				          data_dir => '$APACHE{data_dir}',
-                                          error_mode => 'fatal' );
-
-chown Apache->server->uid, Apache->server->gid, \$interps[-1]->files_written;
-
-my \@ah = ( HTML::Mason::ApacheHandler->new( interp => \$interps[0],
-                                            args_method => '$args_method' ),
-           HTML::Mason::ApacheHandler->new( interp => \$interps[1],
-                                            args_method => '$args_method' ),
-	   HTML::Mason::ApacheHandler->new( interp => \$interps[2],
-                                            args_method => '$args_method',
-					    top_level_predicate => sub { \$_[0] =~ m,/_.*, ? 0 : 1 } ),
-	   HTML::Mason::ApacheHandler->new( interp => \$interps[3],
-                                            args_method => '$args_method',
-                                            decline_dirs => 0 ),
-	   HTML::Mason::ApacheHandler->new( interp => \$interps[4],
-                                            args_method => '$args_method' ),
-	 );
 
 sub handler
 {
@@ -241,6 +231,8 @@ sub handler
     my \$status = \$ah[\$ah_index]->handle_request(\$r);
     \$r->print( "Status code: \$status\\n" );
 }
+
+1;
 EOF
     close F;
 }
