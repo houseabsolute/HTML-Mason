@@ -9,7 +9,6 @@ use strict;
 use base qw( HTML::Mason::Compiler HTML::Mason::Container );
 use Params::Validate qw( :all );
 
-#use HTML::Mason::Subcomponent;
 use HTML::Mason::Exceptions;
 
 use HTML::Mason::MethodMaker
@@ -39,8 +38,17 @@ sub compile
     my $self = shift;
     my %p = @_;
 
-    $self->comp_class( $p{comp_class} ) if exists $p{comp_class};
+    local $self->{comp_class} = $p{comp_class} if exists $p{comp_class};
     return $self->SUPER::compile( comp_text => $p{comp_text}, name => $p{name} );
+}
+
+sub object_id
+{
+    my $self = shift;
+
+    local $self->{comp_class} = '';
+
+    return $self->SUPER::object_id;
 }
 
 sub compiled_component
@@ -55,8 +63,9 @@ sub compiled_component
     my $header = $self->_make_main_header;
     my $params = $self->_component_params;
 
-    # Maybe use some sort of checksum of lexer & compiler names and versions?
-    $params->{parser_version} = "'0.8'";
+    # The '!' char will not appear in a md5 hex checksum
+    my $id = $self->object_id;
+    $params->{compiler_id} = "'$id'";
     $params->{create_time} = time;
 
     $params->{subcomps} = '\%_def' if %{ $self->{def} };
@@ -98,6 +107,8 @@ sub compiled_component
 						 $params ),
 			    ';',
 			  );
+
+    $object .= "\n\n# MASON COMPILER ID: $id\n";
 
     $self->{current_comp} = undef;
 
