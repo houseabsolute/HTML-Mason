@@ -1,4 +1,4 @@
-Copyright (c) 1998-2000 by Jonathan Swartz. All rights reserved.
+Copyright (c) 1998-2001 by Jonathan Swartz. All rights reserved.
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
@@ -24,6 +24,8 @@ Mason requires Perl 5.005 or greater, and the following CPAN modules:
 The following CPAN modules are optional for certain features, but not required:
 
 * Time::HiRes
+
+* Cache::Cache
 
 INSTALLATION
 
@@ -60,22 +62,23 @@ The official Mason web site is at http://www.masonhq.com/.  There
 you'll find Mason documentation, news, etc.
 
 The FAQ, currently maintained by Kwindla Kramer, can be found at
-http://www.masonhq.com/faq/ or
+http://www.masonhq.com/docs/faq/ or
 http://allafrica.com/tools/mason/faq.html.
 
 Several mailing lists exist for Mason users and developers. Full
-information can be found at http://www.masonhq.com/maillist.html.
+information can be found at
+http://www.masonhq.com/resources/mailing_lists.html.
 
 CODE EXAMPLES
 
 The samples/ directory contains a few basic components as well as
 a miniature commerce site built with components.
 
-The Mason component archive (http://www.masonhq.com/arch/), launched
-in November 1999, should be another good source of examples.
+The Mason community collaboration system (http://www.masonhq.com/)
+contains, among other things, an archive of contributed code.
 
 Links to various articles containing code examples are listed at
-http://www.masonhq.com/articles.html.
+http://www.masonhq.com/docs/articles.html.
 
 REPORTING BUGS
 
@@ -111,10 +114,11 @@ for its support or maintenance.
 
 Mason is provided "as is" and without any express or implied
 warranties, including, without limitation, the implied warranties of
-merchantibility and fitness for a particular purpose.  Mason is
-released under the same terms as Perl itself.  For more information
-see the "README" or "Artistic" files provided with the Perl
-distribution.
+merchantibility and fitness for a particular purpose.
+
+Mason is released under the same terms as Perl itself.  For more
+information see the "README" or "Artistic" files provided with the
+Perl distribution.
 
 AUTHOR
 
