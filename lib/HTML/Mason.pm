@@ -191,7 +191,8 @@ reference companion to the Developer's Manual is the Request API
 documentation, B<L<HTML::Mason::Request>>.
 
 Whoever is responsible for setting up and tuning Mason should read the
-I<Administrator's Manual> (B<L<HTML::Mason::Admin>>). This document
+I<Administrator's Manual> (B<L<HTML::Mason::Admin>>), though
+developers might also benefit from reading it as well. This document
 covers more advanced configuration scenarios and performance
 optimization. Reference companions to the Administrator's Manual
 include B<L<HTML::Mason::Request>>, B<L<HTML::Mason::Compiler>>,
