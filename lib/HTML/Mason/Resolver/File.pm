@@ -32,7 +32,7 @@ sub new {
     # If our 'handler' classes subclassed HTML::Mason::Interp, this
     # could be done away with.
     #
-    if ( defined $HTML::Mason::ApacheHandler::VERSION && Apache->request )
+    if ( defined $HTML::Mason::ApacheHandler::VERSION && Apache->can('request') )
     {
 	$defaults{comp_root} = Apache->request->document_root;
     }
