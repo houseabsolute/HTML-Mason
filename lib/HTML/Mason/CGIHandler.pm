@@ -93,6 +93,18 @@ sub cgi_object {
     return $self->{cgi_request}->query(@_);
 }
 
+sub redirect {
+    my $self = shift;
+    my $url = shift;
+
+    $self->clear_buffer;
+
+    $self->{cgi_request}->header_out( Location => $url );
+    $self->{cgi_request}->http_header;
+
+    $self->abort;
+}
+
 ###########################################################
 package HTML::Mason::FakeApache;
 # Analogous to Apache request object $r (but not an actual Apache subclass)
