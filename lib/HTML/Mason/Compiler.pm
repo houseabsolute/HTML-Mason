@@ -323,8 +323,12 @@ sub start_named_block
     my $self = shift;
     my %p = @_;
 
-    $self->lexer->throw_syntax_error("Cannot define a $p{type} inside a method or subcomponent")
-        unless $self->{in_main};
+    $self->lexer->throw_syntax_error
+	("Cannot define a $p{block_type} inside a method or subcomponent")
+	    unless $self->{in_main};
+
+    $self->lexer->throw_syntax_error("Invalid $p{block_type} name: $p{name}")
+	if $p{name} =~ /[^.\w]/;
 
     $self->{in_main}--;
 
