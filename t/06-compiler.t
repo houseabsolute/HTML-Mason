@@ -277,6 +277,18 @@ EOF
 		    );
 
 #------------------------------------------------------------
+    $group->add_test( name => 'whitespace near </%args>',
+		      description => 'test that whitespace is allowed before </%args>',
+		      call_args => [qw(foo foo)],
+		      component => <<'EOF',
+  <%args>
+   $foo
+  </%args>
+EOF
+		      expect => "  \n",
+		    );
+
+#------------------------------------------------------------
 
     $group->add_test( name => 'line_nums',
 		      description => 'make sure that errors are reported with the correct line numbers',
