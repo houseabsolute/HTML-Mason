@@ -5,6 +5,17 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+1.101
+
+[ BUG FIXES ]
+
+- The 08-ah.t tests failed with a runtime error if run by root.  This
+was not a Mason bug, but a bug in the test code itself.
+- ApacheHandler did not work Perl 5.005.
+- Even if ApacheHandler was given an Apache::Request object to
+handle_request() or prepare_request(), it was still calling
+Apache::Request->new.
+
 1.10  June 25, 2002
 
 This is a big release and there are a number of backwards
