@@ -61,44 +61,6 @@ content managers (i.e., non-programmers) to work on the layout without
 getting mired in programming details. Techies, however, still enjoy
 the full power of Perl.
 
-One of the best ways to learn about Mason is to explore the samples/
-directory created during installation. There you will find a
-collection of components, simple to complex, illustrating most of
-Mason's component syntax.
-
-Other Mason features include:
-
-=over
-
-=item Caching
-
-Mason caches components after compilation, and offers an internal,
-shared, expireable data cache for use by components themselves.
-
-=item Templating
-
-The autohandler and dhandler features make it easy to apply a common
-header, footer, or filtering function to an entire directory or
-hierarchy of pages.
-
-=item Previewer
-
-Mason includes a powerful previewing utility which acts as a proxy
-between Mason and incoming requests. Using a web interface, users
-create "port profiles" that massage requests in all kinds of
-interesting ways: different browsers may be simulated, different
-request ports, different times of day, etc.
-
-=item Standalone Use
-
-Mason is optimized for use with mod_perl, but can also be used from
-CGI or as a standalone tool to generate other types of dynamic text
-files (similar to Text::Template, ePerl, etc.). To learn more about
-this option see the STANDALONE MODE section in
-L<HTML::Mason::Interp|HTML::Mason::Interp>.
-
-=back
-
 Mason works by intercepting innocent-looking requests (say,
 http://www.yoursite.com/index.html) and mapping them to requests for
 Mason components.  Mason then compiles the component, runs it, and
@@ -124,9 +86,7 @@ evaluated as a Perl expression.
 Beyond this trivial example, components can also embed serious chunks
 of Perl code (say, to pull records from a database). They can also
 call other components, cache results for later reuse, and perform all
-the tricks you expect from a regular Perl program. See
-L<HTML::Mason::Devel|HTML::Mason::Devel> for a full tutorial on building, using and
-debugging Mason components.
+the tricks you expect from a regular Perl program.
 
 =head1 INSTALLATION
 
@@ -201,21 +161,16 @@ Whoever is responsible for setting up and tuning Mason should read the
 I<Administrator's Manual> (L<HTML::Mason::Admin|HTML::Mason::Admin>),
 though developers might also benefit from reading it as well. This
 document covers more advanced configuration scenarios and performance
-optimization. Reference companions to the Administrator's Manual
-include L<HTML::Mason::Component|HTML::Mason::Component>,
-L<HTML::Mason::Interp|HTML::Mason::Interp>, and
-L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>.
+optimization. The reference companion to the Administrator's manual
+is the I<Parameters Reference>, which describes all the parameters you
+can use to configure Mason.
 
 Most of this documentation assumes that you're running Mason on top of
-mod_perl, since that is the most common configuration.  If you are
-using Mason outside of mod_perl, the documentation is still valid;
-you'll just have to ignore mod_perl specific references like $r and
-the ApacheHandler object, and you'll want to read the STANDALONE MODE
-section in L<HTML::Mason::Interp|HTML::Mason::Interp/"STANDALONE
-MODE">.
-
-If you would like to run Mason via a CGI script, please refer to the
+mod_perl, since that is the most common configuration.  If you would
+like to run Mason via a CGI script, refer to the
 L<HTML::Mason::CGIHandler|HTML::Mason::CGIHandler> documentation.
+If you are using Mason from a standalone program, refer to the
+STANDALONE MODE in L<HTML::Mason::Interp|HTML::Mason::Interp>.
 
 =head1 AUTHORS
 
@@ -224,7 +179,6 @@ Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams
 =head1 SEE ALSO
 
 L<HTML::Mason::Devel|HTML::Mason::Devel>,
-L<HTML::Mason::Request|HTML::Mason::Request>,
 L<HTML::Mason::Admin|HTML::Mason::Admin>
 
 =cut
