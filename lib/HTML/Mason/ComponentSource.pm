@@ -52,21 +52,19 @@ sub comp_source
 {
     my $self = shift;
 
-    return $self->{source} if exists $self->{source};
-
-    $self->{source} = eval { $self->{source_callback}->() };
+    my $source = eval { $self->{source_callback}->() };
 
     if (my $err = @_)
     {
 	UNIVERSAL::can( $err, 'rethrow' ) ? $err->rethrow : error $err;
     }
 
-    unless ( defined $self->{source} )
+    unless ( defined $source )
     {
 	error "source callback returned no source for $self->{friendly_name} component";
     }
 
-    return $self->{source};
+    return $source;
 }
 
 sub object_code
