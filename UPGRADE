@@ -91,8 +91,14 @@ Instead, you specify this via the ApacheHandler constructor, via:
 You should preload the Apache::Request or CGI module in your handler
 or httpd.conf, in order to save memory.
 
-- The ApacheHandler module now uses Apache::Request by default instead
-of CGI.pm.
+- The default HTTP argument processor is now Apache::Request instead
+of CGI.pm. This entails several differences:
+
+  * Apache::Request treats parameters case-insensitively for purposes
+  of grouping. This would  only be a problem if you expect two arguments
+  that differ only by case (e.g. "mode" and "MODE").
+
+  * Apache::Request always parses the query string, even for POST requests.
 
 - There is no more batch vs. stream mode.  In its place, the Request
 object now has an attribute called "autoflush", which is a much
