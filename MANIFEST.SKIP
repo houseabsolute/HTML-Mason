@@ -10,3 +10,7 @@ t/httpd.*
 MANIFEST.SKIP
 .*\.tar\.gz
 ^Makefile$
+ToClass.pm
+Events.pm
+blib
+htdocs
