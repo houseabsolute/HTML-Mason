@@ -138,6 +138,7 @@ sub taint_is_on
 
 sub make_fh
 {
+    return undef if $] >= 5.6;  # Let filehandles autovivify
     return do { local *FH; *FH; };  # double *FH avoids a warning
 }
 
