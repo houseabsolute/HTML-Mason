@@ -67,7 +67,7 @@ __PACKAGE__->valid_params
 						      sub { $_[0] =~ /^(?:batch|stream)$/ } } },
      max_recurse                  => { parse => 'string',  default => 32, type => SCALAR },
      preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF },
-     request_class                => { parse => 'string', default => 'HTML::Mason::Request', type => SCALAR },
+     request_class                => { parse => 'string',  default => 'HTML::Mason::Request', type => SCALAR },
      resolver                     => { isa => 'HTML::Mason::Resolver' },
      static_file_root             => { parse => 'string',  optional => 1, type => SCALAR },
      system_log_events            => { parse => 'string',  optional => 1, type => SCALAR|HASHREF|UNDEF },

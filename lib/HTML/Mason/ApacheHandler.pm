@@ -138,7 +138,7 @@ __PACKAGE__->valid_params
      multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1 },
      output_mode           => { parse => 'string',  type => SCALAR,       default => 'batch' },
      interp_class          => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason::Interp' },
-     request_class         => { parse => 'string', default => 'HTML::Mason::Request::ApacheHandler', type => SCALAR },
+     request_class         => { parse => 'string',  default => 'HTML::Mason::Request::ApacheHandler', type => SCALAR },
      top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1} },
 
      # the only required param
