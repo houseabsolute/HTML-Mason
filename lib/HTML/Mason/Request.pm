@@ -73,7 +73,7 @@ BEGIN
 			 descr => "An interpreter for Mason control functions",
 			 public => 0 },
 	 error_format => { parse => 'string', type => SCALAR, default => 'text',
-			   callbacks => { "must be one of 'brief', 'text', 'line', or 'html'" =>
+			   callbacks => { "HTML::Mason::Exception->can( method )'" =>
 					  sub { HTML::Mason::Exception->can("as_$_[0]"); } },
 			   descr => "How error conditions are returned to the caller (brief, text, line or html)" },
 	 error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
@@ -347,6 +347,8 @@ sub exec {
 sub _handle_error
 {
     my ($self, $err) = @_;
+
+    die $err if $self->is_subrequest;
 
     # Set error format for when error is stringified.
     if (UNIVERSAL::can($err, 'format')) {
