@@ -54,7 +54,8 @@ sub new
 {
     my $proto = shift;
     my $class = ref $proto || $proto;
-    return bless { validate(@_, $class->validation_spec) }, $class;
+    my @args = $class->create_contained_objects(@_);
+    return bless {validate(@args, $class->validation_spec)}, $class;
 }
 
 sub lex
