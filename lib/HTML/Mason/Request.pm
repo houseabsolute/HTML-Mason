@@ -1882,7 +1882,7 @@ values may be overridden by passing parameters to this method.
 
 The C<comp> parameter is required, while all other parameters are
 optional.  It may be specified as an absolute path or as a path
-relative to C<< $m->current_comp->dir_path >>.
+relative to the current component.
 
 See DEVEL<subrequests> for more information about subrequests.
 
