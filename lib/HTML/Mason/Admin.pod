@@ -421,27 +421,21 @@ That said, there are times when it is very useful to make a value
 available to all Mason components: a DBI database handle, a hash of
 user session information, the server root for forming absolute URLs.
 
-If you are using a C<handler.pl> script you can initialize the global there,
-either outside the handler() subroutine (if you only need to set it
-once) or inside (if you need to set it every request). Because Mason
-by default parses components in C<strict> mode, you'll need to invoke
-C<use vars> to avoid a fatal globals warning.
+Because Mason by default parses components in C<strict> mode, you'll
+need to declare a global if you don't want to access it with an
+explicit package name. The easiest way to declare a global is with the
+C<MasonAllowGlobals> parameter:
 
-    { package HTML::Mason::Commands;
-      use vars qw($server_root);
-    }
+   PerlSetVar MasonAllowGlobals $dbh
+   PerlAddVar MasonAllowGlobals $user
 
-    ...
+Since all components run in the same package, you'll be able to set
+the global in one component and access it in all the others.
 
-    $HTML::Mason::Commands::server_root = "http://www.mysite.com/";
-
-Alternatively, you can initialize the global in the E<lt>%onceE<gt> or
-E<lt>%initE<gt> section of a top-level C<autohandler>:
-
-    <%once>
-    use vars qw($server_root);
-    $server_root = "http://www.mysite.com/";
-    <%once>
+Autohandlers are common places to assign values to globals.  Use the
+<tt>&lt;%once&gt;</tt> section if the global only needs to be
+initialized at load time, or the <tt>&lt;%init&gt;</tt> section if it
+needs to be initialized every request.
 
 =head2 Sessions
 
