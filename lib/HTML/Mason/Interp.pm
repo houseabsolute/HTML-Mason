@@ -27,7 +27,7 @@ require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 # Fields that can be set in new method, with defaults
 my %fields =
     (
-     allow_recursive_autohandlers => 0,
+     allow_recursive_autohandlers => 1,
      autohandler_name => 'autohandler',
      code_cache_max_size => 10*1024*1024,
      comp_root => undef,
