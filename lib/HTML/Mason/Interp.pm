@@ -149,7 +149,16 @@ sub _initialize
     #
     if ($self->data_dir) {
 	foreach my $subdir ( qw(obj cache) ) {
-	    my @newdirs = mkpath( File::Spec->catdir( $self->data_dir, $subdir ) , 0, 0775 );
+	    my $makedir = File::Spec->catdir( $self->data_dir, $subdir );
+	    my @newdirs = eval { mkpath( $makedir, 0, 0775 ) };
+	    if ($@) {
+		my $user  = getpwuid($<);
+		my $group = getgrgid($();
+		my $data_dir = $self->data_dir;
+		error "Cannot create directory $makedir. " .
+		      "Perhaps you need to create or set permissions on your data_dir. " .
+		      "e.g. 'chown $user.$group $data_dir'";
+	    }
 	    $self->push_files_written(@newdirs);
 	}
     } else {
