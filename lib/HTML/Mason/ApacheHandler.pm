@@ -253,8 +253,8 @@ Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ 
 use Apache;
 use Apache::Constants qw( OK DECLINED NOT_FOUND );
 
-# Require a reasonably modern mod_perl - should probably be later
-use mod_perl 1.22;
+# This is the version that introduced PerlAddVar
+use mod_perl 1.24;
 
 if ( $mod_perl::VERSION < 1.99 )
 {

@@ -176,16 +176,10 @@ ServerRoot $conf{apache_dir}
   PerlModule  CGI
   PerlSetVar  MasonCompRoot "$conf{comp_root}"
   PerlSetVar  MasonDataDir  "$conf{data_dir}"
-EOF
 
-    if ($mod_perl::VERSION >= 1.24) {
-	$include .= <<'EOF';
   PerlAddVar  MasonAllowGlobals $foo
   PerlAddVar  MasonAllowGlobals @bar
-EOF
-    }
 
-    $include .= <<"EOF";
   PerlSetVar  MasonArgsMethod CGI
   SetHandler  perl-script
   PerlModule  HTML::Mason::ApacheHandler

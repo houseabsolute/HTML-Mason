@@ -142,9 +142,8 @@ Mason allows you to flexibly configure its behavior via F<httpd.conf>
 configuration parameters.
 
 These configuration parameters are set via mod_perl's C<PerlSetVar>
-and C<PerlAddVar> directives (the latter is only available in mod_perl
-version 1.24 and greater).  Though these parameters are all strings in
-your F<httpd.conf> file, Mason treats different directives as
+and C<PerlAddVar> directives.  Though these parameters are all strings
+in your F<httpd.conf> file, Mason treats different directives as
 containing different types of values:
 
 =over 4
@@ -180,11 +179,6 @@ To set a list parameter, use C<PerlAddVar> for the values, like this:
 
  PerlAddVar  MasonPreloads  /foo/bar/baz.comp
  PerlAddVar  MasonPreloads  /foo/bar/quux.comp
-
-As noted above, C<PerlAddVar> is only available in mod_perl 1.24 and
-up.  This means that it is only possible to assign a single value
-(using C<PerlSetVar>) to list parameters if you are using a mod_perl
-older than 1.24.
 
 =item * hash_list
 

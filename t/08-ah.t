@@ -40,7 +40,7 @@ my $tests = 19; # multi conf & taint tests
 $tests += 59 if my $have_libapreq = have_module('Apache::Request');
 $tests += 40 if my $have_cgi      = have_module('CGI');
 $tests += 15 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
-$tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
+$tests++ if $have_cgi;
 $tests++ if my $have_filter = have_module('Apache::Filter');
 
 plan( tests => $tests);
@@ -75,7 +75,7 @@ taint_tests();           # 15 tests
 
 if ($have_cgi) {             # 40 tests (+ 1?)
     cleanup_data_dir();
-    cgi_tests(1);            # 22 tests + 1 if mod_perl version > 1.24
+    cgi_tests(1);            # 23 tests
 
     cleanup_data_dir();
     cgi_tests(0);            # 18 tests
@@ -318,7 +318,7 @@ EOF
 						  );
     ok($success);
 
-    if (! $with_handler && $mod_perl::VERSION >= 1.24)
+    if (! $with_handler)
     {
 	# test that MasonAllowGlobals works (testing a list parameter
 	# from httpd.conf)
