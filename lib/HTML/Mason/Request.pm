@@ -82,7 +82,7 @@ sub _initialize {
     $self->{out_method} = $interp->out_method if !defined($self->{out_method});
     $self->{out_mode} = $interp->out_mode if !defined($self->{out_mode});
 
-    # Initialize other properties
+    # create base buffer
     $self->{buffer_stack} = [];
     $self->{stack} = [];
 }
@@ -134,11 +134,10 @@ sub exec {
 	HTML::Mason::Exception::Params->throw( error => "exec: first argument ($comp) must be an absolute component path or a component object" );
     }
 
-    # create base buffer
-    $self->push_buffer_stack( HTML::Mason::Buffer->new( sink => $self->out_method, mode => $self->out_mode ) );
-
     # This label is for declined requests.
     retry:
+    $self->push_buffer_stack( HTML::Mason::Buffer->new( sink => $self->out_method, mode => $self->out_mode ) );
+
     # Build wrapper chain and index.
     my $first_comp;
     {my @wrapper_chain = ($comp);
@@ -181,6 +180,7 @@ sub exec {
 
     # If an error occurred...
     if ($err and !$self->aborted) {
+	$self->pop_buffer_stack;
 	goto error;
     }
 
@@ -198,7 +198,6 @@ sub exec {
     return wantarray ? @result : $result;
 
     error:
-    $self->pop_buffer_stack;
     # don't mess with error message if default $SIG{__DIE__} was overridden
     if ($interp->die_handler_overridden) {
 	die $err;
@@ -721,7 +720,7 @@ sub push_buffer_stack {
 sub pop_buffer_stack {
     my ($self) = @_;
     my $buffer = pop @{ $self->{buffer_stack} };
-    $buffer->destroy;
+    $buffer->dispose;
 }
 
 sub buffer_stack {
