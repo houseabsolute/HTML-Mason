@@ -31,6 +31,9 @@ id #448.  Reported by Randy Harmon.
 - If in_package was set, Mason Would die if output was generated after
 a subrequest.  Task id #453.  Reported by David R. Baird.
 
+- If a component called $m->cache_self, and then $m->decline, no
+output would be generated.  Task id #454.  Patch by Vadim Ustiansky.
+
 
 1.19  March 3, 2003
 
