@@ -1,0 +1,13 @@
+<% $result %>
+This was<% $cached ? '' : ' not' %> cached.
+
+<%init>
+my $cached = 0;
+my $result;
+if (!($result = $m->cache(key=>'fandango'))) {
+    $result = "Hello Dolly.";
+    $m->cache(action=>'store', key=>'fandango', value=>$result);
+} else {
+    $cached = 1;
+}
+</%init>

@@ -21,6 +21,8 @@ sub basic_interp {
     return (new HTML::Mason::Interp(comp_root => $comp_root, data_dir => $data_dir));
 }
 
+print "1..17\n";
+
 # autohandler_name/allow_recursive_autohandlers
 try_exec_with_interp({},'autohandler_test/subdir/hello',1);
 try_exec_with_interp({allow_recursive_autohandlers=>1},'autohandler_test/subdir/hello',2);

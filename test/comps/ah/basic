@@ -1,0 +1,6 @@
+Basic test.
+2 + 2 = <% 2 + 2 %>.
+uri = <% $r->uri %>.
+method = <% $r->method %>.
+
+

@@ -46,6 +46,8 @@ sub try_exec_with_parser {
     try_exec($interp,$test,$iteration);
 }
 
+print "1..7\n";
+
 # allow_globals
 undef(*HTML::Mason::Commands::global);
 try_parse({},'allow_globals',1,'Global symbol .* requires explicit package name');
@@ -61,7 +63,7 @@ try_exec_with_parser({allow_globals=>[qw($packvar)]},'in_package',1);
 try_exec_with_parser({allow_globals=>[qw($packvar)],in_package=>'HTML::Mason::NewPackage'},'in_package',2);
 
 # preamble/postamble
-try_exec_with_parser({postamble=>'my $msg = "This is the postamble.\n"; mc_out($msg);'},'prepost',1);
-try_exec_with_parser({preamble=>'my $msg = "This is the preamble.\n"; mc_out($msg);'},'prepost',2);
+try_exec_with_parser({postamble=>'my $msg = "This is the postamble.\n"; $m->out($msg);'},'prepost',1);
+try_exec_with_parser({preamble=>'my $msg = "This is the preamble.\n"; $m->out($msg);'},'prepost',2);
 
 1;

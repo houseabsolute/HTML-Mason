@@ -34,7 +34,7 @@ Got an object file!
 My path is <% $comp->path %>.
 % }
 % if (defined($comp->fq_path)) {
-My fq_path is <% $comp->fq_path %>.
+My fq_path is <% $comp->fq_path =~ /anon/ ? '[anon something]' : $comp->fq_path %>.
 % }
 % if ($comp->is_file_based and defined($comp->source_file)) {
 %   my ($subdir) = ($comp->source_file =~ m{((alt_root|comps)/.*?)$});

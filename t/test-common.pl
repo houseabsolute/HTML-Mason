@@ -1,6 +1,8 @@
+BEGIN { $HTML::Mason::IN_DEBUG_FILE = 1 if !$HTML::Mason::IN_DEBUG_FILE }
 use Data::Dumper;
 use DirHandle;
 use HTML::Mason;
+use HTML::Mason::ApacheHandler;
 use Getopt::Std;
 use strict;
 
@@ -44,28 +46,35 @@ sub try_exec {
     my ($interp, $component, $iteration) = @_;
     next if (defined($comp_pattern) and $component !~ /$comp_pattern/);
     my $itermark = ($iteration) ? "-$iteration" : "";
-    print "Running $component$itermark\n";
+    my $test_name = $component . $itermark;
+    print "Running $test_name\n";
     
+    my $buf = "";
+    $interp->out_method(\$buf);
+    eval { $interp->exec("/$branch/$component"); };
+    if (my $err = $@) {
+	print "ERROR:\n$err\nnot ok\n";
+	return;
+    }
+
+    compare_results($test_name, $buf);
+}
+
+sub compare_results {
+    my ($test_name, $buf) = @_;
     my $results_dir = "$root/test/results/$branch";
     my $tmp_dir = "$root/test/tmp/$branch";
     unless (-d $tmp_dir) {
 	mkdir($tmp_dir,0775) or die "could not make directory $tmp_dir: $!";
     }
-    my $buf = "";
-    $interp->out_method(\$buf);
-    my $result;
-    eval { $interp->exec("/$branch/$component"); };
-    if (my $err = $@) {
-	print "ERROR:\n$err\nnot ok\n";
-	next;
-    }
-    $component =~ s/\//::/g;
+
+    $test_name =~ s/\//::/g;
     
-    my $tmpfile = "$tmp_dir/$component$itermark";
+    my $tmpfile = "$tmp_dir/$test_name";
     my $fh = new IO::File ">$tmpfile" or die "cannot write $tmpfile: $!";
     $fh->print($buf) if defined($buf);
     $fh->close;
-    my $resultsfile = "$results_dir/$component$itermark";
+    my $resultsfile = "$results_dir/$test_name";
     if (!-f $resultsfile and $create_mode) {
 	print "$resultsfile does not exist.\n$tmpfile contains:\n$buf\nCopy to results? ";
 	my $ans = <>;

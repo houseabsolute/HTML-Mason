@@ -1,0 +1,28 @@
+Caller is <% $m->caller->title %> or <% $m->callers(1)->title %>.
+The full component stack is <% join(",",map($_->title,$m->callers)) %>.
+
+% foreach my $path (qw(various_test /sections/perl foobar /shared)) {
+%   my $full_path = $m->process_comp_path($path);
+Trying to fetch <% $path %> (full path <% $full_path %>):
+%   if ($m->comp_exists($path)) {
+%     if (my $comp = $m->fetch_comp($path)) {
+<% $path %> exists with title <% $comp->title %>.
+%     } else {
+<% $path %> exists but could not fetch object!
+%     }
+%   } else {
+<% $path %> does not exist.
+%   }
+% }
+
+% $m->out("Output via the out function.");
+
+% my $diff = time-($m->time);
+% if ($diff <= 2) {
+No time difference.
+% } else {
+Time difference!
+% }
+
+
+

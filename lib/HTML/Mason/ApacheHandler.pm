@@ -77,7 +77,7 @@ my %fields =
     (
      apache_status_title => 'mason',
      decline_dirs => 1,
-     error_mode => undef,
+     error_mode => 'fatal',
      interp => undef,
      output_mode => undef,    # deprecated - now interp->out_mode
      top_level_predicate => undef,

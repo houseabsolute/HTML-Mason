@@ -1,0 +1,5 @@
+% my $var = 1;
+% for (my $i=0; $i<3; $i++) {
+<% $m->comp('support/cache_self_test',var=>$var) %>
+% $var++;
+% }

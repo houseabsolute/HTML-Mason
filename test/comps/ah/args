@@ -1,0 +1,8 @@
+scalar = <% $scalar %>
+list = <% join(",",@list) %>
+hash = <% join(",",map("$_=>$hash{$_}",keys(%hash))) %>
+<%args>
+$scalar
+@list
+%hash
+</%args>

@@ -1,0 +1,6 @@
+Now I will print myself:
+
+Now I will print myself:
+
+<% $m->file("file") %>
+

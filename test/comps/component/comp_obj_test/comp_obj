@@ -12,12 +12,12 @@ $useless=>17
 <% '-' x 60 %>
 
 File-based:
-<& /support/display_comp_obj, comp=>$m->current_comp &>
+<& /component/support/display_comp_obj, comp=>$m->current_comp &>
 
 <% '-' x 60 %>
 
 Subcomponent:
-<& /support/display_comp_obj, comp=>$m->fetch_comp('.subcomp')  &>
+<& /component/support/display_comp_obj, comp=>$m->fetch_comp('.subcomp')  &>
 
 <% '-' x 60 %>
 

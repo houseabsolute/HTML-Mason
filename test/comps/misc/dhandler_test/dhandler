@@ -1,2 +1,2 @@
-dhandler arg = <% mc_dhandler_arg %>
+dhandler arg = <% $m->dhandler_arg %>
 

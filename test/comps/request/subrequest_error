@@ -4,7 +4,7 @@
 </%def>
 
 Calling helper
-% eval {mc_comp('.helper')};
+% eval {$m->comp('.helper')};
 % my $error = $@;
 <& /shared/check_error, error=>$error, lines=>2 &>
 

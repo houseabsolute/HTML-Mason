@@ -1,0 +1,18 @@
+Caller is /request/various or /request/various.
+The full component stack is /request/support/various_test,/request/various.
+
+Trying to fetch various_test (full path /request/support/various_test):
+various_test exists with title /request/support/various_test.
+Trying to fetch /sections/perl (full path /sections/perl):
+/sections/perl exists with title /sections/perl.
+Trying to fetch foobar (full path /request/support/foobar):
+foobar does not exist.
+Trying to fetch /shared (full path /shared):
+/shared does not exist.
+
+Output via the out function.
+No time difference.
+
+
+
+

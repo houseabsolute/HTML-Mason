@@ -39,7 +39,8 @@ sub new
 {
     my $class = shift;
     my $self = {
-	%fields
+	%fields,
+	designator=>undef
     };
     my (%options) = @_;
     while (my ($key,$value) = each(%options)) {
@@ -52,7 +53,7 @@ sub new
     bless $self, $class;
 
     # Assign defaults.
-    $self->{fq_path} = "[anon ". ++$compCount . "]" if !defined($self->{fq_path});
+    $self->{designator} = "[anon ". ++$compCount . "]" if !defined($self->{fq_path});
     $self->{declared_args} = {} if !defined($self->{declared_args});
     $self->{subcomps} = {} if !defined($self->{subcomps});
     
@@ -73,7 +74,7 @@ sub assign_runtime_properties {
     $self->{interp} = $interp;
     $self->{fq_path} = $fq_path if $fq_path;
     foreach my $c (values(%{$self->{subcomps}})) {
-	$c->assign_runtime_properties($interp,$fq_path);
+	$c->assign_runtime_properties($interp);
     }
 }
 
@@ -95,8 +96,8 @@ sub is_file_based { 0 }
 #
 # Basic defaults for component designators: title, path, name, dir_path
 #
-sub title { return $_[0]->fq_path }
-sub name { return $_[0]->fq_path }
+sub title { return $_[0]->{designator} }
+sub name { return $_[0]->{designator} }
 sub path { return undef }
 sub dir_path { return undef }
 

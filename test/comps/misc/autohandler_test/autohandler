@@ -1,7 +1,7 @@
 <& header &>
-Autohandler comp: <% mc_auto_comp %>
+Autohandler comp: <% $m->auto_comp->title %>
 % my $buf;
-<% mc_auto_next (b=>$a*2) %>
+<% $m->auto_next (b=>$a*2) %>
 <& footer &>
 
 <%args>

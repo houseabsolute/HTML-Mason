@@ -1,0 +1,10 @@
+Some text
+
+% eval {$m->comp('support/abort_test')};
+% if (my $err = $@) {
+%   if ($m->aborted) {
+Component aborted with value <% $m->aborted_value %>
+%   } else {
+Got error
+%   }
+% }
