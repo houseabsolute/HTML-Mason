@@ -93,4 +93,81 @@ sub import
     }
 }
 
+package HTML::Mason::Exception;
+
+use overload
+    '""' => \&as_string,
+    fallback => 1;
+
+sub as_string
+{
+    my ($self) = @_;
+    
+    return $self->error;
+}
+
+sub filtered_frames
+{
+    my ($self) = @_;
+
+    my (@frames);
+    my $trace = $self->trace;
+    my @ignore_subs =
+	qw[
+	   (eval)
+	   Exception::Class::Base::throw
+	   HTML::Mason::Commands::__ANON__
+	   HTML::Mason::Component::run
+	   HTML::Mason::Exceptions::__ANON__
+	   HTML::Mason::Request::_run_comp
+	   ];
+    while (my $frame = $trace->next_frame)
+    {
+	last if ($frame->subroutine eq 'HTML::Mason::Request::exec');
+	unless (grep($frame->subroutine eq $_, @ignore_subs) or
+		($frame->subroutine eq 'HTML::Mason::Request::comp' and $frame->filename =~ /Request\.pm/)) {
+	    push(@frames, $frame);
+	}
+    }
+    return @frames;
+}
+
+sub analyze_error
+{
+    my ($self) = @_;
+
+    my ($file, @msgs, @frames);
+    
+    @frames = $self->filtered_frames;
+    if (UNIVERSAL::isa($self, 'HTML::Mason::Exception::Compilation')) {
+	my $error = $self->error;
+	while ($error =~ /(.*) at (.*) line (\d+)\./g) {
+	    push(@msgs, [$1, $3]);
+	    $file = $2;
+	}
+    } else {
+	(my $msg = $self->error) =~ s/\n//g;
+	@msgs = ([$msg, $self->line]);
+	$file = $frames[0]->filename;
+    }
+
+    return { file    => $file,
+	     errors  => \@msgs,
+	     frames  => \@frames };
+}
+
+sub as_log_line
+{
+    my ($self) = @_;
+
+    my $info = $self->analyze_error;
+    my @fields;
+    
+    push(@fields, [File => $info->{file}]);
+    push(@fields, [Errors => join(", ", map { sprintf("[%d:%s]", $_->[1], $_->[0]) } @{$info->{errors}})]);
+    push(@fields, [Stack => join(", ", map { sprintf("[%s:%d]", $_->filename, $_->line) } @{$info->{frames}})]);
+
+    return (join("\t", map { sprintf("%s: %s", $_->[0], $_->[1]) } @fields));
+}
+
 1;
