@@ -70,7 +70,7 @@ code, but still worth fixing.  (reported by Adam Rinehart).
 - Fixed a small documentation error about what kinds of things are
 valid keys in <%flags> and <%attr> blocks.
 - Configuring multiple component roots via the httpd.conf file failed
-silently (as opposed to releases 1.10 - 1.13, where this failed with
+silently (as opposed to releases 1.10 - 1.12, where this failed with
 an error).
 - Unreadable component source files caused the confusing error message
 "source callback returned no source".  This will now throw a much more
