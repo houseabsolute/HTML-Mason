@@ -123,7 +123,7 @@ Here is a simple component example:
 
 After 12 pm, the output of this component is:
 
-    Hello world, good afternoon.
+    Hello World, good afternoon.
 
 This short example demonstrates the three primary "in-line" Perl
 sections. In-line sections are generally embedded within HTML and
