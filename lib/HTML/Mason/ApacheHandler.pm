@@ -827,7 +827,10 @@ sub request_args
 
     my (%args, $cgi_object);
     if ($self->args_method eq 'mod_perl') {
-	$apr = Apache::Request->new($r) unless UNIVERSAL::isa($r, 'Apache::Request');
+        $apr = ( UNIVERSAL::isa($r, 'Apache::Request') ?
+                 $r :
+                 Apache::Request->new($r) );
+
 	%args = $self->_mod_perl_args($apr);
     } else {
         $apr = $r;
