@@ -51,7 +51,7 @@ sub new
 		out_mode => { type => SCALAR, optional => 1 },
 	      }
 	    );
-    
+
     my $self = bless {
 		      %fields,
 		      %options,
@@ -107,14 +107,14 @@ sub exec {
 
     # Error may occur in several places in function.
     my $err;
-    
+
     # Check if reload file has changed.
     $interp->check_reload_file if ($interp->use_reload_file);
 
     # Purge code cache if necessary. Generally happens at the end of
     # the component; this is just in case many errors are occurring.
     $interp->purge_code_cache;
-    
+
     # $comp can be an absolute path or component object.  If a path,
     # load into object. If not found, check for dhandler.
     my ($path, $orig_path);
@@ -197,7 +197,7 @@ sub exec {
     # Purge code cache if necessary. We do this at the end so as not
     # to affect the response of the request as much.
     $interp->purge_code_cache;
-    
+
     # Handle abort.
     return $self->{aborted_value} if ($self->{aborted});
 
@@ -439,7 +439,7 @@ sub fetch_comp
 	    or HTML::Mason::Exception->throw( error => "no method '$method_name' for component " . $owner_comp->title );
 	return $method_comp;
     }
-    
+
     #
     # If path does not contain a slash, check for a subcomponent in the
     # current component first.
@@ -556,7 +556,7 @@ sub comp {
     # was caught by an eval.
     undef $self->{error_backtrace};
     undef $self->{error_clean};
-    
+
     # Get modifiers: optional hash reference passed in as first argument.
     # merge multiple hash references to simplify user and internal usage.
     my %mods = ();
