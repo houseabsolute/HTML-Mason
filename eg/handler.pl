@@ -14,7 +14,8 @@ use strict;
 }
 
 # Create ApacheHandler object at startup.
-my $ah = new HTML::Mason::ApacheHandler();
+my $ah = new HTML::Mason::ApacheHandler( comp_root => '<component root>',
+                                         data_dir => '<data directory>' );
 
 sub handler
 {
