@@ -262,8 +262,6 @@ EOF
 		       );
 
 
-#------------------------------------------------------------
-
     $group->add_support( path => '/auto_filter_die/autohandler',
 			 component => <<'EOF',
 autohandler
@@ -271,8 +269,6 @@ autohandler
 EOF
 		       );
 
-
-#------------------------------------------------------------
 
     $group->add_test( name => 'auto_filter_die/abort_comp_call_in_filter_with_autohandler',
                       description => 'Test that calling another component that dies from a filter section in a component wrapped by an autohandler produces a proper error',
@@ -283,6 +279,30 @@ $m->comp( 'dies' );
 </%filter>
 EOF
                       expect_error => qr/foo death/,
+                    );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/support/abort_in_filter',
+			 component => <<'EOF',
+Will not be seen
+<%filter>
+$m->abort;
+$_ = lc $_;
+</%filter>
+EOF
+		       );
+
+    $group->add_test( name => 'abort_in_filter',
+                      description => 'Test that abort in a filter causes no output',
+                      component => <<'EOF',
+Before the abort
+<& support/abort_in_filter &>
+After the abort - not seen
+EOF
+                      expect => <<'EOF',
+Before the abort
+EOF
                     );
 
 #------------------------------------------------------------
