@@ -912,5 +912,33 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'default_warnings',
+		      description => 'test that warnings during component compilation cause an exception except for redefined subs',
+		      component => <<'EOF',
+a global: <% $GLOBAL %>
+<%once>
+sub foo { 1 }
+sub foo { 1 }
+</%once>
+EOF
+		      expect_error => qr/Global symbol "\$GLOBAL" requires explicit package name/,
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'ignore_warnings',
+		      description => 'test that setting ignore_warnings_exp works',
+		      interp_params => { ignore_warnings_expr => qr/useless use of "re" pragma/i },
+		      component => <<'EOF',
+% use re;
+foo
+EOF
+		      expect => <<'EOF',
+foo
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
