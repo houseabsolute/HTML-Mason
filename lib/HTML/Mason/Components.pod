@@ -1019,7 +1019,7 @@ the results of the current component.  By separating out and hiding a
 filter that, say, changes HTML in a complex way, we allow 
 non-programmers to work in a cleaner HTML environment.
 
-=head2 <%filter> section
+=head2 &lt;%filter&gt; section
 
 The <%filter> section allows you to arbitrarily filter the output of
 the current component. Upon entry to this code, $_ contains the
