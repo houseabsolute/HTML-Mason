@@ -448,7 +448,7 @@ sub _add_body_code
 	$comment = "#line $line $file\n";
     }
 
-    $self->{current_comp}{body} .= "comment$code";
+    $self->{current_comp}{body} .= "$comment$code";
 }
 
 sub dump
