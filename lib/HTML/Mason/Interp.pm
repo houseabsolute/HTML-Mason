@@ -456,6 +456,14 @@ sub eval_object_code
     my ($self, %p) = @_;
     my $object_code = $p{object_code};
 
+    if ( $object_code =~ /\n# MASON COMPILER ID: (\S+)$/ )
+    {
+	my $comp_version = $1;
+
+	wrong_compiler_error 'This object file was created by an incompatible Compiler or Lexer.  Please remove the component files in your object directory.'
+	    if $comp_version ne $self->compiler->object_id;
+    }
+
     # If in taint mode, untaint the object text
     ($object_code) = ($object_code =~ /^(.*)/s) if taint_is_on;
 
