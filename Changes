@@ -5,6 +5,21 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+0.88
+
+- Fixed broken Parser postprocessor code (broken since 0.85).  Added
+tests for this code path as well as the preprocessor feature.
+(Reported by Tim Bishop).
+- Replaced lots of simple accessors with new HTML::Mason::MethodMaker
+(which just makes simple read-only and read-write accessor methods).
+- Removed all direct hash key access from one object into another.
+- Removed all unneeded uses of Exporter in various modules.
+- Added warning about mod_perl as a DSO to README file.
+- Added 'cgi_object' method to HTML::Mason::Request::ApacheHandler.
+This method returns the CGI object Mason uses internally (unless
+you're using Apache::Request instead).  Added documentation for
+this. (suggested by many people)
+
 0.87  Wed May 24 08:49:12 PDT 2000
 
 - Fixed multiple GET/POST argument glitch introduced in 0.86.
