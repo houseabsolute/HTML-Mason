@@ -5,7 +5,7 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
-0.861 Wed May 24 08:49:12 PDT 2000
+0.87  Wed May 24 08:49:12 PDT 2000
 
 - Fixed multiple GET/POST argument glitch introduced in 0.86.
 (reported by Matt Hoskins)
