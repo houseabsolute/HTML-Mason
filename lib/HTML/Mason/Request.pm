@@ -2088,9 +2088,9 @@ L<CGIHandler|HTML::Mason::CGIHandler> documentation for more details.
 =item redirect ($url, [$status])
 
 Given a url, this generates a proper HTTP redirect for that URL. It
-uses C<< $m->clear_buffer >> to clear out any previous output, and C<<
-$m->abort >> to abort the request.  By default, the status code used
-is 302, but this can be overridden by the user.
+uses C<< $m->clear_and_abort >> to clear out any previous output, and
+abort the request.  By default, the status code used is 302, but this
+can be overridden by the user.
 
 Since this is implemented using C<< $m->abort >>, it will be trapped
 by an C< eval {} > block.  If you are using an C< eval {} > block in
