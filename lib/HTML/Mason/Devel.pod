@@ -1085,17 +1085,17 @@ specific expression:
 
 Future Mason versions will allow user-defined and multi-letter escape flags.
 
-=head2 \ at end of line
+=head2 Backslash at end of line
 
-A \ suppresses the newline before %-lines and section tags. In HTML
+A backslash (\) at the end of a line suppresses the newline. In HTML
 components, this is mostly useful for fixed width areas like <PRE>
 tags, since browsers ignore white space for the most part. An example:
 
     <PRE>
     foo
-    %if ($b == 2) {
+    % if (1) {
     bar
-    %}
+    % }
     baz
     </PRE>
 
@@ -1111,19 +1111,15 @@ To suppress the newlines:
 
     <PRE>
     foo\
-    %if ($b == 2) {
+    % if (1) {
     bar\
-    %}
+    % }
     baz
     </PRE>
 
 which prints
 
     foobarbaz
-
-The backslash has no special meaning outside this context. In
-particular, you cannot use it to escape a newline before a plain text
-line.
 
 =head1 DATA CACHING
 
