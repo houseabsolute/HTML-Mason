@@ -102,12 +102,6 @@ sub compiled_component
 	$subs{main} = $params->{code};
 	$params->{code} = "sub {\n\$m->call_dynamic( 'main', \@_ )\n}";
 
-        if ( exists $params->{filter} )
-        {
-            $subs{filter} = $params->{filter};
-            $params->{filter} = "sub {\n\$m->call_dynamic( 'filter', \@_ )\n}";
-        }
-
 	$params->{dynamic_subs_init} =
 	    join '', ( "sub {\n",
 		       $self->_blocks('shared'),
@@ -194,11 +188,19 @@ sub _make_main_header
     my $self = shift;
 
     my $pkg = $self->in_package;
+
+    my @filter;
+    if ( $self->_blocks('filter') )
+    {
+        @filter = "my \$__filter__;\n";
+    }
+
     return join '', ( "package $pkg;\n",
 		      $self->use_strict ? "use strict;\n" : "no strict;\n",
 		      sprintf( "use vars qw(\%s);\n",
 			       join ' ', '$m', $self->allow_globals ),
 		      $self->_blocks('once'),
+                      @filter,
 		    );
 }
 
@@ -259,17 +261,9 @@ sub _component_params
     $params{declared_args} = join '', "{\n", $self->_declared_args, "\n}"
 	if @{ $self->{current_comp}{args} };
 
-    if ( my @filter = $self->_blocks('filter') )
+    if ( $self->_blocks('filter') )
     {
-        $params{filter} =
-            ( join '',
-              "sub { local \$_ = shift;\n",
-              "my %ARGS; { local \$^W; %ARGS = \@_ unless \@_ % 2; }\n",
-              ( join ";\n", @filter ),
-              ";\n",
-              "return \$_;\n",
-              "}\n",
-            );
+        $params{filter} = '\\$__filter__';
     }
 
     return \%params;
@@ -296,6 +290,7 @@ EOF
     return join '', ( $self->preamble,
 		      "my \%ARGS;\n",
 		      @args,
+                      $self->_filter,
 		      "\$m->debug_hook( \$m->current_comp->path ) if ( \%DB:: );\n\n",
 		      $self->_blocks('init'),
 		      $self->{current_comp}{body},
@@ -372,6 +367,24 @@ EOF
     $decl .= " );\n";
 
     return @req_check, $decl, @assign;
+}
+
+sub _filter
+{
+    my $self = shift;
+
+    my @filter;
+    @filter = $self->_blocks('filter')
+        or return;
+
+    return ( join '',
+             "\$__filter__ = sub { local \$_ = shift;\n",
+             ( join ";\n", @filter ),
+             ";\n",
+             "return \$_;\n",
+             "};\n",
+           );
+
 }
 
 sub _flags
