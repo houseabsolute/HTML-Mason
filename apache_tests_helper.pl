@@ -72,6 +72,7 @@ sub write_apache_conf
     my $libs = _libs();
 
     my $include .= <<"EOF";
+ServerRoot $APACHE{apache_dir}
 
 <Perl>
  $libs
@@ -144,12 +145,8 @@ EOF
 
 </IfDefine>
 
-<IfDefine no_comp_root>
-  PerlSetVar MasonArgsMethod  mod_perl
-  PerlSetVar MasonDataDir     $APACHE{data_dir}
-
+<IfDefine no_config>
   SetHandler  perl-script
-  PerlModule  HTML::Mason::ApacheHandler
   PerlHandler HTML::Mason::ApacheHandler
 </IfDefine>
 
