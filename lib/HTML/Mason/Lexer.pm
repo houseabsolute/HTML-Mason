@@ -8,7 +8,7 @@ use strict;
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error error)] );
 
-use HTML::Mason::Tools qw( taint_is_on )
+use HTML::Mason::Tools qw( taint_is_on );
 
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
