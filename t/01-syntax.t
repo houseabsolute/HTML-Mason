@@ -318,5 +318,23 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'call_starts_with_newline',
+		      description => 'make a comp call where the tag starts with a newline',
+		      component => <<'EOF',
+<&
+ .foo,
+ x => 1
+ &>\
+<%def .foo>\
+x is <% $ARGS{x} %>
+</%def>
+EOF
+		      expect => <<'EOF',
+x is 1
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }

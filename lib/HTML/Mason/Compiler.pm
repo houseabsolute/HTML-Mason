@@ -486,12 +486,12 @@ sub component_call
 
     my $call = $p{call};
     for ($call) { s/^ +//; s/ +$//; }
-    if ( $call =~ m,^[\w/.],)
+
+    if ( $call =~ m{^\s*[\w/.:]}s )
     {
-	my $comma = index($call, ',');
-	$comma = length $call if $comma == -1;
-	(my $comp = substr($call, 0, $comma)) =~ s/\s+$//;
-	$call = "'$comp'" . substr($call, $comma);
+        # We want to preserve whitespace or else we might throw off
+        # the line numbering.
+        $call =~ s{^(\s*)([\w/.:]+)}{$1'$2'};
     }
 
     my $code = "\$m->comp( $call );\n";
