@@ -68,7 +68,7 @@ sub compare_results {
 	mkdir($tmp_dir,0775) or die "could not make directory $tmp_dir: $!";
     }
 
-    $test_name =~ s/\//::/g;
+    $test_name =~ s/([^\w\.\-\~])/sprintf('+%02x', ord $1)/eg;
     
     my $tmpfile = "$tmp_dir/$test_name";
     my $fh = new IO::File ">$tmpfile" or die "cannot write $tmpfile: $!";
