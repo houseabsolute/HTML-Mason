@@ -28,19 +28,29 @@ sub new {
     my @my_args = $package->create_contained_objects(comp_root => $ENV{DOCUMENT_ROOT}, %args);
 
     my $self = bless { validate @my_args, $package->validation_spec };
-    $self->{interp}->out_method(\$self->{output});
-    $self->{interp}->compiler->set_allowed_globals('$r');
+    $self->interp->out_method(\$self->{output});
+    $self->interp->compiler->set_allowed_globals('$r');
     
     return $self;
 }
 
 sub handle_request {
     my $self = shift;
+    $self->_handler($ENV{PATH_INFO}, @_);
+}
 
+sub handle_cgi {
+    my ($self, $component) = (shift, shift);
+    $self->_handler($component, @_);
+}
+
+sub _handler {
+    my ($self, $component) = (shift, shift);
+    
     my ($local_root, $local_datadir);
     if ($self->{dev_dirs}) {
 	foreach my $dir (@{$self->{dev_dirs}}) {
-	    if ($ENV{PATH_INFO} =~ s/^\Q$dir//) {
+	    if ($component =~ s/^\Q$dir//) {
 		$local_root    = "$self->{interp}{comp_root}$dir";
 		$local_datadir = "$self->{interp}{data_dir}$dir";
 		last;
@@ -52,23 +62,25 @@ sub handle_request {
     # Encapsulation be damned!
     # Actually, the 'dev_dirs' stuff won't work properly unless comp_root and data_dir can
     # be changed on the fly.
-    local $self->{interp}{comp_root} = $local_root    if $local_root;
-    local $self->{interp}{data_dir}  = $local_datadir if $local_datadir;
+    local $self->interp->{comp_root} = $local_root    if $local_root;
+    local $self->interp->{data_dir}  = $local_datadir if $local_datadir;
 
     my $r = 'HTML::Mason::CGIRequest'->new();
-    $self->{interp}->set_global('$r', $r);
+    $self->interp->set_global('$r', $r);
     
     $self->{output} = '';
-    $self->{interp}->exec($ENV{PATH_INFO}, $r->params);
+    $self->interp->exec($component, $r->params);
 
     if (@_) {
-	# This is a secret feature, and should stay secret because it's just a hack for the test suite.
+	# This is a secret feature, and should stay secret (or go away) because it's just a hack for the test suite.
 	$_[0] .= $r->http_header . $self->{output};
     } else {
 	print $r->http_header;
 	print $self->{output};
     }
 }
+
+sub interp { $_[0]->{interp} }
 
 package HTML::Mason::CGIRequest;
 
@@ -190,8 +202,26 @@ will be C<$ENV{DOCUMENT_ROOT}>.
 =item * handle_request()
 
 Handles the current request, reading input from C<$ENV{QUERY_STRING}>
-or C<STDIN> and sending output to C<STDOUT>.  This method doesn't
-accept any parameters.
+or C<STDIN> and sending headers and component output to C<STDOUT>.
+This method doesn't accept any parameters.  The initial component
+will be the one specified in C<$ENV{PATH_INFO}>.
+
+=item * handle_cgi()
+
+Like C<handle_request()>, but the first (only) parameter is a
+component path or component object.  This is useful within a
+traditional CGI environment, in which you're essentially using Mason
+as a templating language but not an application server.
+
+C<handle_cgi()> will create a CGI query object, parse the query
+parameters, and send the HTTP header and component output to STDOUT.
+If you want to handle those parts yourself, see
+L<HTML::Mason::Interp/"Using Mason from a standalone script">.
+
+=item * interp()
+
+Returns the Mason Interpreter associated with this handler.  The
+Interpreter lasts for the entire lifetime of the handler.
 
 =back
 
