@@ -295,6 +295,11 @@ Use the usual Apache.pm functions, such as $r->header_out.  See the
 Here's how to redirect to $url:
 
 	<%init>
+	# The next two lines are necessary to stop Apache from re-reading
+	# POSTed data.
+	$r->method('GET');
+	$r->headers_in->unset('Content-length');
+
 	$r->content_type('text/html');
 	$r->header_out(Location=>$url);
 	$m->abort(302);
