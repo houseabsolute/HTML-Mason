@@ -436,4 +436,23 @@ Administrator's Guide:
 
 and the section on $m->out in the Request manual:
 
-	http://www.masonhq.com/docs/manual/Request.html#item_out_string_
+	http://www.masonhq.com/docs/manual/Request.html#item_out_string
+
+=head2 How can I handle file uploads under Mason?
+
+The way you handle this depends on which args method you chose for the
+ApacheHandler class.
+
+Under the default method, 'CGI', which uses the CGI.pm module to
+handle incoming arguments, you can use the $m->cgi_object method to
+retrieve a CGI.pm object which can be used to retrieve the uploaded
+file(s).  Please see the CGI.pm documentation for more details.
+
+If you are using the 'mod_perl' method, which uses Apache::Request,
+then the request object available in your components will be an object
+in the Apache::Request class (as opposed to the Apache class).  This
+object is capable of returning Apache::Upload objects for parameters
+which were file uploads.  Please see the Apache::Request documentation
+for more details.
+
+=cut
