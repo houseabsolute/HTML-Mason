@@ -614,13 +614,13 @@ sub comp {
     #
     # Finally, call component subroutine.
     #
-    my ($result, @result);
+    my @result;
+
+    # we have to get this here because the eval{} block changes the
+    # context.
+    my $wantarray = wantarray;
     eval {
-	if (wantarray) {
-	    @result = $self->_run_comp(wantarray, $comp, @args);
-	} else {
-	    $result = $self->_run_comp(wantarray, $comp, @args);
-	}
+	@result = $self->_run_comp($wantarray, $comp, @args);
     };
 
     #
@@ -647,7 +647,7 @@ sub comp {
     $self->pop_buffer_stack;
     $self->pop_buffer_stack if ($mods{store});
 
-    return wantarray ? @result : $result;  # Will return undef in void context (correct)
+    return wantarray ? @result : $result[0];  # Will return undef in void context (correct)
 }
 
 sub _run_comp
