@@ -96,6 +96,7 @@ sub new
     my %p = @_;
 
     GetOptions( 'create' => \$p{create},
+		'tests-to-run=s' => \$p{tests_to_run},
 	      );
 
     die "No group name provided\n"
@@ -107,6 +108,9 @@ sub new
     $p{pre_test_cleanup} = 1
         unless exists $p{pre_test_cleanup};
 
+    $p{tests_to_run} = $ENV{TESTS_TO_RUN}
+        if !defined($p{tests_to_run}) and defined($ENV{TESTS_TO_RUN});
+ 
     return bless {
 		  interp_class => 'HTML::Mason::Interp',
 		  %p,
@@ -348,8 +352,17 @@ sub _run_tests
 {
     my $self = shift;
 
+    my %tests_to_run;
+    if ($self->{tests_to_run}) {
+	my @tests_to_run = sort { $a <=> $b } split(/\s*,\s*/, $self->{tests_to_run});
+	die "tests_to_run must be a list of numbers separated by commas" if grep(!/\d+/, @tests_to_run);
+	%tests_to_run = map { ($_, 1) } @tests_to_run;
+	printf ("Running only test%s %s\n", @tests_to_run == 1 ? "" : "s", join(", ", @tests_to_run));
+    }
+    
     my $count = scalar @{ $self->{tests} };
     print "\n1..$count\n";
+
     if ($VERBOSE)
     {
 	print "Running $self->{name} tests ($count tests): $self->{description}\n";
@@ -358,13 +371,15 @@ sub _run_tests
     my $x = 1;
     foreach my $test ( @{ $self->{tests} } )
     {
-	print "Running $test->{name} (#$x): $test->{description}\n"
-	    if $VERBOSE;
-
-	$self->{current_test} = $test;
-	$self->_make_component unless $test->{skip_component};
-	$self->_run_test;
-
+	if (!%tests_to_run or $tests_to_run{$x}) {
+	    print "Running $test->{name} (#$x): $test->{description}\n"
+		if $VERBOSE;
+	    
+	    $self->{current_test} = $test;
+	    $self->_make_component unless $test->{skip_component};
+	    $self->_run_test;
+	}
+	    
 	$x++;
     }
 }
@@ -781,6 +796,15 @@ If the individual tests are run from the command line with the
 the test harness will simply output its results.  This allows you to
 cut and paste these results back into the test file (assuming they are
 correct!).
+
+=head2 Running selected tests
+
+You can run just some of a test file with the '--tests-to-run' flag,
+or by setting the TESTS_TO_RUN environment variable. In either case
+the value is a comma-separated list of test numbers.  e.g.
+
+    perl ./01-syntax.t --tests-to-run=3,5
+    TESTS_TO_RUN=3,5 perl ./01-syntax.t
 
 =head1 SEE ALSO
 
