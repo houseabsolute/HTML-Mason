@@ -52,11 +52,7 @@ use Exception::Class (%e);
 
 if ($HTML::Mason::DEBUG)
 {
-    Exception::Class::Base->do_trace(1);
-    foreach my $class (keys %e)
-    {
-	$class->do_trace(1);
-    }
+    Exception::Class::Base->Trace(1);
 }
 
 

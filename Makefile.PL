@@ -50,7 +50,7 @@ WriteMakefile(
     'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
     'PREREQ_PM' => { 'Data::Dumper' => 2.08, 'File::Spec' => 0.8, 'Params::Validate' => 0.07,
 		     'Apache::Request' => 0.31,
-		     'Exception::Class' => 0,
+		     'Exception::Class' => 0.95,
 		     },
 
     # %APACHE is created when setup_mod_perl_tests() is called.  The
