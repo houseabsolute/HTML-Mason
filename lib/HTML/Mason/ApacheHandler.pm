@@ -558,19 +558,21 @@ sub new
     my $class = shift;
     # get $r off end of params if its there
     my $r = pop if @_ % 2 == 1;
+    my %params = @_;
 
-    my %defaults = ( request_class  => 'HTML::Mason::Request::ApacheHandler',
-                     resolver_class => 'HTML::Mason::Resolver::File::ApacheHandler',
-                   );
-    my $allowed_params = $class->allowed_params(%defaults, @_);
+    my %defaults;
+    $defaults{request_class}  = 'HTML::Mason::Request::ApacheHandler'
+        unless exists $params{request};
+    $defaults{resolver_class} = 'HTML::Mason::Resolver::File::ApacheHandler'
+        unless exists $params{resolver};
+
+    my $allowed_params = $class->allowed_params(%defaults, %params);
 
     if ( exists $allowed_params->{comp_root} and
 	 my $req = $r || Apache->request )  # DocumentRoot is only available inside requests
     {
 	$defaults{comp_root} = $req->document_root;
     }
-
-    my %params = @_;
 
     if (exists $allowed_params->{data_dir} and not exists $params{data_dir})
     {
