@@ -11,29 +11,23 @@ use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
-=pod
-
-=begin for reference later
-
-BEGIN
-{
-    __PACKAGE__->valid_params
-        (
-         comp_id       => { type => SCALAR | UNDEF, public => 0 },
-         friendly_name => { type => SCALAR, public => 0 },
-         last_modified => { type => SCALAR, public => 0 },
-         comp_path     => { type => SCALAR, public => 0 },
-         comp_class    => { isa => 'HTML::Mason::Component',
-                            default => 'HTML::Mason::Component',
-                            public => 0 },
-         extra         => { type => HASHREF, default => {}, public => 0 },
-         source_callback => { type => CODEREF, public => 0 },
-    );
-}
-
-=end
-
-=cut
+# for reference later
+#
+# BEGIN
+# {
+#     __PACKAGE__->valid_params
+#         (
+#          comp_id       => { type => SCALAR | UNDEF, public => 0 },
+#          friendly_name => { type => SCALAR, public => 0 },
+#          last_modified => { type => SCALAR, public => 0 },
+#          comp_path     => { type => SCALAR, public => 0 },
+#          comp_class    => { isa => 'HTML::Mason::Component',
+#                             default => 'HTML::Mason::Component',
+#                             public => 0 },
+#          extra         => { type => HASHREF, default => {}, public => 0 },
+#          source_callback => { type => CODEREF, public => 0 },
+#     );
+# }
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( comp_id

@@ -28,30 +28,25 @@ use HTML::Mason::MethodMaker
 		    ]
       );
 
-=pod
-
-=begin for reference
-
-__PACKAGE__->valid_params
-    (
-     attr               => {type => HASHREF, default => {}, public => 0},
-     code               => {type => CODEREF, public => 0, public => 0},
-     load_time          => {type => SCALAR,  optional => 1, public => 0},
-     declared_args      => {type => HASHREF, default => {}, public => 0},
-     dynamic_subs_init  => {type => CODEREF, default => sub {}, public => 0},
-     flags              => {type => HASHREF, default => {}, public => 0},
-     comp_id            => {type => SCALAR,  optional => 1, public => 0},
-     methods            => {type => HASHREF, default => {}, public => 0},
-     mfu_count          => {type => SCALAR,  default => 0, public => 0},
-     object_size        => {type => SCALAR,  default => 0, public => 0},
-     parser_version     => {type => SCALAR,  optional => 1, public => 0}, # allows older components to be instantied
-     compiler_id        => {type => SCALAR,  optional => 1, public => 0},
-     subcomps           => {type => HASHREF, default => {}, public => 0},
-    );
-
-=end
-
-=cut
+# for reference later
+# 
+# __PACKAGE__->valid_params
+#     (
+#      attr               => {type => HASHREF, default => {}, public => 0},
+#      code               => {type => CODEREF, public => 0, public => 0},
+#      load_time          => {type => SCALAR,  optional => 1, public => 0},
+#      declared_args      => {type => HASHREF, default => {}, public => 0},
+#      dynamic_subs_init  => {type => CODEREF, default => sub {}, public => 0},
+#      flags              => {type => HASHREF, default => {}, public => 0},
+#      comp_id            => {type => SCALAR,  optional => 1, public => 0},
+#      methods            => {type => HASHREF, default => {}, public => 0},
+#      mfu_count          => {type => SCALAR,  default => 0, public => 0},
+#      object_size        => {type => SCALAR,  default => 0, public => 0},
+#      parser_version     => {type => SCALAR,  optional => 1, public => 0}, # allows older components to be instantied
+#      compiler_id        => {type => SCALAR,  optional => 1, public => 0},
+#      subcomps           => {type => HASHREF, default => {}, public => 0},
+#     );
+# 
 
 my %defaults = ( attr              => {},
                  declared_args     => {},
