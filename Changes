@@ -15,6 +15,11 @@ was not a Mason bug, but a bug in the test code itself.
 - Even if ApacheHandler was given an Apache::Request object to
 handle_request() or prepare_request(), it was still calling
 Apache::Request->new.
+- Fixed incorrect $m->make_subrequest documentation.
+- Added some incompatibilities in 1.10 to the UPGRADE document that
+were left out in previous versions.
+- If ApacheHandler is given an Apache::Request object, it should not
+create a new one.
 
 1.10  June 25, 2002
 
