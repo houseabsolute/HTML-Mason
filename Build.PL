@@ -64,17 +64,6 @@ $build->create_build_script;
 
 __END__
 
-# Get these into the MY namespace for the MY::test method
-%MY::APACHE = %APACHE;
-
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
-WriteMakefile(
-
-    # %APACHE is created when setup_mod_perl_tests() is called.  The
-    # code that does this creation is in apache_tests_helper.pl.
     clean => {
 	'FILES' => "apache_install.txt lib/HTML/Mason/Config.pm mason_tests $APACHE{apache_dir}/httpd.conf $APACHE{apache_dir}/error_log $APACHE{apache_dir}/httpd $APACHE{apache_dir}/httpd.pid $APACHE{comp_root} $APACHE{data_dir} $APACHE{apache_dir}/mason_handler_CGI.pl $APACHE{apache_dir}/mason_handler_mod_perl.pl $APACHE{apache_dir}/CGIHandler.cgi $APACHE{apache_dir}/mason",
     }
-);
-
