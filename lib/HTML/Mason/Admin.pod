@@ -773,7 +773,7 @@ more complexity).
 Here is a bare-bones script that calls a component file and sends
 the result to standard output:
 
-    my $interp = HTML::Mason::Interp->new (out_method=>\$outbuf);
+    my $interp = HTML::Mason::Interp->new ();
     $interp->exec(<absolute-file-path>, <args>...);
 
 Because no component root was specified, the root is set to '/' and
