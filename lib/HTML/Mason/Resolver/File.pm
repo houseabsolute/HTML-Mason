@@ -59,20 +59,6 @@ sub comp_root
     return $self->{comp_root};
 }
 
-sub resolve_backwards
-{
-    my ($self, $file) = @_;
-
-    foreach my $root (map $_->[1], $self->comp_root_array) {
-	if (paths_eq($root, substr($file, 0, length($root)))) {
-	    my $path = substr($file, ($root eq '/' ? 0 : length($root)));
-	    $path =~ s,/$,, unless $path eq '/';
-	    return $path;
-	}
-    }
-    return;
-}
-
 sub get_info {
     my ($self, $path) = @_;
 
