@@ -321,6 +321,57 @@ configuration, e.g.:
 
 This directs Mason to handle only files with .html, .txt, or no extension.
 
+=head2 Securing top-level components
+
+Users may exploit a server-side scripting environment by invoking
+scripts with malicious or unintended arguments. Mason administrators
+need to be particularly wary of this because of the tendency to break
+out "subroutines" into individually accessible file components.
+
+For example, a Mason developer might create a helpful shared component
+for performing sql queries:
+
+    $m->comp('sql_select', table=>'employee', where=>'id=315');
+
+This is a perfectly reasonable component to create and call internally,
+but clearly presents a security risk if accessible via URL:
+
+    http://www.foo.com/sql_select?table=credit_cards&where=*
+
+Of course a web user would have to obtain the name of this component
+through guesswork or other means, but obscurity alone does not
+properly secure a system.  Rather, you should choose a site-wide
+policy for distinguishing top-level components from private
+components, and make sure your developers stick to this policy. You
+can then prevent private components from being served.
+
+One solution is to place all private components inside a directory,
+say /private, that lies under the component root but outside the
+document root.
+
+Another solution is to decide on a naming convention, for example,
+that all private components begin with "_", or that all top-level
+components must end in ".html". Then turn all private requests away
+with a 404 NOT_FOUND (rather than, say, a 403 FORBIDDEN which would
+provide more information than necessary). Use either an Apache directive
+
+    <FilesMatch "^_">
+    SetHandler perl-script
+    PerlHandler "sub { return 404 }"
+    </FilesMatch>
+
+or a handler.pl directive:
+
+    return 404 if $r->filename =~ m{_[^/]+$};
+
+Even after you've safely protected internal components, top-level
+components that process arguments (such as form handlers) still
+present a risk. Users can invoke such a component with arbitrary
+argument values via a handcrafted query string. Always check incoming
+arguments for validity and never place argument values directly into
+SQL, shell commands, etc. Unfortunately, Mason does not yet work with
+with Perl's taint checking which would help ensure these principles.
+
 =head2 Allowing directory requests
 
 By default Mason will decline requests for directories, leaving Apache
