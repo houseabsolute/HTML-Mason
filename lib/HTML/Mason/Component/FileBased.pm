@@ -30,10 +30,10 @@ sub title {
 
 # Ends up setting $self->{path, source_root_key, source_file} and a few in the parent class
 sub assign_runtime_properties {
-    my ($self, $interp, $info) = @_;
+    my ($self, $interp, $source) = @_;
 
-    $self->{source_file} = $info->friendly_name;
-    $self->{source_root_key} = $info->extra->{comp_root};
+    $self->{source_file} = $source->friendly_name;
+    $self->{source_root_key} = $source->extra->{comp_root};
 
     # We used to use File::Basename for this but that is broken
     # because URL paths always use '/' as the dir-separator but we
@@ -41,10 +41,10 @@ sub assign_runtime_properties {
     #
     # The regex itself is taken from File::Basename.
     #
-    @{$self}{ 'dir_path', 'name'} = $info->comp_path =~ m,^(.*/)?(.*),s;
+    @{$self}{ 'dir_path', 'name'} = $source->comp_path =~ m,^(.*/)?(.*),s;
     $self->{dir_path} =~ s,/$,, unless $self->{dir_path} eq '/';
 
-    $self->SUPER::assign_runtime_properties($interp, $info);
+    $self->SUPER::assign_runtime_properties($interp, $source);
 }
 
 1;
