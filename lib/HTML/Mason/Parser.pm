@@ -661,7 +661,7 @@ sub _parse_perl_line
     # From the char after % to the char before the newline.
     my $perl = substr($params{text}, $params{index} + 1, $length - 1);
 
-    $perl = $self->{postprocess}->($perl, 'perl') if $self->{postprocess};
+    $self->{postprocess}->(\$perl, 'perl') if $self->{postprocess};
     $self->_add_output_section($perl);
 
     # Move cursor to newline
@@ -695,7 +695,7 @@ sub _parse_perl_tag
     my $length = $s->{curpos} - 8 - ($params{index} + 7);
 
     my $perl = substr($params{text}, $params{index} + 7, $length);
-    $perl = $self->{postprocess}->($perl, 'perl') if $self->{postprocess};
+    $self->{postprocess}->(\$perl, 'perl') if $self->{postprocess};
     $self->_add_output_section($perl);
 }
 
@@ -745,7 +745,7 @@ sub _parse_substitute_tag
 	$perl = '$_out->('.$expr.');';
     }
 
-    $perl = $self->{postprocess}->($perl, 'perl') if $self->{postprocess};
+    $self->{postprocess}->(\$perl, 'perl') if $self->{postprocess};
     $self->_add_output_section($perl);
 
     $s->{curpos} = $params{index} + 2 + $length + 2;
@@ -777,7 +777,7 @@ sub _parse_call_tag
     }
 
     my $perl = "\$m->comp($call);";
-    $perl = $self->{postprocess}->($perl, 'perl') if $self->{postprocess};
+    $self->{postprocess}->(\$perl, 'perl') if $self->{postprocess};
     $self->_add_output_section($perl);
 
     $s->{curpos} = $params{index} + 2 + $length + 2;
@@ -799,8 +799,8 @@ sub _format_plaintext
     }
 
     $alpha =~ s{([\\\'])} {\\$1}g;   # escape backslashes and single quotes
+    $self->{postprocess}->(\$alpha, 'alpha') if $self->{postprocess};
     $alpha = sprintf q|$_out->('%s');|,$alpha;
-    $alpha = $self->{postprocess}->($alpha, 'alpha') if $self->{postprocess};
     return $alpha;
 }
 
