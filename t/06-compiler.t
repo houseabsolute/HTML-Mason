@@ -573,6 +573,25 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'weird_case',
+			  description => 'test weird parsing case',
+			  component => <<'EOF',
+<%init()%>
+<%args()%>
+<%once>
+sub init { 'init' }
+sub args { 'args' }
+</%once>
+EOF
+                          expect => <<'EOF',
+init
+args
+EOF
+                        );
+
+
+#------------------------------------------------------------
+
     return $group;
 }
 
