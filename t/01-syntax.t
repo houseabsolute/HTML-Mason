@@ -280,5 +280,43 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'comment_in_call',
+		      description => 'make a comp call with a commented line',
+		      component => <<'EOF',
+<& .foo,
+   foo => 1,
+#   bar => 2,
+ &>\
+<%def .foo>\
+foo!
+</%def>
+EOF
+		      expect => <<'EOF',
+foo!
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'comment_in_call2',
+		      description => 'make a comp call with content with a commented line',
+		      component => <<'EOF',
+<&| .show_content,
+   foo => 1,
+#   bar => 2,
+ &>\
+This is the content\
+</&>
+<%def .show_content>\
+<% $m->content %>\
+</%def>
+EOF
+		      expect => <<'EOF',
+This is the content
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
