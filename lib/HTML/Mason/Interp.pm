@@ -257,7 +257,7 @@ sub lookup {
 #
 sub load {
     my ($self,$path) = @_;
-    my ($err,$maxfilemod,$objfile,$objfilemod);
+    my ($maxfilemod, $objfile, $objfilemod);
     my (@objstat, $objisfile);
     my $code_cache = $self->{code_cache};
     my $resolver = $self->{resolver};
@@ -274,8 +274,9 @@ sub load {
 	return undef unless (-f $objfile);   # component not found
 	
 	$self->write_system_log('COMP_LOAD', $fq_path);	# log the load event
-	my $comp = $self->eval_object_text(object=>$objfile, error=>\$err)
-	    or $self->_compilation_error($objfile, $err);
+	my $object ||= read_file($objfile);
+	my $comp = eval { $self->eval_object_text( object => $object ) };
+	$self->_compilation_error($objfile, $@) if $@;
 	$comp->assign_runtime_properties($self,$fq_path);
 	
 	$code_cache->{$fq_path}->{comp} = $comp;
@@ -319,38 +320,39 @@ sub load {
 	    # We are using object files.  Update object file if necessary
 	    # and load component from there.
 	    #
-	    update_object:
 	    my $object;
-	    #
-	    # the encapsulation is breaking here.  I think the
-	    # resolver needs to return this text. - dave
-	    #
-	    my $file = $resolver->get_component(%lookup_info);
-	    if ($objfilemod < $srcmod) {
-		$object = $self->compiler->compile( comp_text => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
-		$self->write_object_file(object_text=>$object, object_file=>$objfile);
-	    }
-	    # read the existing object file
-	    $object ||= read_file($objfile);
-	    $comp = $self->eval_object_text(object=>$object, error=>\$err);
-	    if (!$comp) {
-		# If this is an earlier version object file, replace it.
-		if ($err =~ /object file was created by a pre-0\.7 parser/
-		    or (($err =~ /object file was created by.*version ([\d\.]+) .* you are running parser version ([\d\.]+)\./) and $1 < $2)) {
-		    $objfilemod = 0;
-		    goto update_object;
-		} else {
-		    $self->_compilation_error( $lookup_info{description}, $err );
+	    do
+	    {
+		#
+		# the encapsulation is breaking here.  I think the
+		# resolver needs to return this text. - dave
+		#
+		my $file = $resolver->get_component(%lookup_info);
+		if ($objfilemod < $srcmod) {
+		    $object = $self->compiler->compile( comp_text => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
+		    $self->write_object_file(object_text=>$object, object_file=>$objfile);
 		}
-	    }
+		# read the existing object file
+		$object ||= read_file($objfile);
+		$comp = eval { $self->eval_object_text( object => $object ) };
+
+		if ($@) {
+		    if (UNIVERSAL::isa($@, 'HTML::Mason::Compilation::IncompatibleCompiler')) {
+			$objfilemod = 0;
+			undef $object;
+		    } else {
+			$self->_compilation_error( $lookup_info{description}, $@ );
+		    }
+		}
+	    } until ($object);
 	} else {
 	    #
 	    # No object files. Load component directly into memory.
 	    #
 	    my $file = $resolver->get_component(%lookup_info);
 	    my $object = $self->compiler->compile( comp_text => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
-	    $comp = $self->eval_object_text(object=>$object, error=>\$err)
-		or $self->_compilation_error( $lookup_info{description}, $err );
+	    $comp = eval { $self->eval_object_text( object => $object ) };
+	    $self->_compilation_error( $lookup_info{description}, $@ ) if $@;
 	}
 	$comp->assign_runtime_properties($self,$fq_path);
 
@@ -427,22 +429,23 @@ sub make_component {
 
     # The compiler expects 'comp_text' and 'name'
     $p{name} ||= $p{path} ? $p{path} : '<anonymous component>';
+    my $comp_class = $p{path} ? 'HTML::Mason::Component::FileBased' : 'HTML::Mason::Component';
     my $object = $self->compiler->compile( %p );
-    
+
     if ($p{path}) {
 	my $object_file = File::Spec->catfile( $self->object_dir, $p{path} );
 	$self->write_object_file(object_text=>$object, object_file=>$object_file);
     }
-    
+
     my $err;
-    my $comp = $self->eval_object_text(object=>$object, error=>\$err);
-    $self->_compilation_error( '<anonymous component>', $err ) if $err;
-    
+    my $comp = eval { $self->eval_object_text( object => $object ) };
+    $self->_compilation_error( '<anonymous component>', $@ ) if $@;
+
+    $comp->assign_runtime_properties($self) if $comp;
     if ($p{path}) {
-	$comp->assign_runtime_properties($self) if $comp;
 	$self->code_cache->{$p{path}} = {lastmod=>time(), comp=>$comp};
     }
-    
+
     return $comp;
 }
 
@@ -631,7 +634,7 @@ sub code_cache_decay_factor { 0.75 }
 sub eval_object_text
 {
     my ($self, %options) = @_;
-    my ($object, $errref) = @options{qw(object error)};
+    my $object = $options{object};
 
     # If in taint mode, untaint the object text
     ($object) = ($object =~ /^(.*)/s) if taint_is_on;
@@ -640,7 +643,7 @@ sub eval_object_text
     # Evaluate object file or text with warnings on
     #
     my $ignore_expr = $self->ignore_warnings_expr;
-    my ($comp,$err);
+    my ($comp, $err);
     my $warnstr = '';
 
     {
@@ -661,12 +664,16 @@ sub eval_object_text
 	$err = "could not generate component object (return() in a <%once> section or extra close brace?)";
     }
 
-    #
-    # I will overhaul this sometime soon - dave (I hope soon)
-    #
-    if ($self->{use_object_files}) {
-	# check compatibility between lexer/compiler that wrote this
-	# and lexer/compiler we're using now.
+    unless ($err) {
+	# Yes, I know I always freak out when people start poking
+	# around in object internals but since there is no longer a
+	# parser_version method in Component.pm there is no other way.
+	# Only pre-1.10 components have parser_version set.
+	HTML::Mason::Exception::Compilation::IncompatibleCompiler->throw( error => 'This object file was created by a pre-0.7 parser.  Please remove the component files in your object directory.' )
+	    if ref $comp && ( ref $comp eq 'CODE' || exists $comp->{parser_version} );
+
+	HTML::Mason::Exception::Compilation::IncompatibleCompiler->throw( error => 'This object file was created by an incompatible Compiler or Lexer.  Please remove the component files in your object directory.' )
+	    if UNIVERSAL::can( $comp, 'compiler_id' ) && $comp->compiler_id ne $self->compiler->object_id;
     }
 
     #
@@ -677,8 +684,8 @@ sub eval_object_text
 	if ($err =~ /has too many errors\./) {
 	    $err =~ s/has too many errors\..*/has too many errors./s;
 	}
-	$$errref = $err if defined($errref);
-	return undef;
+
+	HTML::Mason::Exception::Compilation->throw( error => $err );
     } else {
 	return $comp;
     }
