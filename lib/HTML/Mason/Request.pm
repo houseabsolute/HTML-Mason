@@ -1183,25 +1183,20 @@ then returned from the C<$m-E<gt>comp> call.
 
 The <& &> tag provides a convenient shortcut for C<$m-E<gt>comp>.
 
-As of 1.10, component calls can accept an initial hash reference
-parameter which defined component call "modifiers".  The currently
-allowed modifiers are "store" and "base_comp".  The store modifer is
-used to store a component's output in a scalar reference, for example:
+As of 1.10, component calls can accept an initial hash reference of
+I<modifiers>.  The only currently supported modifier is C<store>, which
+stores the component's output in a scalar reference. For example:
 
   my $buf;
   my $return = $m->comp( { store => \$buf }, '/some/comp', type => 'big' );
 
-This parameter can be used in cases where you need to both capture a
-component's output and check its return value.
-
-The "base_comp" modifier allows you to explicitly set the base
-component for the called component by explicitly passing a specific
-component object to be used as the base component for method calls
-starting with "SELF:".
+This mostly duplicates the behavior of I<scomp>, but can be useful in
+rare cases where you need to capture both a component's output and
+return value.
 
 These modifier can be used with the <& &> tag as well, for example:
 
-  <& { base_comp => $comp }, '/some/comp', size => 'medium' &>
+  <& { store => \$buf }, '/some/comp', size => 'medium' &>
 
 =for html <a name="item_comp_exists">
 
