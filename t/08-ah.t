@@ -1,105 +1,213 @@
 #!/usr/bin/perl -w
-BEGIN { $HTML::Mason::IN_DEBUG_FILE = 1 if !$HTML::Mason::IN_DEBUG_FILE }
-use Cwd;
-use CGI;
-use strict;
-use vars (qw($root $branch $comp_root $data_dir));
 
 # Skip test if no mod_perl
 eval { require mod_perl };
-my @use = ($mod_perl::VERSION);
-unless ($mod_perl::VERSION) {
+# need to use it twice to avoid annoying warning
+unless ($mod_perl::VERSION || $mod_perl::VERSION)
+{
     print "1..0\n";
     exit;
 }
 
-$branch = "ah";
-my $pwd = cwd();
-$root = (-f "test-common.pl") ? "$pwd/.." : (-f "t/test-common.pl") ? "$pwd" : die "ERROR: cannot find test-common.pl\n";
-unshift(@INC,"$root/lib");
+use strict;
 
-require "$root/t/test-common.pl";
+use vars qw($VERBOSE $DEBUG $TEST_NUM $CONF_DIR $COMP_ROOT $DATA_DIR %APACHE_PARAMS);
 
-require HTML::Mason::ApacheHandler;
-
-init();
-
-sub fake_apache {
-    my ($options) = @_;
-    die "must specify uri" if !$options->{uri};
-    my $dref = {
-	'method' => 'GET',
-	'document_root' => "$comp_root/ah",
-	'header_only' => 0,
-	'args@' => [],
-	'connection' => {
-	    'remote_ip' => '127.0.0.1',
-	},
-	'uri' => $options->{uri},
-	'headers_in' => {
-	    'User-Agent' => 'Mozilla/4.61 [en] (X11; I; Linux 2.2.12-20 i686)',
-	},
-	'protocol' => 'HTTP/1.0',
-	'dir_config' => {},
-	'server' => {
-	    'server_hostname' => 'www.foo.com',
-	},
-	'content_type' => 'text/html',
-	'ENV' => {
-	},
-	"args\$" => undef,
-	"args_hash" => {},
-	%$options
-    };
-    $dref->{filename} = $dref->{document_root}.$dref->{uri};
-    my $r = HTML::Mason::ApacheHandler::simulate_debug_request($dref);
-    return $r;
+BEGIN
+{
+    $VERBOSE = $ENV{MASON_DEBUG} || $ENV{MASON_VERBOSE};
+    $DEBUG = $ENV{MASON_DEBUG};
 }
 
-sub try_exec_with_ah {
-    my ($uri,$test_name,$ah_options,$r_options) = @_;
-    my $buf;
+use HTML::Mason::Tests;
 
-    # Create standard interpreter.
-    my $interp = new HTML::Mason::Interp(comp_root => $comp_root, data_dir => $data_dir, out_method=>\$buf);
-    
-    # Create new ApacheHandler based on options.
-    undef *Apache::Status::status_mason if *Apache::Status::status_mason;
-    my $ah = new HTML::Mason::ApacheHandler(interp=>$interp, error_mode=>'fatal', apache_status_title=>"mason_$test_name", %$ah_options);
+use lib 'lib', 't/lib';
 
-    # Create fake Apache request.
-    my $r = fake_apache ({uri=>$uri, %$r_options});
-    undef $ENV{SERVER_SOFTWARE} if defined($ENV{SERVER_SOFTWARE});
+use Apache::test;
+use Cwd;
 
-    # Override send header function, and supply default header value.
-    $r->{headers_out_method} = sub { $buf .= $_[0] };
-    $r->headers_out('X-Mason-Test' => 'Initial value');
+# We'll repeat all the tests with an Apache::Request using
+# ApacheHandler if the user has the Apache::Request module installed.
+my $has_apache_request = 1;
+eval { require Apache::Request; };
+$has_apache_request = 0 if $@;
 
-    # Stop CGI from reinitializing with same params
-    CGI::initialize_globals();
+local $| = 1;
 
-    # Handle request.
-    my $retval = eval { $ah->handle_request($r) };
-    if (my $err = $@) {
-	print "ERROR:\n$err\nnot ok\n";
-	return;
+print '1..';
+print $has_apache_request ? 11 : 5;
+print "\n";
+
+$TEST_NUM = 0;
+
+cgi_tests();
+
+if ($has_apache_request)
+{
+    print "Waiting for previous httpd to shut down\n";
+    my $x = 0;
+    while ( -e 't/httpd.pid' )
+    {
+	sleep (1);
+	$x++;
+	if ( $x > 10 )
+	{
+	    die "t/httpd.pid file still exists after 10 seconds.  Exiting.";
+	}
     }
-    $buf .= "Status code: $retval\n";
 
-    # Compare current results with stored results.
-    compare_results ($test_name, $buf);
+    apache_request_tests();
 }
 
-print "1..6\n";
+sub cgi_tests
+{
+    start_httpd('CGI');
 
-try_exec_with_ah('/basic','basic',{},{});
+    standard_tests();
 
-try_exec_with_ah('/headers','headers-batch',{output_mode=>'batch'},{});
-try_exec_with_ah('/headers','headers-stream',{output_mode=>'stream'},{});
-{ my $qs = 'blank=1';
-  try_exec_with_ah('/headers','headers-batch-blank',{output_mode=>'batch'},{"args_hash" => {blank=>1}});
-  try_exec_with_ah('/headers','headers-stream-blank',{output_mode=>'stream'},{"args_hash" => {blank=>1}}); }
+    my $response = Apache::test->fetch( '/mason/comps/cgi_object' );
+    my $actual = filter_response($response);
+    my $success = HTML::Mason::Tests->check_output( actual => $actual,
+						    expect => <<'EOF',
+X-Mason-Test: Initial value
+CGI
+Status code: 0
+EOF
+						  );
+    ok($success);
 
-try_exec_with_ah('/cgi_object', 'cgi_object', {}, {});
+    kill_httpd();
+}
 
-1;
+sub apache_request_tests
+{
+    start_httpd('mod_perl');
+
+    standard_tests();
+
+    kill_httpd();
+}
+
+sub standard_tests
+{
+    my $response = Apache::test->fetch( "/mason/comps/basic" );
+    my $actual = filter_response($response);
+    my $success = HTML::Mason::Tests->check_output( actual => $actual,
+						    expect => <<'EOF',
+X-Mason-Test: Initial value
+Basic test.
+2 + 2 = 4.
+uri = /basic.
+method = GET.
+
+
+Status code: 0
+EOF
+						  );
+    ok($success);
+
+    $response = Apache::test->fetch( "/mason/comps/headers" );
+    $actual = filter_response($response);
+    $success = HTML::Mason::Tests->check_output( actual => $actual,
+						 expect => <<'EOF',
+X-Mason-Test: New value 3
+
+
+Blah blah
+blah
+Status code: 0
+EOF
+					       );
+    ok($success);
+
+    $response = Apache::test->fetch( "/mason_stream/comps/headers" );
+    $actual = filter_response($response);
+    $success = HTML::Mason::Tests->check_output( actual => $actual,
+						 expect => <<'EOF',
+X-Mason-Test: New value 2
+
+
+Blah blah
+blah
+Status code: 0
+EOF
+					       );
+    ok($success);
+
+    $response = Apache::test->fetch( "/mason/comps/headers?blank=1" );
+    $actual = filter_response($response);
+    $success = HTML::Mason::Tests->check_output( actual => $actual,
+						 expect => <<'EOF',
+X-Mason-Test: New value 1
+Status code: 0
+EOF
+					       );
+    ok($success);
+
+    $response = Apache::test->fetch( "/mason_stream/comps/headers?blank=1" );
+    $actual = filter_response($response);
+    $success = HTML::Mason::Tests->check_output( actual => $actual,
+						 expect => <<'EOF',
+X-Mason-Test: New value 1
+Status code: 0
+EOF
+					       );
+    ok($success);
+}
+
+# We're not interested in headers that are always going to be
+# different (like date or server type).
+sub filter_response
+{
+    my $response = shift;
+
+    my $actual = join "\n", ( 'X-Mason-Test: ' . $response->headers->header('X-Mason-Test'),
+			      $response->content );
+
+    return $actual;
+}
+
+sub start_httpd
+{
+    my $def = shift;
+
+    my $cwd = cwd;
+    my $cmd ="t/httpd -D$def -f $cwd/t/httpd.conf";
+    print "Executing $cmd\n";
+    system ($cmd)
+	and die "Can't start httpd server as '$cmd': $!";
+
+    my $x = 0;
+    print "Waiting for httpd to start.\n";
+    until ( -e 't/httpd.pid' )
+    {
+	sleep (1);
+	$x++;
+	if ( $x > 10 )
+	{
+	    die "No t/httpd.pid file has appeared after 10 seconds.  Exiting.";
+	}
+    }
+}
+
+sub kill_httpd
+{
+    my $cwd = cwd;
+    open PID, "$cwd/t/httpd.pid"
+	or die "Can't open '$cwd/t/httpd.pid': $!";
+    my $pid = <PID>;
+    close PID;
+    chomp $pid;
+
+    print "Killing httpd process ($pid)\n";
+    kill 15, $pid
+	or die "Can't kill process $pid: $!";
+}
+
+sub ok
+{
+    my $ok = !!shift;
+    print $ok ? 'ok ' : 'not ok ';
+    print ++$TEST_NUM, "\n";
+}
+
