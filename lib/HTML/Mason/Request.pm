@@ -613,19 +613,19 @@ sub comp {
     #
     # Finally, call component subroutine.
     #
-    my @result;
-
-    # we have to get this here because the eval{} block changes the
-    # context.
-    my $wantarray = wantarray;
+    my ($result, @result);
     eval {
-	@result = $self->_run_comp($wantarray, $comp, @args);
+	if (wantarray) {
+	    @result = $comp->run(@args);
+	} elsif (defined wantarray) {
+	    $result = $comp->run(@args);
+	} else {
+	    $comp->run(@args);
+	}
     };
 
     #
     # If an error occurred, pop stack and pass error down to next level.
-    # Put current component stack in error backtrace unless this has already
-    # been done higher up.
     #
     if (my $err = $@) {
 	# any unflushed output is at $self->top_buffer->output
@@ -645,22 +645,6 @@ sub comp {
     $self->pop_buffer_stack if ($mods{store});
 
     return wantarray ? @result : $result[0];  # Will return undef in void context (correct)
-}
-
-sub _run_comp
-{
-    my ($self, $wantarray, $comp, @args) = @_;
-
-    my ($result, @result);
-    if ($wantarray) {
-	@result = $comp->run(@args);
-    } elsif (defined $wantarray) {
-	$result = $comp->run(@args);
-    } else {
-	$comp->run(@args);
-    }
-
-    return wantarray ? @result : $result;
 }
 
 #
