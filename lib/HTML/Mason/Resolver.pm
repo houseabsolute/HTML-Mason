@@ -31,10 +31,6 @@ sub glob_path {
     shift->_virtual;
 }
 
-sub rel2abs {
-    return undef;
-}
-
 sub _virtual
 {
     my $self = shift;
@@ -113,17 +109,6 @@ list of component paths for components which match this glob pattern.
 For example, the filesystem resolver simply appends this pattern to
 each component root in turn and calls the Perl C<glob()> function to
 find matching files on the filesystem.
-
-=item rel2abs ($path)
-
-Given a relative component $path, returns its corresponding absolute path.
-The function may return undef indicating that only absolute paths are
-allowed - this is the default.
-
-This function is only called if $interp->exec or $interp->load
-receives a relative path. Relative paths to $m->comp and its siblings
-are automatically converted to absolute before being passed to the
-resolver.
 
 =back
 

@@ -187,12 +187,10 @@ sub load {
     my $resolver = $self->{resolver};
 
     #
-    # Given a relative path, call resolver's rel2abs to try and make absolute.
+    # Path must be absolute.
     #
     unless (substr($path, 0, 1) eq '/') {
-	unless ($path = $resolver->rel2abs($path)) {
-	    error "Component paths given to Interp->load must be absolute";
-	}
+	error "Component path given to Interp->load must be absolute";
     }
 
     #
@@ -897,14 +895,8 @@ Example of usage:
 
 =item load (path)
 
-Given a component path, this method returns the component object for
-that path, if one exists.  In normal operations, this method expects
-to receive an absolute path and will throw an exception if it is not
-given one.
-
-However, if you did not provide a component root and you are using
-Mason's default Resolver class, then relative paths will be treated as
-relative to the current working directory.
+Returns the component object corresponding to an absolute component
+C<path>, or undef if none exists.
 
 =for html <a name="item_comp_root">
 

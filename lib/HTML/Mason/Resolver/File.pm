@@ -29,12 +29,6 @@ sub new {
 
     my $self = $package->SUPER::new(@_);
 
-    #
-    # no comp_root param was provided.
-    #
-    $self->{allow_relative_path} = ! exists $p{comp_root};
-    $self->{cwd} = cwd;
-
     # Put it through the accessor to ensure proper data structure
     $self->comp_root( $self->{comp_root} ) unless ref $self->{comp_root};
 
@@ -108,20 +102,6 @@ sub glob_path {
 	}
     }
     return keys(%path_hash);
-}
-
-#
-# Resolve relative url_paths by cwd only if allow_relative_paths
-# flag is on (i.e. if no comp_root param was provided at creation).
-#
-sub rel2abs {
-    my ($self, $path) = @_;
-
-    if ($self->{allow_relative_path}) {
-	return join("/", File::Spec->splitdir( File::Spec->rel2abs( $self->{cwd} ) ), $path);
-    } else {
-	return undef;
-    }
 }
 
 1;

@@ -775,18 +775,12 @@ Here is a bare-bones script that calls a component file and sends
 the result to standard output:
 
     my $interp = HTML::Mason::Interp->new (out_method=>\$outbuf);
-    $interp->exec(<path-to-component>, <args>...);
+    $interp->exec(<absolute-file-path>, <args>...);
 
-Because no component root was specified, the root is set to '/'
-(meaning that any file may be used as a component) and the initial
-component may be relative to the current working directory. This is
-most useful for an isolated component or a few components in a single
-directory. For more complex applications with a full component tree,
-you will probably want to specify a component root.
-
-It should be noted that relative component paths are resolved based on
-the current working directory I<when the Interpreter was created>.
-Subsequent changes to the current working directory will be ignored.
+Because no component root was specified, the root is set to '/' and
+any file on the system may be used as a component. If you have a
+well defined and contained component tree, you'll probably want to
+specify a component root.
 
 Because no data directory was specified, object files will not be
 created and data caching will not work in the default manner. If
@@ -802,7 +796,7 @@ sending to standard output:
          data_dir   => '/path/to/data_dir',
          out_method => \$outbuf
          );
-    $interp->exec(<path-to-component>, <args>...);
+    $interp->exec(<component-path>, <args>...);
 
 =head1 AUTHORS
 
