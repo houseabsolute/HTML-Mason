@@ -888,8 +888,8 @@ httpd.conf or handler.pl file, as this will save some memory.
 Indicates whether Mason should decline directory requests, leaving
 Apache to serve up a directory index or a FORBIDDEN error as
 appropriate. Default is 1. See L<Allowing directory requests in the
-Admin manual|Admin/"Allowing directory requests"> for more information
-about handling directories with Mason.
+Admin manual|HTML::Mason::Admin/"Allowing directory requests"> for
+more information about handling directories with Mason.
 
 =item interp
 
