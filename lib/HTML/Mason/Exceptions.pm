@@ -329,10 +329,7 @@ sub full_message
 {
     my $self = shift;
 
-    my $msg = $self->message;
-    $msg .= sprintf(" at %s line %d", $self->comp_name, $self->line_number);
-
-    return $msg;
+    return sprintf("%s at %s line %d", $self->message, $self->comp_name, $self->line_number);
 }
 
 package HTML::Mason::Exception::Compilation;
