@@ -1,0 +1,20 @@
+<%perl>
+$m->out('part2');
+</%perl>
+<%args>
+$foo => 1
+$bar
+</%args>
+hey there
+% my $x = 1;
+<%perl>
+$m->out($x++) while $x < 100;
+</%perl>
+
+<%def .foo>
+lalalalalala
+</%def>
+
+<%method foo>
+foobar
+</%method>
