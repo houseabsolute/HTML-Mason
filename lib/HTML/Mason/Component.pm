@@ -183,6 +183,19 @@ sub call_method {
 }
 
 #
+# Like call method, but return component output.
+#
+sub scall_method {
+    my ($self,$name,%args) = @_;
+    my $method;
+    if ($self->_locate_inherited('methods',$name,\$method)) {
+	$HTML::Mason::Commands::m->scomp({base_comp=>$self},$method,%args);
+    } else {
+	die "no method '$name' for component ".$self->title;
+    }
+}
+
+#
 # Determine if particular method exists
 #
 sub method_exists {

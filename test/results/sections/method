@@ -6,8 +6,10 @@ method Test
 </HEAD>
 <BODY>
 
-bar
-2
+2 + 2 = 4.
+
+
+THE SECOND METHOD.
 
 </BODY>
 </HTML>

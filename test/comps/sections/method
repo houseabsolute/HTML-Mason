@@ -6,10 +6,14 @@ method Test
 </HEAD>
 <BODY>
 <% $m->current_comp->call_method('foo') %>
+% my $out = $m->current_comp->scall_method('bar');
+<% uc($out) %>
 </BODY>
 </HTML>
 <%method foo>
-bar
-% my $x = 2;
-<% $x %>
+% my $x = 2 + 2;
+2 + 2 = <% $x %>.
+</%method>
+<%method bar>
+The second method.
 </%method>
