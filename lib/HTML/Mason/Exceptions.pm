@@ -395,7 +395,7 @@ sub as_html
 
 <a name="raw"></a>
 
-<% $raw %>
+<pre><% $raw %></pre>
 
 </body></html>
 EOF
