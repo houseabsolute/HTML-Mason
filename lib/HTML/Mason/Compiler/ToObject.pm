@@ -99,8 +99,11 @@ sub compiled_component
 	$subs{main} = $params->{code};
 	$params->{code} = "sub {\n\$m->call_dynamic( 'main', \@_ )\n}";
 
-        $subs{filter} = $params->{filter};
-        $params->{filter} = "sub {\n$m->call_dynamic( 'filter', \@_ )\n}";
+        if ( exists $params->{filter} )
+        {
+            $subs{filter} = $params->{filter};
+            $params->{filter} = "sub {\n\$m->call_dynamic( 'filter', \@_ )\n}";
+        }
 
 	$params->{dynamic_subs_init} =
 	    join '', ( "sub {\n",
@@ -237,7 +240,7 @@ sub _component_params
         $params{filter} =
             ( join '',
               "sub { local \$_ = shift;\n",
-              "my %ARGS = @_;\n",
+              "my %ARGS; { local \$^W; %ARGS = \@_ unless \@_ % 2; }\n",
               ( join ";\n", @filter ),
               ";\n",
               "return \$_;\n",
