@@ -39,14 +39,14 @@ chk_version('Apache::Request' => '0.31') or
 chk_version('Exception::Class' => '0.97') or
     warn  "\n"
 	. "*** If you plan to use Mason with mod_perl,\n"
-        . "    Mason requires version 0.31, or later, of Apache::Request\n"
-	. "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
+        . "    Mason requires version 0.97, or later, of Exception::Class\n"
+	. "    from CPAN/modules/by-module/Exception/Exception-Class-x.x.tar.gz\n\n";
 
 chk_version('Cache::Cache' => '0.99') or
     warn  "\n"
 	. "*** If you plan to use Mason with mod_perl,\n"
-        . "    Mason requires version 0.31, or later, of Apache::Request\n"
-	. "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
+        . "    Mason requires version 0.99, or later, of Cache::Cache\n"
+	. "    from CPAN/modules/by-authors/id/D/DC/DCLINTON/Cache-Cache-x.x.tar.gz\n\n";
 
 make_config();
 setup_mod_perl_tests() unless $opts{'no-prompts'};
