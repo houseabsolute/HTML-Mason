@@ -52,7 +52,7 @@ sub cgi_object
     my ($self) = @_;
 
     HTML::Mason::Exception->throw( error => "Can't call cgi_object method unless CGI.pm was used to handle incoming arguments.\n" )
-	unless $CGI::VERSION;
+	unless defined $CGI::VERSION;
 
     if (defined($_[1])) {
 	$self->{cgi_object} = $_[1];
@@ -107,7 +107,7 @@ use HTML::Mason::MethodMaker
 			  top_level_predicate ) ]
     );
 
-use vars qw($VERSION $ARGS_METHOD);
+use vars qw($VERSION);
 
 $VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
 
@@ -120,7 +120,7 @@ my %valid_params =
 				  sub { $_[0] =~ /^(?:CGI|mod_perl)$/ } }
                               },
      auto_send_headers     => { parse => 'boolean', type => SCALAR|UNDEF, default => 1 },
-     compiler_class        => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason::Compiler::ToObject'},
+
      debug_dir_config_keys => { parse => 'list',    type => ARRAYREF,     optional => 1 },
      debug_handler_proc    => { parse => 'string',  type => SCALAR,       optional => 1 },
      debug_handler_script  => { parse => 'string',  type => SCALAR,       optional => 1 },
@@ -141,12 +141,8 @@ my %valid_params =
      interp                => { isa => 'HTML::Mason::Interp' },
     );
 
-sub valid_params {
-    # Fields that can be set in new method, with defaults.  Other
-    # modules may need to know this information, so it's a method.
-
-    return \%valid_params;
-}
+sub allowed_params { \%valid_params }
+sub validation_spec { shift->allowed_params }
 
 sub import
 {
@@ -158,14 +154,14 @@ sub import
 
 	if ($args_method eq 'CGI')
 	{
-	    unless ($CGI::VERSION)
+	    unless (defined $CGI::VERSION)
 	    {
 		require CGI;
 	    }
 	}
 	elsif ($args_method eq 'mod_perl')
 	{
-	    unless ($Apache::Request::VERSION)
+	    unless (defined $Apache::Request::VERSION)
 	    {
 		require Apache::Request;
 	    }
@@ -211,15 +207,12 @@ sub make_ah
     use vars qw($AH);
     return $AH if $AH && ! $package->get_param('MultipleConfig');
 
-    my %p = $package->get_config($package->valid_params);
+    my %p = $package->get_config($package->allowed_params);
 
     eval "use $p{interp_class}";
     die $@ if $@;
 
-    eval "use $p{compiler_class}";
-    die $@ if $@;
-
-    $AH = $package->new( interp => $package->_make_interp($p{interp_class}, $p{compiler_class}),
+    $AH = $package->new( interp => $package->_make_interp($p{interp_class}),
 			 %p,
 		       );
 
@@ -228,8 +221,8 @@ sub make_ah
 
 sub _make_interp
 {
-    my ($self, $interp_class, $compiler_class) = @_;
-    my %p = $self->get_config($interp_class->valid_params);
+    my ($self, $interp_class) = @_;
+    my %p = $self->get_config($interp_class->allowed_params);
 
     # comp_root is sort of polymorphic, so fix it up
     if (exists $p{comp_root}) {
@@ -246,15 +239,7 @@ sub _make_interp
 	}
     }
 
-    foreach ($interp_class, $compiler_class)
-    {
-	eval "use $_";
-	die $@ if $@;
-    }
-
-    my $interp = $interp_class->new( compiler => $self->_make_compiler($compiler_class),
-				     %p,
-				   );
+    my $interp = $interp_class->new(%p);
 
     # If we're running as superuser, change file ownership to http user & group
     if ($interp->files_written && ! ($> || $<))
@@ -264,18 +249,6 @@ sub _make_interp
     }
 
     return $interp;
-}
-
-sub _make_compiler
-{
-    my ($self, $compiler_class) = @_;
-
-    my %p = $self->get_config($compiler_class->valid_params);
-
-    eval "use $p{lexer_class}";
-    die $@ if $@;
-
-    return $compiler_class->new(%p);
 }
 
 # The following routines handle getting information from $r->dir_config
@@ -300,7 +273,7 @@ sub get_param {
     my ($self, $key, $spec) = @_;
 
     # If we weren't given a spec, try to locate one in our own class.
-    $spec ||= $self->valid_params->{$self->calm_form($key)};
+    $spec ||= $self->allowed_params->{$self->calm_form($key)};
     HTML::Mason::Exception->throw( error => "Unknown config item '$key'" )
         unless $spec;
 
@@ -396,7 +369,7 @@ sub new
 {
     my $class = shift;
 
-    my $self = bless {validate( @_, $class->valid_params )}, $class;
+    my $self = bless {validate( @_, $class->allowed_params )}, $class;
 
     $self->_initialize;
     return $self;
@@ -408,7 +381,7 @@ sub new
 my $status_name = 'mason0001';
 
 Apache::Status->menu_item
-    ($status_name => __PACKAGE__->valid_params->{apache_status_title}{default},
+    ($status_name => __PACKAGE__->allowed_params->{apache_status_title}{default},
      sub { ["<b>(no interpreters created in this child yet)</b>"] });
 
 
@@ -418,12 +391,12 @@ sub _initialize {
     $self->{request_number} = 0;
 
     if ($self->args_method eq 'mod_perl') {
-	unless ($Apache::Request::VERSION) {
+	unless (defined $Apache::Request::VERSION) {
 	    warn "Loading Apache::Request at runtime.  You could save some memory by preloading it in your httpd.conf or handler.pl file\n";
 	    require Apache::Request;
 	}
     } else {
-	unless ($CGI::VERSION) {
+	unless (defined $CGI::VERSION) {
 	    warn "Loading CGI at runtime.  You could save some memory by preloading it in your httpd.conf or handler.pl file\n";
 
 	    require CGI;
@@ -431,7 +404,7 @@ sub _initialize {
     }
 
     # Add an HTML::Mason menu item to the /perl-status page.
-    if ($Apache::Status::VERSION) {
+    if (defined $Apache::Status::VERSION) {
 	# A closure, carries a reference to $self
 	my $statsub = sub {
 	    my ($r,$q) = @_; # request and CGI objects
@@ -506,7 +479,7 @@ EOF
     my $comp = $interp->make_anonymous_component(comp => $comp_text);
     my $out;
     local $interp->{out_method} = \$out;
-    $interp->exec($comp, ah => $self, valid => $interp->valid_params);
+    $interp->exec($comp, ah => $self, valid => $interp->allowed_params);
     return $out;
 }
 
