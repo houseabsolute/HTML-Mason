@@ -183,7 +183,7 @@ use HTML::Mason::ApacheHandler;
 use HTML::Mason;
 
 my \@interps;
-foreach ( 0, 1, 0, 0, 0 )
+foreach ( 0, 1, 0, 0 )
 {
     push \@interps, HTML::Mason::Interp->new( comp_root => '$APACHE{comp_root}',
 				              data_dir => '$APACHE{data_dir}',
@@ -191,6 +191,12 @@ foreach ( 0, 1, 0, 0, 0 )
 
     chown Apache->server->uid, Apache->server->gid, \$interps[-1]->files_written;
 }
+
+push \@interps, HTML::Mason::Interp->new( comp_root => '$APACHE{comp_root}',
+				          data_dir => '$APACHE{data_dir}',
+                                          error_mode => 'fata' );
+
+chown Apache->server->uid, Apache->server->gid, \$interps[-1]->files_written;
 
 my \@ah = ( HTML::Mason::ApacheHandler->new( interp => \$interps[0],
                                             args_method => '$args_method' ),
@@ -203,8 +209,7 @@ my \@ah = ( HTML::Mason::ApacheHandler->new( interp => \$interps[0],
                                             args_method => '$args_method',
                                             decline_dirs => 0 ),
 	   HTML::Mason::ApacheHandler->new( interp => \$interps[4],
-                                            args_method => '$args_method',
-                                            error_mode => 'fatal' ),
+                                            args_method => '$args_method' ),
 	 );
 
 sub handler
