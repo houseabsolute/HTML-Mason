@@ -107,7 +107,8 @@ sub new
 
     $self->{autohandler_name} = undef unless $self->{use_autohandlers};
     $self->{dhandler_name} = undef unless $self->{use_dhandlers};
-    $self->{die_handler_overridden} = 1 if $self->{die_handler} ne $self->validation_spec->{die_handler}{default}; #Hmm
+    $self->{die_handler_overridden} = 1
+	if $self->{die_handler} && $self->{die_handler} ne $self->validation_spec->{die_handler}{default}; #Hmm
 
     $self->system_log_events($self->{system_log_events}) if exists $self->{system_log_events};
     $self->_initialize;
