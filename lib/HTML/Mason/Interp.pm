@@ -258,12 +258,12 @@ sub load {
 	# I think this is broken.  It should also be assigning things
 	# like comp_root, etc.
 	my $info = HTML::Mason::ComponentSource->new( friendly_name => $path,
-						    comp_path => $path,
-						    comp_id => $comp_id,
-						    last_modified => time,
-						    comp_class => 'HTML::Mason::Component',
-						    source_callback => sub { },
-						  );
+						      comp_path => $path,
+						      comp_id => $comp_id,
+						      last_modified => time,
+						      comp_class => 'HTML::Mason::Component',
+						      source_callback => sub { },
+						    );
 	$comp->assign_runtime_properties($self, $info);
 
 	$code_cache->{$comp_id} = {comp=>$comp, type=>'physical'};
@@ -408,7 +408,7 @@ sub purge_code_cache {
 #
 sub make_component {
     my $self = shift;
-    validate(@_, {path =>      { type => SCALAR, optional => 1 },
+    validate(@_, {path        => { type => SCALAR, optional => 1 },
 		  comp_source => { type => SCALAR, optional => 1 },
 		  comp_file   => { type => SCALAR, optional => 1 },
 		  name        => { type => SCALAR, optional => 1 }});
@@ -421,12 +421,12 @@ sub make_component {
     $p{name} ||= $p{path} ? $p{path} : '<anonymous component>';
 
     my $source = HTML::Mason::ComponentSource->new( friendly_name => $p{path} || $p{name},
-						  comp_path => $p{name} || $p{path},
-						  comp_id => undef,
-						  last_modified => time,
-						  comp_class => 'HTML::Mason::Component',
-						  source_callback => sub { $p{comp_source} },
-						);
+						    comp_path => $p{name} || $p{path},
+						    comp_id => undef,
+						    last_modified => time,
+						    comp_class => 'HTML::Mason::Component',
+						    source_callback => sub { $p{comp_source} },
+						  );
 
     my $object_code = $source->object_code( compiler => $self->compiler);
 
