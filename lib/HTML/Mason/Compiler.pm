@@ -534,7 +534,7 @@ sub component_call
 	(my $comp = substr($call, 0, $comma)) =~ s/\s+$//;
 	$call = "'$comp'" . substr($call, $comma);
     }
-    my $code = $prespace . "\$m->comp( $call\n); " . $postspace;
+    my $code = "\$m->comp( $prespace $call $postspace \n); ";
     eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
     compiler_error $@ if $@;
 
