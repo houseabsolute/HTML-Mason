@@ -162,6 +162,7 @@ EOF
 <IfDefine single_level_serverroot>
   ServerRoot /tmp
   SetHandler perl-script
+  PerlSetVar MasonDataDir /tmp/one/two
   PerlHandler HTML::Mason::ApacheHandler
 </IfDefine>
 
