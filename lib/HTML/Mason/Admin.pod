@@ -63,7 +63,7 @@ A simple configuration looks like:
     PerlSetVar MasonDataDir /usr/local/www/mason
     PerlModule HTML::Mason::ApacheHandler
 
-    <FilesMatch "*.html">
+    <FilesMatch "\.html$">
         SetHandler perl-script
         PerlHandler HTML::Mason::ApacheHandler
     </FilesMatch>
@@ -853,7 +853,7 @@ can also find this in C<eg/parselog.pl> in the Mason distribution.
            warn "unrecognized event type: $event\n";
        }
    }
-   
+
 
 B<Suggested Uses>
 
@@ -1189,7 +1189,8 @@ Jonathan Swartz, swartz@pobox.com and Dave Rolsky, autarch@urth.org
 =head1 SEE ALSO
 
 L<HTML::Mason>,
-L<HTML::Mason::Parser>,
+L<HTML::Mason::Lexer>,
+L<HTML::Mason::Compiler>,
 L<HTML::Mason::Interp>,
 L<HTML::Mason::ApacheHandler>
 

@@ -31,7 +31,7 @@ Mason - High-performance, dynamic web site authoring system
     PerlSetVar MasonDataDir /usr/local/www/mason
     PerlModule HTML::Mason::ApacheHandler
 
-    <FilesMatch "*.html">
+    <FilesMatch "\.html$">
         SetHandler perl-script
         PerlHandler HTML::Mason::ApacheHandler
     </FilesMatch>
@@ -153,7 +153,7 @@ C<eg/httpd.conf> in your distribution.
     PerlSetVar MasonDataDir /usr/local/www/mason
     PerlModule HTML::Mason::ApacheHandler
 
-    <FilesMatch "*.html">
+    <FilesMatch "\.html$">
         SetHandler perl-script
         PerlHandler HTML::Mason::ApacheHandler
     </FilesMatch>
@@ -169,13 +169,13 @@ create this directory on startup if necessary.
 The third directive loads Mason with Apache support. Mason
 must be installed somewhere in your Perl @INC for this to work.
 
-Finally, the <FilesMatch> section routes all "*.html" requests to the
+Finally, the <FilesMatch> section routes all "\.html$" requests to the
 Mason handler. If you want all Mason pages to have a distinct
 extension like ".mcomp", use that instead. If you wish to restrict
 Mason to one subdirectory at first, do this:
 
     <Directory /path/to/subdirectory>
-        <FilesMatch "*.html">
+        <FilesMatch "\.html$">
             SetHandler perl-script
             PerlHandler HTML::Mason::ApacheHandler
         </FilesMatch>
@@ -229,8 +229,8 @@ L<HTML::Mason::Devel>,
 L<HTML::Mason::Request>,
 L<HTML::Mason::Component>,
 L<HTML::Mason::Admin>,
-L<HTML::Mason::Compiler>,
 L<HTML::Mason::Lexer>,
+L<HTML::Mason::Compiler>,
 L<HTML::Mason::Interp>,
 L<HTML::Mason::ApacheHandler>
 

@@ -863,7 +863,7 @@ component.  It then returns either a true (serve component) or false
 (reject component). In this example, the predicate rejects requests
 for components whose name starts with an "_" character:
 
-    top_level_predicate => sub { $_[0] !~ m{/_[^/]+$}
+    top_level_predicate => sub { $_[0] !~ m:/_[^/]+$: }
 
 =back
 
@@ -884,7 +884,8 @@ Jonathan Swartz, swartz@pobox.com
 =head1 SEE ALSO
 
 L<HTML::Mason>,
-L<HTML::Mason::Parser>,
+L<HTML::Mason::Lexer>,
+L<HTML::Mason::Compiler>,
 L<HTML::Mason::Interp>,
 L<HTML::Mason::Admin>
 
