@@ -722,7 +722,7 @@ sub add_escape
     while ( my ($name, $sub) = each %p )
     {
         param_error "Invalid escape name ($name)"
-            unless $name =~ /^[\w-]+$/;
+            if $name !~ /^[\w-]+$/ || $name =~ /^n$/;
 
         $self->{escapes}{$name} = $sub;
     }
@@ -953,6 +953,14 @@ ignored.
 
 Given an escape name, this removes that escape from the interpreter's
 known escapes.  If the name is not recognized, it is simply ignored.
+
+=for apply_escapes <a name="item_apply_escapes"></a>
+
+=item apply_escapes ($text, $flags, [more flags...])
+
+This method applies a one or more escapes to a piece of text.  The
+escapes are specified by giving their flag.  Each escape is applied to
+the text in turn, after which the now-modified text is returned.
 
 =for html <a name="item_set_global"></a>
 
