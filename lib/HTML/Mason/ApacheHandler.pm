@@ -869,8 +869,9 @@ sub prepare_request
 
     if (my $err = $@) {
 	return $err->aborted_value
-	    if isa_mason_exception($err, 'Abort')
-	    or isa_mason_exception($err, 'Decline');
+	    if isa_mason_exception($err, 'Abort');
+	return $err->declined_value
+	    if isa_mason_exception($err, 'Decline');
 	rethrow_exception $err;
     }
 
