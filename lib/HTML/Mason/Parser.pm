@@ -41,16 +41,16 @@ sub new
 {
     my $class = shift;
     my $self = {
-        _permitted => \%fields,
-        %fields,
+	_permitted => \%fields,
+	%fields,
     };
     my (%options) = @_;
     while (my ($key,$value) = each(%options)) {
-        if (exists($fields{$key})) {
-            $self->{$key} = $value;
-        } else {
-            die "HTML::Mason::Parser::new: invalid option '$key'\n";
-        }
+	if (exists($fields{$key})) {
+	    $self->{$key} = $value;
+	} else {
+	    die "HTML::Mason::Parser::new: invalid option '$key'\n";
+	}
     }
     bless $self, $class;
     return $self;
@@ -60,7 +60,7 @@ sub allow_globals
 {
     my ($self, @decls) = @_;
     if (my @bad = grep(!/^[\$@%]/,@decls)) {
-        die "allow_globals: bad parameter '$bad[0]', must begin with one of $, @, %\n";
+	die "allow_globals: bad parameter '$bad[0]', must begin with one of $, @, %\n";
     }
     my %h = map {$_=>1} (@{$self->{'allow_globals'}},@decls);
     $self->{'allow_globals'} = [keys(%h)];
@@ -70,7 +70,7 @@ sub allow_globals
 sub make_component
 {
     my ($self, %options) = @_;
-    my ($objectTextRef) = @options{qw(object_text)};
+    my $objectTextRef = $options{object_text};
 
     my $objectText = $self->parse_component(%options) or return undef;
     $$objectTextRef = $objectText if defined($objectTextRef);
@@ -86,18 +86,18 @@ sub parse
     my $error;
     my %subopts = ();
     foreach my $key (qw(script script_file)) {
-        $subopts{$key} = $options{$key} if exists($options{$key});
+	$subopts{$key} = $options{$key} if exists($options{$key});
     }
     my $objectText = $self->parse_component(%subopts,error=>\$error);
     $self->eval_object_text(object_text=>$objectText,error=>\$error) if $objectText;
     if ($objectText && !$error && exists($options{save_to})) {
-        $self->write_object_file(object_text=>$objectText,object_file=>$options{save_to});
+	$self->write_object_file(object_text=>$objectText,object_file=>$options{save_to});
     }
     if ($objectText and my $ref = $options{result_text}) {
-        $$ref = $objectText;
+	$$ref = $objectText;
     }
     if ($error and my $ref = $options{error}) {
-        $$ref = $error;
+	$$ref = $error;
     }
     return $error ? 0 : 1;
 }
@@ -105,7 +105,6 @@ sub parse
 sub parse_component
 {
     my ($self, %options) = @_;
-    my $parseError = 1;
 
     #
     # We want to store all this in the object so it can be easily
@@ -130,9 +129,9 @@ sub parse_component
     # If script_file option used, read script from file.
     #
     if (!defined($state->{script})) {
-        die "parse: must specify script or script_file\n" 
-            unless defined $options{script_file};
-        $state->{script} = read_file($options{script_file});
+	die "parse: must specify script or script_file\n" 
+	    unless defined $options{script_file};
+	$state->{script} = read_file($options{script_file});
     }
 
     #
@@ -147,63 +146,63 @@ sub parse_component
     my $comp_code;
     eval
     {
-        #
-        # Preprocess the script.  The preprocessor routine is handed a
-        # reference to the entire script.
-        #
-        if ($self->{preprocess}) {
-            eval {$self->{preprocess}->(\$state->{script})};
-            if ($@) {
-                die { err => "error during custom preprocess step:\n$@" };
-            }
-        }
+	#
+	# Preprocess the script.  The preprocessor routine is handed a
+	# reference to the entire script.
+	#
+	if ($self->{preprocess}) {
+	    eval {$self->{preprocess}->(\$state->{script})};
+	    if ($@) {
+		die { err => "error during custom preprocess step:\n$@" };
+	    }
+	}
 
-        #
-        # $curpos is fairly obvious, as is $script_length
-        #
-        # $startline keeps track of whether the next text range starts
-        # at the beginning of a line. This becomes important later,
-        # when looking for %-lines.
-        #
-        my $curpos = 0;
-        my $startline = 1;
-        my $script_length = length($state->{script});
+	#
+	# $curpos is fairly obvious, as is $script_length
+	#
+	# $startline keeps track of whether the next text range starts
+	# at the beginning of a line. This becomes important later,
+	# when looking for %-lines.
+	#
+	my $curpos = 0;
+	my $startline = 1;
+	my $script_length = length($state->{script});
 
-        #
-        # output_sections contains a list of sections parsed by
-        # various routines called from _parse_textseg, which is
-        # everything that is not in a mason section besides <%perl>.
-        #
-        # subcomponents is a hash of subcomponent names to parsed
-        # subcomponents.
-        #
-        # methods is a hash of method names to parsed methods (which
-        # are just subcomponents.
-        #
-        # declared_args contains something like:
-        #   { '$foo' => { default => 'x' },
-        #     '@bar' => { default => '(1, 2, 3)' },
-        #     '%baz' => { default => undef } }
-        #
-        $state->{output_sections} = [];
-        $state->{subcomponents} = {};
-        $state->{methods} = {};
-        $state->{declared_args} = {};
+	#
+	# output_sections contains a list of sections parsed by
+	# various routines called from _parse_textseg, which is
+	# everything that is not in a mason section besides <%perl>.
+	#
+	# subcomponents is a hash of subcomponent names to parsed
+	# subcomponents.
+	#
+	# methods is a hash of method names to parsed methods (which
+	# are just subcomponents.
+	#
+	# declared_args contains something like:
+	#   { '$foo' => { default => 'x' },
+	#     '@bar' => { default => '(1, 2, 3)' },
+	#     '%baz' => { default => undef } }
+	#
+	$state->{output_sections} = [];
+	$state->{subcomponents} = {};
+	$state->{methods} = {};
+	$state->{declared_args} = {};
 
-        # def is a special case.
-        my @tags = qw( args attr cleanup
-                       doc filter
-                       flags init
-                       once text );
+	# def is a special case.
+	my @tags = qw( args attr cleanup
+		       doc filter
+		       flags init
+		       once text );
 
-        foreach my $t (@tags)
-        {
-            $state->{$t} = '';
-        }
+	foreach my $t (@tags)
+	{
+	    $state->{$t} = '';
+	}
 
-        my $comp_names = join '|', @tags;
-        while ( $state->{script} =~
-                /(                     # $1: the full tag match
+	my $comp_names = join '|', @tags;
+	while ( $state->{script} =~
+		/(                     # $1: the full tag match
                   <%
                    (?:perl_)?          # optional perl_ prefix
                    ($comp_names|       # $2: allowed tag names plus ...
@@ -214,61 +213,61 @@ sub parse_component
                    )
                   >
                  )/xigo
-              )
-        {
-            my $section_name = lc $2;
-            $section_name = 'def' if substr($section_name,0,3) eq 'def';
-            $section_name = 'method' if substr($section_name,0,6) eq 'method';
+	      )
+	{
+	    my $section_name = lc $2;
+	    $section_name = 'def' if substr($section_name,0,3) eq 'def';
+	    $section_name = 'method' if substr($section_name,0,6) eq 'method';
 
-            my $section_start = pos($state->{script});
-            my $section_tag_pos = $section_start - length($1);
-            my $subcomp_name = $3;
+	    my $section_start = pos($state->{script});
+	    my $section_tag_pos = $section_start - length($1);
+	    my $subcomp_name = $3;
 
-            $self->_parse_textseg( start => $curpos,
-                                   len => $section_tag_pos - $curpos,
-                                   startline => $startline )
-                if $curpos < $section_tag_pos;
+	    $self->_parse_textseg( segbegin => $curpos,
+				   length => $section_tag_pos - $curpos,
+				   startline => $startline )
+		if $curpos < $section_tag_pos;
 
-            if ($state->{script} =~ m/(<\/%(?:perl_)?$section_name>\n?)/ig) {
-                my $ending_tag = $1;
-                my $section_end = pos($state->{script}) - length($ending_tag);
-                my $section = substr($state->{script}, $section_start, $section_end - $section_start);
-                if ($section_name eq 'text') {
-                    # Special case for <%text> sections: add a special
-                    # segment that won't get parsed
-                    $self->_parse_textseg( start => $section_start,
-                                           len => $section_end - $section_start,
-                                           startline => 0,
-                                           noparse => 1 );
-                } elsif ( $section_name eq 'def' || $section_name eq 'method' ) {
-                    my $method = '_parse_' . lc $section_name . '_section';
-                    $self->$method( name => $subcomp_name,
-                                    section => $section,
-                                    section_start => $section_start,
-                                  );
-                } else {
-                    if ( $state->{ lc $section_name } )
-                    {
-                        die $self->_make_error( error => "repeated <%$section_name> section",
-                                                errpos => $section_tag_pos );
-                    }
-                    my $method = '_parse_' . lc $section_name . '_section';
-                    $self->$method( section => $section );
-                }
-                $curpos = pos($state->{script});
-                $startline = substr($ending_tag, -1, 1) eq "\n";
-            } else {
-                die $self->_make_error( error => "<%$section_name> with no matching </%$section_name>",
-                                        errpos => $section_tag_pos );
-            }
-        }
+	    if ($state->{script} =~ m/(<\/%(?:perl_)?$section_name>\n?)/ig) {
+		my $ending_tag = $1;
+		my $section_end = pos($state->{script}) - length($ending_tag);
+		my $section = substr($state->{script}, $section_start, $section_end - $section_start);
+		if ($section_name eq 'text') {
+		    # Special case for <%text> sections: add a special
+		    # segment that won't get parsed
+		    $self->_parse_textseg( segbegin => $section_start,
+					   length => $section_end - $section_start,
+					   startline => 0,
+					   noparse => 1 );
+		} elsif ( $section_name eq 'def' || $section_name eq 'method' ) {
+		    my $method = '_parse_' . lc $section_name . '_section';
+		    $self->$method( name => $subcomp_name,
+				    section => $section,
+				    section_start => $section_start,
+				  );
+		} else {
+		    if ( $state->{ lc $section_name } )
+		    {
+			die $self->_make_error( error => "repeated <%$section_name> section",
+						errpos => $section_tag_pos );
+		    }
+		    my $method = '_parse_' . lc $section_name . '_section';
+		    $self->$method( section => $section );
+		}
+		$curpos = pos($state->{script});
+		$startline = substr($ending_tag, -1, 1) eq "\n";
+	    } else {
+		die $self->_make_error( error => "<%$section_name> with no matching </%$section_name>",
+					errpos => $section_tag_pos );
+	    }
+	}
 
-        $self->_parse_textseg( start => $curpos,
-                               len => $script_length - $curpos,
-                               startline => $startline )
-            if $curpos < $script_length;
+	$self->_parse_textseg( segbegin => $curpos,
+			       length => $script_length - $curpos,
+			       startline => $startline )
+	    if $curpos < $script_length;
 
-        $comp_code = $self->_build_component;
+	$comp_code = $self->_build_component;
     };
     # End of eval {}
 
@@ -284,15 +283,21 @@ sub parse_component
 sub _parse_def_section
 {
     my $self = shift;
+    my %params = @_;
 
-    $self->_parse_subcomponent_or_method(@_, type => 'subcomponent');
+    my $objtext = $self->_parse_subcomponent_or_method(@_, type => 'subcomponent');
+
+    $self->{parser_state}{subcomponents}{ $params{name} } = $objtext;
 }
 
 sub _parse_method_section
 {
     my $self = shift;
+    my %params = @_;
 
-    $self->_parse_subcomponent_or_method(@_, type => 'method');
+    my $objtext = $self->_parse_subcomponent_or_method(@_, type => 'method');
+
+    $self->{parser_state}{methods}{ $params{name} } = $objtext;
 }
 
 sub _parse_subcomponent_or_method
@@ -309,25 +314,25 @@ sub _parse_subcomponent_or_method
     # and put object text in subcomps or methods hash (as
     # appropriate), keyed on def name
     if ($params{name} !~ /^[\w\-\.]+$/) {
-        die $self->_make_error( error => "invalid $params{type} name '$params{name}': valid characters are [A-Za-z0-9._-]",
-                             errpos => $params{section_start} );
+	die $self->_make_error( error => "invalid $params{type} name '$params{name}': valid characters are [A-Za-z0-9._-]",
+			     errpos => $params{section_start} );
     } elsif (exists $state->{$key}{ $params{name} }) {
-        die $self->_make_error( error => "multiple definitions for $params{type} '$params{name}'",
-                                errpos => $params{section_start} );
+	die $self->_make_error( error => "multiple definitions for $params{type} '$params{name}'",
+				errpos => $params{section_start} );
     } else {
-        my ($suberr, $suberrpos);
-        my $objtext = $self->parse_component( script => $params{section},
-                                              embedded => 1,
-                                              comp_class => 'HTML::Mason::Component::Subcomponent',
-                                              error => \$suberr,
-                                              errpos => \$suberrpos );
-        if ($objtext) {
-            $state->{$key}{ $params{name} } = $objtext;
-        } else {
-            die $self->_make_error( error => "Error while parsing $params{type} '$params{name}':\n$suberr",
-                                    errpos => $params{section_start} + $suberrpos,
-                                    suberror => s/(line .*)\n$/($params{name} line .*)\n/ );
-        }
+	my ($suberr, $suberrpos);
+	my $objtext = $self->parse_component( script => $params{section},
+					      embedded => 1,
+					      comp_class => 'HTML::Mason::Component::Subcomponent',
+					      error => \$suberr,
+					      errpos => \$suberrpos );
+	if ($objtext) {
+	    return $objtext;
+	} else {
+	    die $self->_make_error( error => "Error while parsing $params{type} '$params{name}':\n$suberr",
+				    errpos => $params{section_start} + $suberrpos,
+				    suberror => s/(line .*)\n$/($params{name} line .*)\n/ );
+	}
     }
 }
 
@@ -339,33 +344,33 @@ sub _parse_args_section
     my $state = $self->{parser_state};
 
     foreach my $v ( $self->_parse_var_decls( $params{section} ) ) {
-        # %ARGS is automatic, so ignore explicit declaration.
-        next if "$v->{type}$v->{name}" eq '%ARGS';
+	# %ARGS is automatic, so ignore explicit declaration.
+	next if "$v->{type}$v->{name}" eq '%ARGS';
 
-        $state->{declared_args}{"$v->{type}$v->{name}"} = {default=>$v->{default}};
+	$state->{declared_args}{"$v->{type}$v->{name}"} = {default=>$v->{default}};
 
-        my $default_val = defined($v->{default}) ? $v->{default} : 
-            qq| die "no value sent for required parameter '$v->{name}'"|;
-        $default_val .= "\n" if (defined($v->{default}) && $v->{default} =~ /\#/);   # allow comments
+	my $default_val = defined($v->{default}) ? $v->{default} : 
+	    qq| die "no value sent for required parameter '$v->{name}'"|;
+	$default_val .= "\n" if (defined($v->{default}) && $v->{default} =~ /\#/);   # allow comments
 
-        # Scalar
-        if ($v->{type} eq "\$") {
-            $state->{args} .= "my $v->{type}$v->{name} = (!exists \$ARGS{'$v->{name}'} ? $default_val : \$ARGS{'$v->{name}'});";
-        }
-        # Array
-        elsif ($v->{type} eq "\@") {
-            $state->{args} .= "my $v->{type}$v->{name} = (!exists \$ARGS{'$v->{name}'} ? $default_val : ";
-            $state->{args} .= "ref(\$ARGS{'$v->{name}'}) eq 'ARRAY' ? \@{\$ARGS{'$v->{name}'}} : (\$ARGS{'$v->{name}'}));";
-        }
-        # Hash
-        elsif ($v->{type} eq "\%") {
-            $state->{args} .= "my $v->{type}$v->{name} = (!exists \$ARGS{'$v->{name}'} ? $default_val : ";
-            $state->{args} .= "ref \$ARGS{'$v->{name}'} eq 'ARRAY' ? \@{\$ARGS{'$v->{name}'}} : ";
-            $state->{args} .= "ref \$ARGS{'$v->{name}'} eq 'HASH' ? \%{\$ARGS{'$v->{name}'}} : ";
-            $state->{args} .= "die \"single value sent for hash parameter '$v->{type}$v->{name}'\");";
-        }
+	# Scalar
+	if ($v->{type} eq "\$") {
+	    $state->{args} .= "my $v->{type}$v->{name} = (!exists \$ARGS{'$v->{name}'} ? $default_val : \$ARGS{'$v->{name}'});";
+	}
+	# Array
+	elsif ($v->{type} eq "\@") {
+	    $state->{args} .= "my $v->{type}$v->{name} = (!exists \$ARGS{'$v->{name}'} ? $default_val : ";
+	    $state->{args} .= "ref(\$ARGS{'$v->{name}'}) eq 'ARRAY' ? \@{\$ARGS{'$v->{name}'}} : (\$ARGS{'$v->{name}'}));";
+	}
+	# Hash
+	elsif ($v->{type} eq "\%") {
+	    $state->{args} .= "my $v->{type}$v->{name} = (!exists \$ARGS{'$v->{name}'} ? $default_val : ";
+	    $state->{args} .= "ref \$ARGS{'$v->{name}'} eq 'ARRAY' ? \@{\$ARGS{'$v->{name}'}} : ";
+	    $state->{args} .= "ref \$ARGS{'$v->{name}'} eq 'HASH' ? \%{\$ARGS{'$v->{name}'}} : ";
+	    $state->{args} .= "die \"single value sent for hash parameter '$v->{type}$v->{name}'\");";
+	}
 
-        $state->{args} .= "\n";
+	$state->{args} .= "\n";
     }
 }
 
@@ -378,28 +383,28 @@ sub _parse_var_decls
     my @vars;
     foreach my $decl (@decls)
     {
-        my ($var,$default);
-        my $split = index($decl,'=>');
-        if ($split !=-1) {
-            $var = substr($decl,0,$split);
-            $default = substr($decl,$split+2);
-        } else {
-            ($var) = ($decl =~ /^\s*(\S+)/);
-        }
-        for ($var) { s/^\s+//; s/\s+$//; }
+	my ($var,$default);
+	my $split = index($decl,'=>');
+	if ($split !=-1) {
+	    $var = substr($decl,0,$split);
+	    $default = substr($decl,$split+2);
+	} else {
+	    ($var) = ($decl =~ /^\s*(\S+)/);
+	}
+	for ($var) { s/^\s+//; s/\s+$//; }
 
-        # Note this would allow illegal variable names like $81.
-        my $type = substr($var, 0, 1);
-        my $name = substr($var, 1);
-        unless ( ( $type eq '$' ||
-                   $type eq '@' ||
-                   $type eq '%' ) &&
-                 defined $name)
-        {
-            die $self->_make_error( error => "unknown type for argument/attribute '$var': first character must be \$, \@, or \%" );
-        }
+	# Note this would allow illegal variable names like $81.
+	my $type = substr($var, 0, 1);
+	my $name = substr($var, 1);
+	unless ( ( $type eq '$' ||
+		   $type eq '@' ||
+		   $type eq '%' ) &&
+		 defined $name)
+	{
+	    die $self->_make_error( error => "unknown type for argument/attribute '$var': first character must be \$, \@, or \%" );
+	}
 
-        push @vars, {name=>$name,type=>$type,default=>$default};
+	push @vars, {name=>$name,type=>$type,default=>$default};
     }
 
     return @vars;
@@ -412,15 +417,14 @@ sub _parse_filter_section
 
     my $state = $self->{parser_state};
 
-    $params{section} =~ s/^\s+//g;
-    $params{section} =~ s/\s+$//g;
+    for ($params{section}) { s/^\s+//; s/\s+$//; }
 
     $state->{filter} .= join "\n", ( '{ my ($_c,$_r);',
-                                     'if ($m->call_self(\$_c,\$_r)) {'.'for ($_c) {',
-                                     $params{section},
-                                     '}',
-                                     '$m->out($_c);',
-                                     'return $_r }};');
+				     'if ($m->call_self(\$_c,\$_r)) {'.'for ($_c) {',
+				     $params{section},
+				     '}',
+				     '$m->out($_c);',
+				     'return $_r }};');
 }
 
 sub _parse_init_section
@@ -510,79 +514,84 @@ sub _parse_textseg
     #   - Text delimited by <& &>
     # All else is a string to be delimited by single quotes and output.
     #
-    # $s->{startline} keeps track of whether the first character is the
-    # start of a line.
+    # $s->{startline} keeps track of whether the first character is
+    # the start of a line.
     # $s->{curpos} keeps track of where we are in $s->{text}.
     #
-    my $s = $self->{text_parse_state} = {};
-
-    ($s->{segbegin},$s->{textlength},$s->{startline}) =
-        ($params{start},$params{len},$params{startline});
-
-    $s->{text} = substr($state->{script},$s->{segbegin},$s->{textlength});
-
-    # Special case for <%text> sections.  Just push the whole
-    # chunk onto output.
-    if ($params{noparse}) {
-        push( @{ $state->{output_sections} },
-              $self->_format_plaintext(0,length($s->{text})) );
-        return;
-    }
-
+    my $s = $self->{parser_state}{text_parse_state} = {};
+    $s->{startline} = $params{startline};
     $s->{curpos} = 0;
 
+    my $text = substr($state->{script}, $params{segbegin}, $params{length});
+
+    # Special case for <%text> sections.  Just push the whole chunk
+    # onto output without checking for various embedded tags and such.
+    if ($params{noparse}) {
+	$self->_add_output_section( $self->_format_plaintext( text => $text,
+							      start => 0,
+							      end => length($text) ) );
+	return;
+    }
+
  WHILE:
-    while ($s->{curpos} < $s->{textlength}) {
+    while ($s->{curpos} < $params{length}) {
 
-        # Special case.  First line of the segment starts with '%';
-        if ($s->{startline} && substr($s->{text},$s->{curpos},1) eq '%') {
-            $self->_parse_perl_line($s->{curpos});
-            next;
-        }
+	# Special case.  First line of the segment starts with '%';
+	if ($s->{startline} && substr($text,$s->{curpos},1) eq '%') {
+	    $self->_parse_perl_line( index => $s->{curpos},
+				     segbegin => $params{segbegin},
+				     text => $text );
+	    next;
+	}
 
-        $s->{startline} = 0;
+	$s->{startline} = 0;
 
-        my %h;
-        $h{perl_line} = index($s->{text},"\n%",$s->{curpos});
-        $h{perl_tag}  = index(lc $s->{text},'<%perl>',$s->{curpos});
-        $h{substitute_tag} = index($s->{text},'<%', $s->{curpos});
-        $h{call_tag}  = index($s->{text},'<&',$s->{curpos});
+	my %h;
+	$h{perl_line} = index($text,"\n%",$s->{curpos});
+	$h{perl_tag}  = index(lc $text,'<%perl>',$s->{curpos});
+	$h{substitute_tag} = index($text,'<%', $s->{curpos});
+	$h{call_tag}  = index($text,'<&',$s->{curpos});
 
-        # Prefer perl_tag to substitute if both matched at the same
-        # place.
-        delete $h{substitute_tag} if $h{substitute_tag} == $h{perl_tag};
+	# Prefer perl_tag to substitute if both matched at the same
+	# place.
+	delete $h{substitute_tag} if $h{substitute_tag} == $h{perl_tag};
 
-        # Sort keys by values (thanks, Randall!)
-        my @keys = ( map {$_->[0]}
-                     sort { $a->[1] <=> $b->[1] }
-                     map { [ $_, $h{$_} ] } keys %h );
+	# Sort keys by values (thanks, Randall!)
+	my @keys = ( map {$_->[0]}
+		     sort { $a->[1] <=> $b->[1] }
+		     map { [ $_, $h{$_} ] } keys %h );
 
-        foreach my $k (@keys)
-        {
-            next if $h{$k} == -1;
+	foreach my $k (@keys)
+	{
+	    next if $h{$k} == -1;
 
-            # We want to keep the newline from the match as part
-            # of the alphatext so we advance the cursor 1
-            # character.
-            $h{$k} += 1 if $k eq 'perl_line';
+	    # We want to keep the newline from the match as part
+	    # of the alphatext so we advance the cursor 1
+	    # character.
+	    $h{$k} += 1 if $k eq 'perl_line';
 
-            # Grab the alpha text before the tag we just found and
-            # add it in.
-            push ( @{ $state->{output_sections} },
-                   $self->_format_plaintext($s->{curpos},$h{$k}) );
+	    # Grab the alpha text before the tag we just found and
+	    # add it in if there is any such text;
+	    $self->_add_output_section( $self->_format_plaintext( text => $text,
+								  start => $s->{curpos},
+								  end => $h{$k} ) )
+		if $s->{curpos} < $h{$k};
 
-            my $method = "_parse_$k";
+	    my $method = "_parse_$k";
 
-            $self->$method($h{$k});
-            next WHILE;
-        }
+	    $self->$method( index => $h{$k},
+			    segbegin => $params{segbegin},
+			    text => $text );
+	    next WHILE;
+	}
 
-        # Grab whatever's left
-        push ( @{ $state->{output_sections} },
-               $self->_format_plaintext($s->{curpos}, $s->{textlength}) );
+	# Grab whatever's left
+	$self->_add_output_section( $self->_format_plaintext( text => $text,
+							      start => $s->{curpos},
+							      end => $params{length} ) );
 
-        # This is the cue to exit the while loop.
-        $s->{curpos} = $s->{textlength};
+	# This is the cue to exit the while loop.
+	$s->{curpos} = $params{length};
     }
 }
 
@@ -591,23 +600,25 @@ sub _parse_textseg
 #
 sub _parse_perl_line
 {
-    my ($self, $index) = @_;
+    my $self = shift;
+    my %params = @_;
 
-    my $state = $self->{parser_state};
-    my $s = $self->{text_parse_state};
+    my $s = $self->{parser_state}{text_parse_state};
 
     # Find beginning and end of code.
-    my $endline = index($s->{text},"\n",$index);
-    $endline = $s->{textlength} if $endline == -1;
-    my $length = $endline - $index;
+    my $endline = index($params{text},"\n",$params{index});
+    $endline = length($params{text}) if $endline == -1;
+    my $length = $endline - $params{index};
 
     $s->{startline} = 1;
 
-    my $perl = substr($s->{text}, $index + 1, $length - 1);
+    # From the char after % to the char before the newline.
+    my $perl = substr($params{text}, $params{index} + 1, $length - 1);
 
     $perl = $self->{postprocess}->($perl, 'perl') if $self->{postprocess};
-    push @{ $state->{output_sections} }, $perl;
+    $self->_add_output_section($perl);
 
+    # Move cursor to newline
     $s->{curpos} = $endline + 1;
 }
 
@@ -616,22 +627,29 @@ sub _parse_perl_line
 #
 sub _parse_perl_tag
 {
-    my ($self, $index) = @_;
+    my $self = shift;
+    my %params = @_;
 
-    my $state = $self->{parser_state};
-    my $s = $self->{text_parse_state};
+    my $s = $self->{parser_state}{text_parse_state};
 
-    unless ($s->{text} =~ m{</\%perl>}ig) {
-        die $self->_make_error( error => "<%perl> with no matching </%perl>",
-                                errpos => $s->{segbegin} + $index );
+    unless ($params{text} =~ m{</\%perl>}ig) {
+	die $self->_make_error( error => "<%perl> with no matching </%perl>",
+				errpos => $params{segbegin} + $params{index} );
     }
 
-    $s->{curpos} = pos($s->{text});
-    my $length = $s->{curpos} - 8 - ($index + 7);
+    # Move cursor to spot of last match (which is immediately after
+    # the </%perl> tag
+    $s->{curpos} = pos($params{text});
 
-    my $perl = substr($s->{text}, $index + 7, $length);
+    # Subtract the index position (where the original match occurred)
+    # plus the length of the <%perl> tag from the current position
+    # (after the regex) minus the length of the </%perl> tag to get
+    # the length.
+    my $length = $s->{curpos} - 8 - ($params{index} + 7);
+
+    my $perl = substr($params{text}, $params{index} + 7, $length);
     $perl = $self->{postprocess}->($perl, 'perl') if $self->{postprocess};
-    push @{ $state->{output_sections} }, $perl;
+    $self->_add_output_section($perl);
 }
 
 #
@@ -639,83 +657,93 @@ sub _parse_perl_tag
 #
 sub _parse_substitute_tag
 {
-    my ($self, $index) = @_;
+    my $self = shift;
+    my %params = @_;
 
-    my $state = $self->{parser_state};
-    my $s = $self->{text_parse_state};
+    my $s = $self->{parser_state}{text_parse_state};
 
     # See if this is a mistaken <%xxx> command
-    if (substr($s->{text}, $index + 2, 20) =~ /^(\w+)>/) {
-        die $self->_make_error( error => "unknown section <%$1>",
-                                errpos => $s->{segbegin} + $index );
+    if (substr($params{text}, $params{index} + 2, 20) =~ /^(\w+)>/) {
+	die $self->_make_error( error => "unknown section <%$1>",
+				errpos => $params{segbegin} + $params{index} );
     }
 
     # Find the closing part of the tag.
-    my $close = index($s->{text},"%>", $index + 2);
+    my $close = index($params{text},"%>", $params{index} + 2);
     if ($close == -1) {
-        die $self->_make_error( error => "'<%' with no matching '%>'",
-                                errpos => $s->{segbegin} + $index );
+	die $self->_make_error( error => "'<%' with no matching '%>'",
+				errpos => $params{segbegin} + $params{index} );
     }
-    my $length = $close - ($index + 2);
+    my $length = $close - ($params{index} + 2);
 
-    my $perl = '$_out->('. substr($s->{text}, $index + 2, $length) . ');';
+    my $perl = '$_out->('. substr($params{text}, $params{index} + 2, $length) . ');';
     $perl = $self->{postprocess}->($perl, 'perl') if $self->{postprocess};
-    push @{ $state->{output_sections} }, $perl;
+    $self->_add_output_section($perl);
 
-    $s->{curpos} = $index + 2 + $length + 2;
+    $s->{curpos} = $params{index} + 2 + $length + 2;
 }
 
 sub _parse_call_tag
 {
-    my ($self, $index) = @_;
+    my $self = shift;
+    my %params = @_;
 
-    my $state = $self->{parser_state};
-    my $s = $self->{text_parse_state};
+    my $s = $self->{parser_state}{text_parse_state};
 
-    my $close = index($s->{text} , "&>", $index + 2);
+    my $close = index($params{text} , "&>", $params{index} + 2);
     if ($close == -1) {
-        die $self->_make_error( error => "'<&' with no matching '&>'",
-                                errpos => $s->{segbegin} + $index );
+	die $self->_make_error( error => "'<&' with no matching '&>'",
+				errpos => $params{segbegin} + $params{index} );
     }
-    my $length = $close - ($index + 2);
+    my $length = $close - ($params{index} + 2);
 
-    my $call = substr($s->{text}, $index + 2, $length);
-    for ($call) { s/^\s+//; s/\s+$// }
-    if (substr($call,0,1) =~ /[A-Za-z0-9\/_.]/) {
-        # Literal component path; put quotes around it
-        my $comma = index($call, ',');
-        $comma = length $call if $comma == -1;
-        (my $comp = substr($call, 0, $comma)) =~ s/\s+$//;
-        $call = "'$comp'" . substr($call, $comma);
+    my $call = substr($params{text}, $params{index} + 2, $length);
+    for ($call) { s/^\s+//; s/\s+$//; }
+
+    if ($call =~ /^[A-Za-z0-9\/_.]/) {
+	# Literal component path; put quotes around it
+	my $comma = index($call, ',');
+	$comma = length $call if $comma == -1;
+	(my $comp = substr($call, 0, $comma)) =~ s/\s+$//;
+	$call = "'$comp'" . substr($call, $comma);
     }
 
     my $perl = "\$m->comp($call);";
     $perl = $self->{postprocess}->($perl, 'perl') if $self->{postprocess};
-    push @{ $state->{output_sections} }, $perl;
+    $self->_add_output_section($perl);
 
-    $s->{curpos} = $index + 2 + $length + 2;
+    $s->{curpos} = $params{index} + 2 + $length + 2;
 }
 
 sub _format_plaintext
 {
-    my ($self, $begin, $end) = @_;
+    my $self = shift;
+    my %params = @_;
 
-    return unless $end - $begin > 0;
+    return unless $params{end} - $params{start} > 0;
 
-    my $text = $self->{text_parse_state}{text};
-
-    my $alpha = substr($text, $begin, $end - $begin);
+    my $alpha = substr($params{text}, $params{start}, $params{end} - $params{start});
 
     # Remove trailing newline (and backslash) if newline has been
     # 'escaped' with a backslash.
-    if (substr($text, $end - 2, 2) eq "\\\n") {
-        chop $alpha; chop $alpha;
+    if (substr($params{text}, $params{end} - 2, 2) eq "\\\n") {
+	chop $alpha; chop $alpha;
     }
 
     $alpha =~ s{([\\\'])} {\\$1}g;   # escape backslashes and single quotes
     $alpha = sprintf q|$_out->('%s');|,$alpha;
     $alpha = $self->{postprocess}->($alpha, 'alpha') if $self->{postprocess};
     return $alpha;
+}
+
+sub _add_output_section
+{
+    my $self = shift;
+    my $section = shift;
+
+    my $state = $self->{parser_state};
+
+    push @{ $state->{output_sections} }, $section;
 }
 
 sub _build_component
@@ -726,38 +754,9 @@ sub _build_component
 
     my $header = $self->_build_header;
     my $body = $self->_build_body;
+    my $params = $self->_build_params_string($header, $body);
 
-    #
-    # Assemble parameters for component.
-    #
-    my $ver = $self->version();
-    my @cparams = ( "'parser_version'=>$ver",
-                    "'create_time'=>".time() );
-
-    push @cparams, "'subcomps'=>\\\%_subcomponents"
-        if %{ $state->{subcomponents} };
-    push @cparams, "'methods'=>\\\%_methods"
-        if %{ $state->{methods} };
-
-    if (%{ $state->{declared_args} })
-    {
-        my $d = Data::Dumper->new([$state->{declared_args}]);
-        # Brought in from Tools.
-        my $dump = dumper_method($d);
-        for ($dump) { s/\$VAR1\s*=//g; s/;\s*$// }
-        push @cparams, "'declared_args'=>$dump";
-    }
-
-    push @cparams, $state->{flags} if $state->{flags};
-    push @cparams, $state->{attr} if $state->{attr};
-
-    push @cparams, "'code'=>sub {\n$body\n}";
-    push @cparams, sprintf( "'object_size'=>%d",
-                            length($header) + length (join '', @cparams) );
-
-    my $cparamstr = join(",\n",@cparams);
-
-    return $header . "$state->{comp_class}\->new(\n$cparamstr\n);\n";
+    return $header . "$state->{comp_class}\->new(\n$params\n);\n";
 }
 
 sub _build_header
@@ -773,11 +772,11 @@ sub _build_header
     my $pkg = $self->{in_package};
     unless ($state->{embedded})
     {
-        $header .= "package $pkg;\n";
-        $header .= "use strict;\n" if $self->use_strict;
-        my @g = 
-        $header .= sprintf( "use vars qw(\%s);\n",
-                            join(' ', '$m', @{$self->{'allow_globals'}} ) );
+	$header .= "package $pkg;\n";
+	$header .= "use strict;\n" if $self->use_strict;
+	my @g = 
+	$header .= sprintf( "use vars qw(\%s);\n",
+			    join(' ', '$m', @{$self->{'allow_globals'}} ) );
     }
     $header .= $state->{once} if $state->{once};
 
@@ -815,11 +814,48 @@ sub _build_subcomponent_or_method_header
     #
     $code .= "my \%_$type = (\n";
     $code .= join ( ",\n",
-                    map {"'$_' => do {\n$state->{$type}{$_}\n}"}
-                    sort keys %{ $state->{$type} } );
+		    map {"'$_' => do {\n$state->{$type}{$_}\n}"}
+		    sort keys %{ $state->{$type} } );
     $code .= "\n);\n";
 
     return $code;
+}
+
+sub _build_params_string
+{
+    my ($self, $header, $body) = @_;
+    my $state = $self->{parser_state};
+
+    #
+    # Assemble parameters for component.
+    #
+    my $ver = $self->version();
+    my @cparams = ( "'parser_version'=>$ver",
+		    "'create_time'=>".time() );
+
+    push @cparams, "'subcomps'=>\\\%_subcomponents"
+	if %{ $state->{subcomponents} };
+    push @cparams, "'methods'=>\\\%_methods"
+	if %{ $state->{methods} };
+
+    if (%{ $state->{declared_args} })
+    {
+	my $d = Data::Dumper->new([$state->{declared_args}]);
+	# Brought in from Tools.
+	my $dump = dumper_method($d);
+	for ($dump) { s/\$VAR1\s*=//g; s/;\s*$// }
+	push @cparams, "'declared_args'=>$dump";
+    }
+
+    push @cparams, $state->{flags} if $state->{flags};
+    push @cparams, $state->{attr} if $state->{attr};
+
+    push @cparams, "'code'=>sub {\n$body\n}";
+    push @cparams, sprintf( "'object_size'=>%d",
+			    length($header) + length (join ",\n", @cparams) );
+
+    my $cparamstr = join(",\n",@cparams);
+
 }
 
 sub _build_body
@@ -836,12 +872,12 @@ sub _build_body
     $body .= 'my %ARGS;' . "\n";
     if ($state->{args})
     {
-        $body .= 'if (@_ % 2 == 0) { %ARGS = @_ } else { die "Odd number of parameters passed to component expecting name/value pairs" }' . "\n";
-        $body .= $state->{args};
+	$body .= 'if (@_ % 2 == 0) { %ARGS = @_ } else { die "Odd number of parameters passed to component expecting name/value pairs" }' . "\n";
+	$body .= $state->{args};
     }
     else
     {
-        $body .= '%ARGS = @_ unless (@_ % 2);' . "\n";
+	$body .= '%ARGS = @_ unless (@_ % 2);' . "\n";
     }
     $body .= 'my $_out = $m->current_sink;'."\n";
 
@@ -851,7 +887,7 @@ sub _build_body
 
     foreach my $o (@{ $state->{output_sections} })
     {
-        $body .= "$o\n";
+	$body .= "$o\n";
     }
 
     #
@@ -867,54 +903,48 @@ sub _build_body
 }
 
 #
-# This is soooooo dumb but it's a hack solution until we require
-# 5.005+
+# This is lame but it's a hack solution until we require 5.005+
 #
 sub _make_error
 {
     my $self = shift;
-    my %params = @_;
 
-    my @pairs;
-    while (my ($k, $v) = each %params)
-    {
-        push @pairs, (join 'ISEQUALTO', $k, $v);
-    }
-    return join 'KEYVALUEPAIR', @pairs;
+    my $d = Data::Dumper->new([shift]);
+    # Brought in from Tools.
+    my $dump = dumper_method($d);
+    for ($dump) { s/\$VAR1\s*=//g; s/;\s*$// }
+
+    return $dump;
 }
 
 sub _handle_parse_error
 {
-    my ($self, $err) = @_;
+    my ($self, $errdump) = @_;
 
-    my %err;
-    foreach my $pair (split 'KEYVALUEPAIR', $err)
-    {
-        my ($k, $v) = split 'ISEQUALTO', $pair;
-        $err{$k} = $v;
-    }
+    my $err;
+    eval "\$err = $errdump";
 
     # Just in case this isn't a die from one our methods but is some
     # sort of 'real' error generated in another module.  We need real
     # exceptions.  bleah.
-    die $err unless keys %err;
+    die $err unless keys %$err;
 
     my $state = $self->{parser_state};
 
     #
     # Process parsing errors.
     #
-    if (exists $err{errpos}) {
-        my $linenum = (substr($state->{script},0,$err{errpos}) =~ tr/\n//) + 1;
-        if ($err{suberr}) {
-            $err{error} .= " (main script line $linenum)";
-        } else {
-            $err{error} .= " (line $linenum)";
-        }
-        ${ $state->{errpos_ref} } = $err{errpos} if exists $state->{errpos_ref};
+    if (exists $err->{errpos}) {
+	my $linenum = (substr($state->{script},0,$err->{errpos}) =~ tr/\n//) + 1;
+	if ($err->{suberr}) {
+	    $err->{error} .= " (main script line $linenum)";
+	} else {
+	    $err->{error} .= " (line $linenum)";
+	}
+	${ $state->{errpos_ref} } = $err->{errpos} if exists $state->{errpos_ref};
     }
-    $err{error} .= "\n";
-    ${ $state->{error_ref} } = $err{error} if exists $state->{error_ref};
+    $err->{error} .= "\n";
+    ${ $state->{error_ref} } = $err->{error} if exists $state->{error_ref};
 }
 
 #
@@ -931,17 +961,17 @@ sub write_object_file
 {
     my ($self, %options) = @_;
     my ($objectText,$objectFile,$filesWrittenRef) =
-        @options{qw(object_text object_file files_written)};
+	@options{qw(object_text object_file files_written)};
     my @newfiles = ($objectFile);
 
     if (!-f $objectFile) {
-        my ($dirname) = dirname($objectFile);
-        if (!-d $dirname) {
-            unlink($dirname) if (-e $dirname);
-            push(@newfiles,mkpath($dirname,0,0775));
-            die "Couldn't create directory $dirname: $!" if (!-d $dirname);
-        }
-        rmtree($objectFile) if (-d $objectFile);
+	my ($dirname) = dirname($objectFile);
+	if (!-d $dirname) {
+	    unlink($dirname) if (-e $dirname);
+	    push(@newfiles,mkpath($dirname,0,0775));
+	    die "Couldn't create directory $dirname: $!" if (!-d $dirname);
+	}
+	rmtree($objectFile) if (-d $objectFile);
     }
     
     my $fh = new IO::File ">$objectFile" or die "Couldn't write object file $objectFile: $!";
@@ -960,7 +990,7 @@ sub eval_object_text
 {    
     my ($self, %options) = @_;
     my ($objectText,$objectFile,$errref) =
-        @options{qw(object_text object_file error)};
+	@options{qw(object_text object_file error)};
 
     #
     # Evaluate object file or text with warnings on
@@ -968,17 +998,17 @@ sub eval_object_text
     my $ignoreExpr = $self->ignore_warnings_expr;
     my ($comp,$err);
     {
-        my $warnstr;
-        local $^W = 1;
-        local $SIG{__WARN__} = $ignoreExpr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignoreExpr/ } : sub { $warnstr .= $_[0] };
-        if ($objectFile) {
-            ($objectFile) = ($objectFile =~ /^(.*)$/s) if $self->taint_check;
-            $comp = do($objectFile);
-        } else {
-            ($objectText) = ($objectText =~ /^(.*)$/s) if $self->taint_check;
-            $comp = eval($objectText);
-        }
-        $err = $warnstr . $@;
+	my $warnstr;
+	local $^W = 1;
+	local $SIG{__WARN__} = $ignoreExpr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignoreExpr/ } : sub { $warnstr .= $_[0] };
+	if ($objectFile) {
+	    ($objectFile) = ($objectFile =~ /^(.*)$/s) if $self->taint_check;
+	    $comp = do($objectFile);
+	} else {
+	    ($objectText) = ($objectText =~ /^(.*)$/s) if $self->taint_check;
+	    $comp = eval($objectText);
+	}
+	$err = $warnstr . $@;
     }
 
     #
@@ -988,33 +1018,33 @@ sub eval_object_text
     #  -- valid components but with an earlier parser_version
     #
     if ($objectFile) {
-        my $parserVersion = version();
-        my $incompat = "Incompatible object file ($objectFile);\nobject file was created by %s and you are running parser version $parserVersion.\nAsk your administrator to clear the object directory.\n";
-        if (-z $objectFile) {
-            $err = sprintf($incompat,"a pre-0.7 parser");
-        } elsif ($comp) {
-            if (ref($comp) eq 'CODE') {
-                $err = sprintf($incompat,"a pre-0.7 parser");
-            } elsif (ref($comp) !~ /HTML::Mason::Component/) {
-                $err = "object file ($objectFile) did not return a component object!";
-            } elsif ($comp->parser_version != $parserVersion) {
-                $err = sprintf($incompat,"parser version ".$comp->parser_version);
-            }
-        }
+	my $parserVersion = version();
+	my $incompat = "Incompatible object file ($objectFile);\nobject file was created by %s and you are running parser version $parserVersion.\nAsk your administrator to clear the object directory.\n";
+	if (-z $objectFile) {
+	    $err = sprintf($incompat,"a pre-0.7 parser");
+	} elsif ($comp) {
+	    if (ref($comp) eq 'CODE') {
+		$err = sprintf($incompat,"a pre-0.7 parser");
+	    } elsif (ref($comp) !~ /HTML::Mason::Component/) {
+		$err = "object file ($objectFile) did not return a component object!";
+	    } elsif ($comp->parser_version != $parserVersion) {
+		$err = sprintf($incompat,"parser version ".$comp->parser_version);
+	    }
+	}
     }
 
     #
     # Return component or error
     #
     if ($err) {
-        # attempt to stem very long eval errors
-        if ($err =~ /has too many errors\./) {
-            $err =~ s/has too many errors\..*/has too many errors./s;
-        }
-        $$errref = $err if defined($errref);
-        return undef;
+	# attempt to stem very long eval errors
+	if ($err =~ /has too many errors\./) {
+	    $err =~ s/has too many errors\..*/has too many errors./s;
+	}
+	$$errref = $err if defined($errref);
+	return undef;
     } else {
-        return $comp;
+	return $comp;
     }
 }
 
@@ -1035,64 +1065,64 @@ sub make_dirs
     my $reloadFile = $options{update_reload_file} ? "$dataDir/etc/reload.lst" : undef;
     my ($relfh);
     if (defined($reloadFile)) {
-        $relfh = new IO::File ">>$reloadFile" or die "make_dirs: cannot open '$reloadFile' for writing: $!";
-        $relfh->autoflush(1);
+	$relfh = new IO::File ">>$reloadFile" or die "make_dirs: cannot open '$reloadFile' for writing: $!";
+	$relfh->autoflush(1);
     }
     
     my $compilesub = sub {
-        my ($srcfile) = $File::Find::name;
-        return if (!-f $srcfile);
-        return if defined($predicate) && !($predicate->($srcfile));
-        my $compPath = substr($srcfile,length($sourceDir));
-        (my $objfile = $srcfile) =~ s@^$sourceDir@$objectDir@;
-        my ($objfiledir) = dirname($objfile);
-        if (!-d $objfiledir) {
-            if (defined($dirCreateMode)) {
-                print "creating directory $objfiledir\n" if $verbose;
-                mkpath($objfiledir,0,$dirCreateMode);
-                die "make_dirs: cannot create directory '$objfiledir': $!" if (!-d $objfiledir);
-            } else {
-                die "make_dirs: no such directory '$objfiledir'";
-            }
-        }
-        my $makeflag;
-        if (!-e $objfile) {
-            $makeflag = 1;
-        } else {
-            my $srcfilemod = [stat($srcfile)]->[9];
-            my $objfilemod = [stat($objfile)]->[9];
-            $makeflag = ($srcfilemod > $objfilemod);
-        }
-        if ($makeflag) {
-            my ($errmsg,$objText);
-            print "compiling $srcfile\n" if $verbose;
-            if ($self->make_component(script_file=>$srcfile, object_text=>\$objText, error=>\$errmsg)) {
-                $self->write_object_file(object_file=>$objfile, object_text=>$objText);
-            } else {
-                if ($verbose) {
-                    print "error";
-                    if ($errorDir) {
-                        (my $errfile = $srcfile) =~ s@^$sourceDir@$errorDir@;
-                        $self->write_object_file(object_file=>$errfile, object_text=>$objText);
-                        print " in $errfile";
-                    }
-                    print ":\n$errmsg\n";
-                }
-            }
-        }
+	my ($srcfile) = $File::Find::name;
+	return if (!-f $srcfile);
+	return if defined($predicate) && !($predicate->($srcfile));
+	my $compPath = substr($srcfile,length($sourceDir));
+ 	(my $objfile = $srcfile) =~ s@^$sourceDir@$objectDir@;
+	my ($objfiledir) = dirname($objfile);
+	if (!-d $objfiledir) {
+	    if (defined($dirCreateMode)) {
+		print "creating directory $objfiledir\n" if $verbose;
+		mkpath($objfiledir,0,$dirCreateMode);
+		die "make_dirs: cannot create directory '$objfiledir': $!" if (!-d $objfiledir);
+	    } else {
+		die "make_dirs: no such directory '$objfiledir'";
+	    }
+	}
+	my $makeflag;
+	if (!-e $objfile) {
+	    $makeflag = 1;
+	} else {
+	    my $srcfilemod = [stat($srcfile)]->[9];
+	    my $objfilemod = [stat($objfile)]->[9];
+	    $makeflag = ($srcfilemod > $objfilemod);
+	}
+	if ($makeflag) {
+	    my ($errmsg,$objText);
+	    print "compiling $srcfile\n" if $verbose;
+	    if ($self->make_component(script_file=>$srcfile, object_text=>\$objText, error=>\$errmsg)) {
+		$self->write_object_file(object_file=>$objfile, object_text=>$objText);
+	    } else {
+		if ($verbose) {
+		    print "error";
+		    if ($errorDir) {
+			(my $errfile = $srcfile) =~ s@^$sourceDir@$errorDir@;
+			$self->write_object_file(object_file=>$errfile, object_text=>$objText);
+			print " in $errfile";
+		    }
+		    print ":\n$errmsg\n";
+		}
+	    }
+	}
     };
 
     foreach my $path (@paths) {
-        my $fullpath = $sourceDir . $path;
-        $fullpath =~ s@/$@@g;
-        if (-f $fullpath) {
-            $compilesub->($fullpath);
-        } elsif (-d $fullpath) {
-            my $sub = sub {$compilesub->($_) if -f};
-            find($sub,$fullpath);
-        } else {
-            die "make_dirs: no such file or directory '$fullpath'";
-        }
+	my $fullpath = $sourceDir . $path;
+	$fullpath =~ s@/$@@g;
+	if (-f $fullpath) {
+	    $compilesub->($fullpath);
+	} elsif (-d $fullpath) {
+	    my $sub = sub {$compilesub->($_) if -f};
+	    find($sub,$fullpath);
+	} else {
+	    die "make_dirs: no such file or directory '$fullpath'";
+	}
     }
 }
 
