@@ -523,12 +523,18 @@ sub new
 	$defaults{error_format} = 'html';
     }
 
+    # Push $r onto default allow_globals
     if (exists $allowed_params->{allow_globals}) {
 	if ( $defaults{allow_globals} ) {
 	    push @{ $defaults{allow_globals} }, '$r';
 	} else {
 	    $defaults{allow_globals} = ['$r'];
 	}
+    }
+
+    # Don't allow resolver to get created without comp_root, if it needs one
+    if ( exists $allowed_params->{comp_root} && !$defaults{comp_root} && !$params{comp_root} ) {
+	die "No comp_root specified and cannot determine DocumentRoot. Please provide comp_root manually.";
     }
 
     my $self = $class->SUPER::new(%defaults, @_);
