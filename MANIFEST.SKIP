@@ -10,5 +10,3 @@ t/httpd.*
 MANIFEST.SKIP
 .*\.tar\.gz
 ^Makefile$
-t/taint\.comp
-
