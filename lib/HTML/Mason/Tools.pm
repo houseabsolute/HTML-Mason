@@ -21,7 +21,7 @@ require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(read_file html_escape url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on load_pkg);
+@EXPORT_OK = qw(read_file html_escape url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on load_pkg absolute_comp_path);
 
 #
 # Return contents of file. If $binmode is 1, read in binary mode.
@@ -73,13 +73,25 @@ sub compress_path
 }
 
 #
+# Return the absolute version of a component path. Handles . and ..
+# Second argument is directory path to resolve relative paths against.
+#
+sub absolute_comp_path
+{
+    my ($comp_path, $dir_path) = @_;
+
+    $comp_path = "$dir_path/$comp_path" if $comp_path !~ m@^/@;
+    return mason_canonpath($comp_path);
+}
+
+
+#
 # Makes a few fixes to File::Spec::canonpath. Will go away if/when they
 # accept our patch.
 #
 sub mason_canonpath {
     # Just like File::Spec::canonpath, but we're having trouble
     # getting a patch through to them.
-    shift;
     my $path = shift;
     $path =~ s|/+|/|g unless($^O eq 'cygwin');       # xx////yy  -> xx/yy
     $path =~ s|(/\.)+/|/|g;                          # xx/././yy -> xx/yy

@@ -7,7 +7,7 @@ package HTML::Mason::Request;
 use strict;
 
 use File::Spec;
-use HTML::Mason::Tools qw(read_file compress_path load_pkg);
+use HTML::Mason::Tools qw(read_file compress_path load_pkg absolute_comp_path);
 use HTML::Mason::Utils;
 use HTML::Mason::Buffer;
 
@@ -391,7 +391,7 @@ sub caller_args
 sub comp_exists
 {
     my ($self,$path) = @_;
-    return $self->interp->lookup($self->interp->absolute_comp_path($path,$self->current_comp->dir_path)) ? 1 : 0;
+    return $self->interp->lookup(absolute_comp_path($path, $self->current_comp->dir_path)) ? 1 : 0;
 }
 
 sub decline
@@ -467,7 +467,7 @@ sub fetch_comp
     #
     # Otherwise pass the absolute path to interp->load.
     #
-    $path = $self->interp->absolute_comp_path($path,$self->current_comp->dir_path);
+    $path = absolute_comp_path($path, $self->current_comp->dir_path);
     return $self->interp->load($path);
 }
 

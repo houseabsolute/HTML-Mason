@@ -7,6 +7,7 @@ package HTML::Mason::Component;
 use strict;
 use File::Basename;
 use File::Spec;
+use HTML::Mason::Tools qw(absolute_comp_path);
 use Params::Validate qw(:all);
 use vars qw($AUTOLOAD);
 
@@ -88,7 +89,7 @@ sub assign_runtime_properties {
     # Assign inheritance properties
     if (exists($self->{flags}->{inherit})) {
 	if (defined($self->{flags}->{inherit})) {
-	    $self->{inherit_path} = $interp->absolute_comp_path($self->{flags}->{inherit},$self->dir_path);
+	    $self->{inherit_path} = absolute_comp_path($self->{flags}->{inherit},$self->dir_path);
 	}
     } elsif (defined($interp->autohandler_name)) {
 	if ($interp->allow_recursive_autohandlers) {
