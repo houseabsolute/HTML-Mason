@@ -782,7 +782,8 @@ sub handle_request
 
     my $req = $self->prepare_request($r);
     return $req unless ref($req);
-    $req->exec;
+
+    return $req->exec;
 }
 
 sub prepare_request
