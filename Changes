@@ -10,7 +10,7 @@ available at http://www.masonhq.com/changes.html.
 [ ENHANCEMENTS ]
 
 - Replace the regex "[A-Za-z0-9]" with "\w", which should cooperate
-better with the use of locales and Unicode.
+better with Unicode.
 
 [ BUG FIXES ]
 
