@@ -465,8 +465,6 @@ my $status_name = 'mason0001';
 sub _initialize {
     my ($self) = @_;
 
-    $self->{request_number} = 0;
-
     if ($self->args_method eq 'mod_perl') {
 	unless (defined $Apache::Request::VERSION) {
 	    warn "Loading Apache::Request at runtime.  You could increase shared memory between Apache processes by preloading it in your httpd.conf or handler.pl file\n";
@@ -606,11 +604,9 @@ sub handle_request {
     # something else in this routine.  Go figure...
     # -jswartz 5/23
     #
-    my ($self,$apreq) = @_;
-    my ($outsub, $retval);
-    my $outbuf = '';
+    my ($self, $apreq) = @_;
+    my ($retval);
     my $interp = $self->interp;
-    $self->{request_number}++;
 
     if (lc($apreq->dir_config('Filter')) eq 'on') {
 	$apreq = $apreq->filter_register;
