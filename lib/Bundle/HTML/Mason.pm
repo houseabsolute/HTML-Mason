@@ -26,7 +26,7 @@ Params::Validate  0.10
 
 Apache::Request  0.31
 
-Exception::Class  0.98
+Exception::Class  1.00
 
 Cache::Cache  0.99
 
