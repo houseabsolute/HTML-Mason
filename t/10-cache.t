@@ -9,7 +9,7 @@ use HTML::Mason::Tools;
 eval { my $fh = do { local *FH; *FH; }; open $fh, $0; flock $fh,1; };
 if ($@)
 {
-    print "1..0\n";
+    print "1..0 # Skipped: flock() is not available on this system\n";
     exit;
 }
 
@@ -17,7 +17,7 @@ if ($@)
 eval { require Cache::FileCache };
 if ($@)
 {
-    print "1..0\n";
+    print "1..0 # Skipped: Cache::FileCache is not installed\n";
     exit;
 }
 
