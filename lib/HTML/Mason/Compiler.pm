@@ -105,7 +105,7 @@ sub add_allowed_globals
 sub allow_globals
 {
     my $self = shift;
-    
+
     if (@_)
     {
 	$self->{allow_globals} = [];
@@ -230,7 +230,7 @@ sub init_block
 {
     my $self = shift;
     my %p = @_;
-    
+
     my $line = $self->lexer->line_count;
     my $file = $self->lexer->name;
     my $comment = "#line $line $file\n";
