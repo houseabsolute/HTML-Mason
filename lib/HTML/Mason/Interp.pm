@@ -17,7 +17,7 @@ use File::Find;
 use IO::File;
 use IO::Seekable;
 use HTML::Mason::Parser;
-use HTML::Mason::Tools qw(read_file pkg_loaded);
+use HTML::Mason::Tools qw(read_file pkg_loaded is_absolute_path);
 use HTML::Mason::Commands qw();
 use HTML::Mason::Config;
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
@@ -103,6 +103,15 @@ sub _initialize
 	$self->parser($p);
     }
 
+    #
+    # Remove unnecessary terminating slashes from directories, and check
+    # that directories are absolute.
+    #
+    foreach my $field (qw(comp_root data_dir data_cache_dir)) {
+	$self->{$field} =~ s/\/$//g;
+ 	die "$field ('".$self->{$field}."') must be an absolute directory" if !is_absolute_path($self->{$field});
+    }
+    
     #
     # Create data subdirectories if necessary. mkpath will die on error.
     #

@@ -107,12 +107,12 @@ sub date_delta_to_secs
 }
 
 #
-# Determines whether a pathname is absolute: beginning with / or a
+# Determines whether a pathname is absolute: beginning with / or ~/ or a
 # drive letter (e.g. C:/).
 #
 sub is_absolute_path
 {
-    return $_[0] =~ /^([A-Za-z]:)?\//;
+    return $_[0] =~ /^(([A-Za-z]:)|~)?\//;
 }
     
 #
