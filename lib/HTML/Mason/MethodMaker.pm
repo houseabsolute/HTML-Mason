@@ -25,8 +25,28 @@ sub import
     {
 	foreach my $rw ( ref $p{read_write} ? @{ $p{read_write} } : $p{read_write} )
 	{
-	    no strict 'refs';
-	    *{"$caller\::$rw"} = sub { my $s = shift; $s->{$rw} = shift if @_; return $s->{$rw}; };
+	    if (ref $rw)
+	    {
+		my ($name, $spec) = @$rw;
+		no strict 'refs';
+		*{"$caller\::$name"} =
+		    sub { my $s = shift;
+			  if (@_)
+			  {
+			      # For some reason related to Perl's
+			      # prototype weirdness this doesn't work
+			      # unless this is passed as a reference.
+			      Params::Validate::validate_pos(\@_, $spec);
+			      $s->{$name} = shift;
+			  }
+			  return $s->{$name};
+		        };
+	    }
+	    else
+	    {
+		no strict 'refs';
+		*{"$caller\::$rw"} = sub { my $s = shift; $s->{$rw} = shift if @_; return $s->{$rw}; };
+	    }
 	}
     }
 
@@ -36,13 +56,36 @@ sub import
 	{
 	    foreach my $rwc (@{ $p{read_write_contained}{$object} })
 	    {
-		no strict 'refs';
-		*{"$caller\::$rwc"} = sub { my $self = shift;
-					    my %new = @_ ? ( $rwc => $_[0] ) : ();
-					    my %args = $self->delayed_object_params( $object,
-										     %new );
-					    return $args{$rwc};
-					};
+		if (ref $rwc)
+		{
+		    my ($name, $spec) = @$rwc;
+		    no strict 'refs';
+		    *{"$caller\::$name"} =
+			sub { my $s = shift;
+			      my %new;
+			      if (@_)
+			      {
+				  # For some reason related to Perl's
+				  # prototype weirdness this doesn't work
+				  # unless this is passed as a reference.
+				  Params::Validate::validate_pos(\@_, $spec);
+				  %new = ( $name => $_[0] );
+			      }
+			      my %args = $s->delayed_object_params( $object,
+								    %new );
+			      return $args{$rwc};
+			  };
+		}
+		else
+		{
+		    no strict 'refs';
+		    *{"$caller\::$rwc"} = sub { my $s = shift;
+						my %new = @_ ? ( $rwc => $_[0] ) : ();
+						my %args = $s->delayed_object_params( $object,
+										      %new );
+						return $args{$rwc};
+					    };
+		}
 	    }
 	}
     }
@@ -59,7 +102,17 @@ HTML::Mason::MethodMaker - Used to create simple get & get/set methods in other 
 =head1 SYNOPSIS
 
  use HTML::Mason::MethodMaker ( read_only => 'foo',
-                                read_write => [ qw( bar baz ) ] );
+                                read_write => [
+                                               [ bar => { type => SCALAR } ],
+                                               [ baz => { isa => 'HTML::Mason::Baz' } ],
+                                                'quux', # no validation
+                                              ],
+                                read_write_contained => { other_object =>
+                                                          [ [ 'thing1' => { isa => 'Thing1' } ],
+                                                            'thing2', # no validation
+                                                          ]
+                                                        },
+                              );
 
 =head1 DESCRIPTION
 
@@ -68,7 +121,8 @@ This automates the creation of simple accessor methods.
 =head1 USAGE
 
 This module creates methods when it is C<use>'d by another module.
-There are two types of methods: 'read_only' and 'read_write'.
+There are three types of methods: 'read_only', 'read_write',
+'read_write_contained'.
 
 Attributes specified as 'read_only' get an accessor that only returns
 the value of the attribute.  Presumably, these attributes are set via
@@ -79,6 +133,24 @@ Attributes specified as 'read_write' will take a single optional
 parameter.  If given, this parameter will become the new value of the
 attribute.  This value is then returned from the method.  If no
 parameter is given, then the current value is returned.
+
+If you want the accessor to use C<Params::Validate> to validate any
+values passed to the accessor (and you _do_), then the the accessor
+specification should be an array reference containing two elements.
+The first element is the accessor name and the second is the
+validation spec.
+
+The 'read_write_contained' parameter is used to create accessor for
+delayed contained objects.  A I<delayed> contained object is one that
+is B<not> created in the containing object's accessor, but rather at
+some point after the containing object is constructed.  For example,
+the Interpreter object creates Request objects after the Interpreter
+itself has been created.
+
+The value of the 'read_write_contained' parameter should be a hash
+reference.  The keys are the internal name of the contained object,
+such as "request" or "buffer".  The values for the keys are the same
+as the parameters given for 'read_write' accessors.
 
 =head1 SEE ALSO
 
