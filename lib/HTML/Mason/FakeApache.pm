@@ -9,6 +9,8 @@ require Exporter;
 @EXPORT = ();
 @EXPORT_OK = ();
 
+use mod_perl;
+
 sub new {
     my $class = shift;
     my $self = {
