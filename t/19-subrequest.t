@@ -239,5 +239,31 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/support/output',
+			 component => <<'EOF',
+More output
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'kwindla',
+		      description => 'tests bug report from Kwindla Kramer',
+		      component => <<'EOF',
+Some output
+% $m->clear_buffer;
+% my $req = $m->make_subrequest( comp => '/subrequest/support/output' );
+% $req->exec();
+% $m->flush_buffer;
+% $m->abort;
+EOF
+		      expect => <<'EOF',
+More output
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     return $group;
 }
