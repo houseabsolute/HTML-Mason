@@ -227,10 +227,10 @@ sub check_reload_file {
 	$self->{last_reload_time} = $lastmod;
 	$self->{last_reload_file_pos} = tell $fh;
 	my @lines = split("\n",$block);
-	foreach my $compPath (@lines) {
-	    if (exists($self->{code_cache}->{$compPath})) {
-		$self->{code_cache_current_size} -= $self->{code_cache}->{$compPath}->{size};
-		delete($self->{code_cache}->{$compPath});
+	foreach my $comp_path (@lines) {
+	    if (exists($self->{code_cache}->{$comp_path})) {
+		$self->{code_cache_current_size} -= $self->{code_cache}->{$comp_path}->{size};
+		delete($self->{code_cache}->{$comp_path});
 	    }
 	}
     }
