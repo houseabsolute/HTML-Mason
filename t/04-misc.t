@@ -97,10 +97,6 @@ EOF
 			 component => <<'EOF',
 dhandler = <% $m->current_comp->title %>
 dhandler arg = <% $m->dhandler_arg %>
-
-<%args>
-$decline=>0
-</%args>
 EOF
 		       );
 
