@@ -206,7 +206,7 @@ sub _initialize {
     $self->{prepare_error} = $@ if $@;
 }
 
-sub new_superclass
+sub alter_superclass
 {
     my $self = shift;
     my $new_super = shift;
