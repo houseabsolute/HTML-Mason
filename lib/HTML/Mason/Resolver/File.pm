@@ -145,6 +145,9 @@ on the filesystem, which is the norm for most Mason-based applications.
 
 =head1 CONSTRUCTOR
 
+
+=item comp_root
+
 The C<new> method takes a single mandatory parameter, C<comp_root>.
 This parameter may be either a scalar or an array reference.  If it is
 a scalar, it should be a filesystem path indicating the component
@@ -156,8 +159,8 @@ If it is an array reference, it should be of the following form:
    [ key2 => '/path/to/other/root' ] ]
 
 The "keys" for each path must be unique names and their "values" must
-be filesystem paths.  These paths will be searched in order whenever a
-component path must be resolved to a filesystem path.
+be filesystem paths.  These paths will be searched in the provided
+order whenever a component path must be resolved to a filesystem path.
 
 =head1 ADDITIONAL METHODS
 
