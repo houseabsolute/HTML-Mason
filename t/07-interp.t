@@ -948,6 +948,9 @@ EOF
     {
         $group->add_test( name => 'source_filter',
                           description => 'make sure source filters work',
+                          interp_params =>
+                          { ignore_warnings_expr =>
+                            qr/uninitialized|Subroutine .* redefined/i },
                           component => <<'EOF',
 no explosion
 <%init>
