@@ -263,6 +263,8 @@ sub exec {
     $interp->set_global('m'=>$self)
         if ($interp->compiler->in_package ne 'HTML::Mason::Commands');
 
+    # Save context of subroutine for use inside eval.
+    my $wantarray = wantarray;
     my @result;
     eval {
 	# Create initial buffer.
@@ -300,7 +302,7 @@ sub exec {
 	    tie *SELECTED, 'Tie::Handle::Mason', $self;
 
 	    my $old = select SELECTED;
-	    if (wantarray) {
+	    if ($wantarray) {
 		@result = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @request_args)};
 	    } else {
 		$result[0] = eval {$self->comp({base_comp=>$request_comp}, $first_comp, @request_args)};
@@ -328,7 +330,7 @@ sub exec {
     $interp->purge_code_cache;
 
     # Return aborted value or result.
-    return ($self->aborted($err) ? $err->aborted_value : (wantarray ? @result : $result[0]));
+    return ($self->aborted($err) ? $err->aborted_value : ($wantarray ? @result : $result[0]));
 }
 
 #
