@@ -24,7 +24,7 @@ __PACKAGE__->valid_params
 __PACKAGE__->contained_objects
     (
      interp => 'HTML::Mason::Interp',
-     cgi_request => { class   => 'HTML::Mason::CGIRequest', # $r
+     cgi_request => { class   => 'HTML::Mason::FakeApache', # $r
 		      delayed => 1 },
     );
 
@@ -118,7 +118,7 @@ package HTML::Mason::Request::CGI;
 use HTML::Mason::Request;
 use base qw(HTML::Mason::Request);
 
-__PACKAGE__->valid_params( cgi_request => {isa => 'HTML::Mason::CGIRequest'} );
+__PACKAGE__->valid_params( cgi_request => {isa => 'HTML::Mason::FakeApache'} );
 
 sub cgi_object {
     my $self = shift;
@@ -126,7 +126,7 @@ sub cgi_object {
 }
 
 ###########################################################
-package HTML::Mason::CGIRequest;
+package HTML::Mason::FakeApache;
 # Analogous to Apache request object $r (but not an actual Apache subclass)
 
 use HTML::Mason::MethodMaker(read_write => [qw(query headers)]);
