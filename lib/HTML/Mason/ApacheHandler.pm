@@ -848,7 +848,6 @@ parameters to the new() constructor.
 handle_request() is not a user method, but rather is called from the
 HTML::Mason::handler() routine in handler.pl.
 
-
 =head1 PARAMETERS TO THE new() CONTRUCTOR
 
 =over
@@ -908,6 +907,43 @@ For example:
     my $ah = new HTML::Mason::ApacheHandler;
     my $decline_dirs = $ah->decline_dirs;
     $ah->decline_dirs(1);
+
+=head1 OTHER METHODS
+
+The ApacheHandler object has a few other publically accessible methods
+that may be of interest to end users.
+
+=over 4
+
+=item handle_request ($r)
+
+This method takes an Apache object representing a request and
+translates that request into a form Mason can understand.  It's return
+value is an Apache status code.
+
+=item prepare_request ($r)
+
+This method takes an Apache object representing a request and returns
+a new Mason request object or an Apache status code.  If it is a
+request object you can manipulate that object as you like, and then
+call the request object's C<exec> method to have it generate output.
+
+If this method returns an Apache status code, that means that it could
+not create a Mason request object.
+
+This method is useful if you would like to have a chance to decline a
+request based on properties of the Mason request object.  For example:
+
+    my $req = $ah->prepare_request($r);
+    # $req must be an Apache status code if it's not an object
+    return $req unless ref($req);
+
+    return DECLINED
+        unless $req->request_comp->source_file =~ /\.html$/;
+
+    $req->exec;
+
+=back
 
 =head1 SEE ALSO
 
