@@ -317,18 +317,16 @@ sub capture_debug_state
     my (%d,$expr);
 
     $expr = '';
-    foreach my $field (qw(method method_number bytes_sent the_request proxyreq header_only protocol uri filename path_info requires auth_type auth_name document_root allow_options content_type content_encoding content_language status status_line args)) {
+    foreach my $field (qw(allow_options auth_name auth_type bytes_sent no_cache content content_encoding content_languages content_type document_root filename header_only method method_number path_info protocol proxyreq requires status status_line the_request uri as_string get_remote_host get_remote_logname get_server_port is_initial_req is_main)) {
 	$expr .= "\$d{$field} = \$r->$field;\n";
     }
-    eval($expr);
-
-    $d{headers_in} = {$r->headers_in};
-    $d{headers_out} = {$r->headers_out};
-    $d{cgi_env} = {$r->cgi_env};
-    $d{dir_config} = {};
-    foreach my $key (@{$self->debug_dir_config_keys}) {
-	$d{dir_config}->{$key} = $r->dir_config($key);
+    foreach my $field (qw(dir_config headers_in headers_out err_headers_out notes subprocess_env cgi_env)) {
+	$expr .= "\$d{$field} = {\$r->$field};\n";
     }
+    eval($expr);
+    warn "error creating debug file: $@\n" if $@;
+    $d{'args@'} = [$r->args];
+    $d{'args$'} = scalar($r->args);
     
     if ($r->method eq 'POST') {
 	$d{content} = $argString;
