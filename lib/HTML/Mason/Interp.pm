@@ -221,6 +221,9 @@ sub load {
 
     # No component matches this path.
     return unless defined $source;
+
+    # comp_id is the unique name for the component, used for cache key
+    # and object file name.
     my $comp_id = $source->comp_id;
 
     #
