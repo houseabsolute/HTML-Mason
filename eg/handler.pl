@@ -6,14 +6,19 @@
 
 package HTML::Mason;
 
-#
-# Sample Mason handler.
-#
+# Bring in main Mason package.
 use HTML::Mason;
-use strict;
+
+# Bring in ApacheHandler, necessary for mod_perl integration.
+# Uncomment the second line (and comment the first) to use
+# Apache::Request instead of CGI.pm to parse arguments.
+use HTML::Mason::ApacheHandler;
+# use HTML::Mason::ApacheHandler (args_method=>'mod_perl');
 
 # Uncomment the next line if you plan to use the Mason previewer.
 #use HTML::Mason::Preview;
+
+use strict;
 
 # List of modules that you want to use from components (see Admin
 # manual for details)
