@@ -103,7 +103,11 @@ sub lex
     # refs inside the compiler
     $self->{compiler}->end_component;
 
-    die $@ if $@;
+    if ($@)
+    {
+	$@->rethrow if UNIVERSAL::can( $@, 'rethrow' );
+	HTML::Mason::Exception->throw( error => $@ );
+    }
 }
 
 sub start
