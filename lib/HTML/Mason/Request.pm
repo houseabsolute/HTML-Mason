@@ -14,7 +14,8 @@ use HTML::Mason::Buffer;
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
-use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error abort_error error)] );
+use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error abort_error
+					 top_level_not_found_error error)] );
 
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
@@ -24,7 +25,7 @@ use HTML::Mason::MethodMaker
 			 aborted_value
 			 count
 			 declined
-			 error_code
+			 error_mode
 			 interp
 			 top_comp ) ],
 
@@ -37,9 +38,9 @@ __PACKAGE__->valid_params
     (
      autoflush  => { parse => 'string', default => 0, type => SCALAR },
      interp     => { isa => 'HTML::Mason::Interp' },
-     time       => { parse => 'string',  default => 'real', type => SCALAR,
-		     callbacks => {"must be either 'real' or a numeric value" =>
-				   sub { $_[0] =~ /^(?:real|\d+)$/ }} },
+     error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
+		     callbacks => { "must be one of 'html', 'text', or 'fatal'" =>
+					sub { $_[0] =~ /^(?:html|text|fatal)$/ } } },
      out_method => { type => SCALARREF | CODEREF, optional => 1 },
      data_cache_defaults => { type => HASHREF|UNDEF, optional => 1 },
     );
@@ -61,7 +62,6 @@ sub new
 		      aborted_value => undef,
 		      count => 0,
 		      declined => undef,
-		      error_code => undef,
 		      dhandler_arg => undef,
 		      buffer_stack => undef,
 		      stack => undef,
@@ -111,91 +111,109 @@ sub exec {
     my ($self, $comp, @args) = @_;
     my $interp = $self->interp;
 
-    # All errors returned from exec() will be in exception form.
+    # All errors returned from this routine will be in exception form.
     local $SIG{'__DIE__'} = sub {
 	my $err = $_[0];
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
     };
 
-    # Check if reload file has changed.
-    $interp->check_reload_file if ($interp->use_reload_file);
+    my ($result, @result);
+    eval {
+	# Check if reload file has changed.
+	$interp->check_reload_file if ($interp->use_reload_file);
 
-    # Purge code cache if necessary. Generally happens at the end of
-    # the component; this is just in case many errors are occurring.
-    $interp->purge_code_cache;
+	# Purge code cache if necessary. Generally happens at the end of
+	# the component; this is just in case many errors are occurring.
+	$interp->purge_code_cache;
 
-    # $comp can be an absolute path or component object.  If a path,
-    # load into object. If not found, check for dhandler.
-    my ($path, $orig_path);
-    if (!ref($comp) && substr($comp,0,1) eq '/') {
-	$comp =~ s,/+,/,g;
-	$orig_path = $path = $comp;
-	$comp = $interp->load($path);
+	# $comp can be an absolute path or component object.  If a path,
+	# load into object. If not found, check for dhandler.
+	my ($path, $orig_path);
+	if (!ref($comp) && substr($comp,0,1) eq '/') {
+	    $comp =~ s,/+,/,g;
+	    $orig_path = $path = $comp;
+	    $comp = $interp->load($path);
 
-	unless ($comp) {
-	    if (defined($interp->dhandler_name) and $comp = $interp->find_comp_upwards($path,$interp->dhandler_name)) {
-		my $parent_path = $comp->dir_path;
-		($self->{dhandler_arg} = $path) =~ s{^$parent_path/?}{};
+	    unless ($comp) {
+		if (defined($interp->dhandler_name) and $comp = $interp->find_comp_upwards($path,$interp->dhandler_name)) {
+		    my $parent_path = $comp->dir_path;
+		    ($self->{dhandler_arg} = $path) =~ s{^$parent_path/?}{};
+		}
 	    }
+	    unless ($comp) {
+		top_level_not_found_error "could not find component for initial path '$path'\n";
+	    }
+	} elsif ( ! UNIVERSAL::isa( $comp, 'HTML::Mason::Component' ) ) {
+	    param_error "exec: first argument ($comp) must be an absolute component path or a component object";
 	}
-	unless ($comp) {
-	    error "could not find component for initial path '$path'\n";
-	}
-    } elsif ( ! UNIVERSAL::isa( $comp, 'HTML::Mason::Component' ) ) {
-	param_error "exec: first argument ($comp) must be an absolute component path or a component object";
-    }
 
-    # This block repeats only if $m->decline is called in a component
-    my ($result, @result, $err, $declined);
-    do
-    {
-	$declined = 0;
-
-	my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
-	$self->push_buffer_stack($buffer);
-
-	# Build wrapper chain and index.
-	my $first_comp;
+	# This block repeats only if $m->decline is called in a component
+	my $declined;
+	do
 	{
-	    my @wrapper_chain = ($comp);
-	    for (my $parent = $comp->parent; $parent; $parent = $parent->parent) {
-		unshift(@wrapper_chain,$parent);
-		error "inheritance chain length > 32 (infinite inheritance loop?)"
-		    if (@wrapper_chain > 32);
+	    $declined = 0;
+
+	    my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
+	    $self->push_buffer_stack($buffer);
+
+	    # Build wrapper chain and index.
+	    my $first_comp;
+	    {
+		my @wrapper_chain = ($comp);
+		for (my $parent = $comp->parent; $parent; $parent = $parent->parent) {
+		    unshift(@wrapper_chain,$parent);
+		    error "inheritance chain length > 32 (infinite inheritance loop?)"
+			if (@wrapper_chain > 32);
+		}
+		$first_comp = $wrapper_chain[0];
+		$self->{wrapper_chain} = [@wrapper_chain];
+		$self->{wrapper_index} = {map((($wrapper_chain[$_]->path || '') => $_),(0..$#wrapper_chain))};
 	    }
-	    $first_comp = $wrapper_chain[0];
-	    $self->{wrapper_chain} = [@wrapper_chain];
-	    $self->{wrapper_index} = {map((($wrapper_chain[$_]->path || '') => $_),(0..$#wrapper_chain))};
-	}
 
-	# Fill top_level slots for introspection.
-	$self->{top_comp} = $comp;
-	$self->{top_args} = \@args;
+	    # Fill top_level slots for introspection.
+	    $self->{top_comp} = $comp;
+	    $self->{top_args} = \@args;
 
-	# Call the first component.
-	if (wantarray) {
-	    @result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
-	} else {
-	    $result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
-	}
-	$err = $@;
-
-	# If declined, try to find the next dhandler.
-	if ( ($declined = $self->declined) and $path) {
-	    $path =~ s,/[^/]+$,, if defined($self->{dhandler_arg});
-	    if (defined($interp->dhandler_name) and my $next_comp = $interp->find_comp_upwards($path, $interp->dhandler_name)) {
-		$comp = $next_comp;
-		my $parent = $comp->dir_path;
-		$self->_reinitialize;
-		($self->{dhandler_arg} = $orig_path) =~ s{^$parent/}{};
+	    # Call the first component.
+	    if (wantarray) {
+		@result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
+	    } else {
+		$result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
 	    }
-	}
-    } while ($declined && $path);
 
-    # If a non-abort error occurred, just rethrow it.
+	    if (my $err = $@) {
+		# If declined, try to find the next dhandler.
+		if ( ($declined = $self->declined) and $path) {
+		    $path =~ s,/[^/]+$,, if defined($self->{dhandler_arg});
+		    if (defined($interp->dhandler_name) and my $next_comp = $interp->find_comp_upwards($path, $interp->dhandler_name)) {
+			$comp = $next_comp;
+			my $parent = $comp->dir_path;
+			$self->_reinitialize;
+			($self->{dhandler_arg} = $orig_path) =~ s{^$parent/}{};
+		    }
+		} else {
+		    die $err;
+		}
+	    }
+		
+	} while ($declined && $path);
+    };
+
+    # Handle errors.
+    my $err = $@;
     if ($err and !$self->aborted) {
-	$self->pop_buffer_stack;
-	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
+	my $error_mode = $self->error_mode;
+	if (UNIVERSAL::isa($err, 'HTML::Mason::Exception') and $error_mode =~ /^(text|html)$/) {
+	    $self->clear_buffer;
+	    if ($error_mode eq 'text') {
+		$self->out($err->as_text);
+	    } elsif ($error_mode eq 'html') {
+		$self->out($err->as_html);
+	    }
+	} else {
+	    $self->pop_buffer_stack;
+	    die $err;
+	}
     }
 
     # Flush output buffer.
@@ -206,10 +224,8 @@ sub exec {
     # to affect the response of the request as much.
     $interp->purge_code_cache;
 
-    # Handle abort.
-    return $self->{aborted_value} if ($self->{aborted});
-
-    return wantarray ? @result : $result;
+    # Return aborted value or result.
+    return ($self->aborted) ? $self->aborted_value : (wantarray) ? @result : $result;
 }
 
 #
@@ -518,14 +534,6 @@ sub print
 }
 
 *out = \&print;
-
-sub time
-{
-    my $self = shift;
-    $self->{time} = shift if @_;  # XXX needs to check validity
-    return time() if $self->{time} eq 'real';
-    return $self->{time};
-}
 
 #
 # Execute the given component
@@ -1045,7 +1053,7 @@ To cache the component's return value:
     </%init>
 
 The reason that we call C<pop> on C<@retval> is that the return value
-from C<< $m->cache_self >> is a list made up of the return value of
+from C<$m-E<gt>cache_self> is a list made up of the return value of
 the component followed by a 1.  This is to ensure that $m->cache_self
 always returns a true value when returning cached results.
 
@@ -1246,21 +1254,6 @@ Given a I<comp_path>, returns the corresponding absolute component path.
 Like C<$m-E<gt>comp>, but returns the component output as a string
 instead of printing it. (Think sprintf versus printf.) The
 component's return value is discarded.
-
-=for html <a name="item_time">
-
-=item time
-
-Returns the request's notion of the current time in Perl time()
-format (number of seconds since the epoch).
-
-By using C<$m-E<gt>time> rather than calling time() directly, you enable
-the option of previewer or port-based time/date simulations. e.g.
-a port that looks one day into the future.
-
-The notion of the current time can be set by passing an optional
-argument to the C<time()> method, e.g. C<$m-E<gt>time(time() + 60*60)>
-sets the time forward one hour.
 
 =for html <a name="item_top_args">
 
