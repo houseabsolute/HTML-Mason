@@ -770,7 +770,7 @@ sub pop_stack {
 }
 
 sub push_buffer_stack {
-    my ($self) = @_;
+    my $self = shift;
 
     validate_pos( @_, { can => [ qw( receive clear flush output ) ] } );
 
