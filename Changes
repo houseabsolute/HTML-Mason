@@ -37,6 +37,11 @@ redirects, for example.
 - The lexing code now handles some weird edge case errors in a better
 way.  One of these involved a component starting with a invalid block
 name like <%foo>.
+- A component that compiles into code with syntax errors seems to
+trigger a Perl bug when Mason attempts to eval it.  This bug is
+present in Perls before 5.7.3, but appears to be fixed in the
+development branch.  Mason will use alarm, if supported by the system,
+to break out of the hanging state.
 
 1.09_01  April 4, 2002
 

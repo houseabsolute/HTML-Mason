@@ -479,7 +479,10 @@ sub eval_object_code
 	# systems that provide alarm we can try to protect against
 	# this.
 	#
-	if ( $Config{d_alarm} )
+	# This appears to be a Perl bug, fixed in 5.7.3+.  We'll skip
+	# this hack for versions where the bug is fixed.
+	#
+	if ( $Config{d_alarm} && $] < 5.007003 )
 	{
 	    my $sec = 5;
 	    eval
