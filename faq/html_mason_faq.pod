@@ -449,10 +449,10 @@ retrieve a CGI.pm object which can be used to retrieve the uploaded
 file(s).  Please see the CGI.pm documentation for more details.
 
 If you are using the 'mod_perl' method, which uses Apache::Request,
-then the request object available in your components will be an object
-in the Apache::Request class (as opposed to the Apache class).  This
-object is capable of returning Apache::Upload objects for parameters
-which were file uploads.  Please see the Apache::Request documentation
-for more details.
+then the request object available as $r in your components will be an
+object in the Apache::Request class (as opposed to the Apache class).
+This object is capable of returning Apache::Upload objects for
+parameters which were file uploads.  Please see the Apache::Request
+documentation for more details.
 
 =cut
