@@ -956,7 +956,7 @@ parameters to the new() constructor.
 handle_request() is not a user method, but rather is called from the
 HTML::Mason::handler() routine in handler.pl.
 
-=head1 PARAMETERS TO THE new() CONTRUCTOR
+=head1 PARAMETERS TO THE new() CONSTRUCTOR
 
 =over
 
@@ -1000,10 +1000,13 @@ more information about handling directories with Mason.
 
 =item interp
 
-Specifies a Mason interpreter to use for handling requests.  An
-C<HTML::Mason::Interp> object will be created if you don't specify one
-yourself.  The interpreter should be an instance of the
-C<HTML::Mason::Interp> class, or a subclass thereof.
+The Interp object to associate with this Compiler. By default a new
+object of class L<interp_class> will be created.
+
+=item interp_class
+
+The class to use when creating a interpreter. Defaults to
+C<HTML::Mason::Interp>.
 
 =back
 
@@ -1064,7 +1067,7 @@ The second is an Apache request object, possibly the one originally
 passed to the method.
 
 The third item may be a CGI.pm object or C<undef>, depending on the
-value of the "args_method" parameter for the ApacheHandler object.
+value of the P<args_method> parameter.
 
 =back
 

@@ -125,18 +125,27 @@ HTML::Mason::Resolver::File - Component path resolver for file-based components
 This HTML::Mason::Resolver subclass is used when components are stored
 on the filesystem, which is the norm for most Mason-based applications.
 
-=head1 CONSTRUCTOR
+=head1 PARAMETERS TO THE new() CONSTRUCTOR
+
+The C<new> method takes a single mandatory parameter, C<comp_root>.
 
 =over
 
 =item comp_root
 
-The C<new> method takes a single mandatory parameter, C<comp_root>.
+The component root marks the top of your component hierarchy and
+defines how component paths are translated into real file paths. For
+example, if your component root is /usr/local/httpd/docs, a component
+path of /products/index.html translates to the file
+/usr/local/httpd/docs/products/index.html.
+
+Under the ApacheHandler and CGIHandler, comp_root defaults to the
+server's document root. In standalone mode comp_root defaults to the
+current working directory.
+
 This parameter may be either a scalar or an array reference.  If it is
 a scalar, it should be a filesystem path indicating the component
-root.
-
-If it is an array reference, it should be of the following form:
+root. If it is an array reference, it should be of the following form:
 
  [ [ key1 => '/path/to/root' ],
    [ key2 => '/path/to/other/root' ] ]
@@ -145,16 +154,9 @@ The "keys" for each path must be unique names and their "values" must
 be filesystem paths.  These paths will be searched in the provided
 order whenever a component path must be resolved to a filesystem path.
 
-This parameter defaults to the current working directory.  The
-ApacheHandler and CGIHandler modules default this parameter to the web
-server's document root.
-
 =back
 
 =head1 ADDITIONAL METHODS
-
-Besides, the methods documented in the HTML::Mason::Resolver method,
-this class provides one additional method.
 
 =over 4
 

@@ -731,7 +731,7 @@ Interp objects are handed off immediately to an ApacheHandler object
 which internally calls the Interp implementation methods. In that case
 the only user method is the new() constructor.
 
-=head1 PARAMETERS FOR new() CONSTRUCTOR
+=head1 PARAMETERS TO THE new() CONSTRUCTOR
 
 =over
 
@@ -739,67 +739,38 @@ the only user method is the new() constructor.
 
 File name used for autohandlers. Default is "autohandler".
 
-=item autoflush
-
-This parameter indicates whether or not requests created by this
-interpreter should have autoflush turned on or off by default.
-
 =item code_cache_max_size
 
 Specifies the maximum size, in bytes, of the in-memory code cache
-where components are stored. e.g.
-
-    code_cache_max_size => 20*1024*1024
-    code_cache_max_size => 20_000_000
-
-Default is 10 MB. See the L<Code Cache section in the I<Admin
-Guide>|HTML::Mason::Admin/"Code Cache"> for further details.
+where components are stored. Default is 10 MB. See the L<Code Cache
+section in the I<Admin Guide>|HTML::Mason::Admin/"Code Cache"> for
+further details.
 
 =item compiler
 
-The Compiler object to associate with this Interpreter.  If none is
-provided a default compiler using the
-C<HTML::Mason::Compiler::ToObject> and C<HTML::Mason::Lexer> classes
-will be created.
+The Compiler object to associate with this Interpreter.  By default
+a new object of class L<compiler_class> will be created.
+
+=item compiler_class
+
+The class to use when creating a compiler. Defaults to L<HTML::Mason::Compiler>.
+
+=item current_time
+
+Interpreter's notion of the current time (deprecated).
 
 =item data_dir
 
-The Mason data directory. Mason's various data directories (obj,
-cache, etc), live within the data_dir.
+The data directory is a writable directory that Mason uses for various
+features and optimizations: for example, component object files and
+data cache files.
 
-If this parameter is not given then there are several results.  First,
-Mason will not use object files, since it has no place to put them.
-Second, the default caching class for the request object will be
-Cache::MemoryCache instead of Cache::FileCache.
+Mason will create the directory on startup, if necessary, and set its
+permissions according to the web server User/Group.
 
-=item data_cache_defaults
-
-A hash reference of default options to use for the C<$m-E<gt>cache>
-command. For example, to use the Cache::MemoryCache implementation
-by default,
-
-    data_cache_defaults => {cache_class => 'MemoryCache'}
-
-These settings are overriden by options given to particular
-C<$m-E<gt>cache> calls.
-
-=item static_source
-
-True or false, default is false. When false, Mason checks the
-timestamp of the component source file each time the component is used
-to see if it has changed. This provides the instant feedback for
-source changes that is expected for development.  However it does
-entail a file stat for each component executed.
-
-When true, Mason assumes that the component source tree is unchanging:
-it will not check component source files to determine if the memory
-cache or object file has expired.  This can save many file stats per
-request. However, in order to get Mason to recognize a component
-source change, you must remove object files and restart the server (so
-as to clear the memory cache).
-
-Use this feature for live sites where performance is crucial and
-where updates are infrequent and well-controlled.
+If this parameter is not specified, Mason will not use object files,
+and the default L<data cache class|HTML::Mason:Request/item_cache>
+will be Cache::MemoryCache instead of Cache::FileCache.
 
 =item ignore_warnings_expr
 
@@ -834,10 +805,37 @@ means that this section will be executed before a Mason or Apache
 request exist, so preloading a component that uses C<$m> or C<$r> in a
 C<< <%once> >> section will fail.
 
+=item request_class
+
+The class to use when creating requests. Defaults to L<HTML::Mason::Request>.
+
 =item resolver
 
-The Resolver object to associate with this Interpreter.  If none is
-provided, a default Resolver will be created.
+The Resolver object to associate with this Compiler. By default a new
+object of class L<resolver_class> will be created.
+
+=item resolver_class
+
+The class to use when creating a resolver. Defaults to
+C<HTML::Mason::Resolver::File>.
+
+=item static_source
+
+True or false, default is false. When false, Mason checks the
+timestamp of the component source file each time the component is used
+to see if it has changed. This provides the instant feedback for
+source changes that is expected for development.  However it does
+entail a file stat for each component executed.
+
+When true, Mason assumes that the component source tree is unchanging:
+it will not check component source files to determine if the memory
+cache or object file has expired.  This can save many file stats per
+request. However, in order to get Mason to recognize a component
+source change, you must remove object files and restart the server (so
+as to clear the memory cache).
+
+Use this feature for live sites where performance is crucial and
+where updates are infrequent and well-controlled.
 
 =item use_object_files
 
@@ -856,7 +854,7 @@ sets and returns the value.  For example:
 
     my $interp = new HTML::Mason::Interp (...);
     my $c = $interp->compiler;
-    $interp->dhandler_name("da-handler");
+    $interp->code_cache_max_size(20 * 1024 * 1024);
 
 The following properties can be queried but not modified: data_dir,
 preloads.

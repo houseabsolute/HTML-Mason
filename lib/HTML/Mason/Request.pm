@@ -1244,7 +1244,7 @@ subcomponent takes precedence.
 
 =back
 
-=head1 CONSTRUCTOR PARAMETERS
+=head1 PARAMETERS TO THE new() CONSTRUCTOR
 
 =over 4
 
@@ -1253,19 +1253,28 @@ subcomponent takes precedence.
 Indicates whether or not to delay sending output until all output has
 been generated. Default is true.
 
+=item buffer_class
+
+The class to use when creating buffers. Defaults to L<HTML::Mason::Buffer>.
+
 =item data_cache_api
 
 The $m-E<gt>cache API to use. '1.1', the default, indicates the newer
-API L<documented in this
-manual|HTML::Mason::Request/item_cache>. '1.0' indicates the old API
-documented in 1.0x and earlier. This compatibility layer is provided
-as a convenience for users upgrading from older versions of Mason, but
-will not be supported indefinitely.
+API L<documented in this manual|HTML::Mason::Request/item_cache>.
+'1.0' indicates the old API documented in 1.0x and earlier. This
+compatibility layer is provided as a convenience for users upgrading
+from older versions of Mason, but will not be supported indefinitely.
 
 =item data_cache_defaults
 
-The default parameters used when $m-E<gt>cache creates a cache object;
-see the Cache::Cache documentation for a list of allowable parameters.
+A hash reference of default options to use for the C<$m-E<gt>cache>
+command. For example, to use the Cache::MemoryCache implementation
+by default,
+
+    data_cache_defaults => {cache_class => 'MemoryCache'}
+
+These settings are overriden by options given to particular
+C<$m-E<gt>cache> calls.
 
 =item dhandler_name
 

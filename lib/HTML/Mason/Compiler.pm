@@ -580,6 +580,15 @@ valid flags are
 The developer can override default escape flags on a per-expression
 basis; see L<HTML::Mason::Devel/escaping_expressions>.
 
+=item lexer
+
+The Lexer object to associate with this Compiler. By default a new
+object of class L<lexer_class> will be created.
+
+=item lexer_class
+
+The class to use when creating a lexer. Defaults to C<HTML::Mason::Lexer>.
+
 =item preprocess
 
 Sub reference that is called to preprocess each component before Parser does

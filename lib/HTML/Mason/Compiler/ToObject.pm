@@ -400,7 +400,7 @@ HTML::Mason::Compiler::ToObject - A Compiler subclass that generates Mason objec
 This Compiler subclass generates Mason object code (Perl code).  It is
 the default Compiler class used by Mason.
 
-=head1 PARAMETERS FOR new() CONSTRUCTOR
+=head1 PARAMETERS TO THE new() CONSTRUCTOR
 
 All of these parameters are optional.
 
