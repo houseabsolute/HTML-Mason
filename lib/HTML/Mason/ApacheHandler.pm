@@ -627,11 +627,11 @@ EOF
     my $out;
     local $interp->{out_method} = \$out;
 
-    my $request = $self->interp->make_request( comp => $comp,
-					       args => [ah => $self, valid => $interp->allowed_params],
-					       ah => $self,
-					       apache_req => $p{apache_req},
-					     );
+    $self->interp->make_request( comp => $comp,
+				 args => [ah => $self, valid => $interp->allowed_params],
+				 ah => $self,
+				 apache_req => $p{apache_req},
+			       )->exec;
     return $out;
 }
 
@@ -713,10 +713,10 @@ sub prepare_request
 
     #
     # Why this strangeness with taking a reference to Apache::print?
-    # See below, where a bit of funkiness is done to catch calls to
-    # print and $r->print inside components.  Without this, calling
-    # $m->flush_buffer can lead to a loop where the content
-    # disappears.
+    # See HTML::Mason::Request::ApacheHandler->exec, where a bit of
+    # funkiness is done to catch calls to print and $r->print inside
+    # components.  Without this, calling $m->flush_buffer can lead to
+    # a loop where the content disappears.
     #
     # By using the reference to the original function we ensure that
     # we call the version of the sub that sends its output to the
