@@ -287,7 +287,7 @@ sub make_component
 		#
 		# Tag beginning with <%
 		#
-		if (substr($text,$b,7) eq '<%perl>') {
+		if (substr($text,$b,7) =~ /<%perl>/i) {
 		    #
 		    # <%perl> section
 		    #
