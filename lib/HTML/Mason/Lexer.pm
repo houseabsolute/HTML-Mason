@@ -311,7 +311,7 @@ sub match_block_end
     my $self = shift;
     my %p = @_;
 
-    my $re = $p{allow_text} ? qr,\G(.*?)</%\Q$p{block_type}\E>(\n?),is : qr,\G()</%\Q$p{block_type}\E>(\n?),is;
+    my $re = $p{allow_text} ? qr,\G(.*?)</%\Q$p{block_type}\E>(\n?),is : qr,\G()\s*</%\Q$p{block_type}\E>(\n?),is;
     if ( $self->{current}{comp_source} =~ /$re/gc )
     {
 	return $p{allow_text} ? ($1, $2) : $2;
