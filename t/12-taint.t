@@ -45,7 +45,7 @@ if ($alarm_works)
     $SIG{ALRM} = sub { $alarm = 1; die "alarm"; };
 
     my $comp = read_file('t/taint.comp');
-    eval { alarm 5; local $^W; $comp = $compiler->compile( comp => $comp, name => 't/taint.comp' ); };
+    eval { alarm 5; local $^W; $comp = $compiler->compile( comp_text => $comp, name => 't/taint.comp' ); };
 
     if ( $alarm || $@ || ! defined $comp )
     {

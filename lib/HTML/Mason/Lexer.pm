@@ -67,8 +67,8 @@ sub lex
     my $self = shift;
     my %p = @_;
 
-    $self->{comp} = $p{comp};
-    $self->{comp} =~ s/\r//g;
+    $self->{comp_text} = $p{comp_text};
+    $self->{comp_text} =~ s/\r//g;
 
     $self->{name} = $p{name};
     $self->{lines} = 1;
@@ -101,7 +101,7 @@ sub start
     my $self = shift;
 
     my $end;
-    while ( defined  $self->{pos} ? $self->{pos} < length $self->{comp} : 1 )
+    while ( defined  $self->{pos} ? $self->{pos} < length $self->{comp_text} : 1 )
     {
 	last if $end = $self->match_end;
 
@@ -137,7 +137,7 @@ sub match_block
 {
     my $self = shift;
 
-    my $comp = $self->{comp};
+    my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     if ( $comp =~ /\G<%($blocks_re)>/igcs )
     {
@@ -158,7 +158,7 @@ sub raw_block
     my $self = shift;
     my %p = @_;
 
-    my $comp = $self->{comp};
+    my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     if ( $comp =~ m,\G(.*?)</%\Q$p{block_type}\E>(\n?),igcs )
     {
@@ -186,7 +186,7 @@ sub variable_list_block
     my $self = shift;
     my %p = @_;
 
-    my $comp = $self->{comp};
+    my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     while ( $comp =~ m,\G               # last pos matched
                        (?:
@@ -245,7 +245,7 @@ sub key_val_block
     my $self = shift;
     my %p = @_;
 
-    my $comp = $self->{comp};
+    my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     while ( $comp =~ /\G
                       [ \t]*
@@ -286,7 +286,7 @@ sub match_named_block
     my $self = shift;
     my %p = @_;
 
-    my $comp = $self->{comp};
+    my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     if ( $comp =~ /\G<%(def|method)\s+([^\n]+?)>/igcs )
     {
@@ -315,7 +315,7 @@ sub match_substitute
 {
     my $self = shift;
 
-    my $comp = $self->{comp};
+    my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     if ( $comp =~ /\G<%/gcs )
     {
@@ -345,7 +345,7 @@ sub match_comp_call
 {
     my $self = shift;
 
-    my $comp = $self->{comp};
+    my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     if ( $comp =~ /\G<&(?!\|)/gcs )
     {
@@ -373,7 +373,7 @@ sub match_comp_content_call
 {
     my $self = shift;
 
-    my $comp = $self->{comp};
+    my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     if ( $comp =~ /\G<&\|/gcs )
     {
@@ -400,7 +400,7 @@ sub match_comp_content_call_end
 {
     my $self = shift;
 
-    my $comp = $self->{comp};
+    my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
 
     if ( $comp =~ m,\G</&>,gc )
@@ -417,7 +417,7 @@ sub match_perl_line
 {
     my $self = shift;
 
-    my $comp = $self->{comp};
+    my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     if ( $comp =~ /\G(?:(?<=\n)|\A)%([^\n]+)(?:\n|\z)/gcs )
     {
@@ -434,7 +434,7 @@ sub match_text
 {
     my $self = shift;
 
-    my $comp = $self->{comp};
+    my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     if ( $comp =~ m,\G
                     (.*?)       # anything
@@ -474,7 +474,7 @@ sub match_end
 
     # $self->{ending} is a qr// 'string'.  No need to escape.  It will
     # also include the needed \G marker
-    my $comp = $self->{comp};
+    my $comp = $self->{comp_text};
     pos($comp) = $self->{pos};
     if ( $comp =~ /($self->{ending})/gcs )
     {
@@ -500,14 +500,14 @@ sub _next_line
 
     $pos = ( defined $pos ?
 	     $pos :
-	     ( substr( $self->{comp}, $self->{pos}, 1 ) =~ /\n/ ?
+	     ( substr( $self->{comp_text}, $self->{pos}, 1 ) =~ /\n/ ?
 	       $self->{pos} + 1 :
 	       $self->{pos} ) );
 
-    my $to_eol = ( index( $self->{comp}, "\n", $pos ) != -1 ?
-		   ( index( $self->{comp}, "\n" , $pos ) ) - $pos :
-		   length $self->{comp} );
-    return substr( $self->{comp}, $pos, $to_eol );
+    my $to_eol = ( index( $self->{comp_text}, "\n", $pos ) != -1 ?
+		   ( index( $self->{comp_text}, "\n" , $pos ) ) - $pos :
+		   length $self->{comp_text} );
+    return substr( $self->{comp_text}, $pos, $to_eol );
 }
 
 sub line_count

@@ -41,7 +41,7 @@ sub compile
     my %p = @_;
 
     $self->comp_class( $p{comp_class} || 'HTML::Mason::Component' );
-    return $self->SUPER::compile( comp => $p{comp}, name => $p{name} );
+    return $self->SUPER::compile( comp_text => $p{comp_text}, name => $p{name} );
 }
 
 sub compiled_component

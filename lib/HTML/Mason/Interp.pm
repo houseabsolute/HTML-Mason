@@ -347,7 +347,7 @@ sub load {
 	    #
 	    my $file = $resolver->get_component(%lookup_info);
 	    if ($objfilemod < $srcmod) {
-		$object = $self->compiler->compile( comp => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
+		$object = $self->compiler->compile( comp_text => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
 		$self->write_object_file(object_text=>$object, object_file=>$objfile);
 	    }
 	    # read the existing object file
@@ -368,7 +368,7 @@ sub load {
 	    # No object files. Load component directly into memory.
 	    #
 	    my $file = $resolver->get_component(%lookup_info);
-	    my $object = $self->compiler->compile( comp => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
+	    my $object = $self->compiler->compile( comp_text => $file, name => $lookup_info{description}, comp_class => $resolver->comp_class );
 	    $comp = $self->eval_object_text(object=>$object, error=>\$err)
 		or $self->_compilation_error( $lookup_info{description}, $err );
 	}
@@ -445,8 +445,7 @@ sub make_component {
 	( error => "Must specify either 'comp_text' or 'comp_file' parameter to 'make_component()'" )
 	unless $p{comp_text};
 
-    # The compiler expects 'comp' and 'name'
-    $p{comp} = delete $p{comp_text};
+    # The compiler expects 'comp_text' and 'name'
     $p{name} ||= $p{path} ? $p{path} : '<anonymous component>';
     my $object = $self->compiler->compile( %p );
     

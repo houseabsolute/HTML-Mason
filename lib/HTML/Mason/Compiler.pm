@@ -102,7 +102,7 @@ sub compile
     my $self = shift;
     my %p = @_;
 
-    validate( @_, { comp => { type => SCALAR },
+    validate( @_, { comp_text => { type => SCALAR },
 		    name => { type => SCALAR },
 		  } );
 
@@ -110,12 +110,12 @@ sub compile
     # reference to the entire script.
     if ($self->preprocess)
     {
-	eval { $self->preprocess->( \$p{comp} ) };
+	eval { $self->preprocess->( \$p{comp_text} ) };
 	HTML::Mason::Exception::Compiler->throw( error => "Error during custom preprocess step: $@" )
 	    if $@;
     }
 
-    $self->lexer->lex( comp => $p{comp}, name => $p{name} );
+    $self->lexer->lex( comp_text => $p{comp_text}, name => $p{name} );
 
     return $self->compiled_component;
 }
