@@ -98,6 +98,7 @@ EOF
 my %cmd_options;
 GetOptions( 'create' => \$cmd_options{create},
 	    'tests-to-run=s' => \$cmd_options{tests_to_run},
+	    'tests-to-skip=s' => \$cmd_options{tests_to_skip},
 	    'tests-class=s' => \$cmd_options{tests_class},
 	    );
 
@@ -106,6 +107,8 @@ GetOptions( 'create' => \$cmd_options{create},
 #
 $cmd_options{tests_to_run} = $ENV{MASON_TESTS_TO_RUN}
     if !defined($cmd_options{tests_to_run}) and defined($ENV{MASON_TESTS_TO_RUN});
+$cmd_options{tests_to_skip} = $ENV{MASON_TESTS_TO_SKIP}
+    if !defined($cmd_options{tests_to_skip}) and defined($ENV{MASON_TESTS_TO_SKIP});
 $cmd_options{tests_class} = $ENV{MASON_TESTS_CLASS}
     if !defined($cmd_options{tests_class}) and defined($ENV{MASON_TESTS_CLASS});
 
@@ -380,9 +383,15 @@ sub _run_tests
     my %tests_to_run;
     if ($self->{tests_to_run}) {
 	my @tests_to_run = sort { $a <=> $b } split(/\s*,\s*/, $self->{tests_to_run});
-	die "tests_to_run must be a list of numbers separated by commas" if grep(!/\d+/, @tests_to_run);
 	%tests_to_run = map { ($_, 1) } @tests_to_run;
 	printf ("Running only test%s %s\n", @tests_to_run == 1 ? "" : "s", join(", ", @tests_to_run));
+    }
+
+    my %tests_to_skip;
+    if ($cmd_options{tests_to_skip}) {
+	my @tests_to_skip = split(/\s*,\s*/, $self->{tests_to_skip});
+	%tests_to_skip = map { ($_, 1) } @tests_to_skip;
+	printf ("Skipping test%s %s\n", @tests_to_skip == 1 ? "" : "s", join(", ", @tests_to_skip));
     }
     
     my $count = scalar @{ $self->{tests} };
@@ -396,10 +405,12 @@ sub _run_tests
     my $x = 1;
     foreach my $test ( @{ $self->{tests} } )
     {
-	if (!%tests_to_run or $tests_to_run{$x}) {
+	my $full_name = join(":", $self->{name}, $test->{name});
+	
+	if ((!%tests_to_run or $tests_to_run{$x} or $tests_to_run{$test->{name}} or $tests_to_run{$full_name})
+	    and (!%tests_to_skip or (!$tests_to_skip{$x} and !$tests_to_skip{$test->{name}} and !$tests_to_skip{$full_name}))) {
 	    print "Running $test->{name} (#$x): $test->{description}\n"
 		if $VERBOSE;
-	    
 	    $self->{current_test} = $test;
 	    $self->_make_component unless $test->{skip_component};
 	    $self->_run_test;
@@ -824,14 +835,25 @@ the test harness will simply output its results.  This allows you to
 cut and paste these results back into the test file (assuming they are
 correct!).
 
-=head2 Running selected tests
+=head2 Running and/or skipping selected tests
 
 You can run just some of a test file with the '--tests-to-run' flag or
-the MASON_TESTS_TO_RUN environment variable.  The value is a
-comma-separated list of test numbers.  e.g.
+the MASON_TESTS_TO_RUN environment variable. Similarly you can skip
+specific tests with the '--tests-to-skip' flag or the
+MASON_TESTS_TO_SKIP environment variable.
+
+The value of either flag is a comma-separated list of one or more of
+the following:
+
+    * a test number
+    * a test name
+    * a test file name and test name joined with a colon
+
+e.g.
 
     perl ./01-syntax.t --tests-to-run=3,5
-    MASON_TESTS_TO_RUN=3,5 perl ./01-syntax.t
+    MASON_TESTS_TO_SKIP=fake_percent,empty_percents perl ./01-syntax.t
+    MASON_TESTS_TO_SKIP=misc:autohandler,interp:private1 make test
 
 =head2 Subclassing this module
 
