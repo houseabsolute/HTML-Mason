@@ -793,9 +793,12 @@ may be more appropriate for in-depth debugging sessions.
 =head1 ACCESSOR METHODS
 
 All of the above properties have read-only accessor methods of the
-same name. You cannot change any property of a compiler after it has
-been created (but you can create multiple compilers with different
-properties).
+same name.
+
+You cannot change any property of a compiler after it has been created
+- among other things, this would potentially invalidate any existing
+cached component objects or object files. Your best bet is to create
+different compiler objects and load them into different interpreters.
 
 =head1 METHODS
 

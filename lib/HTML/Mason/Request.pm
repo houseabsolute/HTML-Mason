@@ -928,7 +928,11 @@ sub caller_args
 sub comp_exists
 {
     my ($self, $path) = @_;
-    return $self->interp->comp_exists(absolute_comp_path($path, $self->current_comp->dir_path)) ? 1 : 0;
+
+    # In order to support SELF, PARENT, REQUEST, subcomponents and
+    # methods, it is easiest just to defer to fetch_comp.
+    #
+    return $self->fetch_comp($path) ? 1 : 0;
 }
 
 sub decline
@@ -967,9 +971,10 @@ sub depth
 #
 sub fetch_comp
 {
-    my ($self, $path, $current_comp) = @_;
+    my ($self, $path, $current_comp, $error, $exists_only) = @_;
 
     $current_comp ||= $self->{top_stack}->[STACK_COMP];
+
     if ($self->{use_internal_component_caches}) {
 	my $fetch_comp_cache = $current_comp->{fetch_comp_cache};
 	unless (defined($fetch_comp_cache->{$path})) {
@@ -985,22 +990,22 @@ sub fetch_comp
 	    # which we can create this cache safely.
 	    #
 	    if ($path =~ /^(?:SELF|REQUEST)/) {
-		return $self->_fetch_comp($path, $current_comp);
+		return $self->_fetch_comp($path, $current_comp, $error);
 	    } else {
 		$fetch_comp_cache->{$path} =
-		    $self->_fetch_comp($path, $current_comp);
+		    $self->_fetch_comp($path, $current_comp, $error);
 		Scalar::Util::weaken($fetch_comp_cache->{$path}) if can_weaken;
 	    }
 	}
 	return $fetch_comp_cache->{$path};
     } else {
-	return $self->_fetch_comp($path, $current_comp);
+	return $self->_fetch_comp($path, $current_comp, $error);
     }
 }
 
 sub _fetch_comp
 {
-    my ($self, $path, $current_comp) = @_;
+    my ($self, $path, $current_comp, $error) = @_;
 
     #
     # Handle paths SELF, PARENT, and REQUEST
@@ -1009,8 +1014,8 @@ sub _fetch_comp
 	return $self->base_comp;
     }
     if ($path eq 'PARENT') {
-	my $c = $current_comp->parent
-	    or error "PARENT designator used from component with no parent";
+	my $c = $current_comp->parent;
+	$$error = "PARENT designator used from component with no parent" if !$c && defined($error);
 	return $c;
     }
     if ($path eq 'REQUEST') {
@@ -1023,10 +1028,16 @@ sub _fetch_comp
     if (index($path,':') != -1) {
 	my $method_comp;
 	my ($owner_path,$method_name) = split(':',$path,2);
-	my $owner_comp = $self->fetch_comp($owner_path)
-	    or error "could not find component for path '$owner_path'\n";
-	$owner_comp->_locate_inherited('methods',$method_name,\$method_comp)
-	    or error "no method '$method_name' for component " . $owner_comp->title;
+	if (my $owner_comp = $self->fetch_comp($owner_path, $current_comp, $error)) {
+	    if ($owner_comp->_locate_inherited('methods',$method_name,\$method_comp)) {
+		return $method_comp;
+	    } else {
+		$$error = "no such method '$method_name' for component " . $owner_comp->title if defined($error);
+	    }
+	} else {
+	    $$error ||= "could not find component for path '$owner_path'\n" if defined($error);
+	}
+
 	return $method_comp;
     }
 
@@ -1154,8 +1165,9 @@ sub comp {
 	die "comp called without component - must pass a path or component object"
 	    unless defined($comp);
 	$path = $comp;
-	$comp = $self->fetch_comp($path)
-	    or error "could not find component for path '$path'\n";
+	my $error;
+	$comp = $self->fetch_comp($path, undef, \$error)
+	    or error($error || "could not find component for path '$path'\n");
     }
     
     # Increment depth and check for maximum recursion. Depth starts at 1.
@@ -1972,13 +1984,14 @@ This modifier can be used with the <& &> tag as well, for example:
 =for html <a name="item_comp_exists"></a>
 
 Returns 1 if I<comp_path> is the path of an existing component, 0
-otherwise.  That path given may be relative, in which case the current
-component's directory path will be prepended.
+otherwise.  I<comp_path> may be any path accepted by
+L<comp|HTML::Mason::Request/item_comp> or
+L<fetch_comp|HTML::Mason::Request/fetch_comp>, including method or
+subcomponent paths.
 
-comp_exists does not work with special paths (SELF, PARENT, REQUEST)
-or with subcomponents or methods. See
-L<method_exists|HTML::Mason::Component/item_method_exists> to handle
-the latter.
+Depending on implementation, <comp_exists> may try to load the
+component referred to by the path, and may throw an error if the
+component contains a syntax error.
 
 =item content
 

@@ -204,5 +204,97 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'parent_designator_with_no_parent',
+		      description => 'using PARENT from component with no parent',
+		      component => <<'EOF',
+<%flags>
+inherit=>undef
+</%flags>
+
+<& PARENT:foo &>
+EOF
+		      expect_error => qr/PARENT designator used from component with no parent/,
+		 );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'no_such_method',
+		      description => 'calling nonexistent method on existing component',
+		      component => <<'EOF',
+<& support/amper_test:bar &>
+EOF
+		      expect_error => qr/no such method 'bar' for component/,
+		 );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'fetch_comp_no_errors',
+		      description => 'fetch_comp should not throw any errors',
+		      component => <<'EOF',
+% foreach my $path (qw(foo support/amper_test:bar PARENT)) {
+<% $m->fetch_comp($path) ? 'defined' : 'undefined' %>
+% }
+EOF
+		      expect => <<'EOF',
+undefined
+undefined
+undefined
+EOF
+		 );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/support/methods',
+			 component => <<'EOF',
+<%method foo></%method>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'comp_exists',
+		      description => 'test comp_exists with various types of paths',
+		      component => <<'EOF',
+<%perl>
+my @paths = qw(
+   support/methods
+   support/methods:foo
+   support/methods:bar
+   .foo
+   .bar
+   SELF
+   SELF:foo
+   PARENT
+   PARENT:foo
+   REQUEST
+   REQUEST:foo
+);
+</%perl>
+
+<%def .foo></%def>
+
+% foreach my $path (@paths) {
+<% $path %>: <% $m->comp_exists($path) %>
+% }
+EOF
+		      expect => <<'EOF',
+
+
+support/methods: 1
+support/methods:foo: 1
+support/methods:bar: 0
+.foo: 1
+.bar: 0
+SELF: 1
+SELF:foo: 0
+PARENT: 0
+PARENT:foo: 0
+REQUEST: 1
+REQUEST:foo: 0
+EOF
+		 );
+
+#------------------------------------------------------------
+
     return $group;
 }

@@ -23,6 +23,8 @@ easier to implement with a cache_self component <%flag>.
 - ** All compiler properties are now read-only. If you need to change
 compiler properties on a per-request basis, you'll need to create
 multiple compiler and interpreter objects.
+- ** comp_exists may try to load the designated component, and may
+throw an error if it contains a syntax error.
 - ** The current_time method, deprecated in 1.1x, has been removed.
 - ** The behaviors of $m->flush_buffer and $m->clear_buffer have been
 simplified. $m->flush_buffer only acts on the top-level output buffer;
@@ -48,9 +50,9 @@ file-based or otherwise, can benefit from component root settings or
 choose to ignore them.
 - Added the compiler object_id to the object file path, so that
 multiple versions of Mason do not collide in the same object
-directory. Task #569.
+directory. Task id #569.
 - Added .obj (or a configurable extension) to object filenames.
-Task #152.
+Task id #152.
 - Added an official comment syntax, <% # ... %>, and documented
 the various comment markers in the developer's manual. Task id #566.
 - Added buffer_preallocate_size parameter, which allows you to
@@ -62,6 +64,9 @@ component root(s). Task id #562.
 
 - Mason now throws an error if the path specified in a component's
 'inherit' flag cannot be found. Task id #480.
+- Fixed comp_exists to work with any path accepted by comp or
+fetch_comp. Task id #572.
+- Fixed fetch_comp to stop throwing errors for certain bad paths.
 
 1.24  November 12, 2003
 
