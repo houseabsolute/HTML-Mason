@@ -11,6 +11,10 @@ use HTML::Mason::Tests;
 
     __PACKAGE__->valid_params( foo_val => { parse => 'string', type => Params::Validate::SCALAR } );
 
+    # shuts up 5.00503 warnings
+    1 if $HTML::Mason::ApacheHandler::VERSION;
+    1 if $HTML::Mason::CGIHandler::VERSION;
+
     sub new
     {
         my $class = shift;
