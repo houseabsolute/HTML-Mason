@@ -72,6 +72,13 @@ This specifies two component roots, a main component tree and a
 private tree which overrides certain components.  The order is
 respected ala @INC, so 'private' is searched first and 'main' second.
 
+=item compiler
+
+Compiler object for compiling components on the fly.  If none is
+provided a default compiler using the
+C<HTML::Mason::Compiler::ToObject> and C<HTML::Mason::Lexer> classes
+will be created.
+
 =item current_time
 
 Overrides the time returned by $m->time with a fixed Perl time() value
@@ -109,6 +116,21 @@ at all.  Defaults to:
 File name used for dhandlers. Default is "dhandler". If
 undef, Mason will not look for dhandlers.
 
+=item ignore_warnings_expr
+
+Regular expression indicating which warnings to ignore when compiling
+components. Any warning that is not ignored will prevent the
+component from being compiled and executed. For example:
+
+    ignore_warnings_expr =>
+        'Global symbol.*requires explicit package'
+
+If undef, all warnings are heeded; if '.', all warnings are ignored.
+
+By default, this is set to 'Subroutine .* redefined'.  This allows you
+to declare global subroutines inside <%once> sections and not receive
+an error when the component is reloaded.
+
 =item max_recurse
 
 The maximum component stack depth the interpreter is allowed to
@@ -137,11 +159,6 @@ it is computed. (This does not take into account buffering done by
 Apache or the O/S.) The default mode is batch.  See the 
 L<Admin/staging vs production> section of the I<Admin Guide> for a
 discussion of the trade-offs.
-
-=item parser
-
-Parser object for compiling components on the fly. If omitted, creates
-a parser with default parameters.
 
 =item preloads
 
@@ -215,7 +232,7 @@ name. In general, no arguments retrieves the value, and one argument
 sets and returns the value.  For example:
 
     my $interp = new HTML::Mason::Interp (...);
-    my $p = $interp->parser;
+    my $c = $interp->compiler;
     my $comproot = $interp->comp_root;
     $interp->out_method(\$buf);
 
@@ -244,17 +261,38 @@ in the case of a list or hash.  For example:
 
 The global is set in the package that components run in: usually
 C<HTML::Mason::Commands>, although this can be overridden via the
-Parser parameter L<Parser/in_package>.  The lines above, for example,
-are equivalent to:
+Compiler parameter L<Compiler/in_package>.  The lines above, for
+example, are equivalent to:
 
     $HTML::Mason::Commands::dbh = DBI->connect(...);
     %HTML::Mason::Commands::session = %s;
 
 assuming that C<in_package> has not been changed.
 
-Any global that you set should also be registered with the Parser
-parameter L<Parser/allow_globals>; otherwise you'll get warnings from
-C<strict>.
+Any global that you set should also be registered with the Compiler
+parameter L<Compiler/allow_globals>; otherwise you'll get warnings
+from C<strict>.
+
+=for html <a name="item_make_component">
+
+=item make_component ([script=>..., script_file=>..., error=>...])
+
+This method compiles a component source script into an
+Component object.  The source may be passed in as a string in
+I<script>, or as a filename in I<script_file>.
+
+Returns a new Component object.  If it fails it will throw an error.
+
+Example of usage:
+
+    # Make a component
+    my $comp =
+      eval { $interp->make_anonymous_component
+               ( comp=>'<%perl>my $name = "World";</%perl>Hello <% $name %>!' ) };
+    die $@ if $@;
+
+    # Call it from inside another component
+    $m->comp($comp);
 
 =back
 
@@ -371,7 +409,6 @@ Jonathan Swartz, swartz@pobox.com
 =head1 SEE ALSO
 
 L<HTML::Mason>,
-L<HTML::Mason::Parser>,
 L<HTML::Mason::ApacheHandler>,
 L<HTML::Mason::Admin>
 
