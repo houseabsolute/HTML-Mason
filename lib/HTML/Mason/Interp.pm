@@ -548,7 +548,13 @@ sub _do_or_eval
     }
     else
     {
-        return eval $p{object_code};
+        # no strict is not respected when eval'ing a string.  I don't
+        # know why.
+        my $extra = '';
+        $extra = 'no strict;'
+            if $self->compiler->can('use_strict') && ! $self->compiler->use_strict;
+
+        return eval "$extra$p{object_code}";
     }
 }
 
