@@ -27,7 +27,8 @@ See CREDITS file for other contributors
 	- documented how to integrate Mason with Apache::Session
           [modus]
 	- ** changed behavior of reload_file mode to read directly
-          from object files [mschmick]
+          from object files [mschmick]. If you use reload files,
+          you're now responsible for creating object files.
 	- reduced number of file stats when loading components
           [mschmick]
 	- upgraded FakeApache/debug files to work with mod_perl 1.19
@@ -48,8 +49,10 @@ See CREDITS file for other contributors
 	- added cache actions 'expire' and 'keys'
 	- corrected Parser to properly handle \ in components
           (submitted by Ken Williams)
-	- took Preview out of Mason.pm; ApacheHandler used only if
-          mod_perl environment
+	- ** took Preview out of Mason.pm; ApacheHandler used only if
+          mod_perl environment. If you use the previewer, you now
+          have to explicitly "use HTML::Mason::Preview" in your
+          handler.pl.
 	- improved documentation about argument/GET/POST handling
           (suggested by Ken Williams)
 	- added cache option 'busy_lock' (suggested by Dennis Watson)
@@ -59,6 +62,7 @@ See CREDITS file for other contributors
           Austin Lin)
 	- fixed "return if content-type..." line in handler.pl and
           Mason.pod (submitted by Patrick Kane)
+	- added CREDITS file
 
 0.4  Wed Jan 06 10:35:00 PST  1999
 	- added support for using Perl profiler in conjunction with
