@@ -41,10 +41,10 @@ filesystem paths.
 ApacheHandler object during server startup without providing a
 component root.  This will also shown incorrectly in the sample
 handler.pl in the eg/ directory.
-- Reduced Mason's memory usage when compiling components.  This is
-particularly noticeable with very large components (1-2MB or greater).
-Work on this will continue for future versions.  (reported by Todd
-Holbrook)
+- Reduced Mason's memory usage when compiling and serving components.
+This is particularly noticeable with very large components (1-2MB or
+greater).  Work on this will continue for future versions.  (reported
+by Todd Holbrook)
 - %ARGS and <%shared> variables could not be accessed from <%filter>.
 (reported by Adam Roth)
 - Switch.pm did not work in file-based components. (reported by Gert
@@ -56,6 +56,7 @@ call with content. (reported by Manuel Capinha)
 - Some tests were failing on Windows, because they assumed Unix style
 filesystem paths.  This was a problem with the tests, not the core
 code, but still worth fixing.  (reported by Adam Rinehart).
+- $m->caller() was inadvertently left out of the documentation - fixed.
 
 1.13  August 26, 2002 (Taiwan time)
 
