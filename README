@@ -87,6 +87,10 @@ Several mailing lists exist for Mason users and developers. Full
 information can be found at
 http://www.masonhq.com/resources/mailing_lists.html.
 
+There is a book about Mason, _Embedding Perl in HTML with Mason_, by
+Dave Rolsky and Ken Williams.  This book is published by O'Reilly and
+Associates.  The book's home page is http://www.masonbook.com/.
+
 CODE EXAMPLES
 
 The samples/ directory contains a few basic components.
