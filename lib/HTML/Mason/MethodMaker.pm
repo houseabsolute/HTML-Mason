@@ -32,19 +32,26 @@ sub import
 		my ($name, $spec) = @$rw;
 		no strict 'refs';
 		*{"$caller\::$name"} =
-		    sub { my $s = shift;
-			  if (@_)
+		    sub { if (@_ > 1)
 			  {
+                              my $s = shift;
 			      validate_pos(@_, $spec);
 			      $s->{$name} = shift;
+                              return $s->{$name};
 			  }
-			  return $s->{$name};
+			  return $_[0]->{$name};
 		        };
 	    }
 	    else
 	    {
 		no strict 'refs';
-		*{"$caller\::$rw"} = sub { my $s = shift; $s->{$rw} = shift if @_; return $s->{$rw}; };
+		*{"$caller\::$rw"} =
+                    sub { if (@_ > 1)
+                          {
+                              $_[0]->{$rw} = $_[1];
+                          }
+                          return $_[0]->{$rw};
+                        };
 	    }
 	}
     }
