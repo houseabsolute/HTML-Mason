@@ -82,7 +82,6 @@ sub lex
     # Initialize lexer state
     $current->{lines} = 1;
     $current->{in_def} = $current->{in_method} = 0;
-    $current->{pos} = undef;
 
     # This will be overridden if entering a def or method section.
     $current->{ending} = qr/\G\z/;
@@ -130,8 +129,7 @@ sub start
     my $self = shift;
 
     my $end;
-    while ( ! defined $self->{current}{pos} ||
-	    $self->{current}{pos} < length $self->{current}{comp_source} )
+    while (1)
     {
 	last if $end = $self->match_end;
 
@@ -384,8 +382,8 @@ if ( $] >= 5.006 )
 }
 else
 {
-    # Like [\a-z\A-Z_] but respects locales
-    $flag = qr/[^\W\d]\w*/;
+    # Like [a-zA-Z_] but respects locales
+    $flag = qr/[^\W\d]\w*/x;
 }
 
 sub escape_flag_regex { $flag }
@@ -543,7 +541,7 @@ sub match_end
     if ( $self->{current}{comp_source} =~ /($self->{current}{ending})/gcs )
     {
 	$self->{current}{lines} += $1 =~ tr/\n//;
-	return $1 || 1;
+	return defined $1 && length $1 ? $1 : 1;
     }
     return 0;
 }
