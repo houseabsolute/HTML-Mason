@@ -23,7 +23,7 @@ sub assign_subcomponent_properties {
 }
 
 sub cache_file { return $_[0]->owner->cache_file }
-sub create_time { return $_[0]->owner->create-time }
+sub create_time { return $_[0]->owner->create_time }
 sub dir_path { return $_[0]->owner->dir_path }
 sub is_subcomp { 1 }
 sub object_file { return $_[0]->owner->object_file }
