@@ -551,17 +551,18 @@ sub handle_request_1
     # Craft the out method for this request to handle automatic http
     # headers.
     #
+    my $retval;
     if ($self->auto_send_headers) {
 	my $headers_sent = 0;
 	my $delay_buf = '';
 	my $out_method = sub {
-	    # Check to see if the header has been sent, first via a fast
-	    # flag, then via a slightly slower $r test.
+	    # Check to see if the headers have been sent, first by fast
+	    # variable check, then by slightly slower $r check.
 	    unless ($headers_sent) {
 		unless (http_header_sent($r)) {
-		    # If in stream mode and header has not been sent,
-		    # buffer initial whitespace so as to delay headers.
-		    if ($_[0] !~ /\S/ and $request->out_mode eq 'stream') {
+		    # If header has not been sent, buffer initial whitespace
+		    # so as to delay headers.
+		    if ($_[0] !~ /\S/) {
 			$delay_buf .= $_[0];
 			return;
 		    } else {
@@ -584,19 +585,20 @@ sub handle_request_1
 	};
 	$request->{out_method} = $out_method;
 
-	my $retval = $request->exec($comp, %args);
+	$retval = $request->exec($comp, %args);
 
-	# Send headers and any buffered whitespace if it has not
-	# already been sent (as in a page with just headers).
-	if ($request->out_mode eq 'stream' and !$headers_sent) {
+	# On a success code, send headers and any buffered whitespace
+	# if it has not already been sent. On an error code, leave it
+	# to Apache to send the headers.
+	if (!$headers_sent and (!$retval or $retval==200)) {
 	    $r->send_http_header() unless http_header_sent($r);
 	    $interp->out_method($delay_buf) unless $delay_buf eq '';
 	}
-
-	return $retval;
     } else {
 	$request->exec($comp, %args);
     }
+    undef $request; # ward off leak
+    return $retval;
 }
 
 sub simulate_debug_request
