@@ -184,7 +184,11 @@ sub _initialize
 		unless File::Spec->file_name_is_absolute($pattern);
 	    my @paths = $self->resolver->glob_path($pattern)
 		or warn "Didn't find any components for preload pattern '$pattern'";
-	    foreach (@paths) { $self->load($_) }
+	    foreach (@paths)
+            {
+                $self->load($_)
+                    or error "Cannot preload component $_, found via pattern $pattern";
+            }
 	}
     }
 
