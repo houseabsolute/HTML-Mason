@@ -1242,9 +1242,19 @@ C<n> flag to turn off HTML-escaping for a specific expression:
 
     <% $html_block |n %>
 
-Multiple escapes can be specified as a list:
+Multiple escapes can be specified as a comma-separated list:
 
     <% $uri | u, n %>
+
+The old pre-defined escapes, 'h', 'u', and 'n', are allowed to be used
+I<without> commas, so that this is legal:
+
+    <% $uri | un %>
+
+However, this only works for these three escapes, and no others.  If
+you are using user-defined escapes as well, you I<must> use a comma:
+
+    <% $uri | u, add_session %>
 
 =head3 User-defined Escapes
 
@@ -1252,8 +1262,8 @@ Besides the default escapes mentioned above, it is possible for the
 user to define their own escapes or to override the built-in 'h' and
 'u' escapes.
 
-This is done via the L<Interp object's add_escape()
-method|HTML::Mason::Interp/item_add_escape>.  Escape names may be any
+This is done via the L<Interp object's C<set_escape()>
+method|HTML::Mason::Interp/item_set_escape>.  Escape names may be any
 number of characters as long as it matches the regex C</^[\w-]+$/>.
 The one exception is that you cannot override the 'n' flag.
 
@@ -1268,9 +1278,15 @@ defined will cause an error when executing that component.
 One possible use for this feature is to override the built-in HTML
 escaping's assumption of the ISO-8859-1 character set.  You could
 override the 'h' flag in a top-level autohandler or a
-ADMIN<handler.pl|"CONFIGURING VIA HANDLER SCRIPT"> script like this:
+L<handler.pl|HTML::Mason::Admin/"CONFIGURING VIA HANDLER SCRIPT">
+script like this:
 
   $interp->set_escape( h => \&escape_ISO_8859_2 );
+
+Inside components, the Interpreter object is available via C<<
+$m->interp() >> so you would do this instead:
+
+  $m->interp->set_escape( h => \&escape_ISO_8859_2 );
 
 And of course this can be used for all sorts of other things, like a
 naughty words filter for the easily offended:
