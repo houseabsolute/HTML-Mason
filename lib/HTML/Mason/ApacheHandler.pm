@@ -333,7 +333,7 @@ sub _startup
 use constant
     HAS_TABLE_API => $mod_perl::VERSION >= 1.99 || Apache::perl_hook('TableApi');
 
-my (%AH_BY_CONFIG, %AH_BY_NAME);
+my %AH_BY_CONFIG;
 sub make_ah
 {
     my ($package, $r) = @_;
@@ -385,10 +385,6 @@ sub make_ah
     my $ah = $package->new(%p, $r);
     $AH_BY_CONFIG{$key} = $ah if $key;
 
-    my $name;
-    $name = $r->dir_config('MasonConfigName') if $r;
-    $AH_BY_NAME{$name} = $ah if defined $name;
-
     return $ah;
 }
 
@@ -421,9 +417,6 @@ sub _get_mason_params
 
     foreach my $studly ( keys %$config )
     {
-        # special case because this isn't a constructor parameter
-        next if $studly eq 'MasonConfigName';
-
 	(my $calm = $studly) =~ s/^Mason// or next;
 	$calm = $self->calm_form($calm);
 
@@ -978,13 +971,6 @@ sub handler %s
     my ($package, $r) = @_;
 
     my $ah;
-
-    my $name = $r->dir_config('MasonConfigName');
-    if ( defined $name )
-    {
-        $ah = $AH_BY_NAME{$name};
-    }
-
     $ah ||= $package->make_ah($r);
 
     return $ah->handle_request($r);

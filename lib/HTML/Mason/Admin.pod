@@ -248,35 +248,6 @@ high-level server root such as F</usr> or F</etc>.
 Mason will create the directory on startup, if necessary, and set its
 permissions according to the web server User/Group.
 
-=head2 Configuration Names
-
-When you configure Mason via your F<httpd.conf> file, Mason has to
-create an ApacheHandler object for each request.  However, as a
-performance enhancement, Mason caches previously created ApacheHandler
-objects internally.  If you give your configurations a unique name,
-then Mason can use this name as its cache key, and gain a significant
-speed boost.
-
-This name is set with the C<MasonConfigName> parameter.  An example
-use of this would be the following:
-
-  <Location /foo>
-    PerlSetVar  MasonConfigName   Foo
-    PerlSetVar  MasonAllowGlobals $Foo
-    SetHandler  perl-script
-    PerlHandler HTML::Mason::ApacheHandler
-  </Location>
-
-  <Location /bar>
-    PerlSetVar  MasonConfigName   Bar
-    PerlSetVar  MasonAllowGlobals $Bar
-    SetHandler  perl-script
-    PerlHandler HTML::Mason::ApacheHandler
-  </Location>
-
-If you don't provide configuration names, Mason will run substantially
-slower.
-
 =head2 External Modules
 
 Components will often need access to external Perl modules. There are
@@ -363,7 +334,6 @@ space:
     <VirtualHost www.site1.com>
       DocumentRoot  /usr/local/www/htdocs/site1
       <LocationMatch ...>
-        PerlSetVar   MasonConfigName  Site1
         SetHandler   perl-script
         PerlHandler  HTML::Mason::ApacheHandler
       </LocationMatch>
@@ -373,7 +343,6 @@ space:
     <VirtualHost www.site2.com>
       DocumentRoot  /usr/local/www/htdocs/site2
       <LocationMatch ...>
-        PerlSetVar   MasonConfigName  Site2
         SetHandler   perl-script
         PerlHandler  HTML::Mason::ApacheHandler
       </LocationMatch>
@@ -407,7 +376,6 @@ the component root must change depending on the site requested.
       DocumentRoot  /usr/local/www/htdocs/site1
 
       # Mason configuration
-      PerlSetVar  MasonConfigName  Site1
       PerlSetVar  MasonCompRoot    /usr/local/www/htdocs/site1
       PerlSetVar  MasonDataDir     /usr/local/mason/site1
 
@@ -422,7 +390,6 @@ the component root must change depending on the site requested.
       DocumentRoot  /usr/local/www/htdocs/site2
 
       # Mason configuration
-      PerlSetVar  MasonConfigName  Site2
       PerlSetVar  MasonCompRoot    /usr/local/www/htdocs/site2
       PerlSetVar  MasonDataDir     /usr/local/mason/site2
 
@@ -827,33 +794,12 @@ object file rather than the source file.
 If for some reason you don't want Mason to create object files, set
 P<use_object_files> to 0.
 
-=head2 How Mason Creates and Caches ApacheHandler Objects
+=head2 Write a handler subroutine
 
-When you configure Mason under mod_perl via the Apache F<httpd.conf>
-file, Mason must create one or more ApacheHandler objects internally
-in order to handle requests.
-
-Mason tries to aggressively cache these objects, in order to avoid
-doing more work than necessary for each request.  This is done in two
-different ways.
-
-=over 4
-
-=item 1. Cached by Name
-
-As mentioned previously, if you set the C<MasonConfigName> parameter,
-Mason will use this as its cache key.  This lets Mason find the right
-ApacheHandler object very quickly.
-
-=item 2. Cached by Configuration
-
-The other cache, which is the slowest, is based on a key made up of
-all your configuration values.  This is slowest because it requires
-Mason to read your configuration I<before> it can do a cache lookup,
-whereas lookups by an explicit name do not require reading the
-configuration on every request.
-
-=back
+Writing your own C<handler()> subroutine which uses an ApacheHandler
+object (or objects) created during server startup is slightly faster
+(around 5% or so) than configuring mason via your F<httpd.conf> file
+and letting Mason create its own ApacheHandler objects internally.
 
 =head2 Static Source Mode
 

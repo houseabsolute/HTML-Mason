@@ -19,11 +19,10 @@ modules like Error.pm.  Task id #446.
 - Added more documentation on Mason's error handling and exception
 system.  Task id #446.
 
-- The way ApacheHandler objects are cached when Mason is configured in
-the Apache config file has changed.  You can now set an explicit
-MasonConfigName parameter to get a significant speed enhancement.  See
-the "Configuration Names" section under "BASIC CONFIGURATION VIA
-httpd.conf DIRECTIVES" in the Admin manual for details.
+- If Mason was configured via the Apache httpd.conf file, it could in
+many cases be quite a bit slower than configuration via a custom
+handler subroutine.  Now configuration via the httpd.conf is much
+faster, and is only about 5% slower than a custom handler subroutine.
 
 - Mason's test harness now gives verbose output when the TEST_VERBOSE
 environment variable is true.  This eliminates the need for setting
