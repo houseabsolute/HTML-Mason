@@ -1246,8 +1246,8 @@ Multiple escapes can be specified as a comma-separated list:
 
     <% $uri | u, n %>
 
-The old pre-defined escapes, 'h', 'u', and 'n', are allowed to be used
-I<without> commas, so that this is legal:
+The old pre-defined escapes, 'h', 'u', and 'n', can be used I<without>
+commas, so that this is legal:
 
     <% $uri | un %>
 
