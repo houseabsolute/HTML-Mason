@@ -772,8 +772,7 @@ components that process arguments (such as form handlers) still
 present a risk. Users can invoke such a component with arbitrary
 argument values via a handcrafted query string. Always check incoming
 arguments for validity and never place argument values directly into
-SQL, shell commands, etc. Unfortunately, Mason does not yet work with
-with Perl's taint checking which would help ensure these principles.
+SQL, shell commands, etc.
 
 =head2 Allowing directory requests
 
