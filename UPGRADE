@@ -6,6 +6,12 @@ upgrade first on a test server.
 
 Version 1.10
 
+- *** This version does not play nice with PerlFreshRestart! ***
+
+Please see the FAQ, which details a variety of error messages you
+might get when using PerlFreshRestart.  Turn it off and check out
+Apache::Reload instead.
+
 - The HTML::Mason::Commands module has been removed.  None of the old
 'mc_' style commands will work with this version.
 
