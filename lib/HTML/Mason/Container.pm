@@ -143,7 +143,7 @@ sub create_contained_objects
 	    # We still need to delete any arguments that _would_ have
 	    # been given to this object's constructor (if the object
 	    # had not been given).  This allows a container class to
-	    # provide defaults for a contained object will still
+	    # provide defaults for a contained object while still
 	    # accepting an already constructed object as one of its
 	    # params.
 	    #
