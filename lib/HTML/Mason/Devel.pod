@@ -1281,7 +1281,7 @@ Data caching is implemented with DeWitt Clinton's C<Cache::Cache>
 module. To get the full benefit out of caching you should I<read the
 documentation> for C<Cache::Cache> as well as for relevant subclasses
 (e.g. C<Cache::FileCache>). Our documentation here covers common usage
-but skips many options and features.
+but skips some options and features.
 
 =head2 Basic Usage
 
@@ -1314,35 +1314,35 @@ You can fetch all the keys in a cache with
     my @idents = $m->cache->get_keys;
 
 It should be noted that Mason reserves all keys beginning with
-I<__mason> for its own use.
+C<__mason> for its own use.
 
 =head2 Expiration
 
-You may pass an optional third argument to C<< $m->cache->set >>
-indicating when the data should expire:
+You can pass an optional third argument to C<< $m->cache->set >>
+indicating when the item should expire:
 
-    $m->cache->set('name1', $string1, '5min');   # Expire in 5 minutes
+    $m->cache->set('name1', $string1, '5 min');  # Expire in 5 minutes
     $m->cache->set('name2', $string2, '3h');     # Expire in 3 hours
 
 To change the expiration time for a piece of data, call C<set> again
 with the new expiration. To expire an item immediately, use
 C<< $m->cache->remove >>.
 
-The C<expire_if> option from Mason 1.0x and earlier is currently not
-supported, though a version of it may be added to C<Cache::Cache> in
-the future. For now, you can use tests on C<get_object()> to
-conditionally expire a cache. For example, this code expires C<$key>
-whenever a particular C<$file> changes:
+You can also specify an expiration condition when you fetch the item,
+using the C<expire_if> option:
 
-    if (my $co = $m->cache->get_object($key) and
-        $co->get_created_at < (stat($file))[9]) {
-        $m->cache->remove($key);
-    }
+    my $result = $m->cache->get('key',
+        expire_if=>sub { $_[0]->get_created_at < (stat($file))[9] });
 
-You can also expire a cache item from an external script; see
+C<expire_if> takes an anonymous subroutine, which is called with the
+cache object as its only parameter. If the subroutine returns a true
+value, the item is expired. In the example above, we expire the item
+whenever a certain file changes.
+
+Finally, you can expire a cache item from an external script; see
 L<Accessing a Cache Externally|"Accessing a Cache Externally"> below.
 
-=head2 Avoiding Concurrent Recomputation
+=head2 Avoiding Concurrent Recomputation with Busy Locks
 
 The code shown in "Basic Usage" above,
 
@@ -1363,26 +1363,17 @@ This sequence continues until the first process finishes and stores
 the new value.  On average, the value will be recomputed and written
 to the cache 15 times!
 
-One solution is to have the first process set the expiration time of
-the value ahead a few minutes, so that the other processes use the old
-value instead of also recomputing it:
+Mason offers a solution with the C<busy_lock> flag:
 
-   my $result = $m->cache->get('key');
-   if (!defined($result)) {
-       if (my $o = $m->cache->get_object('key')) {
-           $o->set_expiration_time(time + 2*60);
-       }
-       ... compute $result ...
-       $m->cache->set('key', $result);
-   }
+   my $result = $m->cache->get('key', busy_lock=>'30 sec');
 
-Of course, this solution will only work if it is acceptable for a
-component to get a slightly stale cache value for a few minutes.
-
-Mason 1.0x and earlier had a feature called "busy locks" that
-addressed the same problem in an admittedly more compact fashion.
-This feature is not currently supported, although a version of it may
-be added to C<Cache::Cache> in the future.
+In this case, when the value cannot be retrieved, C<get()> sets
+the expiration time of the value 30 seconds in the future before
+returning C<undef>.  This tells the first process to compute the new
+value while causing subsequent processes to use the old value for 30
+seconds.  In general, the duration passed to C<busy_lock> indicates
+how long you're willing to allow this component to use an expired
+cache value.
 
 =head2 Caching All Output
 
@@ -1475,6 +1466,18 @@ and the cache subclass is C<Cache::FileCache>:
 	 cache_root => "/usr/local/www/mason/cache",
 	 username => "mason");
     $cache->remove('key1');
+
+=head2 Mason 1.0x Cache API
+
+For users upgrading from 1.0x and earlier, any existing $m-E<gt>cache
+code will be incompatible with the new API. However, you can continue
+to use the 1.0x cache API for a while by setting
+L<data_cache_api|HTML::Mason::Request/data_cache_api> to '1.0'. All of
+the $m-E<gt>cache options with the exception of C<tie_class> should be
+supported.  The C<access_data_cache> function is no longer available,
+however; this will need to be converted to use C<Cache::Cache>
+directly, as described in the L<previous
+section|HTML::Mason::Devel/Accessing a Cache Externally>.
 
 =head1 WEB-SPECIFIC FEATURES
 
