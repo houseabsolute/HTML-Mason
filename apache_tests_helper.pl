@@ -122,7 +122,6 @@ EOF
 
 <IfDefine multi_config>
   PerlSetVar MasonArgsMethod CGI
-  PerlSetVar MasonMultipleConfig 1
 
   <Location /comps/multiconf1>
     PerlSetVar  MasonCompRoot "$APACHE{comp_root}/multiconf1"
