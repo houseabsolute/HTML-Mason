@@ -646,6 +646,56 @@ This is child's bar.
 EOF
 		       );
 
+#------------------------------------------------------------
+
+    $group->add_support( path => '/request_test/autohandler',
+			 component => <<'EOF',
+<& SELF:x &>\
+<& REQUEST:x &>\
+next\
+% $m->call_next;
+<%method x>
+x in autohandler
+</%method>
+<%flags>
+inherit => undef
+</%flags>
+EOF
+                       );
+
+    $group->add_support( path => '/request_test/other_comp',
+			 component => <<'EOF',
+<& REQUEST:x &>\
+<& SELF:x &>\
+<%method x>x in other comp
+</%method>
+<%flags>
+inherit => undef
+</%flags>
+EOF
+                       );
+
+    $group->add_test( name => 'request_tests',
+                      path => '/request_test/request_test',
+                      call_path => '/request_test/request_test',
+                      description => 'Test that REQUEST: works',
+                      component => <<'EOF',
+<& PARENT:x &>\
+<& other_comp &>\
+<%method x>x in requested comp
+</%method>
+EOF
+                      expect => <<'EOF',
+x in requested comp
+x in requested comp
+next
+x in autohandler
+x in requested comp
+x in other comp
+EOF
+                    );
+
+#------------------------------------------------------------
 
     return $group;
 }
