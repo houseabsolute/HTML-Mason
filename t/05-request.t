@@ -643,5 +643,24 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'abort_and_store',
+		      description => 'Test that an abort in a store\'d component still generates _some_ output',
+		      component => <<'EOF',
+filter
+
+% my $foo;
+% eval { $m->comp( { store => \$foo }, 'support/abort_test') };
+<% $foo %>
+EOF
+		      expect => <<'EOF',
+filter
+
+Some more text
+
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
