@@ -11,6 +11,10 @@ available at http://www.masonhq.com/changes.html.
 
 - Replace the regex "[A-Za-z0-9]" with "\w", which should cooperate
 better with Unicode.
+- Added a section called "Avoiding Concurrent Recomputations" to the
+Developer's Manual.  This describes how to achieve the same effect as
+was provided by the "busy locks" feature in 1.0x.  L{Devel/Avoiding
+Concurrent Recomputations}
 
 [ BUG FIXES ]
 
@@ -53,6 +57,11 @@ by Chris Hutchinson.
 -- Comments were not being allowed after flag and attribute
 assignments.  Again, this is not documented as being allowed.
 Reported by Chris Hutchinson.
+- CPAN thought that version 1.68 of HTML::Mason::ApacheHandler (part
+of the 1.05 release), was newer than version 1.242 (part of the 1.1201
+release).  This is what we get for using CVS to set verson numbers.
+This version number is now set by hand in order to make sure that this
+does not happen in the future.
 
 
 1.1201  July 24, 2002
