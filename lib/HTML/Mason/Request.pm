@@ -156,6 +156,7 @@ use HTML::Mason::MethodMaker
     ( read_only => [ qw(
 			count
 			dhandler_arg
+			initialized
 			interp
 			parent_request
 			plugin_instances
@@ -179,6 +180,7 @@ sub new
     %$self = (%$self,
 	      dhandler_arg   => undef,
 	      execd 	     => 0,
+	      initialized    => 0,
 	      stack 	     => [],
 	      top_stack      => undef,
 	      wrapper_chain  => undef,
@@ -313,6 +315,8 @@ sub _initialize {
     my $err = $@;
     if ($err and !$self->_aborted_or_declined($err)) {
 	$self->_handle_error($err);
+    } else {
+	$self->{initialized} = 1;
     }
 }
 
@@ -358,6 +362,10 @@ sub alter_superclass
 sub exec {
     my ($self) = @_;
     my $interp = $self->interp;
+
+    # If the request failed to initialize, the error has already been handled
+    # at the bottom of _initialize(); just return.
+    return unless $self->initialized();
 
     # All errors returned from this routine will be in exception form.
     local $SIG{'__DIE__'} = \&rethrow_exception;

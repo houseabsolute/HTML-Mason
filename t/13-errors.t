@@ -335,8 +335,8 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'error_during_compilation',
-		      description => "Make sure compiler errors work in output mode",
+    $group->add_test( name => 'top_level_compilation_error',
+		      description => "Make sure top-level compiler errors work in output mode",
                       interp_params => {
 					 error_format => 'text',
 					 error_mode => 'output',
