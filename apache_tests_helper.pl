@@ -216,6 +216,7 @@ sub handler
     unless (\$ah[\$ah_index])
     {
         \$r->print( "No ApacheHandler object at index #\$ah_index" );
+        warn "No ApacheHandler object at index #\$ah_index\n";
         return;
     }
 
