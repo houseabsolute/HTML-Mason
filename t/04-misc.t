@@ -242,5 +242,14 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'accessor_validate',
+		      description => 'test accessor parameter validate',
+		      component => <<'EOF',
+% $m->interp->use_object_files([1]);
+EOF
+		      expect_error => qr/Parameter #1 to .*? was an 'arrayref'/,
+		    );
+
+#------------------------------------------------------------
     return $group;
 }
