@@ -294,7 +294,7 @@ sub cache
 sub cache_self {
     my ($self, %options) = @_;
 
-    return (wantarray ? () : undef) if $self->top_stack->{in_cache_self};
+    return if $self->top_stack->{in_cache_self};
 
     my $expires_in = delete $options{expires_in} || 'never';
     my $key = delete $options{key} || '__cache_self__';
