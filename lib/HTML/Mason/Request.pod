@@ -52,6 +52,16 @@ through components. The optional argument specifies the return
 value from C<Interp::exec>; in a web environment, this ultimately
 becomes the HTTP status code.
 
+=for html <a name="item_base_comp">
+
+=item base_comp
+
+Returns the current base component for method and attributes.
+Generally set to the original page component; however, if you invoke
+call_method on a component, C<base_comp> is dynamically set to that
+component until call_method exits. See L<Devel/Object-Oriented
+Techniques> for examples of usage.
+
 =for html <a name="item_cache">
 
 =item cache ([action=>'retrieve|store|expire|keys'], [key=>name],
@@ -180,12 +190,24 @@ component object at that index in the list. e.g.
 
 =item call_next ([args...])
 
-Calls the component intercepted by an autohandler.  With no arguments,
-the original arguments are passed to the component.  Any arguments
-specified here serve to augment and override (in case of conflict) the
-original arguments. Works like C<$m-E<gt>comp> in terms of return value and
+Calls the next component in the content wrapping chain; usually called
+from an autohandler. With no arguments, the original arguments are
+passed to the component.  Any arguments specified here serve to
+augment and override (in case of conflict) the original
+arguments. Works like C<$m-E<gt>comp> in terms of return value and
 scalar/list context.  See the L<Devel/autohandlers> section of the
 I<Component Developer's Guide> for examples.
+
+=for html <a name="item_clear_buffer">
+
+=item clear_buffer
+
+Clears the Mason output buffer. Any output sent before this line is
+discarded. Useful for handling error conditions that can only be
+detected in the middle of a request.
+
+clear_buffer only works in batch output mode, and is thwarted by
+C<flush_buffer>.
 
 =for html <a name="item_comp">
 
@@ -256,9 +278,9 @@ undef if no such component exists.
 
 =item fetch_next
 
-Returns the component object intercepted by an autohandler.  See the
-L<Devel/autohandlers> section of the I<Component Developer's Guide>
-for usage and examples.
+Returns the next component in the content wrapping chain; usually
+called from an autohandler.  See the L<Devel/autohandlers> section of
+the I<Component Developer's Guide> for usage and examples.
 
 =for html <a name="item_file">
 
