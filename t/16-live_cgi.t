@@ -2,7 +2,7 @@
 
 use strict;
 
-unless (-e "$ENV{APACHE_DIR}/CGIHandler.cgi")
+unless ($ENV{MASON_MAINTAINER} && -e "$ENV{APACHE_DIR}/CGIHandler.cgi")
 {
     print "1..0\n";
     exit;

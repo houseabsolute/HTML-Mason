@@ -3,7 +3,8 @@
 # Skip test if no mod_perl
 eval { require mod_perl };
 # need to use it twice to avoid annoying warning
-unless ($mod_perl::VERSION || $mod_perl::VERSION)
+unless ( $ENV{MASON_MAINTAINER} &&
+         ( $mod_perl::VERSION || $mod_perl::VERSION ) )
 {
     print "1..0\n";
     exit;
