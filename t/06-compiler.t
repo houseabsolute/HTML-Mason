@@ -323,6 +323,19 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'attr_block_zero',
+		      description => 'test proper handling of zero in <%attr> block values',
+		      component => <<'EOF',
+<%attr>
+ key => 0
+</%attr>
+<% $m->current_comp->attr_exists('key') ? 'exists' : 'missing' %>
+EOF
+		      expect => "exists\n",
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
