@@ -138,7 +138,7 @@ My title is /interp/comp_root_test/shared [main].
 
 My object file is /.../obj/main/interp/comp_root_test/shared
 My path is /interp/comp_root_test/shared.
-My fq_path is /main/interp/comp_root_test/shared.
+My comp_id is /main/interp/comp_root_test/shared.
 My source file is /.../comps/interp/comp_root_test/shared
 My source dir is /.../comps/interp/comp_root_test
 
@@ -171,7 +171,7 @@ My title is /interp/comp_root_test/private1 [main].
 
 My object file is /.../obj/main/interp/comp_root_test/private1
 My path is /interp/comp_root_test/private1.
-My fq_path is /main/interp/comp_root_test/private1.
+My comp_id is /main/interp/comp_root_test/private1.
 My source file is /.../comps/interp/comp_root_test/private1
 My source dir is /.../comps/interp/comp_root_test
 
@@ -204,7 +204,7 @@ My title is /interp/comp_root_test/private2 [alt].
 
 My object file is /.../obj/alt/interp/comp_root_test/private2
 My path is /interp/comp_root_test/private2.
-My fq_path is /alt/interp/comp_root_test/private2.
+My comp_id is /alt/interp/comp_root_test/private2.
 My source file is /.../alt_root/interp/comp_root_test/private2
 My source dir is /.../alt_root/interp/comp_root_test
 

@@ -15,7 +15,7 @@ use HTML::Mason::MethodMaker
     ( read_only => [ qw( code
 			 create_time
 			 declared_args
-			 fq_path
+			 comp_id
 			 inherit_path
 			 inherit_start_path
 			 interp
@@ -34,7 +34,7 @@ my %valid_params =
      declared_args      => {type => HASHREF, default => {}},
      dynamic_subs_init  => {type => CODEREF, default => sub {}},
      flags              => {type => HASHREF, default => {}},
-     fq_path            => {type => SCALAR,  optional => 1},
+     comp_id            => {type => SCALAR,  optional => 1},
      interp             => {isa => 'HTML::Mason::Interp', optional => 1},
      methods            => {type => HASHREF, default => {}},
      mfu_count          => {type => SCALAR,  default => 0},
@@ -58,7 +58,7 @@ sub new
 		     }, $class;
 
     # Assign defaults.
-    $self->{designator} = "[anon ". ++$comp_count . "]" if !defined($self->{fq_path});
+    $self->{designator} = "[anon ". ++$comp_count . "]" if !defined($self->{comp_id});
 
     # Initialize subcomponent and method properties.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
@@ -72,14 +72,14 @@ sub new
 }
 
 #
-# Assign interpreter and, optionally, new fq_path to component.
+# Assign interpreter and, optionally, new comp_id to component.
 # Must be run before component will fully work.
 #
-# Ends up assigning $self->{interp, fq_path, inherit_path, inherit_start_path}
+# Ends up assigning $self->{interp, comp_id, inherit_path, inherit_start_path}
 sub assign_runtime_properties {
     my ($self, $interp, %info) = @_;
     $self->{interp} = $interp;
-    $self->{fq_path} = $info{fq_path};
+    $self->{comp_id} = $info{comp_id};
 
     foreach my $c (values(%{$self->{subcomps}})) {
 	$c->assign_runtime_properties($interp);

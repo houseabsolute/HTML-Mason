@@ -83,7 +83,7 @@ sub comp_root
 #  (
 #   url_path => same as incoming path parameter
 #   disk_path => where this component is stored on the filesystem
-#   fq_path   => combination of comp_root and url_path: "$comp_root:$url_path"
+#   comp_id   => combination of comp_root and url_path: "$comp_root:$url_path"
 #   comp_root => name of component root we found the component in
 #   last_modified => time of last modification, in seconds
 #  );
@@ -98,7 +98,7 @@ sub get_info {
 	my $modified = (stat _)[9];
 	my $base = $key eq 'MAIN' ? '' : "/$key";
 	$key = undef if $key eq 'MAIN';
-	return ( url_path => $path, disk_path => $srcfile, fq_path => "$base$path",
+	return ( url_path => $path, disk_path => $srcfile, comp_id => "$base$path",
 		 comp_root => $key, last_modified => $modified );
     }
     return;

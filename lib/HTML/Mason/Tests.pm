@@ -73,8 +73,8 @@ My object file is /.../<% $subfile %>
 % if (defined($comp->path)) {
 My path is <% $comp->path %>.
 % }
-% if (defined($comp->fq_path)) {
-My fq_path is <% $comp->fq_path =~ /anon/ ? '[anon something]' : $comp->fq_path %>.
+% if (defined($comp->comp_id)) {
+My comp_id is <% $comp->comp_id =~ /anon/ ? '[anon something]' : $comp->comp_id %>.
 % }
 % if ($comp->is_file_based and defined($comp->source_file)) {
 %   my ($subfile) = ($comp->source_file =~ m{((alt_root|comps)/.*?)$});

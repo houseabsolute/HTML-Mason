@@ -236,7 +236,7 @@ sub absolute_comp_path
 sub lookup {
     my ($self,$path) = @_;
     my %info = $self->resolver->get_info($path) or return;
-    return $info{fq_path};
+    return $info{comp_id};
 }
 
 #
@@ -256,22 +256,22 @@ sub load {
     # have a cached subroutine or object file.
     #
     if ($self->{use_reload_file}) {
-	my $fq_path = $path;   # note - this will foil multiple component roots
-	return $code_cache->{$fq_path}->{comp} if exists($code_cache->{$fq_path});
+	my $comp_id = $path;   # note - this will foil multiple component roots
+	return $code_cache->{$comp_id}->{comp} if exists($code_cache->{$comp_id});
 
-	$objfile = File::Spec->catfile( $self->object_dir, $fq_path );
+	$objfile = File::Spec->catfile( $self->object_dir, $comp_id );
 	return undef unless (-f $objfile);   # component not found
 
-	$self->write_system_log('COMP_LOAD', $fq_path);	# log the load event
+	$self->write_system_log('COMP_LOAD', $comp_id);	# log the load event
 	my $object ||= read_file($objfile);
 	my $comp = eval { $self->eval_object_text( object => $object ) };
 	$self->_compilation_error($objfile, $@) if $@;
 
 	# I think this is broken.  It should also be assigning things
 	# like disk_path (for disk-based comps), comp_root, etc.
-	$comp->assign_runtime_properties($self, url_path => $fq_path);
+	$comp->assign_runtime_properties($self, url_path => $path, comp_id => $comp_id);
 
-	$code_cache->{$fq_path} = {comp=>$comp, type=>'physical'};
+	$code_cache->{$comp_id} = {comp=>$comp, type=>'physical'};
 	return $comp;
     }
 
@@ -285,7 +285,7 @@ sub load {
     # Return undef if component not found.
     #
     my %lookup_info = $resolver->get_info($path) or return undef;
-    my $fq_path = $lookup_info{fq_path};
+    my $comp_id = $lookup_info{comp_id};
 
     #
     # Get last modified time of source.
@@ -293,7 +293,7 @@ sub load {
     my $srcmod = $lookup_info{last_modified};
 
     if ($self->{use_object_files}) {
-	$objfile = File::Spec->catfile( $self->object_dir, $fq_path );
+	$objfile = File::Spec->catfile( $self->object_dir, $comp_id );
 	@objstat = stat $objfile;
 	$objisfile = -f _;
     }
@@ -302,14 +302,14 @@ sub load {
     # If code cache contains an up to date entry for this path,
     # use the cached sub.
     #
-    if (exists($code_cache->{$fq_path}) and $code_cache->{$fq_path}->{lastmod} >= $srcmod) {
-	return $code_cache->{$fq_path}->{comp};
+    if (exists($code_cache->{$comp_id}) and $code_cache->{$comp_id}->{lastmod} >= $srcmod) {
+	return $code_cache->{$comp_id}->{comp};
     } else {
 	$objfilemod = (defined($objfile) and $objisfile) ? $objstat[9] : 0;
 	#
 	# Load the component from source or object file.
 	#
-	$self->write_system_log('COMP_LOAD', $fq_path);	# log the load event
+	$self->write_system_log('COMP_LOAD', $comp_id);	# log the load event
 
 	my $comp;
 	if ($objfile) {
@@ -322,7 +322,6 @@ sub load {
 	    {
 		my $comp_text = $resolver->get_source(%lookup_info);
 		if ($objfilemod < $srcmod) {
-# XXX 'description' isn't known
 		    $object = $self->compiler->compile( comp_text => $comp_text, name => ($lookup_info{disk_path} || $lookup_info{url_path}), comp_class => $resolver->comp_class );
 		    $self->write_object_file(object_text=>$object, object_file=>$objfile);
 		}
@@ -355,10 +354,10 @@ sub load {
 	# Delete any stale cached version of this component, then
 	# cache it if it's small enough.
 	#
-	$self->delete_from_code_cache($fq_path);
+	$self->delete_from_code_cache($comp_id);
 
 	if ($comp->object_size <= $self->code_cache_max_elem) {
-	    $code_cache->{$fq_path} = {lastmod=>$srcmod, comp=>$comp, type=>'physical'};
+	    $code_cache->{$comp_id} = {lastmod=>$srcmod, comp=>$comp, type=>'physical'};
 	    $self->{code_cache_current_size} += $comp->object_size;
 	}
 	return $comp;
@@ -599,11 +598,12 @@ sub code_cache_max_elem { shift->code_cache_max_size * 0.20 }
 sub code_cache_decay_factor { 0.75 }
 
 
-########################################
-# Methods that used to be in Parser.pm.
-# This is a temporary home only.
-# They need to be moved again.
-########################################
+###################################################################
+# The eval_object_text & write_object_file methods used to be in
+# Parser.pm.  This is a temporary home only.  They need to be moved
+# again at some point in the future (during some sort of interp
+# re-architecting.
+###################################################################
 
 #
 # eval_object_text
@@ -727,7 +727,7 @@ sub _compilation_error {
 sub object_file {
     my ($self, $comp) = @_;
     return $comp->persistent ?
-	File::Spec->catdir( $self->object_dir, $comp->fq_path ) :
+	File::Spec->catdir( $self->object_dir, $comp->comp_id ) :
 	undef;
 }
 

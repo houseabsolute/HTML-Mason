@@ -248,7 +248,7 @@ sub cache
     if ($self->data_cache_defaults) {
 	%options = (%{$self->data_cache_defaults},%options);
     }
-    $options{namespace}   ||= compress_path($self->current_comp->fq_path);
+    $options{namespace}   ||= compress_path($self->current_comp->comp_id);
     $options{cache_root}  ||= File::Spec->catdir($self->interp->data_dir,"cache");
     $options{username}      = "mason";
 

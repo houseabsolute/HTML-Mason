@@ -127,7 +127,7 @@ This is the same as incoming path parameter.
 This is the last modificatoin time for the component, in Unix time
 (seconds since the epoch).
 
-=item * fq_path
+=item * comp_id
 
 This is a unique id for the component used to distinguish two
 components with the same name in different component

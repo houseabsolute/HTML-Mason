@@ -70,7 +70,7 @@ My title is /component/comp_obj_test/comp_obj.
 
 My object file is /.../obj/component/comp_obj_test/comp_obj
 My path is /component/comp_obj_test/comp_obj.
-My fq_path is /component/comp_obj_test/comp_obj.
+My comp_id is /component/comp_obj_test/comp_obj.
 My source file is /.../comps/component/comp_obj_test/comp_obj
 My source dir is /.../comps/component/comp_obj_test
 
