@@ -869,16 +869,17 @@ that uses the component. However, if the component is preloaded, this
 code will only execute once in the parent.  Unless you have total control
 over what components will be preloaded, it is safest to avoid
 initializing variables that can't survive a fork(), e.g. DBI handles.
-Use the following trick to initialize such variables in the E<lt>%initE<gt>
+Use code like this to initialize such variables in the E<lt>%initE<gt>
 section:
 
     <%once>
-    my $dbh;    # declare but don't assign
+    my $dbh;      # declare but don't assign
     ...
+    my $init = 0; # have we initialized variables?
     </%once>
 
     <%init>
-    if ($m->current_comp->first_time) {
+    unless ($init++) {
         $dbh = DBI::connect ...
     }
     ...
