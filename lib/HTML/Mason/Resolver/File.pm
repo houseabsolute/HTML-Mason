@@ -175,6 +175,16 @@ order whenever a component path must be resolved to a filesystem path.
 This method returns the component root, which will either be a scalar
 or an array reference, as documented L<here|HTML::Mason::Resolver::File/item_comp_root>.
 
+=item comp_root_array
+
+Returns the component root as an array of name/path pairs.  Can be
+used like the following:
+
+  foreach my $pair ($self->comp_root_array) {
+    my ($name, $path) = @$pair;
+    ...
+  }
+
 =back
 
 =head1 SEE ALSO
