@@ -42,11 +42,12 @@ sub dump_specs
     foreach my $class (sort keys %VALID_PARAMS)
     {
 	my $params = $VALID_PARAMS{$class};
-	print " --- $class:\n";
+	print " --- $class\n";
+	print " ----- valid parameters\n";
 	foreach my $name (sort keys %$params)
 	{
 	    my $spec = $params->{$name};
-	    my ($type, $default) = $spec->{isa} ? ('object',$spec->{isa}) : ($spec->{parse}, $spec->{default});
+	    my ($type, $default) = $spec->{isa} ? ('object', $spec->{isa}) : ($spec->{parse}, $spec->{default});
 	    if (ref($default) eq 'CODE') {
 		$default = 'sub ' . B::Deparse->new()->coderef2text($default);
 		$default =~ s/\s+/ /g;
@@ -56,8 +57,32 @@ sub dump_specs
 		$type = 'regex';
 		$default =~ s/^\(\?(\w*)-\w*:(.*)\)/\/$2\/$1/;
 	    }
-	    print "$name\t$type\t$default\n";
+	    printf("%-28s   %-7s   %s\n", $name, $type, $default);
 	}
+
+	if (exists $CONTAINED_OBJECTS{$class})
+	{
+	    print " ----- contained objects\n";
+
+	    my $contains = $CONTAINED_OBJECTS{$class};
+	    foreach my $name (sort keys %$contains)
+	    {
+		my $default;
+		if (ref $contains->{$name} eq 'HASH')
+		{
+		    $default = '{ ';
+		    $default .= join ', ', map { "$_ => $contains->{$name}{$_}" } sort keys %{ $contains->{$name} };
+		    $default .= ' }';
+		}
+		else
+		{
+		    $default = $contains->{$name};
+		}
+
+		printf("%-20s   %s\n", $name, $default);
+	    }
+	}
+
 	print "\n";
     }
 }
@@ -181,7 +206,6 @@ sub get_contained_objects
 
     no strict 'refs';
     foreach my $superclass (@{ "${class}::ISA" }) {
-	next unless exists $CONTAINED_OBJECTS{$superclass};
 	my %superparams = $superclass->get_contained_objects;
 	@c{keys %superparams} = values %superparams;  # Add %superparams to %c
     }
@@ -246,7 +270,6 @@ sub validation_spec
 
     no strict 'refs';
     foreach my $superclass (@{ "${class}::ISA" }) {
-	next unless exists $VALID_PARAMS{$superclass};
 	my $superparams = $superclass->validation_spec;
 	@p{keys %$superparams} = values %$superparams;
     }
