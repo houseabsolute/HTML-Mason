@@ -199,7 +199,7 @@ sub escape_perl_expression
 
 sub coerce_to_array
 {
-    my $val = shift;
+    my ($val, $name) = @_;
 
     return ($val) unless ref $val;
 
@@ -212,14 +212,14 @@ sub coerce_to_array
 	return %$val;
     }
 
-    param_error "Cannot coerce $val to an array";
+    param_error "Cannot coerce $val to an array for '$name' parameter";
 }
 
 sub coerce_to_hash
 {
-    my $val = shift;
+    my ($val, $name) = @_;
 
-    param_error "Cannot convert a single value to a hash"
+    param_error "Cannot convert a single value to a hash for '$name' parameter"
 	unless ref $val;
 
     if ( UNIVERSAL::isa( $val, 'ARRAY' ) )

@@ -297,12 +297,13 @@ sub _arg_declarations
 
     foreach ( @{ $self->{current_comp}{args} } )
     {
-	push @decl, "$_->{type}$_->{name}";
+	my $var_name = "$_->{type}$_->{name}";
+	push @decl, $var_name;
 
 	my $coerce;
 	if ( $coercion_funcs{ $_->{type} } )
 	{
-	    $coerce = $coercion_funcs{ $_->{type} } . "(\$ARGS{'$_->{name}'})";
+	    $coerce = $coercion_funcs{ $_->{type} } . "(\$ARGS{'$_->{name}'}, '$var_name')";
 	}
 	else
 	{
@@ -323,7 +324,7 @@ sub _arg_declarations
 	    push @required, $_->{name};
 
 	    push @assign,
-		"$_->{type}$_->{name} = $coerce;\n";
+		"$var_name = $coerce;\n";
 	}
     }
 
