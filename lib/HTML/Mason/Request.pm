@@ -1384,9 +1384,8 @@ strategies. See the Cache::Cache documentation for a complete list of
 options and methods.
 
 Note: users upgrading from 1.0x and earlier can continue to use the
-old C<$m-E<gt>cache> API by setting
-L<data_cache_api|HTML::Mason::Request/data_cache_api> to '1.0'.
-This support will be removed at a later date.
+old C<$m-E<gt>cache> API by setting P<data_cache_api> to '1.0'.  This
+support will be removed at a later date.
 
 =for html <a name="item_cache_self"></a>
 
@@ -1450,8 +1449,7 @@ We call C<pop> on C<@retval> to remove the mandatory '1' at the end of
 the list.
 
 Note: users upgrading from 1.0x and earlier can continue to use the
-old C<$m-E<gt>cache_self> API by setting
-L<data_cache_api|HTML::Mason::Request/data_cache_api> to '1.0'.
+old C<$m-E<gt>cache_self> API by setting P<data_cache_api> to '1.0'.
 This support will be removed at a later date.
 
 =for html <a name="item_caller_args"></a>
@@ -1728,7 +1726,7 @@ Returns the Interp object associated with this request.
 =item make_subrequest (comp => path, args => arrayref, other parameters)
 
 This method creates a new Request object which inherits its parent's
-settable properties, such as C<autoflush> and C<out_method>.  These
+settable properties, such as P<autoflush> and P<out_method>.  These
 values may be overridden by passing parameters to this method.
 
 The "comp" parameter is required, while all other parameters are
@@ -1842,7 +1840,7 @@ ApacheHandler or CGIHandler modules.
 
 Returns the CGI object used to parse any CGI parameters submitted to
 the component, assuming that you have not changed the default value of
-the ApacheHandler C<args_method> parameter.  If you are using the
+the ApacheHandler P<args_method> parameter.  If you are using the
 'mod_perl' args method, then calling this method is a fatal error.
 See the L<ApacheHandler|HTML::Mason::ApacheHandler> and
 L<CGIHandler|HTML::Mason::CGIHandler> documentation for more details.

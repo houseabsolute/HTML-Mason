@@ -253,15 +253,6 @@ Because these are always set inside components, you should not ever
 define other variables with the same name, or else your code may fail
 in strange and mysterious ways.
 
-=head2 System Objects
-
-Five system objects share the work of serving requests in Mason:
-Lexer, Compiler, Interp, Resolver, and ApacheHandler. The
-administrator creates these objects and provides parameters that shape
-Mason's behavior. As a pure component developer you shouldn't need to
-worry about or access these objects, but occasionally we'll mention a
-relevant parameter.
-
 =head2 Component Objects
 
 Mason provides an object API for components, allowing you to query a
@@ -274,6 +265,19 @@ $m->current_comp >> and C<< $m->fetch_comp >>.
 Note that for many basic applications all you'll want to do with
 components is call them, for which no object method is needed. See
 next section.
+
+=head2 System Objects
+
+Many system objects share the work of serving requests in Mason:
+L<HTML::Mason::Lexer|HTML::Mason::Lexer>,
+L<HTML::Mason::Compiler|HTML::Mason::Compiler>,
+L<HTML::Mason::Interp|HTML::Mason::Interp>,
+L<HTML::Mason::Resolver|HTML::Mason::Resolver>,
+and L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler> are examples. The
+administrator creates these objects and provides parameters that shape
+Mason's behavior. As a pure component developer you shouldn't need to
+worry about or access these objects, but occasionally we'll mention a
+relevant parameter.
 
 =head1 CALLING COMPONENTS
 
@@ -291,7 +295,7 @@ To call one component from another, use the <& &> tag:
 =item comp_path:
 
 The component path. With a leading '/', the path is relative to the
-component root (C<comp_root>). Otherwise, it is relative to the
+component root (P<comp_root>). Otherwise, it is relative to the
 location of the calling component.
 
 =item name => value pairs:
@@ -525,7 +529,7 @@ methods normally associated with one.
 
 To create a subrequest you simply use the C<< $m->make_subrequest >>
 method.  This method can take any parameters normally given to the
-Request object's constructor, such as C<autoflush> or C<out_method>.
+Request object's constructor, such as P<autoflush> or P<out_method>.
 Once you have a new request object you simply call its C<exec> method
 to execute it, which takes exactly the same parameters as the C<comp>
 method.
@@ -543,7 +547,7 @@ Here are some examples:
   </%perl>
 
 If you want to capture the subrequest's output in a scalar, you can
-simply pass an C<out_method> parameter to C<< $m->make_subrequest >>:
+simply pass an P<out_method> parameter to C<< $m->make_subrequest >>:
 
   <%perl>
    my $buffer;
@@ -565,7 +569,7 @@ attributes.
 By default, output from a subrequest appears inline in the calling
 component, at the point where it is executed.  If you wish to do
 something else, you will need to explicitly override the subrequest's
-C<out_method> parameter.
+P<out_method> parameter.
 
 Mason Request objects are only designed to handle a single call to
 C<exec>.  If you wish to make multiple subrequests, you must create
@@ -646,8 +650,7 @@ request may defer control to the next dhandler by calling C<<
 $m->decline >>.
 
 The administrator can customize the file name used for dhandlers with
-the L<Interp's dhandler_name|HTML::Mason::Interp/dhandler_name>
-parameter.
+the P<dhandler_name> parameter.
 
 =head2 autohandlers
 
@@ -720,8 +723,7 @@ separate section, L<Object-Oriented Techniques|"Object-Oriented
 Techniques">.
 
 The administrator can customize the file name used for autohandlers
-with the L<Interp's
-autohandler_name|HTML::Mason::Interp/autohandler_name> parameter.
+with the P<autohandler_name> parameter.
 
 =head2 dhandlers vs. autohandlers
 
@@ -1216,15 +1218,10 @@ The current valid flags are
     n - turn off default escape flags
 
 The administrator may specify a set of default escape flags via the
-L<Compiler's
-default_escape_flags|HTML::Mason::Compiler/default_escape_flags>
-parameter. For example, if the administrator specifies
-
-    default_escape_flags => 'h'
-
-then all <% %> expressions will automatically be HTML-escaped.  In
-this case you would use the C<n> flag to turn off HTML-escaping for a
-specific expression:
+P<default_escape_flags> parameter. For example, if the administrator
+sets P<default_escape_flags> to 'h', then all <% %> expressions will
+automatically be HTML-escaped.  In this case you would use the C<n>
+flag to turn off HTML-escaping for a specific expression:
 
     <% $html_block |n %>
 
@@ -1428,6 +1425,9 @@ same component. Just make sure the correct value is passed to all
 calls to C<< $m->cache >>; Mason does not remember which subclass you
 have used for a given component or key.
 
+The administrator can set the default cache subclass used by all
+components with the P<data_cache_defaults> parameter.
+
 =head2 Accessing a Cache Externally
 
 To access a component's cache from outside the component (e.g. in an
@@ -1438,9 +1438,9 @@ external Perl script), you'll need have the following information:
 =item *
 
 the namespace associated with the component. The function
-C<HTML::Mason::Utils::data_cache_namespace>, given a component path,
-will return the namespace, although this does not work with multiple
-component roots.
+L<HTML::Mason::Utils::data_cache_namespace|HTML::Mason::Utils/data_cache_namespace>,
+given a component id (usually just the component path), returns the
+namespace.
 
 =item *
 
@@ -1470,14 +1470,16 @@ and the cache subclass is C<Cache::FileCache>:
 =head2 Mason 1.0x Cache API
 
 For users upgrading from 1.0x and earlier, any existing $m-E<gt>cache
-code will be incompatible with the new API. However, you can continue
-to use the 1.0x cache API for a while by setting
-L<data_cache_api|HTML::Mason::Request/data_cache_api> to '1.0'. All of
-the $m-E<gt>cache options with the exception of C<tie_class> should be
-supported.  The C<access_data_cache> function is no longer available,
-however; this will need to be converted to use C<Cache::Cache>
-directly, as described in the L<previous
-section|HTML::Mason::Devel/Accessing a Cache Externally>.
+code will be incompatible with the new API. However, if you wish to
+continue using the 1.0x cache API for a while, you (or your
+administrator) can set P<data_cache_api> to '1.0'. All of the
+$m-E<gt>cache options with the exception of C<tie_class> should be
+supported.
+
+The C<access_data_cache> function is no longer available; this will
+need to be converted to use C<Cache::Cache> directly, as described in
+the L<previous section|HTML::Mason::Devel/Accessing a Cache
+Externally>.
 
 =head1 WEB-SPECIFIC FEATURES
 
@@ -1487,7 +1489,7 @@ Mason automatically sends HTTP headers via C<< $r->send_http_header >>
 but it will not send headers if they've already been sent manually.
 
 To determine the exact header behavior on your system, you need to
-know whether your server's default is to have C<autoflush> on or off.
+know whether your server's default is to have P<autoflush> on or off.
 Your administrator should have this information.  If your administrator
 doesn't know then it is probably off, the default.
 
@@ -1519,8 +1521,7 @@ this code will only work as long as F</shared/get_user_cookie> doesn't
 output anything (given its functional nature, it shouldn't).
 
 The administrator can turn off automatic header sending via the
-L<Request's auto_send_headers|HTML::Mason::Request/auto_send_headers>
-parameter available when running Mason with the ApacheHandler module.
+P<auto_send_headers> parameter.
 
 =head2 Returning HTTP Status
 

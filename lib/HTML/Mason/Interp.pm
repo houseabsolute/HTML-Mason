@@ -917,17 +917,17 @@ in the case of a list or hash.  For example:
 
 The global is set in the package that components run in: usually
 C<HTML::Mason::Commands>, although this can be overridden via the
-L<Compiler's in_package|HTML::Mason::Compiler/in_package> parameter.
+P<in_package> parameter.
 The lines above, for example, are equivalent to:
 
     $HTML::Mason::Commands::dbh = DBI->connect(...);
     %HTML::Mason::Commands::session = %s;
 
-assuming that C<in_package> has not been changed.
+assuming that P<in_package> has not been changed.
 
 Any global that you set should also be registered with the
-L<Compiler's allow_globals|HTML::Mason::Compiler/allow_globals>
-parameter; otherwise you'll get warnings from C<strict>.
+P<allow_globals> parameter; otherwise you'll get warnings from
+C<strict>.
 
 =for html <a name="item_comp_exists"></a>
 
