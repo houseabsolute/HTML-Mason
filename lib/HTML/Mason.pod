@@ -75,12 +75,6 @@ Other Mason features include:
 Mason caches components after compilation, and offers an internal,
 shared, expireable data cache for use by components themselves.
 
-=item Debugging
-
-Mason includes a debugging mode whereby HTTP requests can be captured
-to "debug files" for later replay inside Perl's command-line debugger
-(as opposed to the non-interactive mod_perl interpreter).
-
 =item Templating
 
 The autohandler and dhandler features make it easy to apply a common
