@@ -9,7 +9,7 @@ available at http://www.masonhq.com/code/history.html.
 
 [ BACKWARDS INCOMPATIBILITIES ]
 
-- Mason now requires version 1.24 of mod_perl in the ApacheHandler
+- ** Mason now requires version 1.24 of mod_perl in the ApacheHandler
 module.
 
 [ BUG FIXES ]
