@@ -362,8 +362,8 @@ EOF
     }
 
     return join '', ( $self->preamble,
-		      "my \%ARGS;\n",
                       $self->_set_request,
+		      "my \%ARGS;\n",
 		      @args,
                       $self->_filter,
 		      "\$m->debug_hook( \$m->current_comp->path ) if ( \%DB:: );\n\n",
