@@ -112,7 +112,7 @@ make the autohandlers work well together.
 
 - When calling components, base_comp now gets set to the called
 components, _unless_ you call a component with a component object or
-your component call starts with SELF: or METHOD:.  So a call like
+your component call starts with SELF: or PARENT:.  So a call like
 this:
 
   <& /some/comp, foo => 1 &>
