@@ -503,11 +503,13 @@ EOF
 # this is a comment
   # another comment
  key => 'foo'
+# one last comment
 </%attr>
 <%flags>
 # this is a comment
   # another comment
 inherit => undef
+# one last comment
 </%flags>
 compiled
 EOF

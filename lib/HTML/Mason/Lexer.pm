@@ -298,10 +298,16 @@ sub key_val_block
                       [ \t]*
                       ([\w_]+)          # identifier
                       [ \t]*=>[ \t]*    # separator
-                      (\S[^\n]*?)        # value ( must start with a non-space char)
+                      (\S[^\n]*?)       # value ( must start with a non-space char)
                       $ending
                       |
-                      \G\n
+                      \G\n              # a plain empty line
+                      |
+                      \G
+                      [ \t]*            # an optional comment
+                      \#
+                      [^\n]*
+                      $ending
                       |
                       \G[ \t]+?
                       $ending
@@ -330,7 +336,7 @@ sub match_block_end
     my ($self, $p) = @_;
 
     my $re = $p->{allow_text} ? qr,\G(.*?)</%\Q$p->{block_type}\E>(\n?),is
-                              : qr,\G()\s*</%\Q$p->{block_type}\E>(\n?),is;
+                              : qr,\G\s*</%\Q$p->{block_type}\E>(\n?),is;
     if ( $self->{current}{comp_source} =~ /$re/gc )
     {
 	return $p->{allow_text} ? ($1, $2) : $2;

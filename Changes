@@ -7,6 +7,11 @@ available at http://www.masonhq.com/code/history.html.
 
 1.22
 
+[ ENHANCEMENTS ]
+
+- Comments are now allowed on separate lines inside <%attr> and
+<%flags> blocks.
+
 [ BUG FIXES ]
 
 - Removed the use of alarm() and SIG{ALRM} to trap rare infinite loops
