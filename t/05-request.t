@@ -32,7 +32,7 @@ EOF
 			 component => <<'EOF',
 My depth is <% $m->depth %>.
 
-The top-level component is <% $m->callers(-1)->title %>.
+The top-level component is <% $m->top_comp->title %>.
 
 My stack looks like:
 -----
@@ -69,9 +69,10 @@ EOF
     $group->add_support( path => '/support/various_test',
 			 component => <<'EOF',
 Caller is <% $m->caller->title %> or <% $m->callers(1)->title %>.
-The top level component is <% $m->callers(-1)->title %>.
+The top level component is <% $m->callers(-1)->title %> or <% $m->top_comp->title %>.
 The full component stack is <% join(",",map($_->title,$m->callers)) %>.
 My argument list is (<% join(",",$m->caller_args(0)) %>).
+The top argument list is (<% join(",",$m->top_args()) %>) or (<% join(",",$m->caller_args(-1)) %>).
 
 % foreach my $path (qw(various_test /request/sections/perl foobar /shared)) {
 %   my $full_path = $m->process_comp_path($path);
@@ -103,6 +104,14 @@ Time difference!
 EOF
 		       );
 
+
+#------------------------------------------------------------
+
+    $group->add_support( path => 'various_helper',
+			 component => <<'EOF',
+<& support/various_test, %ARGS &>
+EOF
+		       );
 
 #------------------------------------------------------------
 
@@ -341,15 +350,17 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'various',
+		      call_args => {junk=>5},
 		      description => 'tests caller, callers, fetch_comp, process_comp_path, comp_exists and scomp',
 		      component => <<'EOF',
-<& support/various_test, junk=>6 &>
+<& various_helper, junk=>$ARGS{junk}+1 &>
 EOF
 		      expect => <<'EOF',
-Caller is /request/various or /request/various.
-The top level component is /request/various.
-The full component stack is /request/support/various_test,/request/various.
+Caller is /request/various_helper or /request/various_helper.
+The top level component is /request/various or /request/various.
+The full component stack is /request/support/various_test,/request/various_helper,/request/various.
 My argument list is (junk,6).
+The top argument list is (junk,5) or (junk,5).
 
 Trying to fetch various_test (full path /request/support/various_test):
 various_test exists with title /request/support/various_test.
@@ -370,9 +381,6 @@ No time difference.
 
 EOF
 		    );
-
-
-#------------------------------------------------------------
 
     return $group;
 }
