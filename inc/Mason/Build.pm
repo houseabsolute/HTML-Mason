@@ -136,6 +136,17 @@ sub _write_apache_test_conf
 	or die "Can't make dir '$conf{comp_root}': $!";
     mkdir $conf{data_dir}, 0755
 	or die "Can't make dir '$conf{data_dir}': $!";
+    if (!$<) {
+	# set data_dir permissions when running as root
+	my $uid = getpwnam($conf{user});
+	my $gid = getgrnam($conf{group});
+        my $default_data_dir = File::Spec->catdir( $conf{apache_dir}, 'mason' );
+	eval {
+	    chown $uid,$gid, $conf{data_dir};
+	    mkdir $default_data_dir, 0755;
+	    chown $uid,$gid, $default_data_dir;
+	};
+    }
 
     $self->add_to_cleanup( @conf{'comp_root', 'data_dir'} );
 
@@ -434,8 +445,7 @@ for (my \$x = 0; \$x <= \$#ah_params; \$x++)
 	      \%res_params,
             );
 
-    # TODO: fix for Apache2
-    #chown Apache->server->uid, Apache->server->gid, \$ah->interp->files_written;
+    chown \$ah->get_uid_gid, \$ah->interp->files_written;
 
     push \@ah, \$ah;
 }
