@@ -888,19 +888,21 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'no_data_dir',
-		      description => 'test interp without a data directory',
-                      interp => HTML::Mason::Interp->new( comp_root => HTML::Mason::Tests->comp_root ),
-		      component => <<'EOF',
+    if ( load_pkg('Cache::Cache') )
+    {
+	$group->add_test( name => 'no_data_dir',
+			  description => 'test interp without a data directory',
+			  interp => HTML::Mason::Interp->new( comp_root => HTML::Mason::Tests->comp_root ),
+			  component => <<'EOF',
 Hello World!
 <% ref $m->cache %>
 EOF
-		      expect => <<'EOF',
+			  expect => <<'EOF',
 Hello World!
 Cache::MemoryCache
 EOF
-		    );
-
+			  );
+    }
 #------------------------------------------------------------
 
     $group->add_support( path => 'no_comp_root_helper',
