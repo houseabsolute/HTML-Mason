@@ -85,7 +85,8 @@ sub initialize
 	    $self->{mode} ||= 'batch';
 	    # convert scalarref to a coderef for efficiency
 	    $self->{buffer} = $self->{sink};
-	    $self->{sink} = sub { for (@_) { ${ $self->{buffer} } .= $_ if defined } };
+	    my $b = $self->{buffer};
+	    $self->{sink} = sub { for (@_) { $$b .= $_ if defined } };
 	}
 	else
 	{
@@ -108,7 +109,8 @@ sub initialize
 	else
 	{
 	    $self->{buffer} = '';
-	    $self->{sink} = sub { for (@_) { $self->{buffer} .= $_ if defined } };
+	    my $b = \$self->{buffer};
+	    $self->{sink} = sub { for (@_) { $$b .= $_ if defined } };
 	}
     }
 }
@@ -151,15 +153,6 @@ sub output
     my $output = ref $self->{buffer} ? ${ $self->{buffer} } : $self->{buffer};
     return $self->filter->( $output ) if $self->filter;
     return $output;
-}
-
-sub dispose
-{
-    my $self = shift;
-    foreach ( qw( parent sink ) )
-    {
-	undef $self->{$_};
-    }
 }
 
 =pod
