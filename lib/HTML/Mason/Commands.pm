@@ -122,7 +122,7 @@ sub mc_cache_self
     
     my $interp = $REQ->interp;
     return undef unless $interp->use_data_cache;
-    return undef if $REQ->{stack}->[0]->{in_cache_self_flag};
+    return undef if $REQ->top_stack->{in_cache_self_flag};
     my (%retrieveOptions,%storeOptions);
     foreach (qw(key expire_if keep_in_memory busy_lock)) {
 	if (exists($options{$_})) {
@@ -147,15 +147,14 @@ sub mc_cache_self
 	# Reinvoke the component. Collect output ($output) and return
 	# value ($retval).
 	#
-        $output = '';
-	my $lref = $REQ->{stack}->[0];
+	my $lref = $REQ->top_stack;
 	my %saveLocals = %$lref;
 	$lref->{sink} = sub { $output .= $_[0] };
 	$lref->{in_cache_self_flag} = 1;
 	my $sub = $lref->{comp}->{code};
 	my %args = %{$lref->{args}};
 	$retval = &$sub(%args);
-	$REQ->{stack}->[0] = {%saveLocals};
+	$REQ->top_stack({%saveLocals});
 
 	#
 	# Store output and return value as a two-item listref.
@@ -188,7 +187,7 @@ sub mc_caller ()
     if ($REQ->depth <= 1) {
 	return undef;
     } else {
-	return $REQ->{stack}->[1]->{comp}->title;
+	return $REQ->callers(1)->title;
     }
 }
 
@@ -196,14 +195,14 @@ sub mc_call_self
 {
     check_request;
     my ($cref,$rref) = @_;
-    return 0 if $REQ->{stack}->[0]->{in_call_self_flag};
+    return 0 if $REQ->top_stack->{in_call_self_flag};
     
     #
     # Reinvoke the component with in_call_self_flag=1. Collect
     # output and return value in references provided.
     #
     my $content;
-    my $lref = $REQ->{stack}->[0];
+    my $lref = $REQ->top_stack;
     my %saveLocals = %$lref;
     $lref->{sink} = sub { $content .= $_[0] };
     $lref->{in_call_self_flag} = 1;
@@ -216,7 +215,7 @@ sub mc_call_self
     } else {
 	&$sub(%args);
     }
-    $REQ->{stack}->[0] = {%saveLocals};
+    $REQ->top_stack({%saveLocals});
     $$cref = $content if ref($cref) eq 'SCALAR';
 
     return 1;
@@ -225,7 +224,7 @@ sub mc_call_self
 sub mc_call_stack ()
 {
     check_request;
-    return map($_->{comp}->title,@{$REQ->{stack}});
+    return map($_->title,$REQ->callers);
 }
 
 sub mc_comp
@@ -252,7 +251,7 @@ sub mc_comp_source
 sub mc_comp_stack ()
 {
     check_request;
-    return map($_->{comp}->title,@{$REQ->{stack}});
+    return map($_->title,$REQ->callers);
 }
 
 #

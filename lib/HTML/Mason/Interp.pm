@@ -247,12 +247,12 @@ sub exec {
 	my $i = index($err,'HTML::Mason::Interp::exec');
 	$err = substr($err,0,$i) if $i!=-1;
 	$err =~ s/^\s*(HTML::Mason::Commands::__ANON__|HTML::Mason::Request::call).*\n//gm;
-	if (@{$req->{stack}}) {
-	    my $errmsg = "error while executing ".$req->comp->title.":\n";
+	# Salvage what was left in the request stack for backtrace information
+	if (@{$req->{stack_array}}) {
+	    my @titles = map($_->{comp}->title,@{$req->{stack_array}});
+	    my $errmsg = "error while executing $titles[-1]:\n";
 	    $errmsg .= $err."\n";
-	    if ($req->depth > 1) {
-		$errmsg .= "backtrace: " . join(" <= ",map($_->{comp}->title,@{$req->{stack}}))."\n";
-	    }
+	    $errmsg .= "backtrace: " . join(" <= ",reverse(@titles)) . "\n" if @titles > 1;
 	    die ($errmsg);
 	} else {
 	    die ($err);

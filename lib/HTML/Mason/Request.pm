@@ -18,7 +18,7 @@ my %fields =
      count => 0,
      dhandler_arg => undef,
      interp => undef,
-     stack => undef,
+     stack_array => undef,
      );
 # Create accessor routines
 foreach my $f (keys %fields) {
@@ -49,7 +49,7 @@ sub new
     while (my ($type,$href) = each(%{$interp->{hooks}})) {
 	$self->{"hooks_$type"} = [values(%$href)] if (%$href);
     }
-    $self->{stack} = [];
+    $self->{stack_array} = [];
     $self->{count} = ++($interp->{request_count});
 
     return $self;
@@ -61,10 +61,11 @@ sub new
 sub callers
 {
     my ($self,$index) = @_;
+    my @callers = reverse(@{$self->stack});
     if (defined($index)) {
-	return $self->stack->[$index]->{comp};
+	return $callers[$index]->{comp};
     } else {
-	return map($_->{comp},@{$self->stack});
+	return map($_->{comp},@callers);
     }
 }
 
@@ -82,13 +83,17 @@ sub depth
 sub stack
 {
     my ($self) = @_;
-    my $stack = $self->{stack};
-    if ($self eq $REQ and scalar(@$stack) == $REQ_DEPTH) {
-	return $stack;
-    } else {
-	my $depth = $self->depth;
-	return [(@$stack)[0..$depth]];
-    }
+    my $stack = $self->{stack_array};
+    my $depth = $self->depth;
+    splice(@$stack,$depth) unless (@$stack == $depth);
+    return $stack;
+}
+
+# Set or retrieve the hashref at the top of the stack.
+sub top_stack {
+    my ($self,$href) = @_;
+    $self->{stack_array}->[$self->depth-1] = $href if defined($href);
+    return $self->{stack_array}->[$self->depth-1];
 }
 
 #
@@ -107,20 +112,20 @@ sub call {
     my $req = shift(@_);
 
     if (defined($REQ) and $req eq $REQ) {
-	local $REQ_DEPTH = $REQ_DEPTH + 1;
+	local $REQ_DEPTH = $REQ_DEPTH;
 	$req->call1(@_);
     } else {
 	local %REQ_DEPTHS = %REQ_DEPTHS;
 	$REQ_DEPTHS{$REQ} = $REQ_DEPTH if defined($REQ);
 	local $REQ = $req;
-	local $REQ_DEPTH = $REQ_DEPTHS{$REQ} || 1;
+	local $REQ_DEPTH = $REQ_DEPTHS{$REQ} || 0;
 	$req->call1(@_);
     }
 }
 sub call1 {
     my ($req, $comp, %args) = @_;
     my $interp = $req->{interp};
-    my $depth = $req->depth;
+    my $depth = $REQ_DEPTH;
 
     #
     # $comp can be an absolute path or component object.  If a path,
@@ -149,10 +154,10 @@ sub call1 {
 	$$store = '';
 	$sink = sub { $$store .= $_[0] if defined ($_[0]) };
 	delete($args{STORE});
-    } elsif (!$depth) {
+    } elsif ($depth==0) {
 	$sink = $interp->{out_method};
     } else {
-	$sink = $req->stack->[0]->{sink};
+	$sink = $req->top_stack->{sink};
     }
 
     #
@@ -160,9 +165,10 @@ sub call1 {
     #
     die "$depth levels deep in component stack (infinite recursive call?)\n" if ($depth >= $interp->{max_recurse});
 
-    # Push new frame onto stack.
-    $#(@{$req->{stack}}) = $depth-1;
-    unshift(@{$req->{stack}},{comp=>$comp,args=>{%args},sink=>$sink});
+    # Push new frame onto stack and increment (localized) depth.
+    my $stack = $req->stack;
+    push(@$stack,{comp=>$comp,args=>{%args},sink=>$sink});
+    $REQ_DEPTH++;
 
     # Call start_comp hooks.
     $req->call_hooks('start_comp');
@@ -176,34 +182,23 @@ sub call1 {
     #
     # Finally, call component subroutine.
     #
-    # Hate to do an eval for every comp call, but otherwise a die can
-    # fall through to a previous component without ever popping the
-    # stack. Could use a dynamically scoped variable for the
-    # stack, but difficult in case of multiple request objects.
-    #
     $comp->{run_count}++;
     my ($result, @result);
     if (wantarray) {
-	eval { @result = $sub->(%args) };
+	@result = $sub->(%args);
     } else {
-	eval { $result = $sub->(%args) };
+	$result = $sub->(%args);
     }
-    my $err = $@;
 
     #
-    # Pop stack.
-    #
-    shift(@{$req->{stack}});
-
-    #
-    # If error occurred, pass back to previous level.
-    #
-    die $err if $err;
-    
-    #
-    # Otherwise, call end_comp hooks and return.
+    # Call end_comp hooks.
     #
     $req->call_hooks('end_comp');
+    
+    #
+    # Pop stack and return.
+    #
+    pop(@$stack);
     return wantarray ? @result : $result;
 }
 
@@ -256,9 +251,9 @@ sub debug_hook
 #
 # Accessor methods for top of stack elements.
 #
-sub comp { return $_[0]->stack->[0]->{comp} }
-sub args { return $_[0]->stack->[0]->{args} }
-sub sink { return $_[0]->stack->[0]->{sink} }
+sub comp { return $_[0]->top_stack->{comp} }
+sub args { return $_[0]->top_stack->{args} }
+sub sink { return $_[0]->top_stack->{sink} }
 
 #
 # Abort out of current execution.
