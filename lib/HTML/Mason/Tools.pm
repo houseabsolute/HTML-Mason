@@ -48,8 +48,10 @@ sub read_file_ref
     my $fh = _get_reading_handle(@_);
     my ($buffer, $retval) = ('');
     while (1) {
-	# Important to read in chunks
-	$retval = read $fh, $buffer, 1000, length($buffer);
+	# Important to read in chunks - 16KB is a good compromise
+	# between not bloating memory usage and not calling read many
+	# times for small files
+	$retval = read $fh, $buffer, 1024 * 16, length($buffer);
 	system_error "read_file_ref: Couldn't read from '$_[0]': $!"
 	    unless defined $retval;
 	last if !$retval;
