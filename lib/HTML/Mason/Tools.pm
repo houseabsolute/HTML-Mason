@@ -51,6 +51,14 @@ sub html_escape
     return $text;
 }
 
+sub old_html_escape
+{
+    my ($text) = @_;
+    return unless defined $$text;
+
+    $$text = html_escape($$text);
+}
+
 #
 # Determines whether two paths are equal, taking into account
 # case-insensitivity in Windows O/S.
@@ -262,6 +270,17 @@ This function takes a string and returns its HTML-escaped version,
 escaping the following characters: '&', '>', '<', and '"'.
 
 The escaped string is this function's return value.
+
+=item old_html_escape
+
+This function takes a string reference and HTML-escapes it, escaping
+the following characters: '&', '>', '<', and '"'.
+
+It is provided for those who wish to use it to replace (or supplement)
+the existing 'h' escape flag, via the Interpreter's L<C<set_escape()>
+method|HTML>::Mason::Interp/item_set_escape>.
+
+It is not exportable.
 
 =item paths_eq
 
