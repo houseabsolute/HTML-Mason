@@ -5,6 +5,30 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
+1.12
+
+[ ENHANCEMENTS ]
+
+- Various optimizations have been added to this release in order to
+address the fact that Mason 1.11 is quite a bit slower than 1.05.  One
+major factor was optimizing Params::Validate and Class::Container, so
+for that reason this version of Mason requires Params::Validate 0.24
+and Class::Container 0.07.  With these modules installed, this release
+shows improvements of up to 50-60% in benchmarks that stress Mason's
+weaknesses, with other benchmarks showing up to a 100% improvement.
+- Made subclassing CGIHandler more useful by breaking out its arg
+processing into a request_args method, just like ApacheHandler.
+- Added alter_superclass method to Request class, for use by Request
+subclasses.  See the HTML::Mason::Subclassing document for details.
+
+[ BUG FIXES ]
+
+- Fix HTML generated for error messages so that tags balance out.
+Unbalanced table tags caused this page to not display properly with
+Netscape 4.x.
+- Fix nasty memory leaks in ApacheHandler.
+
+
 1.11  July 3, 2002
 
 [ BUG FIXES ]
@@ -171,6 +195,7 @@ Mason can now figure this out by itself.
 - ** The base_comp is now changed for each component call, unless that
 component call uses a component object for its first argument, or the
 call starts with SELF: or PARENT:.
+- ** The "perl_" prefix for Mason tags is no longer supported.
 
 [ ENHANCEMENTS AND NEW FEATURES ]
 
