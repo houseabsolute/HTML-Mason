@@ -29,12 +29,18 @@ use HTML::Mason::MethodMaker
 
 __PACKAGE__->valid_params
     (
-     allow_globals        => { parse => 'list',   type => ARRAYREF, default => [] },
-     default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
-     lexer                => { isa => 'HTML::Mason::Lexer' },
-     preprocess           => { parse => 'code',   type => CODEREF,  optional => 1 },
-     postprocess_perl     => { parse => 'code',   type => CODEREF,  optional => 1 },
-     postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1 },
+     allow_globals        => { parse => 'list',   type => ARRAYREF, default => [],
+			       descr => "An array of names of Perl variables that are allowed globally within components" },
+     default_escape_flags => { parse => 'string', type => SCALAR,   default => '',
+			       descr => "Escape flags that will apply by default to all Mason tag output" },
+     lexer                => { isa => 'HTML::Mason::Lexer',
+			       descr => "A Lexer object that will scan component text during compilation" },
+     preprocess           => { parse => 'code',   type => CODEREF,  optional => 1,
+			       descr => "A subroutine through which all component text will be sent during compilation" },
+     postprocess_perl     => { parse => 'code',   type => CODEREF,  optional => 1,
+			       descr => "A subroutine through which all Perl code will be sent during compilation" },
+     postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1,
+			       descr => "A subroutine through which all plain text will be sent during compilation" },
     );
 
 __PACKAGE__->contained_objects( lexer => 'HTML::Mason::Lexer' );
