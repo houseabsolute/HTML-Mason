@@ -1661,7 +1661,7 @@ Thus the safer way to generate an error status is
    $m->clear_buffer;
    $m->abort($status);
 
-C<< $m->abort >> bypasses the component stack and ensure that
+C<< $m->abort >> bypasses the component stack and ensures that
 C<$status> is returned from the top-most component. It works by
 throwing an exception. If you wrapped this code (directly or
 indirectly) in an eval, you must take care to rethrow the exception,
