@@ -217,5 +217,22 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'dash in subcomp named',
+			  description => 'tests that dashes are allowed in subcomponent names',
+			  component => <<'EOF',
+a
+<%def has-dashes>
+foo
+</%def>
+b
+EOF
+			  expect => <<'EOF',
+a
+b
+EOF
+			);
+
+#------------------------------------------------------------
+
     return $group;
 }
