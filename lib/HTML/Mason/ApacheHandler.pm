@@ -41,6 +41,7 @@ my %fields =
      debug_handler_script => undef,
      debug_handler_proc => undef,
      debug_dir_config_keys => [],
+     apache_status_title => 'mason',
      );
 # Minor speedup: create anon. subs to reduce AUTOLOAD calls
 foreach my $f (keys %fields) {
@@ -76,27 +77,30 @@ sub _initialize {
     my $interp = $self->interp;
 
     # ----------------------------
-    # Add an HTML ::Mason menu item to the /perl-status page. Things we report:
+    # Add an HTML::Mason menu item to the /perl-status page. Things we report:
     # -- Interp properties
     # -- loaded (cached) components
+    my $name = $self->{apache_status_title};
+    my $title;
+    if ($name eq 'mason') {
+        $title='HTML::Mason status';    #item for HTML::Mason module
+    } 
+    else {
+        $title=$name;
+        $name=~s/\W/_/g;
+    }
     Apache::Status->menu_item(
-	'mason' => "HTML::Mason status", #item for HTML::Mason module
-	 sub {
-	     my($r,$q) = @_; #request and CGI objects
-	     my(@strings);
-	     
-	     push (@strings,
-		'<DL><DT><FONT SIZE="+1"><B>Interp object properties (startup options)</B></FONT><DD>',
-		map("$_ = ".$interp->{$_}."<BR>\n", grep (ref $interp->{$_} eq '', sort keys %{$interp->{_permitted}})),
-		'</DL>');
+        $name=>$title,
+	    sub {
+            my($r,$q) = @_; #request and CGI objects
+            my(@strings);
 
-	     push (@strings,
-		'<DL><DT><FONT SIZE="+1"><B>Cached components</B></FONT><DD>',
-		map("$_<BR>\n", sort keys %{$interp->{code_cache}}),
-		'</DL>');
+            push (@strings,
+                    qq(<FONT size="+2"><B>$self->{apache_status}</B></FONT><BR><BR>),
+                    $self->interp_status);
 
-	     return \@strings;     #return an array ref
-	 }
+            return \@strings;     #return an array ref
+        }
     ) if $Apache::Status::VERSION; #only if Apache::Status is loaded
 
     
@@ -119,6 +123,41 @@ sub _initialize {
     #
     $interp->parser->allow_globals(qw($r));
 }
+
+#
+# Generate an array that describes Interp's current status
+#
+sub interp_status
+{
+    my ($interp) = $_[0]->interp;
+
+    my @strings;
+    push @strings,
+        qq(<DL><DT><FONT SIZE="+1"><B>Interp object properties</B></FONT>\n),
+        qq(<DT><B>Startup options</B>\n);
+
+
+    push @strings,
+        map {"<DD><TT>$_ = ".(defined($interp->{$_}) ? 
+                                $interp->{$_} : '<I>undef</I>'
+                             )."</TT>\n" 
+            } grep ref $interp->{$_} eq '', sort keys %{$interp->{_permitted}};
+
+    push @strings, '</DL>',
+            '<DL><DT><FONT SIZE="+1"><B>Cached components</B></FONT><DD>';
+
+    if(%{$interp->{code_cache}})
+    {     
+        push (@strings, map("<TT>$_</TT><BR>\n", 
+                            sort keys %{$interp->{code_cache}} 
+                           )
+             );
+    } else {
+        push @strings, '<I>None</I>';
+    }     
+    push @strings, '</DL>';
+    return @strings;
+}         
 
 sub send_http_header_hook
 {
