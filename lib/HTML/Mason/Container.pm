@@ -36,7 +36,7 @@ my %CONTAINED_OBJECTS = ();
 
 sub all_specs
 {
-    my ($self, %args) = @_;
+    my ($self) = @_;
 
     require B::Deparse;
     my %out;
