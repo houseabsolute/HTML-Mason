@@ -21,8 +21,8 @@ use vars qw(@ISA @EXPORT_OK);
 
 sub data_cache_namespace
 {
-    my ($path) = @_;
-    return compress_path($path);
+    my ($comp_id) = @_;
+    return compress_path($comp_id);
 }
 
 sub cgi_request_args
@@ -61,13 +61,16 @@ code you have written with Mason.
 
 =over 4
 
-=item data_cache_namespace ($path)
+=item data_cache_namespace ($comp_id)
 
-Given a component path, this method returns its default
+Given a component id, this method returns its default
 C<Cache::Cache> namespace.  This can be useful if you want to access
 the cached data outside of Mason.
 
-This method will not work if you are using multiple component roots.
+With a single component root, the component id is just the component
+path. With multiple component roots, the component id is
+C<key>/C<path>, where C<key> is the key corresponding to the root that
+the component falls under.
 
 =item cgi_request_args ($cgi, $method)
 
