@@ -23,13 +23,14 @@ use HTML::Mason::MethodMaker
 
 __PACKAGE__->valid_params
     (
-     sink => { type => SCALARREF | CODEREF, optional => 1 },
-     parent => { isa => 'HTML::Mason::Buffer', optional => 1 },
-     mode => { callbacks =>
-	       { 'batch or stream' => sub { $_[0] =~ /^(?:batch|stream)/ } },
-	       optional => 1 },
+     sink         => { type => SCALARREF | CODEREF, optional => 1 },
+     parent       => { isa => 'HTML::Mason::Buffer', optional => 1 },
+     mode         => { type => SCALAR,
+		       callbacks =>
+		       { 'batch or stream' => sub { $_[0] =~ /^(?:batch|stream)$/ } },
+		       optional => 1 },
      ignore_flush => { type => SCALAR, default => 0 },
-     filter => { type => CODEREF, optional => 1 },
+     filter       => { type => CODEREF, optional => 1 },
     );
 
 __PACKAGE__->contained_objects
