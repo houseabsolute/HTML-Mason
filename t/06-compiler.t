@@ -482,7 +482,7 @@ EOF
 #------------------------------------------------------------
 
     my $error =
-	$] >= 5.006 ? qr/Unterminated <>/ : qr/Might be a runaway multi-line <> string/;
+	$] >= 5.006 ? qr/Unterminated <>/ : qr/Bareword "subcomp" not allowed/;
 
     $group->add_test( name => 'subcomp_parse_error',
 		      description => 'A misnamed block at the beginning of a component was throwing the lexer into an infinite loop.  Now it should be compiled into a component with a syntax error.',
