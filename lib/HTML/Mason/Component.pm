@@ -118,7 +118,8 @@ sub run {
 
     my $req = HTML::Mason::Request->instance;
 
-    $req->push_filter_buffer( filter => $self->{filter} );
+    $req->push_filter_buffer( filter => $self->{filter},
+                              filter_args => \@_ );
 
     my @r;
 
