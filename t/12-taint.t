@@ -22,7 +22,8 @@ BEGIN
     eval $libs;
 }
 
-use HTML::Mason::Parser;
+use HTML::Mason::Compiler::ToObject;
+use HTML::Mason::Tools qw(read_file);
 
 # Clear alarms, and skip test if alarm not implemented
 eval {alarm 0};
@@ -33,13 +34,13 @@ if ($@) {
 
 print "1..1\n";
 
-my $parser = HTML::Mason::Parser->new;
+my $compiler = HTML::Mason::Compiler::ToObject->new;
 
 my $alarm;
 $SIG{ALRM} = sub { $alarm = 1; die "alarm"; };
 
-my $comp;
-eval { alarm 5; local $^W; $comp = $parser->parse_component( script_file => 't/taint.comp' ); };
+my $comp = read_file('t/taint.comp');
+eval { alarm 5; local $^W; $comp = $compiler->compile( comp => $comp, name => 't/taint.comp' ); };
 
 if ( $alarm || $@ || ! defined $comp )
 {
