@@ -8,11 +8,15 @@ This manual is written for the sysadmin/webmaster in charge of
 installing, configuring, or tuning a Mason system.  The bulk of the
 documentation assumes that you are using mod_perl.  See L<RUNNING
 OUTSIDE OF MOD_PERL|HTML::Mason::Admin/RUNNING OUTSIDE OF MOD_PERL>
-for more details.
+for more details. For more details on mod_perl, visit
+the mod_perl website at http://perl.apache.org/.
 
 =head1 SITE CONFIGURATION METHODS
 
-There are two ways to configure Apache/mod_perl to use Mason.
+Mason includes module specifically designed to integrate Mason and
+mod_perl, C<HTML::Mason::ApacheHandler>.  By telling mod_perl to hand
+content requests to this module, you can use Mason to generate web
+pages.  There are two ways to configure Mason under mod_perl.
 
 =over 4
 
@@ -60,6 +64,12 @@ This configuration tells Apache to serve all URLs ending in ".html"
 with Mason.  We use the PerlModule line to tell mod_perl to load Mason
 once at startup time, saving time and memory.  This example does not
 set any Mason configuration parameters, so Mason uses its default values.
+
+If this is your first time installing and using Mason, we recommend
+that you use the above configuration in a test webserver to start
+with.  This will let you play with Mason under mod_perl with a minimum
+of fuss.  Once you've gotten this working, then come back and read the
+rest of the document for further possibilities.
 
 =head2 Configuration Parameters
 
@@ -225,6 +235,12 @@ namespace, you can do this:
     use CGI;
     use LWP;
   }
+  </Perl>
+
+A Perl section will also work for including local library paths:
+
+  <Perl>
+  use lib '/path/to/local/lib';
   </Perl>
 
 =head2 Declining Image Requests
@@ -433,7 +449,10 @@ private components.
 
 In addition, we discuss some of the possibilities that become
 available when you create a custom wrapper around Mason's request
-handling mechanism.
+handling mechanism.  This wrapper generally consists of two parts.
+The initialization portion, run at server startup, will load any
+needed modules and create objects.  The other portion is the
+C<handler()> subroutine, which handles web page requests.
 
 =head2 Writing a Wrapper
 
@@ -481,6 +500,12 @@ it may "feel" more solid to some folks than the F<handler.pl>
 approach.
 
 =head2 The Wrapper Code
+
+Regardless of how you load your wrapper code, it will always work the
+same way.  The C<handler()> subroutine should expect to receive the
+Apache request object representing the current request.  This request
+object is used by the ApacheHandler module to determine what component
+is being called.
 
 Let's look at the guts of some wrapper code.  Here's a first version:
 
@@ -550,7 +575,8 @@ directory requests.  Here's a bit of code that could be added to the
 C<handler()> subroutine to do this:
 
     return DECLINED
-        if $r->content_type && $r->content_type !~ m|^text/|i &&
+        if $r->content_type &&
+           $r->content_type !~ m|^text/|i &&
            $r->content_type !~ m|directory$|i;
 
 This code returns C<DECLINED> if the request has a content type and
@@ -612,7 +638,7 @@ for each host, one for each host.  Here's some sample code for that:
 
         my $site = $r->dir_config('SiteName');
 
-        return DECLINED unless exists $ah{$site}
+        return DECLINED unless exists $ah{$site};
 
         return $ah{$site}->handle_request($r);
     }
@@ -660,7 +686,7 @@ error handling component?  There is no way to do this without wrapper
 code.  Here's an example C<handler()> subroutine that does this:
 
     sub handler {
-        my $r = shift;
+        my ($r) = @_;
 
         my $return = eval { $ah->handle_request($r) };
 
@@ -826,9 +852,9 @@ overhead.  Your process growth will not match the code cache
 size exactly.
 
 You can prepopulate the cache with components that you know will be
-accessed often; see L<Preloading|"Preloading">. Note that preloaded components
-possess no special status in the cache and can be discarded like any
-others.
+accessed often; see L<Preloading Components|"Preloading Components">.
+Note that preloaded components possess no special status in the cache
+and can be discarded like any others.
 
 Naturally, a cache entry is invalidated if the corresponding component
 source file changes.
@@ -858,7 +884,7 @@ object file rather than the source file.
 If for some reason you don't want Mason to create object files, set
 P<use_object_files> to 0.
 
-=head2 Preloading
+=head2 Preloading Components
 
 You can tell Mason to preload a set of components in the parent
 process, rather than loading them on demand, using the P<preloads>
