@@ -856,7 +856,6 @@ sub prepare_request
 					 apache_req => $r,
 				       );
 
-    # Get print() from original $r.
     my $final_output_method = ($r->method eq 'HEAD' ?
 			       sub {} :
 			       $r->can('print'));
