@@ -1,76 +1,74 @@
-Credits for Mason, most recent contributions first.
+Mason was created by Jonathan Swartz over several years at CMP Media.
+
+The main development team shifts over time, as with most open source
+projects. However, at time of writing, most development is done by
+Dave Rolsky, Ken Williams and Jonathan Swartz.
+
+Other contributors, most recent first:
+
+(July '01)
+
+Matthew Lewinski created the design for the second overhaul of Mason
+HQ.
 
 (November '00)
 
-Dave Rolsky (autarch@urth.org) was the first new member to the
-development team since Mason's inception. Before joining Dave revamped
-the parser module, answered numerous queries on the user's list and
-initiated discussions on Mason's future.
+Dave Rolsky was the first new member to the development team since
+Mason's inception. Before joining Dave revamped the parser module,
+answered numerous queries on the user's list and initiated discussions
+on Mason's future.
 
-Ken Williams (ken@forum.swarthmore.edu) was the second new member to
-the development team. Before joining Ken submitted a variety of code
-cleanups/speedups and hosted the first mailing list archive at the
-math forum.
+Ken Williams has submitted a variety of code cleanups/speedups and
+hosted the first mailing list archive at the math forum.
 
-Michael Dorman (mdorman-perl.mason@debian.org), Ken Miller
-(millerk@mail.husky-oil.com) and Ken Williams currently administer the
+Michael Dorman, Ken Miller and Ken Williams currently administer the
 mailing lists.
 
-Thanks to Hank Leininger (hlein@progressive-comp.com) and the folks
-at MARC for their excellent mail archive interface, on which all of
-Mason's lists are archived.
+Thanks to Hank Leininger and the folks at MARC for their excellent
+mail archive interface, on which all of Mason's lists are archived.
 
 (July '99)
 
-Matt Jalbert (mjalbert@exuberance.com) lent his artistic flair to
-the MasonHQ web site design.
+Matt Jalbert lent his artistic flair to the Mason HQ web site design.
 
 (February '99)
 
-Patrick Kane (modus@pr.es.to) was an early Mason adopter providing
-useful feedback from the beginning.  He acted briefly as FAQ
-maintainer and contributed the first session-related examples. Patrick
-now hosts the Mason site and core development server.
+Patrick Kane was an early Mason adopter providing useful feedback from
+the beginning.  He acted briefly as FAQ maintainer and contributed the
+first session-related examples. Patrick currently hosts the Mason site
+and core development server.
 
-Kirrily 'Skud' Robert (skud@netizen.com.au) started the Mason mailing
-list despite my foot-dragging, and I'm eternally grateful.
+Kirrily 'Skud' Robert started the first Mason mailing list and hosted
+it at netizen for over a year.
 
 (October '98)
 
 The original idea for Mason was inspired by the component system used
 by NetGuide Live at CMP Media in 1996.  HTML++ lives on!
 
-Gady Costeff (costeff@yahoo.com) formulated the need for a better
-component-based web engine and blessed us with a creative, open-minded
-environment.
+Gady Costeff formulated the need for a better component-based web
+engine and blessed us with a creative, open-minded environment.
 
-Tom Smith (tsmith@cmp.com) protected our core development team from
-hostile forces, kept calm during the storms, and was (and continues to
-be) a great ally of the Mason open source initiative.
+Tom Smith protected our core development team from hostile forces,
+kept calm during the storms, and was (and continues to be) a great
+ally of the Mason open source initiative.
 
 Thanks to Debra Robinson and CMP management for generously supporting
 the Mason and Content Management open source releases.
 
-Chris Dobosz (chris@mojam.com) helped design the predecessor to Mason
-(Scribe) and implemented the predecessor to Content Management system.
-He had the first non-CMP production web site to use Mason, Mojam.com.
+Chris Dobosz helped design the predecessor to Mason (Scribe) and
+implemented the predecessor to Content Management system.  He had the
+first non-CMP production web site to use Mason, Mojam.com.
 
-Dennis Watson (dwatson@cmp.com) also helped design Scribe and was a
-never-ending source of Perl and Oracle wisdom.
+Dennis Watson also helped design Scribe and was a never-ending source
+of Perl and Oracle wisdom.
 
-Kurt Hurtado (kurt@kind.com) helped convert Scribe to Mason and
-created the CD-ME example.
+Kurt Hurtado helped convert Scribe to Mason and created the CD-ME
+example.
 
-Mark Schmick (mark@webz.com) wrote all of the original Mason
-documentation and helped greatly in getting the first release out the
-door.  He also created the Mason Content Management system.
-
-Matt Jalbert (mjalbert@exuberance.com) lent his artistic flair to
-the MasonHQ web site design.
-
-Gordon Henriksen (gordon@actifunds.com) did some preliminary work on a
-new lexer and compiler for Mason.  We stole the general design concept
-and many code snippets.
+Mark Schmick wrote all of the original Mason documentation and helped
+greatly in getting the first release out the door.  He also created
+the Mason Content Management system.
 
 The Internet technology team at CMP was supportive and patient with me
 as I brought down the systems with my periodic Mason "improvements".
@@ -80,48 +78,41 @@ as I brought down the systems with my periodic Mason "improvements".
 Besides those mentioned above, the following people have contributed
 suggestions or patches, as listed in the Changes file:
 
-John Arnold (John_Arnold@dtc.org)
-Oleg Bartunov (oleg@sai.msu.su)
-John Beppu (beppu@lineo.com)
-Paolo Campanella (npaolo@mighty.co.za)
-Sean Cazzell (cazzell@eng.usf.edu)
-Caleb Crome (ccrome@yahoo.com)
-Joe Edmonds (jedmonds@stamps.com)
-Ewan Edwards (eskwayrd@csp.net)
-Pascal Eeftinck (arcade@xs4all.nl)
-Jon Frisby (jfrisby@everyone.net)
-Philip Gwyn (liste@artware.qc.ca)
-Eric Hammond (ehammond@thinksome.com)
-Brian Holmes (bholmes@cmpnet.cmp.com)
-Matt Hoskins (matt@nipltd.com)
-Tom Hughes (thh@cyberscience.com)
-Tom Hukins (tom@eborcom.com)
-Pelle Johnsen (pelle.johnsen@mail.dk)
-Dirk Koopman (djk@tobit.co.uk)
-Fen Lebalme (fen@lumeria.com)
-Matthew Lewinski (mlewinski@avantgo.com)
-Jim Mortko (jskills@goofball.com)
-Chuck O'Donnell (cao@milf18.bus.net)
-Aaron Ross (ross@forum.swarthmore.edu)
-Paul Schilling (pfschill@bigfoot.com)
-Randal Schwartz (merlyn@stonehenge.com)
-Michael Abraham Shulman (mas@kurukshetra.cjb.net)
-Jeremy Taylor (jtaylor@brite.net)
-John Tobey (john.tobey@isay.com)
-Renzo Toma (renzo.toma@veronica.nl)
-Denis Shaposhnikov (dsh@neva.vlink.ru)
-Lee Semel (lsemel@igicom.com)
-Michael Shulman (viritrilbia@kurukshetra.cjb.net)
-Scott Straley (scott@straley.net)
-Adam Stubbs (mason@advantagecommunication.com)
-Jeremy Taylor (jtaylor@brite.net)
-John Tobey (john.tobey@isay.com)
-Benjamin John Turner (bjturner@whowhere.com)
-Rafael Weinstein (rafael@avantgo.com)
-Mikhail Zabaluev (mookid@sigent.ru)
-
+John Arnold
+Oleg Bartunov
+John Beppu
+Paolo Campanella
+Sean Cazzell
+Caleb Crome
+Joe Edmonds
+Ewan Edwards
+Pascal Eeftinck
+Jon Frisby
+Philip Gwyn
+Eric Hammond
+Brian Holmes
+Matt Hoskins
+Tom Hughes
+Tom Hukins
+Pelle Johnsen
+Dirk Koopman
+Fen Lebalme
+Jim Mortko
+Chuck O'Donnell
+Aaron Ross
+Paul Schilling
+Randal Schwartz
+Jeremy Taylor
+Renzo Toma
+Denis Shaposhnikov
+Lee Semel
+Michael Shulman
+Scott Straley
+Adam Stubbs
+Jeremy Taylor
+John Tobey
+Benjamin John Turner
+Rafael Weinstein
+Mikhail Zabaluev
 
 Thanks y'all!
-Jonathan Swartz
-swartz@pobox.com
-
