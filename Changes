@@ -37,8 +37,8 @@ debugger.  Task id #461.
 [ BUG FIXES ]
 
 - Fixed a serious error in which a Compiler that was used on a
-component containing syntax errors would claim that any future
-components also contained syntax errors.  Task id #467.
+component containing certain kinds of syntax errors would claim that
+any future components also contained syntax errors.  Task id #467.
 - Now assigning runtime properties (such as interp) to method
 component objects as well as subcomponent objects.  Task id #462.
 
