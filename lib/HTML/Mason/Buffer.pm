@@ -96,11 +96,11 @@ sub _initialize
     }
     else
     {
-	# If we have no sink we must have a parent whose sink we can use
-	HTML::Mason::Exception::Params->throw( error => "Buffering to default sink requires a parent buffer." )
-	    unless $self->{parent};
-
 	$self->{mode} ||= $self->{parent}->mode;
+
+	HTML::Mason::Exception::Params->throw( error => "Buffering to a default sink only works in batch mode or with a parent buffer." )
+	    unless $self->{parent} || $self->{mode} eq 'batch';
+
 
 	if ($self->{mode} eq 'stream')
 	{
@@ -156,27 +156,8 @@ sub output
 }
 
 =pod
+
 =begin nobody
-## old buffer stack attempt
-
-sub new
-{
-	$self->{stdout_tie} = tied *STDOUT;
-	$self->{stack} = [ \&Apache::print ];
-	tie *STDOUT,buffer
-	# do this in Request::exec --- local *Apache::print = \&buffer::print;
-}
-
-sub DESTROY
-{
-	$self->pop_buffer(1) while @{$self->{stack}};
-	untie *STDOUT;
-	tie *STDOUT, $self->{stdout_tie} if $self->{stdout_tie};
-}
-
-PRINT
-PRINTF
-(for tied stdout)
 
 
 ### Reimplement <%filter> with buffer stack and/or closures
