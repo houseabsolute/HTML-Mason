@@ -535,7 +535,7 @@ sub comp1 {
     my $self = shift;
 
     # Get modifiers: optional hash reference passed in as first argument.
-    my %mods = %{shift()} if (ref($_[0]) eq 'HASH');
+    my %mods = (ref($_[0]) eq 'HASH') ? %{shift()} : ();
 
     my ($comp,@args) = @_;
     my $interp = $self->{interp};
