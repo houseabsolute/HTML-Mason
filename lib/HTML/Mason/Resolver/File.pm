@@ -24,10 +24,6 @@ sub allowed_params {
 }
 sub validation_spec { return shift->allowed_params }
 
-# For subobject auto-creation
-my %creates_objects = ();
-sub creates_objects { \%creates_objects }
-
 use HTML::Mason::MethodMaker
     ( read_only => ['comp_root'] );
 

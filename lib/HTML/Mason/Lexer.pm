@@ -15,9 +15,6 @@ my %valid_params = ();
 sub allowed_params { \%valid_params }
 sub validation_spec { return shift->allowed_params }
 
-my %creates_objects = ();
-sub creates_objects { \%creates_objects }
-
 
 # This is a block name and what method should be called to lex its
 # contents if it is encountered.  'def' & 'method' blocks are special

@@ -13,9 +13,6 @@ my %valid_params = ();
 sub allowed_params { \%valid_params }
 sub validation_spec { return shift->allowed_params }
 
-#my %creates_objects = ();
-#sub creates_objects { \%creates_objects }
-
 sub new
 {
     my $class = shift;
