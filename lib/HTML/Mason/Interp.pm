@@ -259,7 +259,7 @@ sub load {
 	my $comp_id = $path;   # note - this will foil multiple component roots
 	return $code_cache->{$comp_id}->{comp} if exists($code_cache->{$comp_id});
 
-	$objfile = File::Spec->catfile( $self->object_dir, $comp_id );
+	$objfile = $self->comp_id_to_objfile($comp_id);
 	return undef unless (-f $objfile);   # component not found
 
 	$self->write_system_log('COMP_LOAD', $comp_id);	# log the load event
@@ -293,7 +293,7 @@ sub load {
     my $srcmod = $lookup_info{last_modified};
 
     if ($self->{use_object_files}) {
-	$objfile = File::Spec->catfile( $self->object_dir, $comp_id );
+	$objfile = $self->comp_id_to_objfile($comp_id);
 	@objstat = stat $objfile;
 	$objisfile = -f _;
     }
@@ -371,6 +371,13 @@ sub delete_from_code_cache {
     $self->{code_cache_current_size} -= $self->{code_cache}{$comp}{comp}->object_size;
     delete $self->{code_cache}{$comp};
     return;
+}
+
+
+sub comp_id_to_objfile {
+    my ($self, $comp_id) = @_;
+
+    return File::Spec->catfile( $self->object_dir, split /\//, $comp_id );
 }
 
 #
@@ -729,7 +736,7 @@ sub _compilation_error {
 sub object_file {
     my ($self, $comp) = @_;
     return $comp->persistent ?
-	File::Spec->catdir( $self->object_dir, $comp->comp_id ) :
+	$self->comp_id_to_objfile($comp->comp_id) :
 	undef;
 }
 
@@ -1304,9 +1311,3 @@ L<HTML::Mason::ApacheHandler>,
 L<HTML::Mason::Admin>
 
 =cut
-
-  sub fq_path_to_objfile {
-      my ($self, $fq_path) = @_;
-
-      return File::Spec->catfile( $self->object_dir, split /\/, $fq_path );
-  }
