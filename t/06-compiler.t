@@ -399,6 +399,46 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'block_end_without_nl',
+		      description => 'Test that a block can end without a newline before it',
+		      component => <<'EOF',
+no newlines<%args>$foo => 1</%args><%attr>foo => 1</%attr><%flags>inherit => undef</%flags>
+EOF
+		      expect => <<'EOF',
+no newlines
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'more_block_variations',
+		      description => 'Test various mixture of whitespace with blocks',
+		      component => <<'EOF',
+various
+<%args>
+ $foo => 1</%args>
+<%attr>
+  foo => 1</%attr>
+<%args>$bar => 1
+</%args>
+<%attr>bar => 1
+</%attr>
+<%args>
+ $quux => 1</%args>
+<%attr>
+  quux => 1</%attr>
+<%args>  $baz => 1
+</%args>
+<%attr>  baz => 1
+</%attr>
+EOF
+		      expect => <<'EOF',
+various
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
