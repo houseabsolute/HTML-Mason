@@ -6,12 +6,10 @@ package HTML::Mason::Compiler::ToObject;
 
 use strict;
 
-use vars qw(%VALID_PARAMS);
-
-use HTML::Mason::Compiler;
-use base qw( HTML::Mason::Compiler );
+use base qw( HTML::Mason::Compiler HTML::Mason::Container );
 use Params::Validate qw( :all );
 
+#use HTML::Mason::Subcomponent;
 use HTML::Mason::Exceptions;
 
 use HTML::Mason::MethodMaker
@@ -24,20 +22,24 @@ use HTML::Mason::MethodMaker
 		    ],
     );
 
-%VALID_PARAMS =
+__PACKAGE__->valid_params
     (
+     comp_class    => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component' },
+     subcomp_class => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Component::Subcomponent' },
      in_package => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Commands' },
      postamble  => { parse => 'string',  type => SCALAR, default => '' },
      preamble   => { parse => 'string',  type => SCALAR, default => '' },
      use_strict => { parse => 'boolean', type => SCALAR, default => 1 },
     );
 
+__PACKAGE__->contained_objects();
+
 sub compile
 {
     my $self = shift;
     my %p = @_;
 
-    $self->comp_class( $p{comp_class} || 'HTML::Mason::Component' );
+    $self->comp_class( $p{comp_class} ) if exists $p{comp_class};
     return $self->SUPER::compile( comp_text => $p{comp_text}, name => $p{name} );
 }
 
@@ -166,12 +168,10 @@ sub _subcomponent_or_method_footer
 
     return '' unless %{ $self->{current_comp}{$type} };
 
-    my $comp_class = 'HTML::Mason::Component::Subcomponent';
-
     return join '', ( "my %_$type =\n(\n",
 		      join ( ",\n",
 			     map { "'$_' => " .
-				   $self->_constructor( $comp_class,
+				   $self->_constructor( $self->{subcomp_class},
 							$self->{"compiled_$type"}{$_} ) }
 			     keys %{ $self->{"compiled_$type"} }
 			   ),

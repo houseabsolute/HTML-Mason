@@ -9,9 +9,11 @@ use strict;
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
 
-my %valid_params = ();
-sub allowed_params { \%valid_params }
-sub validation_spec { return shift->allowed_params }
+use base qw(HTML::Mason::Container);
+
+__PACKAGE__->valid_params();
+__PACKAGE__->contained_objects();
+
 
 sub new
 {

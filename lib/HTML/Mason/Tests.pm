@@ -378,46 +378,14 @@ sub _run_test
 			 %{ $test->{lexer_params} } :
 			 ()
 		       );
-
-    if ($DEBUG && keys %lexer_params)
-    {
-	print "Lexer params:\n";
-	while ( my ($k, $v) = each %lexer_params)
-	{
-	    print "  $k => $v\n";
-	}
-    }
-
     my %compiler_params = ( exists $test->{compiler_params} ?
 			    %{ $test->{compiler_params} } :
 			    ()
 			  );
-
-    if ($DEBUG && keys %compiler_params)
-    {
-	print "Compiler params:\n";
-	while ( my ($k, $v) = each %compiler_params)
-	{
-	    print "  $k => $v\n";
-	}
-    }
-
-    my $compiler = HTML::Mason::Compiler::ToObject->new( %compiler_params,
-							 %lexer_params
-						       );
-
     my %interp_params = ( exists $test->{interp_params} ?
 			  %{ $test->{interp_params} } :
 			  () );
-
-    if ($DEBUG && keys %interp_params)
-    {
-	print "Interp params:\n";
-	while ( my ($k, $v) = each %interp_params)
-	{
-	    print "  $k => $v\n";
-	}
-    }
+    %interp_params = ( %interp_params, %lexer_params, %compiler_params );
 
     my $buf;
     my $interp;
@@ -432,7 +400,6 @@ sub _run_test
 	$interp = HTML::Mason::Interp->new( comp_root => $self->comp_root,
 					    data_dir  => $self->data_dir,
 					    out_method => sub { for (@_) { $buf .= $_ if defined $_ } },
-					    compiler => $compiler,
 					    %interp_params,
 					  );
     }

@@ -11,18 +11,14 @@ use HTML::Mason::Resolver;
 use HTML::Mason::Tools qw(paths_eq read_file);
 use Params::Validate qw(:all);
 
-use vars qw(@ISA);
-@ISA = qw(HTML::Mason::Resolver);
+use base qw(HTML::Mason::Resolver HTML::Mason::Container);
 
-my %valid_params = 
+__PACKAGE__->valid_params
     (
      comp_root    => { parse => 'list', type => SCALAR|ARRAYREF },
     );
-sub allowed_params {
-    my $self = shift;
-    return {%{$self->SUPER::allowed_params}, %valid_params};
-}
-sub validation_spec { return shift->allowed_params }
+
+__PACKAGE__->contained_objects();
 
 use HTML::Mason::MethodMaker
     ( read_only => ['comp_root'] );

@@ -24,12 +24,31 @@ package HTML::Mason::Container;
 # in the return value.  This lets the creator be totally ignorant of
 # the creation parameters of any objects it creates.
 
+use Params::Validate qw(:all);
+
+my %VALID_PARAMS = ();
+my %CONTAINED_OBJECTS = ();
+
+
+sub valid_params
+{
+    my $class = shift;
+    $VALID_PARAMS{$class} = {@_};
+}
+
+sub contained_objects
+{
+    my $class = shift;
+    $CONTAINED_OBJECTS{$class} = {@_};
+}
+
 sub create_contained_objects
 {
     my ($class, %args) = @_;
 
-    my %c = $class->contained_objects(%args);
+    my %c = $class->get_contained_objects(%args);
     while (my ($name, $default_class) = each %c) {
+	next if exists $args{$name};
 
 	# Figure out exactly which class to make an object of
 	my $contained_class = delete $args{"${name}_class"} || $default_class;
@@ -45,6 +64,7 @@ sub _make_contained_object
 {
     my ($class, $name, $contained_class, $args) = @_;
 
+    die "Invalid class name '$contained_class'" unless $contained_class =~ /^[\w:]+$/;
     {
 	no strict 'refs';
 	unless ( defined ${ "$contained_class\::VERSION" } )
@@ -55,8 +75,8 @@ sub _make_contained_object
     }
 
     # Everything this class will accept, including parameters it will
-    # pass onto its own contained objects
-    my $allowed = $contained_class->allowed_params(%$args);
+    # pass on to its own contained objects
+    my $allowed = $contained_class->allowed_params($args);
 
     my %contained_args;
 
@@ -64,83 +84,68 @@ sub _make_contained_object
     {
 	$contained_args{$_} = delete $args->{$_} if exists $args->{$_};
     }
-
-    return $args->{$name} if exists $args->{$name};
-
     return $contained_class->new(%contained_args);
 }
 
-sub contained_objects
+sub get_contained_objects
 {
-    my $class = shift;
-    my %args = @_;
+    my $class = ref($_[0]) || shift;
 
-    my @c;
-    {
-	no strict 'refs';
-	my @isa = ( ref $class || $class, @{ "$class\::ISA" } );
-	while ( my $c = shift @isa )
-	{
-	    # make a copy of the global.
-	    my %c = %{ \%{ "$c\::CONTAINED_OBJECTS" } };
-	    foreach my $name ( keys %c )
-	    {
-		$c{$_} = $args{"${name}_class"} if exists $args{"${name}_class"};
-	    }
-
-	    push @c, %c;
-	}
+    my %c = %{ $CONTAINED_OBJECTS{$class} };
+    
+    no strict 'refs';
+    foreach my $superclass (@{ "${class}::ISA" }) {
+	next unless exists $CONTAINED_OBJECTS{$superclass};
+	my %superparams = $superclass->get_contained_objects;
+	@c{keys %superparams} = values %superparams;
     }
 
-    return @c;
+    return %c;
 }
 
 sub allowed_params
 {
-    my ($class, %args) = @_;
+    my $class = shift;
+    my $args = ref($_[0]) ? shift : {@_};
 
-    my %c = $class->contained_objects(%args);
+    my %p = %{ $class->validation_spec };
 
-    my @classes;
+    my %c = $class->get_contained_objects($args);
+
     foreach my $name (keys %c)
     {
-	# it will accept a foo_class parameter
-	$p{"${name}_class"} = { optional => 1 };
+	# Can accept a 'foo' parameter - should already be in the validation_spec
+	next if exists $args->{$name};
+	
+	# Can accept a 'foo_class' parameter instead of a 'foo' parameter
+	# If neither parameter is present, give up - perhaps it's optional
+	my $low_class = "${name}_class";
+	next unless exists $args->{$low_class};
 
-	if ( $args{"${name}_class"} )
-	{
-	    push @classes, $args{"${name}_class"};
-	}
-	elsif ( $c{$name} )
-	{
-	    push @classes, $c{$name};
-	}
+	delete $p{$name};
+	$p{$low_class} = { type => STRING, parse => 'string' };  # A loose spec
+
+	my $subparams = $args->{$low_class}->allowed_params($args);
+	@p{keys %$subparams} = values %$subparams;
     }
-
-    my %p = ( %{ $class->validation_spec },
-	      map { eval "use $_";
-		    die $@ if $@;
-		    %{ $_->allowed_params(%args) } } @classes
-	    );
 
     return \%p;
 }
 
 sub validation_spec
 {
-    my $class = shift;
+    my $class = ref($_[0]) || shift;
 
-    my @p;
-    {
-	no strict 'refs';
-	my @isa = ( ref $class || $class, @{ "$class\::ISA" } );
-	while ( my $c = shift @isa )
-	{
-	    push @p, %{ "$c\::VALID_PARAMS" };
-	}
+    my %p = %{ $VALID_PARAMS{$class} };
+    
+    no strict 'refs';
+    foreach my $superclass (@{ "${class}::ISA" }) {
+	next unless exists $VALID_PARAMS{$superclass};
+	my $superparams = $superclass->validation_spec;
+	@p{keys %$superparams} = values %$superparams;
     }
 
-    return { @p };
+    return \%p;
 }
 
 1;

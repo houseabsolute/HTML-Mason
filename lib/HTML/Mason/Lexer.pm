@@ -11,9 +11,10 @@ use HTML::Mason::Exceptions;
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
 
-my %valid_params = ();
-sub allowed_params { \%valid_params }
-sub validation_spec { return shift->allowed_params }
+use base qw(HTML::Mason::Container);
+
+__PACKAGE__->valid_params();
+__PACKAGE__->contained_objects();
 
 
 # This is a block name and what method should be called to lex its

@@ -6,8 +6,6 @@ package HTML::Mason::Compiler;
 
 use strict;
 
-use vars qw( %VALID_PARAMS %CONTAINED_OBJECTS );
-
 use HTML::Mason::Component::FileBased;
 use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Lexer;
@@ -30,7 +28,7 @@ use HTML::Mason::MethodMaker
 		    ],
     );
 
-%VALID_PARAMS =
+__PACKAGE__->valid_params
     (
      allowed_globals      => { parse => 'list',   type => ARRAYREF, default => [] },
      default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
@@ -40,7 +38,7 @@ use HTML::Mason::MethodMaker
      postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1 },
     );
 
-%CONTAINED_OBJECTS = ( lexer => 'HTML::Mason::Lexer' );
+__PACKAGE__->contained_objects( lexer => 'HTML::Mason::Lexer' );
 
 sub new
 {

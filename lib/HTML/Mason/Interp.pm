@@ -6,8 +6,6 @@ package HTML::Mason::Interp;
 
 use strict;
 
-use vars qw( %VALID_PARAMS %CONTAINED_OBJECTS );
-
 use Carp;
 use File::Basename;
 use File::Path;
@@ -22,7 +20,6 @@ Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->
 
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 
-use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
 use HTML::Mason::MethodMaker
@@ -51,7 +48,7 @@ use HTML::Mason::MethodMaker
       );
 
 # Fields that can be set in new method, with defaults
-%VALID_PARAMS =
+__PACKAGE__->valid_params
     (
      allow_recursive_autohandlers => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
      autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR|UNDEF },
@@ -85,8 +82,11 @@ use HTML::Mason::MethodMaker
     );
 
 # For subobject auto-creation
-%CONTAINED_OBJECTS = ('resolver' => 'HTML::Mason::Resolver::File',
-		      'compiler' => 'HTML::Mason::Compiler::ToObject');
+__PACKAGE__->contained_objects
+    (
+     resolver => 'HTML::Mason::Resolver::File',
+     compiler => 'HTML::Mason::Compiler::ToObject',
+    );
 
 sub new
 {
