@@ -38,7 +38,7 @@ sub new
 
     foreach ( keys %fields )
     {
-	$self->$_( $p{$_} || $fields{$_} ) unless $self->$_();
+	$self->$_( exists $p{$_} ? $p{$_} : $fields{$_} );
     }
 
     $self->_init(%p);
