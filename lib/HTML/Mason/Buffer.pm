@@ -120,7 +120,11 @@ HTML::Mason::Buffer - Objects for Handling Component Output
 
 =head1 SYNOPSIS
 
-   ???
+  my $buffer = HTML::Mason::Buffer->new( sink => sub { print @_ } );
+
+  my $child = $buffer->new_child;
+
+  $child->receive( 'foo', 'bar' );
 
 =head1 DESCRIPTION
 
@@ -132,12 +136,97 @@ component feature.
 Buffers can either store output in a scalar, internally, or they can
 be given a callback to call immediately when output is generated.
 
+Most users will never have to deal with buffer objects directly, but
+will instead use Request object methods such as C<print> or
+C<clear_buffer>.
+
 =head1 CONSTRUCTOR
 
-...
+Buffer objects can be constructed in two different ways.  Like any
+other Mason object, they can be created via their C<new> method.
+
+This method takes several parameters, all of them optional.
+
+=over
+
+=item sink
+
+This should be either a subroutine reference or a scalar reference.
+
+If this is a subroutine reference, then any output received by the
+buffer will be passed to this subroutine reference as a list of one or
+more items.
+
+If this is a scalar reference, then data will be concatenated onto
+this scalar as it is received.
+
+If no parameter is given, then output will be buffered internally, to
+be retrieved by the C<output> method.
+
+=item ignore_flush
+
+If this parameter is true, then the created buffer will ignore calls
+to its C<flush> method.  This parameter defaults to true for buffers
+created via the C<new> method, and false for those created via the
+C<new_child> method.
+
+=item filter
+
+This parameter should be a subroutine reference which should expect to
+receive a single argument, the output to be filtered.  It should
+return the output after transforming it in any way it desires.
+
+=back
+
+New buffers can also be created via the C<new_child> method, which
+takes the same parameters as the C<new> method.  The C<new_child>
+method is an I<object> method, not a class method.
+
+It creates a new buffer object which will eventually pass its output
+to the buffer object that created it.
+
+This allows you to create a stack of buffers.
 
 =head1 METHODS
 
-...
+=over
+
+=item receive
+
+This method takes a list of items to be sent to the buffer's sink.
+
+=item flush
+
+This method tells the buffer to pass any output it may currently have
+stored internally to its parent, if it has one.  It then clears the
+buffer.
+
+This method does nothing if the buffer does not have any stored
+output, which is the case for buffers that were given a subroutine
+reference as their C<sink> argument.
+
+=item clear
+
+For buffers which store output internally, this clears any pending
+output.
+
+=item output
+
+For buffers which store output internally, this returns any pending
+output, possibly passing it through a buffer's filter, if it has one.
+This does B<not> clear the buffer.
+
+=back
+
+=head1 SUBCLASSING
+
+The public API described above is the complete Buffer class API,
+except for one method, C<_initialize>, which is called as part of the
+buffer's construction, from the C<new> method.
+
+Those interested in subclassing this class should also know that the
+constructor may take an additional parameter, C<parent>, which should
+be a Buffer object.  This parameter is automatically supplied by the
+C<new_child> method.
 
 =cut
