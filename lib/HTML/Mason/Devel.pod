@@ -534,7 +534,7 @@ you can change this.
 Here are some examples:
 
   <%perl>
-   my $req = $m->make_subrequest( comp => '/somp/comp', args => [ id => 172 ] );
+   my $req = $m->make_subrequest( comp => '/some/comp', args => [ id => 172 ] );
    $req->exec;
   </%perl>
 
@@ -545,7 +545,7 @@ simply pass an C<out_method> parameter to C<< $m->make_subrequest >>:
    my $buffer;
    my $req =
        $m->make_subrequest
-           ( comp => '/somp/comp', args => [ id => 172 ], out_method => \$buffer );
+           ( comp => '/some/comp', args => [ id => 172 ], out_method => \$buffer );
    $req->exec;
   </%perl>
 
