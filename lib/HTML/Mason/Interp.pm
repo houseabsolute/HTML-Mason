@@ -84,6 +84,8 @@ use HTML::Mason::MethodMaker
 				[ [ autoflush => { type => BOOLEAN } ],
 				  [ data_cache_defaults => { type => HASHREF } ],
 				  [ dhandler_name => { type => SCALAR } ],
+				  [ error_format => { type => SCALAR } ],
+				  [ error_mode => { type => SCALAR } ],
 				  [ max_recurse => { type => SCALAR } ],
 				  [ out_method => { type => SCALARREF | CODEREF } ],
 				]
