@@ -496,6 +496,40 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'stream_print',
+		      description => 'Test print function from a component under stream mode',
+		      interp_params => { out_mode => 'stream' },
+		      component => <<'EOF',
+This is first.
+% print "This is second.\n";
+This is third.
+EOF
+		      expect => <<'EOF',
+This is first.
+This is second.
+This is third.
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'stream_printf',
+		      description => 'Test printf function from a component under stream mode',
+		      interp_params => { out_mode => 'stream' },
+		      component => <<'EOF',
+This is first.
+% printf '%s', "This is second.\n";
+This is third.
+EOF
+		      expect => <<'EOF',
+This is first.
+This is second.
+This is third.
+EOF
+		    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'instance',
 		      description => 'Test HTML::Mason::Request->instance',
 		      component => <<'EOF',
