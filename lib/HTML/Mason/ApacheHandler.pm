@@ -330,20 +330,15 @@ sub _startup
     }
 }
 
+use constant
+    HAS_TABLE_API => $mod_perl::VERSION >= 1.99 || Apache::perl_hook('TableApi');
 
 my (%AH_BY_CONFIG, %AH_BY_NAME);
 sub make_ah
 {
     my ($package, $r) = @_;
 
-    my ($vals, %p) = $package->_get_mason_params($r);
-
-    #
-    # Now that we have all the original config strings stored, we put
-    # them all together in a string that we use to determine whether
-    # or not we've seen this particular set of config values before.
-    #
-    my $key = join $;, map "$_$;$vals->{$_}", sort keys %$vals;
+    my $config = $r->dir_config;
 
     #
     # If the user has virtual hosts, each with a different document
@@ -354,9 +349,17 @@ sub make_ah
     # comp root), we append the document root for the current request
     # to the key.
     #
-    $key .= $; . $r->document_root if $r;
+    my $key =
+        ( join $;,
+          $r->document_root,
+          map { $_, HAS_TABLE_API ? sort $config->get($_) : $config->{$_} }
+          grep { /^Mason/ }
+          keys %$config
+        );
 
     return $AH_BY_CONFIG{$key} if exists $AH_BY_CONFIG{$key};
+
+    my %p = $package->_get_mason_params($r);
 
     # can't use hash_list for this one because it's _either_ a string
     # or a hash_list
@@ -427,17 +430,14 @@ sub _get_mason_params
 	$candidates{$calm} = $config->{$studly};
     }
 
-    return {} unless %candidates;
+    return unless %candidates;
 
     #
     # We will accumulate all the string versions of the keys and
     # values here for later use.
     #
-    my %vals;
-
-    return ( \%vals,
-             map { $_ =>
-                   scalar $self->get_param( $_, \%vals, \%candidates, $config, $r )
+    return ( map { $_ =>
+                   scalar $self->get_param( $_, \%candidates, $config, $r )
                  }
              keys %candidates );
 }
@@ -445,7 +445,7 @@ sub _get_mason_params
 sub get_param {
     # Gets a single config item from dir_config.
 
-    my ($self, $key, $vals, $candidates, $config, $r) = @_;
+    my ($self, $key, $candidates, $config, $r) = @_;
 
     $key = $self->calm_form($key);
 
@@ -461,7 +461,7 @@ sub get_param {
         or error "Unknown parse type for config item '$key'";
 
     my $method = "_get_${type}_param";
-    return $self->$method('Mason'.$self->studly_form($key), $vals, $config, $r);
+    return $self->$method('Mason'.$self->studly_form($key), $config, $r);
 }
 
 sub _get_string_param
@@ -527,12 +527,9 @@ sub _get_hash_list_param
     return \%hash;
 }
 
-use constant
-    HAS_TABLE_API => $mod_perl::VERSION >= 1.99 || Apache::perl_hook('TableApi');
-
 sub _get_val
 {
-    my ($self, $p, $vals, $config, $r) = @_;
+    my ($self, $p, $config, $r) = @_;
 
     my @val;
     if (wantarray || !$config)
@@ -555,8 +552,6 @@ sub _get_val
 
     param_error "Only a single value is allowed for configuration parameter '$p'\n"
 	if @val > 1 && ! wantarray;
-
-    $vals->{$p} = join '', @val if $vals;
 
     return wantarray ? @val : $val[0];
 }
