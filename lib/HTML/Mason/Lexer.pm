@@ -41,7 +41,7 @@ my %blocks = ( args    => 'variable_list_block',
 # ATTENTION!
 #
 # If you are thinking of altering this code you'll notice a strange
-# this.  The text of a component is stored in
+# thing.  The text of a component is stored in
 # $self->{current}{comp_text}.  However, when we go to do a regex
 # against that text we always do this:
 #
