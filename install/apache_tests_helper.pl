@@ -248,6 +248,11 @@ sub setup_handler
     my $libs = _libs();
 
     print F <<"EOF";
+package My::Resolver;
+\$My::Resolver::VERSION = '0.01';
+\@My::Resolver::ISA = 'HTML::Mason::Resolver::File::ApacheHandler';
+
+
 package My::Interp;
 \$My::Interp::VERSION = '0.01';
 \@My::Interp::ISA = 'HTML::Mason::Interp';
@@ -276,6 +281,8 @@ my \@interp_params = ( {},
 my \@ah;
 for (my \$x = 0; \$x <= \$#ah_params; \$x++)
 {
+    my \$res = My::Resolver->new( comp_root => '$APACHE{comp_root}' );
+
     my \$ah =
         HTML::Mason::ApacheHandler->new
             ( args_method => '$args_method',
@@ -286,7 +293,6 @@ for (my \$x = 0; \$x <= \$#ah_params; \$x++)
                                resolver_class => 'HTML::Mason::Resolver::File::ApacheHandler',
                                error_mode => 'output',
                                error_format => 'html',
-                               comp_root => '$APACHE{comp_root}',
                                data_dir => '$APACHE{data_dir}',
                                \%{\$interp_params[\$x]},
                              ),
