@@ -77,6 +77,7 @@ sub SERVER_ERROR { return 500 }
 sub NOT_FOUND { return 404 }
 use Data::Dumper;
 use File::Path;
+use File::Spec;
 use HTML::Mason::Interp;
 use HTML::Mason::Commands;
 use HTML::Mason::FakeApache;
@@ -298,15 +299,15 @@ sub handle_request {
     # Determine debug file mode. Turn it off regardless if we are
     # already operating from a debug file.
     #
-    my $debugMode = $self->debug_mode;
-    $debugMode = 'none' if $HTML::Mason::IN_DEBUG_FILE;
+    my $debug_mode = $self->debug_mode;
+    $debug_mode = 'none' if $HTML::Mason::IN_DEBUG_FILE;
 
     #
     # Capture debug state as early as possible, before we start messing with $apreq.
     #
     my $debug_state;
     $debug_state = $self->capture_debug_state($apreq)
-	if ($debugMode eq 'all' or $debugMode eq 'error');
+	if ($debug_mode eq 'all' or $debug_mode eq 'error');
 
     #
     # Create an Apache-specific request with additional slots.
@@ -356,13 +357,13 @@ sub handle_request {
 		$apreq->send_http_header();
 	    }
 	    print("<h3>System error</h3><p><pre><font size=-1>$err</font></pre>\n");
-	    if ($debugMode eq 'error' or $debugMode eq 'all') {
+	    if ($debug_mode eq 'error' or $debug_mode eq 'all') {
 		my $debug_msg = $self->write_debug_file($apreq,$debug_state);
 		print("<pre><font size=-1>\n$debug_msg\n</font></pre>\n");
 	    }
 	}
     } else {
-	if ($debugMode eq 'all') {
+	if ($debug_mode eq 'all') {
 	    my $debug_msg = $self->write_debug_file($apreq,$debug_state);
 	    print "\n<!--\n$debug_msg\n-->\n" if (http_header_sent($apreq) && !$apreq->header_only && $apreq->header_out("Content-type") =~ /text\/html/);
 	}
@@ -382,12 +383,12 @@ sub write_debug_file
 {
     my ($self, $r, $dref) = @_;
     my $user = $r->connection->user || 'anon';
-    my $outFile = sprintf("%d",int(rand(20))+1);
-    my $outDir = $self->debug_dir . "/$user";
-    if (!-d $outDir) {
-	mkpath($outDir,0,0755) or die "cannot create debug directory '$outDir'";
+    my $out_file = sprintf("%d",int(rand(20))+1);
+    my $out_dir = File::Spec->catfile( $self->debug_dir, $user );
+    if (!-d $out_dir) {
+	mkpath($out_dir,0,0755) or die "cannot create debug directory '$out_dir'";
     }
-    my $out_path = "$outDir/$outFile";
+    my $out_path = File::Spec->catfile( $out_dir, $out_file );
     my $outfh = do { local *FH; *FH; };  # double *FH avoids warning
     unless ( open $outfh, ">$out_path" ) {
 	$r->warn("cannot open debug file '$out_path' for writing");
@@ -448,7 +449,7 @@ PERL
     $o .= <<'PERL';
 if ($opt_P) {
     open SAVEOUT, ">&STDOUT" or die "Can't open &STDOUT: $!";    # stifle component output while profiling
-    open STDOUT, ">/dev/null" or die "Can't write to /dev/null: $!";
+    open STDOUT, File::Spec->devnull or die "Can't write to " . File::Spec->devnull . ": $!";
 }
 for (1 .. $opt_r) {
 print STDERR '.' if ($opt_P and $opt_r > 1);
@@ -471,7 +472,7 @@ PERL
     close $outfh or die "can't close file: $out_path: $!";
     chmod(0775,$out_path) or die "can't chmod file to 0775: $out_path: $!";
 
-    my $debug_msg = "Debug file is '$outFile'.\nFull debug path is '$out_path'.\n";
+    my $debug_msg = "Debug file is '$out_file'.\nFull debug path is '$out_path'.\n";
     return $debug_msg;
 }
 

@@ -1198,13 +1198,13 @@ sub make_dirs
     die "make_dirs: source_dir '$comp_root' does not exist\n" if (!-d $comp_root);
     die "make_dirs: object_dir '$data_dir' does not exist\n" if (!-d $data_dir);
     my $source_dir = $comp_root;
-    my $object_dir = "$data_dir/obj";
-    my $error_dir = "$data_dir/errors";
-    my @paths = (exists($options{paths})) ? @{$options{paths}} : ('/');
+    my $object_dir = File::Spec->catdir( $data_dir, 'obj' );
+    my $error_dir = File::Spec->catdir( $data_dir, 'errors' );
+    my @paths = (exists($options{paths})) ? @{$options{paths}} : (File::Spec->rootdir);
     my $verbose = (exists($options{verbose})) ? $options{verbose} : 1;
     my $predicate = $options{predicate} || sub { $_[0] !~ /\~/ };
     my $dir_create_mode = $options{dir_create_mode} || 0775;
-    my $reload_file = $options{update_reload_file} ? "$data_dir/etc/reload.lst" : undef;
+    my $reload_file = $options{update_reload_file} ? File::Spec->catfile( $data_dir, 'etc', 'reload.lst' ) : undef;
     my ($relfh);
     if (defined($reload_file)) {
 	$relfh = do { local *FH; *FH; };
@@ -1258,8 +1258,7 @@ sub make_dirs
     };
 
     foreach my $path (@paths) {
-	my $fullpath = $source_dir . $path;
-	$fullpath =~ s@/$@@g;
+	my $fullpath = File::Spec->canonpath( File::Spec->catdir( $source_dir, $path ) );
 	if (-f $fullpath) {
 	    $compilesub->($fullpath);
 	} elsif (-d $fullpath) {

@@ -7,6 +7,7 @@ require 5.004;
 
 use strict;
 use File::Basename;
+use File::Spec;
 use HTML::Mason::Tools qw(compress_path);
 use vars qw($AUTOLOAD);
 
@@ -112,7 +113,7 @@ sub assign_runtime_properties {
 	} else {
 	    unless ($self->name eq $interp->autohandler_name) {
 		$self->{inherit_path} = $self->dir_path."/".$interp->autohandler_name;
-	    }		
+	    }
 	}
     }
 }
@@ -135,8 +136,6 @@ sub dynamic_subs_init {
     my $self = shift;
 
     $self->{dynamic_subs_hash} = $self->{dynamic_subs_init}->();
-
-    
 }
 
 sub run_dynamic_sub {
@@ -297,7 +296,7 @@ sub parent {
 #
 # Accessors for various files associated with component
 #
-sub object_file { my $self = shift; return ($self->persistent) ? ($self->interp->object_dir . $self->fq_path) : undef }
-sub cache_file { my $self = shift; return ($self->persistent) ? ($self->interp->data_cache_dir . "/" . compress_path($self->fq_path)) : undef }
+sub object_file { my $self = shift; return ($self->persistent) ? ( File::Spec->catdir( $self->interp->object_dir . $self->fq_path ) ) : undef }
+sub cache_file { my $self = shift; return ($self->persistent) ? ( File::Spec->catdir( $self->interp->data_cache_dir, compress_path($self->fq_path) ) ) : undef }
 
 1;

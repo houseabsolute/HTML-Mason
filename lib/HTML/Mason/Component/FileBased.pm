@@ -7,6 +7,7 @@ package HTML::Mason::Component::FileBased;
 use strict;
 
 use File::Basename;
+use File::Spec;
 
 use vars qw(@ISA);
 
@@ -18,8 +19,7 @@ sub is_file_based { 1 }
 sub persistent { 1 }
 sub source_dir {
     my $dir = dirname($_[0]->source_file);
-    $dir =~ s/\/$// unless $dir eq '/';
-    return $dir;
+    return File::Spec->canonpath($dir);
 }
 sub title {
     my ($self) = @_;
@@ -48,7 +48,7 @@ sub assign_runtime_properties {
 	}
 	die "Assert error: FQ path ($fq_path) contained unknown source root key" unless $self->{source_root};
     }
-    $self->{'source_file'} = $self->{source_root} . $self->{'path'};
+    $self->{'source_file'} = File::Spec->canonpath( File::Spec->catfile( $self->{source_root}, $self->{'path'} ) );
     $self->SUPER::assign_runtime_properties($interp,$fq_path);
 }
 

@@ -8,7 +8,8 @@ use strict;
 
 use Carp;
 
-use HTML::Mason::Tools qw(is_absolute_path read_file);
+use File::Spec;
+use HTML::Mason::Tools qw(read_file);
 use HTML::Mason::Utils;
 
 use vars qw($REQ $REQ_DEPTH %REQ_DEPTHS);
@@ -118,7 +119,7 @@ sub exec {
 	    $self->{error_code} = 'top_not_found';
 	    die "could not find component for initial path '$path'\n";
 	}
-    } elsif (ref($comp) !~ /Component/) {
+    } elsif ( UNIVERSAL::isa( $comp, 'HTML::Mason::Component' ) ) {
 	die "exec: first argument ($comp) must be an absolute component path or a component object";
     }
 
@@ -453,14 +454,14 @@ sub file
 {
     my ($self,$file) = @_;
     my $interp = $self->interp;
-    unless (is_absolute_path($file)) {
+    unless ( File::Spec->file_name_is_absolute($file) ) {
 	if ($interp->static_file_root) {
-	    $file = $interp->static_file_root . "/" . $file;
+	    $file = File::Spec->catfile( $interp->static_file_root, $file );
 	} elsif ($self->current_comp->is_file_based) {
 	    my $source_dir = $self->current_comp->source_dir;
-	    $file = "$source_dir/$file";
+	    $file = File::Spec->catfile( $source_dir, $file );
 	} else {
-	    $file = "/$file";
+	    $file = File::Spec->catfile( File::Spec->rootdir, $file );
 	}
     }
     $self->call_hooks('start_file',$file);

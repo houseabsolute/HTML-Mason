@@ -6,6 +6,7 @@ package HTML::Mason::Resolver::File;
 
 use strict;
 
+use File::Spec;
 use HTML::Mason::Resolver;
 use HTML::Mason::Tools qw(paths_eq);
 
@@ -29,16 +30,17 @@ sub lookup_path {
     my ($self,$path,$interp) = @_;
     my $comp_root = $interp->comp_root;
     if (!ref($comp_root)) {
-	my $srcfile = $comp_root . $path;
+	my $srcfile = File::Spec->catfile( $comp_root, $path );
 	my @srcstat = stat $srcfile;
 	return (-f _) ? ($path, $srcfile, $srcstat[9]) : undef;
     } elsif (ref($comp_root) eq 'ARRAY') {
 	foreach my $lref (@$comp_root) {
 	    my ($key,$root) = @$lref;
 	    $key = uc($key);   # Always make key uppercase in fqpath
-	    my $srcfile = $root . $path;
+	    my $srcfile = File::Spec->catfile( $root, $path );
 	    my @srcstat = stat $srcfile;
-	    return ("/$key$path", $srcfile, $srcstat[9]) if (-f _);
+	    my $fq_path = File::Spec->canonpath( File::Spec->catfile( File::Spec->rootdir, $key, $path ) );
+	    return ($fq_path, $srcfile, $srcstat[9]) if (-f _);  # File::Spec?
 	}
 	return undef;
     } else {
@@ -64,7 +66,7 @@ sub glob_path {
     foreach my $root (@roots) {
 	my @files = glob($root.$pattern);
 	foreach my $file (@files) {
-	    if (my ($path) = ($file =~ m/$root(\/.*)$/)) {
+	    if (my ($path) = ($file =~ m/$root(\/.*)$/)) {  # File::Spec?
 		$path_hash{$path}++;
 	    }
 	}
