@@ -166,18 +166,17 @@ sub exec {
 	    my $buffer = $self->create_delayed_object( 'buffer', sink => $self->out_method );
 	    $self->push_buffer_stack($buffer);
 
-	    # The component will determine its parents here so we
-	    # _must_ do this before building the wrapper chain.
-	    $comp->request($self);
-
 	    # Build wrapper chain and index.
 	    my $first_comp;
 	    {
 		my @wrapper_chain = ($comp);
-		for (my $parent = $comp->parent; $parent; $parent = $parent->parent) {
-		    unshift(@wrapper_chain,$parent);
-		    error "inheritance chain length > 32 (infinite inheritance loop?)"
-			if (@wrapper_chain > 32);
+
+		if ($self->use_autohandlers) {
+		    for (my $parent = $comp->parent; $parent; $parent = $parent->parent) {
+			unshift(@wrapper_chain,$parent);
+			error "inheritance chain length > 32 (infinite inheritance loop?)"
+			    if (@wrapper_chain > 32);
+		    }
 		}
 		$first_comp = $wrapper_chain[0];
 		$self->{wrapper_chain} = [@wrapper_chain];
@@ -484,7 +483,6 @@ sub fetch_comp
 	unless substr($path, 0, 1) eq '/';
 
     my $comp = $self->interp->load($path);
-    $comp->request($self) if $comp;
 
     return $comp;
 }
