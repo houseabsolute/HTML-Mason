@@ -193,7 +193,7 @@ request, you can simply check the value of C<< $self->is_subrequest >>.
 
 =head2 Examples
 
-See the C<HTML::Mason::Request::WithApacheSession> module on CPAN.
+See the C<MasonX::Request::WithApacheSession> module on CPAN.
 
 =head1 Resolver and ComponentSource
 
