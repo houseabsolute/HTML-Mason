@@ -48,18 +48,12 @@ my %valid_params =
 sub allowed_params { \%valid_params }
 sub validation_spec { return shift->allowed_params }
 
-my $comp_count = 0;
-
 sub new
 {
     my $class = shift;
     my $self = bless {
 		      validate(@_, $class->validation_spec),
-		      designator => undef,
 		     }, $class;
-
-    # Assign defaults.
-    $self->{designator} = "[anon ". ++$comp_count . "]" if !defined($self->{comp_id});
 
     # Initialize subcomponent and method properties.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
@@ -72,15 +66,12 @@ sub new
     return $self;
 }
 
-#
-# Assign interpreter and, optionally, new comp_id to component.
-# Must be run before component will fully work.
-#
-# Ends up assigning $self->{interp, comp_id, inherit_path, inherit_start_path}
+my $comp_count = 0;
 sub assign_runtime_properties {
     my ($self, $interp, $info) = @_;
     $self->{interp} = $interp;
-    $self->{comp_id} = $info->comp_id if defined $info->comp_id;
+    $self->{comp_id} = defined $info->comp_id ? $info->comp_id : "[anon ". ++$comp_count . "]";
+
     $self->{path} = $info->comp_path;
 
     $self->_determine_inheritance;
@@ -164,8 +155,8 @@ sub is_file_based { 0 }
 #
 # Basic defaults for component designators: title, path, name, dir_path
 #
-sub title { return $_[0]->{designator} }
-sub name { return $_[0]->{designator} }
+sub title { return $_[0]->{comp_id} }
+sub name { return $_[0]->{comp_id} }
 sub path { return undef }
 sub dir_path { return undef }
 
