@@ -488,18 +488,13 @@ sub capture_debug_state
     };
     warn "error creating debug file: $@\n" if $@;
 
-    if (pkg_installed('Apache::Table')) {
-	my $expr = "my \$href;\n";
+    my $have_table = pkg_installed('Apache::Table');
+    eval {
 	foreach my $field (qw(headers_in headers_out err_headers_out notes dir_config subprocess_env)) {
-	    $expr .= "\$href = scalar(\$r->$field); \$d{$field} = {\%\$href};\n";
+	    $d{$field} = $have_table ? $r->$field() : {};
 	}
-	eval($expr);
-	warn "error creating debug file: $@\n" if $@;
-    } else {
-	foreach my $field (qw(headers_in headers_out err_headers_out notes dir_config subprocess_env)) {
-	    $d{$field} = {};
-	}
-    }
+    };
+    warn "error creating debug file: $@\n" if $@;
     
     $d{'args@'} = [$r->args];
     $d{'args$'} = scalar($r->args);
