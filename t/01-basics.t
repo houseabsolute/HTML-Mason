@@ -21,6 +21,9 @@ my $tmp_dir = "test/tmp/";
 
 my $buf;
 
+# Optional argument gives pattern of tests to run
+my $pattern = $ARGV[0];
+
 # Read list of test components
 my $listfh = new IO::File "test/comps.lst" or die "cannot read component list";
 my @comps = <$listfh>;
@@ -44,21 +47,21 @@ my $interp = new HTML::Mason::Interp( parser=>$parser,
 print "1..".scalar(@comps)."\n";
 
 foreach my $component ( @comps ) {
-    undef $buf;
+    next if (defined($pattern) and $component !~ /$pattern/);
+    print "Running $component\n";
+    $buf = "";
     my $result;
     eval { $interp->exec("/$component"); };
     if (my $err = $@) {
-	my ($top) = ($err =~ /(.*\n.*\n)/);
-	$top =~ s{at /.*}{}g;
-	$buf = "ERROR:\n$top";
-#	$buf .= "\n$err";
+	print "ERROR:\n$err\nnot ok\n";
+	next;
     }
     $component =~ s/\//::/g;
     open(F, ">$tmp_dir$component");
     print F $buf if defined($buf);
     close F;
-    my $error = compareFiles("$tmp_dir$component", "$results_dir$component");
-    print ( $error == 0 ? "ok\n" : "not ok\n" );
+    my $diff = compareFiles("$tmp_dir$component", "$results_dir$component");
+    print ( $diff == 0 ? "ok\n" : "not ok\n" );
 }
 
 
@@ -80,9 +83,9 @@ sub compareFiles {
     my $err  = 0;
     my($l1, $l2, $eq);
 
-    open F1, $f1 || die "***Cannot open $f1"; 
+    open F1, $f1 or do { print "Cannot open $f1\n"; return 1 };
     if (!$errin) {
-	open F2, $f2 || die "***Cannot open $f2"; 
+	open F2, $f2 or do { print "Cannot open $f2\n"; return 1 };
     }
 
     while (defined ($l1 = <F1>)) {
