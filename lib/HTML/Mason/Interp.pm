@@ -662,7 +662,7 @@ sub eval_object_text
 	local $^W = 1;
 	local $SIG{__WARN__} = $ignore_expr ? sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ } : sub { $warnstr .= $_[0] };
 
-	# If in taint mode, untaint the object filename or object text
+	# If in taint mode, untaint the object text
 	($object) = ($object =~ /^(.*)/s) if taint_is_on;
 	$comp = eval $object;
 
