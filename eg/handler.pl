@@ -25,16 +25,15 @@ use strict;
 #   use CGI;
 #}
 
-# Create Mason objects
+# Create ApacheHandler object
 #
-my $interp = new HTML::Mason::Interp (comp_root=>'<component root>',
-                                      data_dir=>'<data directory>');
-my $ah = new HTML::Mason::ApacheHandler (interp=>$interp);
+my $ah = new HTML::Mason::ApacheHandler( comp_root => '<component root>',
+                                         data_dir => '<data directory>' );
 
 # Activate the following if running httpd as root (the normal case).
 # Resets ownership of all files created by Mason at startup.
 #
-#chown (Apache->server->uid, Apache->server->gid, $interp->files_written);
+#chown (Apache->server->uid, Apache->server->gid, $ah->interp->files_written);
 
 sub handler
 {
