@@ -14,6 +14,14 @@ use vars qw(@ISA);
 
 @ISA = qw(HTML::Mason::Resolver);
 
+sub new {
+    my $package = shift;
+    my $self = $package->SUPER::new(@_);
+    HTML::Mason::Exception::Params->throw( error => "must specify value for comp_root\n" )
+	unless $self->interp->{comp_root};
+    return $self;
+}
+
 #
 # With a single component root, the fully-qualified path is just
 # the component path. With multiple component roots, we search

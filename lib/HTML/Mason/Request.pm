@@ -480,7 +480,7 @@ sub time
 }
 
 #
-# Execute the next component in this request.
+# Execute the given component
 #
 sub comp {
     my $self = shift;

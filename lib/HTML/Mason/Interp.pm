@@ -52,8 +52,8 @@ my %valid_params =
      allow_recursive_autohandlers => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
      autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR|UNDEF },
      code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR }, #10M
-     compiler_class               => { parse => 'string',  default => 'HTML::Mason::Compiler::ToObject', type => SCALAR },
      compiler                     => { isa => 'HTML::Mason::Compiler', optional => 1 },
+     compiler_class               => { parse => 'string',  default => 'HTML::Mason::Compiler::ToObject', type => SCALAR },
      current_time                 => { parse => 'string',  default => 'real', type => SCALAR },
      data_cache_dir               => { parse => 'string',  optional => 1, type => SCALAR },
      dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR|UNDEF },
@@ -68,6 +68,8 @@ my %valid_params =
 						      sub { $_[0] =~ /^(?:batch|stream)$/ } } },
      max_recurse                  => { parse => 'string',  default => 32, type => SCALAR },
      preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF },
+     resolver                     => { isa => 'HTML::Mason::Resolver', optional => 1 },
+     resolver_class               => { parse => 'string',  default => 'HTML::Mason::Resolver::File', type => SCALAR },
      static_file_root             => { parse => 'string',  optional => 1, type => SCALAR },
      system_log_events            => { parse => 'string',  optional => 1, type => SCALAR|HASHREF|UNDEF },
      system_log_file              => { parse => 'string',  optional => 1, type => SCALAR },
@@ -117,6 +119,7 @@ sub _initialize
     $self->{code_cache_current_size} = 0;
     $self->{data_cache_defaults} = {};
 
+    # Create compiler if not provided
     unless ($self->{compiler}) {
 	eval "use $self->{compiler_class}" unless $self->{compiler_class} =~ /[^\w:]/;
 	die $@ if $@;
@@ -127,9 +130,9 @@ sub _initialize
     # Create resolver if not provided
     #
     unless ($self->{resolver}) {
-	HTML::Mason::Exception::Params->throw( error => "must specify value for comp_root\n" )
-	    if !$self->{comp_root};
-	$self->{resolver} = HTML::Mason::Resolver::File->new($self);
+	eval "use $self->{resolver_class}" unless $self->{resolver_class} =~ /[^\w:]/;
+	die $@ if $@;
+	$self->{resolver} = $self->{resolver_class}->new($self);
     }
 
     #
