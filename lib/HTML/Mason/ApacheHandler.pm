@@ -665,51 +665,46 @@ sub handle_request_1
     $interp->set_global(r=>$r);
 
     #
-    # Why this strangeness?
-    #
-    # See in the HTML::Mason::ApacheHandler::Request class where much
-    # strangeness is done to catch calls to print and $r->print inside
-    # components.  Without this, calling $m->flush_buffer can lead to
-    # a loop where the content basically disappears.
+    # Why this strangeness? See HTML::Mason::ApacheHandler::Request
+    # where much strangeness is done to catch calls to print and
+    # $r->print inside components.  Without this, calling
+    # $m->flush_buffer can lead to a loop where the content
+    # disappears.
     #
     # By using the reference to the original function we ensure that
     # we call the version of the sub that sends its output to the
     # right place.
     #
     my $print = \&Apache::print;
-    $interp->out_method( sub { $r->$print( grep {defined} @_ ) } );
 
-    my $retval;
-    if ($self->auto_send_headers) {
-
-	# Craft the request's out method to automatically send http
-	# headers.
-	my $headers_sent = 0;
-	my $out_method = sub {
-	    
-	    # Check to see if the headers have been sent, first by fast
-	    # variable check, then by slightly slower $r check.
-	    unless ($headers_sent) {
-		unless (http_header_sent($r)) {
-		    $r->send_http_header();
-		}
-		$headers_sent = 1;
+    # Craft the request's out method to handle http headers, content
+    # length, and HEAD requests.
+    
+    my $must_send_headers = $self->auto_send_headers;
+    my $out_method = sub {
+	
+	# Send headers if they have not been sent by us or by user.
+	if ($must_send_headers) {
+	    unless (http_header_sent($r)) {
+		$r->send_http_header();
 	    }
-
-	    # Call the original out method.
-	    $interp->out_method->($_[0]);
-	};
-	$request->out_method($out_method);
-
-	$retval = $request->exec($comp_path, %args);
-
-	# On a success code, send headers if they have not been sent.
-	# On an error code, leave it to Apache to send the headers.
-	if (!$headers_sent and !http_header_sent($r) and (!$retval or $retval==200)) {
-	    $r->send_http_header();
+	    $must_send_headers = 0;
 	}
-    } else {
-	$retval = $request->exec($comp_path, %args);
+	
+	# Call $r->print. If request was HEAD, suppress output
+	# but allow the request to continue for consistency.
+	unless ($r->method eq 'HEAD') {
+	    $r->print(grep {defined} @_);
+	}
+    };
+    $request->out_method($out_method);
+
+    my $retval = $request->exec($comp_path, %args);
+
+    # On a success code, send headers if they have not been sent.
+    # On an error code, leave it to Apache to send the headers.
+    if ($must_send_headers and !http_header_sent($r) and (!$retval or $retval==200)) {
+	$r->send_http_header();
     }
     undef $request; # ward off leak
 
