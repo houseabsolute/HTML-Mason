@@ -229,4 +229,7 @@ constructor may take an additional parameter, C<parent>, which should
 be a Buffer object.  This parameter is automatically supplied by the
 C<new_child> method.
 
+Any subclass of this class you create should declare itself to be a
+subclass of the C<HTML::Mason::Buffer> class.
+
 =cut
