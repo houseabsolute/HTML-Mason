@@ -11,6 +11,8 @@ __END__
 =head1 PARSER
 
 The Parser object is no longer part of Mason.  It has been replaced by
-the Compiler and Lexer objects.
+the Compiler and Lexer objects.  See the Developer's Manual
+(HTML::Mason::Devel) and Admin Guide (HTML::Mason::Admin) for more
+details.
 
 =cut
