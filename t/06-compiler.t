@@ -688,6 +688,18 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'subst_tag_comments',
+			  description => 'Make sure comments parse correctly in substitution tags',
+			  component => <<'EOF',
+<%# Here's a comment
+  5 + 5 %>
+EOF
+                          expect => 10,
+                        );
+
+
+#------------------------------------------------------------
+
     return $group;
 }
 
