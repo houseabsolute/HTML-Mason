@@ -9,7 +9,6 @@ use File::Basename;
 use File::Spec;
 use HTML::Mason::Tools qw(absolute_comp_path);
 use Params::Validate qw(:all);
-use vars qw($AUTOLOAD);
 
 use HTML::Mason::Exceptions( abbr => ['error'] );
 use HTML::Mason::MethodMaker
