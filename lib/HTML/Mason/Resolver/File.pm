@@ -116,7 +116,7 @@ sub rel2abs {
     my ($self, $path) = @_;
 
     if ($self->{allow_relative_path}) {
-	return join("/", File::Spec->rel2abs(cwd), $path);
+	return join("/", File::Spec->splitdir( File::Spec->rel2abs(cwd) ), $path);
     } else {
 	return undef;
     }
