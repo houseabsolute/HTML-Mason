@@ -676,7 +676,7 @@ again, with the same request object.  We could have put the exception
 in C<< $r->args >>, but it might be nice to leave this untouched so
 that the error-handling component can see the original arguments.
 
-=head3 Other Uses for a Wrapper
+=head3 Other uses for a wrapper
 
 If you have some code which must I<always> run after a request, then
 the only way to guarantee that this happens is to wrap the C<<
