@@ -8,7 +8,7 @@ use strict;
 
 use Cwd;
 use File::Spec;
-use HTML::Mason::Tools qw(read_file paths_eq);
+use HTML::Mason::Tools qw(read_file_ref paths_eq);
 use Params::Validate qw(:all);
 
 use HTML::Mason::ComponentSource;
@@ -80,7 +80,7 @@ sub get_info {
                       comp_path => $path,
                       comp_class => 'HTML::Mason::Component::FileBased',
                       extra => { comp_root => $key },
-                      source_callback => sub { read_file($srcfile) },
+                      source_callback => sub { read_file_ref($srcfile) },
                     );
     }
 
