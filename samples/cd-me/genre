@@ -1,0 +1,20 @@
+<%mc_comp('Template',top=>1)%>
+<h1>CD-ME category: <%ucfirst($cat)%></h1>
+<table border=1><tr><th>Artist</th><th>Title</th><th>Price</th></tr>
+%  foreach my $id (@{$genres{$cat}}) {
+% # with tabling built-in
+<%mc_comp('tools/cd_details',id=>$id,cds=>\%cds,table=>1)%>
+% # or without
+%# <%mc_comp('tools/cd_details',id=>$id,cds=>\%cds)%> <a href="add_cd?id=<%$id%>">Buy</a><br>
+%  }
+</table>
+<%mc_comp('Template',bottom=>1)%>
+
+<%PERL_INIT>
+my %cds = %{mc_comp('data/cds')};
+my %genres = %{mc_comp('data/genres')};
+</%PERL_INIT>
+
+<%PERL_ARGS>
+$cat=>undef
+</%PERL_ARGS>

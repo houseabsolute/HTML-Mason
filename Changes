@@ -1,0 +1,77 @@
+Revision history for Perl extension HTML::Mason.
+
+0.4
+	- added support for using Perl profiler in conjunction with
+	  debug files
+	- fixed bug in previewer HTML trace introduced in 0.3
+	- created Perl status section for Mason
+	- removed most warnings when PerlWarn is on (suggested by
+	  Philip Gwyn)
+	- added code_cache_mode parameter to control caching of
+	  components in memory
+	- fixed mismatch between documentation and code with regards
+	  to cache store events in system log.  The real event name is
+	  CACHE_WRITE.
+	- changed system logging to use canonical server name when
+	  recording URI
+	- field access methods inside Mason objects are now handled
+	  with custom subroutines instead of generic AUTOLOAD,
+	  improving performance
+	- information for debug file is no longer collected if debug
+	  mode is "none"
+	- code to decline images and other non-text requests was
+	  placed in default handler.pl and described in documentation
+	  (suggested by Patrick Michael Kane)
+	- fixed server header output from debug files (suggested by Ewan
+	  Edwards)
+	- created a Mason bundle
+	- created a CPAN "alias" from Apache::Mason to HTML::Mason
+
+0.3   Wed Nov 25 17:00:34 PST 1998
+        - added optional system logging of page requests, cache
+          activity, component loading
+	- deny directory requests so that index files will work in
+          mod_perl 1.16+
+	- removed reliance on several external packages (Date::Manip,
+          CGI::Base, URI::Escape). This should reduce the
+          amount of memory taken up by Mason processes and make Mason
+          easier to install.
+	- INCOMPATIBILITY: due to the removal of Date::Manip, the
+          mc_date command will no longer work unless Date::Manip is
+          explicitly used, and the syntax for the expire_at cache
+          parameter and the Interp current_time parameter have changed.
+	- added parser taint_check flag which allows Mason to work
+          with taint checking on (suggested by Randal Schwartz)
+        - added warning messages when returning 404 from ApacheHandler
+	- improved cache locking with the use of separate lock files
+	- Makefile.PL checks for required and optional packages
+	- documentation fixes and improvements
+	- removed obsolete and undocumented commands from Commands.pm
+        - failure to write debug file is now a warning rather than
+          fatal error
+        - augmented "no configuration for previewer port" error
+        - fixed $interp->exec to be able to return list
+        - changed parser to remove ctrl-Ms instead of replacing with
+          spaces
+        - always call http_header hook, not just at top level
+        - added global IN_DEBUG_FILE flag
+        - renamed mc_call_stack to mc_comp_stack to match
+          documentation
+
+0.2   Fri Aug 21 08:54:13 1998
+	- replaced File::lockf module, which could not port to some
+          systems, with simple call to flock
+	- corrected email address in README
+	- fixed undeclared variable bug in preview component
+	- the previewer did not work in basic versions of Perl 5.004
+          due to an eval scoping bug. A workaround was put in place.
+	- fixed expire_if cache option to pass correct argument to
+          provided subroutine
+	- empty argument section no longer parsing incorrectly
+	- took out directory names from manifest which were causing
+          errors on install
+	- debug file is no longer prepared when debug_mode is "none"
+	- use Preview.pm in Mason.pm
+
+0.1   Wed Jul 22 20:53:56 1998
+        - original version; created by h2xs 1.18

@@ -1,0 +1,99 @@
+=head1 NAME
+
+HTML::Mason::Parser - Mason Component Parser
+
+=head1 SYNOPSIS
+
+    my $p = new HTML::Mason::Parser (...params...);
+
+=head1 DESCRIPTION
+
+A Parser object translates components into Perl subroutines. Parsers
+are typically embedded within (and used by) Interp objects.
+
+=head1 PARAMETERS FOR new() CONSTRUCTOR	
+
+=over
+
+=item ignore_warnings_expr
+
+Regular expression indicating which warnings to
+ignore when compiling subroutines. Any warning that is not ignored
+will prevent the component from being compiled and executed. For
+example:
+
+    ignore_warnings_expr =>
+        'Global symbol.*requires explicit package'
+
+Undefined by default, meaning that all warnings are fatal. 
+
+=item preamble
+
+A piece of Perl code to insert at the beginning of
+every compiled subroutine. Blank by default, but ApacheHandler
+adds the line
+
+    use vars qw($r);
+
+to suppress strict warnings about uses of global $r (the Apache
+request object).
+
+=item postamble
+
+A piece of Perl code to insert at the end of every
+compiled subroutine. Blank by default.
+
+=item source_refer_predicate
+
+Reference to a subroutine that decides whether a given component
+should be compiled with L<Admin/source references>. The subroutine
+takes two arguments: first, the total number of characters in the
+component source; second, the number of characters devoted to plain
+text. For example, this component:
+
+	% my $noun = "World";
+	Hello, <% $noun %>!
+	How are ya?
+
+Has 51 total bytes, 19 of which are plain text. This allows you to
+adjust the trade-off between the memory savings of source references
+and the performance advantage of in-line plain text. For example, to
+choose only components with at least 50% plain text:
+
+    source_refer_predicate =>
+        sub { return $_[1] / $_[0] >= 0.5 }
+
+The current default is
+
+    sub { return $_[1] >= 500 }
+
+i.e. any component with at least 500 characters. This is an
+experimental setting and may change.
+
+=item taint_check
+
+This flag allows Mason to work when taint checking is on
+(e.g. PerlTaintCheck or C<-T> flag).  If true, Mason will pass all
+component source and filenames through a dummy regular expression
+match to untaint them. In the future this option may become more
+sophisticated to allow stricter checks. Default is false.
+
+=item use_strict
+
+Indicates whether to use strict in compiled subroutines.
+Default is true.
+
+=back
+
+=head1 AUTHOR
+
+Jonathan Swartz, swartz@transbay.net
+
+=head1 SEE ALSO
+
+L<HTML::Mason>,
+L<HTML::Mason::Interp>,
+L<HTML::Mason::ApacheHandler>,
+L<HTML::Mason::Admin>
+
+=cut

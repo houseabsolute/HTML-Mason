@@ -1,0 +1,370 @@
+    <HTML> 
+	<HEAD> 
+	    <TITLE>HTML::Mason::Commands - Mason command reference
+
+</TITLE> 
+	</HEAD>
+
+	<BODY>
+
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<LI><A HREF="#name">NAME</A>
+	<LI><A HREF="#description">DESCRIPTION</A>
+	<LI><A HREF="#command_reference">COMMAND REFERENCE</A>
+	<UL>
+
+		<LI><A HREF="#web_only_commands">Web-only Commands</A>
+	</UL>
+
+	<LI><A HREF="#author">AUTHOR</A>
+	<LI><A HREF="#see_also">SEE ALSO</A>
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H1><A NAME="name">NAME
+
+</A></H1>
+HTML::Mason::Commands - Mason command reference
+
+
+<P>
+
+<P>
+<HR>
+<H1><A NAME="description">DESCRIPTION
+
+</A></H1>
+The following commands may be used within Mason components. See
+<STRONG>HTML::Mason::Components</STRONG> (the <EM>Mason Developer's Guide</EM>), for usage examples.
+
+
+<P>
+
+<P>
+<HR>
+<H1><A NAME="command_reference">COMMAND REFERENCE
+
+</A></H1>
+<DL>
+<DT><STRONG><A NAME="item_mc_abort_return_value_">mc_abort ([return value])
+
+</A></STRONG><DD>
+Ends the current execution, finishing the page without returning through
+components. In a web environment, the optional return value is used as the
+HTTP status code.
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_cache_action_retrieve_">mc_cache ([action=&gt;'retrieve'], [key=&gt;name],
+
+</A></STRONG><DD>
+<STRONG>[keep_in_memory=&gt;0|1], [expire_if=&gt;sub])</STRONG>
+
+
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_cache_action_store_key_">mc_cache (action=&gt;'store', [key=&gt;name], value=&gt;data,
+[keep_in_memory=&gt;0|1],
+
+</A></STRONG><DD>
+<STRONG>[expire_at=&gt;time | expire_next=&gt;'hour'|'day' |
+expire_in=&gt;delta])</STRONG>
+
+
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_cache_self_key_name_kee">mc_cache_self ([key=&gt;name], [keep_in_memory=&gt;0|1],
+
+</A></STRONG><DD>
+<STRONG>[expire_if=&gt;sub | expire_at=&gt;time |
+expire_next=&gt;'hour'|'day' | expire_in=&gt;delta])</STRONG>
+
+
+
+
+<P>
+
+<CODE>mc_cache()</CODE> and <CODE>mc_cache_self()</CODE> let you store and
+retrieve the results of computation for improved performance. Each
+component has its own data cache for storing one or more key/value pairs.
+The cache is implemented as a DBM database.
+
+
+<P>
+
+The argument to <EM>action</EM> is one of 'retrieve' or 'store'. Default is 'retrieve'.
+
+
+<P>
+
+The retrieve action returns the cache value if successful, or <CODE>undef</CODE>
+if there was no value or if it has expired.
+
+
+<P>
+
+The store action stores a new cache value, under the given key. The default
+key is 'main'.
+
+
+<P>
+
+<EM>value</EM> defines what to store. It can be a scalar or a reference to an arbitrary
+data structure. The allowable size depends on your DBM implementation.
+
+
+<P>
+
+<EM>keep_in_memory</EM> indicates whether to save the value in memory once it is retrieved. Default
+is 0, meaning that the value will be retrieved from the cache file each
+time. If 1, each child server that retrieves this value will save its own
+copy, which can result in substantial memory usage for larger values. Use
+sparingly.
+
+
+<P>
+
+The various expiration options are:
+
+
+<P>
+
+o <EM>expire_at</EM>: takes an absolute expiration time, in Perl <CODE>time()</CODE> format
+(number of seconds since the epoch)
+
+
+<P>
+
+o <EM>expire_in</EM>: takes a relative expiration time of the form ``&lt;num&gt;&lt;unit&gt;'',
+where &lt;num&gt; is a positive number and &lt;unit&gt; is one of seconds,
+minutes, hours, days, or weeks, or any abbreviation thereof. E.g.
+``10min'', ``30m'', ``1hour''.
+
+
+<P>
+
+o <EM>expire_next</EM>: takes a string, either 'hour' or 'day'. It indicates an expiration time
+at the top of the next hour or day.
+
+
+<P>
+
+o <EM>expire_if</EM>: calls a given anonymous subroutine and expires if the subroutine returns
+a non-zero value. The subroutine is called with one parameter, the time
+when the cache value was last written.
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_caller_">mc_caller ()
+
+</A></STRONG><DD>
+Returns the full path of the component that called this component, or undef
+if this is the top-level component. This is the second element of
+mc_comp_stack.
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_comp_compPath_option_value">mc_comp (compPath, option=&gt;value, ...[, STORE=&gt;ref])
+
+</A></STRONG><DD>
+Calls the component designated by <EM>compPath</EM> with the specified option/value pairs. If the component path is absolute
+(starting with a '/'), then the component is found relative to the
+component root. Relative component paths (no leading '/') are relative to
+the current component directory.
+
+
+<P>
+
+Components work exactly like Perl subroutines in terms of return values and
+context. A component can return any type of value, which is then returned
+from the mc_comp call.
+
+
+<P>
+
+If you want to capture the output of a component in a string, send a scalar
+reference with the STORE option. The output will be placed in the scalar
+instead of being sent to the default output stream.
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_comp_exists_compPath_">mc_comp_exists (compPath)
+
+</A></STRONG><DD>
+Returns 1 if compPath is a valid component path, 0 otherwise. 
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_comp_stack_">mc_comp_stack ()
+
+</A></STRONG><DD>
+Returns the list of components in the call stack, starting with the current
+component and ending with the top-level component.
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_date_format_">mc_date (format)
+
+</A></STRONG><DD>
+This command is provided for backward compatibility with early versions of
+Mason that automatically used the Date::Manip package. Returns the
+interpreter's notion of the current time or date in the specified format.
+This works like Date::Manip::UnixDate (see
+<STRONG>Date::Manip</STRONG> for valid formats). To use this command you must now explicitly ``use
+Date::Manip'' inside the HTML::Mason::Commands package. E.g. in your
+handler.pl,
+
+
+<P>
+
+<PRE>    { package HTML::Mason::Commands;
+      use Date::Manip; }
+</PRE>
+
+<P>
+
+To allow time and date simulations in the previewer, components should use
+<CODE>mc_date()</CODE> rather than UnixDate directly.
+
+
+<P>
+
+<CODE>mc_date()</CODE> works faster than UnixDate for some formats by
+caching results. 
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_file_filename_">mc_file (filename)
+
+</A></STRONG><DD>
+Returns the contents of filename as a string. <EM>filename</EM> may be an absolute filesystem path (starting with a '/') or relative (no
+leading '/'); if relative, the static file root is prepended.
+
+
+<P>
+
+Developers are encouraged to use relative paths whenever possible. This
+eliminates the need for component updates when data files are moved (the
+administrator just updates the static file root).
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_file_root_">mc_file_root ()
+
+</A></STRONG><DD>
+Returns the static file root, used by <CODE>mc_file()</CODE> to resolve
+relative filenames.
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_out_string_">mc_out (string)
+
+</A></STRONG><DD>
+Print the given string. Rarely needed, since normally all HTML is just
+placed in the component body and output implicitly. mc_out is useful if you
+need to output something in the middle of a Perl block.
+
+
+<P>
+
+<CODE>mc_out()</CODE> should be favored over the lower-level <CODE>$r-&gt;print</CODE>, since <CODE>mc_out()</CODE> may be redirected or buffered, depending on
+the current state of the interpreter.
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_time_">mc_time ()
+
+</A></STRONG><DD>
+Returns the interpreter's notion of the current time in Perl
+<CODE>time()</CODE> format (number of seconds since the epoch).
+
+
+<P>
+
+To allow time and date simulations in the previewer, components should use
+<CODE>mc_time()</CODE> rather than calling <CODE>time()</CODE> directly.
+
+
+<P>
+
+</DL>
+<P>
+<HR>
+<H2><A NAME="web_only_commands">Web-only Commands
+
+</A></H2>
+The following commands are only available when Mason is running in a Web
+environment.
+
+
+<P>
+
+<DL>
+<DT><STRONG><A NAME="item_mc_dhandler_arg_">mc_dhandler_arg ()
+
+</A></STRONG><DD>
+For use in dhandlers. Returns the path_info CGI argument, stripped of its
+leading slash.
+
+
+<P>
+
+<DT><STRONG><A NAME="item_mc_suppress_http_header_0_1_">mc_suppress_http_header (0|1)
+
+</A></STRONG><DD>
+Mason normally emits any pending HTTP headers just before entering the
+primary section of a component. To prevent this, call
+<CODE>mc_suppress_http_header(1)</CODE> somewhere in the <CODE>&lt;%perl_init%&gt;</CODE>
+block. You can call <CODE>mc_suppress_http_header(0)</CODE> to cancel.
+
+
+<P>
+
+</DL>
+<P>
+<HR>
+<H1><A NAME="author">AUTHOR
+
+</A></H1>
+Jonathan Swartz, <A
+HREF="MAILTO:swartz@transbay.net">swartz@transbay.net</A>
+
+
+<P>
+
+<P>
+<HR>
+<H1><A NAME="see_also">SEE ALSO
+
+</A></H1>
+<A HREF="././Mason.html#">HTML::Mason</A>,
+<A HREF="././Components.html#">HTML::Mason::Components</A>
+
+
+
+
+<P>
+
+</DL>
+    </BODY>
+
+    </HTML>

@@ -1,0 +1,57 @@
+Copyright (c) 1998 by Jonathan Swartz. All rights reserved.
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+Welcome to Mason, a full-featured web site development and delivery
+system.  Mason allows web pages and sites to be constructed from
+shared, reusable building blocks called components. Components contain
+a mix of Perl and HTML, and can call each other and pass values back
+and forth like subroutines. Components increase modularity and
+eliminate repetitive work: common design elements (headers, footers,
+menus, logos) can be extracted into their own components where they
+need be changed only once to affect the whole site.
+
+Other Mason features include a graphical site previewing utility, an
+HTML/data caching model, and the ability to walk through requests with
+the Perl debugger.
+
+To install Mason, run the standard sequence:
+
+	perl Makefile.PL
+	make
+	make install
+
+After Mason is installed, you will need to activate it by adding some
+directives to your Apache configuration files, and customizing Mason's
+Config.pm and eg/handler.pl files to match your system.
+
+The included pod docs have been pre-converted to HTML for you and
+placed in the htdocs/ directory. The Mason overview (a good place to
+start) is in Mason.html.
+
+Mason was originally developed for the Internet technology group at
+CMP Media, a publisher of technology magazines. Mason currently
+handles 90% of the traffic on CMPnet (http://www.cmpnet.com), a
+network of technology-based sites including TechWeb
+(http://www.techweb.com) and FileMine (http://www.filemine.com).  CMP
+has graciously supported our efforts to release Mason as open source
+software to the Perl community.  However, CMP has NO direct
+involvement with the open source release and bears NO responsibility
+for its support or maintenance.
+
+Mason is provided "as is" and without any express or implied
+warranties, including, without limitation, the implied warranties of
+merchantibility and fitness for a particular purpose.  Mason is
+released under the same terms as Perl itself.  For more information
+see the "README" or "Artistic" files provided with the Perl
+distribution.
+
+Send feedback, questions, bug reports, etc. to the mod_perl list
+(modperl@apache.org; see http://perl.apache.org for more information);
+that way other folks will benefit from the communciation. Or, if you
+prefer, send directly to swartz@transbay.net.
+
+For all bug reports indicate your architecture, Apache/Perl/module
+versions, etc. For installation problems send your handler.pl and
+httpd.conf. For component problems try to isolate the bug in a single
+small component or set of components, and send those.

@@ -1,0 +1,18 @@
+<%mc_comp('Template',top=>1)%>
+
+Search by one of the following methods:<br>
+
+<form action="cd-search">
+<input type="text" name="sstring">
+<input type="hidden" name="mode" value="artist">
+<input type="submit" value="by artist">
+</form>
+<hr>
+<form action="cd-search">
+<input type="text" name="sstring">
+<input type="hidden" name="mode" value="title">
+<input type="submit" value="by title">
+</form>
+
+<%mc_comp('Template',bottom=>1)%>
+

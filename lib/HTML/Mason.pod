@@ -1,0 +1,299 @@
+=head1 NAME 
+
+Mason - High-performance, dynamic web site authoring system 
+
+=head1 SYNOPSIS 
+
+    # Directives for your Apache config files.
+    # Route all requests to the Mason handler.
+    #
+    PerlRequire /opt/mason/eg/handler.pl
+    <Location />
+        SetHandler perl-script
+        PerlHandler HTML::Mason
+    </Location>
+
+    # Sample handler.pl file.
+    # Start Mason and define the mod_perl handler routine.
+    #
+    package HTML::Mason;
+    use HTML::Mason;    # brings in subpackages: Parser, Interp, etc.
+    use strict;
+
+    my $parser = new HTML::Mason::Parser;
+    my $interp = new HTML::Mason::Interp (parser=>$parser,
+                                   comp_root=>'/opt/www/htdocs',
+                                   data_dir=>'/opt/mason/data');
+    my $ah = new HTML::Mason::ApacheHandler (interp=>$interp);
+    chown ( 60001, 60001, $interp->files_written );  # chown nobody
+
+    sub handler
+    {
+        my ($r) = @_;
+        $ah->handle_request($r);
+    }
+
+=head1 DESCRIPTION 
+
+Mason is a tool for building, serving and managing large web
+sites. Its features make it an ideal backend for high load sites
+serving dynamic content, such as online newspapers or database driven
+e-commerce sites.
+
+Mason's various pieces revolve around the notion of "components''. A
+component is a mix of HTML, Perl, and special Mason commands, one
+component per file. So-called "top-level" components represent entire
+web-pages, while smaller components typically return HTML snippets for
+embedding in top-level components. This object-like architecture
+greatly simplifies site maintenance: change a shared component, and
+you instantly changed all dependant pages that refer to it across a
+site (or across many virtual sites).
+
+Mason's component syntax lets designers separate a web page into
+programmatic and design elements. This means the esoteric Perl bits
+can be hidden near the bottom of a component, preloading simple
+variables for use above in the HTML. In our own experience, this frees
+content managers (i.e., non-programmers) to work on the layout without
+getting mired in programming details. Techies, however, still enjoy
+the full power of Perl.
+
+One of the best ways to learn about Mason is to explore the samples/
+directory created during installation. There you will find a
+collection of components, simple to complex, illustrating most of
+Mason's component syntax.
+
+Other Mason features include: 
+
+=over
+
+=item Caching
+
+Mason caches components after compilation, and offers an internal,
+shared, expireable data cache for use by components themselves.
+
+=item Debugging
+
+Mason includes a debugging mode whereby HTTP requests can be captured
+to "debug files" for later replay inside Perl's command-line debugger
+(as opposed to the non-interactive mod_perl interpreter).
+
+=item Previewer
+
+Mason includes a powerful previewing utility which acts as a proxy
+between Mason and incoming requests. Using a web interface, users
+create "port profiles" that massage requests in all kinds of
+interesting ways: different browsers may be simulated, different
+request ports, different times of day, etc.
+
+=item Standalone Use
+
+Mason is optimized for use with mod_perl, but can also be used from
+CGI or as a standalone tool to generate other types of dynamic text
+files (similar to Text::Template, ePerl, etc.). To learn more about
+this option see the STANDALONE MODE section in
+B<L<HTML::Mason::Interp>>.
+
+=back
+
+Mason works by intercepting innocent-looking requests (say,
+http://www.yoursite.com/index.html) and mapping them to requests for
+Mason components.  Mason then compiles the component, runs it, and
+feeds the output back to the client.
+
+Consider this simple Mason component:
+
+    % my $noun = 'World';
+    Hello <% $noun %>!
+    How are ya?
+
+The output of this component is: 
+
+    Hello World!
+    How are ya?
+
+In this component you see a mix of standard HTML and Mason
+elements. The bare '%' prefixing the first line tells Mason that this
+is a line of Perl code. One line below, the embedded S<E<lt>%
+... %E<gt>> tag gets replaced with the return value of its contents,
+evaluated as a Perl expression.
+
+Beyond this trivial example, components can also embed serious chunks
+of Perl code (say, to pull records from a database). They can also
+call other components, cache results for later reuse, and perform all
+the tricks you expect from a regular Perl program. See
+B<HTML::Mason::Components> for a full tutorial on building, using and
+debugging Mason components.
+
+=head1 INSTALLATION 
+
+Mason has been tested under Linux, FreeBSD, and Solaris, but not yet (by us)
+under Win32. As an all-Perl solution, though, it should work on any
+machine that has working versions of Perl 5.004+, mod_perl, and the
+required CPAN modules.
+
+Mason has a standard MakeMaker-driven installation. See the README
+file for details.
+
+=head1 CONFIGURING MASON 
+
+Mason's configuration depends on two files: your Apache C<conf> files
+(C<httpd.conf> or C<srm.conf>), into which you insert directives to
+activate Mason's request handler, and Mason's C<handler.pl> file which
+runs at Apache startup. C<handler.pl> does two things: it starts up
+Mason (which then runs persistently within the httpd), and it defines
+a handler routine to receive HTTP requests.
+
+The paragraphs below assume some knowledge of mod_perl, Apache
+configuration details, and the Apache request API. If you're rusty on
+any these topics, bone up by reading the documentation available at
+http://www.apache.org (Apache) and http://perl.apache.org
+(mod_perl). Here you will also find subscription details for the
+mod_perl mailing list--in my view the best mod_perl resource around.
+
+=head2 Single Site Configuration 
+
+The simplest Mason component is one composed of pure HTML, so the fast
+track is simply to attach Mason to some branch of your server's
+DocumentRoot, like so:
+
+    # Additions to your httpd.conf
+    PerlRequire /usr/local/mason/handler.pl
+
+    Alias /mason /usr/local/www/htdocs
+    <Location /mason>
+        SetHandler perl-script
+        PerlHandler HTML::Mason
+    </Location>
+
+These directives tell Apache to first run C<handler.pl>, the Mason
+startup file. The "Alias" then maps any "/mason" URLs into the
+DocumentRoot (assuming the DocumentRoot is /usr/local/www/htdocs).
+Finally, the <Location> directive routes those requests to the handler
+routine C<HTML::Mason::handler>.
+
+If you want to create HTML without necessarily using the .html extension,
+you might optionally change your DefaultType:
+
+    DefaultType text/html
+
+That's it for the Apache configuration. Next you will need to
+configure Mason's C<handler.pl> file, a sample of which is in
+C<eg/handler.pl>. Here you must make some decisions:
+
+=over
+
+=item Where is the component root (comp_root)?
+
+Mason introduces the idea of a "component root" which, like the
+DocumentRoot, is a virtual root for the component filesystem. In this
+example we equate the two roots; other configurations will opt to keep
+them separate.
+
+=item Where is the data directory (data_dir)?
+
+Mason generates various data files, which live in topical directories
+under Mason's "data directory".
+
+=item What is the UID and GID that the server runs under?
+
+If your web server is running on a privileged port like 80, the parent
+process runs as root and spawns children under the 'User' and 'Group'
+IDs listed in your C<httpd.conf>. To prevent ownership and permission
+conflicts, set the chown() parameters to match the UID and GID from
+your C<httpd.conf>. See the C<handler> section in the
+I<Administrator's Guide> guide for details.
+
+=item Do you plan to intermix images and components in the same directory?
+
+If you use a <Location> or <Directory> directive like the one suggested above,
+then requests to any file under that directory will go to the Mason
+handler. If there are images in the directory, Mason will try to treat
+them like regular components. This is bad: not only is there extra
+overhead, but if an image inadvertently contains a Mason character
+sequence such as "<%", Mason will try to interpret that piece and fail
+with a syntax error.
+
+The simplest remedy is to have Mason decline image and other non-HTML requests, thus
+letting Apache serve them in the normal way.  The following line
+
+    return -1 if $r->content_type !~ m|^text/|io;
+
+declines all requests with a content type not starting with "text/".
+This allows text/html and text/plain to pass through but not much else.
+It is included in the default handler.pl.
+
+=item Are you running with taint checks (e.g. PerlTaintCheck)?
+
+If so, pass the flag C<taint_check>=>1 when creating the parser; this
+tells Mason to untaint component code and filenames.
+
+=back
+
+Both comp_root and the data_dir are set when Mason creates a new
+Interp object:
+
+    my $interp = new HTML::Mason::Interp (parser=>$parser,
+                    comp_root=>'/usr/local/www/htdocs'
+                    data_dir=>'/usr/local/mason/');
+
+Set these to your own locations, then restart the server and go to
+some standard URL on your site, prefixing the URL with "/mason". If
+all goes well you should see the same page as without the "/mason"
+prefix. If not, recheck your Apache config files and C<handler.pl>,
+and also tail your server's error log.
+
+(If you are getting erroneous "404 Not Found" errors, Mason may be
+having trouble with your document and component root. Make sure
+"LogLevel warn" is in your Apache configuration file, then regenerate
+the error and check the error log for Mason warnings.  One situation
+that will unfortunately confuse Mason is if your document or component
+root goes through a soft link. Try specifying your document and
+component root settings in terms of the true path.)
+
+Assuming it worked, you now have a Mason "lens" through which to view
+your HTML tree. Try adding a Mason tag to some HTML file, say <% 2+2
+%>. If you hit Reload and see a "4", Mason's up and running. You can
+now copy or link the C<samples/> directory into your new comp_root and
+check out the sample components in your browser.
+
+Once you feel comfortable with Mason, you can "fully" install it by
+deleting the "Alias" directive from your httpd.conf, and changing the
+<Location> mapping from "/mason" to just "/". Now all URLs serve
+through Mason.
+
+B<HTML::Mason::Admin> describes how to configure Mason to work with
+multiple virtual servers on the same box.
+
+=head1 DOCUMENTATION ROADMAP 
+
+Once Mason is on its feet, the next step is to write a component or
+two. The I<Mason Developer's Manual> (B<L<HTML::Mason::Components>>) 
+is a complete tutorial for writing, using, and debugging components. A
+companion to the Developer's Manual is the Mason commands reference,
+B<L<HTML::Mason::Commands>>.
+
+System Admins, or others interested in configuring Mason or tuning for
+performance, should read B<L<HTML::Mason::Admin>>. Details of Mason's
+core modules can be found in B<L<HTML::Mason::Parser>>,
+B<L<HTML::Mason::Interp>>, and B<L<HTML::Mason::ApacheHandler>>.
+
+Most of this documentation assumes that you're running Mason on top of
+mod_perl, since that is the most common configuration.  If you are
+using Mason outside of mod_perl, the documentation is still valid;
+you'll just have to ignore mod_perl specific references like $r and
+the ApacheHandler object, and you'll want to read the STANDALONE MODE section in
+B<L<HTML::Mason::Interp>>.
+
+=head1 AUTHOR 
+
+Jonathan Swartz, swartz@transbay.net 
+
+=head1 SEE ALSO
+
+L<HTML::Mason::Components>,
+L<HTML::Mason::Commands>,
+L<HTML::Mason::Parser>,
+L<HTML::Mason::Interp>,
+L<HTML::Mason::ApacheHandler>
+
+=cut

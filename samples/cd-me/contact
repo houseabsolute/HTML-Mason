@@ -1,0 +1,11 @@
+<%mc_comp('Template',top=>1)%>
+
+<h3>Contact:</h3>
+<PRE>
+ Sales Manager: Foo Bar 
+    Phone: (415) 420-1212
+    Fax:   (415) 420-2121
+    Email: fbar@cd-me.com
+
+</PRE>
+<%mc_comp('Template',bottom=>1)%>

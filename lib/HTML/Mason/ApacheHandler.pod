@@ -1,0 +1,94 @@
+=head1 NAME
+
+HTML::Mason::ApacheHandler - Link Mason to Apache via mod_perl
+
+=head1 SYNOPSIS
+
+    my $ah = new HTML::Mason::ApacheHandler (..name/value params..);
+    ...
+    sub handler {
+        my $r = shift;
+        $ah->handle_request($r);
+    }
+
+=head1 DESCRIPTION
+
+The ApacheHandler object links Mason to Apache, running components in
+response to HTTP requests. It is controlled primarily through
+parameters to the new() constructor.
+
+handle_request() is not a user method, but rather is called from the
+HTML::Mason::handler() routine in handler.pl.
+
+=head1 PARAMETERS TO THE new() CONTRUCTOR
+
+=over
+
+=item debug_handler_proc
+
+=item debug_handler_script
+
+=item debug_mode
+
+=item debug_perl_binary
+
+The B<debug_*> parameters control Mason's use of debug files.
+Component L<Admin/debugging> procedures are fully described in the I<Mason
+Administrator's Guide>.
+
+=item error_mode
+
+Specifies one of two ways to handle Perl errors, 'fatal' or 'html'.
+In fatal mode the handler simply dies with the error message. This
+may be caught with an eval around C<$ah-E<gt>handle_request> or left
+for Apache to handle (generally with a return status of 500).  In
+HTML mode the handler sends a readable HTML version of the error
+message to the client. HTML mode is most useful in combination with
+batch output mode for debugging.
+
+=item output_mode
+
+Specifies one of two ways to send output to the client, 'batch' or
+'stream'.  Batch mode means that Mason computes the entire page in
+memory and then transmits it all at once. Stream mode means that
+Mason outputs data as soon as it is computed. (This is only Mason's
+point of view; it does not take buffering done by Perl or the O/S
+into account.) Both of these modes use C<$r-E<gt>print> and override
+the value of C<$interp-E<gt>out_method>. The default is 'batch'.  If
+output_mode is specified as C<undef>, then C<$interp-E<gt>out_method>
+is left untouched.
+
+=item top_level_predicate
+
+Reference to a subroutine that decides whether a component can answer
+top level requests. This allows for private-use components that live
+within the DocumentRoot but are inaccesible from URLs. By default,
+always returns 1.
+
+The subroutine receives one parameter, the absolute path to the
+component.  It then returns either a true (serve component) or false
+(reject component). In this example, the predicate rejects requests
+for components whose name starts with an "_" character:
+
+    top_level_predicate => sub { basename($_[0]) !~ /^_/ }
+
+B<NOTE>: In this example I've used basename() from the B<File::Basename>
+package. Since the top_level_predicate is defined in handler.pl,
+within B<HTML::Mason>, any such symbols need to be imported into that
+package. In other words, I would need a C<S<use File::Basename>>
+somewhere below the C<S<package HTML::Mason>> line in C<handler.pl>.
+
+=back
+
+=head1 AUTHOR
+
+Jonathan Swartz, swartz@transbay.net
+
+=head1 SEE ALSO
+
+L<HTML::Mason>,
+L<HTML::Mason::Parser>,
+L<HTML::Mason::Interp>,
+L<HTML::Mason::Admin>
+
+=cut

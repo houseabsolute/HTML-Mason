@@ -1,0 +1,55 @@
+<%mc_comp('Template',top=>1)%>
+
+% if ($action eq "add") {
+
+<h3>Item Added</h3>
+You have added the following CD to your Shopping Kart:<P>
+<% mc_comp('tools/cd_details',id=>$id,cds=>\%cds) %><P>
+<a href="kart?action=retrieve">Click here to view your Shopping Kart</a><P>
+
+% } elsif ($action eq "delete") {
+
+<h3>Item Deleted</h3>
+You have deleted the following CD from your Shopping Kart:<P>
+<% mc_comp('tools/cd_details',id=>$id,cds=>\%cds) %><P>
+<a href="kart?action=retrieve">Click here to view your Shopping Kart</a><P>
+
+% } elsif ($action eq "retrieve") {
+
+<h3>Contents of Shopping Kart:</h3>
+
+%   if (scalar @ids > 0) { # items have been added to the kart
+%     foreach my $id (@ids) {
+        <%mc_comp('tools/cd_details',id=>$id,cds=>\%cds) %> <a href="kart?action=delete&id=<%$id%>">Delete</a><P>
+%     }
+      <a href="kart?action=purge">Clear your Shopping Kart of all items</a><P>
+
+%   } else {
+      <h3>Your shopping Kart is empty!</h3>
+%   }
+
+% } elsif ($action eq "purge") {
+    <h3>Shopping Kart Reset to 0 items</h3>
+% }
+
+<%mc_comp('Template',bottom=>1)%>
+
+<%PERL_INIT>
+my ($cookie,@ids);
+my %cds = %{mc_comp('data/cds')};
+if ($action eq "add") {
+   mc_comp('tools/cookie_manip',add=>$id);
+} elsif ($action eq "delete") {
+   mc_comp('tools/cookie_manip',remove=>$id);
+} elsif ($action eq "retrieve") {
+   $cookie = mc_comp('tools/cookie_manip',retrieve=>1);
+   @ids = split ":", $cookie;
+} elsif ($action eq "purge") {
+   mc_comp('tools/cookie_manip',purge=>1);
+}
+
+</%PERL_INIT>
+<%PERL_ARGS>
+$id=>undef
+$action=>undef
+</%PERL_ARGS>

@@ -1,0 +1,1152 @@
+<%PERL_INIT>
+return {
+          1131119 => {
+                       'genre' => 'jazz',
+                       'title' => 'One Love: Tribute To Bob Marley',
+                       'price' => '16.98',
+                       'id' => 1131119,
+                       'artist' => 'Various Artists'
+                     },
+          1250018 => {
+                       'genre' => 'classical',
+                       'title' => 'Nielsen, Syms. Nos. 2 & 3',
+                       'price' => '16.98',
+                       'id' => 1250018,
+                       'artist' => 'Herbert Blomstedt'
+                     },
+          1164060 => {
+                       'genre' => 'jazz',
+                       'title' => 'The Amazing Bud Powell, Volume 2',
+                       'price' => '15.98',
+                       'id' => 1164060,
+                       'artist' => 'Bud Powell'
+                     },
+          1027820 => {
+                       'genre' => 'country',
+                       'title' => 'The Very Best Of Glen Campbell',
+                       'price' => '15.98',
+                       'id' => 1027820,
+                       'artist' => 'Glen Campbell'
+                     },
+          1005644 => {
+                       'genre' => 'country',
+                       'title' => 'Classics Collection',
+                       'price' => '15.98',
+                       'id' => 1005644,
+                       'artist' => 'Glen Campbell'
+                     },
+          2501534 => {
+                       'genre' => 'rock',
+                       'title' => 'Wheels Of Fire',
+                       'price' => '27.98',
+                       'id' => 2501534,
+                       'artist' => 'Cream'
+                     },
+          1111756 => {
+                       'genre' => 'classical',
+                       'title' => 'Gershwin Performs Gershwin',
+                       'price' => '16.98',
+                       'id' => 1111756,
+                       'artist' => 'George Gershwin'
+                     },
+          1155712 => {
+                       'genre' => 'rock',
+                       'title' => 'Desire Walks On',
+                       'price' => '15.98',
+                       'id' => 1155712,
+                       'artist' => 'Heart'
+                     },
+          1134428 => {
+                       'genre' => 'jazz',
+                       'title' => 'Remembering Madison County',
+                       'price' => '16.98',
+                       'id' => 1134428,
+                       'artist' => 'Various Artists'
+                     },
+          1027663 => {
+                       'genre' => 'jazz',
+                       'title' => 'Is What It Is',
+                       'price' => '15.98',
+                       'id' => 1027663,
+                       'artist' => 'Mike Stern'
+                     },
+          1185271 => {
+                       'genre' => 'country',
+                       'title' => 'Once More, Vols. I & II',
+                       'price' => '15.98',
+                       'id' => 1185271,
+                       'artist' => 'The Osborne Brothers'
+                     },
+          1057066 => {
+                       'genre' => 'rock',
+                       'title' => 'Live: Oy Vey, Baby',
+                       'price' => '14.98',
+                       'id' => 1057066,
+                       'artist' => 'Tin Machine'
+                     },
+          1122928 => {
+                       'genre' => 'rock',
+                       'title' => 'Stressfest',
+                       'price' => '15.98',
+                       'id' => 1122928,
+                       'artist' => 'Steve Morse Band'
+                     },
+          1082817 => {
+                       'genre' => 'jazz',
+                       'title' => 'An Evening With Lena Horne',
+                       'price' => '15.98',
+                       'id' => 1082817,
+                       'artist' => 'Lena Horne'
+                     },
+          1121797 => {
+                       'genre' => 'jazz',
+                       'title' => 'Greatest Hits',
+                       'price' => '15.98',
+                       'id' => 1121797,
+                       'artist' => 'Vince Guaraldi'
+                     },
+          1157338 => {
+                       'genre' => 'country',
+                       'title' => 'Full Circle',
+                       'price' => '16.98',
+                       'id' => 1157338,
+                       'artist' => 'Randy Travis'
+                     },
+          1038918 => {
+                       'genre' => 'classical',
+                       'title' => 'Shostakovich, Symphony No. 8',
+                       'price' => '16.98',
+                       'id' => 1038918,
+                       'artist' => 'AndrÈ Previn'
+                     },
+          1185438 => {
+                       'genre' => 'country',
+                       'title' => 'The Great Dobro Sessions',
+                       'price' => '15.98',
+                       'id' => 1185438,
+                       'artist' => 'Various Artists'
+                     },
+          1082577 => {
+                       'genre' => 'rock',
+                       'title' => 'Structural Damage',
+                       'price' => '15.98',
+                       'id' => 1082577,
+                       'artist' => 'Steve Morse Band'
+                     },
+          1028794 => {
+                       'genre' => 'rock',
+                       'title' => 'Alannah',
+                       'price' => '15.98',
+                       'id' => 1028794,
+                       'artist' => 'Alannah Myles'
+                     },
+          1080878 => {
+                       'genre' => 'jazz',
+                       'title' => 'The Shape Of Jazz To Come',
+                       'price' => '14.98',
+                       'id' => 1080878,
+                       'artist' => 'Ornette Coleman'
+                     },
+          2086791 => {
+                       'genre' => 'classical',
+                       'title' => 'Verdi, Complete Ballet Music',
+                       'price' => '16.98',
+                       'id' => 2086791,
+                       'artist' => 'Various Artists'
+                     },
+          2738664 => {
+                       'genre' => 'classical',
+                       'title' => 'Beethoven, Late Quartets',
+                       'price' => '38.98',
+                       'id' => 2738664,
+                       'artist' => 'Guarneri Quartet'
+                     },
+          1028000 => {
+                       'genre' => 'country',
+                       'title' => 'Guitar Town',
+                       'price' => '14.98',
+                       'id' => 1028000,
+                       'artist' => 'Steve Earle And The Dukes'
+                     },
+          1015213 => {
+                       'genre' => 'rock',
+                       'title' => 'Chronicle, Vol. 2: 20 Great CCR Classics',
+                       'price' => '15.98',
+                       'id' => 1015213,
+                       'artist' => 'Creedence Clearwater Revival'
+                     },
+          1111046 => {
+                       'genre' => 'jazz',
+                       'title' => 'Upfront',
+                       'price' => '15.98',
+                       'id' => 1111046,
+                       'artist' => 'David Sanborn'
+                     },
+          1162130 => {
+                       'genre' => 'jazz',
+                       'title' => 'Moanin\'',
+                       'price' => '15.98',
+                       'id' => 1162130,
+                       'artist' => 'Art Blakey'
+                     },
+          1200146 => {
+                       'genre' => 'country',
+                       'title' => 'Shawn Camp',
+                       'price' => '15.98',
+                       'id' => 1200146,
+                       'artist' => 'Shawn Camp'
+                     },
+          1131127 => {
+                       'genre' => 'jazz',
+                       'title' => 'Blue Skies: The Irving Berlin Songbook',
+                       'price' => '15.98',
+                       'id' => 1131127,
+                       'artist' => 'Various Artists'
+                     },
+          1033273 => {
+                       'genre' => 'jazz',
+                       'title' => 'We\'ll Be Together Again',
+                       'price' => '15.98',
+                       'id' => 1033273,
+                       'artist' => 'Lena Horne'
+                     },
+          1129402 => {
+                       'genre' => 'jazz',
+                       'title' => 'A Night At Birdland Volume 2',
+                       'price' => '15.98',
+                       'id' => 1129402,
+                       'artist' => 'Art Blakey'
+                     },
+          2166031 => {
+                       'genre' => 'rock',
+                       'title' => 'LŸTHER',
+                       'price' => '35.98',
+                       'id' => 2166031,
+                       'artist' => 'Frank Zappa'
+                     },
+          1251156 => {
+                       'genre' => 'classical',
+                       'title' => 'Maria Callas: Rarities',
+                       'price' => '16.98',
+                       'id' => 1251156,
+                       'artist' => 'Maria Callas'
+                     },
+          1840008 => {
+                       'genre' => 'country',
+                       'title' => 'Country Dance Mixes',
+                       'price' => '15.98',
+                       'id' => 1840008,
+                       'artist' => 'Various Artists'
+                     },
+          1128271 => {
+                       'genre' => 'classical',
+                       'title' => 'Rebel, Les ŠlÈmens; Gluck, Alessandro',
+                       'price' => '16.98',
+                       'id' => 1128271,
+                       'artist' => 'Reinhard Goebel'
+                     },
+          1124791 => {
+                       'genre' => 'classical',
+                       'title' => 'The American Album',
+                       'price' => '16.98',
+                       'id' => 1124791,
+                       'artist' => 'Anne Akiko Meyers'
+                     },
+          1169242 => {
+                       'genre' => 'country',
+                       'title' => 'Love Travels',
+                       'price' => '16.98',
+                       'id' => 1169242,
+                       'artist' => 'Kathy Mattea'
+                     },
+          1601954 => {
+                       'genre' => 'country',
+                       'title' => 'Country Club',
+                       'price' => '15.98',
+                       'id' => 1601954,
+                       'artist' => 'Travis Tritt'
+                     },
+          1535525 => {
+                       'genre' => 'rock',
+                       'title' => 'Bad Animals',
+                       'price' => '15.98',
+                       'id' => 1535525,
+                       'artist' => 'Heart'
+                     },
+          1159920 => {
+                       'genre' => 'jazz',
+                       'title' => 'Songs From The Night Before',
+                       'price' => '16.98',
+                       'id' => 1159920,
+                       'artist' => 'David Sanborn'
+                     },
+          1168038 => {
+                       'genre' => 'jazz',
+                       'title' => 'Tactics',
+                       'price' => '15.98',
+                       'id' => 1168038,
+                       'artist' => 'John Abercrombie Trio'
+                     },
+          1013994 => {
+                       'genre' => 'classical',
+                       'title' => 'Pops Roundup',
+                       'price' => '12.98',
+                       'id' => 1013994,
+                       'artist' => 'Arthur Fiedler'
+                     },
+          2164655 => {
+                       'genre' => 'classical',
+                       'title' => 'Bach, Brandenburg Concertos',
+                       'price' => '33.98',
+                       'id' => 2164655,
+                       'artist' => 'Helmuth Rilling'
+                     },
+          1158476 => {
+                       'genre' => 'classical',
+                       'title' => 'Legendary 3 Tenors',
+                       'price' => '12.98',
+                       'id' => 1158476,
+                       'artist' => 'Various Artists'
+                     },
+          1086784 => {
+                       'genre' => 'classical',
+                       'title' => 'Stravinsky, Petrushka; Pulcinella',
+                       'price' => '16.98',
+                       'id' => 1086784,
+                       'artist' => 'Riccardo Chailly'
+                     },
+          1004050 => {
+                       'genre' => 'jazz',
+                       'title' => 'Play Show Boat',
+                       'price' => '15.98',
+                       'id' => 1004050,
+                       'artist' => 'AndrÈ Previn And Friends'
+                     },
+          1012236 => {
+                       'genre' => 'classical',
+                       'title' => 'Dvor·k, Sym. No. 9 "From The New World"',
+                       'price' => '16.98',
+                       'id' => 1012236,
+                       'artist' => 'Kurt Masur'
+                     },
+          1031822 => {
+                       'genre' => 'classical',
+                       'title' => 'The Poetry Of Nature',
+                       'price' => '16.98',
+                       'id' => 1031822,
+                       'artist' => 'Various Artists'
+                     },
+          1009620 => {
+                       'genre' => 'classical',
+                       'title' => 'The American Vocalist',
+                       'price' => '16.98',
+                       'id' => 1009620,
+                       'artist' => 'Joel Cohen (Boston Camarata)'
+                     },
+          1029222 => {
+                       'genre' => 'country',
+                       'title' => 'Have A Little Faith',
+                       'price' => '14.98',
+                       'id' => 1029222,
+                       'artist' => 'Jo-el Sonnier'
+                     },
+          1024371 => {
+                       'genre' => 'country',
+                       'title' => 'The Complete Mercury Sessions',
+                       'price' => '15.98',
+                       'id' => 1024371,
+                       'artist' => 'Jo-el Sonnier'
+                     },
+          1060813 => {
+                       'genre' => 'jazz',
+                       'title' => 'AfoxÈ',
+                       'price' => '15.98',
+                       'id' => 1060813,
+                       'artist' => 'Ernie Watts With Gilberto Gil'
+                     },
+          1120609 => {
+                       'genre' => 'rock',
+                       'title' => 'Coolwalkingsmoothtalkingstraightsmokingfirestoking: The Best Of',
+                       'price' => '16.98',
+                       'id' => 1120609,
+                       'artist' => 'Pete Townshend'
+                     },
+          1056035 => {
+                       'genre' => 'rock',
+                       'title' => 'Rock The House "Live"!',
+                       'price' => '15.98',
+                       'id' => 1056035,
+                       'artist' => 'Heart'
+                     },
+          1028018 => {
+                       'genre' => 'country',
+                       'title' => 'Exit O',
+                       'price' => '14.98',
+                       'id' => 1028018,
+                       'artist' => 'Steve Earle And The Dukes'
+                     },
+          1602291 => {
+                       'genre' => 'country',
+                       'title' => 'Mountain Music',
+                       'price' => '15.98',
+                       'id' => 1602291,
+                       'artist' => 'Alabama'
+                     },
+          1067602 => {
+                       'genre' => 'jazz',
+                       'title' => 'Four in One',
+                       'price' => '15.98',
+                       'id' => 1067602,
+                       'artist' => 'Sonny Fortune'
+                     },
+          1083245 => {
+                       'genre' => 'jazz',
+                       'title' => 'Pearls',
+                       'price' => '16.98',
+                       'id' => 1083245,
+                       'artist' => 'David Sanborn'
+                     },
+          1184324 => {
+                       'genre' => 'country',
+                       'title' => 'The Essential Hank Snow',
+                       'price' => '15.98',
+                       'id' => 1184324,
+                       'artist' => 'Hank Snow'
+                     },
+          2072734 => {
+                       'genre' => 'classical',
+                       'title' => 'A Baltimore Consort Collection',
+                       'price' => '49.98',
+                       'id' => 2072734,
+                       'artist' => 'The Baltimore Consort'
+                     },
+          1018456 => {
+                       'genre' => 'rock',
+                       'title' => 'You Want It, You Got It',
+                       'price' => '14.98',
+                       'id' => 1018456,
+                       'artist' => 'Bryan Adams'
+                     },
+          1123678 => {
+                       'genre' => 'jazz',
+                       'title' => 'Gateway 2',
+                       'price' => '15.98',
+                       'id' => 1123678,
+                       'artist' => 'John Abercrombie/Dave Holland/Jack DeJohnette'
+                     },
+          1008739 => {
+                       'genre' => 'country',
+                       'title' => 'Lonesome Standard Time',
+                       'price' => '15.98',
+                       'id' => 1008739,
+                       'artist' => 'Kathy Mattea'
+                     },
+          1351758 => {
+                       'genre' => 'rock',
+                       'title' => 'Waking Up The Neighbours',
+                       'price' => '15.98',
+                       'id' => 1351758,
+                       'artist' => 'Bryan Adams'
+                     },
+          1129972 => {
+                       'genre' => 'classical',
+                       'title' => 'Leading Man',
+                       'price' => '16.98',
+                       'id' => 1129972,
+                       'artist' => 'Thomas Hampson'
+                     },
+          1029784 => {
+                       'genre' => 'country',
+                       'title' => 'Guitars And Banjos-The Heroes',
+                       'price' => '14.98',
+                       'id' => 1029784,
+                       'artist' => 'Various Artists'
+                     },
+          1086396 => {
+                       'genre' => 'rock',
+                       'title' => 'Hot Rats',
+                       'price' => '15.98',
+                       'id' => 1086396,
+                       'artist' => 'Frank Zappa'
+                     },
+          1814896 => {
+                       'genre' => 'jazz',
+                       'title' => 'The 17 Number Ones',
+                       'price' => '15.98',
+                       'id' => 1814896,
+                       'artist' => 'Tommy Dorsey Orchestra'
+                     },
+          1442003 => {
+                       'genre' => 'rock',
+                       'title' => 'PsychoDerelict',
+                       'price' => '15.98',
+                       'id' => 1442003,
+                       'artist' => 'Pete Townshend'
+                     },
+          1022920 => {
+                       'genre' => 'rock',
+                       'title' => 'Tower Of Power',
+                       'price' => '15.98',
+                       'id' => 1022920,
+                       'artist' => 'Tower Of Power'
+                     },
+          1080340 => {
+                       'genre' => 'country',
+                       'title' => 'A Thousand Memories',
+                       'price' => '15.98',
+                       'id' => 1080340,
+                       'artist' => 'Rhett Akins'
+                     },
+          1186030 => {
+                       'genre' => 'classical',
+                       'title' => 'Night Moods - Moonlight',
+                       'price' => '16.98',
+                       'id' => 1186030,
+                       'artist' => 'Various Artists'
+                     },
+          1015239 => {
+                       'genre' => 'rock',
+                       'title' => 'Green River',
+                       'price' => '15.98',
+                       'id' => 1015239,
+                       'artist' => 'Creedence Clearwater Revival'
+                     },
+          1737220 => {
+                       'genre' => 'jazz',
+                       'title' => 'Midnight in San Juan',
+                       'price' => '15.98',
+                       'id' => 1737220,
+                       'artist' => 'Earl Klugh'
+                     },
+          1116391 => {
+                       'genre' => 'jazz',
+                       'title' => 'Hidden Man',
+                       'price' => '15.98',
+                       'id' => 1116391,
+                       'artist' => 'Ornette Coleman Sound Museum'
+                     },
+          1206069 => {
+                       'genre' => 'classical',
+                       'title' => 'Walking Stones - A Celtic Sojourn',
+                       'price' => '16.98',
+                       'id' => 1206069,
+                       'artist' => 'Ken Kolodner'
+                     },
+          1008747 => {
+                       'genre' => 'jazz',
+                       'title' => 'Rhythm Of The Earth',
+                       'price' => '15.98',
+                       'id' => 1008747,
+                       'artist' => 'Jackie McLean'
+                     },
+          1085752 => {
+                       'genre' => 'country',
+                       'title' => '4 Runner',
+                       'price' => '15.98',
+                       'id' => 1085752,
+                       'artist' => '4 Runner'
+                     },
+          1048669 => {
+                       'genre' => 'classical',
+                       'title' => 'Mozart, Flute Concertos Nos. 1&2',
+                       'price' => '16.98',
+                       'id' => 1048669,
+                       'artist' => 'Jean-Pierre Rampal'
+                     },
+          1025998 => {
+                       'genre' => 'classical',
+                       'title' => 'Marian Anderson: He\'s Got The Whole World In His Hands',
+                       'price' => '12.98',
+                       'id' => 1025998,
+                       'artist' => 'Marian Anderson'
+                     },
+          1184977 => {
+                       'genre' => 'country',
+                       'title' => 'Take It Home',
+                       'price' => '15.98',
+                       'id' => 1184977,
+                       'artist' => 'Hot Rize'
+                     },
+          1088988 => {
+                       'genre' => 'rock',
+                       'title' => 'An American Prayer',
+                       'price' => '15.98',
+                       'id' => 1088988,
+                       'artist' => 'Jim Morrison'
+                     },
+          1123215 => {
+                       'genre' => 'jazz',
+                       'title' => 'Lena In Hollywood',
+                       'price' => '15.98',
+                       'id' => 1123215,
+                       'artist' => 'Lena Horne'
+                     },
+          1024470 => {
+                       'genre' => 'classical',
+                       'title' => 'Stravinsky, Piano Concerto, Ebony Concerto',
+                       'price' => '16.98',
+                       'id' => 1024470,
+                       'artist' => 'Vladimir Ashkenazy'
+                     },
+          1117134 => {
+                       'genre' => 'classical',
+                       'title' => 'Walton, Belshazzar\'s Feast',
+                       'price' => '16.98',
+                       'id' => 1117134,
+                       'artist' => 'Andrew Litton'
+                     },
+          1117613 => {
+                       'genre' => 'jazz',
+                       'title' => 'The Blues And The Abstract Truth',
+                       'price' => '15.98',
+                       'id' => 1117613,
+                       'artist' => 'Oliver Nelson'
+                     },
+          1015247 => {
+                       'genre' => 'rock',
+                       'title' => 'Cosmo\'s Factory',
+                       'price' => '15.98',
+                       'id' => 1015247,
+                       'artist' => 'Creedence Clearwater Revival'
+                     },
+          1036292 => {
+                       'genre' => 'jazz',
+                       'title' => 'Verve Jazz Masters 48',
+                       'price' => '15.98',
+                       'id' => 1036292,
+                       'artist' => 'Oliver Nelson'
+                     },
+          1113737 => {
+                       'genre' => 'rock',
+                       'title' => 'Rhythmeen',
+                       'price' => '16.98',
+                       'id' => 1113737,
+                       'artist' => 'ZZ Top'
+                     },
+          1124429 => {
+                       'genre' => 'classical',
+                       'title' => 'Bizet, Spanish Melodies',
+                       'price' => '16.98',
+                       'id' => 1124429,
+                       'artist' => 'Alexandre Lagoya'
+                     },
+          1126366 => {
+                       'genre' => 'rock',
+                       'title' => 'Greatest Hits',
+                       'price' => '16.98',
+                       'id' => 1126366,
+                       'artist' => 'Nazareth'
+                     },
+          1022938 => {
+                       'genre' => 'rock',
+                       'title' => 'Back To Oakland',
+                       'price' => '14.98',
+                       'id' => 1022938,
+                       'artist' => 'Tower Of Power'
+                     },
+          1834118 => {
+                       'genre' => 'rock',
+                       'title' => 'Greatest Hits',
+                       'price' => '15.98',
+                       'id' => 1834118,
+                       'artist' => 'ZZ Top'
+                     },
+          1089242 => {
+                       'genre' => 'country',
+                       'title' => 'The Essential Glen Campbell, Vol. 1',
+                       'price' => '15.98',
+                       'id' => 1089242,
+                       'artist' => 'Glen Campbell'
+                     },
+          1347715 => {
+                       'genre' => 'rock',
+                       'title' => 'So Far So Good',
+                       'price' => '15.98',
+                       'id' => 1347715,
+                       'artist' => 'Bryan Adams'
+                     },
+          1028919 => {
+                       'genre' => 'country',
+                       'title' => 'Bluegrass Collection',
+                       'price' => '14.98',
+                       'id' => 1028919,
+                       'artist' => 'The Osborne Brothers'
+                     },
+          1539196 => {
+                       'genre' => 'rock',
+                       'title' => 'Into The Fire',
+                       'price' => '15.98',
+                       'id' => 1539196,
+                       'artist' => 'Bryan Adams'
+                     },
+          1184985 => {
+                       'genre' => 'country',
+                       'title' => 'Traditional Ties',
+                       'price' => '15.98',
+                       'id' => 1184985,
+                       'artist' => 'Hot Rize'
+                     },
+          1719897 => {
+                       'genre' => 'rock',
+                       'title' => 'Greatest Hits',
+                       'price' => '15.98',
+                       'id' => 1719897,
+                       'artist' => 'Night Ranger'
+                     },
+          1015411 => {
+                       'genre' => 'classical',
+                       'title' => 'Schubert, "Trout" Quintet',
+                       'price' => '16.98',
+                       'id' => 1015411,
+                       'artist' => 'Andr·s Schiff'
+                     },
+          1036060 => {
+                       'genre' => 'jazz',
+                       'title' => 'Winelight',
+                       'price' => '14.98',
+                       'id' => 1036060,
+                       'artist' => 'Grover Washington Jr.'
+                     },
+          1004407 => {
+                       'genre' => 'jazz',
+                       'title' => 'Mister Magic',
+                       'price' => '14.98',
+                       'id' => 1004407,
+                       'artist' => 'Grover Washington Jr.'
+                     },
+          1023910 => {
+                       'genre' => 'rock',
+                       'title' => 'Antenna',
+                       'price' => '16.98',
+                       'id' => 1023910,
+                       'artist' => 'ZZ Top'
+                     },
+          1034206 => {
+                       'genre' => 'classical',
+                       'title' => 'German Opera Arias',
+                       'price' => '16.98',
+                       'id' => 1034206,
+                       'artist' => 'Thomas Hampson'
+                     },
+          1515402 => {
+                       'genre' => 'rock',
+                       'title' => 'Reckless',
+                       'price' => '15.98',
+                       'id' => 1515402,
+                       'artist' => 'Bryan Adams'
+                     },
+          1523026 => {
+                       'genre' => 'jazz',
+                       'title' => 'The Best of Earl Klugh',
+                       'price' => '15.98',
+                       'id' => 1523026,
+                       'artist' => 'Earl Klugh'
+                     },
+          1255231 => {
+                       'genre' => 'classical',
+                       'title' => 'Concerto! Isserlis Plays Saint-SaÎns',
+                       'price' => '16.98',
+                       'id' => 1255231,
+                       'artist' => 'Steven Isserlis'
+                     },
+          1127422 => {
+                       'genre' => 'classical',
+                       'title' => 'Shostakovich, Symphony No. 7 "Leningrad"',
+                       'price' => '16.98',
+                       'id' => 1127422,
+                       'artist' => 'Yuri Temirkanov'
+                     },
+          1210863 => {
+                       'genre' => 'jazz',
+                       'title' => 'This Is A Recording',
+                       'price' => '15.98',
+                       'id' => 1210863,
+                       'artist' => 'Flim and The B.B.\'s'
+                     },
+          1024249 => {
+                       'genre' => 'jazz',
+                       'title' => 'Great Britain\'s',
+                       'price' => '14.98',
+                       'id' => 1024249,
+                       'artist' => 'Marian McPartland/George Shearing'
+                     },
+          1643055 => {
+                       'genre' => 'rock',
+                       'title' => 'Brigade',
+                       'price' => '15.98',
+                       'id' => 1643055,
+                       'artist' => 'Heart'
+                     },
+          1029255 => {
+                       'genre' => 'country',
+                       'title' => 'A Cowboy Has To Sing',
+                       'price' => '14.98',
+                       'id' => 1029255,
+                       'artist' => 'Sons Of The San Joaquin'
+                     },
+          1124916 => {
+                       'genre' => 'classical',
+                       'title' => 'Intermezzo',
+                       'price' => '16.98',
+                       'id' => 1124916,
+                       'artist' => 'Modern Mandolin Quartet'
+                     },
+          1641752 => {
+                       'genre' => 'rock',
+                       'title' => 'Dreamboat Annie',
+                       'price' => '15.98',
+                       'id' => 1641752,
+                       'artist' => 'Heart'
+                     },
+          1035575 => {
+                       'genre' => 'country',
+                       'title' => 'Greatest Hits - From The Beginning',
+                       'price' => '16.98',
+                       'id' => 1035575,
+                       'artist' => 'Travis Tritt'
+                     },
+          1134477 => {
+                       'genre' => 'classical',
+                       'title' => 'Bizet, Carmen (Highlights)',
+                       'price' => '16.98',
+                       'id' => 1134477,
+                       'artist' => 'Herbert von Karajan'
+                     },
+          1741545 => {
+                       'genre' => 'classical',
+                       'title' => 'Bruckner, Symphony No. 7',
+                       'price' => '16.98',
+                       'id' => 1741545,
+                       'artist' => 'Daniel Barenboim'
+                     },
+          1134956 => {
+                       'genre' => 'country',
+                       'title' => 'Somebody New',
+                       'price' => '15.98',
+                       'id' => 1134956,
+                       'artist' => 'Rhett Akins'
+                     },
+          1029818 => {
+                       'genre' => 'country',
+                       'title' => 'The Essential Bluegrass Album',
+                       'price' => '14.98',
+                       'id' => 1029818,
+                       'artist' => 'The Osborne Brothers'
+                     },
+          2166635 => {
+                       'genre' => 'classical',
+                       'title' => 'Dvor·k, Stabat Mater',
+                       'price' => '33.98',
+                       'id' => 2166635,
+                       'artist' => 'Helmuth Rilling'
+                     },
+          1184753 => {
+                       'genre' => 'classical',
+                       'title' => 'The Poet - Romances for Cello',
+                       'price' => '16.98',
+                       'id' => 1184753,
+                       'artist' => 'Michael HoppÈ'
+                     },
+          1155688 => {
+                       'genre' => 'jazz',
+                       'title' => 'Unveiled',
+                       'price' => '15.98',
+                       'id' => 1155688,
+                       'artist' => 'Marcus Printup'
+                     },
+          1158757 => {
+                       'genre' => 'jazz',
+                       'title' => 'Hat Trick',
+                       'price' => '15.98',
+                       'id' => 1158757,
+                       'artist' => 'Jackie McLean'
+                     },
+          1003201 => {
+                       'genre' => 'jazz',
+                       'title' => 'The Best Of Earl Klugh, Vol. 2',
+                       'price' => '15.98',
+                       'id' => 1003201,
+                       'artist' => 'Earl Klugh'
+                     },
+          1001346 => {
+                       'genre' => 'jazz',
+                       'title' => 'Standards',
+                       'price' => '15.98',
+                       'id' => 1001346,
+                       'artist' => 'Mike Stern'
+                     },
+          1064013 => {
+                       'genre' => 'rock',
+                       'title' => 'One Foot in the Blues',
+                       'price' => '15.98',
+                       'id' => 1064013,
+                       'artist' => 'ZZ Top'
+                     },
+          1112226 => {
+                       'genre' => 'classical',
+                       'title' => 'Introducing Helen Huang: Beethoven, Piano Cto. No. 1; Mozart, Piano Cto. No. 23',
+                       'price' => '13.98',
+                       'id' => 1112226,
+                       'artist' => 'Helen Huang'
+                     },
+          2072130 => {
+                       'genre' => 'classical',
+                       'title' => 'Verdi, Aida',
+                       'price' => '49.98',
+                       'id' => 2072130,
+                       'artist' => 'Georg Solti'
+                     },
+          1015262 => {
+                       'genre' => 'rock',
+                       'title' => 'Pendulum',
+                       'price' => '15.98',
+                       'id' => 1015262,
+                       'artist' => 'Creedence Clearwater Revival'
+                     },
+          2156040 => {
+                       'genre' => 'country',
+                       'title' => 'Ain\'t Ever Satisfied',
+                       'price' => '27.98',
+                       'id' => 2156040,
+                       'artist' => 'Steve Earle'
+                     },
+          1021906 => {
+                       'genre' => 'country',
+                       'title' => 'It Matters To Me',
+                       'price' => '16.98',
+                       'id' => 1021906,
+                       'artist' => 'Faith Hill'
+                     },
+          1107911 => {
+                       'genre' => 'country',
+                       'title' => 'A Collection Of Hits',
+                       'price' => '15.98',
+                       'id' => 1107911,
+                       'artist' => 'Kathy Mattea'
+                     },
+          1023365 => {
+                       'genre' => 'classical',
+                       'title' => 'A Baroque Celebration',
+                       'price' => '16.98',
+                       'id' => 1023365,
+                       'artist' => 'Ilonna Pederson'
+                     },
+          1014851 => {
+                       'genre' => 'classical',
+                       'title' => 'Beethoven, Mass in C',
+                       'price' => '16.98',
+                       'id' => 1014851,
+                       'artist' => 'John Eliot Gardiner'
+                     },
+          1130764 => {
+                       'genre' => 'country',
+                       'title' => 'Dreamin\' Out Loud',
+                       'price' => '15.98',
+                       'id' => 1130764,
+                       'artist' => 'Trace Adkins'
+                     },
+          1080852 => {
+                       'genre' => 'classical',
+                       'title' => 'Mozart, Horn Concertos',
+                       'price' => '16.98',
+                       'id' => 1080852,
+                       'artist' => 'Anthony Halstead'
+                     },
+          1126465 => {
+                       'genre' => 'classical',
+                       'title' => 'Bruckner, Symphony No. 6',
+                       'price' => '16.98',
+                       'id' => 1126465,
+                       'artist' => 'Otto Klemperer'
+                     },
+          1182823 => {
+                       'genre' => 'classical',
+                       'title' => 'Concertos for Oboe',
+                       'price' => '16.98',
+                       'id' => 1182823,
+                       'artist' => 'Lajos Lencses'
+                     },
+          1028539 => {
+                       'genre' => 'jazz',
+                       'title' => 'The Montreal Tapes',
+                       'price' => '15.98',
+                       'id' => 1028539,
+                       'artist' => 'Charlie Haden'
+                     },
+          1012996 => {
+                       'genre' => 'classical',
+                       'title' => 'Pops Plays Puccini',
+                       'price' => '16.98',
+                       'id' => 1012996,
+                       'artist' => 'Erich Kunzel'
+                     },
+          1163955 => {
+                       'genre' => 'jazz',
+                       'title' => 'Caravan',
+                       'price' => '15.98',
+                       'id' => 1163955,
+                       'artist' => 'Art Blakey'
+                     },
+          1180967 => {
+                       'genre' => 'jazz',
+                       'title' => 'Telepathy',
+                       'price' => '16.98',
+                       'id' => 1180967,
+                       'artist' => 'Bill Stewart'
+                     },
+          1166388 => {
+                       'genre' => 'jazz',
+                       'title' => 'Memorial',
+                       'price' => '15.98',
+                       'id' => 1166388,
+                       'artist' => 'Fats Navarro'
+                     },
+          2167773 => {
+                       'genre' => 'classical',
+                       'title' => 'Handel, Susanna',
+                       'price' => '49.98',
+                       'id' => 2167773,
+                       'artist' => 'Nicolas McGegan'
+                     },
+          1061910 => {
+                       'genre' => 'classical',
+                       'title' => 'Bach, Brandenburg Concerto No. 2',
+                       'price' => '16.98',
+                       'id' => 1061910,
+                       'artist' => 'Edwin Fischer'
+                     },
+          1161702 => {
+                       'genre' => 'jazz',
+                       'title' => 'Speak of the Devil',
+                       'price' => '14.98',
+                       'id' => 1161702,
+                       'artist' => 'John Abercrombie Trio'
+                     },
+          1024264 => {
+                       'genre' => 'country',
+                       'title' => 'Take Me As I Am',
+                       'price' => '15.98',
+                       'id' => 1024264,
+                       'artist' => 'Faith Hill'
+                     },
+          1116912 => {
+                       'genre' => 'jazz',
+                       'title' => 'Moods',
+                       'price' => '15.98',
+                       'id' => 1116912,
+                       'artist' => 'Will Downing'
+                     },
+          1001676 => {
+                       'genre' => 'rock',
+                       'title' => 'Lemon Parade',
+                       'price' => '15.98',
+                       'id' => 1001676,
+                       'artist' => 'Tonic'
+                     },
+          2073435 => {
+                       'genre' => 'jazz',
+                       'title' => 'Beauty Is A Rare Thing',
+                       'price' => '49.98',
+                       'id' => 2073435,
+                       'artist' => 'Ornette Coleman'
+                     },
+          1158138 => {
+                       'genre' => 'jazz',
+                       'title' => 'From Now On',
+                       'price' => '15.98',
+                       'id' => 1158138,
+                       'artist' => 'Sonny Fortune'
+                     },
+          1157247 => {
+                       'genre' => 'country',
+                       'title' => 'Train A Comin\'',
+                       'price' => '15.98',
+                       'id' => 1157247,
+                       'artist' => 'Steve Earle'
+                     },
+          1442763 => {
+                       'genre' => 'rock',
+                       'title' => 'Heart',
+                       'price' => '15.98',
+                       'id' => 1442763,
+                       'artist' => 'Heart'
+                     },
+          1342179 => {
+                       'genre' => 'country',
+                       'title' => '16 Top Country Hits, Vol. 2',
+                       'price' => '15.98',
+                       'id' => 1342179,
+                       'artist' => 'Various Artists'
+                     },
+          1053099 => {
+                       'genre' => 'classical',
+                       'title' => 'Handel, The Complete Sonatas For Recorder',
+                       'price' => '16.98',
+                       'id' => 1053099,
+                       'artist' => 'Marion Verbruggen'
+                     },
+          1252980 => {
+                       'genre' => 'classical',
+                       'title' => 'Red, White And Brass',
+                       'price' => '16.98',
+                       'id' => 1252980,
+                       'artist' => 'Canadian Brass'
+                     },
+          1121789 => {
+                       'genre' => 'jazz',
+                       'title' => 'Vince Guaraldi Trio',
+                       'price' => '15.98',
+                       'id' => 1121789,
+                       'artist' => 'Vince Guaraldi Trio'
+                     },
+          1086529 => {
+                       'genre' => 'country',
+                       'title' => 'Class of \'55',
+                       'price' => '15.98',
+                       'id' => 1086529,
+                       'artist' => 'Orbison/Cash/Lewis/Perkins'
+                     },
+          1644764 => {
+                       'genre' => 'jazz',
+                       'title' => 'All-Time Greatest Hits, Vol. 2',
+                       'price' => '15.98',
+                       'id' => 1644764,
+                       'artist' => 'Tommy Dorsey/Frank Sinatra'
+                     },
+          1347665 => {
+                       'genre' => 'country',
+                       'title' => 'No Holdin\' Back',
+                       'price' => '15.98',
+                       'id' => 1347665,
+                       'artist' => 'Randy Travis'
+                     },
+          1538891 => {
+                       'genre' => 'rock',
+                       'title' => 'Cuts Like A Knife',
+                       'price' => '15.98',
+                       'id' => 1538891,
+                       'artist' => 'Bryan Adams'
+                     },
+          1837459 => {
+                       'genre' => 'classical',
+                       'title' => 'Schubert, "Death & The Maiden" Quartet',
+                       'price' => '16.98',
+                       'id' => 1837459,
+                       'artist' => 'Brodsky Quartet'
+                     },
+          1015205 => {
+                       'genre' => 'rock',
+                       'title' => 'Chronicle:20 Greatest Hits',
+                       'price' => '16.98',
+                       'id' => 1015205,
+                       'artist' => 'Creedence Clearwater Revival'
+                     },
+          1032531 => {
+                       'genre' => 'country',
+                       'title' => 'Walking Away A Winner',
+                       'price' => '15.98',
+                       'id' => 1032531,
+                       'artist' => 'Kathy Mattea'
+                     }
+        };
+</%PERL_INIT>

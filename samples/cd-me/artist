@@ -1,0 +1,29 @@
+<%mc_comp('Template',top=>1)%>
+<table border=1><tr><th>Artist</th><th>Title</th><th>Price</th></tr>
+% if ($artist) {
+% $artist=~s/_/ /g;
+% my @ids = @{ $artists{$artist} };
+%  foreach my $id (@ids) {
+<%mc_comp('tools/cd_details',id=>$id,cds=>\%cds,table=>1)%> 
+%  }
+</table>
+
+% } else {
+%   foreach $artist (sort keys %artists) {
+% $artistlink = $artist;
+% $artistlink=~s/ /_/g;
+<a href="artist?artist=<%$artistlink%>"><%$artist%></a><br>
+%   }
+% }
+
+<%mc_comp('Template',bottom=>1)%>
+
+<%PERL_INIT>
+my ($artistlink);
+my %cds = %{mc_comp('data/cds')};
+my %artists = %{mc_comp('data/artists')};
+</%PERL_INIT>
+
+<%PERL_ARGS>
+$artist=>undef
+</%PERL_ARGS>
