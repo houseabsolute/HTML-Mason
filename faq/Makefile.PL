@@ -18,6 +18,6 @@ test:
 html_mason_faq.html: html_mason_faq.pod
 	pod2html --htmlroot=. --podpath=. --infile=html_mason_faq.pod \
 			--outfile=html_mason_faq.html && \
-	rm pod2html-itemcache pod2html-dircache
+	rm -f pod2html-itemcache pod2html-dircache
 ';
 }
