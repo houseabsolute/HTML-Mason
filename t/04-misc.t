@@ -69,6 +69,7 @@ $b
 </%args>
 
 
+
 EOF
 		      expect => <<'EOF',
 <body bgcolor=white>
