@@ -1580,21 +1580,21 @@ hierarchy of pages using C<autohandlers>. The basic template looks like:
     <% $m->call_next %>
     footer HTML
 
-However, sometimes you'll need a more flexible template: one that
-adjusts somewhat to the requested page.  You might want to allow each
-page or subsection to specify a title, background color, or logo image
-while leaving the rest of the template intact. You might want some
-pages or subsections to use a different template, or to ignore
-templates entirely.
+However, sometimes you'll want a more flexible template that adjusts
+to the requested page.  You might want to allow each page or
+subsection to specify a title, background color, or logo image while
+leaving the rest of the template intact. You might want some pages or
+subsections to use a different template, or to ignore templates
+entirely.
 
-In this section you will learn how to address these issues with the
-object-oriented style primitives introduced in Mason 0.85.
+These issues can be addressed with the object-oriented style
+primitives introduced in Mason 0.85.
 
-(Note: we use the term object-oriented loosely. Mason borrows concepts
+Note: we use the term object-oriented loosely. Mason borrows concepts
 like inheritance, methods, and attributes from object methodology but
 implements them in a shallow way to solve a particular set of
 problems. Future redesigns may well incorporate a deeper object
-architecture if the current experiment proves successful.)
+architecture if the current prototype proves successful.
 
 =head2 Determining inheritance
 
@@ -1616,7 +1616,7 @@ This is how to suppress templates.
 Currently there is no way to specify a parent dynamically at run-time,
 or to specify multiple parents.
 
-=head2 Creating flexible templates
+=head2 Content wrapping
 
 At page execution time, Mason builds a chain of components from the
 called component, its parent, its parent's parent, and so
@@ -1625,9 +1625,17 @@ C<$m-E<gt>call_next> passes control to the next component in the chain.  This
 is the familiar autohandler "wrapping" behavior, generalized for any
 number of arbitrarily named templates.
 
-Each of these templates can access methods and/or attributes of the
-requested page. First, use C<$m-E<gt>called_comp> to get a handle on
-the appropriate component:
+If one of these components has no primary section (no HTML or embedded
+Perl), Mason automatically fills in an implicit
+C<$m-E<gt>call_next>. This is useful for inherited components that
+simply define methods and attributes without adding to the content.
+We'll see an example of this below.
+
+=head2 Accessing methods and attributes
+
+A template can access methods and/or attributes of the requested
+page. First, use C<$m-E<gt>called_comp> to get a handle on the
+appropriate component:
 
     my $self = $m->called_comp;
 
@@ -1638,12 +1646,13 @@ To access a method for the page, use C<call_method>:
 
     $self->call_method('header');
 
-or alternatively a path of the form 'comp:method':
+or alternatively a path of the form 'SELF:method':
 
     <& SELF:header &>
     $m->comp('SELF:header')
 
-where special component path SELF is shorthand for C<$m-E<gt>called_comp>.
+In the context of a component path, SELF is shorthand for
+C<$m-E<gt>called_comp>.
 
 Each of the above looks for a method named 'header' in the page
 component.  If no such method exists, the chain of parents is searched
@@ -1651,6 +1660,18 @@ upwards, until ultimately a "method not found" error occurs. Use
 'method_exists' to avoid this error for questionable method calls:
 
     if ($self->method_exists('header')) { ...
+
+To defer to the method of your parent, use C<parent>:
+
+    $m->current_comp->parent->call_method('header')
+
+or alternatively a path of the form 'PARENT:method':
+
+    <& PARENT:header &>
+    $m->comp('PARENT:header')
+
+In the context of a component path, PARENT is shorthand for
+C<$m-E<gt>current_comp->parent>.
 
 The rules for attributes are similar. To access an attribute for the
 page, use C<attr>:
@@ -1660,19 +1681,9 @@ page, use C<attr>:
 This looks for an attribute named 'color' in the $self component. If
 no such attribute exists, the chain of parents is searched upwards,
 until ultimately an "attribute not found" error occurs. Use
-'method_exists' to avoid this error for questionable attributes:
+'attr_exists' to avoid this error for questionable attributes:
 
     if ($self->attr_exists('color')) { ...
-
-To defer to a method or attribute of your parent, use C<parent>:
-
-    $m->current_comp->parent->call_method('header')
-    $m->current_comp->parent->attr('color')
-
-or alternatively, for methods, the special component path PARENT:
-
-    <& PARENT:header &>
-    $m->comp('PARENT:header')
 
 =head2 Example
 
@@ -1690,7 +1701,7 @@ number of standard methods and attributes for each page:
     <head>
     <title><% $self->attr('title') %></title>
     </head>
-    <body bgcolor=<% $self->attr('bgcolor') %>>
+    <body bgcolor="<% $self->attr('bgcolor') %>">
     <& SELF:header &>
     <table>
     <tr>
@@ -1729,8 +1740,8 @@ number of standard methods and attributes for each page:
 
 Notice how we provide defaults for each method and attribute, even if blank.
 
-/products/autohandler does the same sort of thing, overriding some attributes 
-and methods for the /products section of the site. 
+/products/autohandler overrides some attributes and methods for the
+/products section of the site.
 
     <%attr>
     title=>'McGuffey Inc.: Products'
@@ -1739,7 +1750,12 @@ and methods for the /products section of the site.
     ...
     </%method>
 
-/products/index.html maybe overrides a few attributes, but mainly provides
+Because this autohandler has no primary section - no HTML or embedded
+Perl - Mason automatically skips it when moving down the chain of
+"wrapped" components. It exists solely to inherit methods and
+attributes from.
+
+/products/index.html might override a few attributes, but mainly provides
 a primary section for the body.
 
 =head1 COMMON TRAPS
