@@ -57,7 +57,6 @@ use HTML::Mason::MethodMaker
      autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR|UNDEF },
      code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR }, #10M
      compiler                     => { isa => 'HTML::Mason::Compiler' },
-     current_time                 => { parse => 'string',  default => 'real', type => SCALAR },
      data_cache_dir               => { parse => 'string',  optional => 1, type => SCALAR },
      dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR|UNDEF },
      die_handler                  => { parse => 'code',    default => \&Carp::confess, type => CODEREF|SCALAR|UNDEF },
@@ -450,22 +449,6 @@ sub make_component {
     }
     
     return $comp;
-}
-
-#
-# Set or fetch the current time value.
-#
-sub current_time {
-    my $self = shift;
-    if (@_) {
-	my $newtime = shift;
-	HTML::Mason::Exception::Params->throw( error => "Interp->current_time: invalid value '$newtime' - must be 'real' or a numeric time value" )
-	    if $newtime ne 'real' && $newtime !~ /^[0-9]+$/;
-	$newtime = time if $newtime eq 'real';
-	return $self->{current_time} = $newtime;
-    } else {
-	return $self->{current_time};
-    }
 }
 
 sub set_global
@@ -912,16 +895,6 @@ Compiler object for compiling components on the fly.  If none is
 provided a default compiler using the
 C<HTML::Mason::Compiler::ToObject> and C<HTML::Mason::Lexer> classes
 will be created.
-
-=item current_time
-
-Overrides the time returned by $m->time with a fixed Perl time() value
-(seconds since the epoch). On time-sensitive sites, this can be used
-to set up port-based time/date simulations, e.g. a port that looks one
-day into the future.
-
-With no current_time parameter (the default), $m->time reports the
-true time.
 
 =item data_dir
 

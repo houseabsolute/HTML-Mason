@@ -219,20 +219,6 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'current_time',
-		      description => 'test current_time interp param',
-		      interp_params => { current_time => 945526402 },
-		      component => <<'EOF',
-<% $m->time %>
-EOF
-		      expect => <<'EOF',
-945526402
-EOF
-		    );
-
-
-#------------------------------------------------------------
-
     $group->add_support( path => 'support/recurse_test',
 			 component => <<'EOF',
 Entering <% $count %><p>

@@ -492,5 +492,23 @@ EOF
 
 #------------------------------------------------------------
 
+# Slight race condition here
+    $group->add_test( name => 'time',
+		      description => 'test $m->time() method',
+		      component => <<'EOF',
+% $m->time('real');
+<% time() == $m->time %>
+% $m->time(my $x = time() - 4500);
+<% $x == $m->time %>
+EOF
+		      expect => <<'EOF',
+1
+1
+EOF
+		    );
+
+
+#------------------------------------------------------------
+
     return $group;
 }

@@ -41,29 +41,27 @@ my %fields =
 sub new
 {
     my $class = shift;
-    my $self = {
-	%fields,
-	dhandler_arg => undef,
-	buffer_stack => undef,
-	stack => undef,
-	wrapper_chain => undef,
-	wrapper_index => undef
-    };
 
-    validate( @_,
+    my %options = validate( @_,
 	      { interp => { isa => 'HTML::Mason::Interp' },
+		time => { parse => 'string',  default => 'real', type => SCALAR,
+			  callbacks => {"must be either 'real' or a numeric value" =>
+					sub { $_[0] =~ /^(?:real|\d+)$/ }} },
 		out_method => { type => SCALARREF | CODEREF, optional => 1 },
 		out_mode => { type => SCALAR, optional => 1 },
 	      }
 	    );
-    my (%options) = @_;
+    
+    my $self = bless {
+		      %fields,
+		      %options,
+		      dhandler_arg => undef,
+		      buffer_stack => undef,
+		      stack => undef,
+		      wrapper_chain => undef,
+		      wrapper_index => undef,
+		     }, $class;
 
-    foreach ( qw( out_method out_mode ) ) {
-	$self->{$_} = $options{$_} if exists $options{$_};
-    }
-
-    bless $self, $class;
-    $self->{interp} = $options{interp};
     $self->{count} = ++$self->{interp}{request_count};
     $self->_initialize;
     return $self;
@@ -473,10 +471,10 @@ sub print
 
 sub time
 {
-    my ($self) = @_;
-    my $time = $self->interp->current_time;
-    $time = time() if $time eq 'real';
-    return $time;
+    my $self = shift;
+    $self->{time} = shift if @_;  # XXX needs to check validity
+    return time() if $self->{time} eq 'real';
+    return $self->{time};
 }
 
 #
@@ -824,6 +822,7 @@ sub PRINT
 	}
 	else
 	{
+	    local $^W;  # Quiets an 'untie attempted while 1 inner references exist' warning
 	    untie *STDOUT;
 	}
 	$self->{request}->out(@_);
@@ -1172,12 +1171,16 @@ component's return value is discarded.
 
 =item time
 
-Returns the interpreter's notion of the current time in Perl time()
+Returns the request's notion of the current time in Perl time()
 format (number of seconds since the epoch).
 
 By using C<$m-E<gt>time> rather than calling time() directly, you enable
 the option of previewer or port-based time/date simulations. e.g.
 a port that looks one day into the future.
+
+The notion of the current time can be set by passing an optional
+argument to the C<time()> method, e.g. C<$m-E<gt>time(time() + 60*60)>
+sets the time forward one hour.
 
 =for html <a name="item_top_args">
 
