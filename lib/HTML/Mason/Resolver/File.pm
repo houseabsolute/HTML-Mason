@@ -18,7 +18,7 @@ sub new {
     my $package = shift;
     my $self = $package->SUPER::new(@_);
     HTML::Mason::Exception::Params->throw( error => "must specify value for comp_root\n" )
-	unless $self->interp->{comp_root};
+	unless $self->interp->comp_root;
     return $self;
 }
 
