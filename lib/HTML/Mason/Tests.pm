@@ -64,12 +64,6 @@ Including one called <% $comp->subcomps($subkeys[0])->name %>.
 % }
 My title is <% $comp->title =~ /anon/ ? '[anon something]' : $comp->title %>.
 
-% if (defined($comp->cache_file)) {
-%   my ($subfile) = ($comp->cache_file =~ m{data/(?:[^/]+/)?(cache/.*?)$});
-%   if (defined($subfile)) {
-My cache file is /.../<% $subfile %>
-%   }
-% }
 % if (defined($comp->object_file)) {
 %   my ($subfile) = ($comp->object_file =~ m{data/(?:[^/]+/)?(obj/.*?)$});
 %   if (defined($subfile)) {
