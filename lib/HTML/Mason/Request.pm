@@ -109,6 +109,12 @@ sub exec {
     my ($self, $comp, @args) = @_;
     my $interp = $self->interp;
 
+    # All errors returned from exec() will be in exception form.
+    local $SIG{'__DIE__'} = sub {
+	my $err = $_[0];
+	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
+    };
+
     # Check if reload file has changed.
     $interp->check_reload_file if ($interp->use_reload_file);
 
@@ -122,13 +128,8 @@ sub exec {
     if (!ref($comp) && substr($comp,0,1) eq '/') {
 	$comp =~ s,/+,/,g;
 	$orig_path = $path = $comp;
-	{
-	    local $SIG{'__DIE__'} = $interp->die_handler if $interp->die_handler;
-	    eval { $comp = $interp->load($path) };
-	    if (my $err = $@) {
-		UNIVERSAL::can( $err, 'rethrow' ) ? $err->rethrow : error($err);
-	    }
-	}
+	$comp = $interp->load($path);
+
 	unless ($comp) {
 	    if (defined($interp->dhandler_name) and $comp = $interp->find_comp_upwards($path,$interp->dhandler_name)) {
 		my $parent_path = $comp->dir_path;
@@ -136,20 +137,14 @@ sub exec {
 	    }
 	}
 	unless ($comp) {
-	    $self->{error_code} = 'top_not_found';
 	    error "could not find component for initial path '$path'\n";
 	}
     } elsif ( ! UNIVERSAL::isa( $comp, 'HTML::Mason::Component' ) ) {
 	param_error "exec: first argument ($comp) must be an absolute component path or a component object";
     }
 
-    my ($result, @result);
-
-    # Error may occur when calling component
-    my $err;
-
     # This block repeats only if $m->decline is called in a component
-    my $declined;
+    my ($result, @result, $err, $declined);
     do
     {
 	$declined = 0;
@@ -176,13 +171,10 @@ sub exec {
 	$self->{top_args} = \@args;
 
 	# Call the first component.
-	{
-	    local $SIG{'__DIE__'} = $interp->die_handler if $interp->die_handler;
-	    if (wantarray) {
-		@result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
-	    } else {
-		$result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
-	    }
+	if (wantarray) {
+	    @result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
+	} else {
+	    $result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
 	}
 	$err = $@;
 
@@ -204,7 +196,7 @@ sub exec {
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
     }
 
-    # Flush output buffer for batch mode.
+    # Flush output buffer.
     $self->flush_buffer;
     $self->pop_buffer_stack;
 
@@ -601,7 +593,7 @@ sub comp {
 	# This extra buffer is to catch flushes (in the given scalar ref).
 	# The component's main buffer can then be cleared without
 	# affecting previously flushed output.
-        $self->push_buffer_stack($self->top_buffer->new_child( mode => 'batch', sink => $mods{store}, ignore_flush => 1 ));
+        $self->push_buffer_stack($self->top_buffer->new_child( sink => $mods{store}, ignore_flush => 1 ));
     }
     $self->push_buffer_stack($self->top_buffer->new_child);
 
@@ -703,7 +695,7 @@ sub content {
     # make the stack frame look like we are still the previous component
     my $old_frame = $self->pop_stack;
 
-    $self->push_buffer_stack( $self->top_buffer->new_child( mode => 'batch', ignore_flush => 1 ) );
+    $self->push_buffer_stack( $self->top_buffer->new_child( ignore_flush => 1 ) );
     eval { $content->(); };
     my $err = $@;
 
@@ -1105,8 +1097,7 @@ Clears the Mason output buffer. Any output sent before this line is
 discarded. Useful for handling error conditions that can only be
 detected in the middle of a request.
 
-clear_buffer only works in batch output mode, and is thwarted by
-C<flush_buffer>.
+clear_buffer is, of course, thwarted by C<flush_buffer>.
 
 =for html <a name="item_comp">
 
