@@ -26,7 +26,7 @@ use strict;
 # in the return value.  This lets the creator be totally ignorant of
 # the creation parameters of any objects it creates.
 
-use Params::Validate qw(SCALAR);
+use Params::Validate qw(SCALAR HASHREF);
 
 my %VALID_PARAMS = ();
 my %CONTAINED_OBJECTS = ();
@@ -46,34 +46,57 @@ sub contained_objects
 
 sub create_contained_objects
 {
+    # Typically $self doesn't exist yet, $_[0] is a string classname
     my ($class, %args) = @_;
 
-    my %c = $class->get_contained_objects(%args);
-    while (my ($name, $default_class) = each %c) {
-	next if exists $args{$name};
+    my %c = $class->get_contained_objects;
+    while (my ($name, $spec) = each %c) {
+	my $default_class = ref($spec) ? $spec->{class}   : $spec;
+	my $delayed       = ref($spec) ? $spec->{delayed} : 0;
+	if (exists $args{$name}) {
+	    # User provided an object
+	    die "Cannot provide a '$name' object, its creation is delayed" if $delayed;
+	    next;
+	}
 
 	# Figure out exactly which class to make an object of
 	my $contained_class = delete $args{"${name}_class"} || $default_class;
 	next unless $contained_class;
 
-	$args{$name} = $class->_make_contained_object($name, $contained_class, \%args);
+	if ($delayed) {
+	    $args{"_delayed_$name"} = $class->_get_contained_args($name, $contained_class, \%args);
+	    #warn "saving delayed '$name' args for $contained_class: (@{[ %{$args{qq[_delayed_$name]}} ]})";
+	    $args{"_delayed_$name"}{_class} = $contained_class;
+	} else {
+	    $args{$name} = $class->_make_contained_object($name, $contained_class, \%args);
+	}
     }
 
     return %args;
 }
 
-sub _make_contained_object
+sub create_delayed_object
+{
+    my ($self, $name, %args) = @_;
+    my $spec = $self->{"_delayed_$name"}
+	or die "Unknown delayed object '$name'";
+    my $class = delete $spec->{_class}
+	or die "Unknown class for delayed object '$name'";
+
+    return $class->new(%$spec, %args);
+}
+
+sub _get_contained_args
 {
     my ($class, $name, $contained_class, $args) = @_;
 
     die "Invalid class name '$contained_class'" unless $contained_class =~ /^[\w:]+$/;
+
+    unless ($contained_class->can('new'))
     {
 	no strict 'refs';
-	unless ( defined ${ "$contained_class\::VERSION" } )
-	{
-	    eval "use $contained_class";
-	    die $@ if $@;
-	}
+	eval "use $contained_class";
+	die $@ if $@;
     }
 
     # Everything this class will accept, including parameters it will
@@ -81,14 +104,23 @@ sub _make_contained_object
     my $allowed = $contained_class->allowed_params($args);
 
     my %contained_args;
-
     foreach (keys %$allowed)
     {
 	$contained_args{$_} = delete $args->{$_} if exists $args->{$_};
     }
-    return $contained_class->new(%contained_args);
+    return \%contained_args;
 }
 
+sub _make_contained_object
+{
+    my ($class, $name, $contained_class, $args) = @_;
+
+    my $contained_args = $class->_get_contained_args($name, $contained_class, $args);
+    return $contained_class->new(%$contained_args);
+}
+
+# Iterate through this object's @ISA and find all entries in
+# 'contained_objects' list.  Return as a hash.
 sub get_contained_objects
 {
     my $class = ref($_[0]) || shift;
@@ -99,7 +131,7 @@ sub get_contained_objects
     foreach my $superclass (@{ "${class}::ISA" }) {
 	next unless exists $CONTAINED_OBJECTS{$superclass};
 	my %superparams = $superclass->get_contained_objects;
-	@c{keys %superparams} = values %superparams;
+	@c{keys %superparams} = values %superparams;  # Add %superparams to %c
     }
 
     return %c;
@@ -116,7 +148,9 @@ sub allowed_params
 
     foreach my $name (keys %c)
     {
-	# Can accept a 'foo' parameter - should already be in the validation_spec
+	# Can accept a 'foo' parameter - should already be in the validation_spec.
+	# Also, its creation parameters should already have been extracted from $args,
+	# so don't extract any parameters.
 	next if exists $args->{$name};
 
 	# Can accept a 'foo_class' parameter instead of a 'foo' parameter
@@ -132,17 +166,17 @@ sub allowed_params
 	# We have to get the allowed params for the contained object
 	# class.  That class could be overridden, in which case we use
 	# the new class provided.  Otherwise, we use our default.
-	my $contained_class = exists $args->{$low_class} ? $args->{$low_class} : $c{$name};
+	my $spec = exists $args->{$low_class} ? $args->{$low_class} : $c{$name};
+	my $contained_class = ref($spec) ? $spec->{class}   : $spec;
+	my $delayed         = ref($spec) ? $spec->{delayed} : 0;
 
 	# we have to make sure it is loaded before we try calling
 	# ->allowed_params
+	unless ( $contained_class->can('allowed_params') )
 	{
 	    no strict 'refs';
-	    unless ( defined ${ "$contained_class\::VERSION" } )
-	    {
-		eval "use $contained_class";
-		die $@ if $@;
-	    }
+	    eval "use $contained_class";
+	    die $@ if $@;
 	}
 
 	my $subparams = $contained_class->allowed_params($args);
@@ -163,6 +197,14 @@ sub validation_spec
 	next unless exists $VALID_PARAMS{$superclass};
 	my $superparams = $superclass->validation_spec;
 	@p{keys %$superparams} = values %$superparams;
+    }
+
+    # We may need to allow some '_delayed_$name' parameters
+    my %specs = $class->get_contained_objects;
+    while (my ($name, $spec) = each %specs) {
+	next unless ref $spec;
+	next unless $spec->{delayed};
+	$p{"_delayed_$name"} = { type => HASHREF };
     }
 
     return \%p;
