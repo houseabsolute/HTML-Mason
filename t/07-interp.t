@@ -907,7 +907,6 @@ EOF
 
 #------------------------------------------------------------
 
-    my $comp_root = HTML::Mason::Tests->comp_root;
     $group->add_test( name => 'no_comp_root',
 		      description => 'test interp without a comp root or data dir',
 		      component => <<'EOF',
