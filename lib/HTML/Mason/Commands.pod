@@ -5,7 +5,7 @@ HTML::Mason::Commands - Mason command reference
 =head1 DESCRIPTION
 
 This was the documentation for the C<mc_> command set. In Mason 0.8 and
-beyond, C<mc_> commands have been merged into the new Request API. e.g.
+beyond, C<mc_> commands have been replaced by the new B<L<HTML::Mason::Request>> API. e.g.
 
    mc_comp becomes $m->comp
    mc_file becomes $m->file
@@ -13,7 +13,7 @@ beyond, C<mc_> commands have been merged into the new Request API. e.g.
 
 Below is a description of how to convert your C<mc_> commands to C<$m>
 methods. There is also a utility provided with the distribution,
-bin/convert0.8.pl, that performs most of these conversions for you.
+F<bin/convert0.8.pl>, that performs these conversions for you.
 For backwards compatibility C<mc_> commands still work for a
 limited time but will eventually go away.
 
@@ -65,12 +65,12 @@ C<mc_comp_source(path)> becomes C<$m-E<gt>fetch_comp(path)-E<gt>source_file>
 
 =item
 
-C<mc_comp_stack> becomes C<map($_-E<gt>path,$m-E<gt>callers)>
+C<mc_comp_stack> becomes C<map($_-E<gt>title,$m-E<gt>callers)>
 
 =item
 
-C<mc_date> goes away, this was a legacy function anyway. Replace by
-calling the date formatting function of your choice on C<$m-E<gt>time>.
+C<mc_date> goes away, this was a legacy function. Replace by calling
+the date formatting function of your choice on C<$m-E<gt>time>.
 
 =item
 
@@ -91,6 +91,12 @@ C<mc_out> becomes C<$m-E<gt>out>
 =item
 
 C<mc_time> becomes C<$m-E<gt>time>
+
+=item
+
+C<mc_suppress_http_header> (with or without argument) is no longer needed
+and can simply be removed. See L<Devel/Sending HTTP Headers> for
+more information.
 
 =back
 

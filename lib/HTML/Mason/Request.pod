@@ -15,6 +15,30 @@ syntactic tags. Mason creates a new Request object for every web
 request. Inside a component you
 access the current request object via the global C<$m>.
 
+=head1 COMPONENT PATHS
+
+The methods C<comp>, C<comp_exists>, C<fetch_comp>, and
+C<process_comp_path> take a component path as argument.
+
+=over
+
+=item *
+
+If the path is absolute (starting with a '/'), then the component is
+found relative to the component root.
+
+=item *
+
+If the path is relative (no leading '/'), then the component is found
+relative to the current component directory.
+
+=item *
+
+If the path matches both a subcomponent and file-based component, the
+subcomponent takes precedence.
+
+=back
+
 =head1 METHODS
 
 =over
@@ -156,10 +180,7 @@ I<Component Developer's Guide> for examples.
 
 Calls the component designated by I<comp> with the specified
 option/value pairs. I<comp> may be a component path or a component
-object. If the component path is absolute (starting with a '/'), then
-the component is found relative to the component root.  Relative
-component paths (no leading '/') are relative to the current component
-directory.
+object. 
 
 Components work exactly like Perl subroutines in terms of return
 values and context. A component can return any type of value, which is
@@ -203,9 +224,8 @@ removed.  Otherwise returns undef.
 
 =item fetch_comp (comp_path)
 
-Given an absolute or relative component path, returns the
-corresponding component object or undef if no such component exists.
-Looks for subcomponents as well as file-based components.
+Given a I<comp_path>, returns the corresponding component object or
+undef if no such component exists.
 
 =item fetch_next
 
@@ -238,7 +258,7 @@ Returns the Interp object associated with this request.
 
 =item out (string)
 
-Print the given string. Rarely needed, since normally all HTML is just
+Print the given I<string>. Rarely needed, since normally all HTML is just
 placed in the component body and output implicitly. $m->out is useful
 if you need to output something in the middle of a Perl block.
 
@@ -252,8 +272,7 @@ Returns the Parser object associated with this request.
 
 =item process_comp_path (comp_path)
 
-Given an absolute or relative component path, returns the
-corresponding absolute component path.
+Given a I<comp_path>, returns the corresponding absolute component path.
 
 =item scomp
 

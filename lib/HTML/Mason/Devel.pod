@@ -216,14 +216,19 @@ methods.  You'll be introduced to these methods throughout this
 document as they are needed.  For a description of all methods see
 B<L<HTML::Mason::Request>>.
 
+Note to pre-0.8 users: The $m API replaces both the old C<mc_> command
+set and the $REQ variable. See B<L<HTML::Mason::Commands>> for a
+conversion guide.  There is also a utility provided with the
+distribution, F<bin/convert0.8.pl>, that performs appropriate conversions
+on your existing component tree.
+
 =head2 SYSTEM OBJECTS
 
 Three system objects share the work of serving requests in Mason:
 Parser, Interp, and ApacheHandler. The administrator creates these
 objects and provides parameters that shape Mason's behavior. As a pure
 component developer you shouldn't need to worry about or access these
-objects, but occasionally we'll mention a parameter that affects a
-feature.
+objects, but occasionally we'll mention a relevant parameter.
 
 =head2 COMPONENT OBJECTS
 
@@ -1230,16 +1235,17 @@ and return value in the references provided, and returns 1.
 Mason automatically sends HTTP headers via $r->send_http_header. It
 tries to delay sending headers till the last possible moment, to give
 components a chance to affect headers (using $r->header_out,
-$r->content_type, etc.)
+$r->content_type, etc.) It won't send headers if they've already
+been sent manually.
 
 To determine the exact header behavior on your system, you need to
 know whether your server's C<out_mode> is 'batch' (meaning all output
 is buffered until the end) or 'stream' (all output is sent
-immediately). Your administrator should have this information.  If
-your administrator doesn't know the answer then it is probably
+immediately). Your administrator should have this information. If
+your administrator doesn't know then it is probably
 'batch', the default.
 
-In batch mode the header situation is extremely simple: Mason wait
+In batch mode the header situation is extremely simple: Mason waits
 until the very end of the request to send headers. Any component can
 modify or augment the headers.
 
@@ -1255,7 +1261,6 @@ to see whether the user has a cookie; if not, it inserts a new cookie
 into the header.
 
     <%init>
-    ...
     my $cookie = $m->comp('/shared/get_user_cookie');
     if (!$cookie) {
 	$cookie = new CGI::Cookie (...);
@@ -1269,62 +1274,8 @@ will work as long as I<get_user_cookie> doesn't output anything besides
 whitespace (and given its functional nature, it shouldn't).
 
 Note to pre-0.8 users: the suppress_http_header command is thankfully
-no longer needed. For backwards compatibility $m->suppress_http_header
-is defined but does nothing.
-
-=head1 COMPONENT AND REQUEST OBJECTS
-
-In version 0.7, the Mason core was rewritten in a more object-oriented
-manner with two additional classes, C<Request> and C<Component>. Besides
-contributing to a cleaner, more scalable system, the new APIs provide
-developers with increased control and introspection over Mason's inner
-workings.
-
-C<HTML::Mason::Request> allows you to query the state of, and perform
-actions on, the current request from inside a component. It provides
-for Mason what Apache::Request provides for the Apache server. Inside a
-component you access the current request object via the global C<$m>.
-From this one object you can:
-
-=over 4
-
-=item *
-
-get handles on the associated Parser, Interpreter, and ApacheHandler objects
-
-=item *
-
-access the current component and the stack of previous components, as
-well as their arguments
-
-=item *
-
-fetch and call new components
-
-=back
-
-C<HTML::Mason::Component> is the class where Mason keeps all
-components loaded into memory. Once you've gotten a component object
-(generally from one of the Request methods), you can:
-
-=over 4
-
-=item *
-
-get its source file, object file, and cache file pathnames
-
-=item *
-
-query about its declared arguments and subcomponents
-
-=item *
-
-call the component by using it inside <& &> or C<$m->comp>
-
-=back
-
-See the L<HTML::Mason::Request> and L<HTML::Mason::Component>
-reference pages for more details.
+no longer needed. For backwards compatibility, mc_suppress_http_header
+is still defined but does nothing.
 
 =head1 USING THE PERL DEBUGGER
 
