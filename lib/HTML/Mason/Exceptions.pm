@@ -303,20 +303,20 @@ sub as_html
 <p align="center"><font face="Verdana, Arial, Helvetica, sans-serif"><b>System error</b></font></p>
 <table border="0" cellspacing="0" cellpadding="1">
  <tr>
-  <td nowrap align="left" valign="top"><b>error:</b>&nbsp;</td>
-  <td align="left" valign="top" nowrap><% $msg %></td>
+  <td nowrap="nowrap" align="left" valign="top"><b>error:</b>&nbsp;</td>
+  <td align="left" valign="top"><% $msg %></td>
  </tr>
  <tr>
-  <td nowrap align="left" valign="top"><b>context:</b>&nbsp;</td>
-  <td align="left" valign="top" nowrap>
+  <td nowrap="nowrap" align="left" valign="top"><b>context:</b>&nbsp;</td>
+  <td align="left" valign="top" nowrap="nowrap">
    <table border="0" cellpadding="0" cellspacing="0">
 
 %   foreach my $entry (@{$info->{context}}) {
 %	my ($line_num, $line, $highlight) = @$entry;
 %	$line = '' unless defined $line;
     <tr>
-     <td nowrap align="left" valign="top"><b><% $line_num %></b>&nbsp;</td>
-     <td align="left" valign="top" nowrap><% $highlight ? "<font color=red>" : "" %><% $line |h %><% $highlight ? "</font>" : "" %></td>
+     <td nowrap="nowrap" align="left" valign="top"><b><% $line_num %></b>&nbsp;</td>
+     <td align="left" valign="top" nowrap="nowrap"><% $highlight ? "<font color=red>" : "" %><% $line |h %><% $highlight ? "</font>" : "" %></td>
     </tr>
 
 %    }
@@ -325,8 +325,8 @@ sub as_html
   </td>
  </tr>
  <tr>
-  <td align="left" valign="top" nowrap><b>code stack:</b>&nbsp;</td>
-  <td align="left" valign="top" nowrap>
+  <td align="left" valign="top" nowrap="nowrap"><b>code stack:</b>&nbsp;</td>
+  <td align="left" valign="top" nowrap="nowrap">
 %    foreach my $frame (@{$info->{frames}}) {
 	<% $frame->filename |h %>:<% $frame->line |h %><br>
 %    }
