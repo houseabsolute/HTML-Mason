@@ -94,6 +94,7 @@ sub flush
 {
     my $self = shift;
     return if $self->ignore_flush;
+    return unless exists $self->{buffer};
 
     my $output = $self->output;
     return unless defined $output && $output ne '';
@@ -106,8 +107,8 @@ sub clear
 {
     my $self = shift;
     return if $self->ignore_clear;
-
     return unless exists $self->{buffer};
+
     ${$self->{buffer}} = '';
 }
 
