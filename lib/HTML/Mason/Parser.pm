@@ -317,30 +317,16 @@ sub parse
 		    goto parse_error;
 		}
 		my $length = $i-($c+2);
-		(my $call = substr($text,$c+2,$length)) =~ s/^\s+//;
-		my ($comp,$arglist);
-		if ((my $quotemark = (substr($call,0,1))) =~ /[\'\"]/) {
-		    # component path delimited by quotes
-		    my $j = index($call,$quotemark,1);
-		    if ($j==-1) {
-			$err = "<& &> section starts with unmatched quote ($quotemark)";
-			$errpos = $segbegin + $c;
-			goto parse_error;
-		    }
-		    $comp = substr($call,1,$j-1);
-		    $arglist = substr($call,$j+1);
-		    $arglist =~ s/^\s*,//;
-		} else {
-		    # no quotes
-		    ($comp,$arglist) = split(',',$call,2);
-		    $comp =~ s/\s+$//;
-		    if ($comp =~ /\s/) {
-			$err = "comp path ($comp) cannot contain whitespace; did you forget a comma?";
-			$errpos = $segbegin + $c;
-			goto parse_error;
-		    }
+		my $call = substr($text,$c+2,$length);
+		for ($call) { s/^\s+//; s/\s+$// }
+		if (substr($call,0,1) =~ /[A-Za-z0-9\/_.]/) {
+		    # Literal component path; put quotes around it
+		    my $comma = index($call,',');
+		    $comma = length($call) if ($comma==-1);
+		    (my $comp = substr($call,0,$comma)) =~ s/\s+$//;
+		    $call = "'$comp'";
 		}
-		$perl = (defined($arglist) && $arglist =~ /\S/) ? "mc_comp('$comp',$arglist);" : "mc_comp('$comp');";
+		$perl = "mc_comp($call);";
 		$curpos = $c+2+$length+2;
 		$pureTextFlag = 0;
 	    } else {
