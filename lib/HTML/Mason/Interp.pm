@@ -434,7 +434,6 @@ sub make_component {
 
     # The compiler expects 'comp_text' and 'name'
     $p{name} ||= $p{path} ? $p{path} : '<anonymous component>';
-    my $comp_class = $p{path} ? 'HTML::Mason::Component::FileBased' : 'HTML::Mason::Component';
     my $object = $self->compiler->compile( %p );
 
     if ($p{path}) {
