@@ -30,7 +30,7 @@ sub lookup_path {
     my ($self,$path,$interp) = @_;
     my $comp_root = $interp->comp_root;
     if (!ref($comp_root)) {
-	my $srcfile = File::Spec->catfile( $comp_root, $path );
+	my $srcfile = File::Spec->catdir( $comp_root, $path );
 	my @srcstat = stat $srcfile;
 	return (-f _) ? ($path, $srcfile, $srcstat[9]) : undef;
     } elsif (ref($comp_root) eq 'ARRAY') {
