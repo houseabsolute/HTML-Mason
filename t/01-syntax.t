@@ -196,5 +196,26 @@ EOF
 
 #------------------------------------------------------------
 
+	$group->add_test( name => 'comment_in_attr_flags',
+			  description => 'tests that comments are allowed at end of flag/attr lines',
+			  component => <<'EOF',
+a
+<%flags>
+inherit => undef # foo bar
+</%flags>
+<%attr>
+a => 1 # a is 1
+b => 2 # ya ay
+</%attr>
+b
+EOF
+			  expect => <<'EOF',
+a
+b
+EOF
+			);
+
+#------------------------------------------------------------
+
     return $group;
 }
