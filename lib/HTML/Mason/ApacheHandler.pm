@@ -900,23 +900,23 @@ sub request_args
     # leak!
     my $apr;
 
-    my (%args, $cgi_object);
+    my ($args, $cgi_object);
     if ($self->args_method eq 'mod_perl') {
         $apr = ( UNIVERSAL::isa($r, 'Apache::Request') ?
                  $r :
                  Apache::Request->instance($r) );
 
-	%args = $self->_mod_perl_args($apr);
+	$args = $self->_mod_perl_args($apr);
     } else {
         $apr = $r;
 	$cgi_object = CGI->new;
-	%args = $self->_cgi_args($r, $cgi_object);
+	$args = $self->_cgi_args($r, $cgi_object);
     }
-    return (\%args, $apr, $cgi_object);
+    return ($args, $apr, $cgi_object);
 }
 
 #
-# Get %args hash via CGI package
+# Get $args hashref via CGI package
 #
 sub _cgi_args
 {
@@ -924,13 +924,13 @@ sub _cgi_args
 
     # For optimization, don't bother creating a CGI object if request
     # is a GET with no query string
-    return if $r->method eq 'GET' && !scalar($r->args);
+    return {} if $r->method eq 'GET' && !scalar($r->args);
 
     return HTML::Mason::Utils::cgi_request_args($q, $r->method);
 }
 
 #
-# Get %args hash via Apache::Request package.
+# Get $args hashref via Apache::Request package.
 #
 sub _mod_perl_args
 {
@@ -942,7 +942,7 @@ sub _mod_perl_args
 	$args{$key} = @values == 1 ? $values[0] : \@values;
     }
 
-    return %args;
+    return \%args;
 }
 
 #

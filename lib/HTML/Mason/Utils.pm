@@ -36,14 +36,16 @@ sub cgi_request_args
     # parameter named 'keywords' with a value of () (empty array).
     # This is apparently a feature related to <ISINDEX> queries or
     # something (see the CGI.pm) docs.  It makes my head hurt. - dave
-    my @methods = $method ne 'POST' || ! $ENV{QUERY_STRING} ? ( 'param' ) : ( 'param', 'url_param' );
+    my @methods =
+        $method ne 'POST' || ! $ENV{QUERY_STRING} ? ( 'param' ) : ( 'param', 'url_param' );
+
     foreach my $key ( map { $q->$_() } @methods ) {
 	next if exists $args{$key};
 	my @values = map { $q->$_($key) } @methods;
 	$args{$key} = @values == 1 ? $values[0] : \@values;
     }
 
-    return %args;
+    return wantarray ? %args : \%args;
 }
 
 
@@ -79,9 +81,10 @@ the component falls under.
 
 This function expects to receive a C<CGI.pm> object and the request
 method (GET, POST, etc).  Given these two things, it will return a
-hash containing all the arguments passed via the CGI request.  The
-keys will be argument names and the values will be either scalars or
-array references.
+hash in list context or a hashref in scalar context.  The hash(ref)
+will contain all the arguments passed via the CGI request.  The keys
+will be argument names and the values will be either scalars or array
+references.
 
 =back
 
