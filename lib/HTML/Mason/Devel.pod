@@ -1171,11 +1171,11 @@ without C<if> statements surrounding each link!  Note that the regular
 expression need not be very robust as long as you have control over what
 will appear in the body.
 
-Whenever a component that has a filter, or the components that it
-calls, are executing, calls to C<< $m->flush_buffer() >> are ignored.
-This is to ensure that the filter sees the entire component output as
-a whole, all at once.  However, calls to C<< $m->clear_buffer() >> are
-not ignored.
+It should be noted that a filter cannot rely on receiving all of a
+component's output at once, and so may be called multiple times with
+different chunks of output.  This can happen if autoflush is on, or if
+a filter-containing component, or the components it calls, call the
+C<< $m->flush_buffer() >> method.
 
 You can use L<Component Calls with Content|"Component Calls with
 Content"> if you want to filter specific parts of a component rather
