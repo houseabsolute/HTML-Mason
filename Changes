@@ -9,20 +9,20 @@ available at http://www.masonhq.com/code/history.html.
 
 [ BUG FIXES ]
 
-- Fix some buglets in the POD and HTML versions of the docs.
-- Fixed test failures when running as root.  These failures were not
-reflective of bugs in Mason, simply problems in the tests or test
-setup.  Now we skip the tests for end user installs (we still run them
-during development, never fear).
 - Fixed a number of problems with filters:
 -- They didn't see changes made to %ARGS (they were seeing a copy).
 -- They couldn't see any variables declared in <%args> blocks.
 -- The presence of a filter caused a call to $m->flush_buffer,
 breaking redirects.
 - Added a number of tests for filters (*cough*).
+- Fixed broken links and other bugs in the POD and HTML versions of
+the docs.
+- Fixed test failures when running as root.  These failures were not
+reflective of bugs in Mason, simply problems in the tests or test
+setup.  Now we skip the tests for end user installs (we still run them
+during development, never fear).
 - HTML::Mason::Request contained code that caused an error when using
 the CPAN shell's "r" command.
-
 
 1.14  October 7, 2002
 
