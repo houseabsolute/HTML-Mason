@@ -610,24 +610,9 @@ sub cache_self {
     }
 
     # If the top buffer has a filter we need to remove it because
-    # either:
-    #
-    # 1. We have no cached output and we'll be calling the component
-    # again in a moment.  And when the component is called it'll stick
-    # _another_ filtering buffer on the stack.
-    #
-    # ... or ...
-    #
-    # 2. We do have cached output, and that output has already passed
-    # through the filter in the past so we don't want to filter it
-    # again.
-    #
-    # We'll put it back later no matter what in order to let it be
-    # taken off for real in Component.pm
-    #
-    my $filter;
-    $filter = pop @{ $self->{buffer_stack} }
-        if $self->top_stack->{comp}->has_filter;
+    # we'll be adding the filter buffer again in a moment in order to
+    # capture the _filtered_ component output for caching.
+    pop @{ $self->{buffer_stack} } if $self->top_stack->{comp}->has_filter;
 
     my ($output, $retval);
     eval
@@ -645,6 +630,10 @@ sub cache_self {
                                               ignore_flush => 1,
                                               ignore_clear => 1,
                                             );
+
+            push @{ $self->{buffer_stack} },
+                $self->top_buffer->new_child( filter_from => $comp )
+                    if $comp->has_filter;
 
             local $top_stack->{in_cache_self} = 1;
             #
@@ -669,6 +658,12 @@ sub cache_self {
             # Whether there was an error or not we need to pop the buffer
             # stack.
             #
+            if ( $comp->has_filter )
+            {
+                my $filter = pop @{ $self->{buffer_stack} };
+                $filter->flush;
+            }
+
             pop @{ $self->{buffer_stack} };
 
             if ($@) {
@@ -684,14 +679,17 @@ sub cache_self {
         }
     };
 
+    # We can't let the buffer stack grow or shrink inside a call to
+    # ->comp or we end up with a mess.  But we don't want to put pack
+    # the original filtering buffer, or the component output would end
+    # up getting filtered twice.
+    push @{ $self->{buffer_stack} },
+        $self->top_buffer->new_child
+            if $self->top_stack->{comp}->has_filter;
+
     if ($@) {
-        push @{ $self->{buffer_stack} }, $filter
-            if $filter;
         UNIVERSAL::can($@, 'rethrow') ? $@->rethrow : error $@;
     }
-
-    push @{ $self->{buffer_stack} }, $filter
-        if $filter;
 
     #
     # Print the component output.
