@@ -38,23 +38,25 @@ EOF
 }
 
 # These are required modules.
-
-my %prereq = ( 'File::Spec' => 0.8,
-	       'Params::Validate' => 0.24,
-	       'Exception::Class' => 1.01,
-	       'Cache::Cache' => 1.00,
-               'Class::Container' => 0.07,
+my %prereq = ( 'File::Spec' => {version => 0.8,
+				where => "CPAN/modules/by-module/File/File-Spec-x.x.tar.gz"},
+	       'Params::Validate' => {version => 0.24,
+				      where => "CPAN/modules/by-authors/id/D/DR/DROLSKY/Params-Validate-x.x.tar.gz"},
+	       'Exception::Class' => {version => 1.01,
+				      where => "CPAN/modules/by-module/Exception/Exception-Class-x.x.tar.gz"},
+	       'Cache::Cache' => {version => 1.00,
+				  where => "CPAN/modules/by-authors/id/D/DC/DCLINTON/Cache-Cache-x.x.tar.gz"},
+               'Class::Container' => {version => 0.07,
+				      where => "CPAN/modules/by-authors/id/K/KW/KWILLIAMS/Class-Container-x.x.tar.gz"},
 	     );
 
-chk_version('File::Spec' => '0.8') or
-    warn  "\n"
-	. "*** Mason requires version 0.8, or later, of File::Spec\n"
-	. "    from CPAN/modules/by-module/File/File-Spec-x.x.tar.gz\n\n";
-
-chk_version('Params::Validate' => '0.24') or
-    warn  "\n"
-	. "*** Mason requires version 0.24, or later, of Params::Validate\n"
-	. "    from CPAN/modules/by-authors/id/D/DR/DROLSKY/Params-Validate-x.x.tar.gz\n\n";
+foreach (keys %prereq) {
+    chk_version($_ => $prereq{$_}{version}) or
+	warn  "\n"
+	    . "*** Mason requires version $prereq{$_}{version} or later of $_\n"
+	    . "    from $prereq{$_}{where}\n\n";
+    $prereq{$_} = $prereq{$_}{version};
+}
 
 eval { require mod_perl };
 unless ( $@ || $^O =~ /mac|darwin/ )
@@ -67,22 +69,6 @@ unless ( $@ || $^O =~ /mac|darwin/ )
 
     $prereq{'Apache::Request'} = 0.31;
 }
-
-chk_version('Exception::Class' => '1.01') or
-    warn  "\n"
-        . "    Mason requires version 1.01, or later, of Exception::Class\n"
-	. "    from CPAN/modules/by-module/Exception/Exception-Class-x.x.tar.gz\n\n";
-
-chk_version('Cache::Cache' => '1.00') or
-    warn  "\n"
-	. "*** If you plan to use Mason's caching feature,\n"
-        . "    Mason requires version 1.00, or later, of Cache::Cache\n"
-	. "    from CPAN/modules/by-authors/id/D/DC/DCLINTON/Cache-Cache-x.x.tar.gz\n\n";
-
-chk_version('Class::Container' => '0.07') or
-    warn  "\n"
-	. "*** Mason requires version 0.07, or later, of Class::Container\n"
-	. "    from CPAN/modules/by-authors/id/K/KW/KWILLIAMS/Class-Container-x.x.tar.gz\n\n";
 
 setup_mod_perl_tests() unless $opts{'no-prompts'};
 assisted_install_config() unless $opts{'no-prompts'};
