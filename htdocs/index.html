@@ -8,116 +8,159 @@
 
 <h3>Mason Documentation</h3>
 
-<table width="100%" cellspacing="0" cellpadding="0">
-  <tr>
-    <td width="50%" valign="top">
-     <h4>Manuals</h4>
-      <table border=0>
+  <table border=0 cellpadding=4 cellspacing=2>
 
-        <tr>
-        <td valign=top>&nbsp;&#149;</td>
-        <td><a href="Mason.html">Introduction</a><br>
-        Introduction and basic installation.
-        </td>
-        </tr>
+   <tr><td colspan=8><h4>Manuals</h4></td></tr>
 
-        <tr>
-        <td valign=top>&nbsp;&#149;</td>
-        <td><a href="Devel.html">Developer's Manual</a><br>
-        This manual is written for the Mason developer. It describes how to
-        write, run, and debug Mason components.
-        </td>
-        </tr>
+   <tr>
+    
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="Mason.html">Introduction</a><br>
+Introduction and basic installation.
+</td>
 
-        <tr>
-        <td valign=top>&nbsp;&#149;</td>
-        <td><a href="Admin.html">Administrator's Manual</a><br>
-        This manual is written for the web master or system administrator. It
-        describes how to install, configure, and tune a Mason system.
-        </td>
-        </tr>
-        
-      </table>
-    </td>
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="Admin.html">Administrator's Manual</a><br>
+This manual is written for the web master or system administrator. It
+describes how to install, configure, and tune a Mason system.
+</td>
 
-    <td width="50%" valign="top">
-     <h4>Reference</h4>
-      <table border=0>
 
-        <tr>
-        <td valign=top>&nbsp;&#149;</td>
-        <td><a href="Params.html">Parameters</a><br>
-        List of all configuration parameters.
-        </td>
-        </tr>
-        
-        <tr>
-        <td valign=top>&nbsp;&#149;</td>
-        <td><a href="Request.html">Request</a><br>
-        The Request API is the gateway to all Mason features not provided by syntactic tags.
-        </td>
-        </tr>
+   </tr>
 
-        <tr>
-        <td valign=top>&nbsp;&#149;</td>
-        <td><a href="Component.html">Component</a><br>
-        The Component API allows you to examine components loaded into memory.
-        </td>
-        </tr>
+   <tr>        
+    
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="Devel.html">Developer's Manual</a><br>
+This manual is written for the Mason developer. It describes how to
+write, run, and debug Mason components.
+</td>
 
-        <tr>
-        <td valign=top>&nbsp;&#149;</td>
-        <td><a href="CGIHandler.html">CGIHandler</a><br>
-        The CGIHandler makes helps when using Mason in CGI scripts.
-        </td>
-        </tr>
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="Subclassing.html">Subclassing Manual</a><br>
+This guide describes how to create your own custom subclasses to
+override parts of Mason.
+</td>
 
-      </table>
-    </td>
-  </tr>
 
-  <tr><td>&nbsp;</td></tr>
+   </tr>
 
-  <tr>
-    <td width="50%" valign="top">
-     <h4>Advanced</h4>
-     <table border=0>
+   <tr><td>&nbsp;</td></tr>
+   <tr><td colspan=8><h4>Common Reference</h4></td></tr>
 
-        <tr>
-        <td valign=top>&nbsp;&#149;</td>
-        <td><a href="Interp.html">Interp</a><br>
-        The Interp controls the other Mason objects.
-        </td>
-        </tr>
+   <tr>
+    
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="Params.html">Parameters</a><br>
+List of all configuration parameters, with both Perl and Apache
+configuration variants.
+</td>
 
-        <tr>
-        <td valign=top>&nbsp;&#149;</td>
-        <td><a href="ApacheHandler.html">ApacheHandler</a><br>
-        The ApacheHandler glues mod_perl and Mason together.
-        </td>
-        </tr>
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="Request.html">Request</a><br>
+The Request API is the gateway to all Mason features not provided by syntactic tags.
+</td>
 
-        <tr>
-        <td valign=top>&nbsp;&#149;</td>
-        <td><a href="Resolver.html">Resolver</a><br>
-        The Resolver converts component paths to components. You can
-        subclass this to change where components come from.
-        </td>
-        </tr>
 
-        <tr>
-        <td valign=top>&nbsp;&#149;</td>
-        <td><a href="Subclassing.html">Subclassing</a><br>
-        The Subclassing document explains how to subclass core Mason
-        classes.
-        </td>
-        </tr>
+   </tr>
 
-      </table>
-    </td>
-  </tr>
+   <tr>        
+    
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="Component.html">Component</a><br>
+The Component object represents a component loaded into memory.
+</td>
+
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="Interp.html">Interp</a><br>
+The Interp object spawns requests and maintains persistent data
+between requests.
+</td>
+
+
+   </tr>
+
+   <tr>        
+    
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="ApacheHandler.html">ApacheHandler</a><br>
+The ApacheHandler glues Mason and mod_perl together.
+</td>
+
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="CGIHandler.html">CGIHandler</a><br>
+The CGIHandler glues Mason and CGI together.
+</td>
+
+
+   </tr>
+
+   <tr><td>&nbsp;</td></tr>
+   <tr><td colspan=8><h4>Other Reference</h4></td></tr>
+
+   <tr>
+    
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="Compiler.html">Compiler</a><br>
+The Compiler object translates a lexed component source into Perl code.
+</td>
+
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="Lexer.html">Lexer</a><br>
+The Lexer object parses the component source to generate compiler events.
+</td>
+
+
+   </tr>
+
+   <tr>
+    
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="Resolver.html">Resolver</a><br>
+The Resolver object translates a component path into a component
+source item.
+
+</td>
+
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="ComponentSource.html">ComponentSource</a><br>
+The ComponentSource object represents information about the source of
+a component (e.g. a file).
+</td>
+
+
+   </tr>
+
+   <tr>
+    
+<td valign=top align=left>&nbsp;&#149;</td>
+<td valign=top align=left>
+<a href="Buffer.html">Buffer</a><br>
+The Buffer object handles component output and filtering.
+</td>
+
+
+   </tr>
 
 </table>
 
 </body>
 </html>
+
+
+
+
