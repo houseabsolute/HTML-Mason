@@ -207,8 +207,6 @@ BEGIN
 				    descr => "Whether Mason should decline to handle requests for directories" },
 	 multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1,
 				    descr => "Whether multiple Mason configurations are in effect, such as when using VirtualHosts" },
-	 top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1},
-				    descr => "A subroutine that tests whether an HTTP request is valid" },
 	 # the only required param
 	 interp                => { isa => 'HTML::Mason::Interp',
 				    descr => "A Mason interpreter for processing components" },
@@ -226,8 +224,7 @@ use HTML::Mason::MethodMaker
                           args_method
 			  auto_send_headers
 			  decline_dirs
-			  interp
-			  top_level_predicate ) ]
+			  interp ) ]
     );
 
 use vars qw($AH);
@@ -636,7 +633,9 @@ sub handle_request
 {
     my ($self, $r) = @_;
 
-    $self->prepare_request($r)->exec;
+    my $req = $self->prepare_request($r);
+    return $req unless ref($req);
+    $req->exec;
 }
 
 sub prepare_request
@@ -681,14 +680,6 @@ sub prepare_request
 	$pathname .= $r->path_info unless $is_file;
 
 	$r->warn("[Mason] Cannot resolve file to component: $pathname (is file outside component root?)");
-	return $self->return_not_found($r);
-    }
-
-    #
-    # Return NOT_FOUND if file does not pass top level predicate.
-    #
-    if ($is_file and !$self->top_level_predicate->($r->filename)) {
-	$r->warn("[Mason] File fails top level predicate: ".$r->filename);
 	return $self->return_not_found($r);
     }
 
@@ -902,20 +893,6 @@ for more information about handling directories with Mason.
 The only required parameter.  Specifies a Mason interpreter to use for
 handling requests.  The interpreter should be an instance of the
 C<HTML::Mason::Interp> class, or a subclass thereof.
-
-=item top_level_predicate
-
-Reference to a subroutine that decides whether a component can answer
-top level requests. This allows for private-use components that live
-within the DocumentRoot but are inaccesible from URLs. By default,
-always returns 1.
-
-The subroutine receives one parameter, the absolute path to the
-component.  It then returns either a true (serve component) or false
-(reject component). In this example, the predicate rejects requests
-for components whose name starts with an "_" character:
-
-    top_level_predicate => sub { $_[0] !~ m:/_[^/]+$: }
 
 =back
 
