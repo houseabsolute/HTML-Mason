@@ -92,7 +92,7 @@ anonymous subroutine might look like:
 
 A named subroutine call would look like this:
 
- PerlSetVar  MasonOutmode  "\&handle_output"
+ PerlSetVar  MasonOutMode  "\&handle_output"
 
 =item * list
 
