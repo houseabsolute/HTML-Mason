@@ -4,7 +4,7 @@ use strict;
 
 use vars qw($VERSION);
 
-$VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
+$VERSION = 1.43;
 
 my %e;
 
