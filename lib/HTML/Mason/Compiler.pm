@@ -168,7 +168,7 @@ sub _init_comp_data
 
     $data->{body} = '';
 
-    foreach ( $self->lexer->named_block_types )
+    foreach ( qw( def method ) )
     {
 	$data->{$_} = {};
     }
@@ -177,7 +177,7 @@ sub _init_comp_data
     $data->{flags} = {};
     $data->{attr} = {};
 
-    foreach ( $self->lexer->simple_block_types )
+    foreach ( qw( cleanup filter init once perl shared ) )
     {
 	$data->{blocks}{$_} = [];
     }
@@ -242,9 +242,9 @@ sub init_block
     my %p = @_;
 
     my $comment = '';
-    if ( $self->lexer->line_count )
+    if ( $self->lexer->line_number )
     {
-	my $line = $self->lexer->line_count;
+	my $line = $self->lexer->line_number;
 	my $file = $self->lexer->name;
 	$comment = "#line $line $file\n";
     }
@@ -457,9 +457,9 @@ sub _add_body_code
     my $code = shift;
 
     my $comment = '';
-    if ( $self->lexer->line_count )
+    if ( $self->lexer->line_number )
     {
-	my $line = $self->lexer->line_count;
+	my $line = $self->lexer->line_number;
 	my $file = $self->lexer->name;
 	$comment = "#line $line $file\n";
     }
