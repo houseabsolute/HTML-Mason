@@ -92,7 +92,6 @@ The required Mason data directory. Mason's various data directories
 A hash reference of default options to use for the C<$m-E<gt>cache>
 command.
 
-=item die_handler
 
 Specifies a subroutine reference to be used to override $SIG{__DIE__}
 when components are being executed.  If this parameter is specified
@@ -101,9 +100,9 @@ default error handler produces a stack trace that excludes the part of
 the stack inside the Mason core code.
 
 If this parameter is false, then $SIG{__DIE__} will not be overridden
-at all.  Defaults to
+at all.  Defaults to:
 
-    sub { confess($_[0]) }
+ sub { Carp::confess($_[0]) }
 
 =item dhandler_name
 
@@ -177,12 +176,22 @@ Absolute path of system log.  Default is data_dir/etc/system.log.
 
 Separator to use between fields on a line in the system log. Default is ctrl-A ("\cA").
 
+=item use_autohandlers
+
+True or undef, default is true.  If not true, Mason will not attempt
+to use autohandlers.
+
 =item use_data_cache
 
 True or undef, default is true. Specifies whether the $m->cache and
 related commands are operational.  You may need to disable data
 caching temporarily for debugging purposes, but normally this should
 be left alone.
+
+=item use_dhandlers
+
+True or undef, default is true.  If not true, Mason will not attempt
+to use dhandlers.
 
 =item use_object_files
 

@@ -417,7 +417,8 @@ Here's how a simple /newsfeeds/dhandler might look:
     my ($section,$story) = split("/",$arg);    # split out pieces
     my $sth = $DBH->prepare
 	(qq{SELECT headline,body FROM news
-            WHERE section='$section' AND story='$story'});
+            WHERE section=? AND story=?);
+    $sth->execute($section,$story);
     my ($headline,$body) = $sth->fetchrow_array;
     return 404 if !$headline;                  # return "not found" if no such story
     </%init>
@@ -426,8 +427,7 @@ By default dhandlers do not get a chance to handle requests to a
 directory itself (e.g. /newsfeeds). These are automatically deferred
 to Apache, which generates an index page or a FORBIDDEN error.  Often
 this is desirable, but if necessary the administrator can let in
-directory requests as well; see L<Admin/Allowing requests for
-directories>.
+directory requests as well; see L<Admin/Allowing directory requests>.
 
 A component or dhandler that does not want to handle a particular request may
 defer control to the next dhandler by calling C<$m-E<gt>decline>.
@@ -696,7 +696,8 @@ HTML without getting distracted or discouraged by Perl code. For example:
     <%init>
     # Fetch article from database
     my $dbh = DBI::connect ...;
-    my $sth = $dbh->prepare("select * from articles where id = $article_id");
+    my $sth = $dbh->prepare("select * from articles where id = ?");
+    $sth->execute($article_id);
     my ($headline,$date,$author,$body) = $sth->fetchrow_array;
     # Massage the fields
     $headline = uc($headline);
@@ -1519,7 +1520,8 @@ in a single request.
     <%shared>
     my $dbh = DBI::connect ...;
     my $user = $r->connection->user;
-    my $sth = $dbh->prepare("select lname,fname, from users where user_id = '$user'");
+    my $sth = $dbh->prepare("select lname,fname, from users where user_id = ?");
+    $sth->execute($user);
     my ($lname,$fname) = $sth->fetchrow_array;
     my $full_name = "$first $last";
     </%shared>

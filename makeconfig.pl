@@ -69,6 +69,7 @@ sub have_pkg
 {
     my ($pkg) = @_;
     eval { my $p; ($p = $pkg . ".pm") =~ s|::|/|g; require $p; };
+    no strict 'refs';
     return ${"${pkg}::VERSION"} ? 1 : 0;
 }
 
@@ -180,6 +181,8 @@ use vars qw(%APACHE);
 
 sub setup_mod_perl_tests
 {
+    return if $^O =~ /win32/i;
+
     # Skip if no mod_perl
     eval { require mod_perl; };
     return if $@;
@@ -239,18 +242,80 @@ sub write_apache_conf
     mkdir $APACHE{data_dir}, 0755
 	or die "Can't make dir '$APACHE{comp_root}': $!";
 
+    my $libs = _libs();
+
     my $include .= <<"EOF";
+
+<Perl>
+ $libs
+</Perl>
 
 <IfDefine CGI>
   PerlRequire $APACHE{apache_dir}/mason_handler_CGI.pl
+  SetHandler  perl-script
+  PerlHandler HTML::Mason
+</IfDefine>
+
+<IfDefine CGI_no_handler>
+  PerlSetVar  MasonCompRoot "$APACHE{comp_root}"
+  PerlSetVar  MasonDataDir  "$APACHE{data_dir}"
+EOF
+
+    if ($mod_perl::VERSION >= 1.24) {
+	$include .= <<'EOF';
+  PerlAddVar  MasonAllowGlobals $foo
+  PerlAddVar  MasonAllowGlobals @bar
+EOF
+    }
+
+    $include .= <<"EOF";
+  PerlSetVar  MasonArgsMethod CGI
+  SetHandler  perl-script
+  PerlModule  HTML::Mason::ApacheHandler
+  PerlHandler HTML::Mason::ApacheHandler
 </IfDefine>
 
 <IfDefine mod_perl>
   PerlRequire $APACHE{apache_dir}/mason_handler_mod_perl.pl
+  SetHandler  perl-script
+  PerlHandler HTML::Mason
 </IfDefine>
 
-SetHandler perl-script
-PerlHandler HTML::Mason
+<IfDefine mod_perl_no_handler>
+  PerlSetVar  MasonArgsMethod mod_perl
+  PerlSetVar  MasonCompRoot "root => $APACHE{comp_root}"
+  PerlSetVar  MasonDataDir  "$APACHE{data_dir}"
+  PerlSetVar  MasonTopLevelPredicate "sub { \$_[0] !~ m(/__[^/]+\$) }"
+  PerlSetVar  MasonDeclineDirs 0
+  SetHandler  perl-script
+  PerlModule  HTML::Mason::ApacheHandler
+  PerlHandler HTML::Mason::ApacheHandler
+</IfDefine>
+
+<IfDefine multi_config>
+  PerlSetVar MasonArgsMethod CGI
+  PerlSetVar MasonMultipleConfig 1
+
+  <Location /comps/multiconf1>
+    PerlSetVar  MasonCompRoot "$APACHE{comp_root}/multiconf1"
+    PerlSetVar  MasonDataDir  "$APACHE{data_dir}/multiconf1"
+    PerlSetVar  MasonUseAutohandlers 0
+    SetHandler  perl-script
+    PerlModule  HTML::Mason::ApacheHandler
+    PerlHandler HTML::Mason::ApacheHandler
+  </Location>
+
+  <Location /comps/multiconf2>
+    PerlSetVar  MasonCompRoot "$APACHE{comp_root}/multiconf2"
+    PerlSetVar  MasonDataDir  "$APACHE{data_dir}/multiconf2"
+    PerlSetVar  MasonUseDhandlers 0
+    SetHandler  perl-script
+    PerlModule  HTML::Mason::ApacheHandler
+    PerlHandler HTML::Mason::ApacheHandler
+  </Location>
+
+</IfDefine>
+
 EOF
 
     local $^W;
@@ -269,13 +334,7 @@ sub setup_handler
     open F, ">$handler_file"
 	or die "Can't write to '$handler_file': $!";
 
-    my $libs = '';
-    if ($ENV{PERL5LIB})
-    {
-	$libs = 'use lib qw( ';
-	$libs .= join ' ', (split /:|;/, $ENV{PERL5LIB});
-	$libs .= ' );';
-    }
+    my $libs = _libs();
 
     print F <<"EOF";
 package HTML::Mason;
@@ -289,6 +348,7 @@ my \$parser = HTML::Mason::Parser->new;
 my \$interp = HTML::Mason::Interp->new( parser => \$parser,
 				       comp_root => '$APACHE{comp_root}',
 				       data_dir => '$APACHE{data_dir}' );
+chown Apache->server->uid, Apache->server->gid, \$interp->files_written;
 
 my \@ah = ( HTML::Mason::ApacheHandler->new( interp => \$interp,
                                             output_mode => 'batch' ),
@@ -330,6 +390,21 @@ sub handler
 }
 EOF
     close F;
+}
+
+sub _libs
+{
+    my $cwd = cwd();
+    my $libs = 'use lib qw( ';
+    $libs .= join ' ', "$cwd/blib/lib", "$cwd/t/lib";
+    if ($ENV{PERL5LIB})
+    {
+	$libs .= ' ';
+	$libs .= join ' ', (split /:|;/, $ENV{PERL5LIB});
+    }
+    $libs .= ' );';
+
+    return $libs;
 }
 
 1;

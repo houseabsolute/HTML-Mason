@@ -85,13 +85,27 @@ for more information about handling directories with Mason.
 
 =item error_mode
 
-Specifies one of two ways to handle Perl errors, 'fatal' or 'html'.
-In fatal mode the handler simply dies with the error message. This
-may be caught with an eval around C<$ah-E<gt>handle_request> or left
-for Apache to handle (generally with a return status of 500).  In
-HTML mode the handler sends a readable HTML version of the error
-message to the client. HTML mode is most useful in combination with
-batch output mode for debugging.
+Specifies how to handle Perl errors. Options are 'html', 'fatal',
+'raw_html', and 'raw_fatal'; the default is 'html'.
+
+In html mode the handler sends a readable HTML version of the error
+message to the client. This mode is most useful on a development
+server.
+
+In fatal mode the handler simply dies with a compact version of the
+error message. This may be caught with an eval around
+C<$ah-E<gt>handle_request> or left for Apache to handle. In the latter
+case the error will end up in the error logs. This mode is most
+useful on a production server.
+
+The raw_html and raw_fatal modes emulate pre-1.02 error behavior. They
+are analagous to the modes above except that the errors are not
+processed for readability or compactness. The resulting messages are
+much longer, but may include information accidentally omitted by
+Mason's processing.
+
+Regardless of this setting, no readability processing occurs if you
+have overriden the L<Interp/die_handler> Interp parameter.
 
 =item output_mode
 

@@ -5,7 +5,78 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
-0.895  Mon Dec 11 21:27:15 PST 2000
+1.02  April 17, 2001
+
+- Completely redesigned error display. The new display includes a
+contextual source listing and readable stacktrace. You can access the
+old error behavior with the raw_html and raw_fatal error modes.
+(implemented by Matthew Lewinski)
+- Fixed $m->file to close its filehandle between uses. (reported by
+Matthew Lewinski)
+- Fixed bad interaction with Mason 1.01 and CPAN module, by adding
+version number to ApacheHandler.pm.
+- Fixed $m->top_comp to work as documented, and made documentation
+a bit more explicit. (reported by Gordon Henriksen)
+- Fixed specification of a component root as "foo => /foo" in
+httpd.conf. (reported by Chuck O'Donnell)
+- Added MasonDeclineDirs, accidentally omitted in 1.01. (reported by
+David Wheeler)
+- Changed sql examples in Devel.pod to use bind variables. (suggested
+by Austin S. Lin)
+
+1.015 April 3, 2001
+
+- Fixed incompatibility with mod_perl < 1.21_01, introduced in 1.01.
+- Added 'use Apache.pm' to ApacheHandler.pm, necessary for some
+mod_perl installations.
+
+1.01  March 27, 2001
+
+- Implemented configuration of Mason from httpd.conf via PerlSetVar
+directives.  This removes the need for a handler.pl file in many
+cases.  L{Admin/CONFIGURING MASON VIA httpd.conf}.
+- Revamped ApacheHandler tests to use a real Apache web server and
+mod_perl (assuming this is installed).  This allows for much better
+testing of Mason.  However, the test suite takes a bit longer to run
+as starting and stopping the server can take a second or two each
+time.
+- ** Fixed handling of POST requests with query strings via CGI.pm;
+the query string arguments were previously ignored, and are now merged
+with POST arguments. This is an incompatible change only for those
+whose code relied on the arguments missing.
+- Added basic validation of arguments to Parser, Interp,
+and ApacheHandler constructors.
+- Added interp->die_handler, allowing you to install your own
+subroutine as $SIG{__DIE__} to catch errors during component
+execution.  Alternately, you can simply turn the special error
+handling off.  L{Interp/die_handler}
+- Added interp->use_dhandlers and interp->use_autohandlers, more
+intuitive ways to turn on/off dhandlers and autohandlers.
+- Eliminated interp->verbose_compile_error, which is no longer needed
+and has not worked for some time.
+- Wrapped each component call in eval, allowing us to simplify the
+request stack code.  No visible user change.
+- Documented that you cannot call return() from a <%shared> or <%once>
+section.  (reported by Paolo Campanella)
+- Fixed documentation of escaped newline behavior.
+- Fixed incorrect code for using mod_perl args method in
+eg/session_handler.pl.
+
+1.0  January 31, 2001
+
+- Identical to 0.896 except for version.
+
+0.896  January 5, 2001
+
+- Fixed bug preventing Mason from working with PerlFreshRestart.
+- Fixed use_reload_file to work as documented and not stat() source files. (submitted by Benjamin John Turner)
+- Fixed display in Apache::Status.
+- Documented the significance of ordering in <%args> sections.
+- Fixed documentation of %ARGS with regards to hashes passed in query string. (suggested by Adam Stubbs)
+- Added version # to 'use Apache::Session::File' in session_handler.pl.
+- Fixed preloads documentation to match reality.
+
+0.895  December 11, 2000
 
 - ** Removed ApacheHandler from Mason.pm. It is now necessary to
 explicitly 'use' the HTML::Mason::ApacheHandler module in your
@@ -70,15 +141,15 @@ method.  (reported by Caleb Crome)
 - Fixed bug where Mason would try to escape undefined values in a
 substitution with an escape flag.  (submitted by Denis Shaposhnikov)
 
-0.89  Thu Sep 14 08:44:58 PDT 2000
+0.89  September 14, 2000
 
 - Fixed broken CGI args implementation from 0.88 (old arguments
 appearing in new requests)
 - Fixed system log bug from 0.88
 
+0.88  August 30, 2000
 
-0.88  Wed Aug 30 14:49:07 PDT 2000
-
+>>>>>>> 1.54.2.9.2.15
 - Fixed broken Parser postprocessor code (broken since 0.85).  Added
 tests for this code path as well as the preprocessor feature.
 (reported by Tim Bishop)
@@ -106,13 +177,12 @@ mod_perl 1.24 and Apache 1.3.12.  This probably has nothing to do with
 Mason but the very adventurous are encouraged to experiment with a
 mod_perl DSO and report back to the mason list.
 
-
-0.87  Wed May 24 08:49:12 PDT 2000
+0.87  May 24, 2000
 
 - Fixed multiple GET/POST argument glitch introduced in 0.86.
 (reported by Matt Hoskins)
 
-0.86  Thu May 18 10:54:58 PDT 2000
+0.86  May 18, 2000
 
 - Fixed multiple-<%perl>-section infinite loop bug introduced in 0.85.
 - (Re-)Fixed Apache hang on POST not-found bug.
@@ -132,7 +202,7 @@ supported.
 - Fixed args processing loop to allow multiple file
 uploads. (submitted by Matt Hoskins)
 
-0.85  Sun May  7 23:37:18 PDT 2000
+0.85  May 7, 2000
 
 - Added object-oriented primitives to components. Components can
 define methods and attributes and inherit from parent components.
@@ -181,7 +251,7 @@ multiple ApacheHandlers.
 - Updated cookie expiration in CD-ME example. (reported by Renzo Toma)
 - Added a "-f" flag to rm in faq Makefile. (reported by Jeremy Taylor)
 
-0.81  Sun Feb 20 23:39:05 PST 2000
+0.81  February 20, 2000
 
 - Fixed small 0.8 bugs with automatic header sending. Headers are now
 sent for blank pages and are not sent on an error status code.
@@ -197,7 +267,7 @@ sent for blank pages and are not sent on an error status code.
 - Added dynamic virtual server configuration example to Admin.pod.
 (submitted by Caleb Crome)
 
-0.8  Sun Jan 23 16:48:46 PST 2000
+0.8  January 23, 2000
 
 - New integrated request API. $m replaces $REQ as the global variable
 containing the current request object. All mc_ commands have been
@@ -273,7 +343,7 @@ component is caught by another component's eval.
 Data::Dumper::Dumpxs is available. (reported by Pelle Johnsen)
 - Added "code examples" section to README
 
-0.72  Fri Oct 15 08:21:25 PDT 1999
+0.72  October 15, 2000
 
 - Eliminated long-standing infinite-block bug when POSTing to a
 non-existent URL
@@ -293,7 +363,7 @@ of ..." warnings (suggested by Paul Schilling)
 - Removed defunct pure text section in Administrators Guide (reported
 by Michael Shulman)
 
-0.71  Tue Sep 14 13:12:17 PDT 1999
+0.71  September 14, 2000
 
 - Logic of top_level_predicate was reversed in 0.7; fixed.
 (reported by Tom Hughes, Eric Hammond)
@@ -304,7 +374,7 @@ beginning of a line.  (reported by Tom Hughes)
 - Parser no longer inadvertently accepts argument names with
 whitespace.  (reported by Phillip Gwyn)
 
-0.7  Wed Sep 1 10:12:55 PDT 1999
+0.7  September 1, 2000
 
 - Improved core implementation with two new classes,
 HTML::Mason::Request and HTML::Mason::Component.  Code is now cleaner
@@ -343,7 +413,7 @@ references.
 - Simplified chown/getpwuid usage in handler.pl (submitted by Randal
 Schwartz)
 
-0.6.2  Fri Aug 20 09:02:59 PDT 1999
+0.6.2  August 20, 2000
 
 - Fixed problem with shared data cache locks over NFS (submitted by
 Tom Hughes)
@@ -351,7 +421,7 @@ Tom Hughes)
 - Fixed preloading for directories (submitted by Dennis Watson)
 - Added back Utils::get_lock, which is used by content management
 
-0.6.1  Tue Jul 27 09:34:31 PDT 1999
+0.6.1  July 27, 2000
 
 - Added warnings to convert-0.6.pl about occasional erroneous
 component call syntax conversions (reported by Oleg Bartunov)
@@ -363,7 +433,7 @@ Bartunov)
 - Fixed mc_suppress_http_header(0), broken in 0.6 (reported by Jim
 Mortko)
 
-0.6  Fri Jul 16 08:09:27 PDT 1999
+0.6  July 16, 2000
 
 - New <& &> tag provides a more convenient way to call components
 inside HTML. mc_comp still works. L{Devel/components that output html}
@@ -410,12 +480,12 @@ warnings to make <%once> more useful
 code from Interp
 - Added index file to htdocs/
 
-0.5.1  Thu Jun 10 23:35:13 PDT 1999
+0.5.1  June 10, 2000
 - Removed leftover "use File::Recurse" in ApacheHandler.pm [modus]
 - Added empty test target to FAQ Makefile, required on certain
 architectures [modus]
 
-0.5   Thu Jun  3 23:45:09 PDT 1999
+0.5   June 3, 2000
 - Removed memory leak associated with "return sub { ... }"
 - Overhauled Config.pm, now maintains previous configuration when
 upgrading Mason (suggested by Patrick Kane)
@@ -479,7 +549,7 @@ Rafael Weinstein)
 (submitted by Patrick Kane)
 - Added CREDITS file
 
-0.4  Wed Jan 06 10:35:00 PST  1999
+0.4  January 06, 2000
 - Added support for using Perl profiler in conjunction with debug
 files
 - Fixed bug in previewer HTML trace introduced in 0.3
@@ -499,11 +569,11 @@ custom subroutines instead of generic AUTOLOAD, improving performance
 default handler.pl and described in documentation (suggested by
 Patrick Kane)
 - Fixed server header output from debug files (suggested by Ewan
-Edwards)
+Edwards)
 - Created a Mason bundle
 - Created a CPAN "alias" from Apache::Mason to HTML::Mason
 
-0.3   Wed Nov 25 17:00:34 PST 1998
+0.3   November 25, 1999
 - Added optional system logging of page requests, cache activity,
 component loading
 - Deny directory requests so that index files will work in mod_perl
@@ -530,7 +600,7 @@ checking on (suggested by Randal Schwartz)
 - Added global IN_DEBUG_FILE flag
 - Renamed mc_call_stack to mc_comp_stack to match documentation
 
-0.2   Fri Aug 21 08:54:13 1998
+0.2   August 21, 1999
 - Replaced File::lockf module, which could not port to some systems,
 with simple call to flock
 - Corrected email address in README
@@ -545,5 +615,5 @@ install
 - Debug file is no longer prepared when debug_mode is "none"
 - Use Preview.pm in Mason.pm
 
-0.1   Wed Jul 22 20:53:56 1998
+0.1   July 22, 1999
 - Original version; created by h2xs 1.18

@@ -328,17 +328,19 @@ a port that looks one day into the future.
 
 =item top_args
 
-Returns the arguments originally passed to the top level component.
-When called in scalar context, a hash reference is returned. When
-called in list context, a list of arguments (which may be assigned to
-a hash) is returned.
+Returns the arguments originally passed to the top level component
+(see L<Request/top_comp> for definition).  When called in scalar
+context, a hash reference is returned. When called in list context, a
+list of arguments (which may be assigned to a hash) is returned.
 
 =for html <a name="item_top_comp">
 
 =item top_comp
 
-Returns the component originally called in the request. Note: because
-of autohandlers this may or may not be the first component executed.
+Returns the component originally called in the request. Without
+autohandlers, this is the same as the first component executed.  With
+autohandlers, this is the component at the end of the
+C<$m-E<gt>call_next> chain.
 
 =back
 

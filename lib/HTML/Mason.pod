@@ -1,43 +1,19 @@
-=head1 NAME 
+=head1 NAME
 
 Mason - High-performance, dynamic web site authoring system 
 
-=head1 SYNOPSIS 
+=head1 SYNOPSIS
 
-    # Directives for your Apache config files.
-    # Route all requests to the Mason handler.
-    #
-    PerlRequire /opt/mason/eg/handler.pl
-    <Location />
+    PerlSetVar MasonCompRoot /usr/local/www/htdocs
+    PerlSetVar MasonDataDir /usr/local/www/mason
+    PerlModule HTML::Mason::ApacheHandler
+
+    <FilesMatch "*.html">
         SetHandler perl-script
-        PerlHandler HTML::Mason
-    </Location>
+        PerlHandler HTML::Mason::ApacheHandler
+    </FilesMatch>
 
-    # Sample handler.pl file.
-    # Start Mason and define the mod_perl handler routine.
-    #
-    package HTML::Mason;
-    use HTML::Mason;
-    use HTML::Mason::ApacheHandler;
-    use strict;
-
-    my $parser = new HTML::Mason::Parser;
-    my $interp = new HTML::Mason::Interp (parser=>$parser,
-                                   comp_root=>'/opt/www/htdocs',
-                                   data_dir=>'/opt/mason/data');
-    my $ah = new HTML::Mason::ApacheHandler (interp=>$interp);
-    chown ( [getpwnam('nobody')]->[2], [getgrnam('nobody')]->[2],
-            $interp->files_written );   # chown nobody
-
-    sub handler
-    {
-        my ($r) = @_;
-        $ah->handle_request($r);
-    }
-
-    1;
-
-=head1 DESCRIPTION 
+=head1 DESCRIPTION
 
 Mason is a tool for building, serving and managing large web
 sites. Its features make it an ideal backend for high load sites
@@ -66,7 +42,7 @@ directory created during installation. There you will find a
 collection of components, simple to complex, illustrating most of
 Mason's component syntax.
 
-Other Mason features include: 
+Other Mason features include:
 
 =over
 
@@ -110,7 +86,7 @@ Consider this simple Mason component:
     Hello <% $noun %>!
     How are ya?
 
-The output of this component is: 
+The output of this component is:
 
     Hello World!
     How are ya?
@@ -128,7 +104,7 @@ the tricks you expect from a regular Perl program. See
 B<L<HTML::Mason::Devel>> for a full tutorial on building, using and
 debugging Mason components.
 
-=head1 INSTALLATION 
+=head1 INSTALLATION
 
 Mason has been tested under Linux, FreeBSD, Solaris, HPUX, and
 Win32. As an all-Perl solution, it should work on any machine that has
@@ -138,145 +114,67 @@ modules.
 Mason has a standard MakeMaker-driven installation. See the README
 file for details.
 
-=head1 CONFIGURING MASON 
+=head1 CONFIGURING MASON
 
-Mason's configuration depends on two files: your Apache C<conf> files
-(C<httpd.conf> or C<srm.conf>), into which you insert directives to
-activate Mason's request handler, and Mason's C<handler.pl> file which
-runs at Apache startup. C<handler.pl> does two things: it starts up
-Mason (which then runs persistently within the httpd), and it defines
-a handler routine to receive HTTP requests.
-
-The paragraphs below assume some knowledge of mod_perl, Apache
-configuration details, and the Apache request API. If you're rusty on
-any these topics, bone up by reading the documentation available at
+This section assumes that you are able to install and configure a
+mod_perl server. Relevant documentation is available at
 http://www.apache.org (Apache) and http://perl.apache.org
-(mod_perl). Here you will also find subscription details for the
-mod_perl mailing list--in my view the best mod_perl resource around.
+(mod_perl). The mod_perl mailing list, archive, and guide are also
+great resources.
 
-=head2 Single Site Configuration 
+The simplest configuration of Mason requires a few lines in your
+httpd.conf. You can find an annotated version of these lines in
+C<eg/httpd.conf> in your distribution.
 
-The simplest Mason component is one composed of pure HTML, so the fast
-track is simply to attach Mason to some branch of your server's
-DocumentRoot, like so:
+    PerlSetVar MasonCompRoot /usr/local/www/htdocs
+    PerlSetVar MasonDataDir /usr/local/www/mason
+    PerlModule HTML::Mason::ApacheHandler
 
-    # Additions to your httpd.conf
-    PerlRequire /usr/local/mason/handler.pl
-
-    Alias /mason /usr/local/www/htdocs
-    <Location /mason>
+    <FilesMatch "*.html">
         SetHandler perl-script
-        PerlHandler HTML::Mason
+        PerlHandler HTML::Mason::ApacheHandler
+    </FilesMatch>
+
+The first directive specifies the I<component root>, the top of your
+component source tree. In simple configurations this is the same as
+your DocumentRoot.
+
+The second directive specifies the I<data directory>, where Mason
+maintains various subdirectories and data files at runtime. Mason will
+create this directory on startup if necessary.
+
+The third directive loads Mason with Apache support. Mason
+must be installed somewhere in your Perl @INC for this to work.
+
+Finally, the <FilesMatch> section routes all "*.html" requests to the
+Mason handler. If you want all Mason pages to have a distinct
+extension like ".mcomp", use that instead. If you wish to restrict
+Mason to one subdirectory at first, do this:
+
+    <Location /mason>
+        <FilesMatch "*.html">
+            SetHandler perl-script
+            PerlHandler HTML::Mason::ApacheHandler
+        </FilesMatch>
     </Location>
 
-These directives tell Apache to first run C<handler.pl>, the Mason
-startup file. The "Alias" then maps any "/mason" URLs into the
-DocumentRoot (assuming the DocumentRoot is /usr/local/www/htdocs).
-Finally, the <Location> directive routes those requests to the handler
-routine C<HTML::Mason::handler>.
+Once you have added the configuration directives, restart the
+server. First, go to a standard URL on your site to make sure you
+haven't broken anything. If all goes well you should see the same page
+as before. If not, recheck your Apache config files and also tail your
+server's error log.
 
-If you want to create HTML without necessarily using the .html extension,
-change your DefaultType:
+If you are getting "404 Not Found" errors even when the files clearly
+exist, Mason may be having trouble with your document and component
+root. One situation that will unfortunately confuse Mason is if your
+document or component root goes through a symbolic link. Try
+expressing both your document and component root in terms of the true
+filesystem path.
 
-    DefaultType text/html
+Next, try adding the tag <% 2+2 %> at the top of some HTML file. If you
+reload this page and see a "4", Mason is working!
 
-and make sure mod_mime_magic is not active.
-
-That's it for the Apache configuration. Next you will need to
-configure Mason's C<handler.pl> file, a sample of which is in
-C<eg/handler.pl> in the Mason distribution. Here you must make
-some decisions:
-
-=over
-
-=item Where is the component root (comp_root)?
-
-Mason introduces the idea of a "component root" which, like the
-DocumentRoot, is a virtual root for the component filesystem. In this
-example we equate the two roots; other configurations will opt to keep
-them separate.
-
-=item Where is the data directory (data_dir)?
-
-Mason generates various data files, which live in topical directories
-under Mason's "data directory".
-
-=item What is the UID and GID that the server runs under?
-
-If your web server is running on a privileged port like 80, the parent
-process runs as root and spawns children under the 'User' and 'Group'
-IDs listed in your C<httpd.conf>. To prevent ownership and permission
-conflicts, set the chown() parameters to match the UID and GID from
-your C<httpd.conf>. See the C<handler> section in the
-I<Administrator's Guide> guide for details.
-
-=item Do you plan to intermix images and components in the same directory?
-
-If you use a <Location> or <Directory> directive like the one suggested above,
-then requests to any file under that directory will go to the Mason
-handler. If there are images in the directory, Mason will try to treat
-them like regular components. This is bad: not only is there extra
-overhead, but if an image inadvertently contains a Mason character
-sequence such as "<%", Mason will try to interpret that piece and fail
-with a syntax error.
-
-The simplest remedy is to have Mason decline image and other non-HTML requests, thus
-letting Apache serve them in the normal way.  The following line
-
-    return -1 if $r->content_type && $r->content_type !~ m|^text/|i;
-
-declines all requests with a content type not starting with "text/".
-This allows text/html and text/plain to pass through but not much else.
-It is included (commented out) in the default handler.pl.
-
-=item Are you running with taint checks (e.g. PerlTaintCheck)?
-
-If so, pass the flag C<taint_check>=>1 when creating the parser; this
-tells Mason to untaint component code and filenames.
-
-=back
-
-Both comp_root and the data_dir are set when Mason creates a new
-Interp object:
-
-    my $interp = new HTML::Mason::Interp (parser=>$parser,
-                    comp_root=>'/usr/local/www/htdocs'
-                    data_dir=>'/usr/local/mason/');
-
-Set these to your own locations, then restart the server and go to
-some standard URL on your site, prefixing the URL with "/mason". If
-all goes well you should see the same page as without the "/mason"
-prefix. If not, recheck your Apache config files and C<handler.pl>,
-and also tail your server's error log.
-
-If you are getting erroneous "404 Not Found" errors, Mason may be
-having trouble with your document and component root. Remember that
-all files handled by Mason must fall underneath the component root.
-One situation that will unfortunately confuse Mason is if your
-document or component root goes through a soft link. Try specifying
-your document and component root settings in terms of the true path.
-
-Assuming it worked, you now have a Mason "lens" through which to view
-your HTML tree. Try adding a Mason tag to some HTML file, say <% 2+2
-%>. If you hit Reload and see a "4", Mason's up and running. You can
-now copy or link the C<samples/> directory into your new comp_root and
-check out the sample components in your browser.
-
-Once you feel comfortable with Mason, you can "fully" install it by
-deleting the "Alias" directive from your httpd.conf, and changing the
-<Location> mapping from "/mason" to just "/". Now all URLs serve
-through Mason. If you want to maintain a few directories that 
-don't serve through Mason (e.g. for images), you can put in overrides
-like so:
-
-    <Location /plain>
-            SetHandler default-handler
-    </Location>
-
-B<HTML::Mason::Admin> describes how to configure Mason to work with
-multiple virtual servers on the same box.
-
-=head1 DOCUMENTATION ROADMAP 
+=head1 DOCUMENTATION ROADMAP
 
 Once Mason is on its feet, the next step is to write a component or
 two. The I<Mason Developer's Manual> (B<L<HTML::Mason::Devel>>) 
@@ -285,9 +183,11 @@ reference companion to the Developer's Manual is the Request API
 documentation, B<L<HTML::Mason::Request>>.
 
 Whoever is responsible for setting up and tuning Mason should read the
-I<Administrator's Manual> (B<L<HTML::Mason::Admin>>).  Details of
-Mason's core modules can be found in B<L<HTML::Mason::Parser>>,
-B<L<HTML::Mason::Interp>>, and B<L<HTML::Mason::ApacheHandler>>.
+I<Administrator's Manual> (B<L<HTML::Mason::Admin>>). This document
+covers more advanced configuration scenarios and performance
+optimization. Reference companions to the Administrator's Manual
+include B<L<HTML::Mason::Parser>>, B<L<HTML::Mason::Interp>>, and
+B<L<HTML::Mason::ApacheHandler>>.
 
 Most of this documentation assumes that you're running Mason on top of
 mod_perl, since that is the most common configuration.  If you are
@@ -296,14 +196,16 @@ you'll just have to ignore mod_perl specific references like $r and
 the ApacheHandler object, and you'll want to read the STANDALONE MODE section in
 B<L<HTML::Mason::Interp>>.
 
-=head1 AUTHOR 
+=head1 AUTHORS
 
-Jonathan Swartz, swartz@pobox.com 
+Jonathan Swartz, swartz@pobox.com and Dave Rolsky, autarch@urth.org
 
 =head1 SEE ALSO
 
-L<HTML::Mason::Components>,
+L<HTML::Mason::Devel>,
 L<HTML::Mason::Request>,
+L<HTML::Mason::Component>,
+L<HTML::Mason::Admin>,
 L<HTML::Mason::Parser>,
 L<HTML::Mason::Interp>,
 L<HTML::Mason::ApacheHandler>
