@@ -190,8 +190,14 @@ sub compile
 			  } );
     my $src = ref($p{comp_source}) ? $p{comp_source} : \$p{comp_source};
 
+    # The current compile - initially the main component, then each subcomponent/method
     local $self->{current_compile} = {};
-    local $self->{paused_compiles} = []; # So we're re-entrant in subcomps
+    
+    # Useful for implementing features that affect both main body and methods/subcomps
+    local $self->{main_compile} = $self->{current_compile};
+
+    # So we're re-entrant in subcomps
+    local $self->{paused_compiles} = [];
 
     # Preprocess the source.  The preprocessor routine is handed a
     # reference to the entire source.
