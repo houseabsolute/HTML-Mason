@@ -178,14 +178,15 @@ sub html_entities_escape
     load_pkg( 'HTML::Entities',
               'HTML escaping requires the HTML::Entities module, available from CPAN.');
 
-    return HTML::Entities::encode($_[0]);
+    HTML::Entities::encode(${$_[0]});
 }
 
 sub url_escape
 {
-    $_[0] =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
+    my $text = shift;
+    return unless defined $$text;
 
-    return $_[0];
+    $$text =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
 }
 
 sub coerce_to_array
