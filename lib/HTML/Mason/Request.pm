@@ -7,7 +7,7 @@ package HTML::Mason::Request;
 use strict;
 
 use File::Spec;
-use HTML::Mason::Tools qw(read_file compress_path);
+use HTML::Mason::Tools qw(read_file compress_path load_pkg);
 use HTML::Mason::Utils;
 use HTML::Mason::Buffer;
 
@@ -252,8 +252,9 @@ sub cache
 	$cache_class = "Cache::$cache_class" unless $cache_class =~ /::/;
 	delete($options{cache_class});
     }
-    (my $lib_file = $cache_class) =~ s/::/\//g;
-    require "$lib_file.pm" unless exists($INC{$cache_class});
+    load_pkg('Cache/Cache.pm', '$m->cache requires the Cache::Cache module, available from CPAN.');
+    (my $cache_pkgfile = "$cache_class.pm") =~ s{::}{/}g;
+    load_pkg($cache_pkgfile, 'Fix your Cache::Cache installation or choose another cache class.');
 
     my $cache = $cache_class->new (\%options)
 	or HTML::Mason::Exception->throw( error => "could not create cache object" );
