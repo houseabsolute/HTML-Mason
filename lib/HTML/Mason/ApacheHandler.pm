@@ -308,7 +308,7 @@ use HTML::Mason::MethodMaker
 			  interp ) ]
     );
 
-my ($AH, $STARTED);
+my ($STARTED);
 
 # hack to let the make_params_pod.pl script work
 __PACKAGE__->_startup() if Apache->server;
@@ -328,27 +328,10 @@ sub _startup
 	    require Apache::Request unless defined $Apache::Request::VERSION;
 	}
     }
-
-    # if we are in a simple conf file (meaning one without
-    # multiple different Mason configs) we make the apachehandler
-    # object now and simply reuse it later in the handler sub
-    $AH = $pack->make_ah() if $pack->_in_simple_conf_file;
 }
 
-#
-# This is our best guess as to whether we are being configured via the
-# conf file without multiple configs.  It's flawed, because simple
-# configurations don't require an explicit component root to be set.
-#
-sub _in_simple_conf_file
-{
-    my $self = shift;
 
-    my $roots = $self->_get_list_param('MasonCompRoot');
-    return $ENV{MOD_PERL} && @$roots;
-}
-
-my (%AH, %AH_BY_LOCATION);
+my (%AH_BY_CONFIG, %AH_BY_NAME);
 sub make_ah
 {
     my ($package, $r) = @_;
@@ -373,7 +356,7 @@ sub make_ah
     #
     $key .= $; . $r->document_root if $r;
 
-    return $AH{$key} if exists $AH{$key};
+    return $AH_BY_CONFIG{$key} if exists $AH_BY_CONFIG{$key};
 
     # can't use hash_list for this one because it's _either_ a string
     # or a hash_list
@@ -397,14 +380,11 @@ sub make_ah
     }
 
     my $ah = $package->new(%p, $r);
-    $AH{$key} = $ah if $key;
+    $AH_BY_CONFIG{$key} = $ah if $key;
 
-    if ($r && defined $r->location)
-    {
-        my $location_key =
-            join $;, $r->location, $r->server->server_hostname;
-        $AH_BY_LOCATION{$location_key} = $ah;
-    }
+    my $name;
+    $name = $r->dir_config('MasonConfigName') if $r;
+    $AH_BY_NAME{$name} = $ah if defined $name;
 
     return $ah;
 }
@@ -438,6 +418,9 @@ sub _get_mason_params
 
     foreach my $studly ( keys %$config )
     {
+        # special case because this isn't a constructor parameter
+        next if $studly eq 'MasonConfigName';
+
 	(my $calm = $studly) =~ s/^Mason// or next;
 	$calm = $self->calm_form($calm);
 
@@ -998,12 +981,13 @@ BEGIN
 sub handler %s
 {
     my ($package, $r) = @_;
-    my $ah = $AH;
 
-    if ( ! $ah && defined $r->location )
+    my $ah;
+
+    my $name = $r->dir_config('MasonConfigName');
+    if ( defined $name )
     {
-        my $key = join $;, $r->location, $r->server->server_hostname;
-        $ah = $AH_BY_LOCATION{$key};
+        $ah = $AH_BY_NAME{$name};
     }
 
     $ah ||= $package->make_ah($r);
