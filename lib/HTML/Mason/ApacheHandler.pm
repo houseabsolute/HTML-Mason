@@ -12,7 +12,7 @@ package HTML::Mason::Request::ApacheHandler;
 
 use HTML::Mason::Request;
 use HTML::Mason::Container;
-use base qw(HTML::Mason::Request HTML::Mason::Container);
+use base qw(HTML::Mason::Request);
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 
