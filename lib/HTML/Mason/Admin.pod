@@ -198,8 +198,9 @@ each request.
 
 =head2 Component root
 
-The component root marks the top of your component hierarchy. By default,
-it is the same as your Apache document root.
+The component root marks the top of your component hierarchy.  When
+running Mason with the CGIHandler or ApacheHandler modules, this
+defaults to your document root.
 
 The component root defines how component paths are translated into
 real file paths. If your component root is /usr/local/httpd/docs, a
