@@ -24,7 +24,6 @@ use base qw(HTML::Mason::Container);
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code_cache
-			 die_handler_overridden
 			 hooks
 			 system_log_file
 			 system_log_separator
@@ -43,11 +42,6 @@ use HTML::Mason::MethodMaker
 			  use_reload_file ) ],
       );
 
-sub default_die_handler {
-    my $err = $_[0];
-    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
-}
-
 # Fields that can be set in new method, with defaults
 __PACKAGE__->valid_params
     (
@@ -56,7 +50,6 @@ __PACKAGE__->valid_params
      code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR }, #10M
      compiler                     => { isa => 'HTML::Mason::Compiler' },
      dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR|UNDEF },
-     die_handler                  => { parse => 'code',    default => \&default_die_handler, type => CODEREF|SCALAR|UNDEF },
      # Object cause qr// returns an object
      ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
 				       default => qr/Subroutine .* redefined/i },
@@ -106,8 +99,6 @@ sub new
 
     $self->{autohandler_name} = undef unless $self->{use_autohandlers};
     $self->{dhandler_name} = undef unless $self->{use_dhandlers};
-    $self->{die_handler_overridden} = 1
-	if $self->{die_handler} && $self->{die_handler} ne $self->validation_spec->{die_handler}{default}; #Hmm
 
     $self->system_log_events($self->{system_log_events}) if exists $self->{system_log_events};
     $self->_initialize;
@@ -177,17 +168,6 @@ sub _initialize
 #
 sub object_dir { return File::Spec->catdir( shift->data_dir, 'obj' ); }
 sub reload_file { return File::Spec->catfile( shift->data_dir, 'etc', 'reload.lst' ); }
-
-sub die_handler {
-    my $self = shift;
-
-    if (@_) {
-	$self->{die_handler} = shift;
-	$self->{die_handler_overridden} = 1;
-    }
-
-    return $self->{die_handler};
-}
 
 #
 # exec is the initial entry point for executing a component
@@ -955,19 +935,6 @@ by default,
 
 These settings are overriden by options given to particular
 C<$m-E<gt>cache> calls.
-
-=item die_handler
-
-Specifies a subroutine reference to be used to override $SIG{__DIE__}
-when components are being executed.  If this parameter is specified
-then it will override the normal error handling done by Mason.  The
-default error handler produces a stack trace that excludes the part of
-the stack inside the Mason core code.
-
-If this parameter is false, then $SIG{__DIE__} will not be overridden
-at all.  Defaults to:
-
- sub { Carp::confess($_[0]) }
 
 =item dhandler_name
 
