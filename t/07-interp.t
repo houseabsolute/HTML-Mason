@@ -199,6 +199,18 @@ My source dir is /.../alt_root/interp/comp_root_test
 EOF
 		    );
 
+#------------------------------------------------------------
+
+    $group->add_test( name => 'current_time',
+		      description => 'test current_time interp param',
+		      interp_params => { current_time => 945526402 },
+		      component => <<'EOF',
+<% $m->time %>
+EOF
+		      expect => <<'EOF',
+945526402
+EOF
+		    );
 
 #------------------------------------------------------------
 
@@ -900,10 +912,11 @@ Hello World!
 EOF
 			  expect => <<'EOF',
 Hello World!
-Cache::MemoryCache
+HTML::Mason::Cache::MemoryCache
 EOF
 			  );
     }
+
 #------------------------------------------------------------
 
     $group->add_support( path => 'no_comp_root_helper',
