@@ -8,7 +8,6 @@ Events.pm$
 ^t/httpd.*
 ^t/mason
 ^t/error_log$
-^htdocs
 
 # Backup files, etc.
 ~$
