@@ -10,10 +10,9 @@
 package HTML::Mason::Commands;
 
 use strict;
-use HTML::Mason::Utils;
 
 use vars qw($m @ISA @EXPORT_OK @EXPORT);
- 
+
 require Exporter;
 @ISA=qw(Exporter);
 @EXPORT = qw
