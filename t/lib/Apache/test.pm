@@ -259,6 +259,7 @@ sub _find_mod_perl_httpd {
     foreach ( '/usr/local/apache/bin/httpd',
 	      '/usr/local/apache_mp/bin/httpd',
 	      '/opt/apache/bin/httpd',
+	      '/usr/sbin/apache',
 	      $self->_which('httpd'),
 	      $self->_which('apache'),
 	    ) {
