@@ -192,7 +192,7 @@ o HTML table formed from list of hashes
     </tr>
     </table>
 
-B<&lt;% xxx %&gt;>
+B<E<lt>% xxx %E<gt>>
 
 Most useful for printing out variables, as well as more complex
 expressions. Examples:
@@ -204,7 +204,7 @@ expressions. Examples:
 
   You are <% $age<18 ? 'not' : '' %> permitted to enter this site.
 
-B<&lt;%perl&gt; xxx &lt;%/perl&gt;>
+B<E<lt>%perlE<gt> xxx E<lt>%/perlE<gt>>
 
 Useful for Perl blocks of more than a few lines.
 
@@ -323,6 +323,135 @@ before printing:
     my $masthead = $m->scomp('/shared/masthead', color=>'salmon');
     $masthead =~ ...;
     $m->out($masthead);
+
+=head2 Components that Filter Content
+
+Components can be used to filter part of the page's content using an
+extended component syntax.
+
+    <&| /path/to/comp &> this is the content </&>
+    <&| comp, arg1 => 'hi' &> filters can take arguments </&>
+    <&| comp &> content can include <% "tags" %> of all kinds </&>
+    <&| comp1 &> nesting is also <&| comp2 &> OK </&> </&>
+    <&| SELF:method1 &> subcomponents can be filters </&>
+
+The filtering component can be called in all the same ways a normal component
+is called, with arguments and so forth.  The only difference between a 
+filtering component and a normal component, is that a filtering component 
+is expected to fetch the content by calling $m->content, and do something
+with it.
+
+Here is an example of a component used for localization.  Its content
+is a series of strings in different languages, and it selects the
+correct one based on a global $lang variable, which would be setup
+in a site-level autohandler.
+
+   <&| /i18n/itext &>
+      <en>Hello, <% $name %> This is a string in English</en>
+      <de>Schoene Gruesse, <% $name %>, diese Worte sind auf Deutsch</de>
+      <pig>ellohay <% substr($name,2).substr($name,1,1).'ay' %>, 
+      isthay isay igpay atinlay</pig>
+   </&>
+
+Here is the /i18n/itext component:
+
+   <% $text %>
+
+   <%init>
+   # this assumes $lang is a global variable which has been set up earlier.
+   local $_ = $m->content;
+   my ($text) = m{<$lang>(.*?)</$lang>};
+   </%init>
+
+If a filter component is called like a normal component (e.g. <& itext &>),
+$m->content will return undef.  If a normal component which does not call  
+$m->content is called with content, the content will not be output.
+
+If you wrap a filtering component call around the entire component, 
+the result will be functionally similar to a <%filter> section.
+See also L<Filtering>.
+
+=head2 Advanced Components that Filter Content
+
+Internally $m->content is implemented with a closure containing the 
+part of the component which is the content.  In English, that means
+that any mason tags and perl code in the content are evaluated when
+$m->content is called, and $m->content returns the text which would
+have been output by mason.  Because the contents are evaluated at the
+time that $m->content is called, one can write components which act
+as control structures or which output their contents multiple times
+with different values for the variables.
+
+The tricky part of using filter components as control
+structures is setting up variables which can be accessed from
+both the filter component and the content, which is in the component 
+which calls the filter component.  The content has access to all 
+variables in the surrounding component, but the filtering component
+does not.  There are two ways to do this: 
+use global variables, or pass a reference to a lexical variable to the 
+filter component.
+
+Here is a simple example using the second method:
+
+    % my $var;
+    <ol>
+    <&| loop , list => \@items, var => \$var &>
+    <li> <% $var %>
+    </&>
+    </ol>
+
+loop component:
+    <%args>
+    @list
+    $var
+    </%args>
+    % foreach (@list) {
+    % $$var = $_;  # $var is a reference
+    <% $m->content %>
+    % }
+
+Using global variables can be somewhat simpler.  Below is the same
+example, with $var defined as a global variable.  The site administrator
+must make sure that "$var" is included in Mason's allow_globals 
+parameter.  Local-izing $var within the filter component will allow 
+the loop components to be nested.
+
+    <ol>
+    <&| loop, list => \@items &>
+    <li> <% $var %>
+    </&>
+    </ol>
+
+loop component:
+    <%args>
+    @list
+    </%args>
+    % foreach (@list) {
+    % local $var = $_;
+    <% $m->content %>
+    % }
+
+Besides remembering to include "$var" in allow_globals, the developers
+should take care not to use that variable is other places where it
+might conflict with usage by the filter component.  Local-izing $var
+will also provide some protection against using it in other places.
+
+An even simpler method is to use the $_ variable.  It is already global,
+and is automatically local-ized by the foreach statement:
+
+    <ol>
+    <&| loop, list => \@items &>
+    <li> <% $_ %>
+    </&>
+    </ol>
+
+loop component:
+    <%args>
+    @list
+    </%args>
+    % foreach (@list) {
+    <% $m->content %>
+    % }
 
 =head2 Components that compute values
 
@@ -905,7 +1034,7 @@ the results of the current component.  By separating out and hiding a
 filter that, say, changes HTML in a complex way, we allow 
 non-programmers to work in a cleaner HTML environment.
 
-=head2 &lt;%filter&gt; section
+=head2 E<lt>%filterE<gt> section
 
 The C<E<lt>%filterE<gt>> section allows you to arbitrarily filter the output of
 the current component. Upon entry to this code, $_ contains the
