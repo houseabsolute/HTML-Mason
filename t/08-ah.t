@@ -51,7 +51,7 @@ if ($have_libapreq) {        # 44 tests
     apache_request_tests(0); # 14 tests
 
     cleanup_data_dir();
-    no_comp_root_tests();    # 11 tests
+    no_config_tests();    # 11 tests
 }
 
 if ($have_cgi) {             # 34 tests
@@ -361,9 +361,9 @@ EOF
     kill_httpd(1);
 }
 
-sub no_comp_root_tests
+sub no_config_tests
 {
-    start_httpd('no_comp_root');
+    start_httpd('no_config');
 
     standard_tests(0);
 
