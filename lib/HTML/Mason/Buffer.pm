@@ -99,6 +99,8 @@ sub _initialize
 	    $self->{sink} = sub { for (@_) { $$b .= $_ if defined } };
 	}
     }
+
+    $self->{ignore_flush} = 1 unless $self->{parent};
 }
 
 sub new_child
@@ -117,12 +119,8 @@ sub flush
 {
     my $self = shift;
     return if $self->ignore_flush;
-
-    if ($self->parent)
-    {
-	$self->parent->receive( $self->output );
-	$self->clear;
-    }
+    $self->parent->receive( $self->output ) if $self->parent;
+    $self->clear;
 }
 
 sub clear
