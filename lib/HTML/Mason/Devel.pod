@@ -958,6 +958,10 @@ section:
     ...
     </%init>
 
+In addition, using C<$m> or <$r> in this section will not work in a
+preloaded component, because neither of those variable exist when a
+component is preloaded.
+
 =head2 <%shared>
 
 As with C<< <%once> >>, variables declared in this section can be seen in all
