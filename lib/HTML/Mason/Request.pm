@@ -2149,6 +2149,9 @@ manually.
 See DEVEL<sending HTTP headers> for more details about the automatic
 header feature.
 
+NOTE: This parameter has no effect under mod_perl-2, since calling
+C<$r-E<gt>send_http_header> is no longer needed.
+
 =back
 
 =head1 CGI-ONLY METHODS
