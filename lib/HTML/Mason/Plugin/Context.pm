@@ -62,7 +62,7 @@ __END__
 
 =head1 NAME
 
-HTML::Mason::Plugin::Context
+HTML::Mason::Plugin::Context - encapsulates arguments passed to plugin methods
 
 =head1 DESCRIPTION
 
