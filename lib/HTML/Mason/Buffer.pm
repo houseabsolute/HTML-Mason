@@ -89,7 +89,11 @@ sub flush
 {
     my $self = shift;
     return if $self->ignore_flush;
-    $self->parent->receive( $self->output ) if $self->parent;
+
+    my $output = $self->output;
+    return unless defined $output && $output ne '';
+
+    $self->parent->receive( $output ) if $self->parent;
     $self->clear;
 }
 
