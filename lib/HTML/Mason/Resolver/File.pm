@@ -24,25 +24,7 @@ __PACKAGE__->valid_params
 sub new {
     my $package = shift;
 
-    my %defaults;
-
-    #
-    # We make a special case of this cause the convenience factor is
-    # potentially quite high for users
-    #
-    # If our 'handler' classes subclassed HTML::Mason::Interp, this
-    # could be done away with.
-    #
-    if ( defined $HTML::Mason::ApacheHandler::VERSION && Apache->request )
-    {
-	$defaults{comp_root} = Apache->request->document_root;
-    }
-    elsif ( exists $ENV{DOCUMENT_ROOT} )
-    {
-	$defaults{comp_root} = $ENV{DOCUMENT_ROOT};
-    }
-
-    my $self = $package->SUPER::new(%defaults, @_);
+    my $self = $package->SUPER::new(@_);
 
     if ($self->{comp_root}) {
 	# Put it through the accessor to ensure proper data structure
