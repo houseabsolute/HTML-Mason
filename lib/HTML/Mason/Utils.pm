@@ -48,7 +48,9 @@ sub access_data_cache
     # Store
     #
     if ($action eq 'store') {
-	my ($expireTime,%out);
+	my $expireTime=0;
+	my %out;
+	
 	die "no store value provided" if ($action eq 'store' && !exists($options{value}));
 
 	#
