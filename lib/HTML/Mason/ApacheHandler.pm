@@ -556,8 +556,10 @@ sub _get_val
 sub new
 {
     my $class = shift;
-    # get $r off end of params if its there
-    my $r = pop if @_ % 2 == 1;
+
+    # Get $r off end of params if its there
+    my $r;
+    $r = pop() if @_ % 2;
     my %params = @_;
 
     my %defaults;
