@@ -837,9 +837,8 @@ sub prepare_request
     my $out_method = sub {
 
 	# Send headers if they have not been sent by us or by user.
-
         # We use instance here because if we store $request we get a
-        # circular reference and a big memory leak
+        # circular reference and a big memory leak.
 	if (!$sent_headers and HTML::Mason::Request->instance->auto_send_headers) {
 	    unless (http_header_sent($new_r)) {
 		$new_r->send_http_header();
@@ -847,6 +846,12 @@ sub prepare_request
 	    $sent_headers = 1;
 	}
 
+	# We could perhaps install a new, faster out_method here that
+	# wouldn't have to keep checking whether headers have been
+	# sent and what the $r->method is.  That would require
+	# additions to the Request interface, though.
+
+	
 	# Call $new_r->print (using the real Apache method, not our
 	# overriden method). If request was HEAD, suppress output.
 	unless ($new_r->method eq 'HEAD') {
