@@ -15,7 +15,7 @@
 # MasonX::Request::WithApacheSession code available from CPAN.
 #
 
-package MyMason::MyApp;
+package MyApp::Mason;
 
 # Bring in main Mason package.
 use HTML::Mason;
@@ -104,5 +104,5 @@ In your httpd.conf, add something like this:
  PerlRequire /path/to/handler.pl
  <LocationMatch "\.html$">
    SetHandler perl-script
-   PerlHandler MyMason::MyApp
+   PerlHandler MyApp::Mason
  </LocationMatch>
