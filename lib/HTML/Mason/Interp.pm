@@ -47,34 +47,6 @@ use HTML::Mason::MethodMaker
       );
 
 # Fields that can be set in new method, with defaults
-my %fields =
-    (
-     allow_recursive_autohandlers => 1,
-     autohandler_name => 'autohandler',
-     code_cache_max_size => 10*1024*1024,  # 10M
-     compiler => undef,
-     comp_root => undef,
-     current_time => 'real',
-     data_dir => undef,
-     data_cache_defaults => undef,
-     dhandler_name => 'dhandler',
-     die_handler => sub { Carp::confess($_[0]) },
-     die_handler_overridden => 0,
-     ignore_warnings_expr => qr/Subroutine .* redefined/i,
-     system_log_file => undef,
-     system_log_separator => "\cA",
-     max_recurse => 32,
-     out_mode => 'batch',
-     preloads => [],
-     resolver => undef,
-     static_file_root => undef,
-     use_autohandlers => 1,
-     use_data_cache => 1,
-     use_dhandlers => 1,
-     use_object_files => 1,
-     use_reload_file => 0
-     );
-
 my %valid_params =
     (
      allow_recursive_autohandlers => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
@@ -88,12 +60,15 @@ my %valid_params =
      # Object cause qr// returns an object
      ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
 				       default => qr/Subroutine .* redefined/i },
-     out_method                   => { parse => 'code',    optional => 1, type => CODEREF|SCALARREF },
-     out_mode                     => { parse => 'string',  default => 'batch', type => SCALAR },
+     out_method                   => { parse => 'code',    type => CODEREF|SCALARREF,
+				       default => sub { print grep {defined} @_ } },
+     out_mode                     => { parse => 'string',  default => 'batch', type => SCALAR,
+				       callbacks => { "must be either 'batch' or 'stream'" =>
+						      sub { $_[0] =~ /^(?:batch|stream)$/ } } },
      max_recurse                  => { parse => 'string',  default => 32, type => SCALAR },
      preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF },
      static_file_root             => { parse => 'string',  optional => 1, type => SCALAR },
-     system_log_events            => { parse => 'string',  optional => 1, type => SCALAR|UNDEF },
+     system_log_events            => { parse => 'string',  optional => 1, type => SCALAR|HASHREF|UNDEF },
      system_log_file              => { parse => 'string',  optional => 1, type => SCALAR },
      system_log_separator         => { parse => 'string',  default => "\cA", type => SCALAR },
      use_autohandlers             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
@@ -111,38 +86,25 @@ sub valid_params { \%valid_params }
 sub new
 {
     my $class = shift;
-    my $self = bless {
-	%fields,
-        code_cache => {},
-        code_cache_current_size => 0,
-	files_written => [],
-	hooks => {},
-	last_reload_time => 0,
-	last_reload_file_pos => 0,
-	out_method => sub { for (@_) { print $_ if defined } },
-	system_log_fh => undef,
-	system_log_events_hash => undef
-    }, $class;
 
-    validate( @_, $self->valid_params );
-
-    my (%options) = @_;
-
-    HTML::Mason::Exception::Params->throw( error => "out_mode parameter must be either 'batch' or 'stream'\n" )
-	if defined $options{out_mode} && $options{out_mode} ne 'batch' && $options{out_mode} ne 'stream';
-
-    while (my ($key,$value) = each(%options)) {
-	next if $key =~ /out_method|system_log_events/;
-	$self->{$key} = $value;
-    }
+    my $self = bless { validate( @_, $class->valid_params ),
+		       code_cache => {},
+		       code_cache_current_size => 0,
+		       files_written => [],
+		       hooks => {},
+		       last_reload_time => 0,
+		       last_reload_file_pos => 0,
+		       system_log_fh => undef,
+		       system_log_events_hash => undef,
+		     }, $class;
+    
     $self->{autohandler_name} = undef unless $self->{use_autohandlers};
     $self->{dhandler_name} = undef unless $self->{use_dhandlers};
-    $self->{die_handler_overridden} = 1 if exists $options{die_handler};
+    $self->{die_handler_overridden} = 1 if $self->{die_handler} ne $self->valid_params->{die_handler}{default}; #Hmm
 
     $self->{data_cache_dir} ||= ($self->{data_dir} . "/cache");
 
-    $self->out_method($options{out_method}) if (exists($options{out_method}));
-    $self->system_log_events($options{system_log_events}) if (exists($options{system_log_events}));
+    $self->system_log_events($self->{system_log_events}) if exists $self->{system_log_events};
     $self->_initialize;
     return $self;
 }
@@ -825,7 +787,7 @@ foreach my $property (sort keys %$interp) {
     $val =~ s,([\x00-\x1F]),'<font color="purple">control-' . chr( ord('A') + ord($1) - 1 ) . '</font>',eg; # does this work for non-ASCII?
 </%perl>
     <% $property | h %> => <% defined $val ? $val : '<i>undef</i>' %>
-                          <% $val eq $defaults{$property} ? '<font color="green">(default)</font>' : '' %>
+                          <% $val eq $valid{$property}{default} ? '<font color="green">(default)</font>' : '' %>
 		          <br>
 % }
   </tt>
@@ -850,7 +812,7 @@ foreach my $property (sort keys %$interp) {
 
 <%args>
  $interp   # The interpreter we'll elucidate
- %defaults # Default values for interp member data
+ %valid    # Default values for interp member data
  $current_url => ''
 </%args>
 EOF
@@ -865,7 +827,7 @@ EOF
     my $comp = $self->make_anonymous_component(comp => $comp_text);
     my $out;
     local $self->{out_method} = \$out;
-    $self->exec($comp, interp => $self, defaults => \%fields, current_url => $current_url);
+    $self->exec($comp, interp => $self, valid => $self->valid_params, current_url => $current_url);
     return $out;
 }         
 
