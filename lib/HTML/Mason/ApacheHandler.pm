@@ -877,7 +877,7 @@ object used in the ApacheHandler code.
 If args_method is 'mod_perl', the $r global is upgraded to an
 Apache::Request object. This object inherits all Apache methods and
 adds a few of its own, dealing with parameters and file uploads.  See
-L<Apache::Request> for more information.
+L<Apache::Request|Apache::Request> for more information.
 
 While Mason will load Apache::Request or CGI as needed at runtime, it
 is recommended that you preload the relevant module either in your
@@ -887,8 +887,9 @@ httpd.conf or handler.pl file, as this will save some memory.
 
 Indicates whether Mason should decline directory requests, leaving
 Apache to serve up a directory index or a FORBIDDEN error as
-appropriate. Default is 1. See L<Admin/Allowing directory requests>
-for more information about handling directories with Mason.
+appropriate. Default is 1. See L<Allowing directory requests in the
+Admin manual|Admin/"Allowing directory requests"> for more information
+about handling directories with Mason.
 
 =item interp
 
@@ -910,8 +911,8 @@ For example:
 
 =head1 SEE ALSO
 
-L<HTML::Mason>,
-L<HTML::Mason::Admin>,
-L<HTML::Mason::Interp>
+L<HTML::Mason|HTML::Mason>,
+L<HTML::Mason::Admin|HTML::Mason::Admin>,
+L<HTML::Mason::Interp|HTML::Mason::Interp>
 
 =cut
