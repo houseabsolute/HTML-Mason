@@ -77,7 +77,6 @@ sub OK { return 0 }
 sub DECLINED { return -1 }
 sub SERVER_ERROR { return 500 }
 sub NOT_FOUND { return 404 }
-use Data::Dumper;
 use File::Path;
 use File::Spec;
 use HTML::Mason::Exceptions;
