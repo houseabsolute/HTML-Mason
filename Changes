@@ -65,8 +65,8 @@ HTML-escaped.  Task id #468.  Reported by Jeremy Blain.
 - A bad interaction between the XS version of Params::Validate, Perl
 5.00503 and taint mode has been "fixed" by requiring Params::Validate
 0.59, where the problem is fixed.  Task id #470.
-- The test suite now runs the taint mode tests is no longer skipped on
-earlier versions of Perl.  Task id #471.
+- The test suite now runs the taint mode tests with earlier versions
+of Perl.  Task id #471.
 - The ApacheHandler module would go into an infinite memory-eating
 loop when run in taint mode with Perl 5.6.1.  Task id #469.  Reported
 by William McKee.
