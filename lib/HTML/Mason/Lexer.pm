@@ -38,7 +38,7 @@ my %blocks = ( args    => 'variable_list_block',
 my $blocks_re;
 {
     my $re = join '|', keys %blocks;
-    $blocks_re = qr/$re/;
+    $blocks_re = qr/$re/i;
 }
 
 sub new
@@ -121,9 +121,6 @@ sub parse_component
     $self->{compiler}->end_component;
 
     return;
-
-    # $@ will contain a string with relevant info if anything died.
-    $self->_handle_parse_error($@) if $@;
 }
 
 sub start
@@ -155,7 +152,7 @@ sub start
 	unless ( $end eq $expect )
 	{
 	    my $block_name = $self->{"in_$type"};
-	    Mason::Exception::Lexer->throw( error => "No $expect tag for <%$type> for $block_name named block" );
+	    Mason::Exception::Lexer->throw( error => "No $expect tag for <%$type $block_name> named block" );
 	}
     }
 }
@@ -164,7 +161,7 @@ sub match_block
 {
     my $self = shift;
 
-    if ( $self->{comp} =~ /\G<%($blocks_re)>/gcs )
+    if ( $self->{comp} =~ /\G<%($blocks_re)>/igcs )
     {
 	my $type = $1;
 	$self->{compiler}->start_block( block_type => $type );
@@ -181,7 +178,7 @@ sub raw_block
     my $self = shift;
     my %p = @_;
 
-    if ( $self->{comp} =~ m,\G(.*?)</%\Q$p{block_type}\E>,gs )
+    if ( $self->{comp} =~ m,\G(.*?)</%\Q$p{block_type}\E>,igs )
     {
 	my $block = $1;
 	if (defined $block)
@@ -207,7 +204,7 @@ sub variable_list_block
     while ( $self->{comp} =~ m,\G               # last pos matched
                                [ \t]*
                                ( [\$\@\%] )     # variable type
-                               ( [A-Za-z_]\w* ) # only allows valid Perl variable names
+                               ( [^\W\d]\w* ) # only allows valid Perl variable names
                                [ \t]*
 			       (?:              # this entire entire piece is optional
 			        =>
@@ -284,7 +281,7 @@ sub match_named_block
     my $self = shift;
     my %p = @_;
 
-    if ( $self->{comp} =~ /\G<%(def|method)\s+([^\n]+)>/gcs )
+    if ( $self->{comp} =~ /\G<%(def|method)\s+([^\n]+)>/igcs )
     {
 	my ($type, $name) = ($1, $2);
 	$self->{compiler}->start_named_block( block_type => $type,
@@ -292,7 +289,7 @@ sub match_named_block
 
 	# This will cause ->start to return once it hits the
 	# appropriate ending tag.
-	local $self->{ending} = qr,\G</%\Q$type\E>,;
+	local $self->{ending} = qr,\G</%\Q$type\E>,i;
 
 	$self->{"in_$type"} = $name;
 
@@ -373,7 +370,7 @@ sub match_text
 
     if ( $self->{comp} =~ /\G
                            (.+?)        # anything
-			   (?=          # followed by (use lookahead to not consume text)
+			   (?=          # followed by (use lookahead so as to not consume text)
                              %          # an eval line
                              |
                              <%         # a substitution or tag start
