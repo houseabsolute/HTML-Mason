@@ -383,7 +383,9 @@ sub cache_self {
 	# stack.
 	#
 	$self->pop_buffer_stack;
-	die if $@;
+	if ($@) {
+	    UNIVERSAL::can($@, 'rethrow') ? $@->rethrow : error $@;
+	}
 
 	$cache->set($key, [$output, $retval], $expires_in);
     }
