@@ -276,5 +276,36 @@ EOF
 		    );
 
 #------------------------------------------------------------
+
+    $group->add_support( path => '/dhandler',
+			 component => <<'EOF',
+top-level dhandler
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/foo/dhandler',
+			 component => <<'EOF',
+% $m->decline;
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'top_level_dhandler',
+		      description => 'make sure dhandler at /dhandler is called correctly after decline from lower-level dhandler',
+                      path      => '/foo/notused',
+                      call_path => '/foo/nonexistent',
+		      component => <<'EOF',
+not ever used
+EOF
+		      expect => <<'EOF',
+top-level dhandler
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
