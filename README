@@ -51,8 +51,7 @@ additionally (or only) to the mod_perl mailing list at
 modperl@apache.org.
 
 If you have a question or comment that you don't feel is appropriate
-for the group, write to one of the HTML::Mason authors: Jonathan
-Swartz (swartz@transbay.net) or Mark Schmick (mark@webz.com).
+for the group, write to the author at swartz@transbay.net.
 
 REPORTING BUGS
 
@@ -64,6 +63,17 @@ For all bug reports indicate your architecture, Apache/Perl/module
 versions, etc. For installation problems send your handler.pl and
 httpd.conf. For component problems try to isolate the bug in a single
 small component or set of components, and send those.
+
+CONTENT MANAGEMENT
+
+There is a companion content management system for Mason, maintained
+by Mark Schmick.  CM is a web-based interface to your component and
+content files; it allows designers and programmers to work on a site
+remotely without resorting to ftp or telnet. It supports
+staging/production sites, RCS versioning of files, global content
+searching, and a host of other features. CM is written entirely as a
+set of Mason components.  Find out more and download a copy at
+http://www.masonhq.com/Mason-CM/.
 
 LICENSE
 
@@ -80,3 +90,8 @@ merchantibility and fitness for a particular purpose.  Mason is
 released under the same terms as Perl itself.  For more information
 see the "README" or "Artistic" files provided with the Perl
 distribution.
+
+AUTHOR
+
+Jonathan Swartz
+swartz@transbay.net

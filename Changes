@@ -24,12 +24,12 @@ See CREDITS file for other contributors
 	- added Parser option 'in_package' (submitted by Philip Gwyn)
 	- added facilities for using globals in components: Parser
           option 'allow_globals' and Interp method 'set_global'
+	- documented how to integrate Mason with Apache::Session
+          [modus]
 	- ** changed behavior of reload_file mode to read directly
           from object files [mschmick]
 	- reduced number of file stats when loading components
           [mschmick]
-	- documented how to integrate Mason with Apache::Session
-          [modus]
 	- upgraded FakeApache/debug files to work with mod_perl 1.19
 	- added documentation about how debug files work
 	- mentioned mailing lists, masonhq.com web site, and FAQ in
