@@ -1,5 +1,5 @@
 Contents of system log, sans numbers:
 % my $content = $m->file($m->interp->data_dir."/etc/system.log");
-% $content =~ s/[0-9]+\|\|//g;
+% $content =~ s/[0-9.]+\|\|//g;
 <% $content %>
 

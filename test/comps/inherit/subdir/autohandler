@@ -1,0 +1,2 @@
+<& ../report_parent &>
+<% $m->call_next %>

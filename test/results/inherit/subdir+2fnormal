@@ -1,0 +1,9 @@
+My name is /inherit/autohandler and I have no parent.
+
+My name is /inherit/subdir/autohandler and my parent is /inherit/autohandler.
+
+My name is /inherit/subdir/normal and my parent is /inherit/subdir/autohandler.
+
+
+
+

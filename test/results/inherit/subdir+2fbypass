@@ -1,0 +1,6 @@
+My name is /inherit/autohandler and I have no parent.
+
+My name is /inherit/subdir/bypass and my parent is /inherit/autohandler.
+
+
+

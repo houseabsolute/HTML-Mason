@@ -53,7 +53,7 @@ try_exec_with_interp({dhandler_name=>'plainfile'},'dhandler_test/foo/blag');
 # max_recurse
 try_exec_with_interp({},'max_recurse_8');
 try_exec_with_interp({},'max_recurse_24',1);
-try_exec_with_interp({max_recurse=>21},'max_recurse_24',2);
+try_exec_with_interp({max_recurse=>50},'max_recurse_24',2);
 
 # out_mode
 try_exec_with_interp({},'out_mode',1);
