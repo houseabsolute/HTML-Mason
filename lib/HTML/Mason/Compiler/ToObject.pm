@@ -221,7 +221,8 @@ sub _component_params
 
     $params{flags} = join '', "{\n", $self->_flags, "\n}" if keys %{ $self->{current_comp}{flags} };
     $params{attr}  = join '', "{\n", $self->_attr, "\n}" if keys %{ $self->{current_comp}{attr} };
-    $params{declared_args} = join '', "{\n", $self->_declared_args, "\n}" if keys %{ $self->{current_comp}{args} };
+    $params{declared_args} = join '', "{\n", $self->_declared_args, "\n}"
+	if @{ $self->{current_comp}{args} };
 
     return \%params;
 }
@@ -231,7 +232,7 @@ sub _body
     my $self = shift;
 
     my @args;
-    if ( keys %{ $self->{current_comp}{args} } )
+    if ( @{ $self->{current_comp}{args} } )
     {
 	@args = ( <<'EOF',
 if (@_ % 2 == 0) { %ARGS = @_ } else { die "Odd number of parameters passed to component expecting name/value pairs" }
@@ -279,7 +280,7 @@ sub _arg_declarations
     my $self = shift;
 
     my @args;
-    foreach ( values %{ $self->{current_comp}{args} } )
+    foreach ( @{ $self->{current_comp}{args} } )
     {
 	my $default_val = ( defined $_->{default} ?
 			    $_->{default} :
@@ -345,14 +346,14 @@ sub _declared_args
 
     my @args;
 
-    foreach my $key ( sort keys %{ $self->{current_comp}{args} } )
+    foreach my $arg ( sort {"$a->{type}$a->{name}" cmp "$b->{type}$b->{name}" }
+		      @{ $self->{current_comp}{args} } )
     {
-	my $val = $self->{current_comp}{args}{$key};
-	my $def = defined $val->{default} ? "$val->{default}" : 'undef';
+	my $def = defined $arg->{default} ? "$arg->{default}" : 'undef';
 	$def =~ s,([\\']),\\$1,g;
 	$def = "'$def'" unless $def eq 'undef';
 
-	push @args, "'$key' => { default => $def }";
+	push @args, "'$arg->{type}$arg->{name}' => { default => $def }";
     }
 
     return join ",\n", @args;
