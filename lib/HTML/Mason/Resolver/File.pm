@@ -6,7 +6,6 @@ package HTML::Mason::Resolver::File;
 
 use strict;
 
-use Cwd qw(cwd);
 use File::Spec;
 use HTML::Mason::Tools qw(read_file);
 use Params::Validate qw(:all);
