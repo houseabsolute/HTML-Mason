@@ -93,6 +93,7 @@ sub import
     {
 	no strict 'refs';
 	*{"${caller}::isa_mason_exception"} = \&isa_mason_exception;
+	*{"${caller}::rethrow_exception"} = \&rethrow_exception;
     }
 }
 
@@ -109,6 +110,17 @@ sub isa_mason_exception
     } else {
 	return UNIVERSAL::isa($err, "HTML::Mason::Exception");
     }
+}
+
+sub rethrow_exception
+{
+    my ($err) = @_;
+    return unless $err;
+
+    if ( UNIVERSAL::can($err, 'rethrow') ) {
+	$err->rethrow;
+    }
+    HTML::Mason::Exception->throw(error => $err);
 }
 
 package HTML::Mason::Exception;
