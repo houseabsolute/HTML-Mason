@@ -5,7 +5,7 @@ available at http://www.masonhq.com/changes.html.
 
 ** denotes an incompatible change
 
-1.13
+1.13  August 26, 2002 (Taiwan time)
 
 [ ENHANCEMENTS ]
 
@@ -307,7 +307,7 @@ Frisbie).
 substitution escape flag.  This module escapes high-ascii characters
 properly.
 - Calling a method via $m->comp('comp:method') works just like
-$comp->call_method('method').  Previously, ???
+$comp->call_method('method').
 - When an object contains other objects then the containing object's
 constructor accepts parameters intended for the contained objects.
 For example, the Interp object contains a Resolver object and Request
