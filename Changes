@@ -20,6 +20,11 @@ fixed.
 
 - Fix a bug in the lexer that made it think it had found a Perl-line
 where none existed.
+- Fixed a bug related to handling of parameters in httpd.conf files.
+This was only noticeable if you attempted to provide a subclass of one
+of Mason's classes (like your own Request class) that took its own
+parameters.  Mason was not recognizing those additional parameters as
+valid.
 
 1.09_02  June 4, 2002
 
