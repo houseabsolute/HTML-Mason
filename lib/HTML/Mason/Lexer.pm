@@ -10,6 +10,7 @@ use Exception::Class qw( Mason::Exception::Lexer );
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( preprocess
+                          compiler_class
                          )
 		    ],
     );
@@ -17,6 +18,7 @@ use HTML::Mason::MethodMaker
 
 my %fields =
     ( preprocess => undef,
+      compiler_class => 'HTML::Mason::Compiler::ToObject',
     );
 
 
@@ -47,8 +49,6 @@ sub new
 
     my $self = bless {}, $class;
 
-    $self->{compiler} = HTML::Mason::Compiler::ToObject->new( lexer => $self );
-
     foreach ( keys %p )
     {
 	if ( exists $fields{$_} )
@@ -64,6 +64,8 @@ sub new
     {
 	$self->{$_} ||= $fields{$_};
     }
+
+    $self->{compiler} = $self->{compiler_class}->new( lexer => $self );
 
     return $self;
 }
