@@ -109,7 +109,10 @@ sub text
 
     1 if $self->{postprocess_text};
 
-    push @{ $self->{current_comp}{text_buffer} }, $p{text};
+    my $line = $self->{lexer}->line_count;
+    my $file = $self->{lexer}->file;
+
+    push @{ $self->{current_comp}{text_buffer} }, "#line $line $file\n$p{text}";
 }
 
 sub text_block
@@ -117,7 +120,10 @@ sub text_block
     my $self = shift;
     my %p = @_;
 
-    push @{ $self->{current_comp}{text_buffer} }, $p{text};
+    my $line = $self->{lexer}->line_count;
+    my $file = $self->{lexer}->file;
+
+    push @{ $self->{current_comp}{text_buffer} }, "#line $line $file\n$p{text}";
 }
 
 sub end_block
