@@ -6,10 +6,16 @@ package HTML::Mason::Lexer;
 
 use strict;
 
-use HTML::Mason::Exceptions;
+use HTML::Mason::Exceptions
+    ( abbr =>
+      { param_error  => 'HTML::Mason::Exception::Params',
+	syntax_error => 'HTML::Mason::Exception::Syntax',
+	error        => 'HTML::Mason::Exception',
+      },
+    );
 
 use Params::Validate qw(:all);
-Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
+Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
 
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
@@ -113,7 +119,7 @@ sub lex
     if ($@)
     {
 	$@->rethrow if UNIVERSAL::can( $@, 'rethrow' );
-	HTML::Mason::Exception->throw( error => $@ );
+	error $@;
     }
 }
 
@@ -160,7 +166,7 @@ sub start
 	$self->match_text && next;
 
 	# We should never get here - if we do, we're in an infinite loop.
-	HTML::Mason::Exception::Syntax->throw( error => "Infinite parsing loop encountered - Lexer bug?" );
+	syntax_error "Infinite parsing loop encountered - Lexer bug?";
     }
 
     if ( $self->{in_def} || $self->{in_method} )
@@ -169,7 +175,7 @@ sub start
 	unless ( $end =~ m,</%\Q$type\E>\n?,i )
 	{
 	    my $block_name = $self->{"in_$type"};
-	    HTML::Mason::Exception::Syntax->throw( error => "No </%$type> tag for <%$type $block_name> block" );
+	    syntax_error "No </%$type> tag for <%$type $block_name> block";
 	}
     }
 }
@@ -345,7 +351,7 @@ sub match_block_end
     else
     {
 	my $line = $self->_next_line;
-	HTML::Mason::Exception::Syntax->throw( error => "Invalid <%$p{block_type}> section line at line $self->{lines}:\n$line" );
+	syntax_error "Invalid <%$p{block_type}> section line at line $self->{lines}:\n$line";
     }
 }
 
@@ -402,7 +408,7 @@ sub match_substitute
 	else
 	{
 	    my $line = $self->_next_line( $self->{pos} - 2 );
-	    HTML::Mason::Exception::Syntax->throw( error => "'<%' without matching '%>' at $self->{lines}:\n$line" );
+	    syntax_error "'<%' without matching '%>' at $self->{lines}:\n$line";
 	}
     }
 }
@@ -429,7 +435,7 @@ sub match_comp_call
 	else
 	{
 	    my $line = $self->_next_line( $self->{pos} - 2 );
-	    HTML::Mason::Exception::Syntax->throw( error => "'<&' without matching '&>' at $self->{lines}:\n$line" );
+	    syntax_error "'<&' without matching '&>' at $self->{lines}:\n$line";
 	}
     }
 }
@@ -457,7 +463,7 @@ sub match_comp_content_call
 	else
 	{
 	    my $line = $self->_next_line( $self->{pos} - 3 );
-	    HTML::Mason::Exception::Syntax->throw( error => "'<&|' without matching '&>' at $self->{lines}:\n$line" );
+	    syntax_error "'<&|' without matching '&>' at $self->{lines}:\n$line";
 	}
     }
 }
