@@ -14,14 +14,14 @@ them if desired.  When you run "make install" this file will be
 installed alongside the other Mason libraries.
 EOF
     
-my $confFile = <<EOF;
+my $confFile = <<'EOF';
 # Copyright (c) 1998-2001 by Jonathan Swartz. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the same terms as Perl itself.
 
 # This is the global configuration file for HTML::Mason.
 
-\%HTML::Mason::Config = (
+%%HTML::Mason::Config = (
     # Do we have the XS version of Data::Dumper?
     #
     'use_data_dumper_xs'      => %d,
@@ -35,34 +35,30 @@ my $confFile = <<EOF;
 );
 EOF
 
-sub have_pkg
+sub pkg_version
 {
     my ($pkg) = @_;
     eval { my $p; ($p = $pkg . ".pm") =~ s|::|/|g; require $p; };
     no strict 'refs';
-    return ${"${pkg}::VERSION"} ? 1 : 0;
+    return ${"${pkg}::VERSION"};
 }
 
 sub chk_version
 {
-    my($pkg,$wanted,$msg) = @_;
+    my ($pkg, $wanted) = @_;
 
     local($|) = 1;
-    print "Checking for $pkg...";
-
-    eval { my $p; ($p = $pkg . ".pm") =~ s#::#/#g; require $p; };
-
-    my $vstr;
-    my $vnum;
-    {
-	no strict 'refs';
-	$vstr = ${"${pkg}::VERSION"} ? "found v" . ${"${pkg}::VERSION"}	: "not found";
-	$vnum = ${"${pkg}::VERSION"} || 0;
+    print "Checking for $pkg... ";
+    
+    my $version = pkg_version($pkg);
+    unless ($version) {
+	print "not found\n";
+	return 0;
     }
+    print "found v$version\n";
 
-    print $vnum >= $wanted ? "ok\n" : " " . $vstr . "\n";
-
-    $vnum >= $wanted;
+    print " not ok\n" unless $version >= $wanted;
+    return $version >= $wanted;
 }
 
 sub make_config
@@ -71,7 +67,7 @@ sub make_config
     print "Checking for existing configuration...";
     eval {require 'HTML/Mason/Config.pm'; };
     my $err = $@;
-    print (($err) ? "not found." : (!defined(%HTML::Mason::Config)) ? "old-style Config.pm found." : "found.");
+    print (($err) ? "not found." : %HTML::Mason::Config ? "found." : "old-style Config.pm found.");
     print "\n";
     my %c = %HTML::Mason::Config;
 
@@ -98,10 +94,10 @@ sub make_config
 	$c{use_time_hires} = $h;
     }
 
-    open(F,">lib/HTML/Mason/Config.pm") or die "\nERROR: Cannot write lib/HTML/Mason/Config.pm. Check directory permissions and rerun.\n";
-    my $conf = sprintf($confFile,@c{qw(default_cache_tie_class mldbm_file_ext mldbm_use_db mldbm_serializer use_data_dumper_xs use_time_hires)});
-    print F $conf;
     print "\nWriting lib/HTML/Mason/Config.pm.\n";
+    open(F,">lib/HTML/Mason/Config.pm") or die "\nERROR: Cannot write lib/HTML/Mason/Config.pm. Check directory permissions and rerun.\n";
+    my $conf = sprintf($confFile,@c{qw(use_data_dumper_xs use_time_hires)});
+    print F $conf;
     close(F);
 
     print "\nYour settings are:\n";
