@@ -364,7 +364,8 @@ sending to the client.
 
 This method returns a hash containing the parameters sent by the
 client.  Multiple parameters of the same name are represented by array
-references.
+references.  If both POST and query string arguments were submitted,
+these will be merged together.
 
 =back
 
