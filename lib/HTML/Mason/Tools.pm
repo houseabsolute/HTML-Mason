@@ -42,6 +42,18 @@ sub read_file
 }
 
 #
+# Escape HTML &, >, <, and " characters. Borrowed from CGI::Base.
+#
+sub html_escape
+{
+    my ($text) = @_;
+    my %html_escape = ('&' => '&amp;', '>'=>'&gt;', '<'=>'&lt;', '"'=>'&quot;');
+    my $html_escape = join('', keys %html_escape);
+    $text =~ s/([$html_escape])/$html_escape{$1}/mgoe;
+    return $text;
+}
+
+#
 # Determines whether two paths are equal, taking into account
 # case-insensitivity in Windows O/S.
 #
