@@ -55,10 +55,13 @@ BEGIN
 
     __PACKAGE__->contained_objects
 	(
-	 resolver => 'HTML::Mason::Resolver::File',
-	 compiler => 'HTML::Mason::Compiler::ToObject',
+	 resolver => { class => 'HTML::Mason::Resolver::File',
+		       descr => "This class is expected to return component information based on a component path" },
+	 compiler => { class => 'HTML::Mason::Compiler::ToObject',
+		       descr => "This class is used to translate component source into code" },
 	 request  => { class => ( 'HTML::Mason::Request' ),
-		       delayed => 1 },
+		       delayed => 1,
+		       descr => "Objects returned by make_request are members of this class" },
 	);
 }
 
