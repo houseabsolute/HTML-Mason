@@ -639,7 +639,7 @@ The class to use when creating a lexer. Defaults to L<HTML::Mason::Lexer|HTML::M
 
 =item preprocess
 
-Sub reference that is called to preprocess each component before Parser does
+Sub reference that is called to preprocess each component before the compiler does
 it's magic.  The sub is called with a single parameter, a scalar reference
 to the script.  The sub is expected to process the script in-place.   This is
 one way to extend the HTML::Mason syntax with new tags, etc., although a much
