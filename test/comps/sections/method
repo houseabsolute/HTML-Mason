@@ -1,0 +1,15 @@
+<HTML>
+<HEAD>
+<TITLE>
+method Test
+</TITLE>
+</HEAD>
+<BODY>
+<% $m->called_comp->call_method('foo') %>
+</BODY>
+</HTML>
+<%method foo>
+bar
+% my $x = 2;
+<% $x %>
+</%method>

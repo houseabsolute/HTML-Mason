@@ -1,0 +1,18 @@
+<HTML>
+<HEAD>
+<TITLE>
+flags Test
+</TITLE>
+</HEAD>
+<BODY>
+foo
+<% $m->called_comp->flag('foo') %>
+<% $m->called_comp->flag('bar')->[1] %>
+<% $m->called_comp->flag('baz')->{b} %>
+</BODY>
+</HTML>
+<%flags>
+foo => 1
+bar => [4,5]
+baz => { a => 1, b => 2 }
+</%flags>
