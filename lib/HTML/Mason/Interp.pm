@@ -41,7 +41,6 @@ use HTML::Mason::MethodMaker
 		          ignore_warnings_expr
 			  max_recurse
 			  out_mode
-                          request_class
 			  resolver
 			  static_file_root
 			  use_object_files
@@ -67,7 +66,6 @@ __PACKAGE__->valid_params
 						      sub { $_[0] =~ /^(?:batch|stream)$/ } } },
      max_recurse                  => { parse => 'string',  default => 32, type => SCALAR },
      preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF },
-     request_class                => { parse => 'string',  default => 'HTML::Mason::Request', type => SCALAR },
      resolver                     => { isa => 'HTML::Mason::Resolver' },
      static_file_root             => { parse => 'string',  optional => 1, type => SCALAR },
      system_log_events            => { parse => 'string',  optional => 1, type => SCALAR|HASHREF|UNDEF },
@@ -86,6 +84,10 @@ __PACKAGE__->contained_objects
     (
      resolver => 'HTML::Mason::Resolver::File',
      compiler => 'HTML::Mason::Compiler::ToObject',
+     request  => { class => ( $ENV{MOD_PERL} ?
+			      'HTML::Mason::Request::ApacheHandler' :
+			      'HTML::Mason::Request' ),
+		   delayed => 1 },
     );
 
 sub new
@@ -133,8 +135,8 @@ sub _initialize
     #
     # Create data subdirectories if necessary. mkpath will die on error.
     #
-    foreach my $subdir (qw(obj cache cache/locks etc)) {
-	my @newdirs = mkpath($self->data_dir."/$subdir",0,0775);
+    foreach my $subdir ( qw(obj cache etc), File::Spec->catdir( 'cache', 'locks') ) {
+	my @newdirs = mkpath( File::Spec->catdir( $self->data_dir, $subdir ) , 0, 0775 );
 	$self->push_files_written(@newdirs);
     }
 
@@ -151,16 +153,14 @@ sub _initialize
 	select $oldfh;
 	$self->{system_log_fh} = $fh;
     }
-    
+
     #
     # Preloads
     #
     if ($self->preloads) {
-	HTML::Mason::Exception::Exception->throw( error => "array reference expected for preloads parameter" )
-	    unless UNIVERSAL::isa($self->preloads, 'ARRAY');
 	foreach my $pattern (@{$self->preloads}) {
 	    HTML::Mason::Exception->throw( error => "preloads pattern must be an absolute path" )
-		unless substr($pattern,0,1) eq '/';
+		 unless File::Spec->file_name_is_absolute($pattern);
 	    my @paths = $self->resolver->glob_path($pattern);
 	    foreach (@paths) { $self->load($_) }
 	}
@@ -198,8 +198,14 @@ sub die_handler {
 #
 sub exec {
     my $self = shift;
-    my $req = $self->{request_class}->new(interp=>$self);
+    my $req = $self->make_request;
     $req->exec(@_);
+}
+
+sub make_request {
+    my $self = shift;
+
+    return $self->create_delayed_object( 'request', interp => $self, @_ );
 }
 
 #
@@ -275,13 +281,13 @@ sub load {
 
 	$objfile = File::Spec->catfile( $self->object_dir, $fq_path );
 	return undef unless (-f $objfile);   # component not found
-	
+
 	$self->write_system_log('COMP_LOAD', $fq_path);	# log the load event
 	my $object ||= read_file($objfile);
 	my $comp = eval { $self->eval_object_text( object => $object ) };
 	$self->_compilation_error($objfile, $@) if $@;
 	$comp->assign_runtime_properties($self,$fq_path);
-	
+
 	$code_cache->{$fq_path}->{comp} = $comp;
 	return $comp;
     }
@@ -297,13 +303,13 @@ sub load {
     # Get last modified time of source.
     #
     my $srcmod = $lookup_info{last_modified};
-    
+
     if ($self->{use_object_files}) {
 	$objfile = File::Spec->catfile( $self->object_dir, $fq_path );
 	@objstat = stat $objfile;
 	$objisfile = -f _;
     }
-    
+
     #
     # If code cache contains an up to date entry for this path,
     # use the cached sub.
@@ -376,7 +382,7 @@ sub load {
 sub delete_from_code_cache {
     my ($self, $comp) = @_;
     return unless exists $self->{code_cache}{$comp};
-    
+
     $self->{code_cache_current_size} -= $self->{code_cache}{$comp}{comp}->object_size;
     delete $self->{code_cache}{$comp};
     return;
@@ -815,13 +821,13 @@ EOF
 	($current_url = $r->uri) =~ s/$path_info$//;
 	$current_url .= '?' . $r->args;
     }
-    
+
     my $comp = $self->make_component(comp => $comp_text);
     my $out;
     local $self->{out_method} = \$out;
     $self->exec($comp, interp => $self, valid => $self->validation_spec, current_url => $current_url);
     return $out;
-}         
+}
 
 
 1;
