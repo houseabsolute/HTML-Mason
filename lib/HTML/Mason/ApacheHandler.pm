@@ -162,6 +162,13 @@ sub import
     if ( $pack->_in_apache_conf_file )
     {
 	$pack->make_ah() unless $pack->get_param('MultipleConfig');
+
+	foreach ( $pack->get_param('interp_class'), $pack->get_param('compiler_class') ) )
+	{
+	    eval "use $p{$_}";
+	    die $@ if $@;
+	}
+
 	my $args_method = $pack->get_param('ArgsMethod');
 
 	eval $args_method eq 'mod_perl' ? 'use Apache::Request' : 'use CGI';
