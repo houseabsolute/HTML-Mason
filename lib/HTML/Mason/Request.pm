@@ -171,12 +171,14 @@ sub exec {
 	    $self->{top_comp} = $comp;
 	    $self->{top_args} = \@args;
 
-	    # Call the first component.
+	    # Call the first component, with STDOUT mapped to $m->out.
+	    tie *STDOUT, 'Tie::Handle::Mason', $self;
 	    if (wantarray) {
 		@result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
 	    } else {
 		$result = eval {$self->comp({base_comp=>$comp}, $first_comp, @args)};
 	    }
+	    untie *STDOUT;
 
 	    if (my $err = $@) {
 		# If declined, try to find the next dhandler.
@@ -626,8 +628,6 @@ sub comp {
     # been done higher up.
     #
     if (my $err = $@) {
-	untie *STDOUT if $self->depth == 1; # it was tied in _run_comp
-
 	# any unflushed output is at $self->top_buffer->output
 	$self->pop_stack;
 	$self->pop_buffer_stack;
@@ -651,10 +651,6 @@ sub _run_comp
 {
     my ($self, $wantarray, $comp, @args) = @_;
 
-    if ($self->depth == 1) {
-	tie *STDOUT, 'Tie::Handle::Mason', $self;
-    }
-
     my ($result, @result);
     if ($wantarray) {
 	@result = $comp->run(@args);
@@ -662,10 +658,6 @@ sub _run_comp
 	$result = $comp->run(@args);
     } else {
 	$comp->run(@args);
-    }
-
-    if ($self->depth == 1) {
-	untie *STDOUT;
     }
 
     return wantarray ? @result : $result;
