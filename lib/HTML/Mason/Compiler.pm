@@ -524,7 +524,6 @@ sub _add_body_code
 {
     my $self = shift;
 
-    my $comment;
     if ( $self->lexer->line_number )
     {
 	my $line = $self->lexer->line_number;
