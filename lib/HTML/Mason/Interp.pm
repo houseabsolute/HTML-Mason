@@ -800,8 +800,8 @@ EOF
     local $self->{out_method} = \$out;
 
     my $args = {interp => $self, valid => $self->validation_spec, current_url => $current_url};
-    my $request = $self->make_request(comp=>$comp, args=>$args, %p);
-    $request->exec;
+    $self->make_request(comp=>$comp, args=>$args, %p)->exec;
+
     return $out;
 }
 
