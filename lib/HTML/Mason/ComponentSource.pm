@@ -27,7 +27,7 @@ my %valid_params =
      friendly_name => { type => SCALAR },
      last_modified => { type => SCALAR },
      comp_path     => { type => SCALAR },
-     comp_class    => { isa => 'HTML::Mason::Component' },
+     comp_class    => { isa => 'HTML::Mason::Component', default => 'HTML::Mason::Component' },
      extra         => { type => HASHREF, default => {} },
      source_callback => { type => CODEREF },
     );
