@@ -48,3 +48,15 @@ WriteMakefile(
     }
 );
 
+package MY;
+
+sub test
+{
+    my $self = shift;
+
+    my $test = $self->SUPER::test(@_);
+
+    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE}=\$(TEST_VERBOSE); $1/;
+
+    return $test;
+}
