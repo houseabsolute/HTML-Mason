@@ -157,9 +157,10 @@ sub _initialize
     #
     if ($self->preloads) {
 	foreach my $pattern (@{$self->preloads}) {
-	    error "preloads pattern must be an absolute path"
+	    error "preload pattern '$pattern' must be an absolute path"
 		unless File::Spec->file_name_is_absolute($pattern);
-	    my @paths = $self->resolver->glob_path($pattern);
+	    my @paths = $self->resolver->glob_path($pattern)
+		or warn "Didn't find any components for preload pattern '$pattern'";
 	    foreach (@paths) { $self->load($_) }
 	}
     }
@@ -168,8 +169,7 @@ sub _initialize
     # Adjust to current size of reload file
     #
     if ($self->use_reload_file && -f $self->reload_file) {
-	$self->{last_reload_file_pos} = (stat(_))[7];
-	$self->{last_reload_time} = (stat(_))[9];
+	@{$self}{qw[last_reload_file_pos last_reload_time]} = (stat _)[7, 9];
     }
 }
 
@@ -286,8 +286,13 @@ sub load {
 	$self->_compilation_error($objfile, $@) if $@;
 	$comp->assign_runtime_properties($self,$fq_path);
 
-	$code_cache->{$fq_path}->{comp} = $comp;
+	$code_cache->{$fq_path} = {comp=>$comp, type=>'physical'};
 	return $comp;
+    }
+
+    if (exists $code_cache->{$path} and $code_cache->{$path}{type} eq 'virtual') {
+	# Don't look for this in the component root
+	return $code_cache->{$path}{comp};
     }
 
     #
@@ -345,7 +350,7 @@ sub load {
 			$objfilemod = 0;
 			undef $object;
 		    } else {
-			$self->_compilation_error( $lookup_info{description}, $@ );
+			$self->_compilation_error( $lookup_info{disk_path}, $@ );
 		    }
 		}
 	    } until ($object);
@@ -357,7 +362,7 @@ sub load {
 # XXX 'description' isn't known
 	    my $object = $self->compiler->compile( comp_text => $comp_text, name => $lookup_info{url_path}, comp_class => $resolver->comp_class );
 	    $comp = eval { $self->eval_object_text( object => $object ) };
-	    $self->_compilation_error( $lookup_info{description}, $@ ) if $@;
+	    $self->_compilation_error( $lookup_info{disk_path}, $@ ) if $@;
 	}
 	$comp->assign_runtime_properties($self, %lookup_info);
 
@@ -368,7 +373,7 @@ sub load {
 	$self->delete_from_code_cache($fq_path);
 
 	if ($comp->object_size <= $self->code_cache_max_elem) {
-	    $code_cache->{$fq_path} = {lastmod=>$srcmod, comp=>$comp};
+	    $code_cache->{$fq_path} = {lastmod=>$srcmod, comp=>$comp, type=>'physical'};
 	    $self->{code_cache_current_size} += $comp->object_size;
 	}
 	return $comp;
@@ -416,7 +421,7 @@ sub purge_code_cache {
 }
 
 #
-# Construct a component on the fly.  Public if 'path' parameter is
+# Construct a component on the fly.  Virtual if 'path' parameter is
 # given, otherwise anonymous.
 #
 sub make_component {
@@ -445,7 +450,7 @@ sub make_component {
 
     $comp->assign_runtime_properties($self) if $comp;
     if ($p{path}) {
-	$self->code_cache->{$p{path}} = {lastmod=>time(), comp=>$comp};
+	$self->code_cache->{$p{path}} = {lastmod=>time(), comp=>$comp, type=>'virtual'};
     }
 
     return $comp;
