@@ -186,6 +186,14 @@ sub load {
     my $code_cache = $self->code_cache;
     my $resolver = $self->{resolver};
 
+    unless (substr($path, 0, 1) eq '/') {
+	if (my $prefix = $resolver->default_path_prefix) {
+	    $path = join '/', $prefix, $path;
+	} else {
+	    error "Component paths given to Interp->load must be absolute";
+	}
+    }
+
     #
     # Get source info from resolver. Cache the results in fixed_source mode.
     #
