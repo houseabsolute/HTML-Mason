@@ -1,6 +1,6 @@
 =head1 NAME
 
-Devel.pod - Mason Developer's Manual
+HTML::Mason::Devel - Mason Developer's Manual
 
 =head1 DESCRIPTION
 
