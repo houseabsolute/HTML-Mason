@@ -533,23 +533,30 @@ you can change this.
 
 Here are some examples:
 
-  % my $req = $m->make_subrequest;
-  % $req->exec( '/some/comp', id => 172 );
+  <%perl>
+   my $req = $m->make_subrequest( comp => '/somp/comp', args => [ id => 172 ] );
+   $req->exec;
+  </%perl>
 
 If you want to capture the subrequest's output in a scalar, you can
 simply pass an C<out_method> parameter to C<< $m->make_subrequest >>:
 
-  % my $buffer;
-  % my $req = $m->make_subrequest( out_method => \$buffer );
-  % $req->exec( '/some/comp', id => 172 );
+  <%perl>
+   my $buffer;
+   my $req =
+       $m->make_subrequest
+           ( comp => '/somp/comp', args => [ id => 172 ], out_method => \$buffer );
+   $req->exec;
+  </%perl>
 
 Now C<$buffer> contains all the output from that call to F</some/comp>.
 
-For convenience, Mason also provides an C<< $m->subexec >> method that
-internally calls C<< $m->make_subrequest >> and then calls C<exec> on
-the created request, all in one fell swoop.  This is useful in cases
-where you have no need to override any of the parent request's
-parameters.
+For convenience, Mason also provides an C<< $m->subexec >> method.
+This method takes the same arguments as C<< $m->comp >> and internally
+calls C<< $m->make_subrequest >> and then C<exec> on the created
+request, all in one fell swoop.  This is useful in cases where you
+have no need to override any of the parent request object's
+attributes.
 
 By default, output from a subrequest appears inline in the calling
 component, at the point where it is executed.  If you wish to do
