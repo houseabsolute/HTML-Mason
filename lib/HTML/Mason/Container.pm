@@ -38,8 +38,8 @@ my %CONTAINED_OBJECTS = ();
 # data structure, though, and let the caller format it.
 sub dump_specs
 {
-    my ($self, $style) = @_;
-    $style ||= 'text';
+    my ($self, %args) = @_;
+    $args{style} ||= 'text';
 
     require B::Deparse;
     my %out;
@@ -77,9 +77,9 @@ sub dump_specs
 	}
     }
 
-    if ($style eq 'hash') {
+    if ($args{style} eq 'hash') {
 	return %out;
-    } elsif ($style eq 'text') {
+    } elsif ($args{style} eq 'text') {
 	my $format = " - %-28s   %-7s   %s\n    %s\n";
 	my $output = sprintf $format, qw(Name Type Default Description);
 	
@@ -97,7 +97,7 @@ sub dump_specs
 	    }
 	}
 	return $output;
-    } elsif ($style eq 'pod') {
+    } elsif ($args{style} eq 'pod') {
 	my $output = '';
 
 	foreach my $class (sort keys %out) {
@@ -132,7 +132,7 @@ EOF
 	$output =~ s/^ //mg;
 	return $output;
 
-    } else {   #  $style eq 'tabbed'
+    } else {   #  $args{style} eq 'tabbed'
 	my $output = "Name\tType\tDefault\tDescription\n\n";
     }
 }
