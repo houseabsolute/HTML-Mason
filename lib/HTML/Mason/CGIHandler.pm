@@ -3,6 +3,7 @@ package HTML::Mason::CGIHandler;
 use strict;
 
 use HTML::Mason;
+use HTML::Mason::Utils;
 use CGI;
 use File::Spec;
 use Params::Validate qw(:all);
@@ -191,9 +192,8 @@ sub http_header {
 
 sub params {
     my $self = shift;
-    my @input = map {$_, [$self->query->param($_)]} $self->query->param;
-    foreach (@input) {$_ = $_->[0] if ref($_) and @$_==1}  # Unwrap single-element array refs
-    return @input;
+
+    return HTML::Mason::Utils::cgi_request_args($self->query, $self->query->request_method);
 }
 
 1;
