@@ -28,18 +28,15 @@ use strict;
 
 use HTML::Mason::Exceptions (abbr => [qw(error param_error)]);
 
-use Params::Validate qw(SCALAR HASHREF);
+use Params::Validate qw(:types);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
 my %VALID_PARAMS = ();
 my %CONTAINED_OBJECTS = ();
 
-# Dump in several different formats.  Maybe we should just return the
-# data structure, though, and let the caller format it.
-sub dump_specs
+sub all_specs
 {
     my ($self, %args) = @_;
-    $args{style} ||= 'text';
 
     require B::Deparse;
     my %out;
@@ -51,7 +48,9 @@ sub dump_specs
 	foreach my $name (sort keys %$params)
 	{
 	    my $spec = $params->{$name};
-	    my ($type, $default) = $spec->{isa} ? ('object', $spec->{isa}) : ($spec->{parse}, $spec->{default});
+	    my ($type, $default) = $spec->{isa} ?
+	                           ('object', "$spec->{isa}\->new") :
+				   ($spec->{parse}, $spec->{default});
 	    if (ref($default) eq 'CODE') {
 		$default = 'sub ' . B::Deparse->new()->coderef2text($default);
 		$default =~ s/\s+/ /g;
@@ -61,6 +60,15 @@ sub dump_specs
 		$type = 'regex';
 		$default =~ s/^\(\?(\w*)-\w*:(.*)\)/\/$2\/$1/;
 	    }
+	    unless ($type) {
+	      # Guess from the validation spec
+	      $type = ($spec->{type} & ARRAYREF ? 'list' :
+		       $spec->{type} & SCALAR   ? 'string' :
+		       $spec->{type} & CODEREF  ? 'code' :
+		       $spec->{type} & HASHREF  ? 'hash' :
+		       undef);  # Oh well
+	    }
+
 	    my $descr = $spec->{descr} || '(No description available)';
 	    $out{$class}{valid_params}{$name} = {type => $type, default => $default, descr => $descr};
 	}
@@ -77,64 +85,7 @@ sub dump_specs
 	}
     }
 
-    if ($args{style} eq 'hash') {
-	return %out;
-    } elsif ($args{style} eq 'text') {
-	my $format = " - %-28s   %-7s   %s\n    %s\n";
-	my $output = sprintf $format, qw(Name Type Default Description);
-	
-	foreach my $class (sort keys %out) {
-	    $output .= "-------------- $class -------------------" . ('-'x(40-length($class))) . "\n";
-	    $output .= "Valid Parameters:\n";
-	    foreach my $param (sort keys %{$out{$class}{valid_params}}) {
-		$output .= sprintf($format,
-				   $param, map $out{$class}{valid_params}{$param}{$_}, qw(type default descr));
-	    }
-	    $output .= "Contained Objects:\n";
-	    $output .= "  (none)\n" unless keys %{$out{$class}{contained_objects}};
-	    foreach my $object (sort keys %{$out{$class}{contained_objects}}) {
-		$output .= sprintf(" - %-20s   %s\n", $object, $out{$class}{contained_objects}{$object}{class});
-	    }
-	}
-	return $output;
-    } elsif ($args{style} eq 'pod') {
-	my $output = '';
-
-	foreach my $class (sort keys %out) {
-	    $output .= "=head2 $class\n\nValid Parameters:\n\n=over 4\n\n";
-
-	    foreach my $param (sort keys %{$out{$class}{valid_params}}) {
-		my $spec = $out{$class}{valid_params}{$param};
-		$output .= <<"EOF";
- =item * $param
- 
-  Default: $spec->{default}
-     Type: $spec->{type}
-
- $spec->{descr}
-
-EOF
-	    }
-	    $output .= "=back\n\nContained Objects:\n\n=over 4\n\n";
-	    $output .= "(none)\n\n" unless keys %{$out{$class}{contained_objects}};
-	    foreach my $object (sort keys %{$out{$class}{contained_objects}}) {
-		my $spec = $out{$class}{contained_objects}{$object};
-		$output .= <<"EOF";
- =item * $object
- 
-  Default class: $spec->{class}
-        Delayed: $spec->{delayed}
-
-EOF
-	    }
-	    $output .= "=back\n\n";
-	}
-	$output =~ s/^ //mg;
-	return $output;
-
-    } else {   #  $args{style} eq 'tabbed'
-	my $output = "Name\tType\tDefault\tDescription\n\n";
-    }
+    return %out;
 }
 
 sub valid_params
