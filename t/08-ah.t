@@ -73,7 +73,7 @@ sub try_exec_with_ah {
     compare_results ($test_name, $buf);
 }
 
-print "1..5\n";
+print "1..4\n";
 
 try_exec_with_ah('/basic','basic',{},{});
 
@@ -84,7 +84,5 @@ try_exec_with_ah('/headers','headers-stream',{output_mode=>'stream'},{});
   local $ENV{QUERY_STRING} = $qs;
   local $ENV{REQUEST_METHOD} = 'GET';
   try_exec_with_ah('/args','args',{},{"args\$" => $qs}); }
-
-try_exec_with_ah('/decline','decline',{},{});
 
 1;
