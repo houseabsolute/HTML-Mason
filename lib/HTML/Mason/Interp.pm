@@ -960,6 +960,7 @@ which will return a subroutine reference.
 When setting these with C<PerlSetVar> directives in an Apache
 configuration file, you can set them like this:
 
+  PerlSetVar  MasonEscapeFlags  "h => \&HTML::Mason::Escapes::basic_html_escape"
   PerlSetVar  MasonEscapeFlags  "flag  => \&subroutine"
   PerlSetVar  MasonEscapeFlags  "uc    => sub { ${$_[0]} = uc ${$_[0]}; }"
   PerlAddVar  MasonEscapeFlags  "thing => other_thing"

@@ -1274,9 +1274,11 @@ The current valid flags are:
 =item * h
 
 Escape HTML ('<' => '&lt;', etc.) using C<HTML::Entities::encode()>.
-The C<HTML::Entities> module assumes that text is in the ISO-8859-1
-character set with all version of Perl before 5.8.0, and Unicode for
-version 5.8.0 and greater.
+Before Perl 5.8.0 this module assumes that text is in the ISO-8859-1
+character set, and will interact badly with other encodings. See L<the
+next section|HTML::Mason::Interp/"User-defined Escapes"> for how to
+override this escaping. After 5.8.0, the encoding assumes that text is
+in Unicode.
 
 =item * u
 
@@ -1331,19 +1333,21 @@ ignored.
 Escapes can be defined at any time but using an escape that is not
 defined will cause an error when executing that component.
 
-One possible use for this feature is to override the built-in HTML
-escaping's assumption of the ISO-8859-1 character set.  You could
-override the 'h' flag in a top-level autohandler or L<custom wrapper
-code|HTML::Mason::Admin/"ADVANCED CONFIGURATION"> like this:
+A common use for this feature is to override the built-in HTML
+escaping, which will not work with non-ISO-8559-1 encodings.  If
+you are using such an encoding and want to switch the 'h' flag to do
+escape just the minimal set of characters (C<E<lt>>, C<E<gt>>, C<&>,
+C<">), put this in your Apache configuration:
 
-  $ah->interp->set_escape( h => \&escape_ISO_8859_2 );
+    PerlSetVar  MasonEscapeFlags  "h => \&HTML::Mason::Escapes::basic_html_escape"
 
-where C<$ah> is an ApacheHandler object.
+Or, in a top-level autohandler:
 
-Inside components, the Interpreter object is available via C<<
-$m->interp() >> so you would do this instead:
+  $m->interp->set_escape( h => \&HTML::Mason::Escapes::basic_html_escape );
 
-  $m->interp->set_escape( h => \&escape_ISO_8859_2 );
+Or you could write your own escape function for a particular encoding:
+
+  $ah->interp->set_escape( h => \&my_html_escape );
 
 And of course this can be used for all sorts of other things, like a
 naughty words filter for the easily offended:
