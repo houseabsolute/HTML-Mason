@@ -11,6 +11,8 @@ use HTML::Mason::Exceptions;
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
 
+use Digest::MD5 ();
+
 use base qw(HTML::Mason::Container);
 
 __PACKAGE__->valid_params();
@@ -68,7 +70,7 @@ sub lex
 		      name => SCALAR,
 		      compiler => {isa => 'HTML::Mason::Compiler'}}
 		    );
-    
+
     # Make these local, because they only apply to the current parse.
     # This also avoids a circular ref between the compiler & lexer.  They
     # aren't really data members of $self, but $self is a convenient place
@@ -103,6 +105,22 @@ sub lex
 	$@->rethrow if UNIVERSAL::can( $@, 'rethrow' );
 	HTML::Mason::Exception->throw( error => $@ );
     }
+}
+
+sub object_id
+{
+    my $self = shift;
+
+    my @vals;
+    foreach my $k ( keys %{ $self->validation_spec } )
+    {
+	push @vals, $k;
+	push @vals, ( UNIVERSAL::isa( $self->{$k}, 'HASH' )  ? map { $_ => $self->{$k}{$_} } keys %{ $self->{$k} } :
+		      UNIVERSAL::isa( $self->{$k}, 'ARRAY' ) ? @{ $self->{$k} } :
+		      $self->{$k} );
+    }
+
+    return Digest::MD5::md5_hex( class => ref $self, @vals );
 }
 
 sub start
