@@ -1403,7 +1403,9 @@ and the cache subclass is C<Cache::FileCache>:
 	 username => "mason");
     $cache->remove('key1');
 
-=head1 SENDING HTTP HEADERS
+=head1 WEB-SPECIFIC FEATURES
+
+=head2 Sending HTTP Headers
 
 Mason automatically sends HTTP headers via C<< $r->send_http_header >>
 but it will not send headers if they've already been sent manually.
@@ -1443,6 +1445,49 @@ output anything (given its functional nature, it shouldn't).
 The administrator can turn off automatic header sending via the
 L<Request's auto_send_headers|HTML::Mason::Request/auto_send_headers>
 parameter available when running Mason with the ApacheHandler module.
+
+=head2 Returning HTTP Status
+
+The value returned from the top-most component becomes the status code
+of the request. If no value is explicitly returned, it defaults to OK
+(0).
+
+Simply returning an error status (such as 404) from the top-most
+component has two problems in practice. First, the decision to return
+an error status often resides further down in the component
+stack. Second, you may have generated some content by the time this
+decision is made. (Both of these are more likely to be true when using
+autohandlers.)
+
+Thus the safer way to generate an error status is
+
+   $m->clear_buffer;
+   $m->abort($status);
+
+C<< $m->abort >> bypasses the component stack and ensure that
+C<$status> is returned from the top-most component. It works by
+throwing an exception. If you wrapped this code (directly or
+indirectly) in an eval, you must take care to rethrow the exception,
+or the status will not make it out:
+
+   eval { $m->comp('...') };
+   if ($@) {
+      if ($m->aborted) {
+          die $@;
+      } else {
+          # deal with non-abort exceptions
+      }
+   }
+
+=head2 External Redirects
+
+Because it is so commonly needed, Mason provides an external redirect
+method:
+
+    $m->redirect($url);    # Redirects with 302 status
+
+This method uses the clear_buffer/abort technique mentioned above,
+so the same warnings apply regarding evals.
 
 =head1 USING THE PERL DEBUGGER
 
