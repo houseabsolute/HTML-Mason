@@ -33,12 +33,15 @@ BEGIN
 	( ah         => { isa => 'HTML::Mason::ApacheHandler',
 			  descr => 'An ApacheHandler to handle web requests',
 			  public => 0 },
+
 	  apache_req => { isa => $ap_req_class, default => undef,
 			  descr => "An Apache request object",
 			  public => 0 },
+
 	  cgi_object => { isa => 'CGI',    default => undef,
 			  descr => "A CGI.pm request object",
 			  public => 0 },
+
 	  auto_send_headers => { parse => 'boolean', type => BOOLEAN, default => 1,
 				 descr => "Whether HTTP headers should be auto-generated" },
 	);
@@ -269,26 +272,34 @@ BEGIN
 {
     __PACKAGE__->valid_params
 	(
-	 apache_status_title   => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason status',
-				    descr => "The title of the Apache::Status page" },
-	 args_method           => { parse => 'string',  type => SCALAR,       default => 'mod_perl',
-				    callbacks =>
-				    { "must be either 'CGI' or 'mod_perl'" =>
-				      sub { $_[0] =~ /^(?:CGI|mod_perl)$/ } },
-				    descr => "Whether to use CGI.pm or Apache::Request for parsing the incoming HTTP request",
-				  },
-	 decline_dirs          => { parse => 'boolean', type => BOOLEAN, default => 1,
-				    descr => "Whether Mason should decline to handle requests for directories" },
+	 apache_status_title =>
+         { parse => 'string', type => SCALAR, default => 'HTML::Mason status',
+           descr => "The title of the Apache::Status page" },
+
+	 args_method =>
+         { parse => 'string',  type => SCALAR,       default => 'mod_perl',
+           callbacks =>
+           { "must be either 'CGI' or 'mod_perl'" =>
+             sub { $_[0] =~ /^(?:CGI|mod_perl)$/ } },
+           descr => "Whether to use CGI.pm or Apache::Request for parsing the incoming HTTP request",
+         },
+
+	 decline_dirs =>
+         { parse => 'boolean', type => BOOLEAN, default => 1,
+           descr => "Whether Mason should decline to handle requests for directories" },
+
 	 # the only required param
-	 interp                => { isa => 'HTML::Mason::Interp',
-				    descr => "A Mason interpreter for processing components" },
+	 interp =>
+         { isa => 'HTML::Mason::Interp',
+           descr => "A Mason interpreter for processing components" },
 	);
 
     __PACKAGE__->contained_objects
 	(
-	 interp => { class => 'HTML::Mason::Interp',
-                     descr => 'The interp class coordinates multiple objects to handle request execution'
-                   },
+	 interp =>
+         { class => 'HTML::Mason::Interp',
+           descr => 'The interp class coordinates multiple objects to handle request execution'
+         },
 	);
 }
 
