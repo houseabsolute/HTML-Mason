@@ -10,6 +10,15 @@ See CREDITS file for other contributors.
 
 ** denotes an incompatible change
 
+0.6.1
+
+- Added warnings to convert-0.6.pl about occasional erroneous
+component call syntax conversions (reported by Oleg Bartunov)
+- Fixed conversion of <% mc_comp("/foo/$bar") %> (reported by Oleg
+Bartunov)
+- Fixed mc_suppress_http_header(0) which was broken by removal of
+internal unsuppress_hook function (reported by Jim Mortko)
+
 0.6  Fri Jul 16 08:09:27 PDT 1999
 
 - New <& &> tag provides a more convenient way to call components
