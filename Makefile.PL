@@ -54,7 +54,7 @@ sub test
 
     my $test = $self->SUPER::test(@_);
 
-    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE}=\$(TEST_VERBOSE); $1/;
+    $test =~ s/(runtests \@ARGV;)/\$\$ENV{MASON_VERBOSE}=\$(TEST_VERBOSE) ? \$(TEST_VERBOSE) : \$\$ENV{MASON_VERBOSE}; $1/;
 
     # %APACHE is set in makeconfig.pl.
     # If we are not going to test with Apache there is no harm in
