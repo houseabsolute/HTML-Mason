@@ -29,7 +29,6 @@ sub make_tests
     my $group = HTML::Mason::Tests->new( name => 'cache',
 					 description => 'Test caching' );
 
-
 #------------------------------------------------------------
 
     $group->add_test( name => 'cache_packages',
@@ -429,7 +428,34 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support ( path => 'support/cache_self_die',
+			  component => <<'EOF',
+die
+<%init>
+return if $m->cache_self;
+die 'foo';
+</%init>
+EOF
+			);
 
+#------------------------------------------------------------
+
+    $group->add_test( name => 'cache_self_death',
+		      description => 'test $m->cache_self and death',
+		      component => <<'EOF',
+<% $old_stack_size == $new_stack_size ? 'same' : "$old_stack_size != $new_stack_size" %>
+<%init>
+my $old_stack_size = scalar $m->buffer_stack;
+eval { $m->comp( 'support/cache_self_die' ) };
+my $new_stack_size = scalar $m->buffer_stack;
+</%init>
+EOF
+		      expect => <<'EOF',
+same
+EOF
+		    );
+
+#------------------------------------------------------------
 
     return $group;
 }
