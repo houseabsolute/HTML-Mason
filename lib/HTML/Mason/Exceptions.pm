@@ -448,7 +448,7 @@ HTML::Mason::Exceptions - Exception objects thrown by Mason
 
 =head1 SYNOPSIS
 
-  use HTML::Mason::Exceptions qw(system_error);
+  use HTML::Mason::Exceptions ( abbr => [ qw(system_error) ] );
 
   open FH, 'foo' or system_error "cannot open foo: $!";
 
