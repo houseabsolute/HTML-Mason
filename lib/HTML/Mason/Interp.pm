@@ -552,7 +552,6 @@ sub find_comp_upwards
     # the native filesystem way
     my @p = split /\//, $startpath;
 
-    my $last_p;
     while (!($comp = $self->load( File::Spec->catfile( @p, $name ) )) && @p) {
 	pop @p;
     }
