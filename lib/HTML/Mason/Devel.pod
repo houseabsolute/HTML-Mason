@@ -981,6 +981,12 @@ one more subcomponents or methods. See L<Object-Oriented
 Techniques|"Object-Oriented Techniques"> for an example of
 usage.
 
+It's important to realize that you do not have access to the C<%ARGS>
+hash or variables created via an C<< <%args> >> block inside a shared
+section.  However, you can access arguments via the C<<
+$m->request_args >> method, documented in the L<Request
+docs|HTML::Mason::Request/"request_args">.
+
 Avoid using C<< <%shared> >> for side-effect code that needs to run at a
 predictable time during page generation. You may assume only that
 C<< <%shared> >> runs just before the first code that needs it and runs at
