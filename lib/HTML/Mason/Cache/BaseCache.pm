@@ -75,48 +75,91 @@ __END__
 
 =head1 NAME
 
-HTML::Mason::Cache::BaseCache - Mason extensions to Cache::BaseCache
+HTML::Mason::Cache::BaseCache - Base cache object
 
 =head1 DESCRIPTION
 
 This is the base module for all cache implementations used in Mason.
-It provides a few additional methods on top of Cache::BaseCache.
+It provides a few additional methods on top of C<Cache::BaseCache> in
+Dewitt Clinton's C<Cache::Cache> package.
 
-=head1 ADDITIONAL METHODS
+An object of this class is returned from L<$m-E<gt>cache|HTML::Mason::Request/item_cache>.
+
+=head1 METHODS
 
 =over
 
-=item get (key, %params)
+=for html <a name="item_clear"></a>
 
-Like the basic method, returns the value associated with I<key> or
-undef if it is non-existent or expired. This is extended
-with the following optional name/value parameters:
+=item clear ()
+
+Remove all values in the cache.
+
+=for html <a name="item_get"></a>
+
+=item get (key, [%params])
+
+Returns the value associated with I<key> or undef if it is
+non-existent or expired. This is extended with the following optional
+name/value parameters:
 
 =over
 
 =item busy_lock => duration
 
-If the value has expired, set its expiration time forward by the specified
+If the value has expired, set its expiration time to the current time plus
 I<duration> (instead of removing it from the cache) before returning undef.
+This is used to prevent multiple processes from recomputing the same
+expensive value simultaneously. The I<duration> may be of any form acceptable
+to L<set|HTML::Mason::Cache::BaseCache/item_set>.
 
 =item expire_if => sub
 
-If the cache object exists, call I<sub> with the cache object as a
-single parameter. If I<sub> returns a true value, expire the value.
+If the value exists and has not expired, call I<sub> with the cache
+object as a single parameter. If I<sub> returns a true value, expire
+the value.
 
 =back
 
+=for html <a name="item_get_object"></a>
+
+=item get_object (key)
+
+Returns the underlying C<Cache::Object> object associated with I<key>.
+The most useful methods on this object are
+
+    $co->get_created_at();    # when was object stored in cache
+    $co->get_accessed_at();   # when was object last accessed
+    $co->get_expires_at();    # when does object expire
+
+=for html <a name="item_expire"></a>
+
 =item expire (key)
 
-Expires the cache object associated with I<key>, if the object exists.
+Expires the value associated with I<key>, if it exists. Differs from
+L<remove|HTML::Mason::Cache::BaseCache/item_remove> only in that
+the cache object is left around, e.g. for retrieval by
+L<get_object|HTML::Mason::Cache::BaseCache/item_get_object>.
 
-=item expire_if (key, sub)
+=for html <a name="item_remove"></a>
 
-Expires the cache object associated with I<key> if I<sub> returns a
-true value.  I<sub> is called with the cache object as a single
-argument.  The return value of I<sub> is returned to the caller. If
-the object does not exist, simply returns a true value without calling
-I<sub>.
+=item remove (key)
+
+Removes the cache object associated with I<key>, if it exists.
+
+=for html <a name="item_set"></a>
+
+=item set (key, data, [duration])
+
+Associates I<data> with I<key> in the cache. I<duration>
+indicates the time until the value should be erased.  If
+I<duration> is unspecified, the value will never expire
+by time.
+
+I<$expires_in> may be a simple number of seconds, or a string of the
+form "[number] [unit]", e.g., "10 minutes".  The valid units are s,
+second, seconds, sec, m, minute, minutes, min, h, hour, hours, d, day,
+days, w, week, weeks, M, month, months, y, year, and years.
 
 =back
 
