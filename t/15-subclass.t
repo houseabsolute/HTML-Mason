@@ -11,7 +11,30 @@ use HTML::Mason::Tests;
 
     __PACKAGE__->valid_params( foo_val => { parse => 'string', type => Params::Validate::SCALAR } );
 
+    sub new
+    {
+        my $class = shift;
+
+        $class->alter_superclass( $HTML::Mason::ApacheHandler::VERSION ?
+                                  'HTML::Mason::Request::ApacheHandler' :
+                                  $HTML::Mason::CGIHandler::VERSION ?
+                                  'HTML::Mason::Request::CGI' :
+                                  'HTML::Mason::Request' );
+
+        my $self = $class->SUPER::new(@_);
+    }
+
     sub foo_val { $_[0]->{foo_val} }
+}
+
+{
+    package HTML::Mason::Request::Test::Subclass;
+
+    @HTML::Mason::Request::Test::Subclass::ISA = 'HTML::Mason::Request::Test';
+
+    __PACKAGE__->valid_params( bar_val => { parse => 'string', type => Params::Validate::SCALAR } );
+
+    sub bar_val { $_[0]->{bar_val} }
 }
 
 {
@@ -68,6 +91,33 @@ this request cannot ->foo_val!
 EOF
 		      expect => <<'EOF',
 foo_val is 77
+EOF
+		    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'request_subclass_of_subclass',
+		      description => 'use a HTML::Mason::Request grandchild',
+		      interp_params =>
+                      { request_class => 'HTML::Mason::Request::Test::Subclass',
+                        foo_val => 77,
+                        bar_val => 42,
+                      },
+		      component => <<'EOF',
+% if ( $m->can('foo_val') ) {
+foo_val is <% $m->foo_val %>
+% } else {
+this request cannot ->foo_val!
+% }
+% if ( $m->can('bar_val') ) {
+bar_val is <% $m->bar_val %>
+% } else {
+this request cannot ->bar_val!
+% }
+EOF
+		      expect => <<'EOF',
+foo_val is 77
+bar_val is 42
 EOF
 		    );
 
