@@ -93,8 +93,8 @@ sub file_to_path {
 	    $path =~ s/\/$// unless $path eq '/';
 	    return $path;
 	}
-	return undef;
     }
+    return undef;
 }
 
 #

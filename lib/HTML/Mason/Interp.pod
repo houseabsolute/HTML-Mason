@@ -42,12 +42,12 @@ tree.
 
 =item current_time
 
-Overrides the time and date returned by mc_time and mc_date with a
+Overrides the time and date returned by $m->time and $m->date with a
 fixed value. This is useful for testing time-based components,
 e.g. seeing what a page will look like tomorrow. The argument is a
 Perl time() value (seconds since the epoch).
 
-With no current_time parameter (the default), mc_time and mc_date
+With no current_time parameter (the default), $m->time and $m->date
 report the true time.
 
 =item data_dir
@@ -98,11 +98,11 @@ section of the I<Admin Guide> for further details.
 
 =item static_file_root
 
-Absolute path to prepend to relative filenames passed to C<mc_file()>. Does
+Absolute path to prepend to relative filenames passed to C<$m->file()>. Does
 not require a trailing slash. For example, if the file root is
-'/foo/bar', then C<mc_file('baz/bap')> will read the file
+'/foo/bar', then C<$m->file('baz/bap')> will read the file
 '/foo/bar/baz/bap'. Undefined by default; if left undefined,
-relative path names to C<mc_file()> are prepended with the
+relative path names to C<$m->file()> are prepended with the
 current component directory.
 
 =item system_log_file
@@ -120,7 +120,7 @@ log, separated by "|". Default is to log nothing.
 
 =item use_data_cache
 
-True or undef, default is true. Specifies whether the mc_cache and
+True or undef, default is true. Specifies whether the $m->cache and
 related commands are operational.  You may need to disable data
 caching temporarily for debugging purposes, but normally this should
 be left alone.
@@ -223,7 +223,7 @@ Interp's exec() method:
 where I<comp> is a component path or component object.
 
 Component parameters are given as a series of name/value pairs, just
-as they are with C<mc_comp>. exec returns the return value of
+as they are with C<$m->comp>. exec returns the return value of
 the component. Component output is sent to standard output by default,
 but you can change this by specifying C<out_method>.
 

@@ -48,17 +48,17 @@ Indicates the name of the package you wish your components to run in.
 This way different applications or virtual hosts can be run in
 different name spaces.  Default is C<HTML::Mason::Commands>.
 
-You will have to explicitly import the mc_* commands from C<HTML::Mason::Commands>
+You will have to explicitly import the $m->* commands from C<HTML::Mason::Commands>
 into your package. Ideally you will put this in your C<handler.pl>:
 
     { package MyPackage;
     use HTML::Mason::Commands; }
 
-This will bring in all of the mc_ commands. If you want to save some
+This will bring in all of the $m-> commands. If you want to save some
 space on imported symbols, specify just the commands you want:
 
     { package MyPackage;
-    use HTML::Mason::Commands qw(mc_comp mc_file mc_cache); }
+    use HTML::Mason::Commands qw($m->comp $m->file $m->cache); }
 
 =item postamble
 
@@ -217,7 +217,7 @@ Example of usage:
 
     #!/usr/bin/perl
     use HTML::Mason;
-    use HTML::Mason::ApacheHandler;  # load explicitly to bring in special mc_ commands
+    use HTML::Mason::ApacheHandler;  # load explicitly to bring in special $m-> commands
     
     my $p = new HTML::Mason::Parser;
     $p->allow_globals(qw($r));       # allow Apache $r global

@@ -12,33 +12,33 @@ examples.
 
 =over
 
-=item mc_abort ([return value])
+=item $m->abort ([return value])
 
 Ends the current request, finishing the page without returning
 through components. In a web environment, the optional return value is
 used as the HTTP status code.
 
-=item mc_auto_next ([args...])
+=item $m->auto_next ([args...])
 
 Calls the component interrupted by an autohandler.  With no arguments,
 the original arguments are passed to the component.  Any arguments
 specified here serve to augment and override (in case of conflict) the
-original arguments. Works like mc_comp in terms of return value and
+original arguments. Works like $m->comp in terms of return value and
 scalar/list context.  See the L<Devel/autohandlers> section of the
 I<Component Developer's Guide> for examples.
 
-=item mc_auto_comp
+=item $m->auto_comp
 
 Returns the path of the component interrupted by an autohandler.  This
 is generally a relative path; it is only absolute if you call
-C<mc_auto_comp> from a component other than the autohandler and a
+C<$m->auto_comp> from a component other than the autohandler and a
 forward relative path cannot be generated. See the L<Devel/autohandlers>
 section of the I<Component Developer's Guide> for usage and examples.
 
-=item mc_cache ([action=>'retrieve|store|expire|keys'], [key=>name],
+=item $m->cache ([action=>'retrieve|store|expire|keys'], [key=>name],
 [value=>data], [keep_in_memory=>0|1], [expire options...])
 
-mc_cache() lets you store and retrieve the results
+$m->cache() lets you store and retrieve the results
 of computation for improved performance. Each component has its own
 data cache for storing one or more key/value pairs. The cache is
 implemented as a DBM database. See the L<Devel/data caching>
@@ -85,65 +85,65 @@ o I<expire_if>: calls a given anonymous subroutine and expires if the
 subroutine returns a non-zero value. The subroutine is called with one
 parameter, the time when the cache value was last written.
 
-=item mc_cache_self (... same as mc_cache options...)
+=item $m->cache_self (... same as $m->cache options...)
 
-Uses mc_cache to cache the entire output and/or the return value of
+Uses $m->cache to cache the entire output and/or the return value of
 the current component.  It is typically used right at the top of an
 C<E<lt>%init%E<gt>> section.
 
 To cache the component's output:
 
     <%init>
-        return if mc_cache_self(expire_in=>'3 hours'[, key=>'fookey']);
+        return if $m->cache_self(expire_in=>'3 hours'[, key=>'fookey']);
         ... <rest of init> ...
     </%init>
 
 To cache the component's return value:
 
     <%init>
-        my ($retval,$cached) = mc_cache_self(expire_in=>'3 hours'[, key=>'fookey']);
+        my ($retval,$cached) = $m->cache_self(expire_in=>'3 hours'[, key=>'fookey']);
         return $retval if $cached;
         ... <rest of init> ...
     </%init>
 
 This only works with scalar and reference return values.
 
-mc_cache_self handles both the retrieve and store, so you can pass
-both kinds of options to it. See mc_cache for an explanation of
+$m->cache_self handles both the retrieve and store, so you can pass
+both kinds of options to it. See $m->cache for an explanation of
 options.
 
-mc_cache_self uses a bit of magic to accomplish everything in one
+$m->cache_self uses a bit of magic to accomplish everything in one
 line.  You can use it without understanding it, but if you're
 curious, here's how it works:
 
-o A component foo calls mc_cache_self for the first time.
+o A component foo calls $m->cache_self for the first time.
 
-o mc_cache_self sees that the cache is empty and calls foo again
+o $m->cache_self sees that the cache is empty and calls foo again
 recursively, with a STORE option to capture its content into a buffer.
 
-o foo again calls mc_cache_self, which immediately returns 0 this time.
+o foo again calls $m->cache_self, which immediately returns 0 this time.
 
-o foo goes about its business and generates content into the mc_cache_self buffer.
+o foo goes about its business and generates content into the $m->cache_self buffer.
 
-o When control is returned to mc_cache_self, it stores the content and
+o When control is returned to $m->cache_self, it stores the content and
 return value in the cache and also outputs the content normally.
-Finally mc_cache_self returns the list (retval,1) which in turn
+Finally $m->cache_self returns the list (retval,1) which in turn
 causes foo to return immediately.
 
-=item mc_caller ()
+=item $m->caller ()
 
 Returns the full path of the component that called this component, or
 undef if this is the top-level component. This is the second element
-of mc_comp_stack.
+of $m->comp_stack.
 
-=item mc_call_self ([output_ref], [retval_ref])
+=item $m->call_self ([output_ref], [retval_ref])
 
 This command allows you to filter both the output and the return value
 of the current component. It is typically called at the top of an
 <%init> section:
 
     <%init>
-        if mc_call_self(my \$output, my \$retval) {
+        if $m->call_self(my \$output, my \$retval) {
             ... < perform filter and return > ...
         }
         ... <rest of init> ...
@@ -152,7 +152,7 @@ of the current component. It is typically called at the top of an
 See the L<Devel/filtering> section of the I<Component Developer's Guide>
 for usage and examples.
 
-=item mc_comp =for html <a name="comp">
+=item $m->comp =for html <a name="comp">
 
 Calls the component designated by I<comp> with the specified
 option/value pairs. I<comp> may be a component path or a component
@@ -163,33 +163,33 @@ directory.
 
 Components work exactly like Perl subroutines in terms of return
 values and context. A component can return any type of value, which is
-then returned from the mc_comp call.
+then returned from the $m->comp call.
 
 If you want to capture the output of a component in a string, send a
 scalar reference with the STORE option. The output will be placed in
 the scalar instead of being sent to the default output stream.
 
-The <& &> tag provides a convenient shortcut for mc_comp.
+The <& &> tag provides a convenient shortcut for $m->comp.
 
-=item mc_comp_exists (compPath)
+=item $m->comp_exists (compPath)
 
 Returns 1 if I<compPath> is a valid component path, 0 otherwise. 
 
-=item mc_comp_source ([compPath])
+=item $m->comp_source ([compPath])
 
 Returns the full source filename for I<compPath>, which may be
 absolute or relative. With no arguments, defaults to the current
 component. For example, to get the last modified time of this
 component:
 
-    my $lastmod = (stat(mc_comp_source))[9];
+    my $lastmod = (stat($m->comp_source))[9];
 
-=item mc_comp_stack ()
+=item $m->comp_stack ()
 
 Returns the list of components in the call stack, starting with the
 current component and ending with the top-level component.
 
-=item mc_date (format)
+=item $m->date (format)
 
 This command is provided for backward compatibility with early
 versions of Mason that automatically used the Date::Manip package.
@@ -203,11 +203,11 @@ E.g. in your handler.pl,
       use Date::Manip; }
 
 To allow time and date simulations in the previewer, components should
-use mc_date() rather than UnixDate directly.
+use $m->date() rather than UnixDate directly.
 
-mc_date() works faster than UnixDate for some formats by caching results. 
+$m->date() works faster than UnixDate for some formats by caching results. 
 
-=item mc_dhandler_arg ()
+=item $m->dhandler_arg ()
 
 If the request has been handled by a dhandler, this method returns the
 remainder of the URI beyond the dhandler directory.  Similar to the
@@ -215,7 +215,7 @@ PATH_INFO except without the leading slash. See the
 L<Devel/dhandlers> section of the I<Component Developer's Guide>
 for examples.
 
-=item mc_file (filename)
+=item $m->file (filename)
 
 Returns the contents of filename as a string. I<filename> may be an
 absolute filesystem path (starting with a '/') or relative (no leading
@@ -226,28 +226,28 @@ Developers are encouraged to use relative paths whenever possible.
 This eliminates the need for component updates when content files are
 moved (the administrator just updates the static file root).
 
-=item mc_file_root ()
+=item $m->file_root ()
 
-Returns the static file root, used by mc_file() to resolve relative
+Returns the static file root, used by $m->file() to resolve relative
 filenames.
 
-=item mc_out (string)
+=item $m->out (string)
 
 Print the given string. Rarely needed, since normally all HTML is just
-placed in the component body and output implicitly. mc_out is useful
+placed in the component body and output implicitly. $m->out is useful
 if you need to output something in the middle of a Perl block.
 
-mc_out() should be favored over C<print> or C<$r-E<gt>print>,
-since mc_out() may be redirected or buffered depending on the
+$m->out() should be favored over C<print> or C<$r-E<gt>print>,
+since $m->out() may be redirected or buffered depending on the
 current state of the interpreter.
 
-=item mc_time ()
+=item $m->time ()
 
 Returns the interpreter's notion of the current time in Perl time()
 format (number of seconds since the epoch).
 
 To allow time and date simulations in the previewer, components should
-use mc_time() rather than calling time() directly.
+use $m->time() rather than calling time() directly.
 
 =back
 
@@ -258,12 +258,12 @@ Web environment.
 
 =over
 
-=item mc_suppress_http_header (0|1)
+=item $m->suppress_http_header (0|1)
 
 Mason normally emits any pending HTTP headers just before entering
 the primary section of a component. To prevent this, call
-mc_suppress_http_header(1) somewhere in the C<E<lt>%init%E<gt>>
-block. You can call mc_suppress_http_header(0) to cancel.
+$m->suppress_http_header(1) somewhere in the C<E<lt>%init%E<gt>>
+block. You can call $m->suppress_http_header(0) to cancel.
 
 =back
 

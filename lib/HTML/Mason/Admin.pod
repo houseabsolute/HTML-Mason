@@ -131,6 +131,31 @@ Unfortunately if your component root or document root goes through a
 soft link, Mason will have trouble comparing the paths and will return
 404. To fix this, set your document root to the true path.
 
+=head2 Component roots (multiple)
+
+If you are just starting out it is probably safe to skip this section initially.
+
+Starting in Mason 0.8 it is now possible to specify multiple component
+roots in the spirit of Perl's @INC. To do so you must specify a list
+of lists:
+    
+    comp_root => [[key1, root1], [key2, root2], ...]
+
+Each pair consists of a key and root.  The key is a string that
+identifies the root mnemonically to a component developer.  Data cache
+and object directories are split up by these keys to make sure
+different components sharing the same path have different cache and
+object files. The key is also included whenever Mason prints the
+component title, as in an error message.
+
+For example:
+
+    comp_root => [['private', '/usr/home/joe/comps'], ['main', '/usr/local/www/htdocs']]
+
+This specifies two component roots, a main component tree and a
+private tree which overrides certain components.  The order is
+respected ala @INC, so 'private' is searched first and 'main' second.
+
 =head2 Data directory
 
 The data directory is where Mason keeps various files to help
@@ -300,7 +325,7 @@ to the MLDBM documentation.
 =item Administration
 
 Once set up, data caching requires little administration. When a
-component calls C<mc_cache> or C<mc_cache_self> for the first time,
+component calls C<$m->cache> or C<$m->cache_self> for the first time,
 Mason automatically creates a new cache file under C<data_dir/cache>.
 The name of the file is determined by encoding the path as follows:
 
@@ -326,7 +351,7 @@ guaranteed -- developers are warned that cached data may disappear
 anytime and components must still function.
 
 If some reason you want to disable data caching, specify
-C<use_data_cache>=>0 to the Interp object. This will cause all mc_cache
+C<use_data_cache>=>0 to the Interp object. This will cause all $m->cache
 calls to return undef without doing anything.
 
 =back
@@ -496,7 +521,7 @@ The events are:
  REQ_END	end of HTTP request		request number, error flag (1 if
 						error occurred, 0 otherwise)
  CACHE_READ	attempt to read from		component path, cache key, success
-		data cache (mc_cache)		flag (1 if item found, 0 otherwise)
+		data cache ($m->cache)		flag (1 if item found, 0 otherwise)
  CACHE_STORE	store to data cache		component path, cache key
  COMP_LOAD	component loaded into memory	component path
 		for first time	
@@ -658,10 +683,10 @@ component:
 
 translates to something like:
 
-    my $_srctext = mc_file('/usr/local/www/htdocs/foo/bar');
-    mc_comp('top');
+    my $_srctext = $m->file('/usr/local/www/htdocs/foo/bar');
+    $m->comp('top');
     print(substr($_srctext,18,20498));
-    mc_comp('center');
+    $m->comp('center');
     print(substr($_srctext,20520,30720));
 
 The resulting code is a bit slower but more memory efficient. Mason
@@ -745,51 +770,34 @@ each case.
 
 =head2 Out mode
 
-Mason can spew data in two modes. "Batch" mode means that Mason
-computes the entire page in memory and then transmits it all at
-once. "Stream" mode means that Mason outputs data as soon as it is
-computed. (This is only Mason's point of view; it does not take
-buffering done by Perl or the O/S into account.)
+Mason can spew data in two modes. In "batch" mode Mason computes the
+entire page in a memory buffer and then transmits it all at once. In
+"stream" mode Mason outputs data as soon as it is computed. (This does
+not take into account buffering done by Apache or the O/S.) The default
+mode is "batch".
 
-Which is better, batch or stream? It depends on the context.
+Batch mode has the advantage of better error handling.  Suppose an
+error occurs in the middle of a page. In stream mode, the error
+message interrupts existing output, often appearing in an awkward HTML
+context such as the middle of a table which never gets closed. In batch
+mode, the error message is output neatly and alone.
 
-For production web servers, stream mode is better because it gets data
-to the browser more quickly. A browser can only process and display
-data at a certain rate--streaming the data allows the browser to start
-working in parallel with the server, while waiting to the end
-serializes the task (first the server does all its work, then the
-browser does all its work). From a user perspective the initial bytes
-are especially important: until the browser receives some data, it
-simply displays a "waiting" message. Serving a computationally intense
-page in batch mode makes the server look unresponsive and tempts users
-to hit Stop, whereas in stream mode the browser at least acknowledges
-an answer and draws a background.
+Batch mode also offers more flexibility in controlling HTTP
+headers. See L<Devel/sending_http_headers>.
 
-For development or staging web servers, batch mode has the advantage
-of better error handling.  Suppose an error occurs in the middle of a
-page. In stream mode, the error message interrupts existing output,
-often appearing in an awkward HTML context such as the middle of a
-table which never gets closed. The user may see a partial page and
-have to "View source" to see the error message. In batch mode, the
-error message is output neatly and alone.
+Stream mode may help get data to the browser more quickly, allowing
+server and browser to work in parallel. It also prevents memory
+buildup for very large responses.
 
-If you don't mind the performance implications of batch mode, then
-running all servers (development and production) in batch mode offers
-additional flexibility to developers:
+Since Apache does its own buffering, stream mode does not entail
+immediate delivery of output to the client. You must set $|=1 to turn
+off Apache buffering completely (generally not a good idea) or call
+$m->flush_buffer to flush the buffer selectively.
 
-=over
-
-=item
-
-HTTP headers can be manipulated in any component since they are not sent
-til the end. See L<Devel/sending_http_headers>.
-
-=item
-
-$m->clear_buffer can help in presenting a clean error message to the
-client. See L<Request/clear_buffer>.
-
-=back
+In terms of making your server seem responsive, the initial bytes are
+most important.  You can send these early by calling $m->flush_buffer
+in key locations such as the common page header. However, this dilutes
+the advantages of batch mode mentioned above. Tradeoffs...
 
 You control output mode by setting C<interp-E<gt>out_mode> to "batch"
 or "stream".

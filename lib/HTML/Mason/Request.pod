@@ -12,11 +12,6 @@ Mason creates one Request object for every web request (or, in
 stand-alone mode, every C<Interp::exec> call). Inside a component you
 access the current request object via the global C<$m>.
 
-Prior to version 0.7, the only way to access request information was
-through specific mc_ commands. For this reason many of the methods
-below have mc_ command equivalents; you are free to use either
-interface.
-
 =head1 METHODS
 
 =over
@@ -26,23 +21,127 @@ interface.
 Ends the current request, finishing the page without returning
 through components. The optional argument specifies the return
 value from C<Interp::exec>; in a web environment, this ultimately
-becomes the HTTP status code. This method is used to implement
-C<mc_abort>.
+becomes the HTTP status code.
 
-=for html <a name="call">
+=item auto_comp
 
-=item call (comp, option=>value, ...[, STORE=>ref])
+Returns the component object intercepted by an autohandler.  See the
+L<Devel/autohandlers> section of the I<Component Developer's Guide>
+for usage and examples.
 
-Calls the component designated by I<comp> with the specified
-option/value pairs. I<comp> may be an absolute or relative component
-path, or a component object.
+=item auto_next ([args...])
 
-The optional STORE option causes all output to be placed in the scalar
-reference provided instead of being sent to the default output stream.
+Calls the component intercepted by an autohandler.  With no arguments,
+the original arguments are passed to the component.  Any arguments
+specified here serve to augment and override (in case of conflict) the
+original arguments. Works like $m->comp in terms of return value and
+scalar/list context.  See the L<Devel/autohandlers> section of the
+I<Component Developer's Guide> for examples.
 
-This method is used to implement C<mc_comp> and the <& &> tag.
+=item cache ([action=>'retrieve|store|expire|keys'], [key=>name],
+[value=>data], [keep_in_memory=>0|1], [expire options...])
+
+$m->cache() lets you store and retrieve the results
+of computation for improved performance. Each component has its own
+data cache for storing one or more key/value pairs. The cache is
+implemented as a DBM database. See the L<Devel/data caching>
+section of the I<Component Developer's Guide> for examples
+and caching strategies.
+
+The argument to I<action> is one of:
+
+o I<retrieve>: returns the cache value if successful, or C<undef>
+if there was no value or if it has expired.
+
+o I<store>: stores a new cache value under the given key.
+Default key is 'main'.
+
+o I<expire>: expires a given cache value or values.
+key may be a single key or a list reference. Default key is 'main'.
+
+o I<keys>: returns a list of all the keys in the cache.
+
+I<value> defines what to store. It can be a scalar or a reference to
+an arbitrary data structure. The allowable size depends on your DBM
+implementation.
+
+I<keep_in_memory> indicates whether to save the value in memory once it is
+retrieved. Default is 0, meaning that the value will be retrieved from
+the cache file each time. If 1, each child server that retrieves this
+value will save its own copy, which can result in substantial memory
+usage for larger values. Use sparingly.
+
+The various expiration options are:
+
+o I<expire_at>: takes an absolute expiration time, in Perl time() format
+(number of seconds since the epoch)
+
+o I<expire_in>: takes a relative expiration time of the form
+"<num><unit>", where <num> is a positive number and <unit> is one of
+seconds, minutes, hours, days, or weeks, or any abbreviation thereof.
+E.g. "10min", "30m", "1hour".
+
+o I<expire_next>: takes a string, either 'hour' or 'day'. It indicates
+an expiration time at the top of the next hour or day.
+
+o I<expire_if>: calls a given anonymous subroutine and expires if the
+subroutine returns a non-zero value. The subroutine is called with one
+parameter, the time when the cache value was last written.
+
+=item cache_self (... same as $m->cache options...)
+
+Uses $m->cache to cache the entire output and/or the return value of
+the current component.  It is typically used right at the top of an
+C<E<lt>%init%E<gt>> section.
+
+To cache the component's output:
+
+    <%init>
+        return if $m->cache_self(expire_in=>'3 hours'[, key=>'fookey']);
+        ... <rest of init> ...
+    </%init>
+
+To cache the component's return value:
+
+    <%init>
+        my ($retval,$cached) = $m->cache_self(expire_in=>'3 hours'[, key=>'fookey']);
+        return $retval if $cached;
+        ... <rest of init> ...
+    </%init>
+
+This only works with scalar and reference return values.
+
+$m->cache_self handles both the retrieve and store, so you can pass
+both kinds of options to it. See $m->cache for an explanation of
+options.
+
+$m->cache_self uses a bit of magic to accomplish everything in one
+line.  You can use it without understanding it, but if you're
+curious, here's how it works:
+
+o A component foo calls $m->cache_self for the first time.
+
+o $m->cache_self sees that the cache is empty and calls foo again
+recursively, with a STORE option to capture its content into a buffer.
+
+o foo again calls $m->cache_self, which immediately returns 0 this time.
+
+o foo goes about its business and generates content into the $m->cache_self buffer.
+
+o When control is returned to $m->cache_self, it stores the content and
+return value in the cache and also outputs the content normally.
+Finally $m->cache_self returns the list (retval,1) which in turn
+causes foo to return immediately.
 
 =for html <a name="callers">
+
+=item caller_args
+
+Returns a list reference of the arguments passed by the component at
+the specified stack level. e.g.
+
+    $m->caller_args(0)   # arguments passed to current component
+    $m->caller_args(-1)  # arguments passed to top-level component
 
 =item callers
 
@@ -56,15 +155,41 @@ component object at that index in the list. e.g.
     $m->callers(-1)     # top-level component
 
 =for html <a name="comp">
-
 =item comp
 
-Returns the current component object.
+Calls the component designated by I<comp> with the specified
+option/value pairs. I<comp> may be a component path or a component
+object. If the component path is absolute (starting with a '/'), then
+the component is found relative to the component root.  Relative
+component paths (no leading '/') are relative to the current component
+directory.
+
+Components work exactly like Perl subroutines in terms of return
+values and context. A component can return any type of value, which is
+then returned from the $m->comp call.
+
+The <& &> tag provides a convenient shortcut for $m->comp.
+
+=item $m->comp_exists (comp_path)
+
+Returns 1 if I<comp_path> is a valid component path, 0 otherwise. 
 
 =item count
 
 Returns the number of this request, which is unique for a given
 request and interpreter.
+
+=for html <a name="current_comp">
+
+=item current_comp
+
+Returns the current component object.
+
+=item decline
+
+Generally called from a top-level component or dhandler. Aborts the
+current request and restarts with the next applicable dhandler,
+working up the tree. If no dhandler is available, returns NOT_FOUND.
 
 =item depth
 
@@ -75,29 +200,68 @@ value is 1, which indicates we are in the top-level component.
 
 If the request has been handled by a dhandler, this method returns the
 remainder of the URI or C<Interp::exec> path when the dhandler directory is
-removed.  Otherwise returns undef.  This method is used to implement
-C<mc_dhandler_arg>.
+removed.  Otherwise returns undef.
 
 =for html <a name="fetch_comp">
 
-=item fetch_comp (compPath)
+=item fetch_comp (comp_path)
 
 Given an absolute or relative component path, returns the
 corresponding component object or undef if no such component exists.
 Looks for subcomponents as well as file-based components.
 
+=item file (filename)
+
+Returns the contents of filename as a string. I<filename> may be an
+absolute filesystem path (starting with a '/') or relative (no leading
+'/'). If relative, Mason prepends the static file root, or the current
+component directory if no static file root is defined.
+
+Developers are encouraged to use relative paths whenever possible.
+This eliminates the need for component updates when content files are
+moved (the administrator just updates the static file root).
+
+=item file_root
+
+Returns the static file root, used by $m->file() to resolve relative
+filenames.
+
+=item flush_buffer
+
+Flushes the Mason output buffer. Under mod_perl, also calls $r->rflush
+to flush the Apache buffer. Useful for making your servers seem more
+responsive, especially for the initial bytes of output.
+
 =item interp
 
 Returns the Interp object associated with this request.
+
+=item out (string)
+
+Print the given string. Rarely needed, since normally all HTML is just
+placed in the component body and output implicitly. $m->out is useful
+if you need to output something in the middle of a Perl block.
+
+$m->out() should be used instead of C<print> or C<$r-E<gt>print>,
+since $m->out() may be redirected or buffered depending on the
+current state of the interpreter.
 
 =item parser
 
 Returns the Parser object associated with this request.
 
-=item process_comp_path (compPath)
+=item process_comp_path (comp_path)
 
 Given an absolute or relative component path, returns the
 corresponding absolute component path.
+
+=item time
+
+Returns the interpreter's notion of the current time in Perl time()
+format (number of seconds since the epoch).
+
+To allow time and date simulations in the previewer, components should
+use $m->time() rather than calling time() directly.
 
 =back
 

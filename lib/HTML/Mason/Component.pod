@@ -52,7 +52,7 @@ new component dynamically.
 
 Similarly, there is no C<execute> or C<call> method, because calling a
 component requires a request. All of the interfaces for calling a
-component (<& &>, C<mc_comp>, C<$interp-E<gt>exec>, C<$m-E<gt>call>)
+component (<& &>, C<$m->comp>, C<$interp-E<gt>exec>, C<$m-E<gt>call>)
 which normally take a component path, will also take a component
 object.
 
@@ -153,7 +153,7 @@ or undef if no such subcomponent exists. e.g.
 Returns a printable string denoting this component.  It is intended to
 uniquely identify a component within a given interpreter although this
 is not 100% guaranteed. Mason uses this string in error messages,
-the previewer component trace, and C<mc_comp_stack>.
+the previewer component trace, and C<$m->comp_stack>.
 
 For file-based components this is the component path.  For
 subcomponents this is "parent_component_path:subcomponent_name". For

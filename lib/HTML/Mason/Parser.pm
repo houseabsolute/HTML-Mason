@@ -478,7 +478,7 @@ sub parse_component
     if ($sectiontext{filter}) {
 	my $ftext = $sectiontext{filter};
 	for ($ftext) { s/^\s+//g; s/\s+$//g }
-	$body .= sprintf(join("\n",'{ my ($_c,$_r);','if (mc_call_self(\$_c,\$_r)) {'.'for ($_c) {',$ftext,'}','mc_out($_c);','return $_r }};'));
+	$body .= sprintf(join("\n",'{ my ($_c,$_r);','if ($m->call_self(\$_c,\$_r)) {'.'for ($_c) {',$ftext,'}','$m->out($_c);','return $_r }};'));
     }
 
     #

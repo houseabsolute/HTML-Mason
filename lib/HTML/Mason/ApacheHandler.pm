@@ -42,6 +42,15 @@ sub ah { my $s=shift; return @_ ? ($s->{ah}=shift) : $s->{ah} }
 sub http_input { my $s=shift; return @_ ? ($s->{http_input}=shift) : $s->{http_input} }
 sub apache_req { my $s=shift; return @_ ? ($s->{apache_req}=shift) : $s->{apache_req} }
 
+# Override flush_buffer to also call $r->rflush
+sub flush_buffer
+{
+    my ($self, $content) = @_;
+    $self->SUPER::flush_buffer($content);
+    $self->apache_req->rflush;
+}
+
+
 #----------------------------------------------------------------------
 #
 # APACHEHANDLER OBJECT
@@ -130,6 +139,7 @@ sub _initialize {
 
     my $statsub = sub {
 	my($r,$q) = @_; #request and CGI objects
+	return [] if !defined($r);
 	my(@strings);
 
 	push (@strings,
@@ -138,7 +148,8 @@ sub _initialize {
 
 	return \@strings;     #return an array ref
     };
-    Apache::Status->menu_item ($name,$title,$statsub) if $Apache::Status::VERSION;
+    eval { Apache::Status::status_mason() };
+    Apache::Status->menu_item ($name,$title,$statsub) if $Apache::Status::VERSION and $@;
     
     #
     # Create data subdirectories if necessary. mkpath will die on error.
@@ -578,7 +589,7 @@ sub handle_request_1
     #
     my $retval = eval { $request->exec($comp, %args) };
     if ($@) {
-	return -1 if $request->declined;
+	return 404 if $request->declined;
 	die $@;
     }
     return $retval;

@@ -91,12 +91,13 @@ sub warn {
 sub send_http_header {
     my $self = shift;
     $self->content_type('text/plain') if !$self->content_type;
-    print "Server: ".$ENV{'SERVER_SOFTWARE'}."\n" if $ENV{'SERVER_SOFTWARE'};
-    print "Content-type: ".$self->content_type."\n";
+    my $outm = $self->{headers_out_method} || sub { print $_[0] };
+    $outm->("Server: ".$ENV{'SERVER_SOFTWARE'}."\n") if $ENV{'SERVER_SOFTWARE'};
+    $outm->("Content-type: ".$self->content_type."\n");
     my $href = $self->headers_out;
     if (ref($href) eq 'HASH') {
 	while (my ($key,$value) = each(%{$href})) {
-	    print "$key: $value\n";
+	    $outm->("$key: $value\n");
 	}
     }
     print "\n";

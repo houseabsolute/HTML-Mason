@@ -1,5 +1,5 @@
+Content-type: text/html
 X-Mason-Test: Initial value
-
 Basic test.
 2 + 2 = 4.
 uri = /basic.

@@ -55,10 +55,10 @@ sub try_exec_with_ah {
 
     # Create fake Apache request.
     my $r = fake_apache ({uri=>$uri, %$r_options});
+    undef $ENV{SERVER_SOFTWARE} if defined($ENV{SERVER_SOFTWARE});
 
     # Override send header function, and supply default header value.
-    *HTML::Mason::FakeApache::send_http_header = sub { $buf .= "X-Mason-Test: ".$_[0]->header_out('X-Mason-Test')."\n\n" };
-    HTML::Mason::FakeApache::send_http_header() if 0;
+    $r->{headers_out_method} = sub { $buf .= $_[0] };
     $r->headers_out('X-Mason-Test' => 'Initial value');
 
     # Handle request.

@@ -273,7 +273,7 @@ sub handle_preview_request_1
 
 	#
 	# Set up hooks to record events. An event is the starting
-	# or ending of an mc_comp or mc_file. When an event occurs,
+	# or ending of an $m->comp or $m->file. When an event occurs,
 	# place an event code in the content (EVENT# surrounded by
 	# ctrl-A), and push a hash of information onto the event list.
 	#
@@ -383,7 +383,7 @@ sub handle_preview_request_1
 
 	#
 	# Analyze event information. Create a list of objects
-	# (distinct component and mc_file invocations)
+	# (distinct component and $m->file invocations)
 	# and assign to each event the object that follows it.
 	#
 	my (@objects,@stack);
