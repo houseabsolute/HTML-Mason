@@ -667,13 +667,13 @@ sub cache_self {
         UNIVERSAL::can($@, 'rethrow') ? $@->rethrow : error $@;
     }
 
+    push @{ $self->{buffer_stack} }, $filter
+        if $filter;
+
     #
     # Print the component output.
     #
     $self->print($output);
-
-    push @{ $self->{buffer_stack} }, $filter
-        if $filter;
 
     #
     # Return the component return value in case the caller is interested,
@@ -978,6 +978,12 @@ sub comp {
         push @{ $self->{buffer_stack} }, $self->{buffer_stack}[-1]->new_child;
     }
 
+    if ( $comp->has_filter )
+    {
+        push @{ $self->{buffer_stack} },
+            $self->{buffer_stack}[-1]->new_child( filter_from => $comp );
+    }
+
     my @result;
 
     # The eval block creates a new context so we need to get this
@@ -997,30 +1003,38 @@ sub comp {
         }
     };
 
-    #
-    # If an error occurred, pop stack and pass error down to next level.
-    #
-    if (my $err = $@) {
-	# any unflushed output is at $self->top_buffer->output
-	$self->flush_buffer if $self->aborted;
+    my $err = $@;
 
-	pop @{ $self->{stack} };
-        if ( $mods{store} )
+    # any unflushed output is at $self->top_buffer->output
+    $self->flush_buffer if $self->aborted;
+
+    if ( $comp->has_filter )
+    {
+        my $buffer = pop @{ $self->{buffer_stack} };
+
+        # we don't want to send output if there was a real error
+        unless ( $err && ! $self->aborted )
         {
-            pop @{ $self->{buffer_stack} };
-            pop @{ $self->{buffer_stack} };
+            # have to catch errors from filter code too
+            $self->print( $buffer->output );
         }
-
-	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
     }
 
     pop @{ $self->{stack} };
+
     if ( $mods{store} )
     {
         $self->flush_buffer;
+
         pop @{ $self->{buffer_stack} };
         pop @{ $self->{buffer_stack} };
     }
+
+    if ($err)
+    {
+        UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
+    }
+
 
     return wantarray ? @result : $result[0];  # Will return undef in void context (correct)
 }
@@ -1033,13 +1047,6 @@ sub scomp {
     my $buf;
     $self->comp({store=>\$buf},@_);
     return $buf;
-}
-
-sub push_filter_buffer
-{
-    my $self = shift;
-
-    push @{ $self->{buffer_stack} }, $self->top_buffer->new_child(@_);
 }
 
 sub content {

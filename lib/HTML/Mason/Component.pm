@@ -117,33 +117,7 @@ sub run {
 
     $self->{mfu_count}++;
 
-    return $self->{code}->(@_) unless $self->has_filter;
-
-    my $req = HTML::Mason::Request->instance;
-
-    $req->push_filter_buffer( filter_from => $self );
-
-    my @r;
-
-    my $wantarray = wantarray;
-    my @result;
-    # Note: this must always preserve calling wantarray() context
-    eval {
-        if ($wantarray) {
-            @result = $self->{code}->(@_);
-        } elsif (defined $wantarray) {
-            $result[0] = $self->{code}->(@_);
-        } else {
-            $self->{code}->(@_);
-        }
-    };
-
-    my $buffer = $req->pop_buffer_stack;
-    $req->print( $buffer->output );
-
-    die $@ if $@;
-
-    return $wantarray ? @result : defined $wantarray ? $result[0] : undef;
+    return $self->{code}->(@_);
 }
 
 sub dynamic_subs_init {
