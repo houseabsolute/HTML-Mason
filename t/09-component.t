@@ -28,7 +28,7 @@ $useless=>17
 </%args>
 </%def>
 
-% my $anon = $m->interp->make_component(comp_text=>join("\n",'% my $adj = "flummoxed";','I am a <% $adj %> anonymous component.'),name=>'anonymous');
+% my $anon = $m->interp->make_component(comp_source=>join("\n",'% my $adj = "flummoxed";','I am a <% $adj %> anonymous component.'),name=>'anonymous');
 
 <% '-' x 60 %>
 
@@ -93,6 +93,7 @@ My title is /component/comp_obj_test/comp_obj:.subcomp.
 
 My object file is /.../obj/component/comp_obj_test/comp_obj
 My path is /component/comp_obj_test/comp_obj:.subcomp.
+My comp_id is [subcomponent '.subcomp' of /component/comp_obj_test/comp_obj].
 
 
 
@@ -109,6 +110,7 @@ My short name is [anon something].
 I have 0 subcomponent(s).
 My title is [anon something].
 
+My comp_id is [anon something].
 
 
 
