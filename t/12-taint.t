@@ -82,7 +82,7 @@ $data_dir = File::Spec->catdir( getcwd(), 'mason_tests', 'data' );
 
 # this is tainted, as is anything with return val from getcwd()
 my $comp2 = read_file('t/taint.comp');
-eval { $interp->write_object_file( object_text => $comp2,
+eval { $interp->write_object_file( object_code => $comp2,
 				   object_file => "$data_dir/taint_write_test",
 				 ); };
 
