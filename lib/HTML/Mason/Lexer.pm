@@ -41,6 +41,12 @@ my $blocks_re;
     $blocks_re = qr/$re/i;
 }
 
+sub parameters
+{
+    shift;
+    ();
+}
+
 sub simple_block_types
 {
     return grep { $blocks{$_} eq 'raw_block'} keys %blocks;
@@ -320,7 +326,7 @@ sub match_substitute
     if ( $comp =~ /\G<%/gcs )
     {
 	$self->{pos} = pos($comp);
-	if ( $comp =~ /\G(.+?)(\s*\|\s*([a-z]+)\s*)?%>/gcs )
+	if ( $comp =~ /\G(.+?)(\s*\|\s*([a-z]+)?\s*)?%>/igcs )
 	{
 	    $self->{pos} = pos($comp);
 	    my ($sub, $escape) = ($1, $3);
