@@ -42,8 +42,6 @@ using the classes provide in the Mason distribution.  Customizing and
 subclassing is covered in the
 L<Subclassing|HTML::Mason::Subclassing> document.
 
-XXX: Must write that (can use appendix C from the book!).
-
 =head2 MINIMAL CONFIGURATION
 
 The absolutely most minimal configuration looks like this:
