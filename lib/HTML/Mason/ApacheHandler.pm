@@ -169,13 +169,6 @@ sub import
     }
 }
 
-sub _in_conf_file
-{
-    my $self = shift;
-
-    return $self->_in_simple_conf_file || $self->_in_complex_conf_file;
-}
-
 #
 # This is my best guess as to whether we are being configured via the
 # conf file without multiple configs.  Without a comp root it will
@@ -193,21 +186,23 @@ sub make_ah
 {
     my $package = shift;
 
+    my $comp_root = $package->_get_string_param('MasonCompRoot');
+
     use vars qw($AH);
-    return $AH if $AH;
+    return $AH if $AH && $AH->{last_comp_root} eq $comp_root;
 
     my %p = $package->get_config($package->allowed_params);
 
     eval "use $p{interp_class}";
     die $@ if $@;
 
-    my $ah = $package->new( interp => $package->_make_interp($p{interp_class}),
-			    %p,
-			  );
+    $AH = $package->new( interp => $package->_make_interp($p{interp_class}),
+			 %p,
+		       );
 
-    $AH = $ah if $Apache::Server::Starting; # otherwise, there are multiple configs
+    $AH->{last_comp_root} = $comp_root;
 
-    return $ah;
+    return $AH;
 }
 
 sub _make_interp
