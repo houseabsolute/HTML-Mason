@@ -1377,7 +1377,10 @@ the buffer cannot be flushed.
 =item instance
 
 This class method returns the C<HTML::Mason:::Request> currently in
-use.  If called when no Mason request is active it will return C<undef>.
+use.  If called when no Mason request is active it will return
+C<undef>.
+
+If called inside a subrequest, it returns the subrequest object.
 
 =for html <a name="item_interp">
 
