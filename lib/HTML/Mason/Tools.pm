@@ -21,7 +21,7 @@ require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(can_weaken read_file read_file_ref url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on load_pkg pkg_loaded absolute_comp_path);
+@EXPORT_OK = qw(can_weaken read_file read_file_ref url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on load_pkg pkg_loaded absolute_comp_path checksum);
 
 # Is weaken available? Even under 5.6+, it might not be available on systems w/o a compiler.
 #
@@ -265,6 +265,18 @@ sub coerce_to_hash
     param_error "Cannot coerce $val to a hash";
 }
 
+# Adler32 algorithm
+sub checksum {
+    my ($str) = @_;
+    
+    my $s1 = 1;
+    my $s2 = 1;
+    for my $c (unpack("C*", $str)) {
+	$s1 = ($s1 + $c ) % 65521;
+	$s2 = ($s2 + $s1) % 65521;
+    }
+    return ($s2 << 16) + $s1;
+}
 
 1;
 
@@ -363,6 +375,10 @@ if this can't be done.
 
 This function is called from the generated component code as part of a
 component's argument handling.
+
+=item checksum
+
+Computes a simple checksum of a string. Used for Compiler::object_id.
 
 =back
 

@@ -5,12 +5,12 @@
 package HTML::Mason::Compiler;
 
 use strict;
-
+use Data::Dumper;
 use HTML::Mason::Component::FileBased;
 use HTML::Mason::Component::Subcomponent;
-use HTML::Mason::Lexer;
-
 use HTML::Mason::Exceptions( abbr => [qw(param_error compiler_error syntax_error)] );
+use HTML::Mason::Lexer;
+use HTML::Mason::Tools qw(checksum);
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
 
@@ -111,32 +111,16 @@ sub compute_object_id
     # time the program is loaded, whether they are a reference to the
     # same object or not.
     my $spec = $self->validation_spec;
-
     my @id_keys =
 	( grep { ! exists $spec->{$_}{isa} && ! exists $spec->{$_}{can} }
 	  grep { $_ ne 'container' } keys %$spec );
 
     my @vals = ('HTML::Mason::VERSION', $HTML::Mason::VERSION);
-
-    foreach my $k ( @id_keys )
-    {
-	push @vals, $k;
-
-	# For coderef params we simply indicate whether or not it is
-	# present.  This is better than simply ignoring them but not
-	# by much.  We _could_ use B::Deparse's coderef2text method to
-	# do this properly but I'm not sure if that's a good idea or
-	# if it works for Perl 5.005.
-	push @vals,
-	( $spec->{$k}{parse} eq 'code'  ? ( $self->{$k} ? 1 : 0 ) :
-	  UNIVERSAL::isa( $self->{$k}, 'HASH' )  ?
-	  map { $_ => $self->{$k}{$_} } sort keys %{ $self->{$k} } :
-	  UNIVERSAL::isa( $self->{$k}, 'ARRAY' ) ? sort @{ $self->{$k} } :
-	  $self->{$k} );
+    foreach my $k ( @id_keys ) {
+	push @vals, $k, $self->{$k};
     }
-
-    local $^W; # ignore undef warnings
-    $self->{object_id} = unpack('%32C*', join "\0", @vals);
+    my $dumped_vals = Data::Dumper->new(\@vals)->Indent(0)->Dump;
+    $self->{object_id} = checksum($dumped_vals);
 }
 
 my %top_level_only_block = map { $_ => 1 } qw( cleanup once shared );

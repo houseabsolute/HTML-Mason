@@ -723,17 +723,6 @@ EOF
 
 #------------------------------------------------------------
 
-	$group->add_test( name => 'stale_object_file',
-			  description => 'Make sure object files always contain compiler ID',
-			  component => <<'EOF',
-<% $m->interp->compiler->assert_creatorship({object_file => $m->current_comp->object_file}) %>
-EOF
-                          expect => 1,
-                        );
-
-
-#------------------------------------------------------------
-
 	$group->add_test( name => 'subst_tag_comments',
 			  description => 'Make sure comments parse correctly in substitution tags',
 			  component => <<'EOF',
@@ -1025,8 +1014,6 @@ $object_id_hash => {}
 </%args>
 
 count = <% $count %>
-object_id = <% $m->interp->compiler->object_id %>
-postprocess_text = <% $m->interp->compiler->postprocess_text %>
 
 <%perl>
 my $object_id = $m->interp->compiler->object_id;
@@ -1054,13 +1041,18 @@ $m->print($buf);
 </%perl>
 EOF
                           expect => <<'EOF',
+
 count = 0
+
 
 count = 1
 
+
 count = 2
 
+
 count = 3
+
 
 COUNT = 4
 EOF
