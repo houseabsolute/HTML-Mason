@@ -18,9 +18,9 @@ C<perl -MCPAN -e 'install Bundle::HTML::Mason'>
 
 =head1 CONTENTS
 
-MLDBM
-    
 Data::Dumper
+
+MLDBM
 
 HTML::Mason
 
