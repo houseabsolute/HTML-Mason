@@ -102,6 +102,7 @@ sub clear
 sub output
 {
     my $self = shift;
+    return unless exists $self->{buffer};
     my $output = ${$self->{buffer}};
     return $self->filter->( $output ) if $self->filter;
     return $output;
