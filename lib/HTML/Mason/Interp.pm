@@ -52,6 +52,7 @@ my %valid_params =
      allow_recursive_autohandlers => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
      autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR|UNDEF },
      code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR }, #10M
+     compiler_class               => { parse => 'string',  default => 'HTML::Mason::Compiler::ToObject', type => SCALAR },
      compiler                     => { isa => 'HTML::Mason::Compiler', optional => 1 },
      current_time                 => { parse => 'string',  default => 'real', type => SCALAR },
      data_cache_dir               => { parse => 'string',  optional => 1, type => SCALAR },
@@ -117,9 +118,9 @@ sub _initialize
     $self->{data_cache_defaults} = {};
 
     unless ($self->{compiler}) {
-	require HTML::Mason::Compiler::ToObject;
-	require HTML::Mason::Lexer;
-	$self->compiler( HTML::Mason::Compiler::ToObject->new( lexer_class => 'HTML::Mason::Lexer' ) );
+	eval "use $self->{compiler_class}" unless $self->{compiler_class} =~ /[^\w:]/;
+	die $@ if $@;
+	$self->compiler( $self->{compiler_class}->new() );
     }
 
     #

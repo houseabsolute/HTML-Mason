@@ -27,12 +27,12 @@ use HTML::Mason::MethodMaker
 
 my %valid_params = 
     (
-     allowed_globals      => { parse => 'list',   default => [] },
-     default_escape_flags => { parse => 'string', default => '' },
-     lexer_class          => { parse => 'string', default => 'HTML::Mason::Lexer', isa => 'HTML::Mason::Lexer' },
-     preprocess           => { parse => 'code',   optional => 1 },
-     postprocess_perl     => { parse => 'code',   optional => 1 },
-     postprocess_text     => { parse => 'code',   optional => 1 },
+     allowed_globals      => { parse => 'list',   type => ARRAYREF, default => [] },
+     default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
+     lexer_class          => { parse => 'string', isa => 'HTML::Mason::Lexer', default => 'HTML::Mason::Lexer' },
+     preprocess           => { parse => 'code',   type => CODEREF,  optional => 1 },
+     postprocess_perl     => { parse => 'code',   type => CODEREF,  optional => 1 },
+     postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1 },
     );
 
 sub valid_params { \%valid_params }
@@ -71,13 +71,10 @@ sub _init
     # the compiler and get filtered here.
     #
     my %lexer_params;
-    foreach ( $self->lexer_class->parameters )
-    {
-	$lexer_params{$_} = delete $p{$_} if exists $p{$_};
-    }
+    my @lexer_param_keys = keys %{$self->lexer_class->valid_params};
+    @lexer_params{@lexer_param_keys} = delete @p{@lexer_param_keys};
 
-    $self->lexer( $self->lexer_class->new( compiler => $self,
-					   %lexer_params ) );
+    $self->lexer( $self->lexer_class->new(%lexer_params, compiler => $self) );
 }
 
 sub set_allowed_globals

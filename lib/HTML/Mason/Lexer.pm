@@ -44,12 +44,6 @@ my $blocks_re;
     $blocks_re = qr/$re/i;
 }
 
-sub parameters
-{
-    shift;
-    ();
-}
-
 sub simple_block_types
 {
     return grep { $blocks{$_} eq 'raw_block'} keys %blocks;
