@@ -23,11 +23,6 @@ sub chk_version
 
 # These are required modules.
 
-chk_version(File::Tools => '1.0') or
-    warn  "\n"
-	. "*** Mason requires version 1.0, or later, of File::Tools\n"
-	. "    from CPAN/modules/by-module/File/Tools-x.x.tar.gz\n\n";
-
 chk_version(MLDBM => '2.0') or
     warn  "\n"
 	. "*** Mason requires version 2.0, or later, of MLDBM\n"
@@ -79,5 +74,5 @@ if ($read) {
 WriteMakefile(
     'NAME'    => 'HTML::Mason',
     'VERSION_FROM' => 'lib/HTML/Mason.pm', # finds $VERSION
-    'PREREQ_PM' => { MLDBM => 2.0, Data::Dumper => 2.08, File::Tools => 1.0 }
+    'PREREQ_PM' => { MLDBM => 2.0, Data::Dumper => 2.08 }
 );
