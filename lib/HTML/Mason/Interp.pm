@@ -870,7 +870,7 @@ Default is the empty list.  For maximum performance, this should only
 be used for components that are frequently viewed and rarely updated.
 See ADMIN<preloading> for further details.
 
-As mentioned in the developer's guide, a component's C<< <%once> >>
+As mentioned in the developer's manual, a component's C<< <%once> >>
 section is executed when it is loaded.  For preloaded components, this
 means that this section will be executed before a Mason or Apache
 request exist, so preloading a component that uses C<$m> or C<$r> in a

@@ -10,12 +10,12 @@ components.
 
 If you are the webmaster (or otherwise responsible for the Mason
 installation), you should also read L<the administrator's
-guide|HTML::Mason::Admin>. There you will find information about site
+manual|HTML::Mason::Admin>. There you will find information about site
 configuration, performance tuning, component caching, and so on.
 
 If you are a developer just interested in knowing more about Mason's
 capabilities and implementation, then L<the administrator's
-guide|HTML::Mason::Admin> is for you too.
+manual|HTML::Mason::Admin> is for you too.
 
 We strongly suggest that you have a working Mason to play with as you
 work through these examples. Other component examples can be found in
