@@ -490,6 +490,8 @@ sub system_log_event_check
     return ($self->{system_log_fh} && $self->{system_log_events_hash}->{$flag});
 }
 
+sub comp_root { shift->resolver->comp_root(@_) }
+
 #
 # Allow scalar or code reference as argument to out_method.
 #
