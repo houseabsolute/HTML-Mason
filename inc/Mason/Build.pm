@@ -903,8 +903,7 @@ sub _files_with_pod
 
     return
 	( grep { $self->contains_pod($_) }
-	  @{ $self->rscan_dir( $dir, qr{\.pm$} ) },
-	  @{ $self->rscan_dir( $dir, qr{\.pod$} ) }
+	  @{ $self->rscan_dir( $dir, qr{\.p(m|od)$} ) }
 	);
 }
 
