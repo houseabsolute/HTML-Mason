@@ -63,13 +63,13 @@ foreach (keys %prereq) {
 eval { require mod_perl };
 unless ( $@ || $^O =~ /mac|darwin/ )
 {
-    chk_version('Apache::Request' => '0.31') or
+    chk_version('Apache::Request' => '0.32') or
 	warn  "\n"
 	    . "*** If you plan to use Mason with mod_perl,\n"
-	    . "    Mason requires version 0.31, or later, of Apache::Request\n"
+	    . "    Mason requires version 0.32, or later, of Apache::Request\n"
 	    . "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
 
-    $prereq{'Apache::Request'} = 0.31;
+    $prereq{'Apache::Request'} = 0.32;
 }
 
 setup_mod_perl_tests() if is_maintainer() && ! $opts{'no-prompts'};
