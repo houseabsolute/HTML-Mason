@@ -1,0 +1,14 @@
+.*CVS.*
+\.cvsignore$
+t/.*\.pl
+t/.*\.cgi
+t/httpd.*
+~$
+^#
+^\.
+\.bak$
+MANIFEST.SKIP
+.*\.tar\.gz
+^Makefile$
+t/taint\.comp
+
