@@ -960,5 +960,25 @@ EOF
 
 #------------------------------------------------------------
 
+    # This test doesn't pass yet -Ken
+    $group->add_test( name => 'make_component',
+                      description => 'test that the make_component() method works',
+		      component => <<'EOF',
+<%init>
+my $ctext = q|
+% my $x = 'Hello, ';
+<% $x %>|;
+my $comp = $m->interp->make_component( comp => $ctext, path => '/fooey_comp' );
+</%init>
+% $m->comp('/fooey_comp');
+World
+EOF
+		      expect => <<'EOF',
+
+Hello, World
+EOF
+		    );
+
+
     return $group;
 }
