@@ -225,7 +225,15 @@ sub raw_block
     my $method = "$p{block_type}_block";
     return $self->$method(%p) if $self->can($method);
 
-    push @{ $self->{current_comp}{blocks}{ $p{block_type} } }, $p{block};
+    my $comment = '';
+    if ( $self->lexer->line_number )
+    {
+	my $line = $self->lexer->line_number;
+	my $file = $self->lexer->name;
+	$comment = "#line $line $file\n";
+    }
+
+    push @{ $self->{current_comp}{blocks}{ $p{block_type} } }, "$comment$p{block}";
 }
 
 sub doc_block
@@ -239,22 +247,6 @@ sub perl_block
     my %p = @_;
 
     $self->_add_body_code( $p{block} );
-}
-
-sub init_block
-{
-    my $self = shift;
-    my %p = @_;
-
-    my $comment = '';
-    if ( $self->lexer->line_number )
-    {
-	my $line = $self->lexer->line_number;
-	my $file = $self->lexer->name;
-	$comment = "#line $line $file\n";
-    }
-
-    push @{ $self->{current_comp}{blocks}{ $p{block_type} } }, "$comment$p{block}";
 }
 
 sub text
