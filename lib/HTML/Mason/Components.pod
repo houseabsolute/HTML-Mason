@@ -262,7 +262,7 @@ Here are some examples:
 
     # you can use arbitrary expression for component path, but it cannot
     # begin with a letter or number; delimit with () to remedy this
-    <& (rand(2) ? 'thiscomp' : 'thatcomp'), id=>123 &>
+    <& (int(rand(2)) ? 'thiscomp' : 'thatcomp'), id=>123 &>
 
 =head2 Components that compute values
 
@@ -446,24 +446,8 @@ For example, here we base the page title partly on the component name:
     my $section = ($comp eq 'mktg.html' ? 'Marketing' : ...);
     </%init>
 
-C<mc_auto_comp> is also necessary for I<suppressing> one or more
-original arguments, something that C<mc_auto_next> does not let you
-do.  Below, the C<$refsrc> variable is used solely by the
-autohandler, which removes it from the arguments sent to the next
-component.
-
-    <& (mc_auto_comp()), %ARGS &>
-    
-    <%init>
-    if ($refsrc) {
-       ...
-    }
-    delete($ARGS{refsrc});
-    </%init>
-    
-    <%args>
-    $refsrc=>undef
-    </%args>
+C<mc_auto_comp> is also useful for calling the component manually,
+e.g. if you want to suppress one or more original arguments.
 
 By default autohandlers apply only to the current directory, not to
 its subdirectories.  The Mason administrator can turn on the flag
@@ -1032,8 +1016,8 @@ error.
 
 This section describes several ways to apply filtering functions over
 the results of the current component.  By separating out and hiding a
-filter that, say, changes HTML in a complex way, we allow designers
-and non-programmers to work in a cleaner HTML environment.
+filter that, say, changes HTML in a complex way, we allow 
+non-programmers to work in a cleaner HTML environment.
 
 =head2 <%filter> section
 
@@ -1069,7 +1053,8 @@ will appear in the body.
 =head2 mc_call_self command
 
 This command allows you to filter both the output and the return value
-of the current component.
+of the current component. It is fairly advanced; for most purposes the
+<%filter> tag above will be sufficient and simpler.
 
 mc_call_self takes two arguments.  The first is a scalar reference and
 will be populated with the component output.  The second is either a

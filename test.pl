@@ -16,9 +16,9 @@ use Cwd;
 
 my $pwd = cwd;
 my $comp_root = "$pwd/test/comps/";
-my $data_dir = "$pwd/test/data/";
+my $data_dir = "$pwd/test/mason/";
 my $results_dir = "test/results/";
-my $tmp_dir = "test/tmp/";
+my $tmp_dir = "test/output/";
 
 my $buf;
 
