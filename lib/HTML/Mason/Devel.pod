@@ -1189,10 +1189,10 @@ but skips many options and features.
 The C<$m-E<gt>cache> method returns an object representing the cache
 for this component. Here's the typical usage of C<$m-E<gt>cache>:
 
-    my $result = $m->cache->get('identifier');
+    my $result = $m->cache->get('key');
     if (!defined($result)) {
         ... compute $result ...
-        $m->cache->set('identifier', $result);
+        $m->cache->set('key', $result);
     }
 
 C<$m-E<gt>cache-E<gt>get> attempts to retrieve this component's cache
@@ -1200,9 +1200,9 @@ value. If the value is available it is placed in I<$result>. If the
 value is not available, C<$result> is computed and stored in the
 cache by C<$m-E<gt>cache-E<gt>set>.
 
-=head2 Multiple Identifiers/Values
+=head2 Multiple Keys/Values
 
-A cache can store multiple identifier/value pairs. A value can be
+A cache can store multiple key/value pairs. A value can be
 anything serializable by C<Storable>, from a simple scalar to an
 arbitrary complex list or hash reference:
 
@@ -1210,11 +1210,11 @@ arbitrary complex list or hash reference:
     $m->cache->set('friends',\@list);
     $m->cache->set('map', %hash);
 
-You can fetch all the identifiers in a cache with
+You can fetch all the keys in a cache with
 
-    my @idents = $m->cache->get_identifiers;
+    my @idents = $m->cache->get_keys;
 
-It should be noted that Mason reserves all identifiers beginning with
+It should be noted that Mason reserves all keys beginning with
 I<__cache_self__> for its own use.
 
 =head2 Expiration
@@ -1256,7 +1256,7 @@ reference for details.
 =head2 Cache Object Meta-data
 
 C<$m->E<gt>cache-E<gt>get_object> returns the B<Cache::Object> associated
-with a particular identifier. You can use this to retrieve useful
+with a particular key. You can use this to retrieve useful
 meta-data:
 
     my $co = $m->cache->get_object('name1');
@@ -1276,13 +1276,13 @@ this with the I<cache_class> keyword. The value must be the name of a
 C<Cache::Cache> subclass; if it does not contain a "::", the prefix
 "Cache::" is automatically prepended. For example:
 
-    my $result = $m->cache(cache_class=>'MemoryCache')->get('identifier');
-    $m->cache(cache_class=>'MemoryCache')->set('identifier', $result);
+    my $result = $m->cache(cache_class=>'MemoryCache')->get('key');
+    $m->cache(cache_class=>'MemoryCache')->set('key', $result);
 
-You can even specify different subclasses for different identifiers in the
-same component. Just make sure the correct value is passed to all calls
-to C<$m-E<gt>cache>; Mason does not remember which subclass you
-have used for a given component or identifier.
+You can even specify different subclasses for different keys in the
+same component. Just make sure the correct value is passed to all
+calls to C<$m-E<gt>cache>; Mason does not remember which subclass you
+have used for a given component or key.
 
 =head2 Accessing a Cache Externally
 
@@ -1315,12 +1315,12 @@ C</foo/bar>, assuming the data directory is C</usr/local/www/mason>
 and the cache subclass is C<Cache::FileCache>:
 
     use HTML::Mason::Utils qw(data_cache_namespace);
-    
+
     my $cache = new Cache::FileCache
         (namespace => data_cache_namespace("/foo/bar"),
 	 cache_root => "/usr/local/www/mason/cache",
 	 username => "mason");
-    $cache->remove('identifier1');
+    $cache->remove('key1');
 
 =head1 SENDING HTTP HEADERS
 
