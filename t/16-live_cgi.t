@@ -20,6 +20,7 @@ use File::Basename;
 use File::Path;
 use File::Spec;
 use HTML::Mason::Tests;
+use Test;
 
 use lib 'lib', File::Spec->catdir('t', 'lib');
 
@@ -33,7 +34,7 @@ local $| = 1;
 kill_httpd(1);
 test_load_apache();
 
-print "1..7\n";
+plan(tests => 7);
 
 print STDERR "\n";
 
@@ -76,95 +77,67 @@ sub run_tests
     {
 	my $path = '/comps/basic';
 	my $response = Apache::test->fetch($path);
-	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
-							expect => <<'EOF',
+	ok $response->content, <<'EOF';
 Basic test.
 2 + 2 = 4.
 EOF
-						      );
-
-	ok($success);
     }
 
     {
 	my $path = '/comps/print';
 	my $response = Apache::test->fetch($path);
-	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
-							expect => <<'EOF',
+	ok $response->content, <<'EOF';
 This is first.
 This is second.
 This is third.
 EOF
-						      );
-
-	ok($success);
     }
 
     {
 	my $path = '/comps/print/autoflush';
 	my $response = Apache::test->fetch($path);
-	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
-							expect => <<'EOF',
+	ok $response->content, <<'EOF';
 This is first.
 This is second.
 This is third.
 EOF
-						      );
-
-	ok($success);
     }
 
     {
 	my $path = '/comps/print/handle_comp';
 	my $response = Apache::test->fetch($path);
-	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
-							expect => <<'EOF',
+	ok $response->content, <<'EOF';
 This is first.
 This is second.
 This is third.
 EOF
-						      );
-
-	ok($success);
     }
 
     {
 	my $path = '/comps/print/handle_cgi_object';
 	my $response = Apache::test->fetch($path);
-	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
-							expect => <<'EOF',
+	ok $response->content, <<'EOF';
 This is first.
 This is second.
 This is third.
 EOF
-						      );
-
-	ok($success);
     }
 
     {
 	my $path = '/comps/cgi_foo_param/handle_cgi_object';
 	my $response = Apache::test->fetch($path);
-	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
-							expect => <<'EOF',
+	ok $response->content, <<'EOF';
 CGI foo param is bar
 EOF
-						      );
-
-	ok($success);
     }
 
     {
 	my $path = '/comps/redirect';
 	my $response = Apache::test->fetch($path);
-	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
-							expect => <<'EOF',
+	ok $response->content, <<'EOF';
 Basic test.
 2 + 2 = 4.
 EOF
-						      );
-
-	ok($success);
     }
 
 
