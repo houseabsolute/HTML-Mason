@@ -741,7 +741,6 @@ implements the cache API but never stores data.
 
 This section explains Mason's various performance enhancements and how
 to administer them.
-
 =head2 Code Cache
 
 When Mason loads a component, it places it in a memory cache.
@@ -794,6 +793,73 @@ object file rather than the source file.
 If for some reason you don't want Mason to create object files, set
 P<use_object_files> to 0.
 
+=head2 How Mason Creates and Caches ApacheHandler Objects
+
+When you configure Mason under mod_perl via the Apache F<httpd.conf>
+file, Mason must create one or more ApacheHandler objects internally
+in order to handle requests.
+
+Mason tries to aggressively cache these objects, in order to avoid
+doing more work than necessary for each request.  There are three
+levels of caching.
+
+=over 4
+
+=item 1. Cached at Startup
+
+Mason first tries to create and cache an ApacheHandler object during
+server startup.  It only does this if it guesses that you have just
+one Mason configuration in your F<httpd.conf> file.
+
+If Mason can read its configuration information during startup, I<and>
+it finds a "MasonCompRoot" setting in that configuration, then it
+assumes that you only have one Mason configuration defined.  Because
+of the way Apache works, any configuration information inside an
+enclosing block, such as a C<< <VirtualHost> >> or C<< <Location> >>
+block, is not seen during server startup, and so will not be cached.
+If you have Mason configured in the simplest way possible, which does
+not require setting a component root, then Mason will assume you may
+have multiple configurations.
+
+=item 2. Cached by Location
+
+If Mason wasn't able to create a single ApacheHandler object at
+startup, then it assumes that you may have multiple Mason
+configurations defined in different blocks of your F<httpd.conf> file.
+When it makes a new ApacheHandler object, it will cache it based on
+the value of C<< $r->location >> and C<< $r->server->server_hostname
+>>.
+
+The problem with this method is that only C<< <Location> >> C<<
+<LocationMatch> >>, C<< <Directory> >>, and C<< <DirectoryMatch> >>
+blocks cause C<< $r->location >> to return anything.  If your
+configuration is directly inside a C<< <FilesMatch> >> or C<<
+<VirtualHost> >> block, then C<< $r->location >> returns C<undef>, and
+Mason cannot cache your configuration based on this.
+
+=item 3. Cached by Configuration
+
+The last cache, which is the slowest, is based on a key made up of all
+your configuration values.  This is slowest because it requires Mason
+to read your configuration I<before> it can do a cache lookup, whereas
+the previous two methods do not require reading the configuration on
+every request.
+
+=back
+
+=head2 Static Source Mode
+
+As described above, Mason checks the timestamp of a component source
+file every time that component is called. This can add up to a lot
+of file stats.
+
+If you have a live site with infrequent and well-controlled updates,
+you may choose to use P<static_source> mode. In this mode Mason will
+not check source timestamps when it uses an in-memory cache or object
+file.  The disadvantage is that you must remove object files and
+restart the server whenever you change component source; however this
+process can be easily automated.
+
 =head2 Preloading Components
 
 You can tell Mason to preload a set of components in the parent
@@ -819,19 +885,6 @@ modules only in the parent process.
 Try to preload components that are used frequently and do not change
 often.  (If a preloaded component changes, all the children will have
 to reload it from scratch.)
-
-=head2 Static Source Mode
-
-As described above, Mason checks the timestamp of a component source
-file every time that component is called. This can add up to a lot
-of file stats.
-
-If you have a live site with infrequent and well-controlled updates,
-you may choose to use P<static_source> mode. In this mode Mason will
-not check source timestamps when it uses an in-memory cache or object
-file.  The disadvantage is that you must remove object files and
-restart the server whenever you change component source; however this
-process can be easily automated.
 
 =head1 ERROR REPORTING AND EXCEPTIONS
 
