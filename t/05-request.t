@@ -358,7 +358,7 @@ EOF
 			  expect => <<'EOF',
 
 Calling helper
-Error: error while executing /request/support/subrequest_error_test:
+Error: whoops!
 
 
 Back from error, checking request state:

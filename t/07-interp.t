@@ -890,7 +890,7 @@ EOF
 		      component => <<'EOF',
 <% die 'foo' %>
 EOF
-		      expect_error => 'while executing /interp/normal_die_handler',
+		      expect_error => 'foo at /interp/normal_die_handler',
 		    );
 
 #------------------------------------------------------------
