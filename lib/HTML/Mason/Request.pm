@@ -182,7 +182,7 @@ sub exec {
 			if (@wrapper_chain > 32);
 		}
 
-		$first_comp = $self->use_autohandlers ? $wrapper_chain[0] : $wrapper_chain[-1];
+		$first_comp = $wrapper_chain[0];
 		$self->{wrapper_chain} = [@wrapper_chain];
 		$self->{wrapper_index} = {map((($wrapper_chain[$_]->path || '') => $_),(0..$#wrapper_chain))};
 	    }
