@@ -1,0 +1,33 @@
+UPGRADE GUIDE for Mason
+
+Hints about upgrading to various major revisions of Mason. To be
+completely safe, always read carefully through the Changes file and
+upgrade first on a test server.
+
+Version 0.85
+
+- Autohandlers are now recursive by default. If your site uses
+directory-specific autohandlers depending on the default value of
+allow_recursive_autohandlers=0, you must explicitly pass
+allow_recursive_autohandlers=>0 when creating the Interp.
+
+- All applicable autohandlers now get a chance to run. If your site
+has multiple autohandlers in parent/child directories, you'll likely
+get display problems when upgrading (e.g. multiple templates showing
+up per page). For a short-term fix, place
+
+    <%flags>
+    inherit=>undef
+    </%flags>
+
+in every autohandler. Ideally, in the long-term you'll be able to
+make the autohandlers work well together.
+
+
+Version 0.8
+
+- Version 0.8 sports a new request API. $m now contains the current
+request object, and all mc_ commands have been incorporated into $m
+methods. The utility bin/convert0.8.pl converts existing components to
+use the new syntax. See Commands.pod for a manual conversion guide and
+a list of rare conversion problems.
