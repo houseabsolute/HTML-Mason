@@ -730,7 +730,6 @@ sub push_buffer_stack {
 sub pop_buffer_stack {
     my ($self) = @_;
     my $buffer = pop @{ $self->{buffer_stack} };
-    $buffer->dispose;
 }
 
 sub buffer_stack {
