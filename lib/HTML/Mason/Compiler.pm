@@ -758,7 +758,7 @@ The "block_type" parameter will be either "flags" or "attr".
 
 =item start_named_block(block_type => <string>, name => <name>)
 
-Analogous to L<"start_block()">, but starts a "named" block 
+Analogous to L<item_start_block|start_block>, but starts a "named" block 
 (C<< <%method> >> or C<< <%def> >>).
 
 =item end_named_block()

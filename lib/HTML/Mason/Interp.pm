@@ -861,8 +861,8 @@ C<MemoryCache> instead of C<FileCache>.
 =item escape_flags
 
 A hash reference of escape flags to set for this object.  See the
-section on the L<C<set_escape()>
-method|HTML::Mason::Interp/set_escape> for more details.
+section on the L<set_escape
+method|HTML::Mason::Interp/item_set_escape> for more details.
 
 =item ignore_warnings_expr
 
@@ -1055,7 +1055,7 @@ Component object.  The source may be passed in as a string in C<comp_source>,
 or as a filename in C<comp_file>.  When using C<comp_file>, the
 filename is specified as a path on the file system, not as a path
 relative to Mason's component root (see 
-L<Request-E<gt>fetch_comp|HTML::Mason::Request/fetch_comp> for that).
+L<$m-E<gt>fetch_comp|HTML::Mason::Request/item_fetch_comp> for that).
 
 If Mason encounters an error during processing, an exception will be thrown.
 

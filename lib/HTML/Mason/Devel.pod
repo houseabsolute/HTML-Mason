@@ -643,7 +643,7 @@ directory itself (e.g. F</newsfeeds>). These are automatically
 deferred to Apache, which generates an index page or a FORBIDDEN
 error.  Often this is desirable, but if necessary the administrator
 can let in directory requests as well; see ADMIN<allowing directory
-request>.
+requests>.
 
 A component or dhandler that does not want to handle a particular
 request may defer control to the next dhandler by calling C<<
@@ -989,9 +989,8 @@ Techniques|"Object-Oriented Techniques"> for an example of usage.
 
 It's important to realize that you do not have access to the C<%ARGS>
 hash or variables created via an C<< <%args> >> block inside a shared
-section.  However, you can access arguments via the C<<
-$m->request_args >> method, documented in the L<Request
-docs|HTML::Mason::Request/"request_args">.
+section.  However, you can access arguments via
+L<$m-E<gt>request_args|HTML::Mason::Request/item_request_args>.
 
 Avoid using C<< <%shared> >> for side-effect code that needs to run at a
 predictable time during page generation. You may assume only that

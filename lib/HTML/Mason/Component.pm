@@ -400,14 +400,14 @@ directly with a component object.
 =head2 CREATING AND ACCESSING COMPONENTS
 
 Common ways to get handles on existing component objects include the
-L<Request-E<gt>current_comp|HTML::Mason::Request/current_comp>,
-L<Request-E<gt>callers|HTML::Mason::Request/callers>, and
-L<Request-E<gt>fetch_comp|HTML::Mason::Request/fetch_comp> methods.
+L<Request-E<gt>current_comp|HTML::Mason::Request/item_current_comp>,
+L<Request-E<gt>callers|HTML::Mason::Request/item_callers>, and
+L<Request-E<gt>fetch_comp|HTML::Mason::Request/item_fetch_comp> methods.
 
 There is no published C<new> method, because creating a component
-requires an Interpreter. Use the L<Interp's
-make_component|HTML::Mason::Interp/make_component> method to create a
-new component dynamically.
+requires an Interpreter. Use the
+L<make_component|HTML::Mason::Interp/item_make_component> method to
+create a new component dynamically.
 
 Similarly, there is no C<execute> or C<call> method, because calling a
 component requires a request. All of the interfaces for calling a
@@ -547,10 +547,9 @@ Returns the entire path of this component, relative to the component root.
 
 =item scall_method (name, args...)
 
-Like L<Component-E<gt>call_method (name, args...)|call_method (name,
-args...)>, but returns the method output as a string instead of
-printing it. (Think sprintf versus printf.) The method's return value,
-if any, is discarded.
+Like L<item_call_method|call_method>, but returns the method output as
+a string instead of printing it. (Think sprintf versus printf.) The
+method's return value, if any, is discarded.
 
 =for html <a name="item_subcomps"></a>
 

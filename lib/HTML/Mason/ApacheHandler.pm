@@ -1009,7 +1009,7 @@ object used for argument processing.
 If args_method is 'mod_perl', the C<$r> global is upgraded to an
 Apache::Request object. This object inherits all Apache methods and
 adds a few of its own, dealing with parameters and file uploads.  See
-L<Apache::Request|Apache::Request> for more information.
+C<Apache::Request> for more information.
 
 While Mason will load C<Apache::Request> or C<CGI> as needed at runtime, it
 is recommended that you preload the relevant module either in your

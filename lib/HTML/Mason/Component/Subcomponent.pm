@@ -52,3 +52,35 @@ sub is_method
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+HTML::Mason::Component::Subcomponent - Mason Subcomponent Class
+
+=head1 DESCRIPTION
+
+This is a subclass of
+L<HTML::Mason::Component|HTML::Mason::Component>. Mason uses it to
+implement both subcomponents (defined by C<< <%def> >>) and methods (defined
+by C<< <%method> >>).
+
+A subcomponent gets most of its properties from its owner.
+
+=head1 METHODS
+
+=over 4
+
+=item owner
+
+Return the component object that this subcomponent or method was
+defined within.
+
+=back
+
+=head1 SEE ALSO
+
+L<HTML::Mason::Component|HTML::Mason::Component>
+
+=cut
