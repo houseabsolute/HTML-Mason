@@ -361,20 +361,19 @@ sub purge_code_cache {
 #
 sub make_component {
     my $self = shift;
-    validate(@_, {path        => { type => SCALAR, optional => 1 },
-		  comp_source => { type => SCALAR, optional => 1 },
-		  comp_file   => { type => SCALAR, optional => 1 },
-		  name        => { type => SCALAR, optional => 1 }});
 
-    my %p = @_;
+    my %p = validate(@_, { comp_source => { type => SCALAR, optional => 1 },
+			   comp_file   => { type => SCALAR, optional => 1 },
+			   name        => { type => SCALAR, optional => 1 } });
+
     $p{comp_source} = read_file(delete $p{comp_file}) if exists $p{comp_file};
     param_error "Must specify either 'comp_source' or 'comp_file' parameter to 'make_component()'"
 	unless $p{comp_source};
 
-    $p{name} ||= $p{path} ? $p{path} : '<anonymous component>';
+    $p{name} ||= '<anonymous component>';
 
-    my $source = HTML::Mason::ComponentSource->new( friendly_name => $p{path} || $p{name},
-						    comp_path => $p{name} || $p{path},
+    my $source = HTML::Mason::ComponentSource->new( friendly_name => $p{name},
+						    comp_path => $p{name},
 						    comp_id => undef,
 						    last_modified => time,
 						    comp_class => 'HTML::Mason::Component',
@@ -383,19 +382,10 @@ sub make_component {
 
     my $object_code = $source->object_code( compiler => $self->compiler);
 
-    if ($p{path}) {
-	my $object_file = File::Spec->catfile( $self->object_dir, $p{path} );
-	$self->write_object_file( object_code => $object_code, object_file => $object_file );
-    }
-
     my $comp = eval { $self->eval_object_code( object_code => $object_code ) };
     $self->_compilation_error( $p{name}, $@ ) if $@;
 
     $comp->assign_runtime_properties($self, $source);
-
-    if ($p{path}) {
-	$self->code_cache->{$p{path}} = {lastmod => time(), comp => $comp, type => 'virtual'};
-    }
 
     return $comp;
 }
@@ -1091,14 +1081,7 @@ Example of usage:
                ( comp_source => '<%perl>my $name = "World";</%perl>Hello <% $name %>!' ) };
     die $@ if $@;
 
-    # Make a public component
-    eval { $interp->make_component
-             ( comp_source => '<%perl>my $name = "World";</%perl>Hello <% $name %>!',
-               path => '/hello/world.ma' ) };
-    die $@ if $@;
-
     $m->comp($anon_comp);
-    $m->comp('/hello/world.ma');
 
 =back
 
