@@ -926,5 +926,16 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'make_component_error',
+		      description => 'make sure a proper exception is thrown with make_component syntax errors',
+		      component => <<'EOF',
+% $m->interp->make_component(comp_source => '<% &>');
+EOF
+                      # Would be better to do $@->isa(syntax-error) or the like.
+		      expect_error => '/without matching/',
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
