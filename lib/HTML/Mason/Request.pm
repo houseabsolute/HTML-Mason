@@ -188,20 +188,6 @@ sub abort
     croak "abort() called";
 }
 
-sub fetch_next {
-    my ($self) = @_;
-    my $aref = $self->{autohandler_next} or die "fetch_next: no autohandler invoked";
-    return $aref ? $aref->[0] : undef;
-}
-
-sub call_next {
-    my ($self,@extra_args) = @_;
-    my $aref = $self->{autohandler_next} or die "call_next: no autohandler invoked";
-    my ($comp, $args_ref) = @$aref;
-    my @args = (@$args_ref,@extra_args);
-    return $self->comp($comp, @args);
-}
-
 sub cache
 {
     my ($self,%options) = @_;
@@ -278,6 +264,19 @@ sub cache_self
     # followed by 1 indicating the cache retrieval success.
     #
     return ($retval,1);
+}
+
+#
+# Old synonym for comp.
+#
+sub call { $self->comp(@_) }
+
+sub call_next {
+    my ($self,@extra_args) = @_;
+    my $aref = $self->{autohandler_next} or die "call_next: no autohandler invoked";
+    my ($comp, $args_ref) = @$aref;
+    my @args = (@$args_ref,@extra_args);
+    return $self->comp($comp, @args);
 }
 
 sub caller
@@ -391,6 +390,12 @@ sub fetch_comp
     }
     $path = $self->process_comp_path($path);
     return $self->{interp}->load($path);
+}
+
+sub fetch_next {
+    my ($self) = @_;
+    my $aref = $self->{autohandler_next} or die "fetch_next: no autohandler invoked";
+    return $aref ? $aref->[0] : undef;
 }
 
 sub file
@@ -619,18 +624,6 @@ sub unsuppress_hook {
     my $code = $self->interp->{hooks}->{$args{type}}->{$args{name}};
     $self->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
     push(@{$self->{"hooks_$args{type}"}},$code);
-}
-
-sub set_buffer
-{
-    my ($self, $content) = @_;
-    $self->{out_buffer} = $content;
-}
-
-sub get_buffer
-{
-    my ($self) = @_;
-    return $self->{out_buffer};
 }
 
 sub clear_buffer

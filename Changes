@@ -7,21 +7,56 @@ available at http://www.masonhq.com/changes.html.
 
 0.8
 
-- Added multiple component root feature 
-Resolvers (suggested by Digital Work (supported)) 
-Fix output mode and method 
-Improve HTTP header mechanism 
-Allow arguments to be passed via @_ into component (suggested by Ken Williams) 
-decline() request method (suggested by Chuck O'Donnell) 
-Fix bug with eval(mc_comp(...)) 
-Look into apache-1.3.9/mod_perl-1.2.1 problem 
-Fix mc_unsuppress_http_header (again) 
-mc_cache_self should cache return values as well (suggested by Jon Frisby) 
-caller_args() request method (suggested by Lee Semel) 
-Change cache filenames to url-encode format (submitted by Ken Williams) 
-Add more site configuration examples to Admin.pod 
-- Fixed doc_root / comp_root mismatch on case-insensitive O/S
+- New integrated request API! $m replaces $REQ as the global variable
+containing the current request object. All mc_ commands have been
+incorporated into $m methods: mc_comp becomes $m->comp, mc_file
+becomes $m->file, etc. The old commands still work for now.
+L{Request}
+- The utility bin/convert0.8.pl converts existing components to use
+the new request API.
+- Autohandler methods have been renamed: from mc_auto_next to
+$m->call_next and mc_auto_comp to $m->fetch_next. This is in
+preparation for a more general component inheritance system.
+convert0.8.pl handles this change. L{Devel/autohandlers}
+- Can now specify multiple component roots in the spirit of @INC.
+(suggested by Ewan Edwards and others) L{Admin/Component roots (multiple)}
+- Output mode parameter was moved from ah->output_mode to
+interp->out_mode, to make it independent of mod_perl.
+ah->output_mode still works. L{Interp/out_mode}
+- Simplified HTTP header behavior. Headers are sent at the end of the
+request (in batch mode) or just before the first non-whitespace output
+(in stream mode). suppress_http_header no longer needed.
+L{Devel/sending http headers}
+- Allow arguments to be accessed via @_ as in regular subroutines; no
+longer required to be in hash form. (suggested by Ken Williams)
+L{Devel/using instead}
+- Added $m->scomp, which returns the output of the component call
+instead of printing it. This is a cleaner replacement for the STORE
+parameter, which still works but is no longer officially documented.
+L{Request/item_scomp}
+- Added $m->flush_buffer, which forces the buffer to be sent to the
+client when in batch mode. L{Request/item_flush_buffer}
+- Added $m->caller_args, which returns the argument list for any point
+in the stack. (suggested by Lee Semel) L{Request/item_caller_args}
+- Added $m->decline, which passes control to the next dhandler.
+(suggested by Chuck O'Donnell) L{Request/item_decline}
+- Augmented $m->cache_self to cache return values as well as output.
+(suggested by Jon Frisby)
+- Changed data cache filenames from colon-separated to url-encode
+style for Win32 compatibility. (submitted by Ken Williams)
+L{Admin/data_caching}
+- ** mc_date legacy command removed.
+- Added warnings about using Mason with mod_perl DSO.
+- Added more site configuration examples to Admin.pod.
+L{Admin/configuring virtual sites} 
+- Split object parameter methods (interp->comp_root, etc.) into
+read/write and read-only as appropriate.
+- Fixed request stack corruption when die() or error from one
+component is caught by another component's eval.
+- Fixed doc_root / comp_root mismatch on case-insensitive O/S.
 (reported by John Arnold)
+- Added use_data_dumper_xs Config.pm item, which checks whether
+Data::Dumper::Dumpxs is available. (reported by Pelle Johnsen)
 
 0.73
 
