@@ -68,8 +68,10 @@ BEGIN
 my @read_write_params;
 BEGIN { @read_write_params = qw( autoflush
 				 data_cache_defaults
+				 dhandler_name
 				 error_format
 				 error_mode
+                                 max_recurse
                                  out_method ); }
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( aborted
@@ -152,7 +154,7 @@ sub _initialize {
 
 		# If path was not found, check for dhandler.
 		unless ($request_comp) {
-		    if ( $request_comp = $interp->find_comp_upwards($path, $interp->dhandler_name) ) {
+		    if ( $request_comp = $interp->find_comp_upwards($path, $self->dhandler_name) ) {
 			my $parent_path = $request_comp->dir_path;
 			($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
 		    }
@@ -162,8 +164,8 @@ sub _initialize {
 		# look for the next dhandler up the tree.
 		if ($request_comp and $self->{declined_comps}->{$request_comp->comp_id}) {
 		    $path = $request_comp->dir_path;
-		    unless ($path eq '/' and $request_comp->name eq $interp->dhandler_name) {
-			if ($request_comp->name eq $interp->dhandler_name) {
+		    unless ($path eq '/' and $request_comp->name eq $self->dhandler_name) {
+			if ($request_comp->name eq $self->dhandler_name) {
 			    $path =~ s/\/[^\/]+$//;
 			}
 		    }
@@ -212,8 +214,8 @@ sub exec {
 
 	    for (my $parent = $request_comp->parent; $parent; $parent = $parent->parent) {
 		unshift(@wrapper_chain,$parent);
-		error "inheritance chain length > " . $interp->max_recurse . " (infinite inheritance loop?)"
-		    if (@wrapper_chain > $interp->max_recurse);
+		error "inheritance chain length > " . $self->max_recurse . " (infinite inheritance loop?)"
+		    if (@wrapper_chain > $self->max_recurse);
 	    }
 
 	    $first_comp = $wrapper_chain[0];
@@ -301,8 +303,8 @@ sub make_subrequest
     my $subreq = $interp->make_request(%defaults, %params);
     $subreq->{parent_request} = $self;
     $subreq->{request_depth}  = $self->request_depth+1;
-    error "subrequest depth > " . $interp->max_recurse . " (infinite subrequest loop?)"
-	if $subreq->request_depth > $interp->max_recurse;
+    error "subrequest depth > " . $self->max_recurse . " (infinite subrequest loop?)"
+	if $subreq->request_depth > $self->max_recurse;
 
     return $subreq;
 }
@@ -654,7 +656,7 @@ sub comp {
     # Check for maximum recursion.
     #
     error "$depth levels deep in component stack (infinite recursive call?)\n"
-        if ($depth >= $interp->max_recurse);
+        if ($depth >= $self->max_recurse);
 
     #
     # $m is a dynamically scoped global containing this
