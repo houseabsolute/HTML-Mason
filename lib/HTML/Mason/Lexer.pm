@@ -346,7 +346,7 @@ sub match_named_block
 
     if ( $self->{current}{comp_source} =~ /\G<%(def|method)(?:\s+([^\n]+?))?>/igcs )
     {
-	my ($type, $name) = ($1, $2);
+	my ($type, $name) = (lc $1, $2);
 
 	$self->throw_syntax_error("$type block without a name")
 	    unless defined $name && length $name;
