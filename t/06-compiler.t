@@ -255,6 +255,21 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'line_nums2',
+		      description => 'make sure that errors are reported with the correct line numbers',
+		      component => <<'EOF',
+<% $x %> <% $y %>
+<% $z %>\
+% die "Dead";
+<%init>
+my ($x, $y, $z) = qw(a b c);
+</%init>
+EOF
+		      expect_error => qr/Dead at .* line 3/,
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 

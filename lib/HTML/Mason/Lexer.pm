@@ -466,7 +466,7 @@ sub match_text
     if ( $comp =~ m,\G
                     (.*?)       # anything
 		    (           # followed by
-                     \n%        # an eval line
+                     (?<=\n)(?=%) # an eval line - consume the \n
                      |
                      (?=</?%)   # a substitution or tag start or end  - don't consume
                      |
@@ -479,20 +479,14 @@ sub match_text
                    ,gcsx
        )
     {
-	my $text = $1;
-
-	# Back up if we were terminated by an eval line
-	if ($2 eq "\n%") {
-	    pos($comp)--;
-	    $text .= "\n";
-	}
-
 	$self->{pos} = pos($comp);
 	
-	$self->{compiler}->text( text => $text );
-	$self->{lines} += $text =~ tr/\n/\n/;
+	my $consumed = "$1$2";
+	$self->{compiler}->text( text => "$1" );
+	$self->{lines} += $consumed =~ tr/\n/\n/;
 	return 1;
     }
+    return 0;
 }
 
 sub match_end
