@@ -16,6 +16,7 @@ BEGIN
         {
             print "Your installation of Scalar::Util does not include the weaken subroutine\n";
             print "1..0\n";
+            exit;
         }
     }
 
