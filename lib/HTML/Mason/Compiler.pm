@@ -179,21 +179,23 @@ sub default_escape_flags
 sub compile
 {
     my $self = shift;
-    my %p = validate( @_, { comp_source => { type => SCALAR },
+    my %p = validate( @_, { comp_source => { type => SCALAR|SCALARREF },
 			    name => { type => SCALAR },
+			    fh => { type => HANDLE, optional => 1 },
 			  } );
+    my $src = ref($p{comp_source}) ? $p{comp_source} : \$p{comp_source};
 
-    # Preprocess the script.  The preprocessor routine is handed a
-    # reference to the entire script.
+    # Preprocess the source.  The preprocessor routine is handed a
+    # reference to the entire source.
     if ($self->preprocess)
     {
-	eval { $self->preprocess->( \$p{comp_source} ) };
+	eval { $self->preprocess->( $src ) };
 	compiler_error "Error during custom preprocess step: $@" if $@;
     }
 
-    $self->lexer->lex( comp_source => $p{comp_source}, name => $p{name}, compiler => $self );
+    $self->lexer->lex( comp_source => $src, name => $p{name}, compiler => $self );
 
-    return $self->compiled_component;
+    return $self->compiled_component( exists($p{fh}) ? (fh => $p{fh}) : () );
 }
 
 sub start_component
@@ -306,7 +308,7 @@ sub text
 
     $$tref =~ s,(['\\]),\\$1,g;
 
-    $self->_add_body_code("\$m->print( '$$tref' );\n");
+    $self->_add_body_code("\$m->print( '", $$tref, "' );\n");
 }
 
 sub text_block
@@ -530,7 +532,7 @@ sub _add_body_code
 	$self->{current_comp}{body} .= "#line $line $file\n";
     }
 
-    $self->{current_comp}{body} .= $_[0];
+    $self->{current_comp}{body} .= $_ foreach @_;
 }
 
 sub dump
@@ -572,7 +574,7 @@ sub _dump_data
     }
 
     print "\n$indent  body\n";
-    print "$data->{body}\n";
+    print $data->{body}, "\n";
 }
 
 sub _blocks
