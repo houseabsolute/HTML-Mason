@@ -20,7 +20,7 @@ require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs dumper_method paths_eq is_absolute_path make_absolute_path compress_path mason_canonpath pkg_loaded pkg_installed make_fh);
+@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs dumper_method paths_eq is_absolute_path make_absolute_path compress_path mason_canonpath pkg_loaded pkg_installed make_fh taint_is_on);
 
 #
 # Return contents of file. If $binmode is 1, read in binary mode.
@@ -130,7 +130,7 @@ sub pkg_loaded
 #
 # Determine if taint mode is on.
 #
-sub is_taint_on
+sub taint_is_on
 {
     not eval { "$0$^X" && kill 0; 1 };
 }
