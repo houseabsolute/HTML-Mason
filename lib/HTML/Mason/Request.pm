@@ -193,7 +193,7 @@ sub unsuppress_hook {
     foreach (qw(name type)) {
 	die "unsuppress_hook: must specify $_\n" if !exists($args{$_});
     }
-    my $code = $self->{hooks}->{$args{type}}->{$args{name}};
+    my $code = $self->interp->{hooks}->{$args{type}}->{$args{name}};
     $self->interp->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
     push(@{$self->{"hooks_$args{type}"}},$code);
 }
