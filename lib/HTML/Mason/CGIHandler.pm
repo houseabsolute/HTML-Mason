@@ -40,13 +40,15 @@ __PACKAGE__->contained_objects
 sub new {
     my $package = shift;
 
+    my %p = @_;
     my $self = $package->SUPER::new(comp_root => $ENV{DOCUMENT_ROOT},
 				    request_class => 'HTML::Mason::Request::CGI',
 				    error_mode => 'output',
 				    error_format => 'html',
-				    @_);
+				    %p);
 
-    $self->interp->out_method(\$self->{output});
+    $self->interp->out_method(\$self->{output})
+        unless exists $p{out_method};
     $self->interp->compiler->add_allowed_globals('$r');
     
     return $self;
