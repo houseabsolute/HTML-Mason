@@ -363,6 +363,7 @@ space:
     <VirtualHost www.site1.com>
       DocumentRoot  /usr/local/www/htdocs/site1
       <LocationMatch ...>
+        PerlSetVar   MasonConfigName  Site1
         SetHandler   perl-script
         PerlHandler  HTML::Mason::ApacheHandler
       </LocationMatch>
@@ -372,6 +373,7 @@ space:
     <VirtualHost www.site2.com>
       DocumentRoot  /usr/local/www/htdocs/site2
       <LocationMatch ...>
+        PerlSetVar   MasonConfigName  Site2
         SetHandler   perl-script
         PerlHandler  HTML::Mason::ApacheHandler
       </LocationMatch>
@@ -405,8 +407,9 @@ the component root must change depending on the site requested.
       DocumentRoot  /usr/local/www/htdocs/site1
 
       # Mason configuration
-      PerlSetVar  MasonCompRoot  /usr/local/www/htdocs/site1
-      PerlSetVar  MasonDataDir   /usr/local/mason/site1
+      PerlSetVar  MasonConfigName  Site1
+      PerlSetVar  MasonCompRoot    /usr/local/www/htdocs/site1
+      PerlSetVar  MasonDataDir     /usr/local/mason/site1
 
       <LocationMatch ...>
         SetHandler   perl-script
@@ -419,8 +422,9 @@ the component root must change depending on the site requested.
       DocumentRoot  /usr/local/www/htdocs/site2
 
       # Mason configuration
-      PerlSetVar  MasonCompRoot  /usr/local/www/htdocs/site2
-      PerlSetVar  MasonDataDir   /usr/local/mason/site2
+      PerlSetVar  MasonConfigName  Site2
+      PerlSetVar  MasonCompRoot    /usr/local/www/htdocs/site2
+      PerlSetVar  MasonDataDir     /usr/local/mason/site2
 
       <LocationMatch ...>
         SetHandler   perl-script
