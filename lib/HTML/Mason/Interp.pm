@@ -58,7 +58,7 @@ __PACKAGE__->valid_params
 				       descr => "A Compiler object for compiling components" },
      dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR|UNDEF,
 				       descr => "The filename to use for Mason's 'dhandler' capability" },
-     # Object cause qr// returns an object
+     # OBJECT cause qr// returns an object
      ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
 				       default => qr/Subroutine .* redefined/i,
 				       descr => "A regular expression describing Perl warning messages to ignore" },
@@ -328,7 +328,7 @@ sub load {
 		$comp = eval { $self->eval_object_text( object => $object ) };
 
 		if ($@) {
-		    if (UNIVERSAL::isa($@, 'HTML::Mason::Compilation::IncompatibleCompiler')) {
+		    if (UNIVERSAL::isa($@, 'HTML::Mason::Exception::Compilation::IncompatibleCompiler')) {
 			$objfilemod = 0;
 			undef $object;
 		    } else {
