@@ -11,9 +11,12 @@ use HTML::Mason::Exceptions;
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
 
-my %fields =
-    ( compiler => undef,
-    );
+my %valid_params =
+  (
+   compiler => { isa => 'HTML::Mason::Compiler' },
+  );
+
+sub valid_params { \%valid_params }
 
 
 # This is a block name and what method should be called to lex its
@@ -62,10 +65,7 @@ sub new
 {
     my $proto = shift;
     my $class = ref $proto || $proto;
-
-    validate( @_, { compiler => { isa => 'HTML::Mason::Compiler' } } );
-
-    return bless {%fields, @_}, $class;
+    return bless { validate(@_, $class->valid_params) }, $class;
 }
 
 sub lex

@@ -9,6 +9,7 @@ use strict;
 use File::Basename;
 use File::Spec;
 use HTML::Mason::Tools qw(compress_path);
+use Params::Validate qw(:all);
 use vars qw($AUTOLOAD);
 
 use HTML::Mason::MethodMaker
@@ -26,50 +27,41 @@ use HTML::Mason::MethodMaker
 			   mfu_count ) ]
       );
 
-my %fields =
+# I'm not sure which of these need to be non-optional.
+my %valid_params =
     (
-     attr => undef,
-     code => undef,
-     create_time => undef,
-     declared_args => undef,
-     dynamic_subs_init => undef,
-     flags => undef,
-     fq_path => undef,
-     inherit_path => undef,
-     inherit_start_path => undef,
-     interp => undef,
-     methods => undef,
-     mfu_count => 0,
-     object_size => 0,
-     parser_version => undef,
-     subcomps => undef,
-     source_ref_start => undef   # legacy, left in for pre-0.8 obj files
-     );
+     attr               => {type => HASHREF, optional => 1},
+     code               => {type => CODEREF, optional => 1},
+     create_time        => {type => SCALAR,  optional => 1},
+     declared_args      => {type => HASHREF, default => {}},
+     dynamic_subs_init  => {type => CODEREF, optional => 1},
+     flags              => {type => HASHREF, default => {}},
+     fq_path            => {type => SCALAR,  optional => 1},
+     inherit_path       => {type => SCALAR,  optional => 1},
+     inherit_start_path => {type => SCALAR,  optional => 1},
+     interp             => {isa => 'HTML::Mason::Interp', optional => 1},
+     methods            => {type => HASHREF, default => {}},
+     mfu_count          => {type => SCALAR,  default => 0},
+     object_size        => {type => SCALAR,  default => 0},
+     parser_version     => {type => SCALAR,  optional => 1},
+     subcomps           => {type => HASHREF, default => {}},
+     source_ref_start   => {type => SCALAR,  optional => 1},   # legacy, left in for pre-0.8 obj files
+    );
+
+sub valid_params { \%valid_params }
 
 my $comp_count = 0;
 
 sub new
 {
     my $class = shift;
-    my $self = {
-	%fields,
-	designator=>undef
-    };
-    my (%options) = @_;
-    while (my ($key,$value) = each(%options)) {
-	if (exists($fields{$key})) {
-	    $self->{$key} = $value;
-	} else {
-	    HTML::Mason::Exception::Params->throw( "HTML::Mason::Component::new: invalid option '$key'\n" );
-	}
-    }
-    bless $self, $class;
+    my $self = bless {
+		      validate(@_, $class->valid_params),
+		      designator => undef,
+		     }, $class;
 
     # Assign defaults.
     $self->{designator} = "[anon ". ++$comp_count . "]" if !defined($self->{fq_path});
-    $self->{declared_args} = {} if !defined($self->{declared_args});
-    $self->{subcomps} = {} if !defined($self->{subcomps});
-    $self->{flags} = {} if !defined($self->{flags});
     
     # Initialize subcomponent and method properties.
     while (my ($name,$c) = each(%{$self->{subcomps}})) {
