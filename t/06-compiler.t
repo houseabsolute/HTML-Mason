@@ -803,19 +803,10 @@ EOF
 
     $group->add_support( path => '/has_subcomp',
                          component => <<'EOF',
-<%shared>
-my $x;
-</%shared>
 <& .a &>
 <%def .a>
 A
-<%init>
-$x = 1;
-</%init>
 </%def>
-<%method .d>
-D
-</%method>
 EOF
                        );
 
@@ -824,10 +815,6 @@ EOF
 <%shared>
 my $y = 1;
 </%shared>
-
-<%method .c>
-C
-</%method>
 EOF
 		       );
 
