@@ -482,7 +482,7 @@ hostname to relative image URLs:
     <% $m->call_next %>
     
     <%filter>
-    s{(<img\s+src=\")/} {$1http://images.mysite.com/}ig;
+    s{(<img[^>]+src=\")/} {$1http://images.mysite.com/}ig;
     </%filter>
 
 Most of the time autohandler can simply call C<$m-E<gt>call_next>
