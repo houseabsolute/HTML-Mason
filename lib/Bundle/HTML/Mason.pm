@@ -18,8 +18,6 @@ C<perl -MCPAN -e 'install Bundle::HTML::Mason'>
 
 =head1 CONTENTS
 
-File::Tools
-
 MLDBM
     
 Data::Dumper
