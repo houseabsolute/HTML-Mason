@@ -5,7 +5,7 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
-1.3x
+1.30
 
 [ INCOMPATIBLE CHANGES ]
 
@@ -14,6 +14,9 @@ has so many problems, it cannot be officially supported; we strongly
 recommend upgrading to at least 5.6.1.
 - ** Mason now requires version 1.24 of mod_perl in the ApacheHandler
 module.
+- ** The behaviors of $m->flush_buffer and $m->clear_buffer have been
+simplified. $m->flush_buffer only acts on the top-level output buffer;
+$m->clear_buffer clears all output buffers. Task id #554.
 - ** max_code_cache_size is now kept in terms of number of components,
 not bytes, and its default value is 'unlimited'.
 - ** Components with a <%filter> and a cache_self are no longer cached
@@ -26,9 +29,6 @@ multiple compiler and interpreter objects.
 - ** comp_exists may try to load the designated component, and may
 throw an error if it contains a syntax error.
 - ** The current_time method, deprecated in 1.1x, has been removed.
-- ** The behaviors of $m->flush_buffer and $m->clear_buffer have been
-simplified. $m->flush_buffer only acts on the top-level output buffer;
-$m->clear_buffer clears all output buffers. Task id #554.
 
 [ ENHANCEMENTS ]
 
@@ -36,9 +36,9 @@ $m->clear_buffer clears all output buffers. Task id #554.
 especially in static_source mode.
 - Added a plugin architecture. Plugin classes can perform actions at
 key points, e.g. before and after each request and each component
-call.  See HTML::Mason::Plugin for documentation.
+call.  See HTML::Mason::Plugin for documentation. Task id #24.
 - Added the ability to change component root(s) on the fly if the
-dynamic_comp_root parameter is turned on.
+dynamic_comp_root parameter is turned on. Task id #561.
 - Added static_source_touch_file, making it much easier to update
 a server running in static_source mode.
 - Added enable_autoflush parameter. When turned off, Mason can
@@ -53,6 +53,8 @@ multiple versions of Mason do not collide in the same object
 directory. Task id #569.
 - Added .obj (or a configurable extension) to object filenames.
 Task id #152.
+- Added $m->clear_and_abort, syntactic sugar for the common idiom
+of calling clear_buffer() and then abort(). Task id #505.
 - Added an official comment syntax, <% # ... %>, and documented
 the various comment markers in the developer's manual. Task id #566.
 - Added buffer_preallocate_size parameter, which allows you to
@@ -65,8 +67,10 @@ component root(s). Task id #562.
 - Mason now throws an error if the path specified in a component's
 'inherit' flag cannot be found. Task id #480.
 - Fixed comp_exists to work with any path accepted by comp or
-fetch_comp. Task id #572.
-- Fixed fetch_comp to stop throwing errors for certain bad paths.
+fetch_comp, and fixed fetch_comp to stop throwing errors for certain
+bad paths. Task id #572.
+- Using 'next' or 'last' without a loop can no longer corrupt
+the component stack. Task id #539.
 
 1.24  November 12, 2003
 
