@@ -237,7 +237,7 @@ sub _init_comp_data
     $data->{flags} = {};
     $data->{attr} = {};
 
-    foreach ( qw( cleanup filter init once perl shared ) )
+    foreach ( qw( cleanup filter init once shared ) )
     {
 	$data->{blocks}{$_} = [];
     }
