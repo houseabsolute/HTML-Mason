@@ -11,6 +11,9 @@ use HTML::Mason::Tools qw(absolute_comp_path);
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
+# for weakrefs
+BEGIN { require Scalar::Util if $] >= 5.006 }
+
 use HTML::Mason::Exceptions( abbr => ['error'] );
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( code
@@ -27,7 +30,6 @@ use HTML::Mason::MethodMaker
       read_write => [ [ dynamic_subs_request => { isa => 'HTML::Mason::Request' } ],
 		      [ mfu_count => { type => SCALAR } ],
                       [ filter => { type => CODEREF } ],
-                      [ interp => { isa => 'HTML::Mason::Interp' } ],
 		    ]
       );
 
@@ -76,21 +78,10 @@ sub new
     return $self;
 }
 
-sub from_cache_copy {
-    shift; # ignore class
-    my ($obj) = @_;
-
-    # must copy again before it receives an interp because this copy
-    # may stay in the cache
-    my %new = %$obj;
-
-    return bless \%new, ref $obj;
-}
-
 my $comp_count = 0;
 sub assign_runtime_properties {
     my ($self, $interp, $info) = @_;
-    $self->{interp} = $interp;
+    $self->interp($interp);
     $self->{comp_id} = defined $info->comp_id ? $info->comp_id : "[anon ". ++$comp_count . "]";
 
     $self->{path} = $info->comp_path;
@@ -314,13 +305,20 @@ sub parent {
     return $comp;
 }
 
-sub copy_for_cache {
-    my ($self) = @_;
+sub interp {
+    my $self = shift;
 
-    my %copy = %$self;
-    delete $copy{interp};
+    if (@_) {
+        validate_pos( @_, { isa => 'HTML::Mason::Interp' } );
 
-    return bless \%copy, ref $self;
+        $self->{interp} = $_[0];
+
+        Scalar::Util::weaken( $self->{interp} ) if $] >= 5.006;
+    } elsif ( ! defined $self->{interp} ) {
+        warn "The Interp object that this object contains has gone out of scope.\n";
+    }
+
+    return $self->{interp};
 }
 
 #
