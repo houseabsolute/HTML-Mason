@@ -19,6 +19,8 @@ use IO::Seekable;
 use HTML::Mason::Parser;
 use HTML::Mason::Tools qw(read_file pkg_loaded);
 use HTML::Mason::Config;
+require Time::HiRes if $HTML::Mason::Config{use_time_hires};
+
 use vars qw($AUTOLOAD $_SUB %_ARGS);
 my @used = ($HTML::Mason::Commands::INTERP);
 
@@ -780,7 +782,7 @@ sub write_system_log {
     my $self = shift;
 
     if ($self->{system_log_fh} && $self->system_log_events->{$_[0]}) {
-	my $time = (pkg_loaded("Time::HiRes") ? scalar(Time::HiRes::gettimeofday()) : time);
+	my $time = ($HTML::Mason::Config{use_time_hires} ? scalar(Time::HiRes::gettimeofday()) : time);
 	$self->{system_log_fh}->print(join ($self->system_log_separator,
 					    $time,                  # current time
 					    $_[0],                  # event name

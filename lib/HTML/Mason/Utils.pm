@@ -16,6 +16,7 @@ use Fcntl;
 use File::Basename;
 use HTML::Mason::Config;
 use HTML::Mason::Tools qw(date_delta_to_secs);
+use MLDBM ($HTML::Mason::Config{mldbm_use_db}, $HTML::Mason::Config{mldbm_serializer});
 
 sub access_data_cache
 {
@@ -25,8 +26,8 @@ sub access_data_cache
     # Defaults
     #
     my $cacheFile = $options{cache_file} || die "cache: must specify cache file";
-    my $physFile = $cacheFile . $HTML::Mason::DBM_FILE_EXT;
-    my $tieClass = ($options{tie_class} || $HTML::Mason::DEFAULT_CACHE_TIE_CLASS || die "no tie class defined!");
+    my $physFile = $cacheFile . $HTML::Mason::Config{mldbm_file_ext};
+    my $tieClass = ($options{tie_class} || $HTML::Mason::Config{default_cache_tie_class} || die "no tie class defined!");
     my $action = $options{action} || 'retrieve';
     my $key = $options{key} || 'main';
     my $memCache = $options{memory_cache};
@@ -97,9 +98,25 @@ sub access_data_cache
 		or die "cache: cannot create/open cache file '$cacheFile'\n";
 
 	# Finally, store the value.
-	$out{"$key.contents"} = $options{value};
-	$out{"$key.expires"} = $expireTime;
-	$out{"$key.lastmod"} = $time;
+	eval {
+	    $out{"$key.contents"} = $options{value};
+	    $out{"$key.expires"} = $expireTime;
+	    $out{"$key.lastmod"} = $time;
+	}
+	if (my $err = $@) {
+	    $msg = "An error occurred while storing to the cache file '$physFile'.\n";
+	    if ($tieClass eq 'MLDBM' && $HTML::Mason::Config{mldbm_use_db} =~ /^(SDBM|ODBM|NDBM)/) {
+		$msg .= "One likely reason is that you are using the '$HTML::Mason::Config{mldbm_use_db}'\n";
+		$msg .= "package which is inadequate for storing large data.  Try switching to DB_File\n";
+		$msg .= "or GDBM (see the Administrator's Manual for details). Otherwise, the\n";
+	    } else {
+		$msg .= "The ";
+	    }
+	    $msg .= "cache file may be corrupt or of the wrong DBM format; try removing it and\n";
+	    $msg .= "re-running your request.\n";
+	    $msg .= "Original error message:\n$err";
+	    die $msg;
+	}
 	if (defined($memCache)) {
 	    $memCache->{$path}->{$key} = {expires=>$expireTime,lastModified=>$time,lastUpdated=>$time,contents=>$options{value}};
 	}

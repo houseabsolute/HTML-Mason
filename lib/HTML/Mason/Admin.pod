@@ -17,13 +17,22 @@ part in Mason's configuration.
 =item Config.pm
 
 Config.pm contains global configuration options for Mason.
-Makefile.PL will make initial modifications to the file based on your
-environment; after that, you can edit it by hand, following the
-comments inside.  Currently this file controls:
+Makefile.PL will initially create the file based on your environment,
+placing it in the C<lib/HTML/Mason> subdirectory of the distribution.
+After that, you can edit it by hand, following the comments inside.
 
-o whether or not certain optional modules, such as Time::HiRes, should be loaded for enhanced features
+"make install" copies Config.pm to your Perl library directory
+(e.g. C</usr/lib/perl5/site_perl/HTML/Mason>) along with the other module
+files. This allows Mason internally to grab the configuration data
+with "C<use HTML::Mason::Config>".
 
-o the type of DBM and the serialization method to use for Mason's data caching
+Currently this file controls:
+
+o Whether or not certain optional modules, such as Time::HiRes, should be loaded for enhanced features.
+
+o The type of DBM and the serialization method used for Mason's data
+caching. If you plan to use data caching, make sure that the DBM
+package is a good-quality one (B<DB_File> or B<GDBM_File>)
 
 =item httpd.conf (srm.conf, access.conf)
 
@@ -141,19 +150,32 @@ administer them.
 
 Cache files are implemented using B<MLDBM>, an interface for storing
 persistent multi-level data structures. B<MLDBM>, in turn, uses one of
-several DBM packages (B<DB_File>, B<GDBM>, etc.) and one of several
+several DBM packages (B<DB_File>, B<GDBM>) and one of several
 serialization mechanisms (B<Data::Dumper>, B<FreezeThaw> or
-B<Storable>). Mason's Config.pm contains stubs for several
-combinations; you will at least want to replace the default NDBM with
-a faster, less limited package.
+B<Storable>). Mason's Config.pm controls which packages are used.
+
+The most important task is selecting a good DBM package.  Most
+standard DBM packages (B<SDBM>, B<ODBM>, B<NDBM>) are unsuitable for data
+caching due to significant limitations on the size of keys and values.
+Perl only comes with B<SDBM>, so you'll need to obtain a good-quality
+package if you haven't already. At this time the best options are
+Berkeley DB (B<DB_File>), available at www.sleepycat.com, and GNU's gdbm
+(B<GDBM>), available at GNU mirror sites everywhere.
+
+As far as the serialization methods, all of them should work fine.
+B<Data::Dumper> is probably simplest: it comes with the latest versions
+of Perl, is required by Mason anyway, and produces readable output
+(possibly useful for debugging cache files).  On the other hand
+B<Storable> is significantly faster than the other options according to
+the MLDBM documentation.
 
 =item Administration
 
-Data caching requires little administration. When a component calls
-C<mc_cache> or C<mc_cache_self> for the first time, Mason automatically
-creates a new cache file under C<data_dir/cache>, replacing slashes
-in the component path with "::". For example, the cache file for
-component C</foo/bar> is C<data_dir/cache/foo::bar>.
+Once set up, data caching requires little administration. When a
+component calls C<mc_cache> or C<mc_cache_self> for the first time,
+Mason automatically creates a new cache file under C<data_dir/cache>,
+replacing slashes in the component path with "::". For example, the
+cache file for component C</foo/bar> is C<data_dir/cache/foo::bar>.
 
 Currently Mason never deletes cache files, not even when the
 associated component file is modified.  (This may change in the near future.)

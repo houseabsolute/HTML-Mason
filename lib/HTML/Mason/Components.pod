@@ -574,6 +574,10 @@ circumstances, one component does not access another component's
 cache. Each cached value may be set to expire under certain conditions
 or at a certain time.
 
+To use data caching, your Mason installation must be configured
+with a good DBM package like Berkeley DB (DB_File) or GDBM. See
+B<L<HTML::Mason::Admin>> for more information.
+
 =head2 Basic Usage
 
 Here's the typical usage of mc_cache:
@@ -679,8 +683,6 @@ keys matching a particular pattern.
                        action=>'expire', key=>[grep(/^sales/,@keys)]);
 
 
-
-
 =back
 
 =head2 Busy Locks
@@ -706,7 +708,7 @@ to the cache 15 times!
 
 The solution here is to have the first process notify the others that
 it has started recomputing.  This can be accomplished with the
-busy_lock flag
+busy_lock flag:
 
         mc_cache(action=>'retrieve',busy_lock=>'10sec',...);
 

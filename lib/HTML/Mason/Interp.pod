@@ -111,9 +111,10 @@ log, separated by "|". Default is to log nothing.
 
 =item use_data_cache
 
-True or undef, default is true. You may need to disable data caching
-temporarily for debugging purposes, but normally this should be left
-alone.
+True or undef, default is true. Specifies whether the mc_cache and
+related commands are operational.  You may need to disable data
+caching temporarily for debugging purposes, but normally this should
+be left alone.
 
 =item use_object_files
 
