@@ -32,7 +32,7 @@ __PACKAGE__->contained_objects
 sub new {
     my $package = shift;
 
-    my @my_args = $package->create_contained_objects(comp_root => $ENV{document_root},
+    my @my_args = $package->create_contained_objects(comp_root => $ENV{DOCUMENT_ROOT},
 						     request_class => 'HTML::Mason::Request::CGI',
 						     @_);
 
