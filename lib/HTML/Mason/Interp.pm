@@ -263,33 +263,28 @@ sub load {
 	# We are using object files.  Update object file if necessary
 	# and load component from there.
 	#
-	my $object_code;
 	do
 	{
 	    if ($objfilemod < $srcmod) {
-		$object_code = $source->object_code( compiler => $self->compiler );
-		$self->write_object_file( object_code => $object_code, object_file => $objfile );
+		my $object_code = $source->object_code( compiler => $self->compiler );
+		$self->write_object_file( object_code => \$object_code, object_file => $objfile );
 	    }
-	    # read the existing object file
-	    $object_code ||= read_file($objfile);
-	    $comp = eval { $self->eval_object_code( object_code => $object_code,
-                                                    object_file => $objfile ) };
+	    $comp = eval { $self->eval_object_code( object_file => $objfile ) };
 
 	    if ($@) {
 		if (isa_mason_exception($@, 'Compilation::IncompatibleCompiler')) {
 		    $objfilemod = 0;
-		    undef $object_code;
 		} else {
 		    $self->_compilation_error( $source->friendly_name, $@ );
 		}
 	    }
-	} until ($object_code);
+	} until ($comp);
     } else {
 	#
 	# Not using object files. Load component directly into memory.
 	#
 	my $object_code = $source->object_code( compiler => $self->compiler );
-	$comp = eval { $self->eval_object_code( object_code => $object_code ) };
+	$comp = eval { $self->eval_object_code( object_code => \$object_code ) };
 	$self->_compilation_error( $source->friendly_name, $@ ) if $@;
     }
     $comp->assign_runtime_properties($self, $source);
@@ -381,7 +376,7 @@ sub make_component {
 
     my $object_code = $source->object_code( compiler => $self->compiler);
 
-    my $comp = eval { $self->eval_object_code( object_code => $object_code ) };
+    my $comp = eval { $self->eval_object_code( object_code => \$object_code ) };
     $self->_compilation_error( $p{name}, $@ ) if $@;
 
     $comp->assign_runtime_properties($self, $source);
@@ -454,7 +449,7 @@ sub code_cache_decay_factor { 0.75 }
 # The eval_object_code & write_object_file methods used to be in
 # Parser.pm.  This is a temporary home only.  They need to be moved
 # again at some point in the future (during some sort of interp
-# re-architecting.
+# re-architecting).
 ###################################################################
 
 #
@@ -468,17 +463,9 @@ sub code_cache_decay_factor { 0.75 }
 sub eval_object_code
 {
     my ($self, %p) = @_;
+    my $code = ref($p{object_code}) ? $p{object_code} : \($p{object_code} || '');
 
-    if ( $p{object_code} =~ /\n# MASON COMPILER ID: (\S+)$/ )
-    {
-	my $comp_version = $1;
-
-	wrong_compiler_error 'This object file was created by an incompatible Compiler or Lexer.  Please remove the component files in your object directory.'
-	    if $comp_version ne $self->compiler->object_id;
-    }
-
-    # If in taint mode, untaint the object text
-    ($p{object_code}) = ($p{object_code} =~ /^(.*)/s) if taint_is_on;
+    $self->compiler->assert_creatorship(\%p);
 
     #
     # Evaluate object file or text with warnings on
@@ -508,13 +495,13 @@ sub eval_object_code
            local $SIG{ALRM} = sub { die $warnstr };
            alarm 5;
 
-           $comp = $self->_do_or_eval(%p);
+           $comp = $self->_do_or_eval(\%p);
 
            alarm 0;
 	}
 	else
 	{
-           $comp = $self->_do_or_eval(%p);
+           $comp = $self->_do_or_eval(\%p);
 	}
     }
 
@@ -537,10 +524,7 @@ sub eval_object_code
     #
     if ($err) {
 	# attempt to stem very long eval errors
-	if ($err =~ /has too many errors\./) {
-	    $err =~ s/has too many errors\..*/has too many errors./s;
-	}
-
+	$err =~ s/has too many errors\..+/has too many errors./s;
 	compilation_error $err;
     } else {
 	return $comp;
@@ -549,9 +533,16 @@ sub eval_object_code
 
 sub _do_or_eval
 {
-    my ($self, %p) = @_;
+    my ($self, $p) = @_;
 
-    return $p{object_file} ? do $p{object_file} : eval $p{object_code};
+    if ($p->{object_file}) {
+	return do $p->{object_file};
+    } else {
+	# If in taint mode, untaint the object text
+	(${$p->{object_code}}) = ${$p->{object_code}} =~ /^(.*)/s if taint_is_on;
+
+	return eval ${$p->{object_code}};
+    }
 }
 
 #
@@ -571,7 +562,7 @@ sub write_object_file
 {
     my $self = shift;
 
-    my %p = validate( @_, { object_code => { type => SCALAR },
+    my %p = validate( @_, { object_code => { type => SCALARREF },
 			    object_file => { type => SCALAR },
 			    files_written => { type => ARRAYREF, optional => 1 } },
 		    );
@@ -597,7 +588,7 @@ sub write_object_file
     my $fh = make_fh();
     open $fh, ">$object_file"
 	or system_error "Couldn't write object file $object_file: $!";
-    print $fh $object_code
+    print $fh $$object_code
 	or system_error "Couldn't write object file $object_file: $!";
     close $fh 
 	or system_error "Couldn't close object file $object_file: $!";
