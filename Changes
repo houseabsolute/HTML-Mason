@@ -26,6 +26,7 @@ change should not cause most people any problems.
 - All the modules included with Mason are now documented.
 - Various pieces of existing documentation have been tweaked and
 modified.
+- Added handle_cgi_object method to HTML::Mason::CGIHandler.
 
 [ BUG FIXES ]
 
@@ -33,6 +34,9 @@ modified.
 existed.  This caused ApacheHandler to send headers, which broke
 redirects, for example.
 - Fix broken Apache::Status page  (reported by Thomas A. Lowery).
+- The lexing code now handles some weird edge case errors in a better
+way.  One of these involved a component starting with a invalid block
+name like <%foo>.
 
 1.09_01  April 4, 2002
 
