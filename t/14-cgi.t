@@ -32,7 +32,9 @@ my $group = CGITest->new( name => 'cgi',
 
 #------------------------------------------------------------
 
-my $basic_header = "Content-Type: text/html${CGI::CRLF}${CGI::CRLF}";
+my $basic_header = "Content-Type: text/html";
+$basic_header .= '; charset=ISO-8859-1' if CGI->can('charset');
+$basic_header .= "${CGI::CRLF}${CGI::CRLF}";
 
 $group->add_test( name => 'basic',
 		  description => 'Test basic CGIHandler operation',
