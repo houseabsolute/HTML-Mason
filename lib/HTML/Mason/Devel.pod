@@ -1047,7 +1047,8 @@ used right at the top of a C<E<lt>%init%E<gt>> section:
     </%init>
 
 B<mc_cache_self> is built on top of B<mc_cache>, so it inherits all
-the expiration options described earlier.
+the expiration options described earlier. B<mc_cache_self> can also
+cache a component's return value; see the Commands manual for details.
 
 =head2 Guarantees (or lack thereof)
 

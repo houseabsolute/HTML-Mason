@@ -87,20 +87,33 @@ parameter, the time when the cache value was last written.
 
 =item mc_cache_self (... same as mc_cache options...)
 
-Uses mc_cache to cache the entire output of the current component.  It is typically
-used right at the top of an C<E<lt>%init%E<gt>> section:
+Uses mc_cache to cache the entire output and/or the return value of
+the current component.  It is typically used right at the top of an
+C<E<lt>%init%E<gt>> section.
+
+To cache the component's output:
 
     <%init>
         return if mc_cache_self(expire_in=>'3 hours'[, key=>'fookey']);
         ... <rest of init> ...
     </%init>
 
-The "return if" is necessary. mc_cache_self handles both the retrieve
-and store, so you can pass both kinds of options to it. See
-mc_cache for an explanation of options.
+To cache the component's return value:
+
+    <%init>
+        my ($cached,$retval) = mc_cache_self(expire_in=>'3 hours'[, key=>'fookey']);
+        return $retval if $cached;
+        ... <rest of init> ...
+    </%init>
+
+This only works with scalar and reference return values.
+
+mc_cache_self handles both the retrieve and store, so you can pass
+both kinds of options to it. See mc_cache for an explanation of
+options.
 
 mc_cache_self uses a bit of magic to accomplish everything in one
-line.  You don't really need to understand this, but if you're
+line.  You can use it without understanding it, but if you're
 curious, here's how it works:
 
 o A component foo calls mc_cache_self for the first time.
@@ -112,10 +125,10 @@ o foo again calls mc_cache_self; this time it returns 0 immediately.
 
 o foo goes about its business and generates content into the mc_cache_self buffer.
 
-o When control is returned to mc_cache_self, it stores the content in
-the cache and also outputs the content normally.  Finally
-mc_cache_self returns 1, which in turn causes foo to return
-immediately.
+o When control is returned to mc_cache_self, it stores the content and
+return value in the cache and also outputs the content normally.
+Finally mc_cache_self returns the list (1,retval) which in turn
+causes foo to return immediately.
 
 =item mc_caller ()
 

@@ -87,7 +87,7 @@ sub mc_cache
     check_request;
     my (%options) = @_;
     my $interp = $REQ->interp;
-    return undef if !$interp->use_data_cache;
+    return undef unless $interp->use_data_cache;
     $options{action} = $options{action} || 'retrieve';
     $options{key} = $options{key} || 'main';
     
@@ -121,8 +121,8 @@ sub mc_cache_self
     my (%options) = @_;
     
     my $interp = $REQ->interp;
-    return 0 if !$interp->use_data_cache;
-    return 0 if $REQ->{stack}->[0]->{in_cache_self_flag};
+    return undef unless $interp->use_data_cache;
+    return undef if $REQ->{stack}->[0]->{in_cache_self_flag};
     my (%retrieveOptions,%storeOptions);
     foreach (qw(key expire_if keep_in_memory busy_lock)) {
 	if (exists($options{$_})) {
@@ -135,25 +135,51 @@ sub mc_cache_self
 	}
     }
     my $result = mc_cache(action=>'retrieve',%retrieveOptions);
-    if (!defined($result)) {
+    my ($output,$retval);
+    
+    #
+    # See if our result is cached. Older versions of Mason only stored
+    # output, so if we get something that isn't a two-item listref,
+    # recompute anyway.
+    #
+    unless (defined($result) and ref($result) eq 'ARRAY' and @$result == 2) {
 	#
-	# Reinvoke the component and collect output in $result.
+	# Reinvoke the component. Collect output ($output) and return
+	# value ($retval).
 	#
+        $output = '';
 	my $lref = $REQ->{stack}->[0];
 	my %saveLocals = %$lref;
-	$lref->{sink} = sub { $result .= $_[0] };
+	$lref->{sink} = sub { $output .= $_[0] };
 	$lref->{in_cache_self_flag} = 1;
 	my $sub = $lref->{comp}->{code};
 	my %args = %{$lref->{args}};
-	&$sub(%args);
+	$retval = &$sub(%args);
 	$REQ->{stack}->[0] = {%saveLocals};
-	mc_cache(action=>'store',value=>$result,%storeOptions);
+
+	#
+	# Store output and return value as a two-item listref.
+	#
+	mc_cache(action=>'store',value=>[$output,$retval],%storeOptions);
     } else {
-	$REQ->call_hooks('start_primary');
-	$REQ->call_hooks('end_primary');
+	($output,$retval) = @$result;
+
+	#
+	# Not clear whether to call these hooks...Best guess is
+	# whether the component output anything. These may
+	# be going away soon anyway...
+	if ($output) {
+	    $REQ->call_hooks('start_primary');
+	    $REQ->call_hooks('end_primary');
+	}
     }
-    mc_out($result);
-    return 1;
+    mc_out($output);
+
+    #
+    # Return 1 (indicating the cache retrieval success) followed by
+    # the return value in case the caller is interested.
+    #
+    return (1,$retval);
 }
 
 sub mc_caller ()
