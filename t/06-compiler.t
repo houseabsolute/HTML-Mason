@@ -348,6 +348,46 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'subcomp_parse_error',
+		      description => 'test proper exception throwing for misnamed blocks',
+		      component => <<'EOF',
+<%subcomp .foo>
+ <% 5 %>
+</%subcomp>
+EOF
+		      expect_error => 'Unknown block',
+		      #expect_error => '.*',
+		    );
+
+#------------------------------------------------------------
+
+    # The following test goes into an infinite loop for me (Ken) under
+    # perl 5.6.1.  I can't seem to whittle it down any further.  This
+    # is so bizarre that it seems like it's got to be a perl bug.
+    # (Note that there *is* a syntax error here, but that shouldn't be
+    # causing an infinite loop).
+
+    $group->add_test( name => 'infinite_loop?',
+		      description => 'infinite lexer loop here?',
+		      component => <<'EOF',
+<%args>
+ $prev
+ $next
+ $i
+</%args>
+% (my $dir = $i->{dir}) =~ s,/orig,,;
+% (my $p = $r->uri) =~ s,/[^/]+$,/,;
+  <% $p %>"><% $dir %>
+  <% $i->{fileroot} %>
+  <% "foo">large</a
+ <% $i->{comment} %>
+EOF
+		      expect_error => 'Unknown block',
+		      #expect_error => '.*',
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
