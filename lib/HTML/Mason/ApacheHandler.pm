@@ -79,7 +79,12 @@ sub exec
 {
     my $self = shift;
     my $retval;
-    eval { $retval = $self->SUPER::exec(@_) };
+
+    {
+	# Remap $r->print to Mason's $m->print while executing request
+	local *Apache::print = sub { shift; $request->print(@_) };
+	eval { $retval = $self->SUPER::exec(@_) };
+    }
 
     if ($@) {
 	if (isa_mason_exception($@, 'TopLevelNotFound')) {
@@ -730,12 +735,7 @@ sub handle_request
     };
     $request->out_method($out_method);
 
-    my $retval;
-    {
-	# Remap $r->print to Mason's $m->print while executing request
-	local *Apache::print = sub { shift; $request->print(@_) };
-	$retval = $request->exec($comp_path, %args);
-    }
+    my $retval = $request->exec($comp_path, %args);
 
     # On a success code, send headers if they have not been sent.
     # On an error code, leave it to Apache to send the headers.
