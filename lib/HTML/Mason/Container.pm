@@ -26,7 +26,7 @@ use strict;
 # in the return value.  This lets the creator be totally ignorant of
 # the creation parameters of any objects it creates.
 
-use Params::Validate qw(:all);
+use Params::Validate qw(SCALAR);
 
 my %VALID_PARAMS = ();
 my %CONTAINED_OBJECTS = ();
@@ -93,8 +93,8 @@ sub get_contained_objects
 {
     my $class = ref($_[0]) || shift;
 
-    my %c = %{ $CONTAINED_OBJECTS{$class} };
-    
+    my %c = %{ $CONTAINED_OBJECTS{$class} || {} };
+
     no strict 'refs';
     foreach my $superclass (@{ "${class}::ISA" }) {
 	next unless exists $CONTAINED_OBJECTS{$superclass};
@@ -156,7 +156,7 @@ sub validation_spec
 {
     my $class = ref($_[0]) || shift;
 
-    my %p = %{ $VALID_PARAMS{$class} };
+    my %p = %{ $VALID_PARAMS{$class} || {} };
 
     no strict 'refs';
     foreach my $superclass (@{ "${class}::ISA" }) {
