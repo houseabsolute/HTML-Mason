@@ -28,7 +28,7 @@ $useless=>17
 </%args>
 </%def>
 
-% my $anon = $m->parser->make_component(script=>join("\n",'% my $adj = "flummoxed";','I am a <% $adj %> anonymous component.'));
+% my $anon = $m->interp->make_anonymous_component(comp=>join("\n",'% my $adj = "flummoxed";','I am a <% $adj %> anonymous component.'),name=>'anonymous');
 
 <% '-' x 60 %>
 
@@ -83,8 +83,8 @@ My source dir is /.../comps/component/comp_obj_test
 
 Subcomponent:
 Declared args:
-$useless=>17
 $crucial
+$useless=>17
 
 This is my first time.
 I am a subcomponent.
