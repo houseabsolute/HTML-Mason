@@ -1042,7 +1042,7 @@ sub _generate_html_docs
     require File::Temp;
 
     # should use something less sucky
-    require Pod::Simple::HTML;
+    require Pod::Html;
 
     my $html_dir = File::Spec->catdir( $target_dir, 'htdocs' );
 
