@@ -317,7 +317,7 @@ sub _startup
     my $pack = shift;
     return if $STARTED++; # Allows a subclass to call us, without running twice
 
-    if ( my $args_method = $pack->get_param('ArgsMethod') )
+    if ( my $args_method = $pack->_get_string_param('MasonArgsMethod') )
     {
 	if ($args_method eq 'CGI')
 	{
@@ -398,8 +398,13 @@ sub make_ah
 
     my $ah = $package->new(%p, $r);
     $AH{$key} = $ah if $key;
-    $AH_BY_LOCATION{ $r->location } = $ah
-        if $r && defined $r->location;
+
+    if ($r && defined $r->location)
+    {
+        my $location_key =
+            join $;, $r->location, $r->server->server_hostname;
+        $AH_BY_LOCATION{$location_key} = $ah;
+    }
 
     return $ah;
 }
@@ -428,12 +433,6 @@ sub _get_mason_params
 
     my $config = $r ? $r->dir_config : Apache->server->dir_config;
 
-    #
-    # We will accumulate all the string versions of the keys and
-    # values here for later use.
-    #
-    my %vals;
-
     # Get all params starting with 'Mason'
     my %candidates;
 
@@ -445,21 +444,29 @@ sub _get_mason_params
 	$candidates{$calm} = $config->{$studly};
     }
 
+    return {} unless %candidates;
+
+    #
+    # We will accumulate all the string versions of the keys and
+    # values here for later use.
+    #
+    my %vals;
+
     return ( \%vals,
              map { $_ =>
-                       scalar $self->get_param( $_, \%vals, \%candidates, $r )
-                   }
+                   scalar $self->get_param( $_, \%vals, \%candidates, $config, $r )
+                 }
              keys %candidates );
 }
 
 sub get_param {
     # Gets a single config item from dir_config.
 
-    my ($self, $key, $vals, $params, $r) = @_;
+    my ($self, $key, $vals, $candidates, $config, $r) = @_;
 
     $key = $self->calm_form($key);
 
-    my $spec = $self->allowed_params( $params || {} )->{$key}
+    my $spec = $self->allowed_params( $candidates || {} )->{$key}
         or error "Unknown config item '$key'";
 
     # Guess the default parse type from the Params::Validate validation spec
@@ -471,26 +478,26 @@ sub get_param {
         or error "Unknown parse type for config item '$key'";
 
     my $method = "_get_${type}_param";
-    return $self->$method('Mason'.$self->studly_form($key), $vals, $r);
+    return $self->$method('Mason'.$self->studly_form($key), $vals, $config, $r);
 }
 
 sub _get_string_param
 {
     my $self = shift;
-    return $self->_get_val(@_);
+    return $self->_get_val(0, @_);
 }
 
 sub _get_boolean_param
 {
     my $self = shift;
-    return $self->_get_val(@_);
+    return $self->_get_val(0, @_);
 }
 
 sub _get_code_param
 {
     my $self = shift;
     my $p = $_[0];
-    my $val = $self->_get_val(@_);
+    my $val = $self->_get_val(0, @_);
 
     return unless $val;
 
@@ -505,7 +512,7 @@ sub _get_code_param
 sub _get_list_param
 {
     my $self = shift;
-    my @val = $self->_get_val(@_);
+    my @val = $self->_get_val(1, @_);
     if (@val == 1 && ! defined $val[0])
     {
 	@val = ();
@@ -517,7 +524,7 @@ sub _get_list_param
 sub _get_hash_list_param
 {
     my $self = shift;
-    my @val = $self->_get_val(@_);
+    my @val = $self->_get_val(1, @_);
     if (@val == 1 && ! defined $val[0])
     {
         return {};
@@ -542,10 +549,26 @@ use constant
 
 sub _get_val
 {
-    my ($self, $p, $vals, $r) = @_;
+    my ($self, $is_list, $p, $vals, $config, $r) = @_;
 
-    my $c = $r ? $r : Apache->server;
-    my @val = HAS_TABLE_API ? $c->dir_config->get($p) : $c->dir_config($p);
+    my @val;
+    if ($is_list || !$config)
+    {
+        if ($config)
+        {
+            my $c = $r ? $r : Apache->server;
+            @val = HAS_TABLE_API ? $config->get($p) : $config->{$p};
+        }
+        else
+        {
+            my $c = $r ? $r : Apache->server;
+            @val = HAS_TABLE_API ? $c->dir_config->get($p) : $c->dir_config($p);
+        }
+    }
+    else
+    {
+        @val = exists $config->{$p} ? $config->{$p} : ();
+    }
 
     param_error "Only a single value is allowed for configuration parameter '$p'\n"
 	if @val > 1 && ! wantarray;
@@ -979,7 +1002,8 @@ sub handler %s
 
     if ( ! $ah && defined $r->location )
     {
-        $ah = $AH_BY_LOCATION{ $r->location };
+        my $key = join $;, $r->location, $r->server->server_hostname;
+        $ah = $AH_BY_LOCATION{$key};
     }
 
     $ah ||= $package->make_ah($r);
