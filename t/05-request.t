@@ -662,5 +662,43 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/subrequest2/autohandler',
+			 component => <<'EOF',
+I am the autohandler for <% $m->base_comp->name %>.
+% $m->call_next;
+<%flags>
+inherit => undef
+</%flags>
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/subrequest2/bar',
+			 component => <<'EOF',
+I am bar.
+EOF
+		       );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'subreq_exec_order',
+		      path => '/subrequest2/subreq_exec_order',
+		      call_path => '/subrequest2/subreq_exec_order',
+		      description => 'Test that output from a subrequest comes out when we expect it to.',
+		      component => <<'EOF',
+% $m->subexec('/request/subrequest2/bar');
+I am subreq_exec_order.
+EOF
+		      expect => <<'EOF',
+I am the autohandler for subreq_exec_order.
+I am the autohandler for bar.
+I am bar.
+I am subreq_exec_order.
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
