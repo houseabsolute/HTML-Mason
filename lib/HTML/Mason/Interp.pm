@@ -148,6 +148,16 @@ sub _initialize
 	    foreach (@paths) { $self->load($_) }
 	}
     }
+
+    #
+    # Add the default escape flags
+    #
+    foreach ( [ h => \&HTML::Mason::Tools::html_entities_escape ],
+              [ u => \&HTML::Mason::Tools::url_escape ],
+            )
+    {
+        $self->add_escape(@$_);
+    }
 }
 
 #
@@ -714,6 +724,44 @@ EOF
     $self->make_request(comp=>$comp, args=>$args, out_method=>\$out, %p)->exec;
 
     return $out;
+}
+
+sub add_escape
+{
+    my $self = shift;
+    my %p = @_;
+
+    while ( my ($name, $sub) = each %p )
+    {
+        param_error "Invalid escape name ($name)"
+            unless $name =~ /^\w+$/;
+
+        $self->{escapes}{$name} = $sub;
+    }
+}
+
+# XXX - not sure this is useful
+sub remove_escape
+{
+    my $self = shift;
+
+    delete $self->{escapes}{ shift() };
+}
+
+sub apply_escapes
+{
+    my $self = shift;
+    my $text = shift;
+
+    foreach my $flag (@_)
+    {
+        # XXX - handle missing escape better
+        next unless exists $self->{escapes}{$flag};
+
+        $text = $self->{escapes}{$flag}->($text);
+    }
+
+    return $text;
 }
 
 #
