@@ -94,9 +94,7 @@ __PACKAGE__->contained_objects
     (
      resolver => 'HTML::Mason::Resolver::File',
      compiler => 'HTML::Mason::Compiler::ToObject',
-     request  => { class => ( $ENV{MOD_PERL} ?
-			      'HTML::Mason::Request::ApacheHandler' :
-			      'HTML::Mason::Request' ),
+     request  => { class => ( 'HTML::Mason::Request' ),
 		   delayed => 1 },
     );
 
