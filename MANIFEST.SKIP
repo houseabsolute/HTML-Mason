@@ -3,7 +3,7 @@ ToClass.pm$
 Events.pm$
 
 # Stuff we create during the build process
-^t/.*\.pl
+^t/.*handler.*\.pl
 ^t/.*\.cgi
 ^t/httpd.*
 ^t/mason
