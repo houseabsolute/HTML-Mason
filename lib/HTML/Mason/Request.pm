@@ -269,7 +269,7 @@ sub cache_self
 #
 # Old synonym for comp.
 #
-sub call { $self->comp(@_) }
+sub call { shift->comp(@_) }
 
 sub call_next {
     my ($self,@extra_args) = @_;

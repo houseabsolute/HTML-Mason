@@ -584,14 +584,9 @@ sub handle_request_1
     $interp->set_global(r=>$r);
 
     #
-    # Execute request inside eval in case of decline
+    # Finally, execute request.
     #
-    my $retval = eval { $request->exec($comp, %args) };
-    if ($@) {
-	return 404 if $request->declined;
-	die $@;
-    }
-    return $retval;
+    return $request->exec($comp, %args);
 }
 
 sub simulate_debug_request

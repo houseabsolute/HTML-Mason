@@ -165,16 +165,6 @@ sub _initialize
     }
 }
 
-sub data_cache_filename
-{
-    my ($self,$path) = @_;
-    for ($path) {
-	s@^/@@;
-	s/([^\w\.\-\~])/sprintf('+%02x', ord $1)/eg;
-    }
-    return $self->data_cache_dir."/".$path;
-}
-
 #
 # Shorthand for various data subdirectories and files.
 #
@@ -224,8 +214,8 @@ sub check_reload_file {
 # 
 sub lookup {
     my ($self,$path) = @_;
-    my (@lookupInfo) = $self->resolver->lookup_path($path,$self);
-    return $lookupInfo[0];
+    my (@lookup_info) = $self->resolver->lookup_path($path,$self);
+    return $lookup_info[0];
 }
 
 #
@@ -237,42 +227,42 @@ sub load {
     my ($self,$path) = @_;
     my ($err,$maxfilemod,$objfile,$objfilemod);
     my (@objstat, $objisfile);
-    my $codeCache = $self->{code_cache};
+    my $code_cache = $self->{code_cache};
     my $resolver = $self->{resolver};
 
     #
     # Use resolver to look up component and get fully-qualified path.
     # Return undef if component not found.
     #
-    my (@lookupInfo) = $resolver->lookup_path($path,$self);
-    my $fqPath = $lookupInfo[0] or return undef;
+    my (@lookup_info) = $resolver->lookup_path($path,$self);
+    my $fq_path = $lookup_info[0] or return undef;
 
     #
     # If using reload file, assume that we are using object files and
     # have a cached subroutine or object file.
     #
     if ($self->{use_reload_file}) {
-	return $codeCache->{$fqPath}->{comp} if exists($codeCache->{$fqPath});
+	return $code_cache->{$fq_path}->{comp} if exists($code_cache->{$fq_path});
 
-	$objfile = $self->object_dir . $fqPath;
+	$objfile = $self->object_dir . $fq_path;
 	return undef unless (-f $objfile);   # component not found
 	
-	$self->write_system_log('COMP_LOAD', $fqPath);	# log the load event
+	$self->write_system_log('COMP_LOAD', $fq_path);	# log the load event
 	my $comp = $self->{parser}->eval_object_text(object_file=>$objfile, error=>\$err)
 	    or die "Error while loading '$objfile' at runtime:\n$err\n";
-	$comp->assign_runtime_properties($self,$fqPath);
+	$comp->assign_runtime_properties($self,$fq_path);
 	
-	$codeCache->{$fqPath}->{comp} = $comp;
+	$code_cache->{$fq_path}->{comp} = $comp;
 	return $comp;
     }
 
     #
     # Get last modified time of source.
     #
-    my $srcmod = $resolver->get_last_modified(@lookupInfo);
+    my $srcmod = $resolver->get_last_modified(@lookup_info);
     
     if ($self->{use_object_files}) {
-	$objfile = $self->object_dir . $fqPath;
+	$objfile = $self->object_dir . $fq_path;
 	@objstat = stat $objfile;
 	$objisfile = -f _;
     }
@@ -281,15 +271,15 @@ sub load {
     # If code cache contains an up to date entry for this path,
     # use the cached sub.
     #
-    if (exists($codeCache->{$fqPath}) and $codeCache->{$fqPath}->{lastmod} >= $srcmod) {
-	return $codeCache->{$fqPath}->{comp};
+    if (exists($code_cache->{$fq_path}) and $code_cache->{$fq_path}->{lastmod} >= $srcmod) {
+	return $code_cache->{$fq_path}->{comp};
     } else {
 	$objfilemod = (defined($objfile) and $objisfile) ? $objstat[9] : 0;
 	
 	#
 	# Load the component from source or object file.
 	#
-	$self->write_system_log('COMP_LOAD', $fqPath);	# log the load event
+	$self->write_system_log('COMP_LOAD', $fq_path);	# log the load event
 
 	my $comp;
 	my $parser = $self->{parser};
@@ -301,9 +291,9 @@ sub load {
 	    update_object:
 	    if ($objfilemod < $srcmod) {
 		my @newfiles;
-		my @params = $resolver->get_source_params(@lookupInfo);
+		my @params = $resolver->get_source_params(@lookup_info);
 		my $objText = $parser->parse_component(@params,error=>\$err)
-		    or die sprintf("Error during compilation of %s:\n%s\n",$resolver->get_source_description(@lookupInfo),$err);
+		    or die sprintf("Error during compilation of %s:\n%s\n",$resolver->get_source_description(@lookup_info),$err);
 		$parser->write_object_file(object_text=>$objText, object_file=>$objfile);
 	    }
 	    $comp = $parser->eval_object_text(object_file=>$objfile, error=>\$err);
@@ -321,17 +311,17 @@ sub load {
 	    #
 	    # No object files. Load component directly into memory.
 	    #
-	    my @params = $resolver->get_source_params(@lookupInfo);
+	    my @params = $resolver->get_source_params(@lookup_info);
 	    $comp = $self->parser->make_component(@params,error=>\$err)
-		or die sprintf("Error during compilation of %s:\n%s\n",$resolver->get_source_description(@lookupInfo),$err);
+		or die sprintf("Error during compilation of %s:\n%s\n",$resolver->get_source_description(@lookup_info),$err);
 	}
-	$comp->assign_runtime_properties($self,$fqPath);
+	$comp->assign_runtime_properties($self,$fq_path);
 	
 	#
 	# Cache code in memory
 	#
-	$codeCache->{$fqPath}->{lastmod} = $srcmod;
-	$codeCache->{$fqPath}->{comp} = $comp;
+	$code_cache->{$fq_path}->{lastmod} = $srcmod;
+	$code_cache->{$fq_path}->{comp} = $comp;
 	return $comp;
     }
 }

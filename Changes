@@ -22,7 +22,7 @@ convert0.8.pl handles this change. L{Devel/autohandlers}
 (suggested by Ewan Edwards and others) L{Admin/Component roots (multiple)}
 - Output mode parameter was moved from ah->output_mode to
 interp->out_mode, to make it independent of mod_perl.
-ah->output_mode still works. L{Interp/out_mode}
+ah->output_mode still works. L{Interp/item_out_mode}
 - Simplified HTTP header behavior. Headers are sent at the end of the
 request (in batch mode) or just before the first non-whitespace output
 (in stream mode). suppress_http_header no longer needed.
@@ -41,7 +41,7 @@ in the stack. (suggested by Lee Semel) L{Request/item_caller_args}
 - Added $m->decline, which passes control to the next dhandler.
 (suggested by Chuck O'Donnell) L{Request/item_decline}
 - Augmented $m->cache_self to cache return values as well as output.
-(suggested by Jon Frisby)
+(suggested by Jon Frisby) L{Request/item_cache_self}
 - Changed data cache filenames from colon-separated to url-encode
 style for Win32 compatibility. (submitted by Ken Williams)
 L{Admin/data_caching}

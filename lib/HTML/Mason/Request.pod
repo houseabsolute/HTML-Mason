@@ -53,7 +53,7 @@ becomes the HTTP status code.
 =item cache ([action=>'retrieve|store|expire|keys'], [key=>name],
 [value=>data], [keep_in_memory=>0|1], [expire options...])
 
-$m->cache() lets you store and retrieve the results
+C<$m-E<gt>cache> lets you store and retrieve the results
 of computation for improved performance. Each component has its own
 data cache for storing one or more key/value pairs. The cache is
 implemented as a DBM database. See the L<Devel/data caching>
@@ -100,9 +100,11 @@ o I<expire_if>: calls a given anonymous subroutine and expires if the
 subroutine returns a non-zero value. The subroutine is called with one
 parameter, the time when the cache value was last written.
 
+=for html <a name="item_cache_self">
+
 =item cache_self (... same as $m->cache options...)
 
-Uses $m->cache to cache the entire output and/or the return value of
+Uses C<$m-E<gt>cache> to cache the entire output and/or the return value of
 the current component.  It is typically used right at the top of an
 C<E<lt>%init%E<gt>> section.
 
@@ -123,29 +125,27 @@ To cache the component's return value:
 
 This only works with scalar and reference return values.
 
-$m->cache_self handles both the retrieve and store, so you can pass
-both kinds of options to it. See $m->cache for an explanation of
+C<$m-E<gt>cache_self> handles both the retrieve and store, so you can pass
+both kinds of options to it. See C<$m-E<gt>cache> for an explanation of
 options.
 
-$m->cache_self uses a bit of magic to accomplish everything in one
+C<$m-E<gt>cache_self> uses a bit of magic to accomplish everything in one
 line.  You can use it without understanding it, but if you're
 curious, here's how it works:
 
-o A component foo calls $m->cache_self for the first time.
+o A component foo calls C<$m-E<gt>cache_self> for the first time.
 
-o $m->cache_self sees that the cache is empty and calls foo again
+o C<$m-E<gt>cache_self> sees that the cache is empty and calls foo again
 recursively, with a STORE option to capture its content into a buffer.
 
-o foo again calls $m->cache_self, which immediately returns 0 this time.
+o foo again calls C<$m-E<gt>cache_self> which immediately returns 0 this time.
 
-o foo goes about its business and generates content into the $m->cache_self buffer.
+o foo goes about its business and generates content into the C<$m-E<gt>cache_self> buffer.
 
-o When control is returned to $m->cache_self, it stores the content and
+o When control is returned to C<$m-E<gt>cache_self>, it stores the content and
 return value in the cache and also outputs the content normally.
-Finally $m->cache_self returns the list (retval,1) which in turn
+Finally C<$m-E<gt>cache_self> returns the list (retval,1) which in turn
 causes foo to return immediately.
-
-=for html <a name="callers">
 
 =item caller_args
 
@@ -154,6 +154,8 @@ the specified stack level. e.g.
 
     $m->caller_args(0)   # arguments passed to current component
     $m->caller_args(-1)  # arguments passed to top-level component
+
+=for html <a name="callers">
 
 =item callers
 
@@ -171,7 +173,7 @@ component object at that index in the list. e.g.
 Calls the component intercepted by an autohandler.  With no arguments,
 the original arguments are passed to the component.  Any arguments
 specified here serve to augment and override (in case of conflict) the
-original arguments. Works like $m->comp in terms of return value and
+original arguments. Works like C<$m-E<gt>comp> in terms of return value and
 scalar/list context.  See the L<Devel/autohandlers> section of the
 I<Component Developer's Guide> for examples.
 
@@ -184,9 +186,9 @@ object.
 
 Components work exactly like Perl subroutines in terms of return
 values and context. A component can return any type of value, which is
-then returned from the $m->comp call.
+then returned from the C<$m-E<gt>comp> call.
 
-The <& &> tag provides a convenient shortcut for $m->comp.
+The <& &> tag provides a convenient shortcut for C<$m-E<gt>comp>.
 
 =item comp_exists (comp_path)
 
@@ -207,7 +209,9 @@ Returns the current component object.
 
 Used from a top-level component or dhandler, this method aborts the
 current request and restarts with the next applicable dhandler
-up the tree. If no dhandler is available, returns NOT_FOUND.
+up the tree. If no dhandler is available, an error occurs.
+This method bears no relation to the Apache DECLINED status
+except in name.
 
 =item depth
 
@@ -242,7 +246,7 @@ component directory if no static file root is defined.
 
 =item file_root
 
-Returns the static file root, used by $m->file() to resolve relative
+Returns the static file root, used by C<$m-E<gt>file> to resolve relative
 filenames.
 
 =item flush_buffer
@@ -259,11 +263,11 @@ Returns the Interp object associated with this request.
 =item out (string)
 
 Print the given I<string>. Rarely needed, since normally all HTML is just
-placed in the component body and output implicitly. $m->out is useful
+placed in the component body and output implicitly. C<$m-E<gt>out> is useful
 if you need to output something in the middle of a Perl block.
 
-$m->out() should be used instead of C<print> or C<$r-E<gt>print>,
-since $m->out() may be redirected or buffered depending on the
+C<$m-E<gt>out> should be used instead of C<print> or C<$r-E<gt>print>,
+since C<$m-E<gt>out> may be redirected or buffered depending on the
 current state of the interpreter.
 
 =item parser
@@ -276,7 +280,7 @@ Given a I<comp_path>, returns the corresponding absolute component path.
 
 =item scomp
 
-Like C<$m->comp>, but returns the component output as a string
+Like C<$m-E<gt>comp>, but returns the component output as a string
 instead of printing it. (Think sprintf versus printf.) In scalar
 context the component's return value is discarded. In array context
 the component output and return value are both returned in a
@@ -287,7 +291,7 @@ two-item list.
 Returns the interpreter's notion of the current time in Perl time()
 format (number of seconds since the epoch).
 
-By using $m->time() rather than calling time() directly, you enable
+By using C<$m-E<gt>time> rather than calling time() directly, you enable
 the option of previewer or port-based time/date simulations. e.g.
 a port that looks one day into the future.
 

@@ -10,6 +10,7 @@ require Exporter;
 @EXPORT_OK = qw();
 
 use File::Basename;
+use HTML::Mason::Tools qw(compress_path);
 use strict;
 
 sub is_file_based { 1 }
@@ -23,7 +24,7 @@ sub source_dir {
 }
 sub title {
     my ($self) = @_;
-    return $self->path . ($self->{source_root_key} ? " [".$self->{source_root_key}."]" : "");
+    return $self->path . ($self->{source_root_key} ? " [".lc($self->{source_root_key})."]" : "");
 }
 sub name { return basename($_[0]->path) }
 sub dir_path {
@@ -43,7 +44,7 @@ sub assign_runtime_properties {
 	    or die "Assert error: could not split FQ path ($fq_path) as expected";
 	foreach my $lref (@$comp_root) {
 	    my ($key,$root) = @$lref;
-	    if ($self->{source_root_key} eq $key) {
+	    if ($self->{source_root_key} eq uc($key)) {
 		$self->{source_root} = $root;
 	    }
 	}

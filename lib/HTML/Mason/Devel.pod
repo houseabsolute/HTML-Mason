@@ -236,7 +236,7 @@ Mason provides an object API for components, allowing you to query a
 component's various asociated files, arguments, etc. For a description
 of all methods see B<L<HTML::Mason::Component>>.  Typically you get a
 handle on a component object from request methods like
-C<$m->current_comp> and C<$m->fetch_comp>. 
+C<$m-E<gt>current_comp> and C<$m-E<gt>fetch_comp>. 
 
 Note that for many basic applications all you'll want to do with
 components is call them, for which no object method is needed. See
@@ -297,17 +297,18 @@ Here are some examples:
     # begin with a letter or number; delimit with () to remedy this
     <& (int(rand(2)) ? 'thiscomp' : 'thatcomp'), id=>123 &>
 
-Several request methods also exist for calling components.  C<$m->comp>
+Several request methods also exist for calling components.  C<$m-E<gt>comp>
 performs the equivalent action to <& &>:
 
     $m->comp('/shared/masthead', color=>'salmon');
 
-C<$m->scomp> is like the sprintf version of C<$m->comp>: it returns
+C<$m-E<gt>scomp> is like the sprintf version of C<$m-E<gt>comp>: it returns
 the component output, allowing the caller to examine and modify it
 before printing:
 
     my $masthead = $m->scomp('/shared/masthead', color=>'salmon');
     $masthead =~ ...;
+    $m->out($masthead);
 
 =head2 Components that compute values
 
@@ -326,7 +327,7 @@ they can return values and even understand scalar/list context.
 
 The <& &> notation only calls a component for its side-effect, and
 discards its return value, if any.  To get at the return value of a
-component, use the $m->comp command:
+component, use the C<$m-E<gt>comp> command:
 
     % if ($m->comp('is_netscape')) {
     Welcome, Netscape user!
@@ -389,7 +390,7 @@ In this case Mason constructs the following search path:
 The found dhandler would read "/LocalNews/Story1" from
 C<$r-E<gt>path_info> and use it as a retrieval key into a
 database of stories. Optionally, the Mason command
-C<$m->dhandler_arg()> returns the same path_info stripped of the
+C<$m-E<gt>dhandler_arg> returns the same path_info stripped of the
 leading slash ("LocalNews/locStory1.html").
 
 Here's how a simple /newsfeeds/dhandler might look:
@@ -400,7 +401,7 @@ Here's how a simple /newsfeeds/dhandler might look:
     <& footer &>
     
     <%init>
-    my $arg = $m->dhandler_arg();               # get rest of path
+    my $arg = $m->dhandler_arg;                # get rest of path
     my ($section,$story) = split("/",$arg);    # split out pieces
     my $sth = $DBH->prepare
 	("SELECT headline,body FROM news WHERE section='$section' AND story='$story'");
@@ -413,7 +414,7 @@ turn off dhandlers entirely, with the L<Interp/dhandler_name> Interp
 parameter.
 
 A component or dhandler that does not want to handle a particular request may
-defer control to the next dhandler by calling $m->decline.
+defer control to the next dhandler by calling C<$m-E<gt>decline>.
 
 =head2 autohandlers
 
@@ -425,12 +426,12 @@ global variables.
 Autohandlers are directory based.  When Mason determines the top-level
 component, it checks that directory for a component called
 "autohandler"; if it exists, it is called instead.  After performing
-its actions, the autohandler typically calls C<$m->call_next> to
+its actions, the autohandler typically calls C<$m-E<gt>call_next> to
 transfer control to the original intended component.
 
-C<$m->call_next> works just like C<$m->comp> except that the component path
+C<$m-E<gt>call_next> works just like C<$m-E<gt>comp> except that the component path
 and arguments are implicit. You can pass additional arguments to
-C<$m->call_next>; these are merged with the original arguments, taking
+C<$m-E<gt>call_next>; these are merged with the original arguments, taking
 precedence in case of conflict.  This allows you, for example, to
 override arguments passed in the URL.
 
@@ -464,9 +465,9 @@ hostname to relative image URLs:
     s{(<img\s+src=\")/} {$1http://images.mysite.com}ig;
     </%filter>
 
-Most of the time autohandler can simply call C<$m->call_next> without
+Most of the time autohandler can simply call C<$m-E<gt>call_next> without
 needing to know what component was called. However, should you need
-it, the component object is available from C<$m->fetch_next>.  For
+it, the component object is available from C<$m-E<gt>fetch_next>.  For
 example, here we base the page title partly on the component name:
 
     <HTML>
@@ -476,13 +477,13 @@ example, here we base the page title partly on the component name:
     </HTML>
     
     <%init>
-    my $comp = $m->fetch_next();
+    my $comp = $m->fetch_next;
     my $section = ($comp->name eq 'mktg.html' ? 'Marketing' : ...);
     </%init>
 
-C<$m->fetch_next> is also useful for calling the component manually,
+C<$m-E<gt>fetch_next> is also useful for calling the component manually,
 e.g. if you want to suppress some original arguments or if you want
-to use C<$m->scomp> to store and process the output.
+to use C<$m-E<gt>scomp> to store and process the output.
 
 By default autohandlers apply only to the current directory, not to
 its subdirectories.  The Mason administrator can turn on the flag
@@ -769,7 +770,7 @@ etc. (The only prohibited tag is another C<E<lt>%defE<gt>>, but this will be
 supported eventually).
 
 The I<name> consists of characters in the set C<[A-Za-z0-9._-]>. To
-call a subcomponent simply use its name in <& &> or C<$m->comp>. A
+call a subcomponent simply use its name in <& &> or C<$m-E<gt>comp>. A
 subcomponent can only be seen from its parent component.
 
 If you define a subcomponent with the same name as a file-based
@@ -842,7 +843,7 @@ Useful, for example, when documenting Mason itself from a component:
     </%text>
 
 This works for almost everything, but doesn't let you output
-</%text> itself! When all else fails, use C<$m->out()>:
+</%text> itself! When all else fails, use C<$m-E<gt>out>:
 
     %$m->out('The tags are <%text> and </%text>.');
 
@@ -888,7 +889,7 @@ line.
 
 =head1 DATA CACHING
 
-Mason's C<$m->cache()> and C<$m->cache_self()> methods let components
+Mason's C<$m-E<gt>cache> and C<$m-E<gt>cache_self> methods let components
 save and retrieve the results of computation for improved performance.
 Anything may be cached, from a block of HTML to a complex data structure.
 
@@ -903,7 +904,7 @@ B<L<HTML::Mason::Admin>> for more information.
 
 =head2 Basic Usage
 
-Here's the typical usage of $m->cache:
+Here's the typical usage of C<$m-E<gt>cache>:
 
   my $result = $m->cache(action=>'retrieve');
   if (!defined($result)) {
@@ -911,15 +912,15 @@ Here's the typical usage of $m->cache:
       $m->cache(action=>'store', value=>$result);
   }
 
-The first $m->cache call attempts to retrieve this component's cache
+The first C<$m-E<gt>cache> call attempts to retrieve this component's cache
 value. If the value is available it is placed in C<$result>. If the
 value is not available, C<$result> is computed and stored in the
-cache by the second $m->cache call.
+cache by the second C<$m-E<gt>cache> call.
 
-The default action for $m->cache is 'retrieve', so the first line can
+The default action for C<$m-E<gt>cache> is 'retrieve', so the first line can
 be written as
 
-  my $result = $m->cache();
+  my $result = $m->cache;
 
 =head2 Multiple Keys/Values
 
@@ -986,7 +987,7 @@ Example:
 (e.g. a shell command or web interface is responsible for explicitly
 expiring the item) To expire an item from a Perl script, for any
 component, use B<access_data_cache>. It takes the same arguments as
-$m->cache plus one additional argument, cache_file.  See the
+C<$m-E<gt>cache> plus one additional argument, cache_file.  See the
 administration manual for details on where cache files are stored and
 how they are named.
 
@@ -1066,7 +1067,7 @@ might rename it to "foo_main" and put this component in its place:
     <% $foo_out %>
     <%init>
         my $foo_out;
-        if (!defined ($foo_out = $m->cache())) {
+        if (!defined ($foo_out = $m->cache)) {
             $m->comp('foo_main', STORE=>\$foo_out);
             $m->cache(action=>'store',
                   expire_in=>'3 hours', value=>$foo_out);
@@ -1074,7 +1075,7 @@ might rename it to "foo_main" and put this component in its place:
     </%init>
 
 This works, but is cumbersome. Mason offers a better shortcut: the
-B<$m->cache_self()> command that lets a component cache it's own
+C<$m-E<gt>cache_self> command that lets a component cache it's own
 output and eliminates the need for a dummy component. It is typically
 used right at the top of a C<E<lt>%init%E<gt>> section:
 
@@ -1083,8 +1084,8 @@ used right at the top of a C<E<lt>%init%E<gt>> section:
         ... <rest of init> ...
     </%init>
 
-B<$m->cache_self> is built on top of B<$m->cache>, so it inherits all
-the expiration options described earlier. B<$m->cache_self> can also
+C<$m-E<gt>cache_self> is built on top of C<$m-E<gt>cache>, so it inherits all
+the expiration options described earlier. C<$m-E<gt>cache_self> can also
 cache a component's return value; see the reference for details.
 
 =head2 Guarantees (or lack thereof)
@@ -1155,7 +1156,7 @@ This command allows you to filter both the output and the return value
 of the current component. It is fairly advanced; for most purposes the
 C<E<lt>%filterE<gt>> tag above will be sufficient and simpler.
 
-$m->call_self takes two arguments.  The first is a scalar reference and
+C<$m-E<gt>call_self> takes two arguments.  The first is a scalar reference and
 will be populated with the component output.  The second is either a
 scalar or list reference and will be populated with the component
 return value; the type of reference determines whether
@@ -1163,7 +1164,7 @@ the component will be called in scalar or list context. Both of these
 arguments are optional; you may pass undef if you don't care about one
 of them.
 
-$m->call_self acts like a fork() in the sense that it will return twice
+C<$m-E<gt>call_self> acts like a fork() in the sense that it will return twice
 with different values.  When it returns 0, you allow control to pass
 through to the rest of your component.  When it returns 1, that means
 the component has finished and you can begin filtering the output
@@ -1171,7 +1172,7 @@ and/or return value. (Don't worry, it doesn't really do a fork! See
 next section for explanation.)
 
 The following examples would generally appear at the top of a C<E<lt>%initE<gt>>
-section.  Here is a no-op $m->call_self that leaves the output and
+section.  Here is a no-op C<$m-E<gt>call_self> that leaves the output and
 return value untouched:
 
     if ($m->call_self(my \$output, my \$retval)) {  # assumes Perl 5.005 or greater
@@ -1188,7 +1189,7 @@ the original and the final return value.
         return;
     }
 
-$m->call_self can even convert output to a return value or vice versa.
+C<$m-E<gt>call_self> can even convert output to a return value or vice versa.
 In the next component we provide a nice friendly format for
 non-programmers to represent data with, and use a filter to construct
 and return a corresponding Perl data structure from it:
@@ -1214,20 +1215,20 @@ Now we can get a list of hashes directly from this component.
 
 =head2 How filtering works
 
-$m->call_self (and C<E<lt>%filterE<gt>>, which is built on it) uses a bit of
+C<$m-E<gt>call_self> (and C<E<lt>%filterE<gt>>, which is built on it) uses a bit of
 magic to accomplish everything in one line.  If you're curious, here's
 how it works:
 
-o A component foo calls $m->call_self for the first time.
+o A component foo calls C<$m-E<gt>call_self> for the first time.
 
-o $m->call_self sets an internal flag and calls foo again recursively,
+o C<$m-E<gt>call_self> sets an internal flag and calls foo again recursively,
 changing the output stream to capture content into a buffer.
 
-o foo again calls $m->call_self which, seeing the flag, returns 0 immediately.
+o foo again calls C<$m-E<gt>call_self> which, seeing the flag, returns 0 immediately.
 
-o foo goes about its business and generates content into the $m->call_self buffer.
+o foo goes about its business and generates content into the C<$m-E<gt>call_self> buffer.
 
-o When control is returned to $m->call_self, it places the content
+o When control is returned to C<$m-E<gt>call_self>, it places the content
 and return value in the references provided, and returns 1.
 
 =head1 SENDING HTTP HEADERS
@@ -1532,7 +1533,7 @@ Most Mason servers operate in "batch" mode, which means that
 output is stored in a Mason buffer until the end of the request. Output
 sent via print and $r->print, however, skips the Mason buffer and goes
 directly to the client. This will result in output being printed out
-of order. Always use $m->out instead of print/$r->print; it does the
+of order. Always use C<$m-E<gt>out> instead of print/$r->print; it does the
 right thing with regards to Mason buffering.
 
 =item Do not call $r->content or "new CGI"

@@ -24,7 +24,7 @@ use strict;
 # With a single component root, the fully-qualified path is just
 # the component path. With multiple component roots, we search
 # through each root in turn, and the fully-qualified path is
-# root key + component path.
+# uc(root key) + component path.
 #
 sub lookup_path {
     my ($self,$path,$interp) = @_;
@@ -36,6 +36,7 @@ sub lookup_path {
     } elsif (ref($comp_root) eq 'ARRAY') {
 	foreach my $lref (@$comp_root) {
 	    my ($key,$root) = @$lref;
+	    $key = uc($key);   # Always make key uppercase in fqpath
 	    my $srcfile = $root . $path;
 	    my @srcstat = stat $srcfile;
 	    return ("/$key$path", $srcfile, $srcstat[9]) if (-f _);

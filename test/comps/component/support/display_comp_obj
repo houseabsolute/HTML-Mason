@@ -25,10 +25,12 @@ Including one called <% $comp->subcomps($subkeys[0])->name %>.
 My title is <% $comp->title =~ /anon/ ? '[anon something]' : $comp->title %>.
 
 % if (defined($comp->cache_file)) {
-Got a cache file!
+%   my ($subfile) = ($comp->cache_file =~ m{(data/cache/.*?)$});
+My cache file is /.../<% $subfile %>
 % }
 % if (defined($comp->object_file)) {
-Got an object file!
+%   my ($subfile) = ($comp->object_file =~ m{(data/obj/.*?)$});
+My object file is /.../<% $subfile %>
 % }
 % if (defined($comp->path)) {
 My path is <% $comp->path %>.
@@ -37,12 +39,12 @@ My path is <% $comp->path %>.
 My fq_path is <% $comp->fq_path =~ /anon/ ? '[anon something]' : $comp->fq_path %>.
 % }
 % if ($comp->is_file_based and defined($comp->source_file)) {
-%   my ($subdir) = ($comp->source_file =~ m{((alt_root|comps)/.*?)$});
-My source file is .../<% $subdir %>
+%   my ($subfile) = ($comp->source_file =~ m{((alt_root|comps)/.*?)$});
+My source file is /.../<% $subfile %>
 % }
 % if ($comp->is_file_based and defined($comp->source_dir)) {
-%   my ($subdir) = ($comp->source_dir =~ m{((alt_root|comps)/.*?)$});
-My source dir is .../<% $subdir %>
+%   my ($subfile) = ($comp->source_dir =~ m{((alt_root|comps)/.*?)$});
+My source dir is /.../<% $subfile %>
 % }
 
 <%args>

@@ -13,7 +13,7 @@ require 5.004;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw();
-@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs dumper_method paths_eq is_absolute_path make_absolute_path pkg_loaded pkg_installed);
+@EXPORT_OK = qw(read_file chop_slash html_escape url_escape url_unescape date_delta_to_secs dumper_method paths_eq is_absolute_path make_absolute_path compress_path pkg_loaded pkg_installed);
 
 use strict;
 use IO::File qw(!/^SEEK/);
@@ -143,6 +143,15 @@ sub make_absolute_path
     return $path;
 }
 
+sub compress_path
+{
+    my ($path) = @_;
+    for ($path) {
+	s@^/@@;
+	s/([^\w\.\-\~])/sprintf('+%02x', ord $1)/eg;
+    }
+    return $path;
+}
 
 no strict 'refs';
 

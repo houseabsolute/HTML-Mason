@@ -10,7 +10,7 @@ require Exporter;
 @EXPORT_OK = qw();
 
 use strict;
-use HTML::Mason::Tools qw(read_file);
+use HTML::Mason::Tools qw(read_file compress_path);
 use vars qw($AUTOLOAD);
 
 my %fields =
@@ -121,8 +121,8 @@ sub subcomps {
 #
 # Accessors for various files associated with component
 #
-sub object_file { my $self = shift; return ($self->persistent) ? ($self->interp->object_dir . "/" . $self->fq_path) : undef }
-sub cache_file { my $self = shift; return ($self->persistent) ? ($self->interp->data_cache_filename($self->fq_path)) : undef }
+sub object_file { my $self = shift; return ($self->persistent) ? ($self->interp->object_dir . $self->fq_path) : undef }
+sub cache_file { my $self = shift; return ($self->persistent) ? ($self->interp->data_cache_dir . "/" . compress_path($self->fq_path)) : undef }
 
 #
 # Returns source text stored at bottom of object file
