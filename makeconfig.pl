@@ -1,12 +1,5 @@
 use strict;
 
-my $dbmWarnMsg = <<EOF;
-==> WARNING: the DBM file format chosen for your system, %s, is
-inadequate for data caching due to size limitations. If you intend to
-use data caching we strongly recommend installing Berkley DB (DB_File)
-or GNU DBM (GDBM_File), which have no such limitations.
-EOF
-
 my $hiresWarnMsg = <<EOF;
 ==> Mason needs version 1.19, or later, of Time::HiRes in order to record
 microsecond time values in the system log. Since you do not seem to
@@ -29,29 +22,6 @@ my $confFile = <<EOF;
 # This is the global configuration file for HTML::Mason.
 
 \%HTML::Mason::Config = (
-    # Default cached tie class. Change this to tie cache files to
-    # something other than MLDBM.  Normally this should be left alone.
-    #
-    'default_cache_tie_class' => '%s',
-
-    # Automatic file extension used for the DBM format specified
-    # below.  For example, this is '' for DB_File and GDBM, '.db'
-    # for NDBM, and '.pag' for SDBM. Mason needs to know this so it
-    # can stat arbitrary DBM files.
-    #
-    'mldbm_file_ext'          => '%s',
-    
-    # The DBM format used by MLDBM. Ideally this will be one of
-    # DB_File or GDBM_File. The other formats (SDBM, ODBM, NDBM) are
-    # inadequate for data caching purposes due to size limitations.
-    #
-    'mldbm_use_db'            => '%s',
-	
-    # The serializer used by MLDBM. Currently can be set to one of
-    # Data::Dumper, Storable, or FreezeThaw.
-    #
-    'mldbm_serializer'        => '%s',
-
     # Do we have the XS version of Data::Dumper?
     #
     'use_data_dumper_xs'      => %d,
@@ -104,38 +74,6 @@ sub make_config
     print (($err) ? "not found." : (!defined(%HTML::Mason::Config)) ? "old-style Config.pm found." : "found.");
     print "\n";
     my %c = %HTML::Mason::Config;
-    
-    $c{default_cache_tie_class} ||= 'MLDBM';
-
-    my $val;
-    if (!defined($c{mldbm_use_db})) {
-	if (defined($MLDBM::UseDB) && $MLDBM::UseDB !~ /^SDBM|ODBM|NDBM/) {
-	    $val = $MLDBM::UseDB;
-	} else {
-	    print "\nSearching for DBM packages...";
-	    foreach (qw(GDBM_File DB_File NDBM_File SDBM_File ODBM_File)) {
-		if (have_pkg($_)) {
-		    print "found $_.\n";
-		    $val = $_;
-		    last;
-		}
-	    }
-	    if (!$val) {
-		print "failed! Assuming SDBM.\n";
-		$val = 'SDBM_File';
-	    }
-	}
-	if ($val =~ /^(SDBM|ODBM|NDBM)_File$/) {
-	    printf ("\n$dbmWarnMsg",$val);
-	}
-	$c{mldbm_use_db} = $val;
-    }
-    $c{mldbm_file_ext} = '';
-    $c{mldbm_file_ext} ||= {NDBM_File=>'.db', SDBM_File=>'.pag'}->{$c{mldbm_use_db}};
-    
-    if (!defined($c{mldbm_serializer})) {
-	$c{mldbm_serializer} = $MLDBM::Serializer || 'Data::Dumper';
-    }
 
     if (!defined($c{use_data_dumper_xs})) {
 	print "Checking for Data::Dumper->Dumpxs...";

@@ -5,11 +5,6 @@ require './makeconfig.pl';
 
 # These are required modules.
 
-chk_version(MLDBM => '2.0') or
-    warn  "\n"
-	. "*** Mason requires version 2.0, or later, of MLDBM\n"
-	. "    from CPAN/modules/by-module/MLDBM-x.x.tar.gz\n\n";
-
 chk_version(Data::Dumper => '2.08') or
     warn  "\n"
 	. "*** Mason requires version 2.08, or later, of Data::Dumper\n"
