@@ -553,7 +553,7 @@ C<lex> method and passing itself as the C<compiler> parameter.  The
 lexer then calls various methods in the compiler as it parses the
 component source.
 
-=head1 PARAMETERS TO THE new() CONTRUCTOR
+=head1 PARAMETERS TO THE new() CONSTRUCTOR
 
 =over 4
 
