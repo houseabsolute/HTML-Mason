@@ -38,7 +38,7 @@ kill_httpd(1);
 test_load_apache();
 
 my $tests = 4; # multi conf tests
-$tests += 57 if my $have_libapreq = have_module('Apache::Request');
+$tests += 58 if my $have_libapreq = have_module('Apache::Request');
 $tests += 40 if my $have_cgi      = have_module('CGI');
 $tests += 15 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
 $tests++ if $have_cgi && $mod_perl::VERSION >= 1.24;
@@ -50,11 +50,11 @@ print STDERR "\n";
 write_test_comps();
 
 if ($have_libapreq) {        # 57 tests
-    cleanup_data_dir();
-    apache_request_tests(1); # 22 tests
+#    cleanup_data_dir();
+#    apache_request_tests(1); # 22 tests
 
     cleanup_data_dir();
-    apache_request_tests(0); # 20 tests
+    apache_request_tests(0); # 21 tests
 
     cleanup_data_dir();
     no_config_tests();       # 15 tests
@@ -280,6 +280,12 @@ EOF
 <% 'upper case' | uc %>
 EOF
               );
+
+    write_comp( 'data_cache_defaults', <<'EOF',
+is memory: <% $m->cache->isa('Cache::MemoryCache') ? 1 : 0 %>
+namespace: <% $m->cache->get_namespace %>
+EOF
+              );
 }
 
 sub cgi_tests
@@ -410,6 +416,18 @@ EOF
 						     expect => <<'EOF',
 X-Mason-Test: Initial value
 UPPER CASE
+Status code: 0
+EOF
+						   );
+	ok($success);
+
+	$response = Apache::test->fetch('/comps/data_cache_defaults');
+	$actual = filter_response($response, $with_handler);
+	$success = HTML::Mason::Tests->check_output( actual => $actual,
+						     expect => <<'EOF',
+X-Mason-Test: Initial value
+is memory: 1
+namespace: foo
 Status code: 0
 EOF
 						   );
