@@ -22,7 +22,7 @@ given component.  Again, this is a feature added in 1.09_01 so this
 change should not cause most people any problems.
 - Renamed CGIHandler's handle_cgi method to handle_comp.
 - Removed the dev_dirs feature from CGIHandler.
-- The default component root outside when not using ApacheHandler or
+- The default component root when not using ApacheHandler or
 CGIHandler is now the current working directory at the time the
 HTML::Mason::Resolver::File class is loaded.
 
