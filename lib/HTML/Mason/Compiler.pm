@@ -485,7 +485,7 @@ sub component_call
     my %p = @_;
 
     my $call = $p{call};
-    for ($call) { s/^\s+//; s/\s+$//; }
+    for ($call) { s/^ +//; s/ +$//; }
     if ( $call =~ m,^[\w/.],)
     {
 	my $comma = index($call, ',');
@@ -494,7 +494,7 @@ sub component_call
 	$call = "'$comp'" . substr($call, $comma);
     }
 
-    my $code = "\$m->comp( $call\n );\n";
+    my $code = "\$m->comp( $call );\n";
     eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
     compiler_error $@ if $@;
 
