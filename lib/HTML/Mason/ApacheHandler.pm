@@ -113,10 +113,14 @@ use vars qw($VERSION);
 
 $VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
 
-my %valid_params = 
+my %valid_params =
     (
      apache_status_title   => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason status' },
-     args_method           => { parse => 'string',  type => SCALAR,       default => 'mod_perl' },
+     args_method           => { parse => 'string',  type => SCALAR,       default => 'mod_perl',
+			        callbacks =>
+				{ "must be either 'CGI' or 'mod_perl'" =>
+				  sub { $_[0] =~ /^(?:CGI|mod_perl)$/ } }
+                              },
      auto_send_headers     => { parse => 'boolean', type => SCALAR|UNDEF, default => 1 },
      compiler_class        => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason::Compiler::ToObject'},
      debug_dir_config_keys => { parse => 'list',    type => ARRAYREF,     optional => 1 },
@@ -125,12 +129,16 @@ my %valid_params =
      debug_mode            => { parse => 'string',  type => SCALAR,       optional => 1 },
      debug_perl_binary     => { parse => 'string',  type => SCALAR,       optional => 1 },
      decline_dirs          => { parse => 'boolean', type => SCALAR|UNDEF, default => 1 },
-     error_mode            => { parse => 'string',  type => SCALAR,       default => 'html' },
+     error_mode            => { parse => 'string',  type => SCALAR,       default => 'html',
+				callbacks =>
+				{ "must be one of 'html', 'fatal', 'raw_html', or 'raw_fatal'" =>
+				  sub { $_[0] =~ /^(?:raw)?(?:html|fatal)$/ } }
+			      },
      multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1 },
      output_mode           => { parse => 'string',  type => SCALAR,       default => 'batch' },
      interp_class          => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason::Interp' },
      top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1} },
-     
+
      # the only required param
      interp                => { isa => 'HTML::Mason::Interp' },
     );
@@ -143,12 +151,21 @@ sub valid_params {
 }
 
 
-# Why do we create objects at compile time?  Why not wait until new() or the equivalent?
+# We try to create the objects as soon as possible, before Apache
+# forks.  This leads to a memory savings as the objects (or parts of
+# them) may stay in shared memory.
 __PACKAGE__->import;
 sub import
 {
     my $pack = __PACKAGE__;
-    $pack->make_ah() if $pack->_in_apache_conf_file() && ! $pack->get_param('MultipleConfig');
+
+    if ( $pack->_in_apache_conf_file )
+    {
+	$pack->make_ah() unless $pack->get_param('MultipleConfig');
+	my $args_method = $pack->get_param('ArgsMethod');
+
+	eval $args_method eq 'mod_perl' ? 'use Apache::Request' : 'use CGI';
+    }
 }
 
 # This is my best guess as to whether we are being configured via the
@@ -157,13 +174,14 @@ sub import
 sub _in_apache_conf_file
 {
     my $self = shift;
-    return $ENV{MOD_PERL} && $self->get_param('MultipleConfig');
+    my $interp_class = $self->get_param('InterpClass');
+    return $ENV{MOD_PERL} && $self->get_param('CompRoot', $interp_class->valid_params);
 }
 
 sub make_ah
 {
     my $package = shift;
-    
+
     use vars qw($AH);
     return $AH if $AH && ! $package->get_param('MultipleConfig');
 
@@ -180,7 +198,7 @@ sub _make_interp
 {
     my ($self, $interp_class, $compiler_class) = @_;
     my %p = $self->get_config($interp_class->valid_params);
-    
+
     # comp_root is sort of polymorphic, so fix it up
     if (exists $p{comp_root}) {
 	if (@{$p{comp_root}} == 1 && $p{comp_root}->[0] !~ /=>/) {
@@ -239,11 +257,12 @@ sub get_param {
     # Gets a single config item from dir_config.
 
     my ($self, $key, $spec) = @_;
-    
+
     # If we weren't given a spec, try to locate one in our own class.
     $spec ||= $self->valid_params->{$self->calm_form($key)};
-    die "Unknown config item '$key'" unless $spec;
-    
+    HTML::Mason::Exception->throw( error => "Unknown config item '$key'" )
+        unless $spec;
+
     return unless $spec->{parse};
     my $method = "_get_$spec->{parse}_param";
     my $value = $self->$method('Mason'.$self->studly_form($key));
@@ -269,7 +288,7 @@ sub get_config {
 	my $value = $self->get_param($key, $spec);
 	next if !defined $value;
 	next if $spec->{parse} eq 'list' and !@$value;
-	
+
 	$config{$key} = $value;
     }
     return %config;
@@ -338,16 +357,7 @@ sub new
 
     my $self = bless {validate( @_, $class->valid_params )}, $class;
     $self->{request_number} = 0;
-    
-    # Could this stuff go into the validation hash?
-    HTML::Mason::Exception::Params->throw( error => "args_method parameter must be either 'CGI' or 'mod_perl'\n" )
-	if exists $self->{args_method} && $self->{args_method} !~ /^(?:CGI|mod_perl)$/;
 
-    HTML::Mason::Exception::Params->throw( error => "error_mode parameter must be one of 'html', 'fatal', 'raw_html', or 'raw_fatal'\n" )
-	if exists $self->{error_mode} && $self->{error_mode} !~ /^(?:raw_)?(?:html|fatal)$/;
-
-    require Apache::Request if $self->{args_method} eq 'mod_perl';
-    
     $self->_initialize;
     return $self;
 }
@@ -404,7 +414,7 @@ sub _initialize {
 
 sub status_as_html {
     my ($self) = @_;
-    
+
     # Should I be scared about this?  =)
 
     my $comp_text = <<'EOF';
@@ -443,8 +453,7 @@ EOF
     local $interp->{out_method} = \$out;
     $interp->exec($comp, ah => $self, valid => $interp->valid_params);
     return $out;
-}         
-
+}
 
 #
 # Standard entry point for handling request
@@ -506,7 +515,7 @@ sub handle_request {
 		$apreq->method('GET');
 		$apreq->headers_in->unset('Content-length');
 	    }
-	    
+
 	    # Log the error the same way that Apache does (taken from default_handler in http_core.c)
 	    $apreq->log_error("[Mason] File does not exist: ",$apreq->filename . ($apreq->path_info ? $apreq->path_info : ""));
 	    return NOT_FOUND;
@@ -658,7 +667,7 @@ sub handle_request_1
 			return;
 		    } else {
 			$r->send_http_header();
-			
+
 			# If this is a HEAD request and our Mason request is
 			# still active, abort it.
 			if ($r->header_only) {
