@@ -263,7 +263,7 @@ ServerRoot $conf{apache_dir}
 </IfDefine>
 EOF
 
-    if ( load_pkg('Apache::Filter') )
+    if ( load_pkg('Apache::Filter') && Apache::Filter->VERSION >= 1.021 )
     {
         my $filter_handler = <<'EOF';
   sub FilterTest::handler

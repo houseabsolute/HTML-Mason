@@ -29,7 +29,7 @@ use constant NOT_FOUND  => 404;
 
 BEGIN
 {
-    my $ap_req_class = $mod_perl::VERSION < 1.99 ? 'Apache' : 'Apache::RequestRec';
+    my $ap_req_class = mod_perl->VERSION < 1.99 ? 'Apache' : 'Apache::RequestRec';
 
     __PACKAGE__->valid_params
 	( ah         => { isa => 'HTML::Mason::ApacheHandler',
@@ -255,7 +255,7 @@ use Apache::Constants qw( OK DECLINED NOT_FOUND );
 # This is the version that introduced PerlAddVar
 use mod_perl 1.24;
 
-if ( $mod_perl::VERSION < 1.99 )
+if ( mod_perl->VERSION < 1.99 )
 {
     # No modern distro/OS packages a mod_perl without all of this
     # stuff turned on, does it?
@@ -327,11 +327,11 @@ sub _startup
     {
 	if ($args_method eq 'CGI')
 	{
-	    require CGI unless defined $CGI::VERSION;
+	    require CGI unless defined CGI->VERSION;
 	}
 	elsif ($args_method eq 'mod_perl')
 	{
-	    require Apache::Request unless defined $Apache::Request::VERSION;
+	    require Apache::Request unless defined Apache::Request->VERSION;
 	}
     }
 }
@@ -649,14 +649,14 @@ sub _initialize {
     my ($self) = @_;
 
     if ($self->args_method eq 'mod_perl') {
-	unless (defined $Apache::Request::VERSION) {
+	unless (defined Apache::Request->VERSION) {
 	    warn "Loading Apache::Request at runtime.  You could " .
                  "increase shared memory between Apache processes by ".
                  "preloading it in your httpd.conf or handler.pl file\n";
 	    require Apache::Request;
 	}
     } else {
-	unless (defined $CGI::VERSION) {
+	unless (defined CGI->VERSION) {
 	    warn "Loading CGI at runtime.  You could increase shared ".
                  "memory between Apache processes by preloading it in ".
                  "your httpd.conf or handler.pl file\n";
@@ -666,7 +666,7 @@ sub _initialize {
     }
 
     # Add an HTML::Mason menu item to the /perl-status page.
-    if (defined $Apache::Status::VERSION) {
+    if (defined Apache::Status->VERSION) {
 	# A closure, carries a reference to $self
 	my $statsub = sub {
 	    my ($r,$q) = @_; # request and CGI objects
@@ -864,7 +864,18 @@ sub _apache_request_object
 {
     my $self = shift;
 
-    my $r_sub = lc $_[0]->dir_config('Filter') eq 'on' ? $do_filter : $no_filter;
+    my $r_sub;
+    if ( lc $_[0]->dir_config('Filter') eq 'on' )
+    {
+        die "To use Apache::Filter with Mason you must have at least version 1.021 of Apache::Filter\n"
+            unless Apache::Filter->VERSION >= 1.021;
+
+        $r_sub = $do_filter;
+    }
+    else
+    {
+        $r_sub = $no_filter;
+    }
 
     # This gets the proper request object all in one fell swoop.  We
     # don't want to copy it because if we do something like assign an

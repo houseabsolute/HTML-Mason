@@ -32,13 +32,6 @@ unless ( $@ || $^O =~ /mac|darwin/ || $has_only_mp2 )
     $prereq{'Apache::Request'} = 0.32;
 }
 
-eval { require Apache::Filter };
-
-unless ( $@ || $Apache::Filter::VERSION >= 1.021 )
-{
-    $prereq{'Apache::Filter'} = 1.021;
-}
-
 my $build = Mason::Build->new
   (
    module_name => 'HTML::Mason',
