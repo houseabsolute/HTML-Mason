@@ -6,10 +6,10 @@ package HTML::Mason::Compiler::ToClass;
 
 use strict;
 
-require HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
 
 use Exception::Class qw( Mason::Exception::Compiler );
+use Params::Validate qw( :all );
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( comp_class
@@ -21,34 +21,15 @@ use HTML::Mason::MethodMaker
 		    ],
     );
 
-my %fields =
-    ( allow_globals => [],
-      comp_class => 'HTML::Mason::Component',
+my %valid_params =
+    (
+     allow_globals => { parse => 'list',   type => ARRAYREF, default => [] },
+     comp_class    => { parse => 'string', type => SCALAR,   default => 'HTML::Mason::Component' },
     );
 
-sub new
-{
-    my $proto = shift;
-    my $class = ref $proto || $proto;
-    my %p = @_;
-
-    my $self = bless {}, $class;
-
-    foreach ( keys %p )
-    {
-	if ( exists $fields{$_} )
-	{
-	    $self->{$_} = $p{$_} || $fields{$_};
-	}
-    }
-    foreach ( keys %fields )
-    {
-	$self->{$_} ||= $fields{$_};
-    }
-
-    $self->_init;
-
-    return $self;
+sub valid_params {
+    my $self = shift;
+    return { %{$self->SUPER::valid_params}, %valid_params };  # Hmmm
 }
 
 sub compiled_component

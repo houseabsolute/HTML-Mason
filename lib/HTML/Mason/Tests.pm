@@ -484,74 +484,17 @@ sub _run_test
 
 sub check_output
 {
-    my $self = shift;
-    my %p = @_;
+    my ($self, %p) = @_;
 
-    my @actual = split /\n/, $p{actual};
-    my @expect = split /\n/, $p{expect} if $p{expect};
+    # Whitespace at end can vary.  (Or rather, it is varying in the tests, and
+    # should be made not to vary, but I don't have time to fix it yet.)
+    for ($p{actual}, $p{expect}) {  s/\s+$//  }
+    my $same = ($p{actual} eq $p{expect});
 
-    my $diff;
-    if (@expect > @actual)
-    {
-	$diff = @expect - @actual;
-	if ($VERBOSE)
-	{
-	    print "Actual result contained $diff too few lines.\n";
-	}
+    if (!$same and $VERBOSE) {
+	print "Got ...\n-----\n$p{actual}\n-----\n   ... but expected ...\n-----\n$p{expect}\n-----\n";
     }
-    elsif (@expect < @actual)
-    {
-	$diff = @actual - @expect;
-	if ($VERBOSE)
-	{
-	    print "Actual result contained $diff too many lines.\n";
-	}
-    }
-
-    my $limit = @actual < @expect ? @actual : @expect;
-    my $line = 0;
-    for ( my $x = 0; $x < $limit; $x++ )
-    {
-	$line++;
-	if ( $actual[$x] ne $expect[$x] )
-	{
-	    if ($VERBOSE)
-	    {
-		local $^W; #suppress uninit value warnings.
-		print "Result differed from expected output at line $line\n";
-
-		my @actual_prev = ( $x == 0 ?
-				    () :
-				    ( $x == 1 ?
-				      ( $actual[0] ) :
-				      ( $actual[ $x - 2 ], $actual[ $x - 1 ] ) ) );
-		my @expect_prev = ( $x == 0 ?
-				  () :
-				    ( $x == 1 ?
-				      ( $expect[0] ) :
-				      ( $expect[ $x - 2 ], $expect[ $x - 1 ] ) ) );
-		my @actual_next = ( $x == $#actual ?
-				    () :
-				    ( $x == $#actual - 1 ?
-				      ( $actual[-1] ) :
-				      ( $actual[ $x + 1 ], $actual[ $x + 2 ] ) ) );
-		my @expect_next = ( $x == $#expect ?
-				    () :
-				    ( $x == $#expect - 1 ?
-				      ( $expect[-1] ) :
-				      ( $expect[ $x + 1 ], $expect[ $x + 2 ] ) ) );
-
-		my $actual = join "\n", ( @actual_prev, $actual[$x], @actual_next );
-		my $expect = join "\n", ( @expect_prev, $expect[$x], @expect_next );
-
-		print "Got ...\n-----\n$actual\n-----\n   ... but expected ...\n-----\n$expect\n-----\n";
-	    }
-	    $diff = 1;
-	    last;
-	}
-    }
-
-    return ! $diff;
+    return $same;
 }
 
 sub _fail

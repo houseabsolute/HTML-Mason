@@ -8,6 +8,7 @@ use strict;
 
 use HTML::Mason::Component::FileBased;
 use HTML::Mason::Component::Subcomponent;
+use HTML::Mason::Lexer;
 
 use HTML::Mason::Exceptions;
 use Params::Validate qw(:all);
@@ -24,13 +25,27 @@ use HTML::Mason::MethodMaker
 		    ],
     );
 
-my %fields =
-    ( default_escape_flags => '',
-      lexer_class => 'HTML::Mason::Lexer',
-      preprocess => undef,
-      postprocess_perl => undef,
-      postprocess_text => undef,
+my %valid_params = 
+    (
+     allowed_globals      => { parse => 'list',   default => [] },
+     default_escape_flags => { parse => 'string', default => '' },
+     lexer_class          => { parse => 'string', default => 'HTML::Mason::Lexer', isa => 'HTML::Mason::Lexer' },
+     preprocess           => { parse => 'code',   optional => 1 },
+     postprocess_perl     => { parse => 'code',   optional => 1 },
+     postprocess_text     => { parse => 'code',   optional => 1 },
     );
+
+sub valid_params { \%valid_params }
+
+sub new
+{
+    my $class = shift;
+    my $self = bless {validate(@_, $class->valid_params)}, $class;
+
+    $self->_init;
+
+    return $self;
+}
 
 my %top_level_only_block = map { $_ => 1 } qw( cleanup once shared );
 my %valid_comp_flag = map { $_ => 1 } qw( inherit );
@@ -40,16 +55,14 @@ my %valid_escape_flag = map { $_ => 1 } qw( h n u );
 sub _init
 {
     my $self = shift;
-    my %p = @_;
+    my %p = validate(@_, $self->valid_params);
 
-    foreach ( keys %fields )
+    foreach ( keys %p )
     {
-	$self->$_( exists $p{$_} ? $p{$_} : $fields{$_} ) unless $self->$_();
+	$self->$_( $p{$_} ) unless $self->$_();
     }
 
     $self->set_allowed_globals( exists $p{allowed_globals} ? @{ $p{allowed_globals} } : () );
-
-    require HTML::Mason::Lexer unless $p{lexer_class};
 
     #
     # I want the compiler class to be the sole interface to compiling.

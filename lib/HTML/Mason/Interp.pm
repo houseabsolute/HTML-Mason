@@ -75,10 +75,43 @@ my %fields =
      use_reload_file => 0
      );
 
+my %valid_params =
+    (
+     allow_recursive_autohandlers => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
+     autohandler_name             => { parse => 'string',  default => 'autohandler', type => SCALAR|UNDEF },
+     code_cache_max_size          => { parse => 'string',  default => 10*1024*1024, type => SCALAR }, #10M
+     compiler                     => { isa => 'HTML::Mason::Compiler', optional => 1 },
+     current_time                 => { parse => 'string',  default => 'real', type => SCALAR },
+     data_cache_dir               => { parse => 'string',  optional => 1, type => SCALAR },
+     dhandler_name                => { parse => 'string',  default => 'dhandler', type => SCALAR|UNDEF },
+     die_handler                  => { parse => 'code',    default => \&Carp::confess, type => CODEREF|SCALAR|UNDEF },
+     # Object cause qr// returns an object
+     ignore_warnings_expr         => { parse => 'string',  type => SCALAR|OBJECT,
+				       default => qr/Subroutine .* redefined/i },
+     out_method                   => { parse => 'code',    optional => 1, type => CODEREF|SCALARREF },
+     out_mode                     => { parse => 'string',  default => 'batch', type => SCALAR },
+     max_recurse                  => { parse => 'string',  default => 32, type => SCALAR },
+     preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF },
+     static_file_root             => { parse => 'string',  optional => 1, type => SCALAR },
+     system_log_events            => { parse => 'string',  optional => 1, type => SCALAR|UNDEF },
+     system_log_file              => { parse => 'string',  optional => 1, type => SCALAR },
+     system_log_separator         => { parse => 'string',  default => "\cA", type => SCALAR },
+     use_autohandlers             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
+     use_data_cache               => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
+     use_dhandlers                => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
+     use_object_files             => { parse => 'boolean', default => 1, type => SCALAR|UNDEF },
+     use_reload_file              => { parse => 'boolean', default => 0, type => SCALAR|UNDEF },
+	    
+     comp_root                    => { parse => 'list',   type => SCALAR|ARRAYREF },
+     data_dir                     => { parse => 'string', type => SCALAR },
+    );
+
+sub valid_params { \%valid_params }
+
 sub new
 {
     my $class = shift;
-    my $self = {
+    my $self = bless {
 	%fields,
         code_cache => {},
         code_cache_current_size => 0,
@@ -89,37 +122,9 @@ sub new
 	out_method => sub { for (@_) { print $_ if defined } },
 	system_log_fh => undef,
 	system_log_events_hash => undef
-    };
+    }, $class;
 
-    validate( @_,
-	      { allow_recursive_autohandlers => { type => SCALAR | UNDEF, optional => 1 },
-		autohandler_name => { type => SCALAR | UNDEF, optional => 1 },
-		code_cache_max_size => { type => SCALAR, optional => 1 },
-		current_time => { type => SCALAR, optional => 1 },
-		data_cache_dir => { type => SCALAR, optional => 1 },
-		dhandler_name => { type => SCALAR | UNDEF, optional => 1 },
-		die_handler => { type => CODEREF | SCALAR | UNDEF, optional => 1 },
-		# Object cause qr// returns an object
-		ignore_warnings_expr => { type => SCALAR | OBJECT, optional => 1 },
-		out_method => { type => CODEREF | SCALARREF, optional => 1 },
-		out_mode => { type => SCALAR, optional => 1 },
-		max_recurse => { type => SCALAR, optional => 1 },
-		compiler => { isa => 'HTML::Mason::Compiler', optional => 1 },
-		preloads => { type => ARRAYREF, optional => 1 },
-		static_file_root => { type => SCALAR, optional => 1 },
-		system_log_events => { type => SCALAR | UNDEF, optional => 1 },
-		system_log_file => { type => SCALAR, optional => 1 },
-		system_log_separator => { type => SCALAR, optional => 1 },
-		use_autohandlers => { type => SCALAR | UNDEF, optional => 1 },
-		use_data_cache => { type => SCALAR | UNDEF, optional => 1 },
-		use_dhandlers => { type => SCALAR | UNDEF, optional => 1 },
-		use_object_files => { type => SCALAR | UNDEF, optional => 1 },
-		use_reload_file => { type => SCALAR | UNDEF, optional => 1 },
-
-		comp_root => { type => SCALAR | ARRAYREF },
-		data_dir => { type => SCALAR },
-	      }
-	    );
+    validate( @_, $self->valid_params );
 
     my (%options) = @_;
 
@@ -135,7 +140,6 @@ sub new
     $self->{die_handler_overridden} = 1 if exists $options{die_handler};
 
     $self->{data_cache_dir} ||= ($self->{data_dir} . "/cache");
-    bless $self, $class;
 
     $self->out_method($options{out_method}) if (exists($options{out_method}));
     $self->system_log_events($options{system_log_events}) if (exists($options{system_log_events}));

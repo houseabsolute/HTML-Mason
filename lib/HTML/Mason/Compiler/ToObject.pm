@@ -8,6 +8,7 @@ use strict;
 
 require HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
+use Params::Validate qw( :all );
 
 use HTML::Mason::Exceptions;
 
@@ -21,30 +22,17 @@ use HTML::Mason::MethodMaker
 		    ],
     );
 
-my %fields =
-    ( in_package => 'HTML::Mason::Commands',
-      postamble => '',
-      preamble => '',
-      use_strict => 1,
+my %valid_params =
+    (
+     in_package => { parse => 'string',  type => SCALAR, default => 'HTML::Mason::Commands' },
+     postamble  => { parse => 'string',  type => SCALAR, default => '' },
+     preamble   => { parse => 'string',  type => SCALAR, default => '' },
+     use_strict => { parse => 'boolean', type => SCALAR, default => 1 },
     );
 
-sub new
-{
-    my $proto = shift;
-    my $class = ref $proto || $proto;
-
-    my %p = @_;
-
-    my $self = bless {}, $class;
-
-    foreach ( keys %fields )
-    {
-	$self->$_( exists $p{$_} ? $p{$_} : $fields{$_} );
-    }
-
-    $self->_init(%p);
-
-    return $self;
+sub valid_params {
+    my $self = shift;
+    return { %{$self->SUPER::valid_params}, %valid_params };  # Hmmm
 }
 
 sub compile

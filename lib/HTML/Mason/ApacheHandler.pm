@@ -91,6 +91,11 @@ Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->
 
 use Apache;
 use Apache::Status;
+die "mod_perl must be compiled with PERL_METHOD_HANDLERS=1 (or EVERYTHING=1) to use ", __PACKAGE__, "\n"
+    unless Apache::perl_hook('MethodHandlers');
+
+# Require a reasonably modern mod_perl - should probably be later
+use mod_perl 1.22;
 
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( apache_status_title
@@ -101,30 +106,49 @@ use HTML::Mason::MethodMaker
 			  interp
 			  output_mode
 			  top_level_predicate ) ]
-      );
+    );
 
 # use() params. Assign defaults, in case ApacheHandler is only require'd.
-use vars qw($AH $VERSION);
+use vars qw($VERSION);
 
 $VERSION = sprintf '%2d.%02d', q$Revision$ =~ /(\d+)\.(\d+)/;
 
-# Fields that can be set in new method, with defaults
-my %fields =
+my %valid_params = 
     (
-     apache_status_title => 'HTML::Mason status',
-     args_method => 'mod_perl',
-     auto_send_headers => 1,
-     decline_dirs => 1,
-     error_mode => 'html',
-     interp => undef,
-     output_mode => undef,    # deprecated - now interp->out_mode
-     top_level_predicate => undef,
-     );
+     apache_status_title   => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason status' },
+     args_method           => { parse => 'string',  type => SCALAR,       default => 'mod_perl' },
+     auto_send_headers     => { parse => 'boolean', type => SCALAR|UNDEF, default => 1 },
+     compiler_class        => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason::Compiler::ToObject'},
+     debug_dir_config_keys => { parse => 'list',    type => ARRAYREF,     optional => 1 },
+     debug_handler_proc    => { parse => 'string',  type => SCALAR,       optional => 1 },
+     debug_handler_script  => { parse => 'string',  type => SCALAR,       optional => 1 },
+     debug_mode            => { parse => 'string',  type => SCALAR,       optional => 1 },
+     debug_perl_binary     => { parse => 'string',  type => SCALAR,       optional => 1 },
+     decline_dirs          => { parse => 'boolean', type => SCALAR|UNDEF, default => 1 },
+     error_mode            => { parse => 'string',  type => SCALAR,       default => 'html' },
+     multiple_config       => { parse => 'boolean', type => SCALAR|UNDEF, optional => 1 },
+     output_mode           => { parse => 'string',  type => SCALAR,       default => 'batch' },
+     interp_class          => { parse => 'string',  type => SCALAR,       default => 'HTML::Mason::Interp' },
+     top_level_predicate   => { parse => 'code',    type => CODEREF,      default => sub () {1} },
+     
+     # the only required param
+     interp                => { isa => 'HTML::Mason::Interp' },
+    );
 
-__PACKAGE__->import if $mod_perl::VERSION > 1.21;
+sub valid_params {
+    # Fields that can be set in new method, with defaults.  Other
+    # modules may need to know this information, so it's a method.
+
+    return \%valid_params;
+}
+
+
+# Why do we create objects at compile time?  Why not wait until new() or the equivalent?
+__PACKAGE__->import;
 sub import
 {
-    _make_ah() if _in_apache_conf_file() && ! _get_boolean_param('MultipleConfig');
+    my $pack = __PACKAGE__;
+    $pack->make_ah() if $pack->_in_apache_conf_file() && ! $pack->get_param('MultipleConfig');
 }
 
 # This is my best guess as to whether we are being configured via the
@@ -132,100 +156,52 @@ sub import
 # later anyway.  This may not be the case in the future though.
 sub _in_apache_conf_file
 {
-    # We don't want to try to read the configuration til we're in a
-    # request if mod_perl <= 1.21
-    return 0 if $mod_perl::VERSION <= 1.21 && ( $Apache::Server::Starting || $Apache::ServerStarting ||
-						$Apache::Server::ReStarting || $Apache::ServerReStarting );
-    return $ENV{MOD_PERL} && ( _get_list_param('CompRoot') ||
-			       _get_boolean_param('MultipleConfig') );
+    my $self = shift;
+    return $ENV{MOD_PERL} && $self->get_param('MultipleConfig');
 }
 
-sub _make_ah
+sub make_ah
 {
-    return $AH if $AH && ! _get_boolean_param('MultipleConfig');
+    my $package = shift;
+    
+    use vars qw($AH);
+    return $AH if $AH && ! $package->get_param('MultipleConfig');
 
-    my %p;
+    my %p = $package->get_config($package->valid_params);
 
-    $p{apache_status_title} = _get_string_param('ApacheStatusTitle');
-    $p{args_method} = _get_string_param('ArgsMethod');
-    $p{auto_send_headers} = _get_boolean_param('AutoSendHeaders');
-    $p{debug_handler_proc} = _get_string_param('DebugHandlerProc');
-    $p{debug_handler_script} = _get_string_param('DebugHandlerScript');
-    $p{debug_mode} = _get_string_param('DebugMode');
-    $p{debug_perl_binary} = _get_string_param('DebugPerlBinary');
-    $p{decline_dirs} = _get_boolean_param('DeclineDirs');
-    $p{error_mode} = _get_string_param('ErrorMode');
-    $p{top_level_predicate} = _get_code_param('TopLevelPredicate');
-
-    foreach (keys %p)
-    {
-	delete $p{$_} unless defined $p{$_};
-    }
-
-    $AH = HTML::Mason::ApacheHandler->new( interp => _make_interp(),
-					   %p,
-					 );
+    $AH = $package->new( interp => $package->_make_interp($p{interp_class}, $p{compiler_class}),
+			 %p,
+		       );
 
     return $AH;
 }
 
 sub _make_interp
 {
-    my %p;
-
-    $p{allow_recursive_autohandlers} = _get_boolean_param('AllowRecursiveAutohandlers');
-    $p{autohandler_name}    = _get_string_param('AutohandlerName');
-    $p{code_cache_max_size} = _get_string_param('CodeCacheMaxSize');
-    $p{current_time}        = _get_string_param('CurrentTime');
-    $p{data_cache_dir}      = _get_string_param('DataCacheDir');
-    $p{dhandler_name}       = _get_string_param('DhandlerName');
-    $p{die_handler}         = _get_code_param('DieHandler');
-    $p{max_recurse}         = _get_string_param('MaxRecurse');
-    $p{out_method}          = _get_code_param('OutMethod');
-    $p{out_mode}            = _get_string_param('OutMode');
-    $p{preloads}              = [ _get_list_param('Preloads') ];
-    delete $p{preloads} unless @{ $p{preloads} };
-    $p{static_file_root}      = _get_string_param('StaticFileRoot');
-    $p{system_log_events}     = _get_string_param('SystemLogEvents');
-    $p{system_log_file}       = _get_string_param('SystemLogFile');
-    $p{system_log_separator}  = _get_string_param('SystemLogSepartor');
-    $p{use_autohandlers}      = _get_boolean_param('UseAutohandlers');
-    $p{use_data_cache}        = _get_boolean_param('UseDataCache');
-    $p{use_dhandlers}         = _get_boolean_param('UseDhandlers');
-    $p{use_object_files}      = _get_boolean_param('UseObjectFiles');
-    $p{use_reload_file}       = _get_boolean_param('UseReloadFile');
-
-    my @comp_root = _get_list_param('CompRoot', 1);
-    if (@comp_root == 1 && $comp_root[0] !~ /=>/)
-    {
-	$p{comp_root} = $comp_root[0];
-    }
-    else
-    {
-	my @root;
-	foreach my $root (@comp_root)
-	{
-	    my ($k, $v) = split /\s*=>\s*/, $root;
-	    HTML::Mason::Exception::Params->throw( error => "Configuration parameter MasonCompRoot must be either a singular value or a multiple 'hash' values like 'foo => /home/mason/foo'" )
-		unless defined $k && defined $v;
-	    push @{ $p{comp_root} }, [ $k => $v ];
+    my ($self, $interp_class, $compiler_class) = @_;
+    my %p = $self->get_config($interp_class->valid_params);
+    
+    # comp_root is sort of polymorphic, so fix it up
+    if (exists $p{comp_root}) {
+	if (@{$p{comp_root}} == 1 && $p{comp_root}->[0] !~ /=>/) {
+	    $p{comp_root} = $p{comp_root}[0];  # Convert to a simple string
+	} else {
+	    foreach my $root (@{$p{comp_root}}) {
+		$root = [ split /\s*=>\s*/, $root, 2 ];
+		HTML::Mason::Exception::Params->throw
+		    ( error => "Configuration parameter MasonCompRoot must be either a single string value ".
+		      "or multiple key/value pairs like 'foo => /home/mason/foo'" )
+			unless defined $root->[1];
+	    }
 	}
     }
-    $p{data_dir} = _get_string_param('DataDir', 1);
 
-    # If not defined we'll use the defaults
-    foreach (keys %p)
-    {
-	delete $p{$_} unless defined $p{$_};
-    }
+    my $interp = $interp_class->new( compiler => $self->_make_compiler($compiler_class),
+				     %p,
+				   );
 
-    my $interp = HTML::Mason::Interp->new( compiler => _make_compiler(),
-					   %p,
-					 );
-
-    # if version <= 1.21 then these files shouldn't be created til
-    # after a fork so they should have the right ids anyway
-    if ($interp->files_written && $mod_perl::VERSION > 1.21 && ! ($> || $<))
+    # If we're running as superuser, change file ownership to http user & group
+    if ($interp->files_written && ! ($> || $<))
     {
 	chown Apache->server->uid, Apache->server->gid, $interp->files_written
 	    or HTML::Mason::Exception::System->throw( error => "Can't change ownership of files written by interp object\n" );
@@ -236,48 +212,89 @@ sub _make_interp
 
 sub _make_compiler
 {
-    my %p;
-    $p{allowed_globals} = [ _get_list_param('AllowedGlobals') ];
-    delete $p{allowed_globals} unless @{ $p{allowed_globals} };
+    my ($self, $compiler_class) = @_;
+    eval "use $compiler_class" unless $compiler_class =~ /[^\w:]/;
+    my %p = $self->get_config($compiler_class->valid_params);
 
-    $p{default_escape_flags} = _get_string_param('DefaultEscapeFlags');
-    $p{ignore_warnings_expr} = _get_string_param('IgnoreWarningsExpr');
-    $p{in_package} = _get_string_param('InPackage');
-    $p{postamble} = _get_string_param('Postamble');
-    $p{preamble} = _get_string_param('Preamble');
-    $p{use_strict} = _get_boolean_param('UseStrict');
+    return $compiler_class->new(%p);
+}
 
-    $p{preprocess} = _get_code_param('Preprocess');
-    $p{postprocess_perl} = _get_code_param('PostprocessPerl');
-    $p{postprocess_text} = _get_code_param('PostprocessText');
+# The following routines handle getting information from $r->dir_config
 
-    # If not defined we'll use the defaults
-    foreach (keys %p)
-    {
-	delete $p{$_} unless defined $p{$_};
+sub calm_form {
+    # Transform from StudlyCaps to name_like_this
+    my ($self, $string) = @_;
+    $string =~ s/(^|.)([A-Z])/$1 ? "$1\L_$2" : "\L$2"/ge;
+    return $string;
+}
+
+sub studly_form {
+    # Transform from name_like_this to StudlyCaps
+    my ($self, $string) = @_;
+    $string =~ s/(?:^|_)(\w)/\U$1/g;
+    return $string;
+}
+
+sub get_param {
+    # Gets a single config item from dir_config.
+
+    my ($self, $key, $spec) = @_;
+    
+    # If we weren't given a spec, try to locate one in our own class.
+    $spec ||= $self->valid_params->{$self->calm_form($key)};
+    die "Unknown config item '$key'" unless $spec;
+    
+    return unless $spec->{parse};
+    my $method = "_get_$spec->{parse}_param";
+    my $value = $self->$method('Mason'.$self->studly_form($key));
+
+    if (!defined($value) and exists($spec->{default})) {
+	$value = $spec->{default};
     }
+    return $value;
+}
 
-    require HTML::Mason::Compiler::ToObject;
-    return HTML::Mason::Compiler::ToObject->new(%p);
+sub get_config {
+    # Gets a bunch of config items (specified in the $valid hash) from
+    # current Apache dir_config variables.  Will assign defaults if
+    # appropriate.  Will *not* check for required params - that
+    # happens later, when the params are fed into methods.
+
+    my ($self, $valid) = @_;
+
+    my %config;
+    while (my ($key, $spec) = each %$valid) {
+	# For dir_config params, value is undef if unmentioned, so
+	# don't store undefs.  The TableAPI might be a way around this.
+	my $value = $self->get_param($key, $spec);
+	next if !defined $value;
+	next if $spec->{parse} eq 'list' and !@$value;
+	
+	$config{$key} = $value;
+    }
+    return %config;
 }
 
 sub _get_string_param
 {
-    my ($p, $val) = _get_val(@_[0, 1]);
+    my $self = shift;
+    my ($p, $val) = $self->_get_val(@_);
 
     return $val;
 }
 
 sub _get_boolean_param
 {
-    my ($p, $val) = _get_val(@_[0, 1]);
+    my $self = shift;
+    my ($p, $val) = $self->_get_val(@_);
 
     return $val;
 }
 
 sub _get_code_param
 {
-    my ($p, $val) = _get_val(@_[0, 1]);
+    my $self = shift;
+    my ($p, $val) = $self->_get_val(@_);
 
     return unless $val;
 
@@ -291,25 +308,20 @@ sub _get_code_param
 
 sub _get_list_param
 {
-    my ($p, @val) = _get_val(@_[0,1], 1);
+    my $self = shift;
+    my ($p, @val) = $self->_get_val($_[0], 1);
     if (@val == 1 && ! defined $val[0])
     {
 	@val = ();
     }
 
-    return @val;
+    return \@val;
 }
 
 sub _get_val
 {
-    my ($p, $required, $wantarray) = @_;
-    $p = "Mason$p";
+    my ($self, $p, $wantarray) = @_;
 
-    if ( $mod_perl::VERSION <= 1.21 && ( $Apache::Server::Starting || $Apache::ServerStarting ||
-					 $Apache::Server::ReStarting || $Apache::ServerReStarting ) )
-    {
-	HTML::Mason::Exception->throw( error => "Can't get configuration info during server startup with mod_perl <= 1.21" );
-    }
     my $c = Apache->request ? Apache->request : Apache->server;
 
     my @val = Apache::perl_hook('TableApi') ? $c->dir_config->get($p) : $c->dir_config($p);
@@ -317,53 +329,25 @@ sub _get_val
     HTML::Mason::Exception::Params->throw( error => "Only a single value is allowed for configuration parameter '$p'\n" )
 	if @val > 1 && ! $wantarray;
 
-    HTML::Mason::Exception::Params->throw( error => "Configuration parameter '$p' is required\n" )
-	if $required && ! defined $val[0];
-
     return ($p, $wantarray ? @val : $val[0]);
 }
 
 sub new
 {
     my $class = shift;
-    my $self = {
-	request_number => 0,
-	%fields,
-    };
 
-    validate( @_,
-	      { apache_status_title => { type => SCALAR, optional => 1 },
-		args_method => { type => SCALAR, optional => 1 },
-		auto_send_headers => { type => SCALAR | UNDEF, optional => 1 },
-		decline_dirs => { type => SCALAR | UNDEF, optional => 1 },
-		error_mode => { type => SCALAR, optional => 1 },
-		output_mode => { type => SCALAR | UNDEF, optional => 1 },
-		top_level_predicate => { type => CODEREF | UNDEF, optional => 1 },
-		debug_mode => { type => SCALAR, optional => 1 },
-		debug_perl_binary => { type => SCALAR, optional => 1 },
-		debug_handler_script => { type => SCALAR, optional => 1 },
-		debug_handler_proc => { type => SCALAR, optional => 1 },
-		debug_dir_config_keys => { type => ARRAYREF, optional => 1 },
-
-		# the only required param
-		interp => { isa => 'HTML::Mason::Interp' },
-	      }
-	    );
-
-    my (%options) = @_;
-
+    my $self = bless {validate( @_, $class->valid_params )}, $class;
+    $self->{request_number} = 0;
+    
+    # Could this stuff go into the validation hash?
     HTML::Mason::Exception::Params->throw( error => "args_method parameter must be either 'CGI' or 'mod_perl'\n" )
-	if exists $options{args_method} && $options{args_method} !~ /^(?:CGI|mod_perl)$/;
-    require Apache::Request if $options{args_method} eq 'mod_perl';
+	if exists $self->{args_method} && $self->{args_method} !~ /^(?:CGI|mod_perl)$/;
 
     HTML::Mason::Exception::Params->throw( error => "error_mode parameter must be one of 'html', 'fatal', 'raw_html', or 'raw_fatal'\n" )
-	if exists $options{error_mode} && $options{error_mode} !~ /^(?:raw_)?(?:html|fatal)$/;
+	if exists $self->{error_mode} && $self->{error_mode} !~ /^(?:raw_)?(?:html|fatal)$/;
 
-    while (my ($key,$value) = each(%options)) {
-	$self->{$key} = $value;
-    }
-
-    bless $self, $class;
+    require Apache::Request if $self->{args_method} eq 'mod_perl';
+    
     $self->_initialize;
     return $self;
 }
@@ -374,7 +358,7 @@ sub new
 my $status_name = 'mason0001';
 
 Apache::Status->menu_item
-    ($status_name => $fields{apache_status_title},
+    ($status_name => __PACKAGE__->valid_params->{apache_status_title}{default},
      sub { ["<b>(no interpreters created in this child yet)</b>"] });
 
 
@@ -441,7 +425,7 @@ foreach my $property (sort keys %$ah) {
     $val =~ s,([\x00-\x1F]),'<font color="purple">control-' . chr( ord('A') + ord($1) - 1 ) . '</font>',eg; # does this work for non-ASCII?
 </%perl>
     <% $property |h %> => <% defined $val ? $val : '<i>undef</i>' %>
-                          <% $val eq $defaults{$property} ? '<font color=green>(default)</font>' : '' %>
+                          <% $val eq $valid{$property}{default} ? '<font color=green>(default)</font>' : '' %>
 		          <br>
 % }
   </tt>
@@ -449,7 +433,7 @@ foreach my $property (sort keys %$ah) {
 
 <%args>
  $ah       # The ApacheHandler we'll elucidate
- %defaults # Default values for member data
+ %valid    # Contains default values for member data
 </%args>
 EOF
 
@@ -457,7 +441,7 @@ EOF
     my $comp = $interp->make_anonymous_component(comp => $comp_text);
     my $out;
     local $interp->{out_method} = \$out;
-    $interp->exec($comp, ah => $self, defaults => \%fields);
+    $interp->exec($comp, ah => $self, valid => $interp->valid_params);
     return $out;
 }         
 
@@ -627,19 +611,18 @@ sub handle_request_1
     #
     # Return NOT_FOUND if file does not pass top level predicate.
     #
-    if ($is_file and defined($self->top_level_predicate) and !$self->top_level_predicate->($r->filename)) {
+    if ($is_file and !$self->top_level_predicate->($r->filename)) {
 	$r->warn("[Mason] File fails top level predicate: ".$r->filename);
 	return NOT_FOUND;
     }
 
     my %args;
     if ($self->args_method eq 'mod_perl') {
-      %args = $self->_mod_perl_args(Apache::Request->new($r));
+	$r = Apache::Request->new($r);
+	%args = $self->_mod_perl_args($r, $request);
     } else {
-      %args = $self->_cgi_args($r);
+	%args = $self->_cgi_args($r, $request);
     }
-    #my $args_method = $self->args_method eq 'mod_perl' ? '_mod_perl_args' : '_cgi_args';
-    #%args = $self->$args_method($r,$request);
 
     #
     # Deprecated output_mode parameter - just pass to request out_mode.
@@ -751,11 +734,11 @@ sub http_header_sent { shift->header_out("Content-type") }
 #
 # PerlHandler HTML::Mason::ApacheHandler
 #
-sub handler
+sub handler ($$)
 {
-    my $r = shift;
+    my ($package, $r) = @_;
 
-    my $ah = _make_ah;
+    my $ah = $package->make_ah();
 
     return $ah->handle_request($r);
 }
