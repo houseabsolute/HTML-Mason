@@ -44,7 +44,7 @@ sub access_data_cache
     };
     
     #
-    # Store / expire
+    # Store
     #
     if ($action eq 'store' || $action eq 'expire') {
 	my ($expireTime,%out);
@@ -96,14 +96,47 @@ sub access_data_cache
 	tie (%out, $tieClass, $cacheFile, O_RDWR|O_CREAT, 0664)
 		or die "cache: cannot create/open cache file '$cacheFile'\n";
 
-	if ($action eq 'store') {
-	    $out{"$key.contents"} = $options{value};
-	    $out{"$key.expires"} = $expireTime;
-	    $out{"$key.lastmod"} = $time;
-	    if (defined($memCache)) {
-		$memCache->{$path}->{$key} = {expires=>$expireTime,lastModified=>$time,lastUpdated=>$time,contents=>$options{value}};
-	    }
-	} elsif ($action eq 'expire') {
+	# Finally, store the value.
+	$out{"$key.contents"} = $options{value};
+	$out{"$key.expires"} = $expireTime;
+	$out{"$key.lastmod"} = $time;
+	if (defined($memCache)) {
+	    $memCache->{$path}->{$key} = {expires=>$expireTime,lastModified=>$time,lastUpdated=>$time,contents=>$options{value}};
+	}
+	
+	untie(%out);
+	$lockfh->close();
+
+    #
+    # Expire
+    #
+    } elsif ($action eq 'expire') {
+	my (%out);
+
+	#
+	# Validate parameters
+	#
+	if (my @invalids = grep(!/^(action|key|memory_cache|cache_file|tie_class)$/,keys(%options))) {
+	    die "cache: invalid parameter '$invalids[0]' for action '$action'\n";
+	}
+	
+	#
+	# Try to get lock on cache lockfile. If not possible, trigger error.
+	#
+	my $lockfh = &$lockCacheFile();
+	for (my $cnt=0; $cnt<4 && !$lockfh; $cnt++) {
+	    sleep(1);
+	    $lockfh = &$lockCacheFile();
+	}
+	die "cache: could not get lock on cache file '$physFile', expire action failed" unless $lockfh;
+    
+	# Tie to DB file
+	tie (%out, $tieClass, $cacheFile, O_RDWR|O_CREAT, 0664)
+		or die "cache: cannot create/open cache file '$cacheFile'\n";
+
+	# Expire key or keys
+	@keys = (ref($key) eq 'ARRAY') ? @$key : ($key);
+	foreach my $key (@keys) {
 	    $out{"$key.expires"} = $time;
 	    $out{"$key.lastmod"} = $time;
 	    if (defined($memCache)) {
@@ -112,9 +145,27 @@ sub access_data_cache
 		$memCache->{$path}->{$key}->{lastUpdated} = $time;
 	    }
 	}
+
 	untie(%out);
 	$lockfh->close();
 
+    #
+    # Keys
+    #
+    } elsif ($action eq 'keys') {
+	#
+	# Validate parameters
+	#
+	if (my @invalids = grep(!/^(memory_cache|cache_file|tie_class)$/,keys(%options))) {
+	    die "cache: invalid parameter '$invalids[0]' for action '$action'\n";
+	}
+	
+	my %in;
+	tie (%in, $tieClass, $cacheFile, O_RDONLY, 0);
+	my @keys = keys(%in);
+	untie (%in);
+	return @keys;
+	
     #
     # Retrieve
     #
@@ -214,7 +265,7 @@ sub access_data_cache
 	return ($time < $lastLocked+$delay) ? $mem->{contents} : undef;
 
     } else {
-	die "cache: bad action '$options{action}': must be one of 'store', 'retrieve', or 'expire'\n";
+	die "cache: bad action '$options{action}': must be one of 'store', 'retrieve', 'expire', or 'keys'\n";
     }
 }
 

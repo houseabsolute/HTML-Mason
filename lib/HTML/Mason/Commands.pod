@@ -19,33 +19,34 @@ through components. In a web environment, the optional return value is
 used as the HTTP status code.
 
 =item mc_cache ([action=>'retrieve'], [key=>name],
-
 B<[keep_in_memory=E<gt>0|1], [expire_if=E<gt>sub])>
 
 =item mc_cache (action=>'store', [key=>name], value=>data,
 [keep_in_memory=>0|1],
-
 B<[expire_at=E<gt>time | expire_next=E<gt>'hour'|'day' |
 expire_in=E<gt>delta])>
 
-=item mc_cache_self ([key=>name], [keep_in_memory=>0|1],
+=item mc_cache (action=>'expire', [key=>name])
 
-B<[expire_if=E<gt>sub | expire_at=E<gt>time |
-expire_next=E<gt>'hour'|'day' | expire_in=E<gt>delta])>
-
-mc_cache() and mc_cache_self() let you store and retrieve the results
+mc_cache() lets you store and retrieve the results
 of computation for improved performance. Each component has its own
 data cache for storing one or more key/value pairs. The cache is
-implemented as a DBM database.
+implemented as a DBM database. See the L<Components/data caching>
+section of the I<Component Developer's Guide> for examples
+and caching strategies.
 
-The argument to I<action> is one of 'retrieve' or 'store'. Default is
-'retrieve'.
+The argument to I<action> is one of:
 
-The retrieve action returns the cache value if successful, or C<undef>
+o I<retrieve>: returns the cache value if successful, or C<undef>
 if there was no value or if it has expired.
 
-The store action stores a new cache value, under the given key. The
-default key is 'main'.
+o I<store>: stores a new cache value under the given key.
+Default key is 'main'.
+
+o I<expire>: expires a given cache value or values.
+key may be a single key or a list reference. Default key is 'main'.
+
+o I<keys>: returns a list of all the keys in the cache.
 
 I<value> defines what to store. It can be a scalar or a reference to
 an arbitrary data structure. The allowable size depends on your DBM
@@ -73,6 +74,43 @@ an expiration time at the top of the next hour or day.
 o I<expire_if>: calls a given anonymous subroutine and expires if the
 subroutine returns a non-zero value. The subroutine is called with one
 parameter, the time when the cache value was last written.
+
+=item mc_cache_self ([key=>name], [keep_in_memory=>0|1],
+B<[expire_if=E<gt>sub | expire_at=E<gt>time |
+expire_next=E<gt>'hour'|'day' | expire_in=E<gt>delta])>
+
+Uses mc_cache to cache the entire output of the current component.  It is typically
+used right at the top of a C<E<lt>%perl_init%E<gt>> section:
+
+    <%perl_init>
+        return if mc_cache_self(expire_in=>'3 hours'[, key=>'fookey']);
+        ... <rest of perl_init> ...
+    </%perl_init%>
+
+The "return if" is necessary. mc_cache_self handles both the retrieve
+and store, so you can pass both kinds of options to it. See
+mc_cache for an explanation of options.
+
+mc_cache_self uses a bit of magic to accomplish everything in one
+line.  You don't really need to understand this, but if you're
+curious, here's how it works:
+
+o A component foo calls mc_cache_self for the first time.
+
+o mc_cache_self sees that the cache is empty and calls foo again
+recursively, with a STORE option to capture its content into a buffer.
+
+o foo again calls mc_cache_self; this time it returns 0 immediately.
+
+o foo goes about its business and generates content into the mc_cache_self buffer.
+
+o When control is returned to mc_cache_self, it stores the content in
+the cache and also outputs the content normally.  Finally
+mc_cache_self returns 1, which in turn causes foo to return
+immediately.
+
+
+
 
 
 =item mc_caller ()

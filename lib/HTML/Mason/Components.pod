@@ -675,7 +675,7 @@ Example:
 
 (e.g. a shell command or web interface is responsible for explicitly
 expiring the item) To expire an item from a Perl script, for any
-component, use B<access_data_cache>.  It takes the same arguments as
+component, use B<access_data_cache>. It takes the same arguments as
 mc_cache plus one additional argument, cache_file.  See the
 administration manual for details on where cache files are stored and
 how they are named.
@@ -683,6 +683,20 @@ how they are named.
     use HTML::Mason::Utils 'access_data_cache';
     access_data_cache (cache_file=>'/usr/local/mason/cache/foo::bar',
                        action=>'expire' [, key=>'fookey']);
+
+
+The 'expire' action can also take multiple keys (as a list reference);
+this can be used in conjunction with the 'keys' action to expire all
+keys matching a particular pattern.
+
+    use HTML::Mason::Utils 'access_data_cache';
+    my @keys = access_data_cache (cache_file=>'/usr/local/mason/cache/foo::bar',
+                                  action=>'keys');
+    access_data_cache (cache_file=>'/usr/local/mason/cache/foo::bar',
+                       action=>'expire', key=>[grep(/^sales/,@keys)]);
+
+
+
 
 =back
 
@@ -757,7 +771,6 @@ B<mc_cache_self()> command that lets a component cache it's own
 output and eliminates the need for a dummy component. It is typically
 used right at the top of a C<E<lt>%perl_init%E<gt>> section:
 
-    ... <primary section, body of page> ...
     <%perl_init>
         return if mc_cache_self(expire_in=>'3 hours'[, key=>'fookey']);
         ... <rest of perl_init> ...
@@ -765,6 +778,27 @@ used right at the top of a C<E<lt>%perl_init%E<gt>> section:
 
 B<mc_cache_self> is built on top of B<mc_cache>, so it inherits all
 the expiration options described earlier.
+
+=head2 Guarantees (or lack thereof)
+
+Mason will make a best effort to cache data
+until it expires, but will not guarantee it.  The data cache is not a
+permanent reliable store in itself; you should not place in the cache
+critical data (e.g. user session information) that cannot be
+regenerated from another source such as a database.  You should write
+your code as if the cache might disappear at any time. In particular,
+
+o If the 'store' action cannot get a write lock on the cache, it simply
+fails quietly.
+o Your Mason administrator will be required to remove cache files
+periodically when they get too large; this can happen any time.
+
+On the other hand, expiration in its various forms is guaranteed,
+because Mason does not want you to rely on bad data to generate your
+content. If you use the 'expire' action and it cannot get a write
+lock, it will repeat the attempt several times and finally die with an
+error.
+
 
 =head1 ACCESSING SERVER INTERNALS
 
