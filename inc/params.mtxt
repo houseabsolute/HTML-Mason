@@ -86,7 +86,7 @@ L<make_subrequest|HTML::Mason::Request/item_make_subrequest>.
 =item * Perl name:           <% $param->{name} %>
 
 %   if ($param->{apache_name}) {
-=item * Apache name:         <% $param->{apache_name} %>
+=item * Apache name:         Mason<% $param->{apache_name} %>
 
 %   }
 =item * Type in httpd.conf:  <% $param->{type} %>
