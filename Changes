@@ -20,7 +20,7 @@ in 1.09_02, as a deprecated method.
 [ ENHANCEMENTS ]
 
 - Implemented the long requested user-defined escapes feature.  It is
-not possible to define your own escape flags, as well as overriding
+now possible to define your own escape flags, as well as overriding
 Mason's own 'h' and 'u' flags. L{Devel/Escaping expressions}
 - Implemented expire_if and busy_lock options in new $m->cache->get
 API. These retain the essence of the 1.0x options although both
