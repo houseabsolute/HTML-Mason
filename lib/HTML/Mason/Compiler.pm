@@ -9,6 +9,7 @@ use strict;
 use HTML::Mason::Component::FileBased;
 use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Lexer;
+use HTML::Mason::Utils qw(create_subobjects);
 
 use HTML::Mason::Exceptions;
 use Params::Validate qw(:all);
@@ -17,7 +18,6 @@ Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( default_escape_flags
                           lexer
-                          lexer_class
                           preprocess
                           postprocess_perl
                           postprocess_text
@@ -29,22 +29,26 @@ my %valid_params =
     (
      allowed_globals      => { parse => 'list',   type => ARRAYREF, default => [] },
      default_escape_flags => { parse => 'string', type => SCALAR,   default => '' },
-     lexer_class          => { parse => 'string',
-			       can => [ qw( new lex named_block_types simple_block_types name line_count ) ],
-			       default => 'HTML::Mason::Lexer' },
+     lexer                => { isa => 'HTML::Mason::Lexer' },
      preprocess           => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_perl     => { parse => 'code',   type => CODEREF,  optional => 1 },
      postprocess_text     => { parse => 'code',   type => CODEREF,  optional => 1 },
     );
-
 sub valid_params { \%valid_params }
+
+# For subobject auto-creation
+my %creates_objects = ( lexer => 'HTML::Mason::Lexer' ); # Default class
+sub creates_objects { \%creates_objects }
 
 sub new
 {
     my $class = shift;
-    my $self = bless {validate(@_, $class->valid_params)}, $class;
 
-    $self->_initialize;
+    # Must assign to an actual array for validate() to work
+    my @args = create_subobjects($class, @_);
+    my $self = bless {validate(@args, $class->valid_params)}, $class;
+
+    $self->set_allowed_globals( @{$self->{allowed_globals}} );
 
     return $self;
 }
@@ -53,31 +57,6 @@ my %top_level_only_block = map { $_ => 1 } qw( cleanup once shared );
 my %valid_comp_flag = map { $_ => 1 } qw( inherit );
 my %valid_escape_flag = map { $_ => 1 } qw( h n u );
 
-# called from subclasses to set defaults and to make the lexer object
-sub _initialize
-{
-    my $self = shift;
-    my %p = validate(@_, $self->valid_params);
-
-    foreach ( keys %p )
-    {
-	$self->$_( $p{$_} ) unless $self->$_();
-    }
-
-    $self->set_allowed_globals( exists $p{allowed_globals} ? @{ $p{allowed_globals} } : () );
-
-    #
-    # I want the compiler class to be the sole interface to compiling.
-    # The lexer class should be as hidden as possible.  This means
-    # that parameters intended for the compiler and/or lexer all go to
-    # the compiler and get filtered here.
-    #
-    my %lexer_params;
-    my @lexer_param_keys = keys %{$self->lexer_class->valid_params};
-    @lexer_params{@lexer_param_keys} = delete @p{@lexer_param_keys};
-
-    $self->lexer( $self->lexer_class->new(%lexer_params) );
-}
 
 sub set_allowed_globals
 {

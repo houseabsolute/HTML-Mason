@@ -11,11 +11,11 @@ use HTML::Mason::Exceptions;
 use Params::Validate qw(:all);
 Params::Validate::set_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => shift ) } );
 
-my %valid_params =
-  (
-  );
-
+my %valid_params = ();
 sub valid_params { \%valid_params }
+
+my %creates_objects = ();
+sub creates_objects { \%creates_objects }
 
 
 # This is a block name and what method should be called to lex its
