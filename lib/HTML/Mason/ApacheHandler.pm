@@ -592,7 +592,7 @@ sub handle_request_1
     # 'ah' and 'apache_req' that's their problem.
     #
     my $request = $interp->make_request( ah => $self,
-					 apache_req => $apreq,
+					 apache_req => $r,
 				       );
 
     my %args;
