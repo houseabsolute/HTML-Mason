@@ -112,6 +112,76 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'filters_in_subcomps',
+                      description => 'test <%filter> sections in subcomps only',
+                      component => <<'EOF',
+Main Component
+<& .sub1 &>
+<& .sub2 &>
+
+<%def .sub1>
+Sub 1
+<%filter>
+s/Sub/Subcomponent/;
+</%filter>
+</%def>
+
+<%def .sub2>
+Subcomp 2
+<%filter>
+s/Subcomp/Subcomponent/;
+</%filter>
+</%def>
+
+EOF
+                      expect => <<'EOF',
+Main Component
+
+Subcomponent 1
+
+
+Subcomponent 2
+EOF
+                    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'filters_in_comp_and_subcomps',
+                      description => 'test <%filter> sections in both main comp and subcomps',
+                      component => <<'EOF',
+Main Component (lowercase)
+<& .sub1 &>
+<& .sub2 &>
+
+<%def .sub1>
+Sub 1
+<%filter>
+s/Sub/Subcomponent/;
+</%filter>
+</%def>
+
+<%def .sub2>
+Subcomp 2
+<%filter>
+s/Subcomp/Subcomponent/;
+</%filter>
+</%def>
+
+<%filter>
+$_ = lc($_);
+</%filter>
+
+EOF
+                      expect => <<'EOF',
+main component (lowercase)
+
+subcomponent 1
+
+
+subcomponent 2
+EOF
+                    );
+
         return $group;
 }
 
