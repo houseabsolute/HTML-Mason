@@ -82,7 +82,7 @@ sub receive
     if ( $self->{buffer} )
     {
         # grep { defined } is marginally faster than local $^W;
-        ${ $self->{buffer} } .= join '', grep { defined } @_;
+        ${ $self->{buffer} } .= $_ foreach grep { defined } @_;
     }
     else
     {
@@ -94,12 +94,12 @@ sub flush
 {
     my $self = shift;
     return if $self->ignore_flush;
-    return unless exists $self->{buffer};
-
-    my $output = $self->output;
-    return unless defined $output && $output ne '';
-
-    $self->{parent}->receive( $output ) if $self->{parent};
+    
+    $self->_make_output;
+    my $output = $self->{output};
+    return unless defined($$output) and length($$output);
+    $self->{parent}->receive( $$output ) if $self->{parent};
+    
     $self->clear;
 }
 
@@ -110,15 +110,32 @@ sub clear
     return unless exists $self->{buffer};
 
     ${$self->{buffer}} = '';
+    delete $self->{output};  # Valuable deletion if it's been filtered
 }
 
 sub output
 {
     my $self = shift;
-    return unless exists $self->{buffer};
-    my $output = ${$self->{buffer}};
-    return $self->{filter_from}->filter->($output) if $self->{filter_from};
-    return $output;
+    $self->_make_output;
+    return ${$self->{output}};
+}
+
+# Makes a reference to the current output and stores in
+# $self->{output}.  Unless there are filters, this will be a reference
+# to the same string as $self->{buffer}.
+sub _make_output
+{
+    my $self = shift;
+    unless (exists $self->{buffer}) {
+	my $foo = '';
+	$self->{buffer} = \$foo;
+    }
+    
+    $self->{output} = $self->{buffer};
+    if ($self->{filter_from}) {
+	my $filtered = $self->{filter_from}->filter->(${$self->{output}});
+	$self->{output} = \$filtered;
+    }
 }
 
 1;
