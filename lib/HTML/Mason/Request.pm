@@ -101,7 +101,7 @@ sub exec {
 	if (!($comp = $interp->load($path))) {
 	    if (defined($interp->{dhandler_name}) and $comp = $interp->find_comp_upwards($path,$interp->{dhandler_name})) {
 		my $parent_path = $comp->dir_path;
-		($self->{dhandler_arg} = $path) =~ s{^$parent_path/}{};
+		($self->{dhandler_arg} = $path) =~ s{^$parent_path/?}{};
 	    }
 	}
 	die "could not find component for path '$path'\n" if !$comp;
@@ -118,17 +118,17 @@ sub exec {
 	unshift(@wrapper_chain,$parent);
 	die "inheritance chain length > 32 (infinite inheritance loop?)" if (@wrapper_chain > 32);
     }
-    $comp = shift(@wrapper_chain);
+    my $first_comp = shift(@wrapper_chain);
     $self->{wrapper_chain} = [@wrapper_chain];
 
     # Call the first component.
     my ($result, @result);
     if (wantarray) {
 	local $SIG{'__DIE__'} = sub { confess($_[0]) };
-	@result = eval {$self->comp($comp, @args)};
+	@result = eval {$self->comp({called_comp=>$comp}, $first_comp, @args)};
     } else {
 	local $SIG{'__DIE__'} = sub { confess($_[0]) };
-	$result = eval {$self->comp($comp, @args)};
+	$result = eval {$self->comp({called_comp=>$comp}, $first_comp, @args)};
     }
     my $err = $@;
 
@@ -374,6 +374,16 @@ sub fetch_comp
     die "fetch_comp: requires path as first argument" unless defined($path);
 
     #
+    # Handle special SELF and PARENT paths
+    #
+    if ($path eq 'SELF') {
+	return $self->called_comp or die "SELF designator used when no called component available";
+    }
+    if ($path eq 'PARENT') {
+	return $self->current_comp->parent or die "PARENT designator used from component with no parent";
+    }
+    
+    #
     # If path does not contain a slash, check for a subcomponent in the
     # current component first.
     #
@@ -495,6 +505,10 @@ sub comp1 {
     #
     if (!ref($comp)) {
 	my $path = $comp;
+	if (my ($owner_path,$method) = ($path =~ /(.*):(.*)/)) {
+	    my $owner_comp = $self->fetch_comp($owner_path) or die "could not find component for path '$owner_path'\n";
+	    return $owner_comp->call_method($method,@args);
+	}
 	$comp = $self->fetch_comp($path) or die "could not find component for path '$path'\n";
     }
 
