@@ -25,12 +25,13 @@ use HTML::Mason::MethodMaker
 			 aborted_value
 			 count
 			 declined
-			 error_mode
 			 interp
 			 top_comp ) ],
 
       read_write => [ qw( autoflush
                           data_cache_defaults
+			  error_format
+			  error_mode
 			  out_method
                           use_autohandlers
                           use_dhandlers ) ],
@@ -42,10 +43,14 @@ __PACKAGE__->valid_params
 		     descr => "Whether output should be buffered or sent immediately" },
      interp     => { isa => 'HTML::Mason::Interp',
 		     descr => "An interpreter for Mason control functions" },
-     error_mode => { parse => 'string', type => SCALAR, default => 'fatal',
-		     callbacks => { "must be one of 'html', 'text', or 'fatal'" =>
-					sub { $_[0] =~ /^(?:html|text|fatal)$/ } },
-		     descr => "How error conditions should be handled" },
+     error_format => { parse => 'string', type => SCALAR, default => 'text',
+		       callbacks => { "must be one of 'brief', 'text', 'line', or 'html'" =>
+					  sub { $_[0] =~ /^(?:brief|text|line|html)$/; } },
+                       descr => "How error messages are formatted" },
+     error_mode => { parse => 'string', type => SCALAR, default => 'output',
+		     callbacks => { "must be one of 'output' or 'fatal'" =>
+					sub { $_[0] =~ /^(?:output|fatal)$/ } },
+		     descr => "How error conditions are returned to the caller" },
      out_method => { type => SCALARREF | CODEREF,
 		     descr => "A subroutine or scalar reference through which all output will pass" },
      data_cache_defaults => { type => HASHREF|UNDEF, optional => 1,
@@ -207,7 +212,7 @@ sub exec {
 			($self->{dhandler_arg} = $orig_path) =~ s{^$parent/}{};
 		    }
 		} else {
-		    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
+		    die $err;
 		}
 	    }
 
@@ -217,18 +222,20 @@ sub exec {
     # Handle errors.
     my $err = $@;
     if ($err and !$self->aborted) {
-	my $error_mode = $self->error_mode;
-	if (UNIVERSAL::isa($err, 'HTML::Mason::Exception') and $error_mode =~ /^(text|html)$/) {
-	    $self->clear_buffer;
-	    if ($error_mode eq 'text') {
-		$self->out($err->as_string);
-	    } elsif ($error_mode eq 'html') {
-		$self->out($err->as_html);
-	    }
-	} else {
-	    $self->pop_buffer_stack;
-	    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
+	$self->pop_buffer_stack;
+
+	# Set error format for when error is stringified.
+	if (UNIVERSAL::can($err, 'format')) {
+	    $err->format($self->error_format);
 	}
+
+	# In fatal mode, die with error. In display mode, output stringified error.
+	if ($self->error_mode eq 'fatal') {
+	    die $err;
+	} else {
+	    $self->out_method->("$err");
+	}
+	return;
     }
 
     # Flush output buffer.
@@ -262,7 +269,7 @@ sub cache
     my ($self, %options) = @_;
 
     if ($self->data_cache_defaults) {
-	%options = (%{$self->data_cache_defaults},%options);
+	%options = (%{$self->data_cache_defaults}, %options);
     }
     $options{namespace}   ||= compress_path($self->current_comp->comp_id);
     $options{cache_root}  ||= File::Spec->catdir($self->interp->data_dir,"cache");
