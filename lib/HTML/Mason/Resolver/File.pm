@@ -30,7 +30,7 @@ sub new {
     if ($self->{comp_root}) {
 	# Put it through the accessor to ensure proper data structure
 	$self->comp_root( $self->{comp_root} ) unless ref $self->{comp_root};
-	
+
 	# Check that directories are absolute.
 	foreach my $pair ($self->comp_root_array) {
 	    param_error "Multiple-path component root must consist of a list of two-element lists; see documentation"
