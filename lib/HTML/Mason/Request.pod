@@ -12,8 +12,9 @@ HTML::Mason::Request - Mason Request Class
 
 The Request API is your gateway to all Mason features not provided by
 syntactic tags. Mason creates a new Request object for every web
-request. Inside a component you
-access the current request object via the global C<$m>.
+request. Inside a component you access the current request object via
+the global C<$m>.  Outside of a component, you can use the class
+method C<instance>.
 
 =head1 COMPONENT PATHS
 
@@ -42,6 +43,13 @@ subcomponent takes precedence.
 =head1 METHODS
 
 =over
+
+=for html <a name="item_instance">
+
+=item instance
+
+This class method returns the C<HTML::Mason:::Request> currently in
+use.  If called when no Mason request is active it will return C<undef>.
 
 =for html <a name="item_abort">
 

@@ -69,6 +69,12 @@ sub new
     return $self;
 }
 
+# in the future this method may do something completely different but
+# for now this works just fine.
+sub instance {
+    return $HTML::Mason::Commands::m;
+}
+
 sub _initialize {
     my ($self) = @_;
     my $interp = $self->interp;

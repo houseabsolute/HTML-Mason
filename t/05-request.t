@@ -480,5 +480,17 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'instance',
+		      description => 'Test HTML::Mason::Request->instance',
+		      component => <<'EOF',
+<% $m eq HTML::Mason::Request->instance ? 'yes' : 'no' %>
+EOF
+		      expect => <<'EOF',
+yes
+EOF
+		    );
+
+#------------------------------------------------------------
+
     return $group;
 }
