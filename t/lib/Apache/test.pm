@@ -182,6 +182,7 @@ sub _read_existing_conf {
  MODULE:
     foreach my $module (@load) {
 	foreach my $module_dir (@module_dirs) {
+	   $module_dir =~ s,/$,,;
            foreach my $filename ("mod_$module.so", "lib$module.so", "ApacheModule\u$module.dll") {
                if (-e "$module_dir/$filename") {
                    push @modules, "LoadModule ${module}_module $module_dir/$filename\n"; next MODULE;
