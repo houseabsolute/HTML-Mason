@@ -71,7 +71,6 @@ My stack looks like:
 -----
 
 
-
 I can still print after the subrequest
 EOF
 		    );
