@@ -50,8 +50,7 @@ If the question is more generally about mod_perl, you may wish to post
 additionally (or only) to the mod_perl mailing list at modperl@apache.org.
 
 If you have a question or comment that you don't feel is appropriate for the
-group, write to the HTML::Mason authors: Jonathan Swartz
-(swartz@transbay.net).
+group, write to swartz@transbay.net.
 
 =head2 What is a component?
 
@@ -100,8 +99,10 @@ it is difficult to keep track of all the modules being used on a site.
 A more efficient method is to put the use line in the handler.pl or use the
 PerlModule directive.  If you want components to be able to refer to symbols
 exported by the module, you need to use the module inside the
-HTML::Mason::Commands package.  See the "Pieces of an
-Installation/handler.pl" section of the administration manual (Admin.pod).
+HTML::Mason::Commands package.  See the "External modules"
+section of the Administrator's Guide:
+
+	http://www.masonhq.com/docs/manual/0.8/Admin.html#external_modules
 
 =head2 Can I define subroutines in components?
 
@@ -205,8 +206,10 @@ by creating and not cleaning up global variables.
 =head2 Can I run HTML::Mason outside a web server?
 
 Yes, in fact HTML::Mason can be useful for generating a set of web pages
-offline or as a general templating tool.  See "standalone mode"
-in the interpreter manual (Interp.pm).
+offline or as a general templating tool.  See the "Standalone Mode"
+section of the Interpreter manual:
+
+	http://www.masonhq.com/docs/manual/0.8/Interp.html#standalone_mode
 
 =head2 Can I run HTML::Mason via CGI?
 
@@ -229,7 +232,7 @@ Because HTML::Mason consists of only Perl code (no C), it should work
 anywhere Perl runs.  If it doesn't work on your operating system, let us
 know.
 
-=head2 I'm getting 404 errors for pages that clearly exist.
+=head2 Why am I getting 404 errors for pages that clearly exist?
 
 The filename that Apache has resolved to may not fall underneath the
 component root you specified when you created the interpreter in
@@ -248,7 +251,9 @@ symbolic links in either of these configuration items.
 
 =head2 How do I exit from all components including the ones that called me?
 
-Use $m->abort, documented in the Request manual (Request.pm).
+Use $m->abort, documented in the Request manual:
+
+	http://www.masonhq.com/docs/manual/0.8/Request.html#item_abort_return_value_
 
 =head2 How do I access GET or POST arguments?
 
@@ -281,8 +286,9 @@ To print HTML constructs returned by CGI functions, just enclose them in
 =head2 How do I modify the outgoing HTTP headers?
 
 Use the usual Apache.pm functions, such as $r->header_out.  See the
-"Sending HTTP Headers" section in the component developers manual
-(Devel.pod).
+"Sending HTTP Headers" section in the Component Developer's Guide:
+
+	http://www.masonhq.com/docs/manual/0.8/Devel.html#sending_http_headers
 
 =head2 How do I do an external redirect?
 
@@ -361,10 +367,11 @@ A better way to block out a section is if (0):
 Code blocked out in this way will neither be executed nor displayed, and 
 multiple if (0) blocks can be nested inside each other (unlike HTML comments).
 
-=head2 How can I capture the output of a component (and modify it,
-etc.) instead of having it automatically output?
+=head2 How can I capture the output of a component (and modify it, etc.) instead of having it automatically output?
 
-Use $m->scomp. See the $m->scomp section of the Request manual (Request.pm).
+Use $m->scomp, documented in the Request manual:
+
+	http://www.masonhq.com/docs/manual/0.8/Request.html#item_scomp
 
 =head2 Can I use globals in components?
 
@@ -379,11 +386,13 @@ on, so you'll get a warning about the global (and Mason considers all such
 warnings fatal). To get around this you need to declare the global in a
 "use vars" statement inside the HTML::Mason::Commands package:
 
-    package HTML::Mason::Commands;
-    use vars qw(...);
+	package HTML::Mason::Commands;
+	use vars qw(...);
 
 or use the Parser allow_globals parameter.  See the section on globals in
-the Administrator's Manual.
+the Administrator's Guide:
+
+	http://www.masonhq.com/docs/manual/Admin.html#using_global_variables
 
 Alternatively you can turn off strict entirely by passing:
 
@@ -395,29 +404,31 @@ trouble down the road.
 
 =head2 Can Mason support multiple component roots, with searching, ala Perl's @INC?
 
-As of Mason 0.8, yes!  Consult the Component roots (multiple) section in the
-Mason Administrators guide (Admin.pod).
+As of Mason 0.8, yes!  Consult the "Component roots (multiple)" section in the
+Administrator's Guide:
 
-=head2 Do data cache files expire automatically when a component or its dependencies 
-change?
+	http://www.masonhq.com/docs/manual/0.8/Admin.html#component_roots_multiple_
+
+=head2 Do data cache files expire automatically when a component or its dependencies change?
 
 Eventually, but not right now. Unfortunately, it is difficult for Mason to 
 check this efficiently in the current implementation.  But you can use the 
 following idiom to say "expire when my component source file changes":
 
-    $m->cache(..., expire_if=>sub { (stat($m->source_file))[9] > $_[0] } )
+	$m->cache(..., expire_if=>sub { (stat($m->source_file))[9] > $_[0] } )
 
 =head2 Why does the order of output get mixed up when I use print or $r->print?
 
 Since your server is most likely in batch mode, all Mason output gets
-buffered.  print and $r->print circumvent the buffer and thus come out
-before other Mason output.
+buffered til the end of the request.  print and $r->print circumvent
+the buffer and thus come out before other Mason output.
 
 Solution: don't use print or $r->print. Use $m->out if you must output
-inside a Perl section. See the section on output mode:
+inside a Perl section. See the section on output mode in the
+Administrator's Guide:
 
-   http://www.masonhq.com/docs/manual/Admin.html#out_mode
+	http://www.masonhq.com/docs/manual/Admin.html#out_mode
 
-and $m->out:
+and the section on $m->out in the Request manual:
 
-   http://www.masonhq.com/docs/manual/Commands.html#item_out_string_
+	http://www.masonhq.com/docs/manual/Request.html#item_out_string_
