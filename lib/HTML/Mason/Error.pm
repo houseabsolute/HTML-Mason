@@ -29,7 +29,7 @@ sub error_process {
 		'compile_error' => 'compilation error'
 		);
 
-    my %error_info = (); 
+    my %error_info = ();
     my @callstack = ();
     my @backtrace = ();
     my @errors = ();
@@ -53,20 +53,24 @@ sub error_process {
 	    my ($func, $file, $linenum) =
 		($line =~ /\t(.*) called at (\S*) line (\d*)/);
 
-	    # Ignore superfluous call stack entries.
-	    next if $file =~ m#/dev/null#;
-	    next if $file =~ m#HTML/Mason/ApacheHandler#;
-	    next if $func =~ m#eval|require 0# and $file =~ m#HTML/Mason/Request#;
-	    next if $func =~ m#HTML::Mason::Request::exec#;
-	    next if $func =~ m#HTML::Mason::Component::run#;
-	    next if $func =~ m#HTML::Mason::ApacheHandler#;
-	    next if $func =~ m#FileBased=HASH#;
-	    next if $func =~ m#__ANON__#;
+		# Ignore superfluous call stack entries.
+	    if (defined $file) {
+		next if $file =~ m#/dev/null#;
+		next if $file =~ m#HTML/Mason/ApacheHandler#;
+		next if $func =~ m#eval|require 0# and $file =~ m#HTML/Mason/Request#;
+		next if $func =~ m#HTML::Mason::Request::exec#;
+		next if $func =~ m#HTML::Mason::Component::run#;
+		next if $func =~ m#HTML::Mason::ApacheHandler#;
+		next if $func =~ m#FileBased=HASH#;
+		next if $func =~ m#__ANON__#;
+	    }
 
-	    my $last = $callstack[ scalar(@callstack) - 1 ];
-	    next if ($last && ($last->{'line'} eq $linenum) && ($last->{'file'} eq $file));
+	    if (@callstack)   {
+		my $last = $callstack[ scalar(@callstack) - 1 ];
+		next if ($last && ($last->{'line'} eq $linenum) && ($last->{'file'} eq $file));
+	    }
 
-	    push @callstack, { "function" => $func, "file" => $file, "line" => $linenum };
+	    push @callstack, { "function" => $func, "file" => $file || '', "line" => $linenum };
 	}
 
 	# Sometimes the perl warnings span multiple lines. This should do the 
@@ -318,21 +322,20 @@ sub error_conf {
 		    file            => "error in file: ",
 		    notes           => "",
 		    context         => "context: ",
-		    component_stack => "component stack: ", 
+		    component_stack => "component stack: ",
 		    call_trace      => "code stack: ",
 		    debug_info      => "debug info: ",
 		    raw_error       => "<br><a href=\"#raw_error\">raw_error</a>" . "<br>" x 30 . "raw error: ",
 		},
 
-		show             => [ 
-				      "file",
+		show             => [ "file",
 				      "notes",
 				      "context",
 				      "component_stack",
 				      "call_trace",
 				      "debug_info",
 				      "raw_error",
-				      ],
+				    ],
 
 		};
 
@@ -450,11 +453,9 @@ sub error_notes_html {
 
 sub error_parse {
     my ($error) = @_;
-    my $error_info = {}; 
+    my $error_info = {};
 
-    my @callstack = ();
     my @errors = ();
-    my @backtrace = ();
 
     my @error = split(/\n/, $error);
     foreach my $line (@error) {
