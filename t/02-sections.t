@@ -8,8 +8,8 @@ $tests->run;
 
 sub make_tests
 {
-    my $group = HTML::Mason::Tests->new( name => 'sections',
-					 description => 'Tests various <%foo></%foo> sections' );
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'sections',
+						      description => 'Tests various <%foo></%foo> sections' );
 
 
 #------------------------------------------------------------
@@ -628,7 +628,7 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'test',
+    $group->add_test( name => 'text',
 		      description => 'tests <%text> section',
 		      component => <<'EOF',
 <%text>

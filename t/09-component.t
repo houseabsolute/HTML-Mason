@@ -8,8 +8,8 @@ $tests->run;
 
 sub make_tests
 {
-    my $group = HTML::Mason::Tests->new( name => 'component',
-					 description => 'Component object functionality' );
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'component',
+						      description => 'Component object functionality' );
 
 
 #------------------------------------------------------------

@@ -28,8 +28,8 @@ $tests->run;
 
 sub make_tests
 {
-    my $group = HTML::Mason::Tests->new( name => 'cache',
-					 description => 'Test caching' );
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'cache',
+						      description => 'Test caching' );
 
 
 #------------------------------------------------------------

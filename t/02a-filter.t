@@ -9,8 +9,8 @@ $tests->run;
 sub make_tests
 {
     my $group =
-         HTML::Mason::Tests->new( name => 'filter',
-                                  description => 'Tests <%filter> specific problems' );
+         HTML::Mason::Tests->tests_class->new( name => 'filter',
+					       description => 'Tests <%filter> specific problems' );
 
 #------------------------------------------------------------
 

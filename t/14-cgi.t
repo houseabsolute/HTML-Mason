@@ -12,13 +12,17 @@ use CGI qw(-no_debug);  # Prevent "(offline mode: enter name=value pairs on stan
     use HTML::Mason::Tests;
     use base 'HTML::Mason::Tests';
 
+    my $interp;
+    
     sub _run_test
     {
 	my $self = shift;
 	my $test = $self->{current_test};
 	
 	$self->{buffer} = '';
-	my $interp = $self->_make_interp;
+	$interp ||= HTML::Mason::CGIHandler->new
+	    (comp_root => $self->comp_root,
+	     data_dir  => $self->data_dir);
 	
 	eval { $self->_execute($interp) };
 	

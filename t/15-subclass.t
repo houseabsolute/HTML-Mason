@@ -77,8 +77,8 @@ $tests->run;
 
 sub make_tests
 {
-    my $group = HTML::Mason::Tests->new( name => 'subclass',
-					 description => 'Test use of subclasses for various core classes' );
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'subclass',
+						      description => 'Test use of subclasses for various core classes' );
 
 #------------------------------------------------------------
 

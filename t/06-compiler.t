@@ -10,8 +10,8 @@ my $tests = make_tests();
 $tests->run;
 
 sub make_tests {
-    my $group = HTML::Mason::Tests->new( name => 'compiler',
-					 description => 'compiler and lexer object functionality' );
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'compiler',
+						      description => 'compiler and lexer object functionality' );
 
 
 #------------------------------------------------------------

@@ -9,8 +9,9 @@ $tests->run;
 
 sub make_tests
 {
-    my $group = HTML::Mason::Tests->new( name => 'syntax',
-					 description => 'Basic component syntax tests' );
+
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'syntax',
+						      description => 'Basic component syntax tests' );
 
 
 #------------------------------------------------------------

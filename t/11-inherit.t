@@ -9,8 +9,8 @@ $tests->run;
 
 sub make_tests
 {
-    my $group = HTML::Mason::Tests->new( name => 'inherit',
-					 description => 'Test inheritance' );
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'inherit',
+						      description => 'Test inheritance' );
 
 
 #------------------------------------------------------------

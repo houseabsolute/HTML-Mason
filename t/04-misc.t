@@ -10,8 +10,8 @@ $tests->run;
 
 sub make_tests
 {
-    my $group = HTML::Mason::Tests->new( name => 'misc',
-					 description => 'autohandler and dhandler functionality' );
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'misc',
+						      description => 'autohandler and dhandler functionality' );
 
 
 #------------------------------------------------------------

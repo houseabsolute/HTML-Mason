@@ -91,14 +91,36 @@ EOF
             },
 	  );
 
+#
+# Get command options here so that we read tests_class before user
+# calls new().
+#
+my %cmd_options;
+GetOptions( 'create' => \$cmd_options{create},
+	    'tests-to-run=s' => \$cmd_options{tests_to_run},
+	    'tests-class=s' => \$cmd_options{tests_class},
+	    );
+
+#
+# Allow options to be passed in the environment as well.
+#
+$cmd_options{tests_to_run} = $ENV{MASON_TESTS_TO_RUN}
+    if !defined($cmd_options{tests_to_run}) and defined($ENV{MASON_TESTS_TO_RUN});
+$cmd_options{tests_class} = $ENV{MASON_TESTS_CLASS}
+    if !defined($cmd_options{tests_class}) and defined($ENV{MASON_TESTS_CLASS});
+
+# If user specifies tests_class, load that package; otherwise,
+# default it to this package.
+if (defined($cmd_options{tests_class})) {
+    eval "use $cmd_options{tests_class}";
+} else {
+    $cmd_options{tests_class} = __PACKAGE__;
+}
+
 sub new
 {
     my $class = shift;
-    my %p = @_;
-
-    GetOptions( 'create' => \$p{create},
-		'tests-to-run=s' => \$p{tests_to_run},
-	      );
+    my %p = (@_, %cmd_options);
 
     die "No group name provided\n"
 	unless exists $p{name};
@@ -109,15 +131,17 @@ sub new
     $p{pre_test_cleanup} = 1
         unless exists $p{pre_test_cleanup};
 
-    $p{tests_to_run} = $ENV{TESTS_TO_RUN}
-        if !defined($p{tests_to_run}) and defined($ENV{TESTS_TO_RUN});
- 
     return bless {
-		  interp_class => 'HTML::Mason::Interp',
 		  %p,
 		  support => [],
 		  tests => [],
 		 }, $class;
+}
+
+# Returns the tests class to use for class methods - defaults to this package.
+sub tests_class
+{
+    return $cmd_options{tests_class};
 }
 
 sub add_support
@@ -392,7 +416,7 @@ sub _make_component
     $self->_write_test_comp;
 }
 
-sub _make_interp
+sub _make_main_interp
 {
     my $self = shift;
     my $test = $self->{current_test};
@@ -411,10 +435,16 @@ sub _make_interp
 	}
     }
 
-    return $self->{interp_class}->new( comp_root => $self->comp_root,
-				       data_dir  => $self->data_dir,
-				       %interp_params,
-				     );
+    return $self->_make_interp ( comp_root => $self->comp_root,
+				 data_dir  => $self->data_dir,
+				 %interp_params );
+}
+
+sub _make_interp
+{
+    my ($class, %interp_params) = @_;
+
+    return HTML::Mason::Interp->new( %interp_params );
 }
 
 sub _run_test
@@ -423,7 +453,7 @@ sub _run_test
     my $test = $self->{current_test};
 
     $self->{buffer} = '';
-    my $interp = $self->_make_interp;
+    my $interp = $self->_make_main_interp;
     $interp->out_method( sub { for (@_) { $self->{buffer} .= $_ if defined $_ } } );
 
     eval { $self->_execute($interp) };
@@ -623,10 +653,6 @@ The name of the entire group of tests.
 
 What this group tests.
 
-=item * interp_class (optional, default='HTML::Mason::Interp')
-
-Specifies an alternate class for creating the Interpreter.
-
 =item * pre_test_cleanup (optional, default=1)
 
 If this is true (the default), the component root and data directory
@@ -800,12 +826,35 @@ correct!).
 
 =head2 Running selected tests
 
-You can run just some of a test file with the '--tests-to-run' flag,
-or by setting the TESTS_TO_RUN environment variable. In either case
-the value is a comma-separated list of test numbers.  e.g.
+You can run just some of a test file with the '--tests-to-run' flag or
+the MASON_TESTS_TO_RUN environment variable.  The value is a
+comma-separated list of test numbers.  e.g.
 
     perl ./01-syntax.t --tests-to-run=3,5
-    TESTS_TO_RUN=3,5 perl ./01-syntax.t
+    MASON_TESTS_TO_RUN=3,5 perl ./01-syntax.t
+
+=head2 Subclassing this module
+
+You can run tests with your own Tests.pm subclass using the
+'--tests-class' flag or the MASON_TESTS_CLASS environment variable.
+The value is a fully qualified package name that will be loaded before
+each test file is run.  e.g.
+
+    perl ./01-syntax.t --tests-class=HTML::Mason::Tests::MyTests
+    MASON_TESTS_CLASS=HTML::Mason::Tests::MyTests make test
+
+For example, if you have created your own lexer subclass and want
+to make sure that tests still pass with it, create a Tests subclass
+that overrides the _make_interp method to use your subclass:
+
+    sub _make_interp
+    {
+        my ($self, %interp_params) = @_;
+        
+        return HTML::Mason::Interp->new
+	    ( lexer_class => HTML::Mason::MyLexer,
+	      %interp_params );
+    }
 
 =head1 SEE ALSO
 

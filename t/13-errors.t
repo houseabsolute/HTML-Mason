@@ -11,8 +11,8 @@ $tests->run;
 
 sub make_tests
 {
-    my $group = HTML::Mason::Tests->new( name => 'errors',
-					 description => 'Test that errors are generated properly' );
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'errors',
+						      description => 'Test that errors are generated properly' );
 
 #------------------------------------------------------------
 

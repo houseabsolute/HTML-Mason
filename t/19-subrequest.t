@@ -8,8 +8,8 @@ $tests->run;
 
 sub make_tests
 {
-    my $group = HTML::Mason::Tests->new( name => 'subrequest',
-					 description => 'subrequest-related features' );
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'subrequest',
+						      description => 'subrequest-related features' );
 
 #------------------------------------------------------------
 

@@ -3,7 +3,7 @@ use strict;
 use Cwd;
 use File::Spec;
 
-use HTML::Mason::Interp;
+use HTML::Mason::Tests;
 
 print "1..8\n";
 
@@ -12,9 +12,13 @@ my $comp_root = File::Spec->catdir( getcwd(), 'mason_tests', 'comps' );
 my $data_dir = File::Spec->catdir( getcwd(), 'mason_tests', 'data' );
 ($data_dir) = $data_dir =~ /(.*)/;
 
-my $interp = HTML::Mason::Interp->new( comp_root => $comp_root,
-				       data_dir => $data_dir,
-				     );
+my $tests = HTML::Mason::Tests->tests_class->new( name => 'print',
+                                                  description => 'printing to standard output' );
+
+my $interp = HTML::Mason::Tests->tests_class->_make_interp
+    ( comp_root => $comp_root,
+      data_dir => $data_dir,
+      );
 
 {
     my $source = <<'EOF';

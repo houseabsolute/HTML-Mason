@@ -11,9 +11,9 @@ $tests->run;
 
 sub make_tests
 {
-    my $group = HTML::Mason::Tests->new( name => 'interp',
-					 description => 'interp object functionality',
-                                         pre_test_cleanup => 0 );
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'interp',
+						      description => 'interp object functionality',
+						      pre_test_cleanup => 0 );
 
 #------------------------------------------------------------
 
@@ -69,24 +69,24 @@ Hello World!
 EOF
 		    );
 
-    my $alt_root = File::Spec->catdir( HTML::Mason::Tests->base_path, 'alt_root' );
-    my @roots = ( [ main => HTML::Mason::Tests->comp_root],
+    my $alt_root = File::Spec->catdir( HTML::Mason::Tests->tests_class->base_path, 'alt_root' );
+    my @roots = ( [ main => HTML::Mason::Tests->tests_class->comp_root],
 		  [ alt => $alt_root ] );
 
 
     #HACK!
-    HTML::Mason::Tests->write_comp( '/alt_root/interp/comp_root_test/private2',
-				    File::Spec->catdir( $alt_root, 'interp', 'comp_root_test' ),
-				    'private2',
-				    <<'EOF' );
+    HTML::Mason::Tests->tests_class->write_comp( '/alt_root/interp/comp_root_test/private2',
+						 File::Spec->catdir( $alt_root, 'interp', 'comp_root_test' ),
+						 'private2',
+						 <<'EOF' );
 private2 in the alternate component root.
 <& showcomp &>
 EOF
 
-    HTML::Mason::Tests->write_comp( '/alt_root/interp/comp_root_test/shared',
-				    File::Spec->catdir( $alt_root, 'interp', 'comp_root_test' ),
-				    'shared',
-				    <<'EOF' );
+    HTML::Mason::Tests->tests_class->write_comp( '/alt_root/interp/comp_root_test/shared',
+						 File::Spec->catdir( $alt_root, 'interp', 'comp_root_test' ),
+						 'shared',
+						 <<'EOF' );
 shared.html in the alternate component root.
 <& showcomp &>
 EOF
@@ -499,9 +499,10 @@ EOF
 
 #------------------------------------------------------------
 
-    my $interp = HTML::Mason::Interp->new( data_dir => $group->data_dir,
-					   comp_root => $group->comp_root,
-					   code_cache_max_size => 9400 );
+    my $interp = HTML::Mason::Tests->tests_class->_make_interp
+	( data_dir => $group->data_dir,
+	  comp_root => $group->comp_root,
+	  code_cache_max_size => 9400 );
 
     $group->add_test( name => 'code_cache_test/code_cache_1',
 		      description => 'Run in order to load up code cache',
@@ -746,9 +747,10 @@ EOF
 
 #------------------------------------------------------------
 
-    my $interp = HTML::Mason::Interp->new( data_dir => $group->data_dir,
-					   comp_root => $group->comp_root,
-					 );
+    my $interp = HTML::Mason::Tests->tests_class->_make_interp
+	( data_dir => $group->data_dir,
+	  comp_root => $group->comp_root,
+	  );
     $interp->compiler->allow_globals( qw($global) );
     $interp->set_global( global => 'parsimmon' );
 
@@ -919,7 +921,7 @@ EOF
     {
 	$group->add_test( name => 'no_data_dir',
 			  description => 'test interp without a data directory',
-			  interp => HTML::Mason::Interp->new( comp_root => HTML::Mason::Tests->comp_root ),
+			  interp => HTML::Mason::Tests->tests_class->_make_interp( comp_root => HTML::Mason::Tests->tests_class->comp_root ),
 			  component => <<'EOF',
 Hello World!
 <% ref $m->cache %>
@@ -945,7 +947,7 @@ EOF
 		      description => 'test interp without a comp root or data dir',
 		      component => <<'EOF',
 % my $buffer;
-% my $interp = HTML::Mason::Interp->new( out_method => \$buffer );
+% my $interp = HTML::Mason::Tests->tests_class->_make_interp( out_method => \$buffer );
 % $interp->exec( '/mason_tests/comps/interp/no_comp_root_helper' );
 <% $buffer %>
 EOF
