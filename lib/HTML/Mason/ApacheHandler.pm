@@ -852,7 +852,7 @@ sub prepare_request
 				       );
 
     # get this from current object.
-    my $real_apache_print = $r->can('print');
+    my $real_apache_print = $new_r->can('print');
 
     # Craft the request's out method to handle http headers, content
     # length, and HEAD requests.
