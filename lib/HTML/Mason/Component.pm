@@ -12,7 +12,18 @@ use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
 # for weakrefs
-BEGIN { require Scalar::Util if $] >= 5.006 }
+BEGIN
+{
+    my $can_weaken = 0;
+    if ( $] >= 5.006 )
+    {
+        require Scalar::Util;
+
+        $can_weaken = defined &Scalar::Util::weaken;
+    }
+
+    sub CAN_WEAKEN () { $can_weaken }
+}
 
 use HTML::Mason::Exceptions( abbr => ['error'] );
 use HTML::Mason::MethodMaker
@@ -318,8 +329,7 @@ sub interp {
 
         $self->{interp} = $_[0];
 
-        Scalar::Util::weaken( $self->{interp} )
-            if $] >= 5.006 and defined &Scalar::Util::weaken;
+        Scalar::Util::weaken( $self->{interp} ) if CAN_WEAKEN;
     } elsif ( ! defined $self->{interp} ) {
         die "The Interp object that this object contains has gone out of scope.\n";
     }
