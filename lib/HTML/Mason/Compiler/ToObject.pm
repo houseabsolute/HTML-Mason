@@ -99,6 +99,9 @@ sub compiled_component
 	$subs{main} = $params->{code};
 	$params->{code} = "sub {\n\$m->call_dynamic( 'main', \@_ )\n}";
 
+        $subs{filter} = $params->{filter};
+        $params->{filter} = "sub {\n$m->call_dynamic( 'filter', \@_ )\n}";
+
 	$params->{dynamic_subs_init} =
 	    join '', ( "sub {\n",
 		       $self->_blocks('shared'),
@@ -234,6 +237,7 @@ sub _component_params
         $params{filter} =
             ( join '',
               "sub { local \$_ = shift;\n",
+              "my %ARGS = @_;\n",
               ( join ";\n", @filter ),
               ";\n",
               "return \$_;\n",
