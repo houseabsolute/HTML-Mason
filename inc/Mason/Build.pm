@@ -97,7 +97,7 @@ sub _cleanup_apache_test_files
 {
     my $self = shift;
 
-    foreach ( qw( httpd httpd.conf mason_handler_CGI.pl mason_handler_mod_perl.pl ) )
+    foreach ( qw( httpd mason_handler_CGI.pl mason_handler_mod_perl.pl ) )
     {
 	my $file = File::Spec->catdir( 't', $_ );
 	if ( -e $file )
@@ -107,7 +107,7 @@ sub _cleanup_apache_test_files
 	}
     }
 
-    foreach ( qw( comps data ) )
+    foreach ( qw( comps data conf logs ) )
     {
 	my $dir = File::Spec->catdir( 't', $_ );
 	if ( -d $dir )
@@ -125,17 +125,25 @@ sub _write_apache_test_conf
 
     return unless keys %conf;
 
-    my $conf_file = File::Spec->catfile( $self->base_dir, 't', 'httpd.conf' );
-    $conf{apache_dir} = File::Basename::dirname($conf_file);
+    $conf{apache_dir} = File::Spec->catdir( $self->base_dir, 't' );
     $conf{apache_dir} =~ s,/$,,;
+
+    $conf{conf_dir} = File::Spec->catdir( $conf{apache_dir}, 'conf' );
+    $conf{conf_file} = File::Spec->catfile( $conf{conf_dir}, 'httpd.conf' );
 
     $conf{comp_root} = File::Spec->catdir( $conf{apache_dir}, 'comps' );
     $conf{data_dir} = File::Spec->catdir( $conf{apache_dir}, 'data' );
+
+    $conf{log_dir} = File::Spec->catdir( $conf{apache_dir}, 'logs' );
 
     mkdir $conf{comp_root}, 0755
 	or die "Can't make dir '$conf{comp_root}': $!";
     mkdir $conf{data_dir}, 0755
 	or die "Can't make dir '$conf{data_dir}': $!";
+    mkdir $conf{conf_dir}, 0755
+	or die "Can't make dir '$conf{conf_dir}': $!";
+    mkdir $conf{log_dir}, 0755
+	or die "Can't make dir '$conf{log_dir}': $!";
     if (!$<) {
 	# set data_dir permissions when running as root
 	my $uid = getpwnam($conf{user});
@@ -149,6 +157,7 @@ sub _write_apache_test_conf
     }
 
     $self->add_to_cleanup( @conf{'comp_root', 'data_dir'} );
+    $self->add_to_cleanup( @conf{'log_dir', 'conf_dir'} );
 
     my $libs = $self->_apache_test_conf_libs();
 

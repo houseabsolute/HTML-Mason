@@ -74,11 +74,11 @@ DocumentRoot $DIR/t
 
 $args{modules}
 
-ErrorLog $DIR/t/error_log
-PidFile $DIR/t/httpd.pid
+ErrorLog $DIR/t/logs/error_log
+PidFile $DIR/t/logs/httpd.pid
 $AccessConfig
 $ResourceConfig
-LockFile $DIR/t/httpd.lock
+LockFile $DIR/t/logs/httpd.lock
 TypesConfig /dev/null
 TransferLog /dev/null
 $ScoreBoardFile
@@ -468,10 +468,10 @@ test :: pure_all start_httpd run_tests   kill_httpd
 testdb:	start_httpd run_testsdb kill_httpd
 
 kill_httpd:
-	kill `cat t/httpd.pid`
+	kill `cat t/logs/httpd.pid`
 
 start_httpd:
-	t/httpd -f `pwd`/t/httpd.conf
+	t/httpd -f `pwd`/t/conf/httpd.conf
 
 run_tests :: pure_all
 	PERL_DL_NONLAZY=1 PORT=$conf{port}
