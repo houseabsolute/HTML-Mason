@@ -161,6 +161,12 @@ L<HTML::Mason::CGIHandler|HTML::Mason::CGIHandler> documentation.
 If you are using Mason from a standalone program, refer to
 ADMIN<Using Mason from a Standalone Script>.
 
+There is also a book about Mason, I<Embedding Perl in HTML with
+Mason>, by Dave Rolsky and Ken Williams, published by O'Reilly and
+Associates.  The book's website is at http://www.masonbook.com/.  This
+book goes into detail on a number of topics, and includes a chapter of
+recipes as well as a sample Mason-based website.
+
 =head1 AUTHORS
 
 Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams <ken@mathforum.org>
