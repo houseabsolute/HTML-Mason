@@ -450,8 +450,11 @@ EOF
 			 component => <<'EOF',
 Code cache contains these plain components:
 % my %c = %{$m->interp->{code_cache}};
-% foreach ( sort grep { /plain / } keys %c ) {
+% foreach ( sort grep { /plain/ } keys %c ) {
 <% $_ %>
+% }
+% if ( ! grep { /plain/ } keys %c ) {
+Code cache contains no files matching /plain/
 % }
 EOF
 		       );
@@ -559,11 +562,11 @@ plain7
 EOF
 		       );
 
+#------------------------------------------------------------
+
     my $interp = HTML::Mason::Interp->new( data_dir => $group->data_dir,
 					   comp_root => $group->comp_root,
-					   code_cache_max_size => 5500 );
-
-#------------------------------------------------------------
+					   code_cache_max_size => 9000 );
 
     $group->add_test( name => 'code_cache_test/code_cache_1',
 		      description => 'Run in order to load up code cache',
