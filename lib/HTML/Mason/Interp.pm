@@ -857,6 +857,21 @@ preloads.
 
 =over
 
+=for html <a name="item_exec"></a>
+
+=item exec (comp, args...)
+
+Creates a new HTML::Mason::Request object for the given I<comp> and
+I<args>, and executes it. The return value is the return value of
+I<comp>, if any.
+
+This is useful for running Mason outside of a web environment.
+See L<HTML::Mason::Admin/Using Mason from a standalone script>
+for examples.
+
+This method isn't generally useful in a mod_perl environment; see
+L<subrequests|HTML::Mason::Devel/Subrequests> instead.
+
 =for html <a name="item_set_global"></a>
 
 =item set_global ($varname, [values...])
