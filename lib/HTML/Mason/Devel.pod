@@ -1309,6 +1309,14 @@ naughty words filter for the easily offended:
 
   $interp->set_escape( 'no-naughty' => \&remove_naughty_words );
 
+=head2 Manually applying escapes
+
+You can manually apply one or more escapes to text using the L<Interp
+object's C<apply_escapes()>
+method|HTML::Mason::Interp/item_apply_escapes>. e.g.
+
+  $m->interp->apply_escapes( 'some html content', 'h' );
+
 =head2 Backslash at end of line
 
 A backslash (\) at the end of a line suppresses the newline. In HTML
