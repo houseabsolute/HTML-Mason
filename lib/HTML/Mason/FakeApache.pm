@@ -1,5 +1,11 @@
 use strict;
 
+# We need to define an Apache package or we might get strange errors
+# like "Can't locate package Apache for
+# @HTML::Mason::FakeApache::ISA".  We do the BEGIN/eval thing so that
+# the CPAN indexer doesn't pick it up, which would be ugly.
+BEGIN { eval "package Apache" }
+
 package HTML::Mason::FakeApache;
 @HTML::Mason::FakeApache::ISA = qw(Apache);
 # Analogous to Apache request object $r (but not an actual Apache subclass)
