@@ -134,7 +134,7 @@ knowing which private components exist. Any other file extensions
 
 You might prefer C<FilesMatch> to C<LocationMatch>. However, be aware
 that C<LocationMatch> will work best in conjunction with Mason's
-L<HTML::Mason::Devel/dhandlers>.
+L<dhandlers|HTML::Mason::Devel/dhandlers>.
 
 =head2 Configuration Parameters
 
