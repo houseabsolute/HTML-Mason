@@ -55,15 +55,16 @@ The absolutely most minimal configuration looks like this:
 
     PerlModule HTML::Mason::ApacheHandler
 
-    <LocationMatch "\.html$">
+    <Location />
       SetHandler   perl-script
       PerlHandler  HTML::Mason::ApacheHandler
-    </LocationMatch>
+    </Location>
 
-This configuration tells Apache to serve all URLs ending in ".html"
-with Mason.  We use the PerlModule line to tell mod_perl to load Mason
-once at startup time, saving time and memory.  This example does not
-set any Mason configuration parameters, so Mason uses its default values.
+This configuration tells Apache to serve all URLs through Mason (see
+the next section for a more refined strategy).  We use the PerlModule
+line to tell mod_perl to load Mason once at startup time, saving time
+and memory.  This example does not set any Mason configuration
+parameters, so Mason uses its default values.
 
 If this is your first time installing and using Mason, we recommend
 that you use the above configuration in a test webserver to start
@@ -71,11 +72,80 @@ with.  This will let you play with Mason under mod_perl with a minimum
 of fuss.  Once you've gotten this working, then come back and read the
 rest of the document for further possibilities.
 
+=head2 Controlling Access via Filename Extension
+
+As it turns out, serving every URL through Mason is a bad idea for two
+reasons:
+
+=over
+
+=item 1.
+
+Mason should be prevented from handling images, tarballs, and other
+binary files. Not only will performance suffer, but binary files may
+inadvertently contain a Mason character sequence such as "<%". These
+files should be instead served by Apache's default content handler.
+
+=item 2.
+
+Mason should be prevented from serving private (non-top-level) Mason
+components to users. For example, if you used a utility component for
+performing arbitrary sql queries, you wouldn't want external users to
+be able to access it via a URL. Requests for private components should
+simply result in a 404 NOT_FOUND.
+
+=back
+
+The easiest way to distinguish between different types of files is
+with filename extensions. While many naming schemes are possible, we
+suggest using "normal" extensions for top-level components and
+adding an "m" prefix for private components. For example,
+
+                             Top-level       Private
+
+   Component outputs HTML    .html           .mhtml
+   Component outputs text    .txt            .mtxt
+   Component executes Perl   .pl             .mpl
+
+This scheme minimizes the chance of confusing browsers about content
+type, scales well for new classes of content (e.g. .js/.mjs for
+javascript), and makes transparent the fact that you are using Mason
+versus some other package.
+
+Here is a configuration that enforces this naming scheme:
+
+    PerlModule HTML::Mason::ApacheHandler
+
+    <FilesMatch "(\.html|\.txt|\.pl)$">
+      SetHandler perl-script
+      PerlHandler HTML::Mason
+    </FilesMatch>
+
+    <LocationMatch "(\.html|\.txt|\.pl)$">
+      SetHandler perl-script
+      PerlHandler HTML::Mason
+    </LocationMatch>
+
+    <FilesMatch "(dhandler|autohandler|\.m(html|txt|pl))$"
+      SetHandler perl-script
+      PerlInitHandler Apache::Constants::NOT_FOUND
+    </FilesMatch>
+
+The first block causes real files named .html, .txt, or .pl to
+be served through Mason.
+
+The second block does the same thing for URLs that do not
+correspond to real files. This is essential for using
+L<HTML::Mason::Devel/dhandlers>.
+
+The third block causes requests to private components to return 404
+NOT_FOUND. This prevents unscrupulous users from even knowing which
+private components exist.
+
 =head2 Configuration Parameters
 
-Since the default behavior will not work for everyone, Mason allows
-you to flexibly configure its behavior via F<httpd.conf> configuration
-parameters.
+Mason allows you to flexibly configure its behavior via F<httpd.conf>
+configuration parameters.
 
 These configuration parameters are set via mod_perl's C<PerlSetVar>
 and C<PerlAddVar> directives (the latter is only available in mod_perl
@@ -243,109 +313,6 @@ A Perl section will also work for including local library paths:
   use lib '/path/to/local/lib';
   </Perl>
 
-=head2 Limiting URLs Handled by Mason
-
-Mason should be prevented from serving images, tarballs, and other
-binary files as regular components. Not only will performance suffer,
-but binary files may inadvertently contain a Mason character sequence
-such as "<%".
-
-There are several ways to restrict which file types are handled by
-Mason.  One way is to use C<LocationMatch>, e.g.
-
-    <LocationMatch "(\.html|\.txt|^[^\.]+)$">
-      SetHandler   perl-script
-      PerlHandler  HTML::Mason::ApacheHandler
-    </LocationMatch>
-
-This directs Mason to handle only files with .html or .txt extension,
-as well as those files with no extension.
-
-If you are familiar with Apache, you might have also thought of the
-C<FilesMatch> directive.  The problem with using this directive is
-that this directive only matches files that actually exist on the
-filesystem.  You will not be able to use
-L<dhandlers|HTML::Mason::Devel/dhandlers> to catch non-existent files
-if you use a C<FilesMatch> directive, and for this reason we
-discourage its use.
-
-A second possibility is to indicate the extensions that should I<not>
-be served through Mason, e.g.
-
-    <Location />
-      SetHandler   perl-script
-      PerlHandler  HTML::Mason::ApacheHandler
-    </Location>
-
-    <LocationMatch "\.(gif|jpe?g|png|gz)$">
-      SetHandler  default-handler
-    </LocationMatch>
-
-This will send all extensions not listed in the C<LocationMatch>
-directive through Mason. The disadvantage of this method is that you
-have to explicitly list all of the non-Mason extensions used on your
-site.
-
-Make sure this directive comes I<after> any directive which turns
-Mason on for certain locations, as Apache gives the last block defined
-precedence.
-
-=head3 Securing top-level components
-
-Users may exploit a server-side scripting environment by invoking
-scripts with malicious or unintended arguments. Mason administrators
-need to be particularly wary of this because of the tendency to break
-out "subroutines" into individually accessible file components.
-
-For example, a Mason developer might create a helpful shared component
-for performing sql queries:
-
-    $m->comp('sql_select', table=>'employee', where=>'id=315');
-
-This is a perfectly reasonable component to create and call internally,
-but clearly presents a security risk if accessible via URL:
-
-    http://www.foo.com/sql_select?table=credit_cards&where=*
-
-Of course a web user would have to obtain the name of this component
-through guesswork or other means, but obscurity alone does not
-properly secure a system.  Rather, you should choose a site-wide
-policy for distinguishing top-level components from private
-components, and make sure your developers stick to this policy. You
-can then prevent private components from being served.
-
-One solution is to place all private components inside a directory,
-say F<private/>, that lies under the component root but outside the
-document root. e.g.
-
-  component root:     /usr/mason/comps
-  document root:      /usr/mason/comps/htdocs
-  private components: /usr/mason/comps/private
-
-Since Mason's default component resolution process relies on Apache
-being able to translate URLs to files, this effectively prevents
-outside access to components under F</usr/mason/comps/private>.
-
-Another solution is to decide on a naming convention, for example,
-that all private components begin with "_", or that all top-level
-components must end in ".html". Then turn all private requests away
-with a 404 NOT_FOUND (rather than, say, a 403 FORBIDDEN which would
-provide more information than necessary):
-
-    PerlModule  Apache::Constants
-
-    <LocationMatch "^_">
-      SetHandler       perl-script
-      PerlInitHandler  Apache::Constants::NOT_FOUND
-    </LocationMatch>
-
-Even after you've safely protected internal components, top-level
-components that process arguments (such as form handlers) still
-present a risk. Users can invoke such a component with arbitrary
-argument values via a handcrafted query string. Always check incoming
-arguments for validity and never place argument values directly into
-SQL, shell commands, etc.
-
 =head2 Allowing Directory Requests
 
 By default Mason will decline requests for directories, leaving Apache
@@ -372,19 +339,19 @@ space:
     # Web site #1
     <VirtualHost www.site1.com>
       DocumentRoot  /usr/local/www/htdocs/site1
-      <Location />
+      <FilesMatch ...>
         SetHandler   perl-script
         PerlHandler  HTML::Mason::ApacheHandler
-      </Location>
+      </FilesMatch>
     </VirtualHost>
 
     # Web site #2
     <VirtualHost www.site2.com>
       DocumentRoot  /usr/local/www/htdocs/site2
-      <Location />
+      <FilesMatch ...>
         SetHandler   perl-script
         PerlHandler  HTML::Mason::ApacheHandler
-      </Location>
+      </FilesMatch>
     </VirtualHost>
 
     # Mason configuration
@@ -418,10 +385,10 @@ the component root must change depending on the site requested.
       PerlSetVar  MasonCompRoot  /usr/local/www/htdocs/site1
       PerlSetVar  MasonDataDir   /usr/local/mason/site1
 
-      <Location />
+      <FilesMatch ...>
         SetHandler   perl-script
         PerlHandler  HTML::Mason::ApacheHandler
-      </Location>
+      </FilesMatch>
     </VirtualHost>
 
     # Web site #2
@@ -432,10 +399,10 @@ the component root must change depending on the site requested.
       PerlSetVar  MasonCompRoot  /usr/local/www/htdocs/site2
       PerlSetVar  MasonDataDir   /usr/local/mason/site2
 
-      <Location />
+      <FilesMatch ...>
         SetHandler   perl-script
         PerlHandler  HTML::Mason::ApacheHandler
-      </Location>
+      </FilesMatch>
     </VirtualHost>
 
 =head1 ADVANCED CONFIGURATION
@@ -474,10 +441,10 @@ this case, your Apache configuration would look like this:
 
   PerlRequire  handler.pl
 
-  <LocationMatch "\.html$">
+  <FilesMatch ...>
     SetHandler   perl-script
     PerlHandler  MyApp::Mason
-  </LocationMatch>
+  </FilesMatch>
 
 You may still see references to a F<handler.pl> file in the Mason
 users list archives, as well as the FAQ.  These references will
@@ -566,64 +533,13 @@ called C<MyApp::MasonInit>:
 This can be loaded via a C<PerlModule> directive in the F<httpd.conf>
 file, or in the wrapper code itself via C<use>.
 
-=head2 Accepting Requests Based on Content Type
+=head3 Example: Controlling access with component attributes
 
-As mentioned earlier, letting Mason handle binary files is likely to
-cause problems.  We want to decline requests for binary files while at
-the same time, we want to open up the system to make Mason accept
-directory requests.  Here's a bit of code that could be added to the
-C<handler()> subroutine to do this:
-
-    return DECLINED
-        if $r->content_type &&
-           $r->content_type !~ m|^text/|i &&
-           $r->content_type !~ m|directory$|i;
-
-This code returns C<DECLINED> if the request has a content type and
-that content type does not begin with either "text/" or "directory/".
-The C<DECLINED> constant is exported by the Apache::Constants module.
-Since we are now accepting directory requests, we need to change the
-ApacheHandler to accept these as well.  Our new wrapper now looks like
-this:
-
-  package MyApp::Mason;
-
-  use strict;
-  use Apache::Constants qw(DECLINED);
-  use HTML::Mason::ApacheHandler;
-
-  my $ah =
-      HTML::Mason::ApacheHandler->new
-          ( comp_root => '/path/to/comp/root',
-            data_dir  => '/path/to/data/dir',
-            decline_dirs => 0,
-          );
-
-  sub handler {
-      my ($r) = @_;
-
-      return DECLINED
-          if $r->content_type && $r->content_type !~ m|^text/|i &&
-             $r->content_type !~ m|directory$|i;
-
-      return $ah->handle_request($r);
-  }
-
-=head3 Securing top-level components with code
-
-Again, as discussed earlier, you will often have components that are
-intended only for use by other components, and you don't want these to
-be callable by external requests.  Let's assume that all such
-components have the extension ".mas".  To reject such requests, we can
-add this line to our C<handler()> subroutine:
-
-  return DECLINED if $r->uri =~ /\.mas$/;
-
-=head3 Controlling access with component attributes
-
-If you wanted to control access to components based on component
-attributes, as defined in an C<< <%attr> >> section, you might do
-something like this:
+An example of something you can only do with wrapper code is deciding
+at run-time whether a component can be accessed at the top-level based
+on a complex property of the component.  For example, here's a piece
+of code that uses the current user and a component's C<access_level>
+attribute to control access:
 
   sub handler {
       my ($r) = @_;
@@ -776,6 +692,8 @@ details.  Of course, you could even create a subclass I<and> write a
 wrapper that called it.
 
 =head1 DEVELOPMENT
+
+This section describes how to set up common developer features.
 
 =head2 Global Variables
 
