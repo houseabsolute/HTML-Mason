@@ -4,10 +4,10 @@ use strict;
 
 use Module::Build;
 
-my $notes = Module::Build->current->notes;
+my $test_data = Module::Build->current->notes('test_data');
 
-unless ($notes->{test_data}{is_maintainer} &&
-	-e "$notes->{test_data}{apache_dir}/CGIHandler.cgi")
+unless ($test_data->{is_maintainer} &&
+	-e "$test_data->{apache_dir}/CGIHandler.cgi")
 {
     print "1..0\n";
     exit;
@@ -33,7 +33,7 @@ use Apache::test qw(skip_test have_httpd have_module);
 skip_test unless have_httpd;
 
 # needed for Apache::test->fetch to work
-local $ENV{PORT} = $notes->{test_data}{port};
+local $ENV{PORT} = $test_data->{port};
 
 kill_httpd(1);
 test_load_apache();

@@ -4,12 +4,12 @@ use strict;
 
 use Module::Build;
 
-my $notes = Module::Build->current->notes;
+my $test_data = Module::Build->current->notes('test_data');
 
 # Skip test if no mod_perl
 eval { require mod_perl };
 
-unless ( $notes->{test_data}{is_maintainer} &&
+unless ( $test_data->{is_maintainer} &&
 # need to use var name twice to avoid annoying warning
          ( $mod_perl::VERSION || $mod_perl::VERSION ) )
 {
@@ -31,7 +31,7 @@ skip_test unless have_httpd;
 local $| = 1;
 
 # needed for Apache::test->fetch to work
-local $ENV{PORT} = $notes->{test_data}{port};
+local $ENV{PORT} = $test_data->{port};
 
 kill_httpd(1);
 test_load_apache();
@@ -89,7 +89,7 @@ cleanup_data_dir();
 # permissions manually.
 if ( $> == 0 || $< == 0 )
 {
-    chmod 0777, File::Spec->catdir( $notes->{test_data}{apache_dir}, 'data' );
+    chmod 0777, File::Spec->catdir( $test_data->{apache_dir}, 'data' );
 }
 
 multi_conf_tests();     # 4 tests
