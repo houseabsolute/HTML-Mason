@@ -38,12 +38,13 @@ my %CONTAINED_OBJECTS = ();
 sub dump_specs
 {
     require B::Deparse;
-    print "Name\tType\tDefault\n\n";
+    my $output = '';
+    $output .= "Name\tType\tDefault\tDescription\n\n";
     foreach my $class (sort keys %VALID_PARAMS)
     {
 	my $params = $VALID_PARAMS{$class};
-	print " --- $class\n";
-	print " ----- valid parameters\n";
+	$output .= " --- $class\n";
+	$output .= " ----- valid parameters\n";
 	foreach my $name (sort keys %$params)
 	{
 	    my $spec = $params->{$name};
@@ -57,12 +58,13 @@ sub dump_specs
 		$type = 'regex';
 		$default =~ s/^\(\?(\w*)-\w*:(.*)\)/\/$2\/$1/;
 	    }
-	    printf("%-28s   %-7s   %s\n", $name, $type, $default);
+	    my $descr = $spec->{descr} || '';
+	    $output .= sprintf("%-28s   %-7s   %s\t%s\n", $name, $type, $default, $descr);
 	}
 
 	if (exists $CONTAINED_OBJECTS{$class})
 	{
-	    print " ----- contained objects\n";
+	    $output .= " ----- contained objects\n";
 
 	    my $contains = $CONTAINED_OBJECTS{$class};
 	    foreach my $name (sort keys %$contains)
@@ -78,13 +80,14 @@ sub dump_specs
 		{
 		    $default = $contains->{$name};
 		}
-
-		printf("%-20s   %s\n", $name, $default);
+		
+		$output .= sprintf("%-20s   %s\n", $name, $default);
 	    }
 	}
-
-	print "\n";
+	
+	$output .= "\n";
     }
+    return $output;
 }
 
 sub valid_params
