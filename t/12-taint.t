@@ -18,6 +18,7 @@ BEGIN
 # Cwd has to be loaded after sanitizing $ENV{PATH}
 use Cwd;
 use File::Spec;
+use Test;
 
 BEGIN
 {
@@ -46,17 +47,15 @@ BEGIN
 
 use HTML::Mason::Interp;
 use HTML::Mason::Compiler::ToObject;
-use HTML::Mason::Tools qw(read_file);
-
-my $alarm_works;
+use HTML::Mason::Tools qw(read_file taint_is_on);
 
 # Clear alarms, and skip test if alarm not implemented
-eval {alarm 0; $alarm_works = 1};
-my $tests = $alarm_works ? 3 : 2;
+my $alarm_works = eval {alarm 0; 1};
+plan tests => 8 + $alarm_works;
 
-print "1..$tests\n";
+# These tests depend on taint mode being on
+ok taint_is_on();
 
-my $test_count = 1;
 if ($alarm_works)
 {
     my $compiler = HTML::Mason::Compiler::ToObject->new;
@@ -70,71 +69,52 @@ if ($alarm_works)
            $comp = $compiler->compile( comp_source => $comp, name => 't/taint.comp' );
        };
 
-    if ( $alarm || $@ || ! defined $comp )
-    {
-	my $reason;
-	if ($alarm)
-	{
-	    $reason = "entered endless while loop";
-	}
-	elsif ($@)
-	{
-	    $reason = "gave error during test: $@";
-	}
-	else
-	{
-	    $reason = "returned an undefined value from compiling";
-	}
-	print "not ok $test_count - $reason\n";
-    }
-    else
-    {
-	print "ok $test_count\n";
-    }
-
-    $test_count++;
+    my $error = ( $alarm ? "entered endless while loop" :
+		  $@ ? "gave error during test: $@" :
+		  !defined($comp) ? "returned an undefined value from compiling" :
+		  '' );
+    ok $error, '';
 }
 
-my $comp_root = File::Spec->catdir( getcwd(), 'mason_tests', 'comps' );
-($comp_root) = $comp_root =~ /(.*)/;
-my $data_dir = File::Spec->catdir( getcwd(), 'mason_tests', 'data' );
-($data_dir) = $data_dir =~ /(.*)/;
+# Make these values untainted
+my ($comp_root) = File::Spec->catdir( getcwd(), 'mason_tests', 'comps' ) =~ /(.*)/;
+my ($data_dir)  = File::Spec->catdir( getcwd(), 'mason_tests', 'data'  ) =~ /(.*)/;
+ok !is_tainted($comp_root);
+ok !is_tainted($data_dir);
+
 my $interp = HTML::Mason::Interp->new( comp_root => $comp_root,
 				       data_dir => $data_dir,
 				     );
 
 $data_dir = File::Spec->catdir( getcwd(), 'mason_tests', 'data' );
 
-# this is tainted, as is anything with return val from getcwd()
-my $comp2 = read_file( File::Spec->catfile( File::Spec->curdir, 't', 'taint.comp' ) );
+# This source is tainted, as is anything with return val from getcwd()
+my $comp2 = HTML::Mason::ComponentSource->new
+    ( friendly_name => 't/taint.comp',
+      source_callback => sub {
+	  read_file( File::Spec->catfile( File::Spec->curdir, 't', 'taint.comp' ) );
+      },
+    );
+ok $comp2;
+ok is_tainted($comp2->comp_source);
 
-# This isn't a part of the documented interface, but we test it here anyway.
-eval { $interp->write_object_file( object_code => \$comp2,
-				   object_file =>
-                                   File::Spec->catfile( $data_dir, 'taint_write_test' ),
-				 ); };
+# Make sure we can write tainted data to disk
+eval { $interp->compiler->compile_to_file
+	   ( file => File::Spec->catfile( $data_dir, 'taint_write_test' ),
+	     source => $comp2,
+	   ); };
+ok $@, '', "Unable to write a tainted object to disk";
 
-if (! $@)
-{
-    print "ok $test_count\n";
-}
-else
-{
-    print "not ok $test_count - Unable to write a tainted object file to disk: $@\n";
-}
-$test_count++;
 
 my $cwd = getcwd(); # tainted
 # This isn't a part of the documented interface, but we test it here anyway.
 my $code = "# MASON COMPILER ID: ". $interp->compiler->object_id ."\nmy \$x = '$cwd';"; # also tainted
-eval { $interp->eval_object_code( object_code => \$code ) };
+ok is_tainted($code);
 
-if (! $@)
-{
-    print "ok $test_count\n";
+eval { $interp->eval_object_code( object_code => \$code ) };
+ok $@, '', "Unable to eval a tainted object file";
+
+###########################################################
+sub is_tainted {
+  return not eval { "+@_" && kill 0; 1 };
 }
-else
-{
-    print "not ok $test_count - Unable to eval a tainted object file: $@\n";
-}
-$test_count++;
