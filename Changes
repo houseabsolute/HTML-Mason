@@ -75,6 +75,10 @@ an error).
 - Unreadable component source files caused the confusing error message
 "source callback returned no source".  This will now throw a much more
 helpful exception.
+- Errors occuring in subrequests would cause error output to be mixed
+with regular output when the error_mode was "output" (the default with
+ApacheHandler and CGIHandler).  Errors in subrequests should now look
+the same as errors in the top request.
 
 1.13  August 26, 2002 (Taiwan time)
 
