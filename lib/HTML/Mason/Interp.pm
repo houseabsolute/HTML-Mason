@@ -746,6 +746,16 @@ sub suppress_hook {
     $self->{exec_state}->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
 }
 
+sub unsuppress_hook {
+    my ($self, %args) = @_;
+    foreach (qw(name type)) {
+	die "unsuppress_hook: must specify $_\n" if !exists($args{$_});
+    }
+    my $code = $self->{hooks}->{$args{type}}->{$args{name}};
+    $self->{exec_state}->{"hooks_$args{type}"} = [grep($_ ne $code,@{$self->{"hooks_$args{type}"}})];
+    push(@{$self->{exec_state}->{"hooks_$args{type}"}},$code);
+}
+
 sub call_hooks {
     my ($self, $type, @params) = @_;
     if ($self->{exec_state}->{"hooks_$type"}) {
