@@ -72,6 +72,7 @@ BEGIN
 use Exception::Class (%e);
 
 HTML::Mason::Exception->Trace(1);
+HTML::Mason::Exception->NoRefs(1);
 
 # The import() method allows this:
 #  use HTML::Mason::Exceptions(abbr => ['error1', 'error2', ...]);
