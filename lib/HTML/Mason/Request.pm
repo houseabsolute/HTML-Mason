@@ -119,7 +119,10 @@ sub _initialize {
     my ($self) = @_;
     my $interp = $self->interp;
 
-    # All errors returned from this routine will be in exception form.
+    # All errors returned from this routine will be converted to a
+    # Mason exception and placed in the {prepare_error} slot.  exec()
+    # will then trigger the error. This makes for an easier new + exec
+    # API.
     local $SIG{'__DIE__'} = sub {
 	my $err = $_[0];
 	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error $err;
