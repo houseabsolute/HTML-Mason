@@ -5,7 +5,7 @@ package HTML::Mason;
 
 use 5.005;
 
-$HTML::Mason::VERSION = '1.1';
+$HTML::Mason::VERSION = '1.10_b1';
 
 # remember to switch this off later.
 $HTML::Mason::DEBUG = 1;
