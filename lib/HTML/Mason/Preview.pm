@@ -232,14 +232,6 @@ sub handle_preview_request_1
 	    eval("\$pr->$key(\$value)");
 	}
     }
-    # doesn't really work because the request doesn't go through
-    # normal apache phases (e.g. path_info not set correctly);
-    # currently planning to take out and replace with named
-    # virtual servers
-    if (defined($conf->{top_prefix})) {
-	$pr->document_root($interp->comp_root.$conf->{top_prefix});
-	$pr->filename($pr->document_root.$pr->uri);
-    }
     if (defined($conf->{server})) {
 	while (my ($key,$value) = each(%{$conf->{server}})) {
 	    eval("\$pr->server->$key(\$value)");
@@ -397,7 +389,6 @@ sub handle_preview_request_1
 	my (@objects,@stack);
 	my $objcount = 0;
 	my $fileroot = $interp->static_file_root();
-	my $comproot = $interp->comp_root();
 	foreach $event (@compEvents) {
 	    next if !defined($event);
 	    my ($type,$path) = ($event->{type},$event->{path});
@@ -436,6 +427,7 @@ sub handle_preview_request_1
 			(($objtype eq 'comp' and $event->{comp}->is_file_based) or
 			 ($objtype eq 'file' and $path =~ m{^$fileroot}))) {
 			my $branch;
+			my $comproot = $interp->first_comp_root();
 			if ($objtype eq 'comp') {
 			    $path = $comproot.$path;
 			    $branch = 'Components';

@@ -9,6 +9,7 @@ $root = (-f "test-common.pl") ? "$pwd/.." : (-f "t/test-common.pl") ? "$pwd" : d
 unshift(@INC,"$root/lib");
 
 require "$root/t/test-common.pl";
+init();
 
 try_exec_all();
 

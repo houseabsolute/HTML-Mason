@@ -16,7 +16,6 @@ use vars qw($AUTOLOAD);
 my %fields =
     (
      code => undef,
-     comp_root => undef,
      create_time => undef,
      declared_args => undef,
      fq_path => undef,

@@ -11,6 +11,7 @@ require Exporter;
 
 use strict;
 use Carp;
+use Data::Dumper;
 use File::Path;
 use File::Basename;
 use File::Find;
@@ -23,12 +24,12 @@ use HTML::Mason::Config;
 use HTML::Mason::Resolver::File;
 require Time::HiRes if $HTML::Mason::Config{use_time_hires};
 
+# Fields that can be set in new method, with defaults
 my %fields =
-    (alternate_sources => undef,
+    (
      allow_recursive_autohandlers => 0,
      autohandler_name => 'autohandler',
      comp_root => undef,
-     code_cache_mode => 'all',
      current_time => 'real',
      data_cache_dir => '',
      data_dir => undef,
@@ -46,12 +47,6 @@ my %fields =
      use_reload_file => 0,
      verbose_compile_error => 0
      );
-# Create accessor routines
-foreach my $f (keys %fields) {
-    next if $f =~ /^current_time|system_log_events$/;  # don't overwrite real sub.
-    no strict 'refs';
-    *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
-}
 
 sub new
 {
@@ -72,22 +67,18 @@ sub new
     my (%options) = @_;
     my ($rootDir,$outMethod,$systemLogEvents);
     while (my ($key,$value) = each(%options)) {
+	next if $key =~ /out_method|system_log_events/;
 	if (exists($fields{$key})) {
 	    $self->{$key} = $value;
-	} elsif ($key eq 'out_method') {
-	    $outMethod = $value;
-	} elsif ($key eq 'system_log_events') {
-	    $systemLogEvents = $value;
 	} else {
 	    die "HTML::Mason::Interp::new: invalid option '$key'\n";
 	}
     }
-    die "HTML::Mason::Interp::new: must specify value for comp_root\n" if !$self->{comp_root};
     die "HTML::Mason::Interp::new: must specify value for data_dir\n" if !$self->{data_dir};
     $self->{data_cache_dir} ||= ($self->{data_dir} . "/cache");
     bless $self, $class;
-    $self->out_method($outMethod) if ($outMethod);
-    $self->system_log_events($systemLogEvents) if ($systemLogEvents);
+    $self->out_method($options{out_method}) if (exists($options{out_method}));
+    $self->system_log_events($options{system_log_events}) if (exists($options{system_log_events}));
     $self->_initialize;
     return $self;
 }
@@ -110,6 +101,7 @@ sub _initialize
     # Create resolver if not provided
     #
     unless ($self->{resolver}) {
+	die "must specify value for comp_root\n" if !$self->{comp_root};
 	my $r = new HTML::Mason::Resolver::File;
 	$self->{resolver} = $r;
     }
@@ -119,6 +111,7 @@ sub _initialize
     # that directories are absolute.
     #
     foreach my $field (qw(comp_root data_dir data_cache_dir)) {
+	next if $field eq 'comp_root' and ref($self->{$field}) eq 'ARRAY';
 	$self->{$field} =~ s/\/$//g unless $self->{$field} =~ /^([A-Za-z]:)?\/$/;
  	die "$field ('".$self->{$field}."') must be an absolute directory" if !is_absolute_path($self->{$field});
     }
@@ -135,8 +128,11 @@ sub _initialize
     # If comp_root has multiple dirs, confirm format.
     #
     if (ref($self->comp_root) eq 'ARRAY') {
-	die "Multiple-path component root must consist of a list of two-element lists"
-	    if (grep(ref($_) ne 'ARRAY',@{$self->comp_root}));
+	foreach my $pair (@{$self->comp_root}) {
+	    die "Multiple-path component root must consist of a list of two-element lists; see documentation" if ref($pair) ne 'ARRAY';
+	    $pair->[1] =~ s/\/$//g unless $pair->[1] =~ /^([A-Za-z]:)?\/$/;
+	    die "comp_root must contain only absolute directories" if !is_absolute_path($pair->[1]);
+	}
     }
     
     #
@@ -154,26 +150,10 @@ sub _initialize
     # Preloads
     #
     if ($self->preloads) {
-	(my $savemode,$self->{code_cache_mode}) = ($self->{code_cache_mode},'all');
-	my $slen = length($self->comp_root);
-	foreach my $p (@{$self->preloads}) {
-	    next if ($p !~ m@^/@);
-	    my $fullPath = $self->comp_root . $p;
-	    $fullPath =~ s@/$@@g;
-	    if (-d $fullPath) {
-		my $sub = sub {
-		    if (-f $File::Find::name) {
-			my $file = $File::Find::name;
-			my $compPath = substr($file,$slen);
-			$self->load($compPath);
-		    }
-		};
-		find($sub,$fullPath);
-	    } elsif (-f $fullPath) {
-		$self->load($p);
-	    }
+	foreach my $pattern (@{$self->preloads}) {
+	    my @paths = $self->resolver->glob_path($pattern,$self);
+	    foreach (@paths) { $self->load($_) }
 	}
-	$self->{code_cache_mode} = $savemode;	
     }
 
     #
@@ -258,7 +238,6 @@ sub load {
     my ($err,$maxfilemod,$objfile,$objfilemod);
     my (@objstat, $objisfile);
     my $codeCache = $self->{code_cache};
-    my $compRoot = $self->{comp_root};
     my $resolver = $self->{resolver};
 
     #
@@ -283,9 +262,7 @@ sub load {
 	    or die "Error while loading '$objfile' at runtime:\n$err\n";
 	$comp->assign_runtime_properties($self,$fqPath);
 	
-	if ($self->{code_cache_mode} eq 'all') {
-	    $codeCache->{$fqPath}->{comp} = $comp;
-	}
+	$codeCache->{$fqPath}->{comp} = $comp;
 	return $comp;
     }
 
@@ -345,7 +322,7 @@ sub load {
 	    # No object files. Load component directly into memory.
 	    #
 	    my @params = $resolver->get_source_params(@lookupInfo);
-	    $comp = $self->make_component(@params,error=>\$err)
+	    $comp = $self->parser->make_component(@params,error=>\$err)
 		or die sprintf("Error during compilation of %s:\n%s\n",$resolver->get_source_description(@lookupInfo),$err);
 	}
 	$comp->assign_runtime_properties($self,$fqPath);
@@ -353,10 +330,8 @@ sub load {
 	#
 	# Cache code in memory
 	#
-	if ($self->{code_cache_mode} eq 'all') {
-	    $codeCache->{$fqPath}->{lastmod} = $srcmod;
-	    $codeCache->{$fqPath}->{comp} = $comp;
-	}
+	$codeCache->{$fqPath}->{lastmod} = $srcmod;
+	$codeCache->{$fqPath}->{comp} = $comp;
 	return $comp;
     }
 }
@@ -529,5 +504,29 @@ sub write_system_log {
 					    ),"\n");
     }
 }
+
+# Create generic read-write accessor routines
+
+sub allow_recursive_autohandlers { my $s=shift; return @_ ? ($s->{allow_recursive_autohandlers}=shift) : $s->{allow_recursive_autohandlers} }
+sub autohandler_name { my $s=shift; return @_ ? ($s->{autohandler_name}=shift) : $s->{autohandler_name} }
+sub data_cache_dir { my $s=shift; return @_ ? ($s->{data_cache_dir}=shift) : $s->{data_cache_dir} }
+sub dhandler_name { my $s=shift; return @_ ? ($s->{dhandler_name}=shift) : $s->{dhandler_name} }
+sub max_recurse { my $s=shift; return @_ ? ($s->{max_recurse}=shift) : $s->{max_recurse} }
+sub out_mode { my $s=shift; return @_ ? ($s->{out_mode}=shift) : $s->{out_mode} }
+sub parser { my $s=shift; return @_ ? ($s->{parser}=shift) : $s->{parser} }
+sub resolver { my $s=shift; return @_ ? ($s->{resolver}=shift) : $s->{resolver} }
+sub static_file_root { my $s=shift; return @_ ? ($s->{static_file_root}=shift) : $s->{static_file_root} }
+sub use_data_cache { my $s=shift; return @_ ? ($s->{use_data_cache}=shift) : $s->{use_data_cache} }
+sub use_object_files { my $s=shift; return @_ ? ($s->{use_object_files}=shift) : $s->{use_object_files} }
+sub use_reload_file { my $s=shift; return @_ ? ($s->{use_reload_file}=shift) : $s->{use_reload_file} }
+sub verbose_compile_error { my $s=shift; return @_ ? ($s->{verbose_compile_error}=shift) : $s->{verbose_compile_error} }
+
+# Create generic read-only accessor routines
+
+sub comp_root { return shift->{comp_root} }
+sub data_dir { return shift->{data_dir} }
+sub system_log_file { return shift->{system_log_file} }
+sub system_log_separator { return shift->{system_log_separator} }
+sub preloads { return shift->{preloads} }
 
 1;

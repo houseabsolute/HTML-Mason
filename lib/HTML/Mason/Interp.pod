@@ -35,21 +35,6 @@ Component Developer's Guide for a discussion of the pros and cons.
 File name used for autohandlers. Default is "autohandler". If
 undef, Mason will not look for autohandlers.
 
-=item code_cache_mode
-
-Specifies whether components are cached in memory when they are
-loaded.  This allows you to trade off memory consumption and cache
-effectiveness.  Must be one of 'all', 'request', or 'none'. 'all'
-means that all components are cached for the lifetime of the process.
-'request' means that components are cached for the duration of each
-HTTP request and then discarded.  'none' means that components are
-never cached.  The default is 'all'.  Note that you may preload
-components (using C<preloads>) regardless of the value of this parameter;
-preloaded components stick around for the lifetime of the process.
-
-This parameter may be augmented in the future with more sophisticated
-caching and cache expiration options.
-
 =item comp_root
 
 A required argument, this specifies the root of your component source

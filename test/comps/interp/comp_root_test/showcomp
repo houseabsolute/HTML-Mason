@@ -1,0 +1,2 @@
+% my $comp = $m->callers(1);
+<& /component/support/display_comp_obj, comp=>$comp &>

@@ -33,8 +33,12 @@ Got an object file!
 % if (defined($comp->path)) {
 My path is <% $comp->path %>.
 % }
+% if (defined($comp->fq_path)) {
+My fq_path is <% $comp->fq_path %>.
+% }
 % if ($comp->is_file_based and defined($comp->source_file)) {
-Got a source file!
+%   my ($subdir) = ($comp->source_file =~ m{((alt_root|comps)/.*?)$});
+My source file is .../<% $subdir %>
 % }
 
 <%args>

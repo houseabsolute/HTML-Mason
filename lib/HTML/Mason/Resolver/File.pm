@@ -37,12 +37,38 @@ sub lookup_path {
 	    my ($key,$root) = @$lref;
 	    my $srcfile = $root . $path;
 	    my @srcstat = stat $srcfile;
-	    return ("$key/$path", $srcfile, $srcstat[9]) if (-f _);
+	    return ("/$key$path", $srcfile, $srcstat[9]) if (-f _);
 	}
 	return undef;
     } else {
 	die "comp_root must be a scalar or listref";
     }
+}
+
+#
+# Given a glob pattern, return all existing paths.
+#
+sub glob_path {
+    my ($self,$pattern,$interp) = @_;
+    my $comp_root = $interp->comp_root;
+    my @roots;
+    if (!ref($comp_root)) {
+	@roots = ($comp_root);
+    } elsif (ref($comp_root) eq 'ARRAY') {
+	@roots = map($_->[1],@{$comp_root});
+    } else {
+	die "comp_root must be a scalar or listref";
+    }
+    my %path_hash;
+    foreach my $root (@roots) {
+	my @files = glob($root.$pattern);
+	foreach my $file (@files) {
+	    if (my ($path) = ($file =~ m/$root(\/.*)$/)) {
+		$path_hash{$path}++;
+	    }
+	}
+    }
+    return keys(%path_hash);
 }
 
 #

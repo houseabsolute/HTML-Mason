@@ -604,9 +604,7 @@ Mason will:
 
 store a reference to the subroutine in an in-memory hash table.  The
 current server process can use this for future references to the same
-component. If for some reason you don't want to cache every component
-(e.g. to save memory) you can modify this behavior via the
-C<code_cache_mode> parameter.
+component.
 
 =item *
 

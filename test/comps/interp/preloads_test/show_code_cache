@@ -1,0 +1,3 @@
+Code cache contains:
+% my %c = %{$m->interp->{code_cache}};
+<% join("\n",sort(keys(%c))) %>

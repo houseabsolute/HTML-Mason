@@ -4,24 +4,21 @@
 
 require 5.004;
 
+#----------------------------------------------------------------------
 #
-# Apache-specific Request object
+# APACHE-SPECIFIC REQUEST OBJECT
 #
 package HTML::Mason::Request::ApacheHandler;
 require Exporter;
 use vars qw(@ISA);
 @ISA = qw(HTML::Mason::Request);
 
+# Fields that can be set in new method, with defaults
 my %reqfields =
     (ah => undef,
      http_input => undef,
      apache_req => undef,
      );
-# Create accessor routines
-foreach my $f (keys(%reqfields)) {
-    no strict 'refs';
-    *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
-}
 
 sub new
 {
@@ -39,8 +36,15 @@ sub new
     return $self;
 }
 
+# Create generic read-write accessor routines
+
+sub ah { my $s=shift; return @_ ? ($s->{ah}=shift) : $s->{ah} }
+sub http_input { my $s=shift; return @_ ? ($s->{http_input}=shift) : $s->{http_input} }
+sub apache_req { my $s=shift; return @_ ? ($s->{apache_req}=shift) : $s->{apache_req} }
+
+#----------------------------------------------------------------------
 #
-# ApacheHandler object
+# APACHEHANDLER OBJECT
 #
 package HTML::Mason::ApacheHandler;
 require Exporter;
@@ -68,6 +72,7 @@ use CGI qw(-private_tempfiles);
 
 my @used = ($HTML::Mason::IN_DEBUG_FILE);
 	    
+# Fields that can be set in new method, with defaults
 my %fields =
     (
      apache_status_title => 'mason',
@@ -82,11 +87,6 @@ my %fields =
      debug_handler_proc => undef,
      debug_dir_config_keys => [],
      );
-# Create accessor routines
-foreach my $f (keys %fields) {
-    no strict 'refs';
-    *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
-}
 
 sub new
 {
@@ -438,7 +438,6 @@ sub handle_request_1
 {
     my ($self,$r,$debugState) = @_;
     my $interp = $self->interp;
-    my $compRoot = $interp->comp_root;
 
     #
     # If filename is a directory, then either decline or simply reset
@@ -586,8 +585,23 @@ sub http_header_sent
     return $sent;
 }
 
+# Create generic read-write accessor routines
+
+sub apache_status_title { my $s=shift; return @_ ? ($s->{apache_status_title}=shift) : $s->{apache_status_title} }
+sub decline_dirs { my $s=shift; return @_ ? ($s->{decline_dirs}=shift) : $s->{decline_dirs} }
+sub error_mode { my $s=shift; return @_ ? ($s->{error_mode}=shift) : $s->{error_mode} }
+sub interp { my $s=shift; return @_ ? ($s->{interp}=shift) : $s->{interp} }
+sub output_mode { my $s=shift; return @_ ? ($s->{output_mode}=shift) : $s->{output_mode} }
+sub top_level_predicate { my $s=shift; return @_ ? ($s->{top_level_predicate}=shift) : $s->{top_level_predicate} }
+sub debug_mode { my $s=shift; return @_ ? ($s->{debug_mode}=shift) : $s->{debug_mode} }
+sub debug_perl_binary { my $s=shift; return @_ ? ($s->{debug_perl_binary}=shift) : $s->{debug_perl_binary} }
+sub debug_handler_script { my $s=shift; return @_ ? ($s->{debug_handler_script}=shift) : $s->{debug_handler_script} }
+sub debug_handler_proc { my $s=shift; return @_ ? ($s->{debug_handler_proc}=shift) : $s->{debug_handler_proc} }
+sub debug_dir_config_keys { my $s=shift; return @_ ? ($s->{debug_dir_config_keys}=shift) : $s->{debug_dir_config_keys} }
+
+#----------------------------------------------------------------------
 #
-# Apache-specific Mason commands
+# APACHEHANDLER MASON COMMANDS
 #
 package HTML::Mason::Commands;
 use vars qw($m);

@@ -1,12 +1,22 @@
-use HTML::Mason;
+use Data::Dumper;
 use DirHandle;
+use HTML::Mason;
+use Getopt::Std;
 use strict;
 
-use vars (qw($root $branch $comp_root $data_dir));
+use vars (qw($root $branch $comp_root $data_dir $comp_pattern $create_mode));
 
-$comp_root = "$root/test/comps";
-$data_dir = "$root/test/data";
-my $comp_pattern = $ARGV[0];
+sub init
+{
+    my %opts;
+    getopts('ct:',\%opts);
+
+    $comp_root = "$root/test/comps";
+    $data_dir = "$root/test/data";
+
+    $comp_pattern = $opts{t};
+    $create_mode = $opts{c};
+}
 
 sub try_exec_all
 {
@@ -31,14 +41,15 @@ sub try_exec_all
 }
 
 sub try_exec {
-    my ($interp, $component) = @_;
+    my ($interp, $component, $iteration) = @_;
     next if (defined($comp_pattern) and $component !~ /$comp_pattern/);
-    print "Running $component\n";
+    my $itermark = ($iteration) ? "-$iteration" : "";
+    print "Running $component$itermark\n";
     
     my $results_dir = "$root/test/results/$branch";
     my $tmp_dir = "$root/test/tmp/$branch";
     unless (-d $tmp_dir) {
-	mkdir($tmp_dir) or die "could not make directory $tmp_dir: $!";
+	mkdir($tmp_dir,0775) or die "could not make directory $tmp_dir: $!";
     }
     my $buf = "";
     $interp->out_method(\$buf);
@@ -49,11 +60,18 @@ sub try_exec {
 	next;
     }
     $component =~ s/\//::/g;
-    my $outfile = "$tmp_dir/$component";
-    my $fh = new IO::File ">$outfile" or die "cannot write $outfile: $!";
+    
+    my $tmpfile = "$tmp_dir/$component$itermark";
+    my $fh = new IO::File ">$tmpfile" or die "cannot write $tmpfile: $!";
     $fh->print($buf) if defined($buf);
     $fh->close;
-    my $diff = compare_files("$results_dir/$component", "$tmp_dir/$component");
+    my $resultsfile = "$results_dir/$component$itermark";
+    if (!-f $resultsfile and $create_mode) {
+	print "$resultsfile does not exist.\n$tmpfile contains:\n$buf\nCopy to results? ";
+	my $ans = <>;
+	system("cp $tmpfile $resultsfile") if ($ans =~ /^[Yy]/);
+    }
+    my $diff = compare_files($resultsfile, $tmpfile);
     print ( $diff ? "$diff\nnot ok\n" : "ok\n" );
 }
 

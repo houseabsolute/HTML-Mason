@@ -19,24 +19,19 @@ use HTML::Mason::Component::Subcomponent;
 use HTML::Mason::Request;
 use HTML::Mason::Tools qw(read_file);
 
+# Fields that can be set in new method, with defaults
 my %fields =
-    (preamble => '',
-     postamble => '',
-     preprocess => undef,
-     postprocess => undef,
-     use_strict => 1,
-     source_refer_predicate => sub { return ($_[1] >= 5000) },
+    (allow_globals => [],
      ignore_warnings_expr => 'Subroutine .* redefined',
-     taint_check => 0,
      in_package => 'HTML::Mason::Commands',
-     allow_globals => []
+     postamble => '',
+     postprocess => undef,
+     preamble => '',
+     preprocess => undef,
+     source_refer_predicate => sub { return ($_[1] >= 5000) },
+     taint_check => 0,
+     use_strict => 1,
      );
-# Create accessor routines
-foreach my $f (keys %fields) {
-    next if $f =~ /^allow_globals$/;  # don't overwrite real sub.
-    no strict 'refs';
-    *{$f} = sub {my $s=shift; return @_ ? ($s->{$f}=shift) : $s->{$f}};
-}
 
 #
 # This version number, less than or equal to the Mason version, marks the
@@ -452,7 +447,7 @@ sub parse_component
     # Use source_refer_predicate to determine whether to use source
     # references or directly embedded text.
     #
-    my $useSourceReference = $fileBased && ($pureTextFlag || $self->source_refer_predicate->($scriptlength,$alphalength));
+    my $useSourceReference = $fileBased && $self->source_refer_predicate->($scriptlength,$alphalength);
     my @alphatexts;
     my $endsec = '';
     if ($useSourceReference) {
@@ -547,9 +542,8 @@ sub parse_component
     if (!$embedded) {
 	$header .= "package $pkg;\n";
 	$header .= "use strict;\n" if $self->use_strict;
-	if (my @g = @{$self->{'allow_globals'}}) {
-	    $header .= sprintf("use vars qw(%s);\n",join(" ",'$m',@g));
-	}
+	my @g = @{$self->{'allow_globals'}};
+	$header .= sprintf("use vars qw(%s);\n",join(" ",'$m',@g));
     }
     $header .= $sectiontext{once}."\n" if $sectiontext{once};
 
@@ -574,7 +568,8 @@ sub parse_component
 	for ($argsDump) { s/\$VAR1\s*=//g; s/;\s*$// }
 	push(@cparams,"'declared_args'=>$argsDump");
     }
-    if ($pureTextFlag && $fileBased) {
+
+    if ($pureTextFlag && $useSourceReference) {
 	push(@cparams,"'code'=>\\&HTML::Mason::Commands::pure_text_handler");
     } else {
 	push(@cparams,"'code'=>sub {\n$body\n}");
@@ -799,6 +794,18 @@ sub make_dirs
 	}
     }
 }
+
+# Create generic read-write accessor routines
+
+sub ignore_warnings_expr { my $s=shift; return @_ ? ($s->{ignore_warnings_expr}=shift) : $s->{ignore_warnings_expr} }
+sub in_package { my $s=shift; return @_ ? ($s->{in_package}=shift) : $s->{in_package} }
+sub postamble { my $s=shift; return @_ ? ($s->{postamble}=shift) : $s->{postamble} }
+sub postprocess { my $s=shift; return @_ ? ($s->{postprocess}=shift) : $s->{postprocess} }
+sub preamble { my $s=shift; return @_ ? ($s->{preamble}=shift) : $s->{preamble} }
+sub preprocess { my $s=shift; return @_ ? ($s->{preprocess}=shift) : $s->{preprocess} }
+sub source_refer_predicate { my $s=shift; return @_ ? ($s->{source_refer_predicate}=shift) : $s->{source_refer_predicate} }
+sub taint_check { my $s=shift; return @_ ? ($s->{taint_check}=shift) : $s->{taint_check} }
+sub use_strict { my $s=shift; return @_ ? ($s->{use_strict}=shift) : $s->{use_strict} }
 
 1;
 

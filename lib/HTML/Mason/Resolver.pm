@@ -24,6 +24,10 @@ sub lookup_path {
     return $path;
 }
 
+sub glob_path {
+    return ();
+}
+
 sub file_to_path {
     my ($self,$path,$interp) = @_;    
     return $path;
