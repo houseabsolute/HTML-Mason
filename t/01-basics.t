@@ -28,9 +28,11 @@ chomp(@comps);
 $listfh->close;
 
 # Clear cache directory
-my $d = new DirHandle ('test/data/cache') or die "cannot open cache directory";
-while (defined (my $file = $d->read)) {
-    unlink("test/data/cache/$file");
+if (-d 'test/data/cache') {
+    my $d = new DirHandle ('test/data/cache') or die "cannot read directory test/data/cache";
+    while (defined (my $file = $d->read)) {
+	unlink("test/data/cache/$file");
+    }
 }
 
 my $parser = new HTML::Mason::Parser;
