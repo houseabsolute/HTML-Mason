@@ -47,7 +47,7 @@ BEGIN
 					   default => sub { print STDOUT grep {defined} @_ },
 					   descr => "A subroutine or scalar reference through which all output will pass" },
 	 max_recurse                  => { parse => 'string',  default => 32, type => SCALAR,
-					   descr => "The maximum component stack depth - helps avoid infinite loops" },
+					   descr => "The maximum recursion depth for component, inheritance, and request stack" },
 	 preloads                     => { parse => 'list',    optional => 1, type => ARRAYREF,
 					   descr => "A list of components to load immediately when creating the Interpreter" },
 	 resolver                     => { isa => 'HTML::Mason::Resolver',
@@ -191,9 +191,8 @@ sub cache_dir  { my $self = shift; return $self->data_dir ? File::Spec->catdir( 
 # in a new request.
 #
 sub exec {
-    my $self = shift;
-    my $req = $self->make_request;
-    $req->exec(@_);
+    my ($self, $comp, @args) = @_;
+    $self->make_request(comp=>$comp, args=>\@args)->exec;
 }
 
 sub make_request {
@@ -800,9 +799,9 @@ EOF
     my $out;
     local $self->{out_method} = \$out;
 
-    my $request = $self->make_request(%p);
-
-    $request->exec($comp, interp => $self, valid => $self->validation_spec, current_url => $current_url);
+    my $args = {interp => $self, valid => $self->validation_spec, current_url => $current_url};
+    my $request = $self->make_request(comp=>$comp, args=>$args, %p);
+    $request->exec;
     return $out;
 }
 
