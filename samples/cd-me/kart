@@ -4,14 +4,14 @@
 
 <h3>Item Added</h3>
 You have added the following CD to your Shopping Kart:<P>
-<% $m->comp('tools/cd_details',id=>$id,cds=>\%cds) %><P>
+<& tools/cd_details,id=>$id,cds=>\%cds) &><P>
 <a href="kart?action=retrieve">Click here to view your Shopping Kart</a><P>
 
 % } elsif ($action eq "delete") {
 
 <h3>Item Deleted</h3>
 You have deleted the following CD from your Shopping Kart:<P>
-<% $m->comp('tools/cd_details',id=>$id,cds=>\%cds) %><P>
+<& tools/cd_details,id=>$id,cds=>\%cds) &><P>
 <a href="kart?action=retrieve">Click here to view your Shopping Kart</a><P>
 
 % } elsif ($action eq "retrieve") {
