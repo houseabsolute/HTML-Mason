@@ -46,11 +46,6 @@ use strict;
 my $ah = new HTML::Mason::ApacheHandler( comp_root => '<component root>',
                                          data_dir => '<data directory>' );
 
-# Activate the following if running httpd as root (the normal case).
-# Resets ownership of all files created by Mason at startup.
-#
-#chown (Apache->server->uid, Apache->server->gid, $ah->interp->files_written);
-
 sub handler
 {
     my ($r) = @_;
