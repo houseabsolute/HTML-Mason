@@ -3,6 +3,7 @@ use DirHandle;
 use File::Path;
 use HTML::Mason;
 use Getopt::Std;
+use IO::File;
 use strict;
 
 use vars (qw($root $branch $comp_root $data_dir $comp_pattern $create_mode));
