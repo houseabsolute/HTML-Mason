@@ -161,6 +161,8 @@ Called with no arguments, this returns the value of allow_globals as a
 list.  Called with one or more variable names, it appends the names to
 the existing list, removing duplicates if any.
 
+=for html <a name="item_make">
+
 =item make ($comp_root, $data_dir, [@paths, $verbose, $predicate,
 $dir_create_mode, $update_reload_file])
 

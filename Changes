@@ -1,10 +1,19 @@
-VERSION 0.6
+Revision history for Perl extension HTML::Mason.
+
+All development by Jonathan Swartz, swartz@transbay.net, unless otherwise noted:
+  - [mschmick] Mark Schmick, mark@webz.com
+  - [modus] Patrick Kane, modus@pr.es.to
+See CREDITS file for other contributors
+
+** denotes an incompatible change
+
+0.6
 
 - New <& &> tag provides a more convenient way to call components
-inside HTML. (mc_comp still works.) L<Components/Components as Subroutines>
+inside HTML. mc_comp still works. L<Components/components that output html>
 - The "perl_" prefix has been eliminated from section names: now
-simply use <%init>, <%cleanup>, <%args>, etc. (The old names still
-work.) L<Components/Other Perl sections>
+simply use <%init>, <%cleanup>, <%args>, etc. The old names still
+work. L<Components/other perl sections>
 - The utility bin/convert0.6.pl converts existing components to use
 the above new syntax.
 - New autohandler feature finally provides an easy way to specify a
@@ -14,19 +23,19 @@ It can display header/footers, apply a filtering function, set up
 globals, etc.  A good complement to dhandlers. L<Components/autohandlers>
 - New <%once> section contains code that will be executed once when a
 component is loaded.  It is useful for defining persistent variables
-and named subroutines.  L<Components/&lt%once&gt;>
+and named subroutines.  L<Components/e&lt%oncee&gt;>
 - New <%text> section allows you to turn off Mason processing for a
-particular section of text.  L<Components/&lt%text&gt;>
+particular section of text.  L<Components/e&lt%texte&gt;>
 - Implemented first installation test suite! [modus]
 - HEAD optimization: we now automatically abort after headers are sent
 on a HEAD request.
-- Documented and updated Parser make() utility. make traverses a tree
-of components, compiling any out-of-date components into object files
-and reporting errors.
+- New Parser make() utility traverses a tree of components, compiling
+any out-of-date components into object files and reporting errors.
+L<Parser/item_make>
 - New mc_comp_source command returns the source filename of this or
 any component.  L<Commands/item_mc_comp_source_compPath_>
-- mc_file now uses current component path by default if no
-static_file_root defined (suggested by John Landahl)
+- mc_file now uses current component path by default for relative paths
+if no static_file_root defined (suggested by John Landahl)
 - Various previewer interface improvements
 - Removed link tags in pods documentation due to 5.004 problems
 - Took out previewer stub from Mason.pm to eliminate "subroutine
@@ -42,12 +51,12 @@ warnings to make <%once> more useful
 - Removed defunct Safe code from Parser and defunct ALLOW_HANDLERS
 code from Interp
 
-VERSION 0.5.1  Thu Jun 10 23:35:13 PDT 1999
+0.5.1  Thu Jun 10 23:35:13 PDT 1999
 - Removed leftover "use File::Recurse" in ApacheHandler.pm [modus]
 - Added empty test target to FAQ Makefile, required on certain
 architectures [modus]
 
-VERSION 0.5   Thu Jun  3 23:45:09 PDT 1999
+0.5   Thu Jun  3 23:45:09 PDT 1999
 - Removed memory leak associated with "return sub { ... }"
 - Overhauled Config.pm, now maintains previous configuration when
 upgrading Mason (suggested by Patrick Kane)
@@ -66,9 +75,9 @@ into code. (submitted by Philip Gwyn) L<Parser/item_preprocess>
 package. (submitted by Philip Gwyn) L<Parser/in_package>
 - Added documentation about using globals in components, and
 some new facilities: Parser option 'allow_globals' and Interp
-method 'set_global'. L<Admin/Using global variables>
+method 'set_global'. L<Admin/using global variables>
 - Documented how to save persistent user information with Apache::Session [modus]
-L<Admin/Persistent user sessions>
+L<Admin/persistent user sessions>
 - ** Changed behavior of reload_file mode to read directly from object
 files [mschmick]. If you use reload files, you're now responsible for
 creating object files.
@@ -78,7 +87,7 @@ use Mason's perl-status page with multiple ApacheHandler objects.
 (submitted by Philip Gwyn) L<ApacheHandler/item_apache_status_title>
 - Upgraded FakeApache/debug files to work with mod_perl 1.19
 - New sections in Component Developer's Guide explain how debug files
-work and some caveats about when they don't. L<Admin/Debugging>
+work and some caveats about when they don't. L<Admin/debugging>
 - Mentioned mailing lists, masonhq.com web site, and FAQ in the
 documentation and README
 - Improved documentation on how to integrate images and non-Mason
@@ -111,7 +120,7 @@ Rafael Weinstein)
 (submitted by Patrick Kane)
 - Added CREDITS file
 
-VERSION 0.4  Wed Jan 06 10:35:00 PST  1999
+0.4  Wed Jan 06 10:35:00 PST  1999
 - Added support for using Perl profiler in conjunction with debug
 files
 - Fixed bug in previewer HTML trace introduced in 0.3
@@ -135,7 +144,7 @@ Edwards)
 - Created a Mason bundle
 - Created a CPAN "alias" from Apache::Mason to HTML::Mason
 
-VERSION 0.3   Wed Nov 25 17:00:34 PST 1998
+0.3   Wed Nov 25 17:00:34 PST 1998
 - Added optional system logging of page requests, cache activity,
 component loading
 - Deny directory requests so that index files will work in mod_perl
@@ -162,7 +171,7 @@ checking on (suggested by Randal Schwartz)
 - Added global IN_DEBUG_FILE flag
 - Renamed mc_call_stack to mc_comp_stack to match documentation
 
-VERSION 0.2   Fri Aug 21 08:54:13 1998
+0.2   Fri Aug 21 08:54:13 1998
 - Replaced File::lockf module, which could not port to some systems,
 with simple call to flock
 - Corrected email address in README
@@ -177,5 +186,5 @@ install
 - Debug file is no longer prepared when debug_mode is "none"
 - Use Preview.pm in Mason.pm
 
-VERSION 0.1   Wed Jul 22 20:53:56 1998
+0.1   Wed Jul 22 20:53:56 1998
 - Original version; created by h2xs 1.18
