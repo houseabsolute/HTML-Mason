@@ -255,6 +255,38 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_support( path => '/auto_filter_die/dies',
+			 component => <<'EOF',
+% die "foo death";
+EOF
+		       );
+
+
+#------------------------------------------------------------
+
+    $group->add_support( path => '/auto_filter_die/autohandler',
+			 component => <<'EOF',
+autohandler
+% $m->call_next;
+EOF
+		       );
+
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'auto_filter_die/abort_comp_call_in_filter_with_autohandler',
+                      description => 'Test that calling another component that dies from a filter section in a component wrapped by an autohandler produces a proper error',
+                      component => <<'EOF',
+Stuff
+<%filter>
+$m->comp( 'dies' );
+</%filter>
+EOF
+                      expect_error => qr/foo death/,
+                    );
+
+#------------------------------------------------------------
+
         return $group;
 }
 
