@@ -14,8 +14,17 @@ use HTML::Mason::Buffer;
 use HTML::Mason::Container;
 use base qw(HTML::Mason::Container);
 
+use HTML::Mason::Exceptions
+    (
+     abbr => {param_error  => 'HTML::Mason::Exception::Params',
+	      syntax_error => 'HTML::Mason::Exception::Syntax',
+	      abort_error  => 'HTML::Mason::Exception::Abort',
+	      error        => 'HTML::Mason::Exception',
+	     }
+    );
+
 use Params::Validate qw(:all);
-Params::Validate::validation_options( on_fail => sub { HTML::Mason::Exception::Params->throw( error => join '', @_ ) } );
+Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( aborted
@@ -137,10 +146,10 @@ sub exec {
 	}
 	unless ($comp) {
 	    $self->{error_code} = 'top_not_found';
-	    HTML::Mason::Exception->throw( error => "could not find component for initial path '$path'\n" );
+	    error( "could not find component for initial path '$path'\n" );
 	}
     } elsif ( ! UNIVERSAL::isa( $comp, 'HTML::Mason::Component' ) ) {
-	HTML::Mason::Exception::Params->throw( error => "exec: first argument ($comp) must be an absolute component path or a component object" );
+	param_error( "exec: first argument ($comp) must be an absolute component path or a component object" );
     }
 
     # This label is for declined requests.
@@ -153,7 +162,7 @@ sub exec {
     {my @wrapper_chain = ($comp);
      for (my $parent = $comp->parent; $parent; $parent = $parent->parent) {
 	 unshift(@wrapper_chain,$parent);
-	 HTML::Mason::Exception->throw( error => "inheritance chain length > 32 (infinite inheritance loop?)" )
+	 error( "inheritance chain length > 32 (infinite inheritance loop?)" )
 	     if (@wrapper_chain > 32);
      }
      $first_comp = $wrapper_chain[0];
@@ -217,7 +226,7 @@ sub exec {
 	    my $title = $self->{error_backtrace}->[0]->title;
 	    $err = "error while executing $title:\n$err";
 	}
-	HTML::Mason::Exception->throw( error => $err );
+	error($err);
     }
 }
 
@@ -229,7 +238,7 @@ sub abort
     my ($self) = @_;
     $self->{aborted} = 1;
     $self->{aborted_value} = $_[1] || $self->{aborted_value} || undef;
-    HTML::Mason::Exception::Abort->throw( message => $self->{aborted_value} );
+    abort_error( $self->{aborted_value} );
 }
 
 #
@@ -256,7 +265,7 @@ sub cache
     load_pkg($cache_class, 'Fix your Cache::Cache installation or choose another cache class.');
 
     my $cache = $cache_class->new (\%options)
-	or HTML::Mason::Exception->throw( error => "could not create cache object" );
+	or error( "could not create cache object" );
 
     return $cache;
 }
@@ -310,7 +319,7 @@ sub cache_self {
 	my $buffer = $self->pop_buffer_stack;
 
 	if (my $err = $@) {
-	    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : HTML::Mason::Exception->throw( error => $err );
+	    UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
 	}
 
 	$retval = \@result;
@@ -342,7 +351,7 @@ sub call_dynamic {
 sub call_next {
     my ($self,@extra_args) = @_;
     my $comp = $self->fetch_next
-	or HTML::Mason::Exception->throw( error => "call_next: no next component to invoke" );
+	or error( "call_next: no next component to invoke" );
     return $self->comp($comp, @{$self->current_args}, @extra_args);
 }
 
@@ -381,7 +390,7 @@ sub caller_args
 	    return \%h;
 	}
     } else {
-	HTML::Mason::Exception::Params->throw( error => "caller_args expects stack level as argument" );
+	param_error( "caller_args expects stack level as argument" );
     }
 }
 
@@ -395,7 +404,7 @@ sub decline
 {
     my ($self) = @_;
     $self->{declined} = 1;
-    HTML::Mason::Exception->throw( error => "decline() called (and not caught)" );
+    error( "decline() called (and not caught)" );
 }
 
 #
@@ -418,7 +427,7 @@ sub dhandler_arg { shift->{dhandler_arg} }
 sub fetch_comp
 {
     my ($self,$path) = @_;
-    HTML::Mason::Exception::Params->throw( error => "fetch_comp: requires path as first argument" ) unless defined($path);
+    param_error( "fetch_comp: requires path as first argument" ) unless defined($path);
 
     #
     # Handle paths SELF and PARENT
@@ -428,7 +437,7 @@ sub fetch_comp
     }
     if ($path eq 'PARENT') {
 	return $self->current_comp->parent
-	    or HTML::Mason::Exception->throw( error =>"PARENT designator used from component with no parent" );
+	    or error "PARENT designator used from component with no parent";
     }
 
     #
@@ -438,9 +447,9 @@ sub fetch_comp
 	my $method_comp;
 	my ($owner_path,$method_name) = split(':',$path,2);
 	my $owner_comp = $self->fetch_comp($owner_path)
-	    or HTML::Mason::Exception->throw( error => "could not find component for path '$owner_path'\n" );
+	    or error( "could not find component for path '$owner_path'\n" );
 	$owner_comp->_locate_inherited('methods',$method_name,\$method_comp)
-	    or HTML::Mason::Exception->throw( error => "no method '$method_name' for component " . $owner_comp->title );
+	    or error( "no method '$method_name' for component " . $owner_comp->title );
 	return $method_comp;
     }
 
@@ -492,7 +501,7 @@ sub _fetch_next_helper {
 sub fetch_next {
     my ($self) = @_;
     my $index = $self->_fetch_next_helper;
-    HTML::Mason::Exception->throw( error => "fetch_next: cannot find next component in chain" )
+    error( "fetch_next: cannot find next component in chain" )
 	unless defined($index);
     return $self->{wrapper_chain}->[$index+1];
 }
@@ -503,7 +512,7 @@ sub fetch_next {
 sub fetch_next_all {
     my ($self) = @_;
     my $index = $self->_fetch_next_helper;
-    HTML::Mason::Exception->throw( error => "fetch_next_all: cannot find next component in chain" )
+    error( "fetch_next_all: cannot find next component in chain" )
 	unless defined($index);
     my @wc = @{$self->{wrapper_chain}};
     return @wc[($index+1)..$#wc];
@@ -569,7 +578,7 @@ sub comp {
     my ($comp,@args) = @_;
     my $interp = $self->interp;
     my $depth = $self->depth;
-    HTML::Mason::Exception::Params->throw( error => "comp: requires path or component as first argument" )
+    param_error( "comp: requires path or component as first argument" )
 	unless defined($comp);
 
     #
@@ -580,13 +589,13 @@ sub comp {
     if (!ref($comp)) {
 	$path = $comp;
 	$comp = $self->fetch_comp($path)
-	    or HTML::Mason::Exception->throw( error => "could not find component for path '$path'\n" );
+	    or error( "could not find component for path '$path'\n" );
     }
 
     #
     # Check for maximum recursion.
     #
-    HTML::Mason::Exception->throw( error => "$depth levels deep in component stack (infinite recursive call?)\n" )
+    error( "$depth levels deep in component stack (infinite recursive call?)\n" )
         if ($depth >= $interp->max_recurse);
 
     #
@@ -679,7 +688,7 @@ sub comp {
 	}
 	$self->pop_stack;
 	$self->pop_buffer_stack;
-	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : HTML::Mason::Exception->throw( error => $err );
+	UNIVERSAL::can($err, 'rethrow') ? $err->rethrow : error($err);
     }
 
     #
@@ -750,7 +759,7 @@ sub call_hooks {
 sub suppress_hook {
     my ($self, %args) = @_;
     foreach (qw(name type)) {
-	HTML::Mason::Exception::Params->throw( error => "suppress_hook: must specify $_\n" )
+	param_error( "suppress_hook: must specify $_\n" )
 	    unless exists($args{$_});
     }
     my $code = $self->interp->hooks->{$args{type}}->{$args{name}};
@@ -763,7 +772,7 @@ sub suppress_hook {
 sub unsuppress_hook {
     my ($self, %args) = @_;
     foreach (qw(name type)) {
-	HTML::Mason::Exception::Params->throw( error => "unsuppress_hook: must specify $_\n" )
+	param_error( "unsuppress_hook: must specify $_\n" )
 	    unless exists($args{$_});
     }
     my $code = $self->interp->hooks->{$args{type}}->{$args{name}};
@@ -823,7 +832,7 @@ sub stack {
 # Set or retrieve the hashref at the top of the stack.
 sub top_stack {
     my ($self,$href) = @_;
-    HTML::Mason::Exception->throw( error => "top_stack: nothing on component stack" )
+    error( "top_stack: nothing on component stack" )
 	unless $self->depth > 0;
     $self->{stack}->[-1] = $href if defined($href);
     return $self->{stack}->[-1];
