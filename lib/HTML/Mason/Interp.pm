@@ -767,7 +767,7 @@ HTML::Mason::Interp - Mason Component Interpreter
 
 =head1 SYNOPSIS
 
-    my $i = new HTML::Mason::Interp (data_dir=>'/usr/local/mason',
+    my $i = HTML::Mason::Interp->new (data_dir=>'/usr/local/mason',
                                      comp_root=>'/usr/local/www/htdocs/',
                                      ...other params...);
 
@@ -911,7 +911,7 @@ All of the above properties have standard accessor methods of the same
 name. In general, no arguments retrieves the value, and one argument
 sets and returns the value.  For example:
 
-    my $interp = new HTML::Mason::Interp (...);
+    my $interp = HTML::Mason::Interp->new (...);
     my $c = $interp->compiler;
     $interp->code_cache_max_size(20 * 1024 * 1024);
 

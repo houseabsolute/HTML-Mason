@@ -1001,7 +1001,7 @@ HTML::Mason::ApacheHandler - Mason/mod_perl interface
 
     use HTML::Mason::ApacheHandler;
 
-    my $ah = new HTML::Mason::ApacheHandler (..name/value params..);
+    my $ah = HTML::Mason::ApacheHandler->new (..name/value params..);
     ...
     sub handler {
         my $r = shift;
@@ -1077,7 +1077,7 @@ methods of the same name: no arguments retrieves the value, and one
 argument sets it, except for args_method, which is not settable.  For
 example:
 
-    my $ah = new HTML::Mason::ApacheHandler;
+    my $ah = HTML::Mason::ApacheHandler->new;
     my $decline_dirs = $ah->decline_dirs;
     $ah->decline_dirs(1);
 

@@ -1003,7 +1003,7 @@ output to the browser.
     #!/usr/bin/perl
     use HTML::Mason::CGIHandler;
 
-    my $h = new HTML::Mason::CGIHandler
+    my $h = HTML::Mason::CGIHandler->new
      (
       data_dir  => '/home/jethro/code/mason_data',
      );

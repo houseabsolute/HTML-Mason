@@ -221,7 +221,7 @@ A script at /cgi-bin/mason_handler.pl :
    #!/usr/bin/perl
    use HTML::Mason::CGIHandler;
    
-   my $h = new HTML::Mason::CGIHandler
+   my $h = HTML::Mason::CGIHandler->new
     (
      data_dir  => '/home/jethro/code/mason_data',
      allow_globals => [qw(%session $u)],
