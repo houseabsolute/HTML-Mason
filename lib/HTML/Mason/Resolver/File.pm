@@ -57,7 +57,7 @@ sub comp_root
 	validate_pos @_, {type => ARRAYREF|SCALAR};
 	$self->{comp_root} = ref($_[0]) ? $_[0] : [[ MAIN => $_[0] ]];
     }
-    return $self->{comp_root}[1] if @{$self->{comp_root}} == 1 and $self->{comp_root}[0] eq 'MAIN';
+    return $self->{comp_root}[0][1] if @{$self->{comp_root}} == 1 and $self->{comp_root}[0][0] eq 'MAIN';
     return $self->{comp_root};
 }
 
