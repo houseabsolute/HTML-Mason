@@ -72,7 +72,7 @@ sub _initialize
 sub new_child
 {
     my $self = shift;
-    return __PACKAGE__->new( parent => $self, @_ );
+    return ref($self)->new( parent => $self, @_ );
 }
 
 sub receive
