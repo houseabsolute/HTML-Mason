@@ -27,7 +27,7 @@ chk_version(Apache::Request => '0.31') or
 	. "    from CPAN/modules/by-module/Apache/Apache-Request-x.x.tar.gz\n\n";
 
 make_config();
-setup_mod_perl_tests();
+setup_mod_perl_tests() unless $ARGV[0] eq '--no-prompts';
 
 # Get these into the MY namespace for the MY::test method
 %MY::APACHE = %APACHE;
