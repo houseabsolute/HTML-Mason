@@ -12,8 +12,6 @@ use File::Spec;
 use HTML::Mason::Tools qw(read_file);
 use HTML::Mason::Utils;
 
-use vars qw($REQ $REQ_DEPTH %REQ_DEPTHS);
-
 use HTML::Mason::MethodMaker
     ( read_only => [ qw( aborted
 			 aborted_value
@@ -46,7 +44,7 @@ sub new
 	dhandler_arg => undef,
 	error_flag => undef,
 	out_buffer => '',
-	stack_array => undef,
+	stack => undef,
 	wrapper_chain => undef,
 	wrapper_index => undef
     };
@@ -84,7 +82,7 @@ sub _initialize {
     }
 
     # Initialize other properties
-    $self->{stack_array} = [];
+    $self->{stack} = [];
 }
 
 sub _reinitialize {
@@ -176,9 +174,9 @@ sub exec {
 	    my $i = index($err,'HTML::Mason::Interp::exec');
 	    $err = substr($err,0,$i) if $i!=-1;
 	    $err =~ s/^\s*(HTML::Mason::Commands::__ANON__|HTML::Mason::Request::call).*\n//gm;
-	    # Salvage what was left in the request stack for backtrace information
-	    if (@{$self->{stack_array}}) {
-		my @titles = map($_->{comp}->title,@{$self->{stack_array}});
+ 	    # Get backtrace information
+ 	    if ($self->{error_backtrace} and @{$self->{error_backtrace}}) {
+ 		my @titles = map($_->title,@{$self->{error_backtrace}});
 		my $errmsg = "error while executing $titles[-1]:\n";
 		$errmsg .= $err."\n";
 		$errmsg .= "backtrace: " . join(" <= ",reverse(@titles)) . "\n" if @titles > 1;
@@ -406,7 +404,7 @@ sub decline
 sub depth
 {
     my ($self) = @_;
-    return ($REQ eq $self) ? $REQ_DEPTH : ($REQ_DEPTHS{$self} || 0);
+    return scalar(@{$self->{stack}});
 }
 
 sub dhandler_arg { shift->{dhandler_arg} }
@@ -550,17 +548,15 @@ sub time
 sub stack
 {
     my ($self) = @_;
-    my $stack = $self->{stack_array};
-    my $depth = $self->depth;
-    splice(@$stack,$depth) unless (@$stack == $depth);
-    return $stack;
+    return $self->{stack};
 }
 
 # Set or retrieve the hashref at the top of the stack.
 sub top_stack {
     my ($self,$href) = @_;
-    $self->{stack_array}->[$self->depth-1] = $href if defined($href);
-    return $self->{stack_array}->[$self->depth-1];
+    die "top_stack: nothing on component stack" unless $self->depth > 0;
+    $self->{stack}->[-1] = $href if defined($href);
+    return $self->{stack}->[-1];
 }
 
 #
@@ -572,32 +568,20 @@ sub parser
 }
 
 #
-# Execute the next component in this request. comp() sets up proper
-# dynamically scoped variables and invokes comp1() to do the work.
+# Execute the next component in this request.
 #
 sub comp {
-    my $self = shift(@_);
-
-    if (defined($REQ) and $REQ eq $self) {
-	local $REQ_DEPTH = $REQ_DEPTH;
-	$self->comp1(@_);
-    } else {
-	local %REQ_DEPTHS = %REQ_DEPTHS;
-	$REQ_DEPTHS{$REQ} = $REQ_DEPTH if defined($REQ);
-	local $REQ = $self;
-	local $REQ_DEPTH = $REQ_DEPTHS{$self} || 0;
-	$self->comp1(@_);
-    }
-}
-sub comp1 {
     my $self = shift;
 
+    # Clear error backtrace, in case we had an error which was caught by an eval.
+    undef $self->{error_backtrace};
+    
     # Get modifiers: optional hash reference passed in as first argument.
     my %mods = (ref($_[0]) eq 'HASH') ? %{shift()} : ();
 
     my ($comp,@args) = @_;
-    my $interp = $self->{interp};
-    my $depth = $REQ_DEPTH;
+    my $interp = $self->interp;
+    my $depth = $self->depth;
     die "comp: requires path or component as first argument" unless defined($comp);
 
     #
@@ -632,7 +616,7 @@ sub comp1 {
     } elsif ($depth>0) {
 	$sink = $self->top_stack->{sink};
     } elsif ($self->out_mode eq 'batch') {
-	$sink = $self->_new_sink(\($self->{out_buffer}));
+	$sink = $self->_new_sink(\$self->{out_buffer});
     } else {
 	$sink = $self->out_method;
     }
@@ -648,11 +632,10 @@ sub comp1 {
     #
     die "$depth levels deep in component stack (infinite recursive call?)\n" if ($depth >= $interp->max_recurse);
 
-    # Push new frame onto stack and increment (localized) depth.
+    # Push new frame onto stack.
     my $stack = $self->stack;
     my $frame = {'comp'=>$comp,args=>[@args],sink=>$sink,base_comp=>$base_comp};
     push(@$stack,$frame);
-    $REQ_DEPTH++;
 
     # Call start_comp hooks.
     $self->call_hooks('start_comp');
@@ -662,11 +645,22 @@ sub comp1 {
     #
     my ($result, @result);
     if (wantarray) {
-	@result = $comp->run(@args);
+	@result = eval { $comp->run(@args) };
     } elsif (defined wantarray) {
-	$result = $comp->run(@args);
+	$result = eval { $comp->run(@args) };
     } else {
-	$comp->run(@args);
+	eval { $comp->run(@args) };
+    }
+
+    #
+    # If an error occurred, pop stack and pass error down to next level.
+    # Put current component stack in error backtrace unless this has already
+    # been done higher up.
+    #
+    if ($@) {
+	$self->{error_backtrace} ||= [reverse(map($_->{'comp'},@$stack))];
+	pop(@$stack);
+	die $@;
     }
 
     #
