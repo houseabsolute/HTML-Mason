@@ -118,7 +118,7 @@ Here is a configuration that enforces this naming scheme:
 
     <LocationMatch "(\.html|\.txt|\.pl)$">
       SetHandler perl-script
-      PerlHandler HTML::Mason
+      PerlHandler HTML::Mason::ApacheHandler
     </LocationMatch>
 
     <LocationMatch "(\.m(html|txt|pl)|dhandler|autohandler)$">
