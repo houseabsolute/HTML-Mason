@@ -251,7 +251,7 @@ EOF
     }
 
     {
-	my $path = '/comps/print/stream';
+	my $path = '/comps/print/autoflush';
 	my $response = Apache::test->fetch($path);
 	my $success = HTML::Mason::Tests->check_output( actual => $response->content,
 							expect => <<'EOF',

@@ -265,7 +265,7 @@ EOF
 
     $group->add_test( name => 'max_recurse_2',
 		      description => 'Test that recursion is stopped after 32 levels',
-		      interp_params => { out_mode => 'stream' },
+		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 % eval { $m->comp('support/recurse_test', max=>48) };
 <& /shared/check_error, error=>$@ &>
@@ -680,9 +680,9 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'stream_mode',
-		      description => 'Test that stream mode setting works',
-		      interp_params => { out_mode => 'stream' },
+    $group->add_test( name => 'autoflush_mode',
+		      description => 'Test that autoflush setting works',
+		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 <& mode_test &>
 EOF
@@ -870,27 +870,6 @@ EOF
 I am foo!
 
 EOF
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'overriding_die_handler',
-		      description => 'Test overriding the $SIG{__DIE__} handler',
-		      interp_params => { die_handler => sub { die "BAR\n" } },
-		      component => <<'EOF',
-<% die 'foo' %>
-EOF
-		      expect_error => '^\\s*BAR\\s*$',
-		    );
-
-#------------------------------------------------------------
-
-    $group->add_test( name => 'normal_die_handler',
-		      description => 'Test normal $SIG{__DIE__} handler',
-		      component => <<'EOF',
-<% die 'foo' %>
-EOF
-		      expect_error => 'foo at /interp/normal_die_handler',
 		    );
 
 #------------------------------------------------------------

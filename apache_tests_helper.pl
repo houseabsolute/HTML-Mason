@@ -182,22 +182,27 @@ $libs
 use HTML::Mason::ApacheHandler;
 use HTML::Mason;
 
-my \$interp = HTML::Mason::Interp->new( comp_root => '$APACHE{comp_root}',
-				       data_dir => '$APACHE{data_dir}' );
-chown Apache->server->uid, Apache->server->gid, \$interp->files_written;
+my \@interps;
+foreach ( 0, 1, 0, 0, 0 )
+{
+    push \@interps, HTML::Mason::Interp->new( comp_root => '$APACHE{comp_root}',
+				              data_dir => '$APACHE{data_dir}',
+                                              autoflush => \$_ );
 
-my \@modes = ( qw( batch stream batch batch batch ) );
-my \@ah = ( HTML::Mason::ApacheHandler->new( interp => \$interp,
+    chown Apache->server->uid, Apache->server->gid, \$interps[-1]->files_written;
+}
+
+my \@ah = ( HTML::Mason::ApacheHandler->new( interp => \$interps[0],
                                             args_method => '$args_method' ),
-           HTML::Mason::ApacheHandler->new( interp => \$interp,
+           HTML::Mason::ApacheHandler->new( interp => \$interps[1],
                                             args_method => '$args_method' ),
-	   HTML::Mason::ApacheHandler->new( interp => \$interp,
+	   HTML::Mason::ApacheHandler->new( interp => \$interps[2],
                                             args_method => '$args_method',
 					    top_level_predicate => sub { \$_[0] =~ m,/_.*, ? 0 : 1 } ),
-	   HTML::Mason::ApacheHandler->new( interp => \$interp,
+	   HTML::Mason::ApacheHandler->new( interp => \$interps[3],
                                             args_method => '$args_method',
                                             decline_dirs => 0 ),
-	   HTML::Mason::ApacheHandler->new( interp => \$interp,
+	   HTML::Mason::ApacheHandler->new( interp => \$interps[4],
                                             args_method => '$args_method',
                                             error_mode => 'fatal' ),
 	 );
@@ -221,8 +226,6 @@ sub handler
     \$filename .= \$r->path_info;
     \$filename =~ s,//+,/,g;
     \$r->filename(\$filename);
-
-    \$ah[\$ah_index]->interp->out_mode( \$modes[\$ah_index] );
 
     my \$status = \$ah[\$ah_index]->handle_request(\$r);
     \$r->print( "Status code: \$status\\n" );
@@ -252,9 +255,9 @@ $libs
 use HTML::Mason::CGIHandler;
 
 my \%p;
-if ( \$ENV{PATH_INFO} =~ s,/stream\$,, )
+if ( \$ENV{PATH_INFO} =~ s,/autoflush\$,, )
 {
-    \%p = ( out_mode => 'stream' );
+    \%p = ( autoflush => 1 );
 }
 
 my \$h = HTML::Mason::CGIHandler->new( data_dir  => '$data_dir', \%p );

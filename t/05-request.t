@@ -115,8 +115,8 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'abort',
-		      description => 'test $m->abort method (stream mode)',
-		      interp_params => { out_mode => 'stream' },
+		      description => 'test $m->abort method (autoflush on)',
+		      interp_params => { autoflush => 1 },
 
 		      component => <<'EOF',
 Some text
@@ -496,9 +496,9 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'stream_print',
-		      description => 'Test print function from a component under stream mode',
-		      interp_params => { out_mode => 'stream' },
+    $group->add_test( name => 'autoflush_print',
+		      description => 'Test print function from a component with autoflush on',
+		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 This is first.
 % print "This is second.\n";
@@ -513,9 +513,9 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'stream_printf',
-		      description => 'Test printf function from a component under stream mode',
-		      interp_params => { out_mode => 'stream' },
+    $group->add_test( name => 'autoflush_printf',
+		      description => 'Test printf function from a component with autoflush on',
+		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 This is first.
 % printf '%s', "This is second.\n";
@@ -547,9 +547,9 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'flush_print_stream',
-		      description => 'Test print function from a component in stream mode in conjunction with $m->flush_buffer call',
-		      interp_params => { out_mode => 'stream' },
+    $group->add_test( name => 'flush_print_autoflush',
+		      description => 'Test print function from a component with autoflush on in conjunction with $m->flush_buffer call',
+		      interp_params => { autoflush => 1 },
 		      component => <<'EOF',
 This is first.
 % print "This is second.\n";
