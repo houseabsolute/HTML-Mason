@@ -117,6 +117,7 @@ shared in the main component root.
 Declared args:
 
 I am not a subcomponent.
+I am not a method.
 I am file-based.
 My short name is shared.
 My directory is /interp/comp_root_test.
@@ -147,6 +148,7 @@ private1 in the main component root.
 Declared args:
 
 I am not a subcomponent.
+I am not a method.
 I am file-based.
 My short name is private1.
 My directory is /interp/comp_root_test.
@@ -177,6 +179,7 @@ private2 in the alternate component root.
 Declared args:
 
 I am not a subcomponent.
+I am not a method.
 I am file-based.
 My short name is private2.
 My directory is /interp/comp_root_test.
@@ -893,7 +896,7 @@ EOF
 
 #------------------------------------------------------------
 
-    if ( load_pkg('Cache::Cache') )
+    if ( load_pkg('Cache::Cache') && load_pkg('Cache::MemoryCache') )
     {
 	$group->add_test( name => 'no_data_dir',
 			  description => 'test interp without a data directory',
