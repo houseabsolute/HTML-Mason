@@ -86,7 +86,7 @@ sub kill_httpd
     return unless -e $pid_file;
     my $pid = get_pid();
 
-    print STDERR "Killing httpd process ($pid)\n";
+    print STDERR "\nKilling httpd process ($pid)\n";
     my $result = kill 'TERM', $pid;
     if ( ! $result and $! =~ /no such (?:file|proc)/i )
     {
