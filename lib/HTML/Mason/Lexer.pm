@@ -118,7 +118,9 @@ sub start
     my $self = shift;
 
     my $end;
-    while ( defined $self->{current}{pos} ? $self->{current}{pos} < length $self->{current}{comp_source} : 1 )
+    while ( defined $self->{current}{pos} ?
+	    $self->{current}{pos} < length $self->{current}{comp_source} :
+	    1 )
     {
 	last if $end = $self->match_end;
 
@@ -438,27 +440,64 @@ sub match_text
 {
     my $self = shift;
 
+    #
+    # This regex is a bit weird, to say the least!
+    #
+    # Basically, we need to first check for "text" at the current
+    # position that we don't pass through as text.  This is either an
+    # escaped newline or an EOF.
+    #
+    # If we find one of those, we have matched some "text" but nothing
+    # that we pass through to the compiler.
+    #
+    # Otherwise, we try to match _at least_ one character of text
+    # following by some non-text production, which may be some sort of
+    # Mason syntax or an escaped newline or an EOF.
+    #
+    # It is important that we match at least one character or we can
+    # fail incorrectly on something like this:
+    #
+    #   <%foo>
+    #
+    # It doesn't match any of the previous productions but if found at
+    # the beginning of a component it will not match as text unless we
+    # can consume the first character, "<", before trying to match any
+    # more Mason syntax.
+    #
+    # Otherwise we'd match the empty string at the beginning, followed
+    # by "<%".
+    #
+    # - Dave - 1/6/2002
+    #
     if ( $self->{current}{comp_source} =~ m,
                     \G
-                    (.*?)       # anything
-		    (           # followed by
-                     (?<=\n)(?=%) # an eval line - consume the \n
+                    (?:
+                     (\\\n)      # an escaped newline  - throw away
                      |
-                     (?=</?%)   # a substitution or tag start or end  - don't consume
+                     \z          # or EOF.
                      |
-                     (?=</?&)   # a comp call start or end  - don't consume
-                     |
-                     \\\n       # an escaped newline  - throw away
-                     |
-                     \z         # or EOF.
+                     (?:
+                      (.+?)       # anything
+	              (           # followed by
+                       (?<=\n)(?=%) # an eval line - consume the \n
+                       |
+                       (?=</?%)   # a substitution or tag start or end  - don't consume
+                       |
+                       (?=</?&)   # a comp call start or end  - don't consume
+                       |
+                       \\\n       # an escaped newline  - throw away
+                       |
+                       \z         # or EOF.
+                      )
+                     )
                     )
                    ,gcsx
        )
     {
-	my $consumed = "$1$2";
+	my $consumed = join '', grep { defined } $1, $2, $3;
 	return 0 unless length $consumed;
 
-	$self->{current}{compiler}->text( text => $1 ) if length $1;
+	$self->{current}{compiler}->text( text => $2 ) if length $2;
 
 	$self->{current}{lines} += $consumed =~ tr/\n/\n/;
 	return 1;
