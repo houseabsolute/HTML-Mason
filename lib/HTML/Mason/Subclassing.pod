@@ -230,6 +230,17 @@ for details on what methods the lexer can call.
 See the L<Compiler class|HTML::Mason::Compiler> documentation for
 details on what methods a subclass of this class needs to provide.
 
+If you simply want to tweak Mason's existing behavior, you will
+probably want to subclass C<HTML::Mason::Compiler::ToObject>, which is
+the default Compiler class.  For example, if you wanted to do
+something like make attributes dynamic, you could override the
+C<_flags_or_attr()> method in ToObject.
+
+If you want to drastically change the behavior, you can subclass
+C<HTML::Mason::Compiler> instead.  An example of this would be
+creating a compiler that generates C<EmbPerl> or C<Apache::ASP> as
+output.
+
 =head1 Buffer
 
 The public API documented in
