@@ -25,9 +25,9 @@ BEGIN
          { parse => 'list', type => ARRAYREF, default => [],
            descr => "An array of names of Perl variables that are allowed globally within components" },
 
-	 default_escape_flags
-         => { parse => 'string', type => SCALAR|ARRAYREF, default => [],
-              descr => "Escape flags that will apply by default to all Mason tag output" },
+	 default_escape_flags =>
+         { parse => 'string', type => SCALAR|ARRAYREF, default => [],
+           descr => "Escape flags that will apply by default to all Mason tag output" },
 
 	 lexer =>
          { isa => 'HTML::Mason::Lexer',
