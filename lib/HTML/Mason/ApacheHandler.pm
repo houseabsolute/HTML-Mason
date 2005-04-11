@@ -31,7 +31,7 @@ use constant REDIRECT	=> 302;
 
 BEGIN
 {
-    my $ap_req_class = APACHE2 ? 'Apache::RequestRec' : 'Apache';
+    my $ap_req_class = APACHE2 ? 'Apache2::RequestRec' : 'Apache';
 
     __PACKAGE__->valid_params
 	( ah         => { isa => 'HTML::Mason::ApacheHandler',
