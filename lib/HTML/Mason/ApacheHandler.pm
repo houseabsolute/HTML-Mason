@@ -197,12 +197,10 @@ use constant REDIRECT	=> 302;
 
 BEGIN {
 	if (APACHE2) {
-		require Apache2;
-		Apache2->import();
-		require Apache::RequestRec;
-		require Apache::RequestIO;
-		require Apache::ServerUtil;
-		require Apache::Log;
+		require Apache2::RequestRec;
+		require Apache2::RequestIO;
+		require Apache2::ServerUtil;
+		require Apache2::Log;
 		require APR::Table;
 	} else {
 		require Apache;
@@ -609,7 +607,7 @@ sub get_uid_gid
 
 	# Apache2 lacks $s->uid.
 	# Workaround by searching the config tree.
-	require Apache::Directive;
+	require Apache2::Directive;
 	# for mod_perl <= 1.99_16, use "Apache::Directive->conftree()"
 	my $conftree = Apache::Directive::conftree();
 	my $user = $conftree->lookup('User');
