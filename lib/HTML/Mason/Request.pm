@@ -1399,7 +1399,7 @@ sub current_args { return $_[0]->{top_stack}->[STACK_ARGS] }
 sub base_comp {
     my ($self) = @_;
     unless (defined($self->{top_stack}->[STACK_BASE_COMP])) {
-	return $self->compute_base_comp_for_frame_($self->{top_stack}->[STACK_DEPTH] - 1);
+	return $self->compute_base_comp_for_frame($self->{top_stack}->[STACK_DEPTH] - 1);
     }
     return $self->{top_stack}->[STACK_BASE_COMP];
 }
@@ -1408,7 +1408,7 @@ sub base_comp {
 # Determine the base_comp for a stack frame. See the user
 # documentation for base_comp for a description of these rules.
 #
-sub compute_base_comp_for_frame_ {
+sub compute_base_comp_for_frame {
     my ($self, $frame_num) = @_;
     my $frame = $self->{stack}->[$frame_num];
 
@@ -1423,7 +1423,7 @@ sub compute_base_comp_for_frame_ {
 	} elsif (!$path ||
 		 $path =~ m/^(?:SELF|PARENT|REQUEST)(?:\:..*)?$/ ||
 		 ($comp->is_subcomp && !$comp->is_method)) {
-	    $base_comp = $self->compute_base_comp_for_frame_($frame_num-1);
+	    $base_comp = $self->compute_base_comp_for_frame($frame_num-1);
 	} elsif ($path =~ m/(.*):/) {
 	    my $calling_comp = $self->{stack}->[$frame_num-1]->[STACK_COMP];
 	    $base_comp = $self->fetch_comp($1, $calling_comp);
