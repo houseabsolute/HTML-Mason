@@ -54,6 +54,7 @@ discussed here with your own custom subclasses.
 The absolutely most minimal configuration looks like this:
 
     PerlModule HTML::Mason::ApacheHandler
+    # PerlModule Apache2::compat - if using Apache 2
 
     <Location />
       SetHandler   perl-script

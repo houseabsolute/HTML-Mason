@@ -25,6 +25,7 @@ Mason - High-performance, dynamic web site authoring system
 =head1 SYNOPSIS
 
     PerlModule HTML::Mason::ApacheHandler
+    # PerlModule Apache2::compat - if using Apache 2
 
     <Location />
         SetHandler perl-script
