@@ -1705,7 +1705,7 @@ component to component.
 =over
 
 =item * At the beginning of a request, the base component is
-initialized to the requested component (C<< $m->request_comp >>.
+initialized to the requested component (C<< $m->request_comp >>).
 
 =item * When you call a regular component via a path, the base
 component changes to the called component.

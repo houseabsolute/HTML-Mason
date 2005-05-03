@@ -68,6 +68,10 @@ sub new
 	param_error __PACKAGE__ . "->new: must specify 'apache_req' or 'cgi_object' parameter";
     }
 
+    # Record a flag indicating whether the user passed a custom out_method
+    my %params = @_;
+    $self->ah->{has_custom_out_method} = exists $params{out_method};
+
     return $self;
 }
 
@@ -831,7 +835,7 @@ sub prepare_request
 	return $retval;
     }
 
-    $self->_set_mason_req_out_method($m, $r);
+    $self->_set_mason_req_out_method($m, $r) unless $self->{has_custom_out_method};
 
     $m->cgi_object($cgi_object) if $m->can('cgi_object') && $cgi_object;
 
@@ -1123,9 +1127,12 @@ that may be of interest to end users.
 
 =item handle_request ($r)
 
-This method takes an Apache object representing a request and
-translates that request into a form Mason can understand.  It's return
-value is an Apache status code.
+This method takes an Apache or Apache::Request object representing a
+request and translates that request into a form Mason can understand.
+Its return value is an Apache status code.
+
+Passing an Apache::Request object is useful if you want to set
+Apache::Request parameters, such as POST_MAX or DISABLE_UPLOADS.
 
 =item prepare_request ($r)
 
