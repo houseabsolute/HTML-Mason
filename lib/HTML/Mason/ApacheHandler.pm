@@ -613,7 +613,7 @@ sub get_uid_gid
 	# Workaround by searching the config tree.
 	require Apache2::Directive;
 	# for mod_perl <= 1.99_16, use "Apache::Directive->conftree()"
-	my $conftree = Apache::Directive::conftree();
+	my $conftree = Apache2::Directive::conftree();
 	my $user = $conftree->lookup('User');
 	my $group = $conftree->lookup('Group');
 	$user =~ s/^["'](.*)["']$/$1/;
