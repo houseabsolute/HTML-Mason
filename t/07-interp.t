@@ -5,6 +5,7 @@ use strict;
 use File::Spec;
 use HTML::Mason::Tests;
 use HTML::Mason::Tools qw(load_pkg);
+use IO::File;
 
 my $tests = make_tests();
 $tests->run;
@@ -867,6 +868,55 @@ EOF
 
 
 #------------------------------------------------------------
+
+    $group->add_support( path => '/support/corrupt_object_file',
+			 component => "I was loaded\n",
+                        );
+
+    $group->add_test( name => 'corrupt_object_file',
+		      description => 'test that Mason can recover from a corrupt or empty object file',
+		      component => <<'EOF',
+<%init>
+my $path = 'support/corrupt_object_file';    
+my $comp = $m->fetch_comp('support/corrupt_object_file');
+$m->comp($comp);
+my $object_file = $comp->object_file;
+die "object file does not exist" unless -f $object_file;
+die "object file is not writable" unless -w $object_file;
+
+my $corrupt_object_file_and_reload = sub {
+    my ($content) = @_;
+    my $original_object_file_size = (stat($object_file))[7];
+
+    my $fh = new IO::File ">$object_file"
+        or die "cannot write $object_file: $!";
+    $fh->print($content);
+    $fh->close();
+    die "object file is not the right size after corruption"
+        unless (stat($object_file))[7] == length($content);
+
+    $m->interp->flush_code_cache();
+    $m->comp($path);
+    die "object file is the same size after reloading"
+        if (stat($object_file))[7] == length($content);
+};
+
+$corrupt_object_file_and_reload->("");
+$corrupt_object_file_and_reload->(0);
+$corrupt_object_file_and_reload->("return 5");
+$corrupt_object_file_and_reload->("slkd%^^&*(@@");
+$corrupt_object_file_and_reload->("die 'bleah';");
+</%init>
+EOF
+		      expect => <<'EOF',
+I was loaded
+I was loaded
+I was loaded
+I was loaded
+I was loaded
+I was loaded
+EOF
+		    );
 
     return $group;
 }

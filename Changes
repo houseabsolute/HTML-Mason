@@ -5,6 +5,13 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.29_02
+
+[ ENHANCEMENTS ]
+
+- Mason recovers more gracefully from an empty or corrupted object
+file. Task #579.
+
 1.29_01  January 25, 2005
 
 [ INCOMPATIBLE CHANGES ]

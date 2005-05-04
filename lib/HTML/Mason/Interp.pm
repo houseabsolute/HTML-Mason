@@ -406,25 +406,25 @@ sub load {
 	# We are using object files.  Update object file if necessary
 	# and load component from there.
 	#
-	my $tries = 0;
-	do
-	{
-	    if ($tries++ == 3) {
-		$self->_compilation_error( $source->friendly_name, "Could not load or recreate object file after 3 tries" );
-	    }
-	    if ($objfilemod < $srcmod) {
-		$self->compiler->compile_to_file( file => $objfile, source => $source);
-	    }
+	# If loading the object file generates an error, or results in
+	# a non-component object, try regenerating the object file
+	# once before giving up and reporting an error. This can be
+	# handy in the rare case of an empty or corrupted object file.
+	#
+	if ($objfilemod < $srcmod) {
+	    $self->compiler->compile_to_file( file => $objfile, source => $source);
+	}
+	$comp = eval { $self->eval_object_code( object_file => $objfile ) };
+
+	if (!UNIVERSAL::isa($comp, 'HTML::Mason::Component')) {
+	    $self->compiler->compile_to_file( file => $objfile, source => $source);
 	    $comp = eval { $self->eval_object_code( object_file => $objfile ) };
 
-	    if ($@) {
-		if (isa_mason_exception($@, 'Compilation::IncompatibleCompiler')) {
-		    $objfilemod = 0;
-		} else {
-		    $self->_compilation_error( $source->friendly_name, $@ );
-		}
+	    if (!UNIVERSAL::isa($comp, 'HTML::Mason::Component')) {
+		my $error = $@ ? $@ : "Could not get HTML::Mason::Component object from object file '$objfile'";
+		$self->_compilation_error( $source->friendly_name, $error );
 	    }
-	} until ($comp);
+	}
     } else {
 	#
 	# Not using object files. Load component directly into memory.
