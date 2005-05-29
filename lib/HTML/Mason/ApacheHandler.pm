@@ -5,14 +5,32 @@
 # under the same terms as Perl itself.
 
 use strict;
-# This is the version that introduced PerlAddVar
-use mod_perl 1.24;
 
 #----------------------------------------------------------------------
 #
 # APACHE-SPECIFIC REQUEST OBJECT
 #
 package HTML::Mason::Request::ApacheHandler;
+
+# PerlAddVar was introduced in mod_perl-1.24
+# Support for 1.99 <= modperl < 2.00 was removed due to constantly changing APIs
+BEGIN
+{
+	eval { require mod_perl2 };
+	if ($@) {
+		# hmm, mod_perl < 2.00?
+		require mod_perl;
+	}
+	my $mpver = ($mod_perl2::VERSION || $mod_perl::VERSION);
+
+	# This is the version that introduced PerlAddVar
+	if ($mpver < 1.24) {
+		die "mod_perl VERSION >= 1.24 required";
+	}
+	if ($mpver >= 1.99 && $mpver < 2.00) {
+		die "mod_perl-1.99 is not supported; upgrade to 2.00";
+	}
+}
 
 use HTML::Mason::Request;
 use Class::Container;
@@ -23,7 +41,7 @@ use base qw(HTML::Mason::Request);
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 
-use constant APACHE2	=> $mod_perl::VERSION >= 1.99;
+use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION) >= 2.00;
 use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
@@ -193,7 +211,7 @@ use HTML::Mason::Utils;
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
-use constant APACHE2	=> $mod_perl::VERSION >= 1.99;
+use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION) >= 2.00;
 use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
@@ -271,10 +289,15 @@ use HTML::Mason::MethodMaker
 			  interp ) ]
     );
 
+sub _get_apache_server
+{
+	return APACHE2 ? Apache2::ServerUtil->server() : Apache->server();
+}
+
 my ($STARTED);
 
 # The "if Apache->server" bit is a hack to let the make_params_pod.pl script work
-__PACKAGE__->_startup() if Apache->server;
+__PACKAGE__->_startup() if _get_apache_server;
 sub _startup
 {
     my $pack = shift;
@@ -284,11 +307,17 @@ sub _startup
     {
 	if ($args_method eq 'CGI')
 	{
-	    require CGI unless defined CGI->VERSION;
+	    eval { require CGI unless defined CGI->VERSION; };
+	    # mod_perl2 does not warn about this, so somebody should
+	    if (APACHE2 && CGI->VERSION < 3.08) {
+		warn("CGI version 3.08 is required to support mod_perl2 API");
+	    }
+	    die $@ if $@;
 	}
 	elsif ($args_method eq 'mod_perl')
 	{
-	    require Apache::Request unless defined Apache::Request->VERSION;
+	    my $apreq_module = APACHE2 ? 'Apache2::Request' : 'Apache::Request';
+	    require $apreq_module unless defined $apreq_module->VERSION;
 	}
     }
 }
@@ -381,7 +410,7 @@ sub _get_mason_params
     my $self = shift;
     my $r = shift;
 
-    my $config = $r ? $r->dir_config : Apache->server->dir_config;
+    my $config = $r ? $r->dir_config : _get_apache_server->dir_config;
 
     # Get all params starting with 'Mason'
     my %candidates;
@@ -500,12 +529,12 @@ sub _get_val
     {
         if ($config)
         {
-            my $c = $r ? $r : Apache->server;
+            my $c = $r ? $r : _get_apache_server;
             @val = $config->get($p);
         }
         else
         {
-            my $c = $r ? $r : Apache->server;
+            my $c = $r ? $r : _get_apache_server;
             @val = $c->dir_config->get($p);
         }
     }
@@ -544,8 +573,8 @@ sub new
     if (exists $allowed_params->{data_dir} and not exists $params{data_dir})
     {
 	# constructs path to <server root>/mason
-	if (UNIVERSAL::can('Apache::ServerUtil','server_root')) {
-		$defaults{data_dir} = File::Spec->catdir(Apache::ServerUtil::server_root(),'mason');
+	if (UNIVERSAL::can('Apache2::ServerUtil','server_root')) {
+		$defaults{data_dir} = File::Spec->catdir(Apache2::ServerUtil::server_root(),'mason');
 	} else {
 		$defaults{data_dir} = Apache->server_root_relative('mason');
 	}
@@ -627,12 +656,13 @@ sub get_uid_gid
 sub _initialize {
     my ($self) = @_;
 
+    my $apreq_module = APACHE2 ? 'Apache2::Request' : 'Apache::Request';
     if ($self->args_method eq 'mod_perl') {
-	unless (defined Apache::Request->VERSION) {
-	    warn "Loading Apache::Request at runtime.  You could " .
+	unless (defined $apreq_module->VERSION) {
+	    warn "Loading $apreq_module at runtime.  You could " .
                  "increase shared memory between Apache processes by ".
                  "preloading it in your httpd.conf or handler.pl file\n";
-	    require Apache::Request;
+	    require $apreq_module;
 	}
     } else {
 	unless (defined CGI->VERSION) {
@@ -861,7 +891,9 @@ sub _apache_request_object
         $r_sub = $no_filter;
     }
 
-    my $instance_method = APACHE2 ? 'new' : 'instance';
+    my $apreq_instance = APACHE2
+		? sub { Apache2::Request->new( $_[0] ) }
+		: sub { Apache::Request->instance( $_[0] ) };
 
     # This gets the proper request object all in one fell swoop.  We
     # don't want to copy it because if we do something like assign an
@@ -870,7 +902,7 @@ sub _apache_request_object
     # use multiple variables to avoid this, which is annoying.
     return
         $r_sub->( $self->args_method eq 'mod_perl' ?
-                  Apache::Request->$instance_method( $_[0] ) :
+                  &$apreq_instance( $_[0] ) :
                   $_[0]
                 );
 }
