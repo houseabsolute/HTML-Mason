@@ -275,11 +275,14 @@ sub _find_mod_perl_httpd {
 
     return $ENV{'APACHE'} if $ENV{'APACHE'} && $respect_env;
 
+    local $Apache::test::quiet = 1;
     foreach ( '/usr/local/apache/bin/httpd',
 	      '/usr/local/apache_mp/bin/httpd',
+	      '/usr/local/apache2/bin/httpd',
 	      '/opt/apache/bin/httpd',
 	      '/usr/sbin/apache-perl',
 	      '/usr/sbin/apache',
+	      '/usr/sbin/httpd',
 	      $self->_which('httpd'),
 	      $self->_which('apache'),
 	    ) {
@@ -295,7 +298,7 @@ sub _httpd_has_mod_perl {
     my %compiled = $self->get_compilation_params($httpd);
 
     if ($compiled{SERVER_VERSION} =~ m/^2\./) {
-	warn("Apache $compiled{SERVER_VERSION} detected. Report problems to mason-users\@lists.sourceforge.net\n");
+	warn("Apache $compiled{SERVER_VERSION} detected. Report problems to mason-users\@lists.sourceforge.net\n") unless $Apache::test::quiet;
     }
 
     if ($compiled{SERVER_CONFIG_FILE}) {
@@ -362,8 +365,8 @@ sub have_module {
     my $v = shift;
     eval {# surpress "can't boostrap" warnings
 	local $SIG{__WARN__} = sub {};
-	if ($mod_perl::VERSION >= 1.99) {
-	    require Apache2;
+	if ($mod_perl2::VERSION >= 2.00) {
+	    # use Apache2 is no longer needed
 	} else {
 	    require Apache;
 	}
