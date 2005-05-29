@@ -25,7 +25,9 @@ if ($has_mod_perl_1)
     $prereq{mod_perl} = 1.24;
 }
 
-my $has_only_mp2 = ! $has_mod_perl_1 && eval { require Apache2; 1; };
+eval { require mod_perl2 };
+my $has_mod_perl_2 = $@ ? 0 : 1;
+my $has_only_mp2 = ! $has_mod_perl_1 && $has_mod_perl_2;
 
 unless ( $@ || $^O =~ /mac|darwin/ || $has_only_mp2 )
 {
