@@ -165,7 +165,11 @@ sub _write_apache_test_conf
         File::Spec->catfile( $conf{apache_dir}, 'mason_handler_CGI.pl' );
     my $mod_perl_handler =
         File::Spec->catfile( $conf{apache_dir}, 'mason_handler_mod_perl.pl' );
-    my $default_args_method = (Apache::test::have_module('Apache::Request') ? 'mod_perl' : 'CGI');
+    my $apreq_module = $conf{version} =~ m/^2\./ ? 'Apache2::Request' : 'Apache::Request';
+    # Apache::test::have_module often stderrs about not finding libapreq.so
+    # Putting SERVER_ROOT/lib in LD_LIBRARY_PATH would suppress that, but
+    # that would have to be done before perl starts running.
+    my $default_args_method = (Apache::test::have_module($apreq_module) ? 'mod_perl' : 'CGI');
 
     my %multiconf;
     $multiconf{1}{comp_root} = File::Spec->catfile( $conf{comp_root}, 'multiconf1' );
@@ -391,7 +395,7 @@ sub make_request {
       || \$self->delayed_object_params('request', 'apache_req')
       || \$self->delayed_object_params('request', 'cgi_request');
     \$r->content_type( 'text/fooml' );
-    \$r->send_http_header unless \$mod_perl::VERSION >= 1.99;
+    \$r->send_http_header unless \$mod_perl2::VERSION >= 2.00;
     HTML::Mason::Exception::Abort->throw(error => 'foo', aborted_value => 200);
 }
 
