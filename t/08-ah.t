@@ -7,11 +7,16 @@ use Module::Build;
 my $test_data = Module::Build->current->notes('test_data');
 
 # Skip test if no mod_perl
-eval { require mod_perl };
+eval { require mod_perl2 };
+if ($@) { eval { require mod_perl } };
+my $mpver;
+{
+  no warnings 'once';
+  $mpver = ($mod_perl2::VERSION || $mod_perl::VERSION);
+};
+my $apreq_module = $mpver >= 2 ? 'Apache2::Request' : 'Apache::Request';
 
-unless ( $test_data->{is_maintainer} &&
-# need to use var name twice to avoid annoying warning
-         ( $mod_perl::VERSION || $mod_perl::VERSION ) )
+unless ( $test_data->{is_maintainer} && $mpver )
 {
     print "1..0\n";
     exit;
@@ -37,11 +42,11 @@ kill_httpd(1);
 test_load_apache();
 
 my $tests = 19; # multi conf & taint tests
-$tests += 60 if my $have_libapreq = have_module('Apache::Request');
+$tests += 60 if my $have_libapreq = have_module($apreq_module);
 $tests += 40 if my $have_cgi      = have_module('CGI');
 $tests += 15 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
 $tests++ if $have_cgi;
-$tests++ if my $have_filter = (have_module('Apache::Filter') && Apache::Filter->VERSION >= 1.021 && $mod_perl::VERSION < 1.99);
+$tests++ if my $have_filter = (have_module('Apache::Filter') && Apache::Filter->VERSION >= 1.021 && $mpver < 1.99);
 
 plan( tests => $tests);
 
@@ -151,7 +156,7 @@ EOF
 	      );
 
     write_comp( 'apache_request', <<'EOF',
-% if ($r->isa('Apache::Request')) {
+% if ($r->isa('Apache::Request') || $r->isa('Apache2::Request')) {
 Apache::Request
 % }
 EOF
@@ -248,7 +253,7 @@ EOF
 
     write_comp( 'internal_redirect', <<'EOF',
 <%init>
-if ($mod_perl::VERSION >= 1.99) { require Apache::SubRequest; }
+if ($mod_perl2::VERSION >= 2.00) { require Apache2::SubRequest; }
 $r->internal_redirect('/comps/internal_redirect_target?foo=17');
 $m->auto_send_headers(0);
 $m->clear_buffer;
