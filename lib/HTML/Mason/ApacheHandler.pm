@@ -222,6 +222,7 @@ BEGIN {
 		require Apache2::RequestRec;
 		require Apache2::RequestIO;
 		require Apache2::ServerUtil;
+		require Apache2::RequestUtil;
 		require Apache2::Log;
 		require APR::Table;
 	} else {
@@ -297,7 +298,7 @@ sub _get_apache_server
 my ($STARTED);
 
 # The "if Apache->server" bit is a hack to let the make_params_pod.pl script work
-__PACKAGE__->_startup() if _get_apache_server;
+__PACKAGE__->_startup() if eval { _get_apache_server };
 sub _startup
 {
     my $pack = shift;
@@ -317,7 +318,7 @@ sub _startup
 	elsif ($args_method eq 'mod_perl')
 	{
 	    my $apreq_module = APACHE2 ? 'Apache2::Request' : 'Apache::Request';
-	    require $apreq_module unless defined $apreq_module->VERSION;
+	    eval "require $apreq_module" unless defined $apreq_module->VERSION;
 	}
     }
 }
@@ -529,7 +530,6 @@ sub _get_val
     {
         if ($config)
         {
-            my $c = $r ? $r : _get_apache_server;
             @val = $config->get($p);
         }
         else
@@ -662,7 +662,7 @@ sub _initialize {
 	    warn "Loading $apreq_module at runtime.  You could " .
                  "increase shared memory between Apache processes by ".
                  "preloading it in your httpd.conf or handler.pl file\n";
-	    require $apreq_module;
+	    eval "require $apreq_module";
 	}
     } else {
 	unless (defined CGI->VERSION) {
