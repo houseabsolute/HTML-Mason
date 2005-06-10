@@ -4,6 +4,27 @@
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
+# PerlAddVar was introduced in mod_perl-1.24
+# Support for 1.99 <= modperl < 2.00 was removed due to API changes
+BEGIN
+{
+    my $has_mp2;
+    eval { require mod_perl2; $has_mp2 = 1 };
+    if ($@) {
+        # hmm, mod_perl < 2.00?
+        require mod_perl;
+    }
+    my $mpver = ($mod_perl2::VERSION || $mod_perl::VERSION);
+
+    # This is the version that introduced PerlAddVar
+    if ($mpver < 1.24) {
+        die "mod_perl VERSION >= 1.24 required";
+    }
+    if ($mpver >= 1.99 && $mpver < 2.00 && ! $has_mp2) {
+        die "mod_perl-1.99 is not supported; upgrade to 2.00";
+    }
+}
+
 use strict;
 
 #----------------------------------------------------------------------
@@ -11,26 +32,6 @@ use strict;
 # APACHE-SPECIFIC REQUEST OBJECT
 #
 package HTML::Mason::Request::ApacheHandler;
-
-# PerlAddVar was introduced in mod_perl-1.24
-# Support for 1.99 <= modperl < 2.00 was removed due to constantly changing APIs
-BEGIN
-{
-	eval { require mod_perl2 };
-	if ($@) {
-		# hmm, mod_perl < 2.00?
-		require mod_perl;
-	}
-	my $mpver = ($mod_perl2::VERSION || $mod_perl::VERSION);
-
-	# This is the version that introduced PerlAddVar
-	if ($mpver < 1.24) {
-		die "mod_perl VERSION >= 1.24 required";
-	}
-	if ($mpver >= 1.99 && $mpver < 2.00) {
-		die "mod_perl-1.99 is not supported; upgrade to 2.00";
-	}
-}
 
 use HTML::Mason::Request;
 use Class::Container;
@@ -218,17 +219,19 @@ use constant NOT_FOUND  => 404;
 use constant REDIRECT	=> 302;
 
 BEGIN {
-	if (APACHE2) {
-		require Apache2::RequestRec;
-		require Apache2::RequestIO;
-		require Apache2::ServerUtil;
-		require Apache2::RequestUtil;
-		require Apache2::Log;
-		require APR::Table;
-	} else {
-		require Apache;
-		Apache->import();
-	}
+    if ( eval { _get_apache_server() } ) {
+        if (APACHE2) {
+            require Apache2::RequestRec;
+            require Apache2::RequestIO;
+            require Apache2::ServerUtil;
+            require Apache2::RequestUtil;
+            require Apache2::Log;
+            require APR::Table;
+        } else {
+            require Apache;
+            Apache->import();
+        }
+    }
 }
 
 unless ( APACHE2 )
@@ -297,7 +300,8 @@ sub _get_apache_server
 
 my ($STARTED);
 
-# The "if Apache->server" bit is a hack to let the make_params_pod.pl script work
+# The "if _get_apache_server" bit is a hack to let this module load
+# when not under mod_perl, which is needed to generate Params.pod
 __PACKAGE__->_startup() if eval { _get_apache_server };
 sub _startup
 {
