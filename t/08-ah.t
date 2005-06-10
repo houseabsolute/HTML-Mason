@@ -11,9 +11,9 @@ eval { require mod_perl2 };
 if ($@) { eval { require mod_perl } };
 my $mpver;
 {
-  no warnings 'once';
-  $mpver = ($mod_perl2::VERSION || $mod_perl::VERSION);
-};
+    no warnings 'once';
+    $mpver = ($mod_perl2::VERSION || $mod_perl::VERSION);
+}
 my $apreq_module = $mpver >= 2 ? 'Apache2::Request' : 'Apache::Request';
 
 unless ( $test_data->{is_maintainer} && $mpver )
@@ -46,7 +46,11 @@ $tests += 60 if my $have_libapreq = have_module($apreq_module);
 $tests += 40 if my $have_cgi      = have_module('CGI');
 $tests += 15 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
 $tests++ if $have_cgi;
-$tests++ if my $have_filter = (have_module('Apache::Filter') && Apache::Filter->VERSION >= 1.021 && $mpver < 1.99);
+
+# XXX - this never works because Apache::Filter cannot load outside of
+# mod_perl
+my $have_filter = eval { require Apache::Filter };
+$tests++ if $have_filter && $Apache::Filter::VERSION >= 1.021 && $mpver < 1.99;
 
 plan( tests => $tests);
 
