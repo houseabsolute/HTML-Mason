@@ -10,7 +10,7 @@ available at http://www.masonhq.com/code/history.html.
 [ ENHANCEMENTS ]
 
 - ** Support for mod_perl-2.00 (mod_perl-1.99 is not longer supported
-because of the constantly changing API).
+because of API changes in 2.0RC5).
 - Mason recovers more gracefully from an empty or corrupted object
 file. Task #579.
 
