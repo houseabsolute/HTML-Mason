@@ -257,7 +257,7 @@ EOF
 
     write_comp( 'internal_redirect', <<'EOF',
 <%init>
-if ($mod_perl2::VERSION >= 2.00) { require Apache2::SubRequest; }
+if ($mod_perl2::VERSION >= 1.99) { require Apache2::SubRequest; }
 $r->internal_redirect('/comps/internal_redirect_target?foo=17');
 $m->auto_send_headers(0);
 $m->clear_buffer;
