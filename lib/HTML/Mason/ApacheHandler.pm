@@ -4,6 +4,10 @@
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
+use strict;
+
+package HTML::Mason::ApacheHandler;
+
 # PerlAddVar was introduced in mod_perl-1.24
 # Support for 1.99 <= modperl < 2.00 was removed due to API changes
 BEGIN
@@ -25,8 +29,6 @@ BEGIN
     }
 }
 
-use strict;
-
 #----------------------------------------------------------------------
 #
 # APACHE-SPECIFIC REQUEST OBJECT
@@ -42,7 +44,7 @@ use base qw(HTML::Mason::Request);
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 
-use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION) >= 2.00;
+use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION) >= 1.99;
 use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
@@ -212,7 +214,7 @@ use HTML::Mason::Utils;
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
-use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION) >= 2.00;
+use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION) >= 1.99;
 use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
