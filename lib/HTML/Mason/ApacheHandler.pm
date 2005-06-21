@@ -24,7 +24,7 @@ BEGIN
     if ($mpver < 1.24) {
         die "mod_perl VERSION >= 1.24 required";
     }
-    if ($mpver >= 1.99 && $mpver < 2.00 && ! $has_mp2) {
+    if ($mpver >= 1.99 && $mpver < 1.99022) {
         die "mod_perl-1.99 is not supported; upgrade to 2.00";
     }
 }
@@ -44,7 +44,7 @@ use base qw(HTML::Mason::Request);
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 
-use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION) >= 1.99;
+use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION) >= 1.999022;
 use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
@@ -214,7 +214,7 @@ use HTML::Mason::Utils;
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
-use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION) >= 1.99;
+use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION) >= 1.999022;
 use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
