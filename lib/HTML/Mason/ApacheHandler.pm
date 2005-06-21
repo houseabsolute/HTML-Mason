@@ -24,7 +24,7 @@ BEGIN
     if ($mpver < 1.24) {
         die "mod_perl VERSION >= 1.24 required";
     }
-    if ($mpver >= 1.99 && $mpver < 1.99022) {
+    if ($mpver >= 1.99 && $mpver < 1.999022) {
         die "mod_perl-1.99 is not supported; upgrade to 2.00";
     }
 }
@@ -221,7 +221,6 @@ use constant NOT_FOUND  => 404;
 use constant REDIRECT	=> 302;
 
 BEGIN {
-    if ( eval { _get_apache_server() } ) {
         if (APACHE2) {
             require Apache2::RequestRec;
             require Apache2::RequestIO;
@@ -233,7 +232,6 @@ BEGIN {
             require Apache;
             Apache->import();
         }
-    }
 }
 
 unless ( APACHE2 )
