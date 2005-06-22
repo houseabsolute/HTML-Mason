@@ -925,8 +925,9 @@ sub _request_fs_type
     #
     my $is_dir = -d $r->filename;
 
-    $r->content_type(undef) unless $self->decline_dirs;
-
+    if ($is_dir && !$self->decline_dirs) {
+	$r->content_type(undef);
+    }
     return $is_dir ? 'dir' : -f _ ? 'file' : 'other';
 }
 
