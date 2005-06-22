@@ -1629,8 +1629,8 @@ normally and its output and return value cached.
 It is typically used right at the top of an C<< <%init> >> section:
 
     <%init>
-    return if $m->cache_self([key => 'fookey', expires_in => '3 hours',
-                             ... <other cache options> ... ]);
+    return if $m->cache_self(key => 'fookey', expires_in => '3 hours',
+                             ... <other cache options> ...);
      ... <rest of init> ...
     </%init>
 
