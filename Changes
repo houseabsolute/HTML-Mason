@@ -12,7 +12,14 @@ available at http://www.masonhq.com/code/history.html.
 - ** Support for mod_perl-2.00 (mod_perl-1.99 is not longer supported
 because of API changes in 2.0RC5).
 - Mason recovers more gracefully from an empty or corrupted object
-file. Task #579.
+file. Task id #579.
+
+[ BUG FIXES ]
+
+- Fixed bug with content type being reset when decline_dirs=0.
+Submitted by Brian Phillips. Task id #584.
+- Put "Mason" prefix back in Params.pod. Task id #575.
+- Fixed fetch_comp(undef) to not return an empty hash. Task id #578.
 
 1.29_01  January 25, 2005
 
@@ -38,6 +45,9 @@ multiple compiler and interpreter objects.
 - ** comp_exists may try to load the designated component, and may
 throw an error if it contains a syntax error.
 - ** The current_time method, deprecated in 1.1x, has been removed.
+- ** The HTML::Mason::Buffer class has been eliminated for performance
+reasons. You can use separate components, methods, or subcomponents
+and scomp to achieve the same effects as buffer pushes and pops.
 
 [ ENHANCEMENTS ]
 
