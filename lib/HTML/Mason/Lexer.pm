@@ -359,23 +359,8 @@ sub match_named_block
     }
 }
 
-# starts with an alpha character or underscore, followed by any word
-# character
-my $flag;
-if ( $] >= 5.006 )
-{
-    # Unicode-friendly
-
-    # Use eval because 5.00503 complains even if it doesn't execute
-    # it.
-    eval '$flag = qr/[[:alpha:]_]\w*/;';
-}
-else
-{
-    # Like [a-zA-Z_] but respects locales
-    $flag = qr/[^\W\d]\w*/x;
-}
-
+# Like [a-zA-Z_] but respects locales
+my $flag = qr/[[:alpha:]_]\w*/;
 sub escape_flag_regex { $flag }
 
 sub match_substitute
