@@ -20,6 +20,8 @@ file. Task id #579.
 Submitted by Brian Phillips. Task id #584.
 - Put "Mason" prefix back in Params.pod. Task id #575.
 - Fixed fetch_comp(undef) to not return an empty hash. Task id #578.
+- static_source_touch_file did not take effect until after one request
+for a top-level component.  Reported by Lai Zit Seng. Task id #576.
 
 1.29_01  January 25, 2005
 
