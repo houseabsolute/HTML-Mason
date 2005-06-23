@@ -12,19 +12,24 @@ package HTML::Mason::ApacheHandler;
 # Support for 1.99 <= modperl < 2.00 was removed due to API changes
 BEGIN
 {
-    my $has_mp2;
-    eval { require mod_perl2; $has_mp2 = 1 };
-    if ($@) {
-        # hmm, mod_perl < 2.00?
+    if ( $ENV{MOD_PERL} && $ENV{MOD_PERL} =~ /1\.99|2\.0/ )
+    {
+        require mod_perl2;
+    }
+    else
+    {
         require mod_perl;
     }
+
     my $mpver = ($mod_perl2::VERSION || $mod_perl::VERSION);
 
     # This is the version that introduced PerlAddVar
-    if ($mpver < 1.24) {
+    if ($mpver < 1.24)
+    {
         die "mod_perl VERSION >= 1.24 required";
     }
-    if ($mpver >= 1.99 && $mpver < 1.999022) {
+    if ($mpver >= 1.99 && $mpver < 1.999022)
+    {
         die "mod_perl-1.99 is not supported; upgrade to 2.00";
     }
 }
