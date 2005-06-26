@@ -1,4 +1,4 @@
-Copyright (c) 1998-2003 by Jonathan Swartz. All rights reserved.
+Copyright (c) 1998-2005 by Jonathan Swartz. All rights reserved.
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
@@ -41,16 +41,16 @@ INSTALLATION
 
 To install Mason, run the standard sequence:
 
-	perl Makefile.PL
-	make
-	make install
+	perl Build.PL
+	./Build
+	./Build install
 
 By default, Mason will prompt you for information about where Apache
 is installed so that it can help you configure Mason to run under
 mod_perl.  If you would like to skip this, invoke the Makefile.PL like
 this:
 
-        perl Makefile.PL --noprompts
+        perl Build.PL --noprompts
 
 After Mason is installed, you will need to activate it by adding some
 directives to your Apache configuration files.
@@ -72,6 +72,8 @@ available around the net.
 Testing with recent mod_perls showed improvements, but because this
 bug can be so intermittent and difficult to spot, mod_perl DSO with
 Mason is still strictly unsupported.
+
+This should not be a problem with Apache2.
 
 * Don't use Mason with PerlFreshRestart.
 
@@ -121,7 +123,7 @@ small component or set of components, and send those.
 
 If you are experiencing test failures, please run the tests like this:
 
-        make test TEST_VERBOSE=1
+        ./Build test verbose=1
 
 and send the output along with the bug report.  Otherwise we'll just
 ask you to do this before we can do anything.
@@ -143,13 +145,16 @@ Mason is released under the same terms as Perl itself.  For more
 information see the "README" or "Artistic" files provided with the
 Perl distribution.
 
-AUTHOR
+AUTHORS
 
 Jonathan Swartz
-swartz@pobox.com
+swartz <AT> pobox.com
 
 Dave Rolsky
-autarch@urth.org
+autarch <AT> urth.org
 
 Ken Williams
-ken@mathforum.org
+ken <AT> mathforum.org
+
+John Williams
+williams <AT> tni.com
