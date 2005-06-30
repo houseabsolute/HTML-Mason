@@ -16,19 +16,19 @@ BEGIN
     {
         require mod_perl2;
     }
-    else
+    elsif ( $ENV{MOD_PERL} )
     {
         require mod_perl;
     }
 
-    my $mpver = ($mod_perl2::VERSION || $mod_perl::VERSION);
+    my $mpver = ($mod_perl2::VERSION || $mod_perl::VERSION || 0);
 
     # This is the version that introduced PerlAddVar
-    if ($mpver < 1.24)
+    if ($mpver && $mpver < 1.24)
     {
         die "mod_perl VERSION >= 1.24 required";
     }
-    if ($mpver >= 1.99 && $mpver < 1.999022)
+    elsif ($mpver >= 1.99 && $mpver < 1.999022)
     {
         die "mod_perl-1.99 is not supported; upgrade to 2.00";
     }
@@ -49,7 +49,7 @@ use base qw(HTML::Mason::Request);
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 
-use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION) >= 1.999022;
+use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION || 0) >= 1.999022;
 use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
@@ -220,13 +220,14 @@ use HTML::Mason::Utils;
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
-use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION) >= 1.999022;
+use constant APACHE2	=> ($mod_perl2::VERSION || $mod_perl::VERSION || 0) >= 1.999022;
 use constant OK         => 0;
 use constant DECLINED   => -1;
 use constant NOT_FOUND  => 404;
 use constant REDIRECT	=> 302;
 
 BEGIN {
+   if ($ENV{MOD_PERL}) {
         if (APACHE2) {
             require Apache2::RequestRec;
             require Apache2::RequestIO;
@@ -238,6 +239,7 @@ BEGIN {
             require Apache;
             Apache->import();
         }
+    }
 }
 
 unless ( APACHE2 )
