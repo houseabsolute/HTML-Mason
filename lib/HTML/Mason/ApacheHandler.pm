@@ -172,7 +172,8 @@ sub exec
 	$r->send_http_header();
     }
 
-    return defined($retval) ? $retval : OK;
+    # mod_perl-1 treats 200 and OK the same, but mod_perl-2 does not.
+    return defined($retval) && $retval!=200 ? $retval : OK;
 }
 
 #
