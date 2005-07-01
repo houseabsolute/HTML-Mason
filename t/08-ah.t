@@ -41,10 +41,10 @@ local $ENV{PORT} = $test_data->{port};
 kill_httpd(1);
 test_load_apache();
 
-my $tests = 19; # multi conf & taint tests
-$tests += 60 if my $have_libapreq = have_module($apreq_module);
-$tests += 40 if my $have_cgi      = have_module('CGI');
-$tests += 15 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
+my $tests = 21; # multi conf & taint tests
+$tests += 63 if my $have_libapreq = have_module($apreq_module);
+$tests += 42 if my $have_cgi      = have_module('CGI');
+$tests += 16 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
 $tests++ if $have_cgi;
 
 # XXX - this never works because Apache::Filter cannot load outside of
@@ -58,15 +58,15 @@ print STDERR "\n";
 
 write_test_comps();
 
-if ($have_libapreq) {        # 60 tests
+if ($have_libapreq) {        # 63 tests
     cleanup_data_dir();
-    apache_request_tests(1); # 23 tests
+    apache_request_tests(1); # 24 tests
 
     cleanup_data_dir();
-    apache_request_tests(0); # 22 tests
+    apache_request_tests(0); # 23 tests
 
     cleanup_data_dir();
-    no_config_tests();       # 15 tests
+    no_config_tests();       # 16 tests
 
     if ($have_filter) {
         cleanup_data_dir();
@@ -76,18 +76,18 @@ if ($have_libapreq) {        # 60 tests
 
 if ($have_tmp) {
     cleanup_data_dir();
-    single_level_serverroot_tests();  # 15 tests
+    single_level_serverroot_tests();  # 16 tests
 }
 
 cleanup_data_dir();
-taint_tests();           # 15 tests
+taint_tests();           # 16 tests
 
-if ($have_cgi) {             # 40 tests (+ 1?)
+if ($have_cgi) {             # 42 tests (+ 1?)
     cleanup_data_dir();
-    cgi_tests(1);            # 23 tests
+    cgi_tests(1);            # 24 tests
 
     cleanup_data_dir();
-    cgi_tests(0);            # 18 tests
+    cgi_tests(0);            # 19 tests
 }
 
 cleanup_data_dir();
@@ -101,7 +101,7 @@ if ( $> == 0 || $< == 0 )
     chmod 0777, File::Spec->catdir( $test_data->{apache_dir}, 'data' );
 }
 
-multi_conf_tests();     # 4 tests
+multi_conf_tests();     # 5 tests
 
 sub write_test_comps
 {
@@ -262,6 +262,22 @@ $r->internal_redirect('/comps/internal_redirect_target?foo=17');
 $m->auto_send_headers(0);
 $m->clear_buffer;
 $m->abort;
+</%init>
+EOF
+	      );
+
+    write_comp( 'subrequest', <<'EOF',
+<%init>
+# tests can run under various comp_root settings
+my $comp_root = $m->interp->comp_root;
+$comp_root = $$comp_root[0][1] if ref $comp_root;
+my $comp = $comp_root =~ m/comps/ ? '/internal_redirect_target' : '/comps/internal_redirect_target';
+
+$m->clear_buffer;
+my $sub = $m->make_subrequest(comp => $comp, args=> [ foo => 17 ]);
+$sub->exec;
+$m->flush_buffer;
+$m->abort(200);
 </%init>
 EOF
 	      );
@@ -813,6 +829,19 @@ EOF
 					       );
     ok($success);
 
+    $path = '/comps/subrequest';
+    $path = "/ah=0$path" if $with_handler;
+    $response = Apache::test->fetch($path);
+    $actual = filter_response($response, $with_handler);
+    $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+							      expect => <<'EOF',
+X-Mason-Test: Initial value
+The number is 17.
+Status code: 0
+EOF
+					       );
+    ok($success);
+
     $path = '/comps/error_as_html';
     $path = "/ah=0$path" if $with_handler;
     $response = Apache::test->fetch($path);
@@ -878,6 +907,11 @@ EOF
     $actual = filter_response($response, 0);
     ok( $actual, qr{404 not found}i,
 	"Attempt to request a non-existent component should not work with incorrect dhandler_name" );
+
+    $response = Apache::test->fetch('/perl-status');
+    $actual = filter_response($response, 0);
+    ok( $actual, qr{<a href="/perl-status\?mason0001">HTML::Mason status</a>},
+	"Apache::Status");
 
     kill_httpd(1);
 }

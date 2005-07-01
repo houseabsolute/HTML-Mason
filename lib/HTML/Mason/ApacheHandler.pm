@@ -338,9 +338,10 @@ sub _startup
 # Register with Apache::Status at module startup.  Will get replaced
 # with a more informative status once an interpreter has been created.
 my $status_name = 'mason0001';
-if ( load_pkg('Apache::Status') )
+my $apstat_module = APACHE2 ? 'Apache2::Status' : 'Apache::Status';
+if ( load_pkg($apstat_module) )
 {
-    Apache::Status->menu_item
+    $apstat_module->menu_item
 	($status_name => __PACKAGE__->allowed_params->{apache_status_title}{default},
          sub { ["<b>(no interpreters created in this child yet)</b>"] });
 }
@@ -687,7 +688,8 @@ sub _initialize {
     }
 
     # Add an HTML::Mason menu item to the /perl-status page.
-    if (defined Apache::Status->VERSION) {
+    my $apstat_module = APACHE2 ? 'Apache2::Status' : 'Apache::Status';
+    if (defined $apstat_module->VERSION) {
 	# A closure, carries a reference to $self
 	my $statsub = sub {
 	    my ($r,$q) = @_; # request and CGI objects
@@ -702,7 +704,7 @@ sub _initialize {
 		    $self->interp->status_as_html(ah => $self, apache_req => $r)];
 	};
 	local $^W = 0; # to avoid subroutine redefined warnings
-	Apache::Status->menu_item($status_name, $self->apache_status_title, $statsub);
+	$apstat_module->menu_item($status_name, $self->apache_status_title, $statsub);
     }
 
     my $interp = $self->interp;

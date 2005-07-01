@@ -166,6 +166,7 @@ sub _write_apache_test_conf
     my $mod_perl_handler =
         File::Spec->catfile( $conf{apache_dir}, 'mason_handler_mod_perl.pl' );
     my $apreq_module = $conf{version} =~ m/^2\./ ? 'Apache2::Request' : 'Apache::Request';
+    my $apstat_module = $conf{version} =~ m/^2\./ ? 'Apache2::Status' : 'Apache::Status';
     # Apache::test::have_module often stderrs about not finding libapreq.so
     # Putting SERVER_ROOT/lib in LD_LIBRARY_PATH would suppress that, but
     # that would have to be done before perl starts running.
@@ -293,6 +294,11 @@ ServerRoot $conf{apache_dir}
     SetHandler html-mason
   </Location>
 </IfDefine>
+
+<Location /perl-status>
+    SetHandler perl-script
+    PerlHandler $apstat_module
+</Location>
 EOF
 
 # Apache::Filter is reported to not work with mod_perl 2
