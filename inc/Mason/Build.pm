@@ -1081,7 +1081,7 @@ sub ACTION_manifest
     $self->add_to_cleanup('MANIFEST');
 }
 
-sub ACTION_html_docs
+sub ACTION_custom_html_docs
 {
     my $self = shift;
 
