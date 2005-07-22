@@ -447,6 +447,20 @@ You may still see references to a F<handler.pl> file in the Mason
 users list archives, as well as the FAQ.  These references will
 generally be applicable to any custom code wrapping Mason.
 
+=head3 Wrappers and PerlSetVar-style configuration
+
+Sometimes people attempt to write a wrapper I<and> configure Mason
+with C<PerlSetVar> directives in their Apache configuration file.
+B<This does not work>.  When you give mod_perl this configuration:
+
+  PerlHandler HTML::Mason::ApacheHandler
+
+it will dispatch directly to the C<<
+HTML::Mason::ApacheHandler->handler() >> method, without ever
+executing your wrapper code.  However, you can mix the two methods.
+See L<Mixing httpd.conf Configuration with a Wrapper|"Mixing
+httpd.conf Configuration with a Wrapper">
+
 =head2 Wrapping with a <Perl> block
 
 You can also put your wrapper code in a C<< <Perl> >> block as part of
