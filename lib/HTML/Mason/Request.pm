@@ -438,7 +438,7 @@ sub exec {
 	    tie *SELECTED, 'Tie::Handle::Mason';
 
 	    my $old = select SELECTED;
-	    my $mods = {base_comp=>$request_comp, store=>\ ($self->{request_buffer})};
+	    my $mods = {base_comp => $request_comp, store => \($self->{request_buffer})};
 
 	    if ($self->{has_plugins}) {
 		my $context = bless
