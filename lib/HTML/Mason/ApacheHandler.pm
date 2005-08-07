@@ -5,6 +5,7 @@
 # under the same terms as Perl itself.
 
 use strict;
+use warnings;
 
 package HTML::Mason::ApacheHandler;
 
@@ -152,6 +153,7 @@ sub exec
 	no strict 'refs';
 
         my $req_class = ref $r;
+        no warnings 'redefine';
 	local *{"$req_class\::print"} = sub {
 	    my $local_r = shift;
 	    return $self->print(@_) if $local_r eq $r;

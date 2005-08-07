@@ -1,5 +1,6 @@
 package HTML::Mason::Plugin::Context;
 use strict;
+use warnings;
 
 #------------------------------------------------------------
 

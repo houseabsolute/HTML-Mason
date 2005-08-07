@@ -5,6 +5,7 @@
 package HTML::Mason::Lexer;
 
 use strict;
+use warnings;
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error error)] );
 

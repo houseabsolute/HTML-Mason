@@ -5,6 +5,7 @@
 package HTML::Mason::Compiler::Events;
 
 use strict;
+use warnings;
 
 require HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );

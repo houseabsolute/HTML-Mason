@@ -11,6 +11,7 @@
 package HTML::Mason::Handler;
 
 use strict;
+use warnings;
 
 use HTML::Mason::Exceptions ( abbr => [ qw( virtual_error ) ] );
 

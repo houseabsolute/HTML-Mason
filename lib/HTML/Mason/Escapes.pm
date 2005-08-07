@@ -9,6 +9,7 @@
 package HTML::Mason::Escapes;
 
 use strict;
+use warnings;
 
 use HTML::Mason::Tools qw(load_pkg);
 

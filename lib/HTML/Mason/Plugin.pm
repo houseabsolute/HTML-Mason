@@ -1,6 +1,7 @@
 package HTML::Mason::Plugin;
 
 use strict;
+use warnings;
 
 sub new {
     my $class = shift;

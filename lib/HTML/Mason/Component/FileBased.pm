@@ -5,6 +5,7 @@
 package HTML::Mason::Component::FileBased;
 
 use strict;
+use warnings;
 
 use File::Basename;
 use File::Spec;

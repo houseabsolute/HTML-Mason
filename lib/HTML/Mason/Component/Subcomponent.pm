@@ -5,6 +5,7 @@
 package HTML::Mason::Component::Subcomponent;
 
 use strict;
+use warnings;
 
 use HTML::Mason::Component;
 

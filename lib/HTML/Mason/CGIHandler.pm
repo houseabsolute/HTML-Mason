@@ -1,6 +1,7 @@
 package HTML::Mason::CGIHandler;
 
 use strict;
+use warnings;
 
 use HTML::Mason;
 use HTML::Mason::Utils;

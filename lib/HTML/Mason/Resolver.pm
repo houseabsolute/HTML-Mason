@@ -5,6 +5,7 @@
 package HTML::Mason::Resolver;
 
 use strict;
+use warnings;
 
 use HTML::Mason::Exceptions( abbr => ['param_error', 'virtual_error'] );
 

@@ -5,6 +5,7 @@
 package HTML::Mason::Compiler::ToObject;
 
 use strict;
+use warnings;
 
 use Params::Validate qw(SCALAR validate);
 use HTML::Mason::Tools qw(make_fh taint_is_on);

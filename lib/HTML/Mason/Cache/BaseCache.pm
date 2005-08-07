@@ -4,6 +4,7 @@
 
 package HTML::Mason::Cache::BaseCache;
 use strict;
+use warnings;
 
 #
 # Override to handle busy_lock and expire_if.

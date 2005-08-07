@@ -5,6 +5,7 @@
 package HTML::Mason::MethodMaker;
 
 use strict;
+use warnings;
 
 use Params::Validate qw(validate_pos);
 

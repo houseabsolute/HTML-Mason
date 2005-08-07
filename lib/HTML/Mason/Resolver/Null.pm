@@ -5,6 +5,7 @@
 package HTML::Mason::Resolver::Null;
 
 use strict;
+use warnings;
 
 use HTML::Mason::Resolver;
 use base qw(HTML::Mason::Resolver);

@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 
 # We need to define an Apache package or we might get strange errors
 # like "Can't locate package Apache for
@@ -302,6 +303,7 @@ sub params {
 package HTML::Mason::FakeTable;
 # Analogous to Apache::Table.
 use strict;
+use warnings;
 
 sub new {
     my $class = shift;
@@ -355,6 +357,7 @@ sub do {
 package HTML::Mason::FakeTableHash;
 # Used by HTML::Mason::FakeTable.
 use strict;
+use warnings;
 
 sub TIEHASH {
     my $class = shift;

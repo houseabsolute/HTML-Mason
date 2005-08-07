@@ -1,6 +1,7 @@
 package HTML::Mason::Exceptions;
 
 use strict;
+use warnings;
 
 use vars qw($VERSION);
 

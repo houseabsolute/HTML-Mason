@@ -33,6 +33,7 @@
 package HTML::Mason::Request;
 
 use strict;
+use warnings;
 
 use File::Spec;
 use HTML::Mason::Plugin::Context;

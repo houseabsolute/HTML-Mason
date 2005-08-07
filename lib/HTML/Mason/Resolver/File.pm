@@ -5,6 +5,7 @@
 package HTML::Mason::Resolver::File;
 
 use strict;
+use warnings;
 
 use Cwd;
 

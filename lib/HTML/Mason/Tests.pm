@@ -1,6 +1,7 @@
 package HTML::Mason::Tests;
 
 use strict;
+use warnings;
 
 use Cwd;
 

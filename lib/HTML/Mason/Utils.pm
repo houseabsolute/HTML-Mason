@@ -11,6 +11,7 @@ package HTML::Mason::Utils;
 
 use HTML::Mason::Tools qw(compress_path);
 use strict;
+use warnings;
 
 require Exporter;
 

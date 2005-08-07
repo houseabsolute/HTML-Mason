@@ -5,6 +5,7 @@
 package HTML::Mason::Compiler;
 
 use strict;
+use warnings;
 use Data::Dumper;
 use HTML::Mason::Component::FileBased;
 use HTML::Mason::Component::Subcomponent;

@@ -7,6 +7,7 @@
 package HTML::Mason::Interp;
 
 use strict;
+use warnings;
 
 use File::Basename;
 use File::Path;

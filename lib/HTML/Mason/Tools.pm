@@ -11,6 +11,7 @@
 package HTML::Mason::Tools;
 
 use strict;
+use warnings;
 
 use Cwd;
 use File::Spec;

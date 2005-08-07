@@ -5,6 +5,7 @@
 package HTML::Mason::Component;
 
 use strict;
+use warnings;
 use File::Spec;
 use HTML::Mason::Exceptions( abbr => [qw(param_error)] );
 use HTML::Mason::Tools qw(absolute_comp_path can_weaken);

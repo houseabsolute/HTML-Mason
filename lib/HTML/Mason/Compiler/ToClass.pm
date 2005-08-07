@@ -5,6 +5,7 @@
 package HTML::Mason::Compiler::ToClass;
 
 use strict;
+use warnings;
 
 use HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );

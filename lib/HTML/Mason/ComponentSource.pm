@@ -5,6 +5,7 @@
 package HTML::Mason::ComponentSource;
 
 use strict;
+use warnings;
 use File::Basename;
 use File::Spec;
 use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
