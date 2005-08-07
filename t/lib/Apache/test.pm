@@ -282,6 +282,7 @@ sub _find_mod_perl_httpd {
 	      '/opt/apache/bin/httpd',
 	      '/usr/sbin/apache-perl',
 	      '/usr/sbin/apache',
+	      '/usr/sbin/apache2',
 	      '/usr/sbin/httpd',
 	      $self->_which('httpd'),
 	      $self->_which('apache'),
