@@ -12,6 +12,8 @@ available at http://www.masonhq.com/code/history.html.
 
 - Some doc tweaks to clarify that Mason should work out of the box
 with both mod_perl 1 and 2.
+- Added "use warnings" to all modules and made sure all tests ran
+warnings-free.
 
 [ BUG FIXES ]
 
