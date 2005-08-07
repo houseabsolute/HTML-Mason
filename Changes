@@ -5,6 +5,20 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+
+1.30
+
+[ ENHANCEMENTS ]
+
+- Some doc tweaks to clarify that Mason should work out of the box
+with both mod_perl 1 and 2.
+
+[ BUG FIXES ]
+
+- Silence a warning when HTML::Mason::ApacheHandler was loaded outside
+of mod_perl.
+
+
 1.29_02  June 22, 2005
 
 [ ENHANCEMENTS ]
