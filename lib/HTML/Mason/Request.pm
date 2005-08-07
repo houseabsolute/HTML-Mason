@@ -297,11 +297,13 @@ sub _initialize {
 		unless ($plugin_loaded{$plugin}) {
 		    # Load plugin package if it isn't already loaded.
 		    #
-		    { no strict 'refs';
-		      unless (defined(%{$plugin . "::"})) {
-			  eval "use $plugin;";
-			  die $@ if $@;
-		      }}
+		    {
+                        no strict 'refs';
+                        unless (defined(%{$plugin . "::"})) {
+                            eval "use $plugin;";
+                            die $@ if $@;
+                        }
+                    }
 		    $plugin_loaded{$plugin} = 1;
 		}
  	        $plugin_instance = $plugin->new();
