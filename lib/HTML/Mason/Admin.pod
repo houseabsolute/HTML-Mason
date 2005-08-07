@@ -13,10 +13,11 @@ the mod_perl website at http://perl.apache.org/.
 
 =head1 SITE CONFIGURATION METHODS
 
-Mason includes module specifically designed to integrate Mason and
-mod_perl, C<HTML::Mason::ApacheHandler>.  By telling mod_perl to hand
-content requests to this module, you can use Mason to generate web
-pages.  There are two ways to configure Mason under mod_perl.
+Mason includes a module specifically designed to integrate Mason and
+mod_perl (1 and 2), C<HTML::Mason::ApacheHandler>.  By telling
+mod_perl to hand content requests to this module, you can use Mason to
+generate web pages.  There are two ways to configure Mason under
+mod_perl.
 
 =over 4
 
@@ -54,7 +55,6 @@ discussed here with your own custom subclasses.
 The absolutely most minimal configuration looks like this:
 
     PerlModule HTML::Mason::ApacheHandler
-    # PerlModule Apache2::compat - if using Apache 2
 
     <Location />
       SetHandler   perl-script

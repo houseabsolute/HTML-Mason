@@ -1094,12 +1094,9 @@ HTML::Mason::ApacheHandler - Mason/mod_perl interface
 
 =head1 DESCRIPTION
 
-The ApacheHandler object links Mason to mod_perl, running components in
-response to HTTP requests. It is controlled primarily through
-parameters to the new() constructor.
-
-handle_request() is not a user method, but rather is called from the
-HTML::Mason::handler() routine in handler.pl.
+The ApacheHandler object links Mason to mod_perl (version 1 or 2),
+running components in response to HTTP requests. It is controlled
+primarily through parameters to the new() constructor.
 
 =head1 PARAMETERS TO THE new() CONSTRUCTOR
 
