@@ -116,7 +116,7 @@ BEGIN
            descr => "The maximum recursion depth for component, inheritance, and request stack" },
 
 	 out_method =>
-         { parse => 'code',type => CODEREF|SCALARREF,
+         { parse => 'code' ,type => CODEREF|SCALARREF,
            default => sub { print STDOUT $_[0] },
            descr => "A subroutine or scalar reference through which all output will pass" },
 
@@ -128,7 +128,7 @@ BEGIN
          },
 
  	 plugins =>
-         { parse => 'arrayref', default => [],
+         { parse => 'arrayref', default => [], type => ARRAYREF,
  	   descr => 'List of plugin classes or objects to run hooks around components and requests' },
 
          # Only used when creating subrequests
