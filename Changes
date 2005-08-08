@@ -19,6 +19,7 @@ warnings-free.
 
 - Silence a warning when HTML::Mason::ApacheHandler was loaded outside
 of mod_perl.
+- Support renamed Apache2::Status module.
 
 
 1.29_02  June 22, 2005
