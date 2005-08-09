@@ -8,6 +8,12 @@ available at http://www.masonhq.com/code/history.html.
 
 1.30
 
+[ INCOMPATIBLE CHANGES ]
+
+- ** Under mod_perl2, MasonArgsMethod will default to "CGI", since
+libapreq2 is still in development.  If you have successfully installed
+libapreq2, just set MasonArgsMethod to "mod_perl" to use it.
+
 [ ENHANCEMENTS ]
 
 - Some doc tweaks to clarify that Mason should work out of the box

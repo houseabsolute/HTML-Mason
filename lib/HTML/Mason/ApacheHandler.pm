@@ -271,7 +271,8 @@ BEGIN
            descr => "The title of the Apache::Status page" },
 
 	 args_method =>
-         { parse => 'string',  type => SCALAR,       default => 'mod_perl',
+         { parse => 'string',  type => SCALAR,
+	   default => APACHE2 ? 'CGI' : 'mod_perl',
            regex => qr/^(?:CGI|mod_perl)$/,
            descr => "Whether to use CGI.pm or Apache::Request for parsing the incoming HTTP request",
          },
@@ -1118,8 +1119,9 @@ are 'CGI' and 'mod_perl'; these indicate that a C<CGI.pm> or
 C<Apache::Request> object (respectively) will be created for the
 purposes of argument handling.
 
-'mod_perl' is the default and requires that you have installed the
-C<Apache::Request> package.
+'mod_perl' is the default under mod_perl-1 and requires that you have 
+installed the C<Apache::Request> package.  Under mod_perl-2, the default
+is 'CGI' because C<Apache2::Request> is still in development.
 
 If args_method is 'mod_perl', the C<$r> global is upgraded to an
 Apache::Request object. This object inherits all Apache methods and
