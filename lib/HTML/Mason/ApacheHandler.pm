@@ -326,7 +326,7 @@ sub _startup
 	    eval { require CGI unless defined CGI->VERSION; };
 	    # mod_perl2 does not warn about this, so somebody should
 	    if (APACHE2 && CGI->VERSION < 3.08) {
-		warn("CGI version 3.08 is required to support mod_perl2 API");
+		die "CGI version 3.08 is required to support mod_perl2 API";
 	    }
 	    die $@ if $@;
 	}
