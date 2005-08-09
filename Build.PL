@@ -29,9 +29,18 @@ eval { require mod_perl2 };
 my $has_mod_perl_2 = $@ ? 0 : 1;
 my $has_only_mp2 = ! $has_mod_perl_1 && $has_mod_perl_2;
 
-unless ( $@ || $^O =~ /mac|darwin/ || $has_only_mp2 )
+# XXX - this really isn't right since we really want to know which
+# version of mod_perl they _intend_ to use with Mason, rather than
+# just blindly adding all these prereqs.
+if ($has_mod_perl_1)
 {
-    $prereq{'Apache::Request'} = 0.32;
+    $prereq{'Apache::Request'} = 1.05; # minimum for OSX
+}
+
+if ($has_only_mp2)
+{
+    $prereq{CGI} = 3.08;
+    $prereq{mod_perl} = 1.999022;
 }
 
 my $build = Mason::Build->new
