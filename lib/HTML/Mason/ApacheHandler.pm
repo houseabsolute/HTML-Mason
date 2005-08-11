@@ -9,6 +9,11 @@ use warnings;
 
 package HTML::Mason::ApacheHandler;
 
+use vars qw($VERSION);
+# do not change the version number
+$VERSION = 1.69;
+
+
 # PerlAddVar was introduced in mod_perl-1.24
 # Support for 1.99 <= modperl < 2.00 was removed due to API changes
 BEGIN
@@ -255,10 +260,6 @@ unless ( APACHE2 )
     error "mod_perl must be compiled with PERL_TABLE_API=1 (or EVERYTHING=1) to use ", __PACKAGE__, "\n"
 	unless Apache::perl_hook('TableApi');
 }
-
-use vars qw($VERSION);
-# do not change the version number
-$VERSION = 1.69;
 
 use base qw(HTML::Mason::Handler);
 
