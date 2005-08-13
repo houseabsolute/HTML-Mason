@@ -5,8 +5,17 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.31
 
-1.30
+[ BUG FIXES ]
+
+- Under Apache2, if an ApacheHandler object was created during server
+startup and the associated Interp object created any files or
+directories, Mason would crash when attempting to chown those
+files/dirs to the uid/gid that Apache will use after forking.
+
+
+1.30  August 11, 2005
 
 [ INCOMPATIBLE CHANGES ]
 
