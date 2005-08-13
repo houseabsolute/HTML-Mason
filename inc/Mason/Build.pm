@@ -23,9 +23,9 @@ sub create_build_script
 
     unless ( exists $self->{args}{noprompts} )
     {
-    $self->_apache_test_config;
+        $self->_apache_test_config;
 
-    $self->_assisted_install_config;
+        $self->_assisted_install_config;
     }
 
     $self->add_to_cleanup('mason_tests');
@@ -46,7 +46,7 @@ sub _check_for_old_mason
 
     if ( $HTML::Mason::VERSION < 1.09 )
     {
-    print <<"EOF";
+        print <<"EOF";
 
 It looks like you have an older version of Mason already installed on
 your machine (version $HTML::Mason::VERSION).  This version is not backwards
@@ -56,12 +56,12 @@ installation.
 
 EOF
 
-    unless ( exists $self->{args}{noprompts} )
-    {
-        my $yn = Module::Build->prompt('Continue with installation?', 'N');
+        unless ( exists $self->{args}{noprompts} )
+        {
+            my $yn = Module::Build->prompt('Continue with installation?', 'N');
 
-        exit unless $yn =~ /y(?:es)?/i;
-    }
+            exit unless $yn =~ /y(?:es)?/i;
+        }
     }
 }
 
@@ -79,7 +79,7 @@ sub _apache_test_config
     $self->_cleanup_apache_test_files();
 
     $self->_write_apache_test_conf()
-    or return;
+        or return;
 
     $self->_setup_handler('mod_perl');
     $self->_setup_handler('CGI');
@@ -99,21 +99,21 @@ sub _cleanup_apache_test_files
 
     foreach ( qw( httpd mason_handler_CGI.pl mason_handler_mod_perl.pl ) )
     {
-    my $file = File::Spec->catdir( 't', $_ );
-    if ( -e $file )
-    {
-        unlink $file
-        or die "Can't unlink '$file': $!";
-    }
+        my $file = File::Spec->catdir( 't', $_ );
+        if ( -e $file )
+        {
+            unlink $file
+                or die "Can't unlink '$file': $!";
+        }
     }
 
     foreach ( qw( comps data conf logs ) )
     {
-    my $dir = File::Spec->catdir( 't', $_ );
-    if ( -d $dir )
-    {
-        $self->delete_filetree($dir);
-    }
+        my $dir = File::Spec->catdir( 't', $_ );
+        if ( -d $dir )
+        {
+            $self->delete_filetree($dir);
+        }
     }
 }
 
@@ -137,23 +137,23 @@ sub _write_apache_test_conf
     $conf{log_dir} = File::Spec->catdir( $conf{apache_dir}, 'logs' );
 
     mkdir $conf{comp_root}, 0755
-    or die "Can't make dir '$conf{comp_root}': $!";
+        or die "Can't make dir '$conf{comp_root}': $!";
     mkdir $conf{data_dir}, 0755
-    or die "Can't make dir '$conf{data_dir}': $!";
+        or die "Can't make dir '$conf{data_dir}': $!";
     mkdir $conf{conf_dir}, 0755
-    or die "Can't make dir '$conf{conf_dir}': $!";
+        or die "Can't make dir '$conf{conf_dir}': $!";
     mkdir $conf{log_dir}, 0755
-    or die "Can't make dir '$conf{log_dir}': $!";
+        or die "Can't make dir '$conf{log_dir}': $!";
     if (!$<) {
-    # set data_dir permissions when running as root
-    my $uid = getpwnam($conf{user});
-    my $gid = getgrnam($conf{group});
+        # set data_dir permissions when running as root
+        my $uid = getpwnam($conf{user});
+        my $gid = getgrnam($conf{group});
         my $default_data_dir = File::Spec->catdir( $conf{apache_dir}, 'mason' );
-    eval {
-        chown $uid,$gid, $conf{data_dir};
-        mkdir $default_data_dir, 0755;
-        chown $uid,$gid, $default_data_dir;
-    };
+        eval {
+            chown $uid,$gid, $conf{data_dir};
+            mkdir $default_data_dir, 0755;
+            chown $uid,$gid, $default_data_dir;
+        };
     }
 
     $self->add_to_cleanup( @conf{'comp_root', 'data_dir'} );
@@ -181,7 +181,7 @@ sub _write_apache_test_conf
     # Apache2 tweaks
     my $PerlTaintCheck = 'PerlTaintCheck On';
     if ($conf{version} =~ m/^2\./) {
-    $PerlTaintCheck = 'PerlSwitches -T';
+        $PerlTaintCheck = 'PerlSwitches -T';
     }
 
     my $include .= <<"EOF";
@@ -344,17 +344,17 @@ EOF
     } # matches 'if ( load_pkg('Apache::Filter') )'
 
     {
-    local $^W;
-    Apache::test->write_httpd_conf
-        ( %conf,
-          include => $include
-        );
+        local $^W;
+        Apache::test->write_httpd_conf
+            ( %conf,
+              include => $include
+            );
     }
 
     $self->add_to_cleanup
-    ( map { File::Spec->catfile( $conf{apache_dir}, $_ ) }
-      qw( httpd.conf error_log httpd httpd.pid mason )
-    );
+        ( map { File::Spec->catfile( $conf{apache_dir}, $_ ) }
+          qw( httpd.conf error_log httpd httpd.pid mason )
+        );
 
     $self->notes( apache_test_conf => \%conf );
 
@@ -371,7 +371,7 @@ sub _setup_handler
     my $handler = "mason_handler_$args_method.pl";
     my $handler_file = File::Spec->catfile( $conf->{apache_dir}, $handler );
     open F, ">$handler_file"
-    or die "Can't write to '$handler_file': $!";
+        or die "Can't write to '$handler_file': $!";
 
     my $libs = $self->_apache_test_conf_libs();
 
@@ -418,66 +418,66 @@ use HTML::Mason;
 my \@ah;
 
 \$ah[0] = HTML::Mason::ApacheHandler->new(
-        args_method => '$args_method',
-        #interp_params
-        interp => My::Interp->new( 
-            request_class => 'HTML::Mason::Request::ApacheHandler',
-            data_dir => '$conf->{data_dir}',
-            error_mode => 'output',
-            error_format => 'html',
-        #res_params
-            resolver_class => 'My::Resolver',
-            comp_root => '$conf->{comp_root}',
-        ),
-    );
+                args_method => '$args_method',
+                #interp_params
+                interp => My::Interp->new( 
+                        request_class => 'HTML::Mason::Request::ApacheHandler',
+                        data_dir => '$conf->{data_dir}',
+                        error_mode => 'output',
+                        error_format => 'html',
+                #res_params
+                        resolver_class => 'My::Resolver',
+                        comp_root => '$conf->{comp_root}',
+                ),
+        );
 
 \$ah[1] = HTML::Mason::ApacheHandler->new(
-        args_method => '$args_method',
-        #interp_params
-        interp_class => 'My::Interp',
-        data_dir => '$conf->{data_dir}',
-        error_mode => 'output',
-        error_format => 'html',
-        autoflush => 1,
-        #res_params
-        resolver_class => 'My::Resolver',
-        comp_root => '$conf->{comp_root}',
-    );
+                args_method => '$args_method',
+                #interp_params
+                interp_class => 'My::Interp',
+                data_dir => '$conf->{data_dir}',
+                error_mode => 'output',
+                error_format => 'html',
+                autoflush => 1,
+                #res_params
+                resolver_class => 'My::Resolver',
+                comp_root => '$conf->{comp_root}',
+        );
 
 #\$ah[2] = HTML::Mason::ApacheHandler->new(
-#        args_method => '$args_method',
-#        decline_dirs => 0,
-#        #interp_params
-#        interp => My::Interp->new( 
-#            request_class => 'HTML::Mason::Request::ApacheHandler',
-#            data_dir => '$conf->{data_dir}',
-#            error_mode => 'output',
-#            error_format => 'html',
-#        #res_params
-#            resolver => My::Resolver->new( comp_root => '$conf->{comp_root}'),
-#        ),
-#    );
+#               args_method => '$args_method',
+#               decline_dirs => 0,
+#               #interp_params
+#               interp => My::Interp->new( 
+#                       request_class => 'HTML::Mason::Request::ApacheHandler',
+#                       data_dir => '$conf->{data_dir}',
+#                       error_mode => 'output',
+#                       error_format => 'html',
+#               #res_params
+#                       resolver => My::Resolver->new( comp_root => '$conf->{comp_root}'),
+#               ),
+#       );
 
 \$ah[3] = HTML::Mason::ApacheHandler->new(
-        args_method => '$args_method',
-        #interp_params
-        interp_class => 'My::Interp',
-        data_dir => '$conf->{data_dir}',
-        error_mode => 'fatal',
-        error_format => 'line',
-        #res_params
-        resolver => My::Resolver->new(),
-        comp_root => '$conf->{comp_root}',
-    );
+                args_method => '$args_method',
+                #interp_params
+                interp_class => 'My::Interp',
+                data_dir => '$conf->{data_dir}',
+                error_mode => 'fatal',
+                error_format => 'line',
+                #res_params
+                resolver => My::Resolver->new(),
+                comp_root => '$conf->{comp_root}',
+        );
 
 \$ah[4] = HTML::Mason::ApacheHandler->new(
-        args_method => '$args_method',
-        interp_class => 'My::ThrowingInterp',
-        data_dir => '$conf->{data_dir}',
-        error_mode => 'output',
-        error_format => 'html',
-        comp_root => '$conf->{comp_root}',
-    );
+                args_method => '$args_method',
+                interp_class => 'My::ThrowingInterp',
+                data_dir => '$conf->{data_dir}',
+                error_mode => 'output',
+                error_format => 'html',
+                comp_root => '$conf->{comp_root}',
+        );
 
 
 chown \$ah[0]->get_uid_gid, \$ah[0]->interp->files_written;
@@ -525,7 +525,7 @@ sub _write_CGIHandler
 
     my $handler_file = File::Spec->catfile( $conf->{apache_dir}, 'CGIHandler.cgi' );
     open F, ">$handler_file"
-    or die "Can't write to '$handler_file': $!";
+        or die "Can't write to '$handler_file': $!";
 
     my $libs = $self->_apache_test_conf_libs();
 
@@ -567,7 +567,7 @@ EOF
     close F;
 
     chmod 0755, $handler_file
-    or die "cannot chmod $handler_file to 0755: $!";
+        or die "cannot chmod $handler_file to 0755: $!";
 
     $self->add_to_cleanup($handler_file);
 }
@@ -582,8 +582,8 @@ sub _apache_test_conf_libs
 
     if ($ENV{PERL5LIB})
     {
-    $libs .= ' ';
-    $libs .= join ' ', (split /:|;/, $ENV{PERL5LIB});
+        $libs .= ' ';
+        $libs .= join ' ', (split /:|;/, $ENV{PERL5LIB});
     }
     $libs .= ' );';
 
@@ -600,8 +600,8 @@ sub _assisted_install_config
 
     unless ( $conf->{httpd} )
     {
-    my %conf = Apache::test->get_test_params();
-    $conf = \%conf;
+        my %conf = Apache::test->get_test_params();
+        $conf = \%conf;
     }
 
     return unless $conf->{httpd};
@@ -609,18 +609,18 @@ sub _assisted_install_config
     my %httpd_params = Apache::test->get_compilation_params( $conf->{httpd} );
 
     my $conf_file =
-    ( $conf->{config_file} ?
-      $conf->{config_file} :
-      $httpd_params{SERVER_CONFIG_FILE}
-    );
+        ( $conf->{config_file} ?
+          $conf->{config_file} :
+          $httpd_params{SERVER_CONFIG_FILE}
+        );
 
     my %config_params = eval { $self->_get_config_file_params($conf_file) };
     warn " * Can't investigate current installation status:\n $@" and return if $@;
 
     foreach my $k ( qw( document_root user group ) )
     {
-    # strip quotes if they're there.
-    for ( $config_params{$k}) { s/^"//; s/"$//; }
+        # strip quotes if they're there.
+        for ( $config_params{$k}) { s/^"//; s/"$//; }
     }
 
     my $conf_dir = File::Basename::dirname( $conf_file );
@@ -641,16 +641,16 @@ EOF
     $default = 'no' if -e File::Spec->catfile( $conf_dir, 'mason.conf' );
 
     my $yn =
-    Module::Build->prompt
-        ( 'Would you like help configuring Apache/mod_perl to use Mason?',
-          $default );
+        Module::Build->prompt
+            ( 'Would you like help configuring Apache/mod_perl to use Mason?',
+              $default );
 
     return unless $yn =~ /^y/i;
 
     my %install = ( user => $config_params{user},
-            group => $config_params{group},
-            apache_config_file => $conf_file,
-          );
+                    group => $config_params{group},
+                    apache_config_file => $conf_file,
+                  );
 
     print <<'EOF';
 
@@ -665,8 +665,8 @@ EOF
 
     do
     {
-    $install{comp_root} =
-        Module::Build->prompt( 'Component root?', $config_params{document_root} );
+        $install{comp_root} =
+            Module::Build->prompt( 'Component root?', $config_params{document_root} );
     } until $install{comp_root};
 
     print <<'EOF';
@@ -680,20 +680,20 @@ EOF
 
     do
     {
-    $install{data_dir} =
-        Module::Build->prompt( 'Data directory?',
-                   File::Spec->catdir( $httpd_params{HTTPD_ROOT}, 'mason' ) );
+        $install{data_dir} =
+            Module::Build->prompt( 'Data directory?',
+                                   File::Spec->catdir( $httpd_params{HTTPD_ROOT}, 'mason' ) );
 
-    if ($install{data_dir} && -e $install{data_dir})
-    {
-        my $yn =
-        Module::Build->prompt
-            ( "This directory ('$install{data_dir}') already exists," .
-              " is that ok?", 'yes' );
+        if ($install{data_dir} && -e $install{data_dir})
+        {
+            my $yn =
+                Module::Build->prompt
+                    ( "This directory ('$install{data_dir}') already exists," .
+                      " is that ok?", 'yes' );
 
-        delete $install{data_dir} unless $yn =~ /y/;
-        print "\n";
-    }
+            delete $install{data_dir} unless $yn =~ /y/;
+            print "\n";
+        }
     } until $install{data_dir};
 
     print <<'EOF';
@@ -714,17 +714,17 @@ EOF
     my @ext;
     do
     {
-    my $ext =
-        Module::Build->prompt
-        ( 'What extensions should the web server' .
-          ' recognize as Mason components', 'html' );
+        my $ext =
+            Module::Build->prompt
+                ( 'What extensions should the web server' .
+                  ' recognize as Mason components', 'html' );
 
-    @ext = map { s/^\.//; $_ } split /\s+/, $ext;
+        @ext = map { s/^\.//; $_ } split /\s+/, $ext;
 
-    unless (@ext == 1 && $ext[0] eq '!')
-    {
-        $install{extensions} = \@ext;
-    }
+        unless (@ext == 1 && $ext[0] eq '!')
+        {
+            $install{extensions} = \@ext;
+        }
     } until @ext;
 
     $self->notes( apache_install => \%install );
@@ -737,35 +737,35 @@ sub _get_config_file_params
 
     local *CONF;
 
-    open CONF, "<$file"    or die "Can't read $file: $!\n";
+    open CONF, "<$file" or die "Can't read $file: $!\n";
 
     my %conf;
     while (<CONF>)
     {
-    next if /^\s*\#/; # skip comments
+        next if /^\s*\#/; # skip comments
 
-    # all regexes below attempt to make sure that they're not in a
-    # comment
+        # all regexes below attempt to make sure that they're not in a
+        # comment
 
-    if ( /[^\#]*HTML::Mason/ )
-    {
-        $conf{has_mason} = 1;
-    }
+        if ( /[^\#]*HTML::Mason/ )
+        {
+            $conf{has_mason} = 1;
+        }
 
-    if ( /[^\#]*DocumentRoot\s+(.*)/ )
-    {
-        $conf{document_root} = $1;
-    }
+        if ( /[^\#]*DocumentRoot\s+(.*)/ )
+        {
+            $conf{document_root} = $1;
+        }
 
-    if ( /[^\#]*User\s+(.*)/ )
-    {
-        $conf{user} = $1;
-    }
+        if ( /[^\#]*User\s+(.*)/ )
+        {
+            $conf{user} = $1;
+        }
 
-    if ( /[^\#]*Group\s+(.*)/ )
-    {
-        $conf{group} = $1;
-    }
+        if ( /[^\#]*Group\s+(.*)/ )
+        {
+            $conf{group} = $1;
+        }
     }
 
     close CONF or die "Can't close $file: $!";
@@ -804,14 +804,14 @@ sub ACTION_params_pod
     my $self = shift;
 
     my $params_pod =
-    File::Spec->catfile( $self->_lib_dir, 'HTML', 'Mason', 'Params.pod' );
+        File::Spec->catfile( $self->_lib_dir, 'HTML', 'Mason', 'Params.pod' );
 
     my $comp = File::Spec->catfile( $self->base_dir, 'inc', 'params.mtxt' );
 
     return if $self->up_to_date( [ $comp,
-                   $self->_files_with_pod('lib') ],
-                 $params_pod
-                   );
+                                   $self->_files_with_pod('lib') ],
+                                 $params_pod
+                               );
 
     # make sure we get distro's modules
     local @INC = ( $self->_lib_dir, @INC );
@@ -820,17 +820,17 @@ sub ACTION_params_pod
 
     eval
     {
-    require HTML::Mason;
-    require HTML::Mason::Compiler::ToObject;
-    require HTML::Mason::ApacheHandler;
-    require HTML::Mason::Tools;
+        require HTML::Mason;
+        require HTML::Mason::Compiler::ToObject;
+        require HTML::Mason::ApacheHandler;
+        require HTML::Mason::Tools;
     };
 
     if ($@)
     {
-    warn "Cannot load Mason modules: $@\n";
-    warn "Skipping generation of HTML::Mason::Params document\n";
-    return;
+        warn "Cannot load Mason modules: $@\n";
+        warn "Skipping generation of HTML::Mason::Params document\n";
+        return;
     }
 
     my @params = $self->_find_params;
@@ -838,9 +838,9 @@ sub ACTION_params_pod
 
     my $fh = HTML::Mason::Tools::make_fh();
     open $fh, ">$params_pod"
-    or die "Cannot write to $params_pod";
+        or die "Cannot write to $params_pod";
     print $fh $pod
-    or die "Cannot write to $params_pod";
+        or die "Cannot write to $params_pod";
     close $fh;
 
     $self->add_to_cleanup($params_pod);
@@ -856,54 +856,54 @@ sub _find_params
 
     foreach my $class_file ( $self->_files_with_params )
     {
-    my $pod_text = HTML::Mason::Tools::read_file($class_file);
+        my $pod_text = HTML::Mason::Tools::read_file($class_file);
 
-    while ($pod_text =~ /=item ([a-z_]+)\n\n(.*?)\n(?==item [a-z_]+\n|=back\s+=head)/sg)
-    {
-        my ($name, $desc) = ($1, $2);
-        next if exists($pod{$name});
-        chomp($pod{$name} = $desc);
-    }
+        while ($pod_text =~ /=item ([a-z_]+)\n\n(.*?)\n(?==item [a-z_]+\n|=back\s+=head)/sg)
+        {
+            my ($name, $desc) = ($1, $2);
+            next if exists($pod{$name});
+            chomp($pod{$name} = $desc);
+        }
     }
 
     foreach my $class ( sort keys %specs )
     {
-    foreach my $name ( sort keys %{ $specs{$class}{valid_params} } )
-    {
-        my $param = $specs{$class}{valid_params}{$name};
-        next unless $param->{public};
-        next if $param->{type} eq 'object';
+        foreach my $name ( sort keys %{ $specs{$class}{valid_params} } )
+        {
+            my $param = $specs{$class}{valid_params}{$name};
+            next unless $param->{public};
+            next if $param->{type} eq 'object';
 
-        $param->{name} = $name;
-        $param->{class} = $class;
-        $param->{default} = 'Varies' if $name =~ /^(?:comp_root|error_format|error_mode)$/;
-        $param->{default} = 'Print to STDOUT' if $name eq 'out_method';
-        $param->{pod} = $pod{$name} or die "could not find pod entry for $name\n";
-        $params{$name} = $param;
-    }
+            $param->{name} = $name;
+            $param->{class} = $class;
+            $param->{default} = 'Varies' if $name =~ /^(?:comp_root|error_format|error_mode)$/;
+            $param->{default} = 'Print to STDOUT' if $name eq 'out_method';
+            $param->{pod} = $pod{$name} or die "could not find pod entry for $name\n";
+            $params{$name} = $param;
+        }
 
-    foreach my $obj ( sort keys %{ $specs{$class}{contained_objects} } )
-    {
-        my $name = $obj . '_class';
-        my $default = $specs{$class}{contained_objects}{$obj}{class};
-        my $is_delayed = $specs{$class}{contained_objects}{$obj}{delayed};
-        $params{$name} = {
-        name => $name,
-        type => 'string',
-        class => $class,
-        default => $default,
-        is_delayed => $is_delayed,
-        pod => $pod{$name},
-        public => 1,
-        };
-    }
+        foreach my $obj ( sort keys %{ $specs{$class}{contained_objects} } )
+        {
+            my $name = $obj . '_class';
+            my $default = $specs{$class}{contained_objects}{$obj}{class};
+            my $is_delayed = $specs{$class}{contained_objects}{$obj}{delayed};
+            $params{$name} = {
+                name => $name,
+                type => 'string',
+                class => $class,
+                default => $default,
+                is_delayed => $is_delayed,
+                pod => $pod{$name},
+                public => 1,
+            };
+        }
     }
 
     foreach my $spec (sort values %params)
     {
-    (my $studly = $spec->{name}) =~ s/(?:^|_)(\w)/\U$1/g;
-    $spec->{apache_name} =
-        HTML::Mason::ApacheHandler->studly_form( $spec->{name} );
+        (my $studly = $spec->{name}) =~ s/(?:^|_)(\w)/\U$1/g;
+        $spec->{apache_name} =
+            HTML::Mason::ApacheHandler->studly_form( $spec->{name} );
     }
 
     return map { $params{$_} } sort keys %params;
@@ -924,11 +924,11 @@ sub _files_with_params
     foreach my $class ( qw( ApacheHandler Compiler Compiler/ToObject
                             Interp Request Resolver/File ) )
     {
-    my @class_pieces = split /\//, $class;
-    $class_pieces[-1] .= '.pm';
+        my @class_pieces = split /\//, $class;
+        $class_pieces[-1] .= '.pm';
 
-    push @files,
-        File::Spec->catfile( $self->_lib_dir, 'HTML', 'Mason', @class_pieces );
+        push @files,
+            File::Spec->catfile( $self->_lib_dir, 'HTML', 'Mason', @class_pieces );
     }
 
     return @files;
@@ -943,9 +943,9 @@ sub _run_params_comp
     my $interp = HTML::Mason::Interp->new( out_method => \$buf );
 
     $interp->exec( '/inc/params.mtxt',
-           params => \@params,
-           pods => [ $self->_files_with_pod('lib') ],
-         );
+                   params => \@params,
+                   pods => [ $self->_files_with_pod('lib') ],
+                 );
 
     $buf =~ s/\s+$//s;
 
@@ -958,9 +958,9 @@ sub _files_with_pod
     my $dir = shift;
 
     return
-    ( grep { $self->contains_pod($_) }
-      @{ $self->rscan_dir( $dir, qr{\.p(m|od)$} ) }
-    );
+        ( grep { $self->contains_pod($_) }
+          @{ $self->rscan_dir( $dir, qr{\.p(m|od)$} ) }
+        );
 }
 
 sub _convert_custom_pod
@@ -976,7 +976,7 @@ sub _convert_custom_pod
     # from our local repositories we end up modifying those files.
     foreach my $file ( $self->_files_with_pod($dir) )
     {
-    $self->_convert_pod_in_file($file);
+        $self->_convert_pod_in_file($file);
     }
 
     $self->{converted_pod}{$dir} = 1;
@@ -1022,13 +1022,13 @@ sub _make_writeable
 
     unless ( -w $file )
     {
-    my $mode = (stat $file)[2];
+        my $mode = (stat $file)[2];
 
-    # let user & group write the darn thing
-    $mode |= 0220;
+        # let user & group write the darn thing
+        $mode |= 0220;
 
-    chmod $mode, $file
-        or die "Can't make $file writeable: $!";
+        chmod $mode, $file
+            or die "Can't make $file writeable: $!";
     }
 }
 
@@ -1038,14 +1038,14 @@ sub ACTION_distdir
 
     unless ( defined &ExtUtils::Manifest::maniadd )
     {
-    warn <<'EOF';
+        warn <<'EOF';
 
 The dist action requires a recent version of ExtUtils::Manifest.
 Please upgrade your installed version of the ExtUtils::MakeMaker
 distribution.
 
 EOF
-    exit;
+        exit;
     }
 
     $self->depends_on('params_pod');
@@ -1057,7 +1057,7 @@ EOF
 
     my @files = $self->_generate_html_docs( $self->dist_dir );
 
-    my $dist_manifest =    File::Spec->catfile( $self->dist_dir, 'MANIFEST' );
+    my $dist_manifest = File::Spec->catfile( $self->dist_dir, 'MANIFEST' );
 
     # Nice use of undocumented globals.  I hate the EU::* code!
     local $ExtUtils::Manifest::MANIFEST = $dist_manifest;
@@ -1088,8 +1088,8 @@ sub ACTION_custom_html_docs
     $self->depends_on('build');
 
     $self->_generate_html_docs( File::Spec->catdir( $self->base_dir, 'blib' ),
-                File::Spec->catdir( $self->base_dir ),
-                  );
+                                File::Spec->catdir( $self->base_dir ),
+                              );
 }
 
 sub _generate_html_docs
@@ -1110,17 +1110,17 @@ sub _generate_html_docs
     {
         next if $file =~ m{Bundle/|Apache/};
 
-    my $html_file = $self->_pod_to_html( $file, $html_dir );
+        my $html_file = $self->_pod_to_html( $file, $html_dir );
 
-    my $rel_path = File::Spec->abs2rel( $html_file, $target_dir );
+        my $rel_path = File::Spec->abs2rel( $html_file, $target_dir );
 
-    push @files, $rel_path;
+        push @files, $rel_path;
     }
 
     $self->_check_html_doc_links($html_dir);
 
     $self->add_to_cleanup( map { File::Spec->catfile( $self->base_dir, $_ ) }
-               'pod2htmd.*', 'pod2htmi.*' );
+                           'pod2htmd.*', 'pod2htmi.*' );
 
     return @files;
 }
@@ -1151,22 +1151,22 @@ sub _pod_to_html
     open $htmlfh, ">$html_file" or die "cannot write to $html_file: $!";
 
     while (<$rawfh>) {
-    my $base_dir = File::Basename::dirname($base);
-    if ($base_dir eq '.') {
-        s|HREF="/HTML/Mason/([^\"]+)"|HREF="$1"|gi;
-    } else {
-        s|HREF="/HTML/Mason/([^\"]+)"|HREF="../$1"|gi;
-        s|HREF="/HTML/Mason.html"|HREF="../Mason.html"|gi;
-        s|HREF="$base_dir/([^\"]+)"|HREF="$1"|gi;
-    }
-    s|HREF="/HTML/Mason.html"|HREF="Mason.html"|gi;
-    s/A HREF="([^\"\#]*)\#([^\"]+)"/"A HREF=\"$1\#" . $self->_escape_link($2) . "\""/gie;
-    s/A NAME="([^\"]+)"/"A NAME=\"" . $self->_escape_link($1) . "\""/gie;
-    print $htmlfh $_  or die "cannot write to $html_file: $!";
+        my $base_dir = File::Basename::dirname($base);
+        if ($base_dir eq '.') {
+            s|HREF="/HTML/Mason/([^\"]+)"|HREF="$1"|gi;
+        } else {
+            s|HREF="/HTML/Mason/([^\"]+)"|HREF="../$1"|gi;
+            s|HREF="/HTML/Mason.html"|HREF="../Mason.html"|gi;
+            s|HREF="$base_dir/([^\"]+)"|HREF="$1"|gi;
+        }
+        s|HREF="/HTML/Mason.html"|HREF="Mason.html"|gi;
+        s/A HREF="([^\"\#]*)\#([^\"]+)"/"A HREF=\"$1\#" . $self->_escape_link($2) . "\""/gie;
+        s/A NAME="([^\"]+)"/"A NAME=\"" . $self->_escape_link($1) . "\""/gie;
+        print $htmlfh $_  or die "cannot write to $html_file: $!";
     }
 
     unlink $raw_html_file
-    or die "Cannot unlink $raw_html_file: $!";
+        or die "Cannot unlink $raw_html_file: $!";
 
     $self->add_to_cleanup($html_file);
 
@@ -1232,8 +1232,8 @@ sub _check_html_doc_links
 
     if (my ($error_log) = ($output =~ /(\#-+\n\# ERROR.*)/s))
     {
-    print $error_log;
-    die "linklint had errors";
+        print $error_log;
+        die "linklint had errors";
     }
 }
 
@@ -1332,11 +1332,11 @@ sub ACTION_delete_old_pods
         foreach my $pm ( qw( Interp ApacheHandler Request Component ) ) {
             my $pod_file = File::Spec->catfile( $dir, 'HTML', 'Mason', "$pm.pod" );
 
-        if ( -e $pod_file ) {
-        warn "Removing obsolete documentation file $pod_file\n";
-        unlink $pod_file or warn "Cannot unlink $pod_file: $!";
+            if ( -e $pod_file ) {
+                warn "Removing obsolete documentation file $pod_file\n";
+                unlink $pod_file or warn "Cannot unlink $pod_file: $!";
+            }
         }
-    }
     }
 }
 
@@ -1367,11 +1367,11 @@ EOF
 
     if ( $params->{extensions} )
     {
-    my $ext_re = '(';
-    $ext_re .= join '|', map { "\\.$_" } @{ $params->{extensions} };
-    $ext_re .= ')$';
+        my $ext_re = '(';
+        $ext_re .= join '|', map { "\\.$_" } @{ $params->{extensions} };
+        $ext_re .= ')$';
 
-    $conf .= qq|  <LocationMatch "$ext_re">\n|;
+        $conf .= qq|  <LocationMatch "$ext_re">\n|;
     }
 
     $conf .= <<"EOF";
@@ -1400,17 +1400,17 @@ sub _alter_httpd_conf
 
     local *CONF;
     open CONF, "<$params->{apache_config_file}"
-    or die "Can't read $params->{apache_config_file}: $!";
+        or die "Can't read $params->{apache_config_file}: $!";
 
     my $new = '';
     while (<CONF>)
     {
-    if ( /^# Mason config/ )
-    {
-        my $skip = <CONF>; # just eat another line
-        next;
-    }
-    $new .= $_;
+        if ( /^# Mason config/ )
+        {
+            my $skip = <CONF>; # just eat another line
+            next;
+        }
+        $new .= $_;
     }
     # clear off last two newlines otherwise file will add one extra
     # blank line every time this script runs
@@ -1421,9 +1421,9 @@ sub _alter_httpd_conf
     close CONF or die "Can't close $params->{apache_config_file}: $!";
 
     open CONF, ">$params->{apache_config_file}"
-    or die "Can't write to $params->{apache_config_file}: $!";
+        or die "Can't write to $params->{apache_config_file}: $!";
     print CONF $new
-    or die "Can't write to $params->{apache_config_file}: $!";
+        or die "Can't write to $params->{apache_config_file}: $!";
     close CONF or die "Can't close $params->{apache_config_file}: $!";
 }
 
@@ -1462,17 +1462,17 @@ sub load_pkg {
     eval "use $pkg";
 
     if ($@) {
-    if ($@ =~ /^Can\'t locate .* in \@INC/) {
-        if (defined($nf_error)) {
-        die sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
-                $pkg, $nf_error, "@INC");
+        if ($@ =~ /^Can\'t locate .* in \@INC/) {
+            if (defined($nf_error)) {
+                die sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
+                            $pkg, $nf_error, "@INC");
+            } else {
+                undef $@;
+                return 0;
+            }
         } else {
-        undef $@;
-        return 0;
+            die $@;
         }
-    } else {
-        die $@;
-    }
     }
     return 1;
 }
