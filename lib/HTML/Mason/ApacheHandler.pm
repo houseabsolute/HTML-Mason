@@ -658,15 +658,18 @@ sub get_uid_gid
     # Apache2 lacks $s->uid.
     # Workaround by searching the config tree.
     require Apache2::Directive;
-    # for mod_perl <= 1.99_16, use "Apache::Directive->conftree()"
+
     my $conftree = Apache2::Directive::conftree();
     my $user = $conftree->lookup('User');
     my $group = $conftree->lookup('Group');
+
     $user =~ s/^["'](.*)["']$/$1/;
     $group =~ s/^["'](.*)["']$/$1/;
-    my $uid = getpwnam($user);
-    my $gid = getgrnam($group);
-    return ($uid,$gid);
+
+    my $uid = $user ? getpwnam($user) : $>;
+    my $gid = $group ? getgrnam($group) : $);
+
+    return ($uid, $gid);
 }
 
 sub _initialize {
