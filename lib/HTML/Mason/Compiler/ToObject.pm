@@ -190,8 +190,6 @@ sub compiled_component
     $self->_output_chunk($p{fh}, \$obj_text, $self->_subcomponents_footer);
     $self->_output_chunk($p{fh}, \$obj_text, $self->_methods_footer);
 
-
-
     $self->_output_chunk($p{fh}, \$obj_text,
                          $self->_constructor( $self->comp_class,
                                               $params ),
@@ -320,10 +318,10 @@ sub _body
                       "\$m->debug_hook( \$m->current_comp->path ) if ( HTML::Mason::Compiler::IN_PERL_DB() );\n\n",
                       $self->_blocks('init'),
 
-                      # don't show warnings when appending undefined value to $_outbuf
-                      "\n{ no warnings 'uninitialized';\n",
+                      # do not add a block around this, it introduces
+                      # a separate scope and might break cleanup
+                      # blocks (or all sort of other things!)
                       $self->{current_compile}{body},
-                      "\n}\n",
 
                       $self->_blocks('cleanup'),
                       $self->postamble,
