@@ -270,5 +270,39 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'cleanup_init',
+                      description => 'test that cleanup block has access to variables from init section',
+                      component => <<'EOF',
+<%init>
+my $x = 7;
+</%init>
+<%cleanup>
+$m->print("x is $x");
+</%cleanup>
+EOF
+                      expect => <<'EOF',
+x is 7
+EOF
+                    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'cleanup_perl',
+                      description => 'test that cleanup block has access to variables from perl section',
+                      component => <<'EOF',
+<%perl>
+my $x = 7;
+</%perl>
+<%cleanup>
+$m->print("x is $x");
+</%cleanup>
+EOF
+                      expect => <<'EOF',
+x is 7
+EOF
+                    );
+
+#------------------------------------------------------------
+
     return $group;
 }
