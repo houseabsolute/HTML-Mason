@@ -458,11 +458,10 @@ sub comp_id_to_objfile {
     my ($self, $comp_id) = @_;
 
     return File::Spec->catfile
-	(
-	 $self->object_dir,
-	 $self->compiler->object_id,
-	 split(/\//, $comp_id)
-	 ) . $self->object_file_extension;
+	       ( $self->object_dir,
+                 $self->compiler->object_id,
+                 ( split /\//, $comp_id ),
+               ) . $self->object_file_extension;
 }
 
 #
