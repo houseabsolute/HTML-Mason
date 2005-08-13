@@ -21,28 +21,28 @@ use File::Basename qw(dirname);
 BEGIN
 {
     __PACKAGE__->valid_params
-    (
-     comp_class =>
+        (
+         comp_class =>
          { parse => 'string', type => SCALAR, default => 'HTML::Mason::Component',
            descr => "The class into which component objects will be blessed" },
 
-     subcomp_class =>
+         subcomp_class =>
          { parse => 'string', type => SCALAR, default => 'HTML::Mason::Component::Subcomponent',
            descr => "The class into which subcomponent objects will be blessed" },
 
-     in_package =>
+         in_package =>
          { parse => 'string', type => SCALAR, default => 'HTML::Mason::Commands',
            descr => "The package in which component execution will take place" },
 
-     preamble =>
+         preamble =>
          { parse => 'string', type => SCALAR, default => '',
            descr => "A chunk of Perl code to add to the beginning of each compiled component" },
 
-     postamble =>
+         postamble =>
          { parse => 'string', type => SCALAR, default => '',
            descr => "A chunk of Perl code to add to the end of each compiled component" },
 
-     use_strict =>
+         use_strict =>
          { parse => 'boolean', type => SCALAR, default => 1,
            descr => "Whether to turn on Perl's 'strict' pragma in components" },
 
@@ -50,20 +50,20 @@ BEGIN
          { parse => 'string', type => SCALAR, default => 'auto',
            regex => qr/^(?:always|auto|never)$/,
            descr => "Whether or not to create the %ARGS hash" },
-    );
+        );
 }
 
 use HTML::Mason::MethodMaker
     ( read_only => [
-            qw( comp_class
-            define_args_hash
-            in_package
-            postamble
-            preamble
-            subcomp_class
-            use_strict
-            )
-            ],
+                    qw( comp_class
+                        define_args_hash
+                        in_package
+                        postamble
+                        preamble
+                        subcomp_class
+                        use_strict
+                        )
+                    ],
       );
 
 sub compile
@@ -89,36 +89,36 @@ sub compile_to_file
     my $self = shift;
 
     my %p = validate( @_, {   file => { type => SCALAR },
-                source => { isa => 'HTML::Mason::ComponentSource' } },
-            );
+                            source => { isa => 'HTML::Mason::ComponentSource' } },
+                    );
 
     my ($file, $source) = @p{qw(file source)};
     my @newfiles = ($file);
 
     if (defined $file && !-f $file) {
-    my ($dirname) = dirname($file);
-    if (!-d $dirname) {
-        unlink($dirname) if (-e _);
-        push @newfiles, mkpath($dirname, 0, 0775);
-        system_error "Couldn't create directory $dirname: $!"
-        unless -d $dirname;
-    }
-    rmtree($file) if (-d $file);
+        my ($dirname) = dirname($file);
+        if (!-d $dirname) {
+            unlink($dirname) if (-e _);
+            push @newfiles, mkpath($dirname, 0, 0775);
+            system_error "Couldn't create directory $dirname: $!"
+                unless -d $dirname;
+        }
+        rmtree($file) if (-d $file);
     }
 
     ($file) = $file =~ /^(.*)/s if taint_is_on;  # Untaint blindly
 
     my $fh = make_fh();
     open $fh, "> $file"
-    or system_error "Couldn't create object file $file: $!";
+        or system_error "Couldn't create object file $file: $!";
 
     $self->compile( comp_source => $source->comp_source_ref,
-            name => $source->friendly_name,
-            comp_class => $source->comp_class,
-            fh => $fh );
+                    name => $source->friendly_name,
+                    comp_class => $source->comp_class,
+                    fh => $fh );
 
     close $fh 
-    or system_error "Couldn't close object file $file: $!";
+        or system_error "Couldn't close object file $file: $!";
     
     return \@newfiles;
 }
@@ -128,11 +128,11 @@ sub _output_chunk
     my ($self, $fh, $string) = (shift, shift, shift);
     if ($fh)
     {
-    print $fh (ref $_ ? $$_ : $_) foreach grep defined, @_;
+        print $fh (ref $_ ? $$_ : $_) foreach grep defined, @_;
     }
     else
     {
-    $$string .= (ref $_ ? $$_ : $_) foreach @_;
+        $$string .= (ref $_ ? $$_ : $_) foreach @_;
     }
 }
 
@@ -161,30 +161,30 @@ sub compiled_component
 
     if ( $self->_blocks('shared') )
     {
-    my %subs;
-    while ( my ($name, $pref) = each %{ $c->{compiled_def} } )
-    {
-        my $key = "subcomponent_$name";
-        $subs{$key} = $pref->{code};
-        $pref->{code} = "sub {\nHTML::Mason::Request->instance->call_dynamic('$key',\@_)\n}";
-    }
-    while (my ($name, $pref) = each %{ $c->{compiled_method} } )
-    {
-        my $key = "method_$name";
-        $subs{$key} = $pref->{code};
-        $pref->{code} = "sub {\nHTML::Mason::Request->instance->call_dynamic( '$key', \@_ )\n}";
-    }
-    $subs{main} = $params->{code};
-    $params->{code} = "sub {\nHTML::Mason::Request->instance->call_dynamic( 'main', \@_ )\n}";
+        my %subs;
+        while ( my ($name, $pref) = each %{ $c->{compiled_def} } )
+        {
+            my $key = "subcomponent_$name";
+            $subs{$key} = $pref->{code};
+            $pref->{code} = "sub {\nHTML::Mason::Request->instance->call_dynamic('$key',\@_)\n}";
+        }
+        while (my ($name, $pref) = each %{ $c->{compiled_method} } )
+        {
+            my $key = "method_$name";
+            $subs{$key} = $pref->{code};
+            $pref->{code} = "sub {\nHTML::Mason::Request->instance->call_dynamic( '$key', \@_ )\n}";
+        }
+        $subs{main} = $params->{code};
+        $params->{code} = "sub {\nHTML::Mason::Request->instance->call_dynamic( 'main', \@_ )\n}";
 
-    $params->{dynamic_subs_init} =
-        join '', ( "sub {\n",
+        $params->{dynamic_subs_init} =
+            join '', ( "sub {\n",
                        $self->_set_request,
-               $self->_blocks('shared'),
-               "return {\n",
-               map( "'$_' => $subs{$_},\n", sort keys %subs ),
-               "\n}\n}"
-             );
+                       $self->_blocks('shared'),
+                       "return {\n",
+                       map( "'$_' => $subs{$_},\n", sort keys %subs ),
+                       "\n}\n}"
+                     );
     }
 
     $self->_output_chunk($p{fh}, \$obj_text, $self->_subcomponents_footer);
@@ -193,10 +193,10 @@ sub compiled_component
 
 
     $self->_output_chunk($p{fh}, \$obj_text,
-             $self->_constructor( $self->comp_class,
-                          $params ),
-             ';',
-            );
+                         $self->_constructor( $self->comp_class,
+                                              $params ),
+                         ';',
+                        );
 
     return \$obj_text;
 }
@@ -223,9 +223,9 @@ sub _compile_subcomponents_or_methods
     my %compiled;
     foreach ( keys %{ $self->{current_compile}{$type} } )
     {
-    local $self->{current_compile} = $self->{current_compile}{$type}{$_};
-    local $self->{current_compile}->{in_named_block} = {type => $type, name => $_};
-    $compiled{$_} = $self->_component_params;
+        local $self->{current_compile} = $self->{current_compile}{$type}{$_};
+        local $self->{current_compile}->{in_named_block} = {type => $type, name => $_};
+        $compiled{$_} = $self->_component_params;
     }
 
     return \%compiled;
@@ -238,11 +238,11 @@ sub _make_main_header
     my $pkg = $self->in_package;
 
     return join '', ( "package $pkg;\n",
-              $self->use_strict ? "use strict;\n" : "no strict;\n",
-              sprintf( "use vars qw(\%s);\n",
-                   join ' ', '$m', $self->allow_globals ),
-              $self->_blocks('once'),
-            );
+                      $self->use_strict ? "use strict;\n" : "no strict;\n",
+                      sprintf( "use vars qw(\%s);\n",
+                               join ' ', '$m', $self->allow_globals ),
+                      $self->_blocks('once'),
+                    );
 }
 
 sub _subcomponents_footer
@@ -268,13 +268,13 @@ sub _subcomponent_or_method_footer
     return '' unless %{ $c->{$type} };
 
     return join('',
-        "my %_$type =\n(\n",
-        map( {("'$_' => " ,
-               $self->_constructor( $self->{subcomp_class},
-                        $c->{"compiled_$type"}{$_} ) ,
-               ",\n")} keys %{ $c->{"compiled_$type"} } ) ,
-        "\n);\n"
-           );
+                "my %_$type =\n(\n",
+                map( {("'$_' => " ,
+                       $self->_constructor( $self->{subcomp_class},
+                                            $c->{"compiled_$type"}{$_} ) ,
+                       ",\n")} keys %{ $c->{"compiled_$type"} } ) ,
+                "\n);\n"
+               );
 }
 
 sub _constructor
@@ -282,9 +282,9 @@ sub _constructor
     my ($self, $class, $params) = @_;
 
     return ("${class}->new(\n",
-        map( {("'$_' => ", $params->{$_}, ",\n")} sort keys %$params ),
-        "\n)\n",
-       );
+            map( {("'$_' => ", $params->{$_}, ",\n")} sort keys %$params ),
+            "\n)\n",
+           );
 }
 
 sub _component_params
@@ -292,7 +292,7 @@ sub _component_params
     my $self = shift;
 
     my %params = ( code => join ( '', "sub {\n", $self->_body, "}" ),
-         );
+                 );
 
     $params{flags} = join '', "{\n", $self->_flags, "\n}"
         if keys %{ $self->{current_compile}{flags} };
@@ -301,7 +301,7 @@ sub _component_params
         if keys %{ $self->{current_compile}{attr} };
 
     $params{declared_args} = join '', "{\n", $self->_declared_args, "\n}"
-    if @{ $self->{current_compile}{args} };
+        if @{ $self->{current_compile}{args} };
 
     $params{has_filter} = 1 if $self->_blocks('filter');
 
@@ -314,23 +314,23 @@ sub _body
 
     return join '', ( $self->preamble,
                       $self->_set_request,
-              $self->_set_buffer,
-              $self->_arg_declarations,
+                      $self->_set_buffer,
+                      $self->_arg_declarations,
                       $self->_filter,
-              "\$m->debug_hook( \$m->current_comp->path ) if ( HTML::Mason::Compiler::IN_PERL_DB() );\n\n",
-              $self->_blocks('init'),
+                      "\$m->debug_hook( \$m->current_comp->path ) if ( HTML::Mason::Compiler::IN_PERL_DB() );\n\n",
+                      $self->_blocks('init'),
 
-              # don't show warnings when appending undefined value to $_outbuf
-              "\n{ no warnings 'uninitialized';\n",
-              $self->{current_compile}{body},
-              "\n}\n",
+                      # don't show warnings when appending undefined value to $_outbuf
+                      "\n{ no warnings 'uninitialized';\n",
+                      $self->{current_compile}{body},
+                      "\n}\n",
 
-              $self->_blocks('cleanup'),
-              $self->postamble,
+                      $self->_blocks('cleanup'),
+                      $self->postamble,
 
-              # don't return values implicitly
-              "return;\n",
-            );
+                      # don't return values implicitly
+                      "return;\n",
+                    );
 }
 
 sub _set_request
@@ -347,15 +347,15 @@ sub _set_buffer
     my $self = shift;
 
     if ($self->enable_autoflush) {
-    return '';
+        return '';
     } else {
-    return 'my $_outbuf = $m->{top_stack}->[HTML::Mason::Request::STACK_BUFFER];' . "\n";
+        return 'my $_outbuf = $m->{top_stack}->[HTML::Mason::Request::STACK_BUFFER];' . "\n";
     }
 }
 
 my %coercion_funcs = ( '@' => 'HTML::Mason::Tools::coerce_to_array',
-               '%' => 'HTML::Mason::Tools::coerce_to_hash',
-             );
+                       '%' => 'HTML::Mason::Tools::coerce_to_hash',
+                     );
 sub _arg_declarations
 {
     my $self = shift;
@@ -424,39 +424,39 @@ EOF
 
     foreach ( @{ $self->{current_compile}{args} } )
     {
-    my $var_name = "$_->{type}$_->{name}";
-    push @decl, $var_name;
+        my $var_name = "$_->{type}$_->{name}";
+        push @decl, $var_name;
 
         my $arg_in_array = "\$_[ \$pos{'$_->{name}'} ]";
 
-    my $coerce;
-    if ( $coercion_funcs{ $_->{type} } )
-    {
-        $coerce = $coercion_funcs{ $_->{type} } . "( $arg_in_array, '$var_name')";
-    }
-    else
-    {
-        $coerce = $arg_in_array;
-    }
+        my $coerce;
+        if ( $coercion_funcs{ $_->{type} } )
+        {
+            $coerce = $coercion_funcs{ $_->{type} } . "( $arg_in_array, '$var_name')";
+        }
+        else
+        {
+            $coerce = $arg_in_array;
+        }
 
-    push @assign, "#line $_->{line} $_->{file}\n"
-        if defined $_->{line} && defined $_->{file} && $self->use_source_line_numbers;
+        push @assign, "#line $_->{line} $_->{file}\n"
+            if defined $_->{line} && defined $_->{file} && $self->use_source_line_numbers;
 
-    if ( defined $_->{default} )
-    {
-        my $default_val = $_->{default};
-        # allow for comments after default declaration
-        $default_val .= "\n" if defined $_->{default} && $_->{default} =~ /\#/;
+        if ( defined $_->{default} )
+        {
+            my $default_val = $_->{default};
+            # allow for comments after default declaration
+            $default_val .= "\n" if defined $_->{default} && $_->{default} =~ /\#/;
 
-        push @assign, <<"EOF";
+            push @assign, <<"EOF";
      $var_name = exists \$pos{'$_->{name}'} ? $coerce : $default_val;
 EOF
-    }
-    else
-    {
-        push @assign,
-        "    $var_name = $coerce;\n";
-    }
+        }
+        else
+        {
+            push @assign,
+                "    $var_name = $coerce;\n";
+        }
     }
 
     my $decl = 'my ( ';
@@ -525,7 +525,7 @@ sub _flags_or_attr
     my $type = shift;
 
     return join "\n,", ( map { "$_ => $self->{current_compile}{$type}{$_}" }
-             keys %{ $self->{current_compile}{$type} } );
+                         keys %{ $self->{current_compile}{$type} } );
 }
 
 sub _declared_args
@@ -535,13 +535,13 @@ sub _declared_args
     my @args;
 
     foreach my $arg ( sort {"$a->{type}$a->{name}" cmp "$b->{type}$b->{name}" }
-              @{ $self->{current_compile}{args} } )
+                      @{ $self->{current_compile}{args} } )
     {
-    my $def = defined $arg->{default} ? "$arg->{default}" : 'undef';
-    $def =~ s,([\\']),\\$1,g;
-    $def = "'$def'" unless $def eq 'undef';
+        my $def = defined $arg->{default} ? "$arg->{default}" : 'undef';
+        $def =~ s,([\\']),\\$1,g;
+        $def = "'$def'" unless $def eq 'undef';
 
-    push @args, "  '$arg->{type}$arg->{name}' => { default => $def }";
+        push @args, "  '$arg->{type}$arg->{name}' => { default => $def }";
     }
 
     return join ",\n", @args;

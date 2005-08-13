@@ -31,14 +31,14 @@ sub get_info {
 
     return
       HTML::Mason::ComponentSource->new
-      ( friendly_name => $srcfile,
-        comp_id => "$base$path",
-        last_modified => $modified,
-        comp_path => $path,
-        comp_class => 'HTML::Mason::Component::FileBased',
-        extra => { comp_root => $comp_root_key },
-        source_callback => sub { read_file_ref($srcfile) },
-      );
+          ( friendly_name => $srcfile,
+            comp_id => "$base$path",
+            last_modified => $modified,
+            comp_path => $path,
+            comp_class => 'HTML::Mason::Component::FileBased',
+            extra => { comp_root => $comp_root_key },
+            source_callback => sub { read_file_ref($srcfile) },
+          );
 }
 
 #
@@ -52,10 +52,10 @@ sub glob_path {
     my $root_length = length $comp_root_path;
     my @paths;
     foreach my $file (@files) {
-    next unless -f $file;
-    if (substr($file, 0, $root_length) eq $comp_root_path) {
-        push(@paths, substr($file, $root_length));
-    }
+        next unless -f $file;
+        if (substr($file, 0, $root_length) eq $comp_root_path) {
+            push(@paths, substr($file, $root_length));
+        }
     }
     return @paths;
 }
@@ -80,13 +80,13 @@ sub apache_request_to_comp_path {
     $file = File::Spec->canonpath($file);
 
     foreach my $root (map $_->[1], @comp_root_array) {
-    if (paths_eq($root, substr($file, 0, length($root)))) {
-        my $path = substr($file, length $root);
+        if (paths_eq($root, substr($file, 0, length($root)))) {
+            my $path = substr($file, length $root);
             $path = length $path ? join '/', File::Spec->splitdir($path) : '/';
             chop $path if $path ne '/' && substr($path, -1) eq '/';
 
             return $path;
-    }
+        }
     }
     return undef;
 }

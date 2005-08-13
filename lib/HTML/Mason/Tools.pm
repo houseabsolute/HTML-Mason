@@ -60,13 +60,13 @@ sub read_file_ref
     my $fh = _get_reading_handle(@_);
     my ($buffer, $retval) = ('');
     while (1) {
-    # Important to read in chunks - 16KB is a good compromise
-    # between not bloating memory usage and not calling read many
-    # times for small files
-    $retval = read $fh, $buffer, 1024 * 16, length($buffer);
-    system_error "read_file_ref: Couldn't read from '$_[0]': $!"
-        unless defined $retval;
-    last if !$retval;
+        # Important to read in chunks - 16KB is a good compromise
+        # between not bloating memory usage and not calling read many
+        # times for small files
+        $retval = read $fh, $buffer, 1024 * 16, length($buffer);
+        system_error "read_file_ref: Couldn't read from '$_[0]': $!"
+            unless defined $retval;
+        last if !$retval;
     }
     return \$buffer;
 }
@@ -77,7 +77,7 @@ sub _get_reading_handle {
     error "read_file: '$file' is a directory" if (-d _);
     my $fh = make_fh();
     open $fh, "< $file"
-    or system_error "read_file: could not open file '$file' for reading: $!";
+        or system_error "read_file: could not open file '$file' for reading: $!";
     binmode $fh if $binmode;
     return $fh;
 }
@@ -98,8 +98,8 @@ sub compress_path
 {
     my ($path) = @_;
     for ($path) {
-    s@^/@@;
-    s/([^\w\.\-\~])/sprintf('+%02x', ord $1)/eg;
+        s@^/@@;
+        s/([^\w\.\-\~])/sprintf('+%02x', ord $1)/eg;
     }
     return $path;
 }
@@ -128,11 +128,11 @@ sub mason_canonpath {
     $path =~ s|/+|/|g;                                 # xx////yy  -> xx/yy
     $path =~ s|(?:/\.)+/|/|g;                          # xx/././yy -> xx/yy
     {
-    $path =~ s|^(?:\./)+||s unless $path eq "./";  # ./xx      -> xx
-    $path =~ s|^/(?:\.\./)+|/|s;                   # /../../xx -> xx
-    $path =~ s|/\Z(?!\n)|| unless $path eq "/";    # xx/       -> xx
-    $path =~ s|/[^/]+/\.\.$|| && redo;             # /xx/..    -> /
-    $path =~ s|[^/]+/\.\./|| && redo;              # /xx/../yy -> /yy
+        $path =~ s|^(?:\./)+||s unless $path eq "./";  # ./xx      -> xx
+        $path =~ s|^/(?:\.\./)+|/|s;                   # /../../xx -> xx
+        $path =~ s|/\Z(?!\n)|| unless $path eq "/";    # xx/       -> xx
+        $path =~ s|/[^/]+/\.\.$|| && redo;             # /xx/..    -> /
+        $path =~ s|[^/]+/\.\./|| && redo;              # /xx/../yy -> /yy
     }
     return $path;
 }
@@ -178,17 +178,17 @@ sub load_pkg {
     eval "use $pkg";
 
     if ($@) {
-    if ($@ =~ /^Can\'t locate .* in \@INC/) {
-        if (defined($nf_error)) {
-        error sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
-                  $pkg, $nf_error, join(" ", @INC));
+        if ($@ =~ /^Can\'t locate .* in \@INC/) {
+            if (defined($nf_error)) {
+                error sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
+                              $pkg, $nf_error, join(" ", @INC));
+            } else {
+                undef $@;
+                return 0;
+            }
         } else {
-        undef $@;
-        return 0;
+            error $@;
         }
-    } else {
-        error $@;
-    }
     }
     return 1;
 }
@@ -233,11 +233,11 @@ sub coerce_to_array
 
     if ( UNIVERSAL::isa( $val, 'ARRAY' ) )
     {
-    return @$val;
+        return @$val;
     }
     elsif ( UNIVERSAL::isa( $val, 'HASH' ) )
     {
-    return %$val;
+        return %$val;
     }
 
     param_error "Cannot coerce $val to an array for '$name' parameter";
@@ -248,15 +248,15 @@ sub coerce_to_hash
     my ($val, $name) = @_;
 
     param_error "Cannot convert a single value to a hash for '$name' parameter"
-    unless ref $val;
+        unless ref $val;
 
     if ( UNIVERSAL::isa( $val, 'ARRAY' ) )
     {
-    return @$val;
+        return @$val;
     }
     elsif ( UNIVERSAL::isa( $val, 'HASH' ) )
     {
-    return %$val;
+        return %$val;
     }
 
     param_error "Cannot coerce $val to a hash";
@@ -269,8 +269,8 @@ sub checksum {
     my $s1 = 1;
     my $s2 = 1;
     for my $c (unpack("C*", $str)) {
-    $s1 = ($s1 + $c ) % 65521;
-    $s2 = ($s2 + $s1) % 65521;
+        $s1 = ($s1 + $c ) % 65521;
+        $s2 = ($s2 + $s1) % 65521;
     }
     return ($s2 << 16) + $s1;
 }

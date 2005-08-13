@@ -62,13 +62,13 @@ use HTML::Mason::Tests;
 
     sub compiled_component
     {
-    my $self = shift;
+        my $self = shift;
 
-    my $comp = $self->SUPER::compiled_component(@_);
+        my $comp = $self->SUPER::compiled_component(@_);
 
-    $$comp =~ s/!!BAZ!!/$self->{baz_val}/g;
+        $$comp =~ s/!!BAZ!!/$self->{baz_val}/g;
 
-    return $comp;
+        return $comp;
     }
 }
 
@@ -78,36 +78,36 @@ $tests->run;
 sub make_tests
 {
     my $group = HTML::Mason::Tests->tests_class->new( name => 'subclass',
-                              description => 'Test use of subclasses for various core classes' );
+                                                      description => 'Test use of subclasses for various core classes' );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'request_subclass',
-              description => 'use a HTML::Mason::Request subclass',
-              interp_params => { request_class => 'HTML::Mason::Request::Test',
-                     foo_val => 77 },
-              component => <<'EOF',
+                      description => 'use a HTML::Mason::Request subclass',
+                      interp_params => { request_class => 'HTML::Mason::Request::Test',
+                                         foo_val => 77 },
+                      component => <<'EOF',
 % if ( $m->can('foo_val') ) {
 foo_val is <% $m->foo_val %>
 % } else {
 this request cannot ->foo_val!
 % }
 EOF
-              expect => <<'EOF',
+                      expect => <<'EOF',
 foo_val is 77
 EOF
-            );
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'request_subclass_of_subclass',
-              description => 'use a HTML::Mason::Request grandchild',
-              interp_params =>
+                      description => 'use a HTML::Mason::Request grandchild',
+                      interp_params =>
                       { request_class => 'HTML::Mason::Request::Test::Subclass',
                         foo_val => 77,
                         bar_val => 42,
                       },
-              component => <<'EOF',
+                      component => <<'EOF',
 % if ( $m->can('foo_val') ) {
 foo_val is <% $m->foo_val %>
 % } else {
@@ -119,19 +119,19 @@ bar_val is <% $m->bar_val %>
 this request cannot ->bar_val!
 % }
 EOF
-              expect => <<'EOF',
+                      expect => <<'EOF',
 foo_val is 77
 bar_val is 42
 EOF
-            );
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'lexer_subclass',
-              description => 'use a HTML::Mason::Lexer subclass',
-              interp_params => { lexer_class => 'HTML::Mason::Lexer::Test',
-                     bar_val => 76 },
-              component => <<'EOF',
+                      description => 'use a HTML::Mason::Lexer subclass',
+                      interp_params => { lexer_class => 'HTML::Mason::Lexer::Test',
+                                         bar_val => 76 },
+                      component => <<'EOF',
 % my $lex = $m->interp->compiler->lexer;
 % if ( $lex->can('bar_val') ) {
 bar_val is <% $lex->bar_val %>
@@ -139,27 +139,27 @@ bar_val is <% $lex->bar_val %>
 this lexer cannot ->bar_val!
 % }
 EOF
-              expect => <<'EOF',
+                      expect => <<'EOF',
 bar_val is 76
 EOF
-            );
+                    );
 
 #------------------------------------------------------------
 
     # We don't use object files, because we want to catch the output
     # of compiled_component() instead of writing it to a file
     $group->add_test( name => 'compiler_subclass',
-              description => 'use a HTML::Mason::Compiler subclass',
-              interp_params => { compiler_class => 'HTML::Mason::Compiler::ToObject::Test',
-                     use_object_files => 0,
-                     baz_val => 75 },
-              component => <<'EOF',
+                      description => 'use a HTML::Mason::Compiler subclass',
+                      interp_params => { compiler_class => 'HTML::Mason::Compiler::ToObject::Test',
+                                         use_object_files => 0,
+                                         baz_val => 75 },
+                      component => <<'EOF',
 baz is !!BAZ!!
 EOF
-              expect => <<'EOF',
+                      expect => <<'EOF',
 baz is 75
 EOF
-            );
+                    );
 
 #------------------------------------------------------------
 

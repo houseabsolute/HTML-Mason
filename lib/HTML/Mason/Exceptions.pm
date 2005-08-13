@@ -12,62 +12,62 @@ my %e;
 BEGIN
 {
     %e = ( 'HTML::Mason::Exception' =>
-       { description => 'generic base class for all Mason exceptions',
-         alias => 'error'},
+           { description => 'generic base class for all Mason exceptions',
+             alias => 'error'},
 
-       'HTML::Mason::Exception::Abort' =>
-       { isa => 'HTML::Mason::Exception',
-         fields => [qw(aborted_value)],
-         description => 'a component called $m->abort' },
+           'HTML::Mason::Exception::Abort' =>
+           { isa => 'HTML::Mason::Exception',
+             fields => [qw(aborted_value)],
+             description => 'a component called $m->abort' },
 
-       'HTML::Mason::Exception::Decline' =>
-       { isa => 'HTML::Mason::Exception',
-         fields => [qw(declined_value)],
-         description => 'a component called $m->decline' },
+           'HTML::Mason::Exception::Decline' =>
+           { isa => 'HTML::Mason::Exception',
+             fields => [qw(declined_value)],
+             description => 'a component called $m->decline' },
 
-       'HTML::Mason::Exception::Compiler' =>
-       { isa => 'HTML::Mason::Exception',
-         alias => 'compiler_error',
-         description => 'error thrown from the compiler' },
+           'HTML::Mason::Exception::Compiler' =>
+           { isa => 'HTML::Mason::Exception',
+             alias => 'compiler_error',
+             description => 'error thrown from the compiler' },
 
-       'HTML::Mason::Exception::Compilation' =>
-       { isa => 'HTML::Mason::Exception',
-         alias => 'compilation_error',
-         fields => [qw(filename)],
-         description => "error thrown in eval of the code for a component" },
+           'HTML::Mason::Exception::Compilation' =>
+           { isa => 'HTML::Mason::Exception',
+             alias => 'compilation_error',
+             fields => [qw(filename)],
+             description => "error thrown in eval of the code for a component" },
 
-       'HTML::Mason::Exception::Compilation::IncompatibleCompiler' =>
-       { isa => 'HTML::Mason::Exception::Compilation',
-         alias => 'wrong_compiler_error',
-         description => "a component was compiled by a compiler/lexer with incompatible options.  recompilation is needed" },
+           'HTML::Mason::Exception::Compilation::IncompatibleCompiler' =>
+           { isa => 'HTML::Mason::Exception::Compilation',
+             alias => 'wrong_compiler_error',
+             description => "a component was compiled by a compiler/lexer with incompatible options.  recompilation is needed" },
 
-       'HTML::Mason::Exception::Params' =>
-       { isa => 'HTML::Mason::Exception',
-         alias => 'param_error',
-         description => 'invalid parameters were given to a method/function' },
+           'HTML::Mason::Exception::Params' =>
+           { isa => 'HTML::Mason::Exception',
+             alias => 'param_error',
+             description => 'invalid parameters were given to a method/function' },
 
-       'HTML::Mason::Exception::Syntax' =>
-       { isa => 'HTML::Mason::Exception',
-         alias => 'syntax_error',
-         fields => [qw(source_line comp_name line_number)],
-         description => 'invalid syntax was found in a component' },
+           'HTML::Mason::Exception::Syntax' =>
+           { isa => 'HTML::Mason::Exception',
+             alias => 'syntax_error',
+             fields => [qw(source_line comp_name line_number)],
+             description => 'invalid syntax was found in a component' },
 
-       'HTML::Mason::Exception::System' =>
-       { isa => 'HTML::Mason::Exception',
-         alias => 'system_error',
-         description => 'a system call of some sort failed' },
+           'HTML::Mason::Exception::System' =>
+           { isa => 'HTML::Mason::Exception',
+             alias => 'system_error',
+             description => 'a system call of some sort failed' },
 
-       'HTML::Mason::Exception::TopLevelNotFound' =>
-       { isa => 'HTML::Mason::Exception',
-         alias => 'top_level_not_found_error',
-         description => 'the top level component could not be found' },
+           'HTML::Mason::Exception::TopLevelNotFound' =>
+           { isa => 'HTML::Mason::Exception',
+             alias => 'top_level_not_found_error',
+             description => 'the top level component could not be found' },
 
-       'HTML::Mason::Exception::VirtualMethod' =>
-       { isa => 'HTML::Mason::Exception',
-         alias => 'virtual_error',
-         description => 'a virtual method was not overridden' },
+           'HTML::Mason::Exception::VirtualMethod' =>
+           { isa => 'HTML::Mason::Exception',
+             alias => 'virtual_error',
+             description => 'a virtual method was not overridden' },
 
-     );
+         );
 }
 
 use Exception::Class (%e);
@@ -89,17 +89,17 @@ sub import
     my $caller = caller;
     if ($args{abbr})
     {
-    foreach my $name (@{$args{abbr}})
+        foreach my $name (@{$args{abbr}})
+        {
+            no strict 'refs';
+            die "Unknown exception abbreviation '$name'" unless defined &{$name};
+            *{"${caller}::$name"} = \&{$name};
+        }
+    }
     {
         no strict 'refs';
-        die "Unknown exception abbreviation '$name'" unless defined &{$name};
-        *{"${caller}::$name"} = \&{$name};
-    }
-    }
-    {
-    no strict 'refs';
-    *{"${caller}::isa_mason_exception"} = \&isa_mason_exception;
-    *{"${caller}::rethrow_exception"} = \&rethrow_exception;
+        *{"${caller}::isa_mason_exception"} = \&isa_mason_exception;
+        *{"${caller}::rethrow_exception"} = \&rethrow_exception;
     }
 }
 
@@ -121,7 +121,7 @@ sub rethrow_exception
     return unless $err;
 
     if ( UNIVERSAL::can($err, 'rethrow') ) {
-    $err->rethrow;
+        $err->rethrow;
     }
     elsif ( ref $err ) {
         die $err;
@@ -152,10 +152,10 @@ sub throw
     my %params = @_ == 1 ? ( error => $_[0] ) : @_;
 
     if (HTML::Mason::Exceptions::isa_mason_exception($params{error})) {
-    $params{error} = $params{error}->error;
+        $params{error} = $params{error}->error;
     }
     if (HTML::Mason::Exceptions::isa_mason_exception($params{message})) {
-    $params{message} = $params{message}->error;
+        $params{message} = $params{message}->error;
     }
     $class->SUPER::throw(%params);
 }
@@ -167,24 +167,24 @@ sub filtered_frames
     my (@frames);
     my $trace = $self->trace;
     my %ignore_subs = map { $_ => 1 }
-    qw[
-       (eval)
-       Exception::Class::Base::throw
-       Exception::Class::__ANON__
-       HTML::Mason::Commands::__ANON__
-       HTML::Mason::Component::run
-       HTML::Mason::Exception::throw
-       HTML::Mason::Exceptions::__ANON__
-       HTML::Mason::Request::_run_comp
-       ];
+        qw[
+           (eval)
+           Exception::Class::Base::throw
+           Exception::Class::__ANON__
+           HTML::Mason::Commands::__ANON__
+           HTML::Mason::Component::run
+           HTML::Mason::Exception::throw
+           HTML::Mason::Exceptions::__ANON__
+           HTML::Mason::Request::_run_comp
+           ];
     while (my $frame = $trace->next_frame)
     {
-    last if ($frame->subroutine eq 'HTML::Mason::Request::exec');
-    unless ($frame->filename =~ /Mason\/Exceptions\.pm/ or
-        $ignore_subs{ $frame->subroutine } or
-        ($frame->subroutine eq 'HTML::Mason::Request::comp' and $frame->filename =~ /Request\.pm/)) {
-        push(@frames, $frame);
-    }
+        last if ($frame->subroutine eq 'HTML::Mason::Request::exec');
+        unless ($frame->filename =~ /Mason\/Exceptions\.pm/ or
+                $ignore_subs{ $frame->subroutine } or
+                ($frame->subroutine eq 'HTML::Mason::Request::comp' and $frame->filename =~ /Request\.pm/)) {
+            push(@frames, $frame);
+        }
     }
     @frames = grep { $_->filename !~ /Mason\/Exceptions\.pm/ } $trace->frames if !@frames;
     return @frames;
@@ -199,26 +199,26 @@ sub analyze_error
 
     @frames = $self->filtered_frames;
     if ($self->isa('HTML::Mason::Exception::Syntax')) {
-    $file = $self->comp_name;
-    push(@lines, $self->line_number);
+        $file = $self->comp_name;
+        push(@lines, $self->line_number);
     } elsif ($self->isa('HTML::Mason::Exception::Compilation')) {
-    $file = $self->filename;
-    my $msg = $self->full_message;
-    while ($msg =~ /at .* line (\d+)./g) {
-        push(@lines, $1);
-    }
+        $file = $self->filename;
+        my $msg = $self->full_message;
+        while ($msg =~ /at .* line (\d+)./g) {
+            push(@lines, $1);
+        }
     } elsif (@frames) {
-    $file = $frames[0]->filename;
-    @lines = $frames[0]->line;
+        $file = $frames[0]->filename;
+        @lines = $frames[0]->line;
     }
     my @context;
     @context = $self->get_file_context($file, \@lines) if @lines;
 
     $self->{_info} = {
-    file    => $file,
-    frames  => \@frames,
-    lines   => \@lines,
-    context => \@context,
+        file    => $file,
+        frames  => \@frames,
+        lines   => \@lines,
+        context => \@context,
     };
     return $self->{_info};
 }
@@ -230,38 +230,38 @@ sub get_file_context
     my @context;
     my $fh = do { local *FH; *FH; };
     unless (defined($file) and open($fh, $file)) {
-    @context = (['unable to open file', '']);
+        @context = (['unable to open file', '']);
     } else {
-    # Put the file into a list, indexed at 1.
-    my @file = <$fh>;
-    chomp(@file);
-    unshift(@file, undef);
+        # Put the file into a list, indexed at 1.
+        my @file = <$fh>;
+        chomp(@file);
+        unshift(@file, undef);
 
-    # Mark the important context lines.
-    # We do this by going through the error lines and incrementing hash keys to
-    # keep track of which lines we eventually need to print, and we color the
-    # line which the error actually occured on in red.
-    my (%marks, %red);
-    my $delta = 4;
-    foreach my $line_num (@$line_nums) {
-        foreach my $l (($line_num - $delta) .. ($line_num + $delta)) {
-        next if ($l <= 0 or $l > @file);
-        $marks{$l}++;
+        # Mark the important context lines.
+        # We do this by going through the error lines and incrementing hash keys to
+        # keep track of which lines we eventually need to print, and we color the
+        # line which the error actually occured on in red.
+        my (%marks, %red);
+        my $delta = 4;
+        foreach my $line_num (@$line_nums) {
+            foreach my $l (($line_num - $delta) .. ($line_num + $delta)) {
+                next if ($l <= 0 or $l > @file);
+                $marks{$l}++;
+            }
+            $red{$line_num} = 1;
         }
-        $red{$line_num} = 1;
-    }
 
-    # Create the context list.
-    # By going through the keys of the %marks hash, we can tell which lines need
-    # to be printed. We add a '...' line if we skip numbers in the context.
-    my $last_num = 0;
-    foreach my $line_num (sort { $a <=> $b } keys %marks) {
-        push(@context, ["...", "", 0]) unless $last_num == ($line_num - 1);
-        push(@context, ["$line_num:", $file[$line_num], $red{$line_num}]);;
-        $last_num = $line_num;
-    }
-    push(@context, ["...", "", 0]) unless $last_num == @file;
-    close $fh;
+        # Create the context list.
+        # By going through the keys of the %marks hash, we can tell which lines need
+        # to be printed. We add a '...' line if we skip numbers in the context.
+        my $last_num = 0;
+        foreach my $line_num (sort { $a <=> $b } keys %marks) {
+            push(@context, ["...", "", 0]) unless $last_num == ($line_num - 1);
+            push(@context, ["$line_num:", $file[$line_num], $red{$line_num}]);;
+            $last_num = $line_num;
+        }
+        push(@context, ["...", "", 0]) unless $last_num == @file;
+        close $fh;
     }
     return @context;
 }
@@ -346,8 +346,8 @@ sub as_html
    <table border="0" cellpadding="0" cellspacing="0">
 
 %   foreach my $entry (@{$info->{context}}) {
-%    my ($line_num, $line, $highlight) = @$entry;
-%    $line = '' unless defined $line;
+%       my ($line_num, $line, $highlight) = @$entry;
+%       $line = '' unless defined $line;
 %       HTML::Mason::Escapes::basic_html_escape(\$line);
     <tr>
      <td nowrap="nowrap" align="left" valign="top"><b><% $line_num %></b>&nbsp;</td>
@@ -365,7 +365,7 @@ sub as_html
 %    foreach my $frame (@{$info->{frames}}) {
 %        my $f = $frame->filename; HTML::Mason::Escapes::basic_html_escape(\$f);
 %        my $l = $frame->line; HTML::Mason::Escapes::basic_html_escape(\$l);
-    <% $f %>:<% $l %><br>
+        <% $f %>:<% $l %><br>
 %    }
   </td>
  </tr>

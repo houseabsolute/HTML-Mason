@@ -41,9 +41,9 @@ sub cgi_request_args
         $method ne 'POST' || ! $ENV{QUERY_STRING} ? ( 'param' ) : ( 'param', 'url_param' );
 
     foreach my $key ( map { $q->$_() } @methods ) {
-    next if exists $args{$key};
-    my @values = map { $q->$_($key) } @methods;
-    $args{$key} = @values == 1 ? $values[0] : \@values;
+        next if exists $args{$key};
+        my @values = map { $q->$_($key) } @methods;
+        $args{$key} = @values == 1 ? $values[0] : \@values;
     }
 
     return wantarray ? %args : \%args;

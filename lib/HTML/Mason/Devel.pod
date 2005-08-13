@@ -686,7 +686,7 @@ Here's how a simple /newsfeeds/dhandler might look:
     my $arg = $m->dhandler_arg;                # get rest of path
     my ($section, $story) = split("/", $arg);  # split out pieces
     my $sth = $DBH->prepare
-	(qq{SELECT headline,body FROM news
+        (qq{SELECT headline,body FROM news
             WHERE section = ? AND story = ?);
     $sth->execute($section, $story);
     my ($headline, $body) = $sth->fetchrow_array;
@@ -1704,7 +1704,7 @@ and the cache subclass is C<FileCache>:
 
     my $cache = new Cache::FileCache
         ( { namespace => data_cache_namespace("/foo/bar"),
-	    cache_root => "/usr/local/www/mason/cache" } );
+            cache_root => "/usr/local/www/mason/cache" } );
 
     # Remove one key
     $cache->remove('key1');
@@ -1755,8 +1755,8 @@ into the header.
     <%init>
     my $cookie = $m->comp('/shared/get_user_cookie');
     if (!$cookie) {
-	$cookie = new CGI::Cookie (...);
-	$r->header_out('Set-cookie' => $cookie);
+        $cookie = new CGI::Cookie (...);
+        $r->header_out('Set-cookie' => $cookie);
     }
     ...
     </%init>

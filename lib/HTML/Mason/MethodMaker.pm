@@ -17,11 +17,11 @@ sub import
 
     if ($p{read_only})
     {
-    foreach my $ro ( ref $p{read_only} ? @{ $p{read_only} } : $p{read_only} )
-    {
-        no strict 'refs';
-        *{"$caller\::$ro"} = sub { return $_[0]->{$ro} };
-    }
+        foreach my $ro ( ref $p{read_only} ? @{ $p{read_only} } : $p{read_only} )
+        {
+            no strict 'refs';
+            *{"$caller\::$ro"} = sub { return $_[0]->{$ro} };
+        }
     }
 
     #
@@ -32,72 +32,72 @@ sub import
     #
     if ($p{read_write})
     {
-    foreach my $rw ( ref $p{read_write} ? @{ $p{read_write} } : $p{read_write} )
-    {
-        if (ref $rw)
+        foreach my $rw ( ref $p{read_write} ? @{ $p{read_write} } : $p{read_write} )
         {
-        my ($name, $spec) = @$rw;
-        no strict 'refs';
-        *{"$caller\::$name"} =
-            sub { if (@_ > 1)
-              {
+            if (ref $rw)
+            {
+                my ($name, $spec) = @$rw;
+                no strict 'refs';
+                *{"$caller\::$name"} =
+                    sub { if (@_ > 1)
+                          {
                               my $s = shift;
-                  validate_pos(@_, $spec);
-                  $s->{$name} = shift;
+                              validate_pos(@_, $spec);
+                              $s->{$name} = shift;
                               return $s->{$name};
-              }
-              return $_[0]->{$name};
-                };
-        }
-        else
-        {
-        no strict 'refs';
-        *{"$caller\::$rw"} =
+                          }
+                          return $_[0]->{$name};
+                        };
+            }
+            else
+            {
+                no strict 'refs';
+                *{"$caller\::$rw"} =
                     sub { if (@_ > 1)
                           {
                               $_[0]->{$rw} = $_[1];
                           }
                           return $_[0]->{$rw};
                         };
+            }
         }
-    }
     }
 
     if ($p{read_write_contained})
     {
-    foreach my $object (keys %{ $p{read_write_contained} })
-    {
-        foreach my $rwc (@{ $p{read_write_contained}{$object} })
+        foreach my $object (keys %{ $p{read_write_contained} })
         {
-        if (ref $rwc)
-        {
-            my ($name, $spec) = @$rwc;
-            no strict 'refs';
-            *{"$caller\::$name"} =
-            sub { my $s = shift;
-                  my %new;
-                  if (@_)
-                  {
-                  validate_pos(@_, $spec);
-                  %new = ( $name => $_[0] );
-                  }
-                  my %args = $s->delayed_object_params( $object,
-                                    %new );
-                  return $args{$rwc};
-              };
+            foreach my $rwc (@{ $p{read_write_contained}{$object} })
+            {
+                if (ref $rwc)
+                {
+                    my ($name, $spec) = @$rwc;
+                    no strict 'refs';
+                    *{"$caller\::$name"} =
+                        sub { my $s = shift;
+                              my %new;
+                              if (@_)
+                              {
+                                  validate_pos(@_, $spec);
+                                  %new = ( $name => $_[0] );
+                              }
+                              my %args = $s->delayed_object_params( $object,
+                                                                    %new );
+                              return $args{$rwc};
+                          };
+                }
+                else
+                {
+                    no strict 'refs';
+                    *{"$caller\::$rwc"} = sub { my $s = shift;
+                                                my %new = @_ ? ( $rwc => $_[0] ) : ();
+                                                my %args = $s->delayed_object_params( $object,
+                                                                                      %new );
+                                                return $args{$rwc};
+                                            };
+                }
+            }
         }
-        else
-        {
-            no strict 'refs';
-            *{"$caller\::$rwc"} = sub { my $s = shift;
-                        my %new = @_ ? ( $rwc => $_[0] ) : ();
-                        my %args = $s->delayed_object_params( $object,
-                                              %new );
-                        return $args{$rwc};
-                        };
-        }
-        }
-    }
     }
 }
 

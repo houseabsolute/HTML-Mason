@@ -21,39 +21,39 @@ use base qw(Class::Container);
 BEGIN
 {
     __PACKAGE__->valid_params
-    (
-     allow_globals =>
+        (
+         allow_globals =>
          { parse => 'list', type => ARRAYREF, default => [],
            descr => "An array of names of Perl variables that are allowed globally within components" },
 
-     default_escape_flags =>
+         default_escape_flags =>
          { parse => 'string', type => SCALAR|ARRAYREF, default => [],
            descr => "Escape flags that will apply by default to all Mason tag output" },
 
-     enable_autoflush =>
-     { parse => 'boolean', type => SCALAR, default => 1,
-       descr => "Whether to include support for autoflush when compiling components" },
+         enable_autoflush =>
+         { parse => 'boolean', type => SCALAR, default => 1,
+           descr => "Whether to include support for autoflush when compiling components" },
 
-     lexer =>
+         lexer =>
          { isa => 'HTML::Mason::Lexer',
            descr => "A Lexer object that will scan component text during compilation" },
 
-     preprocess =>
+         preprocess =>
          { parse => 'code', type => CODEREF, optional => 1,
            descr => "A subroutine through which all component text will be sent during compilation" },
 
-     postprocess_perl =>
+         postprocess_perl =>
          { parse => 'code', type => CODEREF, optional => 1,
            descr => "A subroutine through which all Perl code will be sent during compilation" },
 
-     postprocess_text =>
+         postprocess_text =>
          { parse => 'code', type => CODEREF, optional => 1,
            descr => "A subroutine through which all plain text will be sent during compilation" },
 
-     use_source_line_numbers =>
-     { parse => 'boolean', type => SCALAR, default => 1,
-       descr => "Whether to use source line numbers in errors and debugger" },
-    );
+         use_source_line_numbers =>
+         { parse => 'boolean', type => SCALAR, default => 1,
+           descr => "Whether to use source line numbers in errors and debugger" },
+        );
 
     __PACKAGE__->contained_objects
         ( lexer => { class => 'HTML::Mason::Lexer',
@@ -65,23 +65,23 @@ BEGIN
     # determine whether to call $m->debug_hook.
     #
     if (defined($DB::sub)) {
-    *IN_PERL_DB = sub () { 1 };
+        *IN_PERL_DB = sub () { 1 };
     } else {
-    *IN_PERL_DB = sub () { 0 };
+        *IN_PERL_DB = sub () { 0 };
     }
 }
 
 use HTML::Mason::MethodMaker
     ( read_only => [qw(
-               enable_autoflush
-               lexer
-               object_id
-               preprocess
-               postprocess_perl
-               postprocess_text
-               use_source_line_numbers
-               )
-            ],
+                       enable_autoflush
+                       lexer
+                       object_id
+                       preprocess
+                       postprocess_perl
+                       postprocess_text
+                       use_source_line_numbers
+                       )
+                    ],
       );
 
 my $old_escape_re = qr/^[hnu]+$/;
@@ -113,12 +113,12 @@ sub compute_object_id
     # same object or not.
     my $spec = $self->validation_spec;
     my @id_keys =
-    ( grep { ! exists $spec->{$_}{isa} && ! exists $spec->{$_}{can} }
-      grep { $_ ne 'container' } keys %$spec );
+        ( grep { ! exists $spec->{$_}{isa} && ! exists $spec->{$_}{can} }
+          grep { $_ ne 'container' } keys %$spec );
 
     my @vals = ('HTML::Mason::VERSION', $HTML::Mason::VERSION);
     foreach my $k ( @id_keys ) {
-    push @vals, $k, $self->{$k};
+        push @vals, $k, $self->{$k};
     }
     my $dumped_vals = Data::Dumper->new(\@vals)->Indent(0)->Dump;
     $self->{object_id} = checksum($dumped_vals);
@@ -134,7 +134,7 @@ sub add_allowed_globals
 
     if ( my @bad = grep { ! /^[\$@%]/ } @globals )
     {
-    param_error "add_allowed_globals: bad parameters '@bad', must begin with one of \$, \@, %\n";
+        param_error "add_allowed_globals: bad parameters '@bad', must begin with one of \$, \@, %\n";
     }
 
     $self->{allow_globals} = [ keys %{ { map { $_ => 1 } @globals, @{ $self->{allow_globals} } } } ];
@@ -147,9 +147,9 @@ sub allow_globals
 
     if (@_)
     {
-    $self->{allow_globals} = [];
-    return if @_ == 1 and not defined $_[0]; # @_ is (undef)
-    $self->add_allowed_globals(@_);
+        $self->{allow_globals} = [];
+        return if @_ == 1 and not defined $_[0]; # @_ is (undef)
+        $self->add_allowed_globals(@_);
     }
 
     return @{ $self->{allow_globals} };
@@ -189,9 +189,9 @@ sub compile
 {
     my $self = shift;
     my %p = validate( @_, { comp_source => { type => SCALAR|SCALARREF },
-                name => { type => SCALAR },
-                fh => { type => HANDLE, optional => 1 },
-              } );
+                            name => { type => SCALAR },
+                            fh => { type => HANDLE, optional => 1 },
+                          } );
     my $src = ref($p{comp_source}) ? $p{comp_source} : \$p{comp_source};
 
     # The current compile - initially the main component, then each subcomponent/method
@@ -207,8 +207,8 @@ sub compile
     # reference to the entire source.
     if ($self->preprocess)
     {
-    eval { $self->preprocess->( $src ) };
-    compiler_error "Error during custom preprocess step: $@" if $@;
+        eval { $self->preprocess->( $src ) };
+        compiler_error "Error during custom preprocess step: $@" if $@;
     }
 
     $self->lexer->lex( comp_source => $src, name => $p{name}, compiler => $self );
@@ -239,7 +239,7 @@ sub _init_comp_data
 
     foreach ( qw( def method ) )
     {
-    $data->{$_} = {};
+        $data->{$_} = {};
     }
 
     $data->{args} = [];
@@ -248,7 +248,7 @@ sub _init_comp_data
 
     foreach ( qw( cleanup filter init once shared ) )
     {
-    $data->{blocks}{$_} = [];
+        $data->{blocks}{$_} = [];
     }
 }
 
@@ -258,7 +258,7 @@ sub end_component
     my $c = $self->{current_compile};
 
     $self->lexer->throw_syntax_error("Not enough component-with-content ending tags found")
-    if $c->{comp_with_content_stack} && @{ $c->{comp_with_content_stack} };
+        if $c->{comp_with_content_stack} && @{ $c->{comp_with_content_stack} };
 }
 
 sub start_block
@@ -268,10 +268,10 @@ sub start_block
     my %p = @_;
 
     $self->lexer->throw_syntax_error("Cannot define a $p{block_type} section inside a method or subcomponent")
-     if $top_level_only_block{ $p{block_type} } && ! $c->{in_main};
+         if $top_level_only_block{ $p{block_type} } && ! $c->{in_main};
 
     $self->lexer->throw_syntax_error("Cannot nest a $p{block_type} inside a $c->{in_block} block")
-     if $c->{in_block};
+         if $c->{in_block};
 
     $c->{in_block} = $p{block_type};
 }
@@ -293,9 +293,9 @@ sub raw_block
     my $comment = '';
     if ( $self->lexer->line_number )
     {
-    my $line = $self->lexer->line_number;
-    my $file = $self->lexer->name;
-    $comment = "#line $line $file\n" if $self->use_source_line_numbers;
+        my $line = $self->lexer->line_number;
+        my $file = $self->lexer->name;
+        $comment = "#line $line $file\n" if $self->use_source_line_numbers;
     }
 
     push @{ $self->{current_compile}{blocks}{ $p{block_type} } }, "$comment$p{block}";
@@ -327,7 +327,7 @@ sub text
     $$tref =~ s,([\'\\]),\\$1,g;
 
     if ($self->enable_autoflush) {
-    $self->_add_body_code("\$m->print( '", $$tref, "' );\n");
+        $self->_add_body_code("\$m->print( '", $$tref, "' );\n");
     } else {
         $self->_add_body_code("\$\$_outbuf .= '", $$tref, "';\n");
     }
@@ -349,7 +349,7 @@ sub end_block
     my %p = @_;
 
     $self->lexer->throw_syntax_error("End of $p{block_type} encountered while in $c->{in_block} block")
-    unless $c->{in_block} eq $p{block_type};
+        unless $c->{in_block} eq $p{block_type};
 
     $c->{in_block} = undef;
 }
@@ -360,7 +360,7 @@ sub variable_declaration
     my %p = @_;
 
     $self->lexer->throw_syntax_error("variable_declaration called inside a $p{block_type} block")
-    unless $p{block_type} eq 'args';
+        unless $p{block_type} eq 'args';
 
     my $arg = "$p{type}$p{name}";
 
@@ -368,11 +368,11 @@ sub variable_declaration
         if grep { "$_->{type}$_->{name}" eq $arg } @{ $self->{current_compile}{args} };
 
     push @{ $self->{current_compile}{args} }, { type => $p{type},
-                         name => $p{name},
-                         default => $p{default},
-                         line => $self->lexer->line_number,
-                         file => $self->lexer->name,
-                       };
+                                             name => $p{name},
+                                             default => $p{default},
+                                             line => $self->lexer->line_number,
+                                             file => $self->lexer->name,
+                                           };
 }
 
 sub key_value_pair
@@ -381,11 +381,11 @@ sub key_value_pair
     my %p = @_;
 
     compiler_error "key_value_pair called inside a $p{block_type} block"
-    unless $p{block_type} eq 'flags' || $p{block_type} eq 'attr';
+        unless $p{block_type} eq 'flags' || $p{block_type} eq 'attr';
 
     my $type = $p{block_type} eq 'flags' ? 'flag' : 'attribute';
     $self->lexer->throw_syntax_error("$p{key} $type already defined")
-    if exists $self->{current_compile}{ $p{block_type} }{ $p{key} };
+        if exists $self->{current_compile}{ $p{block_type} }{ $p{key} };
 
     $self->{current_compile}{ $p{block_type} }{ $p{key} } = $p{value}
 }
@@ -398,17 +398,17 @@ sub start_named_block
 
     # Error if defining one def or method inside another
     $self->lexer->throw_syntax_error
-    ("Cannot define a $p{block_type} block inside a method or subcomponent")
-        unless $c->{in_main};
+        ("Cannot define a $p{block_type} block inside a method or subcomponent")
+            unless $c->{in_main};
 
     # Error for invalid character in name
     $self->lexer->throw_syntax_error("Invalid $p{block_type} name: $p{name}")
-    if $p{name} =~ /[^.\w-]/;
+        if $p{name} =~ /[^.\w-]/;
 
     # Error if two defs or two methods defined with same name
     $self->lexer->throw_syntax_error
         (sprintf("Duplicate definition of %s '%s'",
-         $p{block_type} eq 'def' ? 'subcomponent' : 'method', $p{name}))
+                 $p{block_type} eq 'def' ? 'subcomponent' : 'method', $p{name}))
             if exists $c->{$p{block_type}}{ $p{name} };
     
     # Error if def and method defined with same name
@@ -452,8 +452,8 @@ sub substitution
     #
     my @lines = split(/\n/, $text);
     unless (grep { /^\s*[^\s\#]/ } @lines) {
-    $self->{current_compile}{last_body_code_type} = 'substitution';
-    return;
+        $self->{current_compile}{last_body_code_type} = 'substitution';
+        return;
     }
 
     if ( ( exists $p{escape} && defined $p{escape} ) ||
@@ -482,7 +482,7 @@ sub substitution
             unless grep { $_ eq 'n' } @flags;
 
         my %seen;
-    my $flags =
+        my $flags =
             ( join ', ',
               map { $seen{$_}++ ? () : "'$_'" }
               grep { $_ ne 'n' } @flags
@@ -496,9 +496,9 @@ sub substitution
     # Make sure to allow lists within <% %> tags.
     #
     if ($self->enable_autoflush) {
-    $code = "\$m->print( $text );\n";
+        $code = "\$m->print( $text );\n";
     } else {
-    $code = "for ($text) { \$\$_outbuf .= \$_ }\n";
+        $code = "for ($text) { \$\$_outbuf .= \$_ }\n";
     }
 
     eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
@@ -517,10 +517,10 @@ sub component_call
     my ($prespace, $call, $postspace) = ($p{call} =~ /(\s*)(.*)(\s*)/s);
     if ( $call =~ m,^[\w/.],)
     {
-    my $comma = index($call, ',');
-    $comma = length $call if $comma == -1;
-    (my $comp = substr($call, 0, $comma)) =~ s/\s+$//;
-    $call = "'$comp'" . substr($call, $comma);
+        my $comma = index($call, ',');
+        $comma = length $call if $comma == -1;
+        (my $comp = substr($call, 0, $comma)) =~ s/\s+$//;
+        $call = "'$comp'" . substr($call, $comma);
     }
     my $code = "\$m->comp( $prespace $call $postspace \n); ";
     eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
@@ -559,7 +559,7 @@ sub component_content_call_end
     my %p = @_;
 
     $self->lexer->throw_syntax_error("Found component with content ending tag but no beginning tag")
-    unless @{ $c->{comp_with_content_stack} };
+        unless @{ $c->{comp_with_content_stack} };
 
     my $call = pop @{ $c->{comp_with_content_stack} };
     my $call_end = $p{call_end};
@@ -568,21 +568,21 @@ sub component_content_call_end
     my $comp = undef;
     if ( $call =~ m,^[\w/.],)
     {
-    my $comma = index($call, ',');
-    $comma = length $call if $comma == -1;
-    ($comp = substr($call, 0, $comma)) =~ s/\s+$//;
-    $call = "'$comp'" . substr($call, $comma);
+        my $comma = index($call, ',');
+        $comma = length $call if $comma == -1;
+        ($comp = substr($call, 0, $comma)) =~ s/\s+$//;
+        $call = "'$comp'" . substr($call, $comma);
     }
     if ($call_end) {
-    if ($call_end !~ m,^[\w/.],) {
-        $self->lexer->throw_syntax_error("Cannot use an expression inside component with content ending tag; use a bare component name or </&> instead");
-    }
-    if (!defined($comp)) {
-        $self->lexer->throw_syntax_error("Cannot match an expression as a component name; use </&> instead");
-    }
-    if ($call_end ne $comp) {
-        $self->lexer->throw_syntax_error("Component name in ending tag ($call_end) does not match component name in beginning tag ($comp)");
-    }
+        if ($call_end !~ m,^[\w/.],) {
+            $self->lexer->throw_syntax_error("Cannot use an expression inside component with content ending tag; use a bare component name or </&> instead");
+        }
+        if (!defined($comp)) {
+            $self->lexer->throw_syntax_error("Cannot match an expression as a component name; use </&> instead");
+        }
+        if ($call_end ne $comp) {
+            $self->lexer->throw_syntax_error("Component name in ending tag ($call_end) does not match component name in beginning tag ($comp)");
+        }
     }
 
     my $code = "} }, $call\n );\n";
@@ -622,9 +622,9 @@ sub _add_body_code
     if ( $self->lexer->line_number &&
          $self->{current_compile}{last_body_code_type} ne 'perl_line' )
     {
-    my $line = $self->lexer->line_number;
-    my $file = $self->lexer->name;
-    $self->{current_compile}{body} .= "#line $line $file\n" if $self->use_source_line_numbers;
+        my $line = $self->lexer->line_number;
+        my $file = $self->lexer->name;
+        $self->{current_compile}{body} .= "#line $line $file\n" if $self->use_source_line_numbers;
     }
 
     $self->{current_compile}{body} .= $_ foreach @_;
@@ -641,14 +641,14 @@ sub dump
 
     foreach ( keys %{ $c->{def} } )
     {
-    warn "  Subcomponent $_\n";
-    $self->_dump_data( $c->{def}{$_}, '  ' );
+        warn "  Subcomponent $_\n";
+        $self->_dump_data( $c->{def}{$_}, '  ' );
     }
 
     foreach ( keys %{ $c->{method} } )
     {
-    warn "  Methods $_\n";
-    $self->_dump_data( $c->{method}{$_}, '  ');
+        warn "  Methods $_\n";
+        $self->_dump_data( $c->{method}{$_}, '  ');
     }
 }
 
@@ -660,13 +660,13 @@ sub _dump_data
 
     if ( @{ $data->{args} } )
     {
-    warn "$indent  args\n";
-    foreach ( @{ $data->{args} } )
-    {
-        warn "$indent    $_->{type}$_->{name}";
-        warn " => $_->{default}" if defined $_->{default};
-        warn "\n";
-    }
+        warn "$indent  args\n";
+        foreach ( @{ $data->{args} } )
+        {
+            warn "$indent    $_->{type}$_->{name}";
+            warn " => $_->{default}" if defined $_->{default};
+            warn "\n";
+        }
     }
 
     warn "\n$indent  body\n";

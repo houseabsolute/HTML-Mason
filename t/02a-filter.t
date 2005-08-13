@@ -10,7 +10,7 @@ sub make_tests
 {
     my $group =
          HTML::Mason::Tests->tests_class->new( name => 'filter',
-                           description => 'Tests <%filter> specific problems' );
+                                               description => 'Tests <%filter> specific problems' );
 
 #------------------------------------------------------------
 
@@ -108,13 +108,13 @@ EOF
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/has_filter',
-             component => <<'EOF',
+                         component => <<'EOF',
 lower case
 <%filter>
 $_ = uc $_;
 </%filter>
 EOF
-               );
+                       );
 
     $group->add_test( name => 'filter_and_clear',
                       description => 'make sure <%filter> does not break $m->clear_buffer',
@@ -222,12 +222,12 @@ EOF
 #------------------------------------------------------------
 
     $group->add_support( path => 'clear_filter_comp',
-             component => <<'EOF',
+                         component => <<'EOF',
 Bar
 % $m->clear_buffer;
 Baz
 EOF
-               );
+                       );
 
 
 #------------------------------------------------------------
@@ -249,10 +249,10 @@ EOF
 #------------------------------------------------------------
 
     $group->add_support( path => 'some_comp',
-             component => <<'EOF',
+                         component => <<'EOF',
 Some stuff
 EOF
-               );
+                       );
 
 
 #------------------------------------------------------------
@@ -275,18 +275,18 @@ EOF
 #------------------------------------------------------------
 
     $group->add_support( path => '/auto_filter_die/dies',
-             component => <<'EOF',
+                         component => <<'EOF',
 % die "foo death";
 EOF
-               );
+                       );
 
 
     $group->add_support( path => '/auto_filter_die/autohandler',
-             component => <<'EOF',
+                         component => <<'EOF',
 autohandler
 % $m->call_next;
 EOF
-               );
+                       );
 
 
     $group->add_test( name => 'auto_filter_die/abort_comp_call_in_filter_with_autohandler',
@@ -303,14 +303,14 @@ EOF
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/abort_in_filter',
-             component => <<'EOF',
+                         component => <<'EOF',
 Will not be seen
 <%filter>
 $m->abort;
 $_ = lc $_;
 </%filter>
 EOF
-               );
+                       );
 
     $group->add_test( name => 'abort_in_filter',
                       description => 'Test that abort in a filter causes no output',
@@ -327,7 +327,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/abort_in_shared_with_filter',
-             component => <<'EOF',
+                         component => <<'EOF',
 <%shared>
 $m->abort('dead');
 </%shared>
@@ -336,7 +336,7 @@ $m->abort('dead');
 $_ = lc $_;
 </%filter>
 EOF
-               );
+                       );
 
     $group->add_test( name => 'abort_in_shared_with_filter',
                       description => 'Test that abort in a shared block works when component has a filter block',

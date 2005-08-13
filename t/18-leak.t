@@ -7,9 +7,9 @@ BEGIN
 {
     unless ( can_weaken )
     {
-    print "Your installation does not include Scalar::Util::weaken\n";
-    print "1..0\n";
-    exit;
+        print "Your installation does not include Scalar::Util::weaken\n";
+        print "1..0\n";
+        exit;
     }
 }
 
@@ -63,11 +63,11 @@ $tests->run;
 sub make_tests
 {
     my $group = HTML::Mason::Tests->tests_class->new( name => '18-leak.t',
-                              description => 'Tests that various memory leaks are no longer with us' );
+                                                      description => 'Tests that various memory leaks are no longer with us' );
 
     $group->add_test( name => 'interp_destroy',
                       description => 'Test that interps with components in cache still get destroyed',
-              component => <<'EOF',
+                      component => <<'EOF',
 <%perl>
 { 
     my $interp = InterpWatcher->new();
@@ -91,56 +91,56 @@ EOF
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/no_error_comp',
-             component => <<'EOF',
+                         component => <<'EOF',
 No error here.
 EOF
-               );
+                       );
 
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/compile_error_comp',
-             component => <<'EOF',
+                         component => <<'EOF',
 <%
 EOF
-               );
+                       );
 
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/runtime_error_comp',
-             component => <<'EOF',
+                         component => <<'EOF',
 % die "bleah";
 EOF
-               );
+                       );
 
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/recursive_caller_1',
-             component => <<'EOF',
+                         component => <<'EOF',
 <%perl>
 $m->comp("recursive_caller_2", %ARGS);
 return;
 </%perl>
 EOF
-               );
+                       );
 
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/recursive_caller_2',
-             component => <<'EOF',
+                         component => <<'EOF',
 <%perl>
 my $anon_comp = $ARGS{anon_comp};
 $m->comp($anon_comp, %ARGS) if $m->depth < 16;
 return;
 </%perl>
 EOF
-               );
+                       );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'request_destroy',
                       description => 'Test that requests get destroyed after top-level component error',
                       interp_params => { request_class => 'RequestWatcher' },
-              component => <<'EOF',
+                      component => <<'EOF',
 <%perl>
 eval { $m->subexec('support/no_error_comp') };
 $m->print("destroy_count = " . RequestWatcher->_destroy_count . "\n");
@@ -161,7 +161,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/def_and_method',
-             component => <<'EOF',
+                         component => <<'EOF',
 <%init>
 $m->comp('.def');
 $m->comp('SELF:method');
@@ -176,14 +176,14 @@ This is a def
 This is a method
 </%method>
 EOF
-               );
+                       );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'component_destroy',
                       description => 'Test that components get freed when cleared from the main cache',
                       interp_params => { code_cache_max_size => 0 },
-              component => <<'EOF',
+                      component => <<'EOF',
 <%perl>
 HTML::Mason::Component->_clear_destroy_count;
 $m->subexec('support/no_error_comp');
@@ -204,14 +204,14 @@ destroy_count = 2
 destroy_count = 3
 destroy_count = 4
 EOF
-               );
+                       );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'component_destroy_static_source',
                       description => 'Test that components get freed in static source mode',
                       interp_params => { static_source => 1 },
-              component => <<'EOF',
+                      component => <<'EOF',
 <%perl>
 HTML::Mason::Component->_clear_destroy_count;
 my $anon_comp_text = q|
@@ -233,7 +233,7 @@ EOF
 destroy_count = 2
 destroy_count = 4
 EOF
-               );
+                       );
 
 #------------------------------------------------------------
 
@@ -241,7 +241,7 @@ EOF
                       description => 'Test that defs and methods don\'t cause components to leak',
                       interp_params => { subcomp_class => 'SubcomponentWatcher',
                                          code_cache_max_size => 0 },
-              component => <<'EOF',
+                      component => <<'EOF',
 <%perl>
 HTML::Mason::Component->_clear_destroy_count;
 $m->subexec('support/def_and_method');
@@ -262,7 +262,7 @@ This is a def
 This is a method
 destroy_count = 2, 4
 EOF
-               );
+                       );
 
 #------------------------------------------------------------
 

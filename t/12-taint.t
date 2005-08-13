@@ -27,8 +27,8 @@ BEGIN
 
     if ($ENV{PERL5LIB})
     {
-    $libs .= ' ';
-    $libs .= join ' ', (split /:|;/, $ENV{PERL5LIB});
+        $libs .= ' ';
+        $libs .= join ' ', (split /:|;/, $ENV{PERL5LIB});
     }
     $libs .= ' );';
 
@@ -64,9 +64,9 @@ if ($alarm_works)
        };
 
     my $error = ( $alarm ? "entered endless while loop" :
-          $@ ? "gave error during test: $@" :
-          !defined($comp) ? "returned an undefined value from compiling" :
-          '' );
+                  $@ ? "gave error during test: $@" :
+                  !defined($comp) ? "returned an undefined value from compiling" :
+                  '' );
     ok $error, '';
 }
 
@@ -77,8 +77,8 @@ ok !is_tainted($comp_root);
 ok !is_tainted($data_dir);
 
 my $interp = HTML::Mason::Interp->new( comp_root => $comp_root,
-                       data_dir => $data_dir,
-                     );
+                                       data_dir => $data_dir,
+                                     );
 
 $data_dir = File::Spec->catdir( getcwd(), 'mason_tests', 'data' );
 
@@ -86,7 +86,7 @@ $data_dir = File::Spec->catdir( getcwd(), 'mason_tests', 'data' );
 my $comp2 = HTML::Mason::ComponentSource->new
     ( friendly_name => 't/taint.comp',
       source_callback => sub {
-      read_file( File::Spec->catfile( File::Spec->curdir, 't', 'taint.comp' ) );
+          read_file( File::Spec->catfile( File::Spec->curdir, 't', 'taint.comp' ) );
       },
     );
 ok $comp2;
@@ -94,9 +94,9 @@ ok is_tainted($comp2->comp_source);
 
 # Make sure we can write tainted data to disk
 eval { $interp->compiler->compile_to_file
-       ( file => File::Spec->catfile( $data_dir, 'taint_write_test' ),
-         source => $comp2,
-       ); };
+           ( file => File::Spec->catfile( $data_dir, 'taint_write_test' ),
+             source => $comp2,
+           ); };
 ok $@, '', "Unable to write a tainted object to disk";
 
 
@@ -112,5 +112,5 @@ ok $@, '', "Unable to eval a tainted object file";
 
 ###########################################################
 sub is_tainted {
-  return not eval { "+@_" && eval 1 };
+    return not eval { "+@_" && eval 1 };
 }

@@ -30,7 +30,7 @@ sub assign_runtime_properties {
     my ($self, $interp, $source) = @_;
     $self->SUPER::assign_runtime_properties($interp, $source);
     $self->{comp_id} = sprintf("[%s '%s' of %s]", $self->{is_method} ? 'method' : 'subcomponent',
-                   $self->name, $self->owner->comp_id);
+                               $self->name, $self->owner->comp_id);
     $self->{path} = $self->owner->path . ":" . $self->name;
 }
 

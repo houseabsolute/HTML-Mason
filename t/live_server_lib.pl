@@ -18,7 +18,7 @@ sub write_comp
     mkpath( $dir, 0, 0755 ) unless -d $dir;
 
     open F, ">$file"
-	or die "Can't write to '$file': $!";
+        or die "Can't write to '$file': $!";
 
     print F $comp;
 
@@ -34,10 +34,10 @@ sub cleanup_data_dir
     local *DIR;
     my $dir = File::Spec->catdir( $notes->{test_data}{apache_dir}, 'data' );
     opendir DIR, $dir
-	or die "Can't open $$dir dir: $!";
+        or die "Can't open $$dir dir: $!";
     foreach ( grep { -d File::Spec->catdir( $dir, $_ ) && $_ !~ /^\./ } readdir DIR )
     {
-	rmtree( File::Spec->catdir( $notes->{test_data}{apache_dir}, 'data', $_ ) );
+        rmtree( File::Spec->catdir( $notes->{test_data}{apache_dir}, 'data', $_ ) );
     }
     closedir DIR;
 }
@@ -47,7 +47,7 @@ sub get_pid
     local *PID;
     my $pid_file = File::Spec->catfile( $notes->{test_data}{apache_dir}, 'logs', 'httpd.pid' );
     open PID, "<$pid_file"
-	or die "Can't open $pid_file: $!";
+        or die "Can't open $pid_file: $!";
     my $pid = <PID>;
     close PID;
     chomp $pid;
@@ -72,19 +72,19 @@ sub start_httpd
     my $cmd ="$httpd $def -f $conf_file";
     print STDERR "Executing $cmd\n";
     system ($cmd)
-	and die "Can't start httpd server as '$cmd': $!";
+        and die "Can't start httpd server as '$cmd': $!";
 
     my $x = 0;
     print STDERR "Waiting for httpd to start.\n";
     until ( -e $pid_file )
     {
-	sleep (1);
-	$x++;
-	if ( $x > 10 )
-	{
-	    die "No $pid_file file has appeared after 10 seconds.  ",
-		"There is probably a problem with the configuration file that was generated for these tests.";
-	}
+        sleep (1);
+        $x++;
+        if ( $x > 10 )
+        {
+            die "No $pid_file file has appeared after 10 seconds.  ",
+                "There is probably a problem with the configuration file that was generated for these tests.";
+        }
     }
 }
 
@@ -99,39 +99,39 @@ sub kill_httpd
     my $result = kill 'TERM', $pid;
     if ( ! $result and $! =~ /no such (?:file|proc)/i )
     {
-	# Looks like apache wasn't running, so we're done
-	unlink $pid_file
-	    or warn "Couldn't remove $pid_file: $!";
-	return;
+        # Looks like apache wasn't running, so we're done
+        unlink $pid_file
+            or warn "Couldn't remove $pid_file: $!";
+        return;
     }
     die "Can't kill process $pid: $!" if !$result;
 
     if ($wait)
     {
-	print STDERR "Waiting for httpd to shut down\n";
-	my $x = 0;
-	while ( -e $pid_file )
-	{
-	    sleep (1);
-	    $x++;
-	    if ( $x > 1 )
-	    {
-		my $result = kill 'TERM', $pid;
-		if ( ! $result and $! =~ /no such (?:file|proc)/i )
-		{
-		    # Looks like apache wasn't running, so we're done
-		    if ( -e $pid_file )
-		    {
-			unlink $pid_file
-			    or warn "Couldn't remove $pid_file: $!";
-		    }
-		    return;
-		}
-	    }
+        print STDERR "Waiting for httpd to shut down\n";
+        my $x = 0;
+        while ( -e $pid_file )
+        {
+            sleep (1);
+            $x++;
+            if ( $x > 1 )
+            {
+                my $result = kill 'TERM', $pid;
+                if ( ! $result and $! =~ /no such (?:file|proc)/i )
+                {
+                    # Looks like apache wasn't running, so we're done
+                    if ( -e $pid_file )
+                    {
+                        unlink $pid_file
+                            or warn "Couldn't remove $pid_file: $!";
+                    }
+                    return;
+                }
+            }
 
-	    die "$pid_file file still exists after 10 seconds.  Exiting."
-		if $x > 10;
-	}
+            die "$pid_file file still exists after 10 seconds.  Exiting."
+                if $x > 10;
+        }
 
     }
 }

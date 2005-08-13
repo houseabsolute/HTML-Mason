@@ -59,7 +59,7 @@ sub comp_source_ref
 
     unless ( defined $source )
     {
-    error "source callback returned no source for $self->{friendly_name} component";
+	error "source callback returned no source for $self->{friendly_name} component";
     }
 
     my $sourceref = ref($source) ? $source : \$source;
@@ -74,8 +74,8 @@ sub object_code
     my %p = validate( @_, { compiler => { isa => 'HTML::Mason::Compiler' } } );
 
     return $p{compiler}->compile( comp_source => $self->comp_source,
-                  name => $self->friendly_name,
-                  comp_class => $self->comp_class );
+				  name => $self->friendly_name,
+				  comp_class => $self->comp_class );
 }
 
 1;

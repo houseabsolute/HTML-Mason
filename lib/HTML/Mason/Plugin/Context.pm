@@ -10,9 +10,9 @@ use base qw(HTML::Mason::Plugin::Context);
 sub request   { $_[0]->[0] }
 sub args      {
     if (wantarray) {
-    return @{$_[0]->[1]};
+        return @{$_[0]->[1]};
     } else {
-    return $_[0]->[1];
+        return $_[0]->[1];
     }
 }
 
@@ -24,9 +24,9 @@ use base qw(HTML::Mason::Plugin::Context);
 sub request   { $_[0]->[0] }
 sub args      {
     if (wantarray) {
-    return @{$_[0]->[1]};
+        return @{$_[0]->[1]};
     } else {
-    return $_[0]->[1];
+        return $_[0]->[1];
     }
 }
 sub output    { $_[0]->[2] }

@@ -21,58 +21,58 @@ sub HTML::Mason::Exception::as_munged
 sub make_tests
 {
     my $group = HTML::Mason::Tests->tests_class->new( name => 'errors',
-                              description => 'Test that errors are generated properly' );
+                                                      description => 'Test that errors are generated properly' );
 
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/error_helper',
-             component => <<'EOF',
+                         component => <<'EOF',
 <%init>
 eval { $m->comp('error1')  };
 $m->comp('error2');
 </%init>
 EOF
-               );
+                       );
 
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/error1',
-             component => <<'EOF',
+                         component => <<'EOF',
 % die "terrible error";
 EOF
-               );
+                       );
 
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/error2',
-             component => <<'EOF',
+                         component => <<'EOF',
 % die "horrible error";
 EOF
-               );
+                       );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'bad_args',
-              description => 'Make sure a bad args line is caught properly',
-              component => <<'EOF',
+                      description => 'Make sure a bad args line is caught properly',
+                      component => <<'EOF',
 <%args>
 foo
 </%args>
 EOF
-              expect_error => qr|Invalid <%args> section line|
-            );
+                      expect_error => qr|Invalid <%args> section line|
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'backtrace',
-              description => 'Make sure trace for second error is accurate when first error is caught by eval',
-              component => <<'EOF',
+                      description => 'Make sure trace for second error is accurate when first error is caught by eval',
+                      component => <<'EOF',
 <%init>
 $m->comp('support/error_helper');
 </%init>
 EOF
-              expect_error => q|horrible error.*|
-            );
+                      expect_error => q|horrible error.*|
+                    );
 
 #------------------------------------------------------------
 
@@ -105,73 +105,73 @@ EOF
 #------------------------------------------------------------
 
     $group->add_support( path => '/support/zero_size',
-             component => '',
-               );
+                         component => '',
+                       );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'read_zero_size',
-              description => 'Make sure that Mason handles a zero length source file correctly',
-              component => <<'EOF',
+                      description => 'Make sure that Mason handles a zero length source file correctly',
+                      component => <<'EOF',
 zero[<& support/zero_size &>]zero
 EOF
-              expect => <<'EOF'
+                      expect => <<'EOF'
 zero[]zero
 EOF
-            );
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'bad_source_callback',
-              description => 'Make sure that a bad source_callback for a ComponentSource object reports a useful error',
+                      description => 'Make sure that a bad source_callback for a ComponentSource object reports a useful error',
                       interp_params => { resolver_class => 'My::Resolver' },
-              component => <<'EOF',
+                      component => <<'EOF',
 does not matter
 EOF
-              expect_error => qr/Undefined subroutine.*will_explode/,
-            );
+                      expect_error => qr/Undefined subroutine.*will_explode/,
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'bad_escape_flag',
-              description => 'Make sure that an invalid escape flag is reported properly',
-              component => <<'EOF',
+                      description => 'Make sure that an invalid escape flag is reported properly',
+                      component => <<'EOF',
 <% 1234 | abc %>
 EOF
-              expect_error => qr/Invalid escape flag: abc/,
-            );
+                      expect_error => qr/Invalid escape flag: abc/,
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'error_mode_output',
-              description => 'Make sure that existing output is cleared when an error occurs in error_mode=output',
+                      description => 'Make sure that existing output is cleared when an error occurs in error_mode=output',
                       interp_params => { error_format => 'munged',
                                          error_mode => 'output',
                                        },
-              component => <<'EOF',
+                      component => <<'EOF',
 Should not appear in output!
 % $m->comp( '/errors/support/error1' );
 EOF
                       expect => <<'EOF',
 terrible error
 EOF
-            );
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'error_in_subrequest',
-              description => 'Make sure that an error in a subrequest is propogated back to the main request',
+                      description => 'Make sure that an error in a subrequest is propogated back to the main request',
                       interp_params => { error_format => 'munged',
                                          error_mode => 'output',
                                        },
-              component => <<'EOF',
+                      component => <<'EOF',
 Should not appear in output!
 % $m->subexec( '/errors/support/error1' );
 EOF
                       expect => <<'EOF',
 terrible error
 EOF
-            );
+                    );
 
 #------------------------------------------------------------
 
@@ -197,7 +197,7 @@ EOF
 % $m->subexec("/does/not/exist");
 EOF
                       expect_error => qr{could not find component for initial path}is,
-              );
+                      );
 
 #------------------------------------------------------------
 
@@ -210,7 +210,7 @@ EOF
 % $m->subexec("/does/not/exist");
 EOF
                       expect => qr{^\s+<html>.*could not find component for initial path}is,
-              );
+                      );
 
 #------------------------------------------------------------
 
@@ -220,53 +220,53 @@ EOF
 % $m->comp("/does/not/exist");
 EOF
                       expect_error => qr{could not find component for path}is,
-              );
+                      );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'change_error_format',
-              description => 'Make sure setting $m->error_format($foo) works on the fly',
+                      description => 'Make sure setting $m->error_format($foo) works on the fly',
                       interp_params => { error_format => 'html',
-                     error_mode => 'output',
+                                         error_mode => 'output',
                                        },
-              component => <<'EOF',
+                      component => <<'EOF',
 % $m->error_format('text');
 % die("Horrible death");
 EOF
                       expect => qr{^Horrible death},
-            );
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'check_error_format_brief',
-              description => 'Make sure setting error_format => "brief" works',
-              interp_params => { error_format => 'brief',
-                     error_mode => 'output',
-                       },
-              component => <<'EOF',
+                      description => 'Make sure setting error_format => "brief" works',
+                      interp_params => { error_format => 'brief',
+                                         error_mode => 'output',
+                                       },
+                      component => <<'EOF',
 % die("Horrible death");
 EOF
-              expect => qr{^Horrible death at .*check_error_format_brief line \d+\.$}s,
-            );
+                      expect => qr{^Horrible death at .*check_error_format_brief line \d+\.$}s,
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'object_exception',
-              description => "Make sure Mason doesn't co-opt non Exception::Class exception objects",
-              component => <<'EOF',
+                      description => "Make sure Mason doesn't co-opt non Exception::Class exception objects",
+                      component => <<'EOF',
 % eval { die bless { foo => 'bar' }, 'FooException' };
 <% ref $@ %>
 EOF
-              expect => <<'EOF',
+                      expect => <<'EOF',
 FooException
 EOF
-            );
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'subcomponent_redefined',
-              description => "Make sure Mason doesn't allow redefinition of subcomponent",
-              component => <<'EOF',
+                      description => "Make sure Mason doesn't allow redefinition of subcomponent",
+                      component => <<'EOF',
 <%def foo>
 foo
 </%def>
@@ -274,14 +274,14 @@ foo
 foo
 </%def>
 EOF
-              expect_error => qr/Duplicate definition of subcomponent/,
-            );
+                      expect_error => qr/Duplicate definition of subcomponent/,
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'method_redefined',
-              description => "Make sure Mason doesn't allow redefinition of method",
-              component => <<'EOF',
+                      description => "Make sure Mason doesn't allow redefinition of method",
+                      component => <<'EOF',
 <%method foo>
 foo
 </%method>
@@ -289,14 +289,14 @@ foo
 foo
 </%method>
 EOF
-              expect_error => qr/Duplicate definition of method/,
-            );
+                      expect_error => qr/Duplicate definition of method/,
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'method_subcomp_conflict',
-              description => "Make sure Mason doesn't allow a subcomponent and method to have the same name",
-              component => <<'EOF',
+                      description => "Make sure Mason doesn't allow a subcomponent and method to have the same name",
+                      component => <<'EOF',
 <%method foo>
 foo
 </%method>
@@ -304,51 +304,51 @@ foo
 foo
 </%def>
 EOF
-              expect_error => qr/with the same name/,
-            );
+                      expect_error => qr/with the same name/,
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'subcomp_bad_name',
-              description => "Make sure Mason doesn't allow a subcomponent with a bad name",
-              component => <<'EOF',
+                      description => "Make sure Mason doesn't allow a subcomponent with a bad name",
+                      component => <<'EOF',
 <%def abc+def>
 foo
 </%def>
 EOF
-              expect_error => qr/Invalid def name/,
-            );
+                      expect_error => qr/Invalid def name/,
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'content_comp_wrong_error',
-              description => "Make sure syntax error inside <&|> </&> tags is thrown correctly",
-              component => <<'EOF',
+                      description => "Make sure syntax error inside <&|> </&> tags is thrown correctly",
+                      component => <<'EOF',
 <&| ttt &>
 <%
 </&>
 <%def ttt>
 </%def>
 EOF
-              expect_error => qr/'<%' without matching '%>'/,
-            );
+                      expect_error => qr/'<%' without matching '%>'/,
+                    );
 
 #------------------------------------------------------------
 
     $group->add_test( name => 'top_level_compilation_error',
-              description => "Make sure top-level compiler errors work in output mode",
+                      description => "Make sure top-level compiler errors work in output mode",
                       interp_params => {
-                     error_format => 'text',
-                     error_mode => 'output',
+                                         error_format => 'text',
+                                         error_mode => 'output',
                                        },
-              component => <<'EOF',
+                      component => <<'EOF',
 % my $x = 
 EOF
-            # match "Error during compilation" followed by 
-            # exactly one occurance of "Stack:"
-            # (Mason should stop after the first error)
-              expect => qr/Error during compilation((?!Stack:).)*Stack:((?!Stack:).)*$/s,
-            );
+                        # match "Error during compilation" followed by 
+                        # exactly one occurance of "Stack:"
+                        # (Mason should stop after the first error)
+                      expect => qr/Error during compilation((?!Stack:).)*Stack:((?!Stack:).)*$/s,
+                    );
 
 #------------------------------------------------------------
 

@@ -113,7 +113,7 @@ method = <% $r->method %>.
 
 
 EOF
-          );
+              );
 
     write_comp( 'headers', <<'EOF',
 
@@ -130,52 +130,52 @@ $m->abort if $blank;
 $blank=>0
 </%args>
 EOF
-          );
+              );
 
     write_comp( 'cgi_object', <<'EOF',
 <% UNIVERSAL::isa(eval { $m->cgi_object } || undef, 'CGI') ? 'CGI' : 'NO CGI' %><% $@ || '' %>
 EOF
-          );
+              );
 
     write_comp( 'params', <<'EOF',
 % foreach (sort keys %ARGS) {
 <% $_ %>: <% ref $ARGS{$_} ? join ', ', sort @{ $ARGS{$_} }, 'array' : $ARGS{$_} %>
 % }
 EOF
-          );
+              );
 
     write_comp( '_underscore', <<'EOF',
 I am underscore.
 EOF
-          );
+              );
 
     write_comp( 'dhandler/dhandler', <<'EOF',
 I am the dhandler.
 EOF
-          );
+              );
 
     write_comp( 'die', <<'EOF',
 % die 'Mine heart is pierced';
 EOF
-          );
+              );
 
     write_comp( 'apache_request', <<'EOF',
 % if ($r->isa('Apache::Request') || $r->isa('Apache2::Request')) {
 Apache::Request
 % }
 EOF
-          );
+                  );
 
     write_comp( 'multiconf1/foo', <<'EOF',
 I am foo in multiconf1
 comp root is <% $m->interp->comp_root =~ m,/comps/multiconf1$, ? 'multiconf1' : $m->interp->comp_root %>
 EOF
-          );
+              );
 
     write_comp( 'multiconf1/autohandler', <<'EOF'
 <& $m->fetch_next, autohandler => 'present' &>
 EOF
-          );
+              );
 
     write_comp( 'multiconf1/autohandler_test', <<'EOF'
 <%args>
@@ -183,19 +183,19 @@ $autohandler => 'misnamed'
 </%args>
 autohandler is <% $autohandler %>
 EOF
-          );
+              );
 
 
     write_comp( 'multiconf2/foo', <<'EOF',
 I am foo in multiconf2
 comp root is <% $m->interp->comp_root =~ m,/comps/multiconf2$, ? 'multiconf2' : $m->interp->comp_root %>
 EOF
-          );
+              );
 
     write_comp( 'multiconf2/dhandler', <<'EOF',
 This should not work
 EOF
-          );
+              );
 
     write_comp( 'allow_globals', <<'EOF',
 % $foo = 1;
@@ -203,33 +203,33 @@ EOF
 $foo is <% $foo %>
 @bar is <% @bar %>
 EOF
-          );
+              );
 
     write_comp( 'decline_dirs', <<'EOF',
 decline_dirs is <% $m->ah->decline_dirs %>
 EOF
-          );
+              );
 
     write_comp( 'print', <<'EOF',
 This is first.
 % print "This is second.\n";
 This is third.
 EOF
-          );
+              );
 
     write_comp( 'r_print', <<'EOF',
 This is first.
 % $r->print("This is second.\n");
 This is third.
 EOF
-          );
+              );
 
     write_comp( 'flush_buffer', <<'EOF',
 % $m->print("foo\n");
 % $m->flush_buffer;
 bar
 EOF
-          );
+              );
 
     write_comp( 'head_request', <<'EOF',
 <%init>
@@ -240,7 +240,7 @@ foreach (sort keys %ARGS) {
 </%init>
 We should never see this.
 EOF
-          );
+              );
 
     write_comp( 'redirect', <<'EOF',
 % $m->print("\n");  # leading whitespace
@@ -253,7 +253,7 @@ $m->redirect('/comps/basic');
 fum
 </%def>
 EOF
-          );
+              );
 
     write_comp( 'internal_redirect', <<'EOF',
 <%init>
@@ -264,7 +264,7 @@ $m->clear_buffer;
 $m->abort;
 </%init>
 EOF
-          );
+              );
 
     write_comp( 'subrequest', <<'EOF',
 <%init>
@@ -280,7 +280,7 @@ $m->flush_buffer;
 $m->abort(200);
 </%init>
 EOF
-          );
+              );
 
     write_comp( 'internal_redirect_target', <<'EOF',
 The number is <% $foo %>.
@@ -288,7 +288,7 @@ The number is <% $foo %>.
 $foo
 </%args>
 EOF
-          );
+              );
 
     write_comp( 'error_as_html', <<'EOF',
 % my $x = 
@@ -342,29 +342,29 @@ sub cgi_tests
     my $response = Apache::test->fetch($path);
     my $actual = filter_response($response, $with_handler);
     my $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                 expect => <<'EOF',
+                                                                 expect => <<'EOF',
 X-Mason-Test: Initial value
 CGI
 Status code: 0
 EOF
-                          );
+                                                  );
     ok($success);
 
     if (! $with_handler)
     {
-    # test that MasonAllowGlobals works (testing a list parameter
-    # from httpd.conf)
-    my $response = Apache::test->fetch('/comps/allow_globals');
-    my $actual = filter_response($response, 0);
-    my $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                     expect => <<'EOF',
+        # test that MasonAllowGlobals works (testing a list parameter
+        # from httpd.conf)
+        my $response = Apache::test->fetch('/comps/allow_globals');
+        my $actual = filter_response($response, 0);
+        my $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                     expect => <<'EOF',
 X-Mason-Test: Initial value
 $foo is 1
 @bar is abc
 Status code: 0
 EOF
-                              );
-    ok($success);
+                                                      );
+        ok($success);
     }
 
     $path = '/comps/head_request?foo=1&bar=1&bar=2';
@@ -378,13 +378,13 @@ EOF
     # anything for a HEAD request. - dave
     $actual = filter_response($response, 0);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 X-Mason-HEAD-Test1: bar: is a ref
 X-Mason-HEAD-Test2: foo: not a ref
 Status code: 0
 EOF
-                           );
+                                               );
 
     ok($success);
 
@@ -406,84 +406,84 @@ sub apache_request_tests
     my $response = Apache::test->fetch($path);
     my $actual = filter_response($response, $with_handler);
     my $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                 expect => <<'EOF',
+                                                                 expect => <<'EOF',
 X-Mason-Test: Initial value
 Apache::Request
 Status code: 0
 EOF
-                          );
+                                                  );
     ok($success);
 
     if ($with_handler)
     {
-    $response = Apache::test->fetch('/ah=4/comps/apache_request');
-    $actual = filter_response($response, $with_handler);
-    $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+        $response = Apache::test->fetch('/ah=4/comps/apache_request');
+        $actual = filter_response($response, $with_handler);
+        $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                  expect => <<'EOF',
 X-Mason-Test: Initial value
 Status code: 0
 EOF
-    );
-    ok($success);
+        );
+        ok($success);
     }
 
     unless ($with_handler)
     {
-    $response = Apache::test->fetch('/comps/decline_dirs');
-    $actual = filter_response($response, $with_handler);
-    $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+        $response = Apache::test->fetch('/comps/decline_dirs');
+        $actual = filter_response($response, $with_handler);
+        $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                  expect => <<'EOF',
 X-Mason-Test: Initial value
 decline_dirs is 0
 Status code: 0
 EOF
-                           );
-    ok($success);
+                                                   );
+        ok($success);
 
-    $response = Apache::test->fetch('/comps/old_html_escape');
-    $actual = filter_response($response, $with_handler);
-    $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+        $response = Apache::test->fetch('/comps/old_html_escape');
+        $actual = filter_response($response, $with_handler);
+        $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                  expect => <<'EOF',
 X-Mason-Test: Initial value
 &lt;&gt;
 Status code: 0
 EOF
-                           );
-    ok($success);
+                                                   );
+        ok($success);
 
-    $response = Apache::test->fetch('/comps/old_html_escape2');
-    $actual = filter_response($response, $with_handler);
-    $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+        $response = Apache::test->fetch('/comps/old_html_escape2');
+        $actual = filter_response($response, $with_handler);
+        $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                  expect => <<'EOF',
 X-Mason-Test: Initial value
 &lt;&gt;
 Status code: 0
 EOF
-                           );
-    ok($success);
+                                                   );
+        ok($success);
 
-    $response = Apache::test->fetch('/comps/uc_escape');
-    $actual = filter_response($response, $with_handler);
-    $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+        $response = Apache::test->fetch('/comps/uc_escape');
+        $actual = filter_response($response, $with_handler);
+        $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                  expect => <<'EOF',
 X-Mason-Test: Initial value
 UPPER CASE
 Status code: 0
 EOF
-                           );
-    ok($success);
+                                                   );
+        ok($success);
 
-    $response = Apache::test->fetch('/comps/data_cache_defaults');
-    $actual = filter_response($response, $with_handler);
-    $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+        $response = Apache::test->fetch('/comps/data_cache_defaults');
+        $actual = filter_response($response, $with_handler);
+        $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                  expect => <<'EOF',
 X-Mason-Test: Initial value
 is memory: 1
 namespace: foo
 Status code: 0
 EOF
-                           );
-    ok($success);
+                                                   );
+        ok($success);
 
         $response = Apache::test->fetch('/comps/test_code_param');
         $actual = filter_response($response, $with_handler);
@@ -533,7 +533,7 @@ sub standard_tests
     my $response = Apache::test->fetch($path);
     my $actual = filter_response($response, $with_handler);
     my $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                 expect => <<'EOF',
+                                                                 expect => <<'EOF',
 X-Mason-Test: Initial value
 Basic test.
 2 + 2 = 4.
@@ -543,7 +543,7 @@ method = GET.
 
 Status code: 0
 EOF
-                          );
+                                                  );
     ok($success);
 
     $path = '/comps/headers';
@@ -552,7 +552,7 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: New value 3
 
 
@@ -560,15 +560,15 @@ Blah blah
 blah
 Status code: 0
 EOF
-                           );
+                                               );
     ok($success);
 
     if ($with_handler)
     {
-    $response = Apache::test->fetch( "/ah=1/comps/headers" );
-    $actual = filter_response($response, $with_handler);
-    $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+        $response = Apache::test->fetch( "/ah=1/comps/headers" );
+        $actual = filter_response($response, $with_handler);
+        $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                  expect => <<'EOF',
 X-Mason-Test: New value 1
 
 
@@ -576,8 +576,8 @@ Blah blah
 blah
 Status code: 0
 EOF
-                           );
-    ok($success);
+                                                   );
+        ok($success);
     }
 
     $path = '/comps/headers?blank=1';
@@ -586,24 +586,24 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: New value 1
 Status code: 0
 EOF
-                           );
+                                               );
     ok($success);
 
     if ($with_handler)
     {
-    $response = Apache::test->fetch( "/ah=1/comps/headers?blank=1" );
-    $actual = filter_response($response, $with_handler);
-    $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+        $response = Apache::test->fetch( "/ah=1/comps/headers?blank=1" );
+        $actual = filter_response($response, $with_handler);
+        $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                  expect => <<'EOF',
 X-Mason-Test: New value 1
 Status code: 0
 EOF
-                           );
-    ok($success);
+                                                   );
+        ok($success);
     }
 
     $path = '/comps/_underscore';
@@ -612,12 +612,12 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 I am underscore.
 Status code: 0
 EOF
-                           );
+                                               );
     ok($success);
 
     $path = '/comps/die';
@@ -627,15 +627,15 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
     ok( $actual, qr{error.*Mine heart is pierced}s,
-    "Error should have said 'Mine heart is pierced'" );
+        "Error should have said 'Mine heart is pierced'" );
 
     if ($with_handler)
     {
-    # error_mode is fatal so we just get a 500
-    $response = Apache::test->fetch( "/ah=3/comps/die" );
-    $actual = filter_response($response, $with_handler);
-    ok( $actual, qr{500 Internal Server Error},
-        "die should have generated 500 error" );
+        # error_mode is fatal so we just get a 500
+        $response = Apache::test->fetch( "/ah=3/comps/die" );
+        $actual = filter_response($response, $with_handler);
+        ok( $actual, qr{500 Internal Server Error},
+            "die should have generated 500 error" );
     }
 
     $path = '/comps/params?qs1=foo&qs2=bar&foo=A&foo=B';
@@ -645,14 +645,14 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 foo: A, B, array
 qs1: foo
 qs2: bar
 Status code: 0
 EOF
-                          );
+                                                  );
     ok($success);
 
     $path = '/comps/params';
@@ -660,19 +660,19 @@ EOF
 
     # params as POST only
     $response = Apache::test->fetch( { uri => $path,
-                       method => 'POST',
-                       content => 'post1=foo&post2=bar&foo=A&foo=B',
-                     } );
+                                       method => 'POST',
+                                       content => 'post1=foo&post2=bar&foo=A&foo=B',
+                                     } );
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 foo: A, B, array
 post1: foo
 post2: bar
 Status code: 0
 EOF
-                          );
+                                                  );
     ok($success);
 
     $path = '/comps/params?qs1=foo&qs2=bar&mixed=A';
@@ -680,12 +680,12 @@ EOF
 
     # params mixed in query string and POST
     $response = Apache::test->fetch( { uri => $path,
-                       method => 'POST',
-                       content => 'post1=a&post2=b&mixed=B',
-                     } );
+                                       method => 'POST',
+                                       content => 'post1=a&post2=b&mixed=B',
+                                     } );
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 mixed: A, B, array
 post1: a
@@ -694,7 +694,7 @@ qs1: foo
 qs2: bar
 Status code: 0
 EOF
-                          );
+                                                  );
     ok($success);
 
     $path = '/comps/print';
@@ -703,32 +703,32 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 This is first.
 This is second.
 This is third.
 Status code: 0
 EOF
-                           );
+                                               );
     ok($success);
 
     if ($with_handler)
     {
-    $path = '/ah=1/comps/print';
+        $path = '/ah=1/comps/print';
 
-    $response = Apache::test->fetch($path);
-    $actual = filter_response($response, $with_handler);
-    $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+        $response = Apache::test->fetch($path);
+        $actual = filter_response($response, $with_handler);
+        $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                  expect => <<'EOF',
 X-Mason-Test: Initial value
 This is first.
 This is second.
 This is third.
 Status code: 0
 EOF
-                           );
-    ok($success);
+                                                   );
+        ok($success);
     }
 
     $path = '/comps/r_print';
@@ -737,32 +737,32 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 This is first.
 This is second.
 This is third.
 Status code: 0
 EOF
-                           );
+                                               );
     ok($success);
 
     if ($with_handler)
     {
-    $path = '/ah=1/comps/r_print';
+        $path = '/ah=1/comps/r_print';
 
-    $response = Apache::test->fetch($path);
-    $actual = filter_response($response, $with_handler);
-    $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+        $response = Apache::test->fetch($path);
+        $actual = filter_response($response, $with_handler);
+        $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                  expect => <<'EOF',
 X-Mason-Test: Initial value
 This is first.
 This is second.
 This is third.
 Status code: 0
 EOF
-                           );
-    ok($success);
+                                                   );
+        ok($success);
     }
 
     $path = '/comps/flush_buffer';
@@ -771,30 +771,30 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 foo
 bar
 Status code: 0
 EOF
-                           );
+                                               );
     ok($success);
 
     if ($with_handler)
     {
-    $path = '/ah=1/comps/flush_buffer';
+        $path = '/ah=1/comps/flush_buffer';
 
-    $response = Apache::test->fetch($path);
-    $actual = filter_response($response, $with_handler);
-    $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+        $response = Apache::test->fetch($path);
+        $actual = filter_response($response, $with_handler);
+        $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                  expect => <<'EOF',
 X-Mason-Test: Initial value
 foo
 bar
 Status code: 0
 EOF
-                           );
-    ok($success);
+                                                   );
+        ok($success);
     }
 
     $path = '/comps/redirect';
@@ -803,7 +803,7 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 Basic test.
 2 + 2 = 4.
@@ -813,7 +813,7 @@ method = GET.
 
 Status code: 0
 EOF
-                          );
+                                                  );
     ok($success);
 
     $path = '/comps/internal_redirect';
@@ -821,12 +821,12 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 The number is 17.
 Status code: 0
 EOF
-                           );
+                                               );
     ok($success);
 
     $path = '/comps/subrequest';
@@ -834,12 +834,12 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 The number is 17.
 Status code: 0
 EOF
-                           );
+                                               );
     ok($success);
 
     $path = '/comps/error_as_html';
@@ -855,7 +855,7 @@ EOF
     $response = Apache::test->fetch('/comps/interp_class');
     $actual = filter_response($response, $with_handler);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<"EOF",
+                                                              expect => <<"EOF",
 X-Mason-Test: Initial value
 Interp class: $expected_class
 Status code: 0
@@ -871,47 +871,47 @@ sub multi_conf_tests
     my $response = Apache::test->fetch('/comps/multiconf1/foo');
     my $actual = filter_response($response, 0);
     my $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                 expect => <<'EOF',
+                                                                 expect => <<'EOF',
 X-Mason-Test: Initial value
 I am foo in multiconf1
 comp root is multiconf1
 Status code: 0
 EOF
-                          );
+                                                  );
     ok($success);
 
     $response = Apache::test->fetch('/comps/multiconf1/autohandler_test');
     $actual = filter_response($response, 0);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 autohandler is misnamed
 Status code: 0
 EOF
-                          );
+                                                  );
     ok($success);
 
     $response = Apache::test->fetch('/comps/multiconf2/foo');
     $actual = filter_response($response, 0);
     $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                  expect => <<'EOF',
+                                                              expect => <<'EOF',
 X-Mason-Test: Initial value
 I am foo in multiconf2
 comp root is multiconf2
 Status code: 0
 EOF
-                           );
+                                               );
     ok($success);
 
     $response = Apache::test->fetch('/comps/multiconf2/dhandler_test');
     $actual = filter_response($response, 0);
     ok( $actual, qr{404 not found}i,
-    "Attempt to request a non-existent component should not work with incorrect dhandler_name" );
+        "Attempt to request a non-existent component should not work with incorrect dhandler_name" );
 
     $response = Apache::test->fetch('/perl-status');
     $actual = filter_response($response, 0);
     ok( $actual, qr{<a href="/perl-status\?mason0001">HTML::Mason status</a>},
-    "Apache::Status");
+        "Apache::Status");
 
     kill_httpd(1);
 }
@@ -925,7 +925,7 @@ sub filter_tests
     my $response = Apache::test->fetch($path);
     my $actual = filter_response($response, 0);
     my $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
-                                 expect => <<'EOF',
+                                                                 expect => <<'EOF',
 X-Mason-Test: Initial value
 BASIC TEST.
 2 + 2 = 4.
@@ -952,25 +952,25 @@ sub filter_response
     # because the header or content may be undef
     local $^W = 0;
     my $actual = ( 'X-Mason-Test: ' .
-           # hack until I make a separate test
-           # suite for the httpd.conf configuration
-           # stuff
-           ( $with_handler ?
-             $response->headers->header('X-Mason-Test') :
-             ( $response->headers->header('X-Mason-Test') ?
-               $response->headers->header('X-Mason-Test') :
-               'Initial value' ) ) );
+                   # hack until I make a separate test
+                   # suite for the httpd.conf configuration
+                   # stuff
+                   ( $with_handler ?
+                     $response->headers->header('X-Mason-Test') :
+                     ( $response->headers->header('X-Mason-Test') ?
+                       $response->headers->header('X-Mason-Test') :
+                       'Initial value' ) ) );
     $actual .= "\n";
 
     # Any headers starting with X-Mason are added, excluding
     # X-Mason-Test, which is handled above
     my @headers;
     $response->headers->scan( sub { return if $_[0] eq 'X-Mason-Test' || $_[0] !~ /^X-Mason/;
-                    push @headers, [ $_[0], "$_[0]: $_[1]\n" ] } );
+                                    push @headers, [ $_[0], "$_[0]: $_[1]\n" ] } );
 
     foreach my $h ( sort { $a->[0] cmp $b->[0] } @headers )
     {
-    $actual .= $h->[1];
+        $actual .= $h->[1];
     }
 
     $actual .= $response->content;
