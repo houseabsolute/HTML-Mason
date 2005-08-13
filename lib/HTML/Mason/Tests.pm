@@ -26,7 +26,7 @@ $DEBUG = $ENV{MASON_DEBUG};
 $| = 1;
 
 @SHARED = ( { path => '/shared/check_error',
-	      component => <<'EOF',
+          component => <<'EOF',
 <% ($error) ? "Error: $error" : "No error!?" %>
 <%init>
 if ($error) {
@@ -40,9 +40,9 @@ $error
 $lines=>1
 </%args>
 EOF
-	    },
-	    { path => '/shared/display_comp_obj',
-	      component => <<'EOF',
+        },
+        { path => '/shared/display_comp_obj',
+          component => <<'EOF',
 Declared args:
 % my %decl = %{$comp->declared_args};
 % foreach (sort keys %decl) {
@@ -78,7 +78,7 @@ My comp_id is <% $comp->comp_id =~ /anon/ ? '[anon something]' : $comp->comp_id 
 $comp
 </%args>
 EOF
-	    },
+        },
             { path => '/shared/display_req_obj',
               component => <<'EOF',
 My depth is <% $m->depth %>.
@@ -96,7 +96,7 @@ My stack looks like:
 
 EOF
             },
-	  );
+      );
 
 #
 # Get command options here so that we read tests_class before user
@@ -104,10 +104,10 @@ EOF
 #
 my %cmd_options;
 GetOptions( 'create' => \$cmd_options{create},
-	    'tests-to-run=s' => \$cmd_options{tests_to_run},
-	    'tests-to-skip=s' => \$cmd_options{tests_to_skip},
-	    'tests-class=s' => \$cmd_options{tests_class},
-	    );
+        'tests-to-run=s' => \$cmd_options{tests_to_run},
+        'tests-to-skip=s' => \$cmd_options{tests_to_skip},
+        'tests-class=s' => \$cmd_options{tests_class},
+        );
 
 #
 # Allow options to be passed in the environment as well.
@@ -133,9 +133,9 @@ if ($cmd_options{tests_to_run}) {
     for ($cmd_options{tests_to_run}) { s/^\s+//; s/\s+$// }
     my @tests_to_run = split(/\s*,\s*/, $cmd_options{tests_to_run});
     if (grep { /[^0-9]/ } @tests_to_run) {
-	@tests_to_run = sort { $a cmp $b } @tests_to_run;
+    @tests_to_run = sort { $a cmp $b } @tests_to_run;
     } else {
-	@tests_to_run = sort { $a <=> $b } @tests_to_run;
+    @tests_to_run = sort { $a <=> $b } @tests_to_run;
     }
     %tests_to_run = map { ($_, 1) } @tests_to_run;
     $Test->diag(sprintf("Running only test%s %s\n", @tests_to_run == 1 ? "" : "s", join(", ", @tests_to_run)))
@@ -155,19 +155,19 @@ sub new
     my %p = (@_, %cmd_options);
 
     die "No group name provided\n"
-	unless exists $p{name};
+    unless exists $p{name};
 
     die "No description for test group provided\n"
-	unless exists $p{description};
+    unless exists $p{description};
 
     $p{pre_test_cleanup} = 1
         unless exists $p{pre_test_cleanup};
 
     return bless {
-		  %p,
-		  support => [],
-		  tests => [],
-		 }, $class;
+          %p,
+          support => [],
+          tests => [],
+         }, $class;
 }
 
 # Returns the tests class to use for class methods - defaults to this package.
@@ -182,10 +182,10 @@ sub add_support
     my %p = @_;
 
     die "'support' key array member contains no 'path' key\n"
-	unless exists $p{path};
+    unless exists $p{path};
 
     die "'support' key array member contains no 'component' key\n"
-	unless exists $p{component};
+    unless exists $p{component};
 
     push @{ $self->{support} }, \%p;
 }
@@ -196,47 +196,47 @@ sub add_test
     my %p = @_;
 
     die "no name provided for test\n"
-	unless exists $p{name};
+    unless exists $p{name};
 
     unless ( exists $p{path} )
     {
-	$p{path} = $p{call_path} || $p{name};
+    $p{path} = $p{call_path} || $p{name};
     }
 
     my $call_path = "/$self->{name}";
     if ( exists $p{call_path} )
     {
-	$call_path .= '/' unless substr( $p{call_path}, 0, 1 ) eq '/';
-	$call_path .= $p{call_path};
+    $call_path .= '/' unless substr( $p{call_path}, 0, 1 ) eq '/';
+    $call_path .= $p{call_path};
     }
     else
     {
-	$call_path .= '/' . $p{name};
+    $call_path .= '/' . $p{name};
     }
     $p{call_path} = $call_path;
 
     if ( ref($p{call_args}) eq 'HASH' )
     {
-	my @lst = %{$p{call_args}};
-	$p{call_args} = \@lst;
+    my @lst = %{$p{call_args}};
+    $p{call_args} = \@lst;
     }
     elsif ( !exists($p{call_args}) ) {
-	$p{call_args} = [];
+    $p{call_args} = [];
     }
 
     die "'$p{name}' test has no description\n"
-	unless exists $p{description};
+    unless exists $p{description};
 
     die "'$p{name}' test has no component\n"
-	unless exists $p{component} || $p{skip_component};
+    unless exists $p{component} || $p{skip_component};
 
     die "'$p{name}' test has no 'expect' or 'expect_error' key\n"
-	unless exists $p{expect} || exists $p{expect_error} || $p{skip_expect} || $self->{create};
+    unless exists $p{expect} || exists $p{expect_error} || $p{skip_expect} || $self->{create};
 
     foreach ( qw( interp_params ) )
     {
-	die "$_ must be a hash reference"
-	    if exists $p{$_} && ! UNIVERSAL::isa( $p{$_}, 'HASH' );
+    die "$_ must be a hash reference"
+        if exists $p{$_} && ! UNIVERSAL::isa( $p{$_}, 'HASH' );
     }
 
     push @{ $self->{tests} }, \%p;
@@ -247,21 +247,21 @@ sub run
     my $self = shift;
 
     die "No tests exist in this group"
-	unless @{ $self->{tests} };
+    unless @{ $self->{tests} };
 
     if ($DEBUG)
     {
-	$Test->diag( "Will " . ( $self->{create} ? '' : 'not ' ) . "create 'expect' files\n" );
+    $Test->diag( "Will " . ( $self->{create} ? '' : 'not ' ) . "create 'expect' files\n" );
     }
 
     eval
     {
         # 1 indicates to be silent on missing directories
-	$self->_cleanup(1) if $self->{pre_test_cleanup};
-	$self->_make_dirs;
-	$self->_write_shared_comps;
-	$self->_write_support_comps;
-	$self->_run_tests;
+    $self->_cleanup(1) if $self->{pre_test_cleanup};
+    $self->_make_dirs;
+    $self->_write_shared_comps;
+    $self->_write_support_comps;
+    $self->_run_tests;
     };
 
     $self->_cleanup unless $ENV{MASON_NO_CLEANUP};
@@ -278,16 +278,16 @@ sub _make_dirs
 
     unless ( -d $self->comp_root )
     {
-	$Test->diag( "Making comp_root directory: $comp_root\n" ) if $DEBUG;
-	mkpath( $self->comp_root, 0, 0755 )
-	    or die "Unable to make base test directory '$comp_root': $!";
+    $Test->diag( "Making comp_root directory: $comp_root\n" ) if $DEBUG;
+    mkpath( $self->comp_root, 0, 0755 )
+        or die "Unable to make base test directory '$comp_root': $!";
     }
 
     unless ( -d $self->data_dir )
     {
-	$Test->diag( "Making data_dir directory: $data_dir\n" ) if $DEBUG;
-	mkpath( $self->data_dir, 0, 0755 )
-	    or die "Unable to make base test directory '$data_dir': $!";
+    $Test->diag( "Making data_dir directory: $data_dir\n" ) if $DEBUG;
+    mkpath( $self->data_dir, 0, 0755 )
+        or die "Unable to make base test directory '$data_dir': $!";
     }
 }
 
@@ -297,12 +297,12 @@ sub base_path
 
     if (ref $proto)
     {
-	$proto->{base_path} ||= File::Spec->catdir( cwd(), 'mason_tests' );
-	return $proto->{base_path};
+    $proto->{base_path} ||= File::Spec->catdir( cwd(), 'mason_tests' );
+    return $proto->{base_path};
     }
     else
     {
-	return File::Spec->catdir( cwd(), 'mason_tests' );
+    return File::Spec->catdir( cwd(), 'mason_tests' );
     }
 }
 
@@ -328,12 +328,12 @@ sub _write_shared_comps
 
     foreach my $comp ( @SHARED )
     {
-	my @path = split m(/), $comp->{path};
-	my $file = pop @path;
+    my @path = split m(/), $comp->{path};
+    my $file = pop @path;
 
-	my $dir = File::Spec->catdir( $self->comp_root, @path );
+    my $dir = File::Spec->catdir( $self->comp_root, @path );
 
-	$self->write_comp( $comp->{path}, $dir, $file, $comp->{component} );
+    $self->write_comp( $comp->{path}, $dir, $file, $comp->{component} );
     }
 }
 
@@ -343,18 +343,18 @@ sub _write_support_comps
 
     unless ( @{ $self->{support} } )
     {
-	$Test->diag( "No support comps to create\n" ) if $DEBUG;
-	return;
+    $Test->diag( "No support comps to create\n" ) if $DEBUG;
+    return;
     }
 
     foreach my $supp ( @{ $self->{support} } )
     {
-	my @path = split m(/), $supp->{path};
-	my $file = pop @path;
+    my @path = split m(/), $supp->{path};
+    my $file = pop @path;
 
-	my $dir = File::Spec->catdir( $self->comp_root, $self->{name}, @path );
+    my $dir = File::Spec->catdir( $self->comp_root, $self->{name}, @path );
 
-	$self->write_comp( $supp->{path}, $dir, $file, $supp->{component} );
+    $self->write_comp( $supp->{path}, $dir, $file, $supp->{component} );
     }
 }
 
@@ -369,9 +369,9 @@ sub _write_test_comp
     my $dir = File::Spec->catdir( $self->comp_root, $self->{name}, @path );
     unless ( -d $dir )
     {
-	$Test->diag( "Making dir: $dir\n" ) if $DEBUG;
-	mkpath( $dir, 0, 0755 )
-	    or die "Unable to create directory '$dir': $!";
+    $Test->diag( "Making dir: $dir\n" ) if $DEBUG;
+    mkpath( $dir, 0, 0755 )
+        or die "Unable to create directory '$dir': $!";
     }
 
     $self->write_comp( $test->{path}, $dir, $file, $test->{component} );
@@ -384,23 +384,23 @@ sub write_comp
 
     unless (-d $dir)
     {
-	$Test->diag( "Making dir: $dir\n" ) if $DEBUG;
-	mkpath( $dir, 0, 0755 )
-	    or die "Unable to create directory '$dir': $!";
+    $Test->diag( "Making dir: $dir\n" ) if $DEBUG;
+    mkpath( $dir, 0, 0755 )
+        or die "Unable to create directory '$dir': $!";
     }
 
     my $real_file = File::Spec->catfile( $dir, $file );
 
     $Test->diag( "Making component $path at $real_file\n" )
-	if $DEBUG;
+    if $DEBUG;
 
     my $fh = make_fh();
     open $fh, ">$real_file"
-	or die "Unable to write to '$real_file': $!";
+    or die "Unable to write to '$real_file': $!";
     print $fh $component
-	or die "Unable to write to '$real_file': $!";
+    or die "Unable to write to '$real_file': $!";
     close $fh
-	or die "Unable to write to '$real_file': $!";
+    or die "Unable to write to '$real_file': $!";
 }
 
 sub _run_tests
@@ -412,51 +412,51 @@ sub _run_tests
 
     if ($VERBOSE)
     {
-	$Test->diag( "Running $self->{name} tests ($count tests): $self->{description}\n" );
+    $Test->diag( "Running $self->{name} tests ($count tests): $self->{description}\n" );
     }
 
     my $x = 1;
     foreach my $test ( @{ $self->{tests} } )
     {
-	$self->{current_test} = $test;
+    $self->{current_test} = $test;
 
-	#
-	# If tests_to_run or tests_to_skip were specified in the
-	# environment or command line, check them to see whether to
-	# run the test.
-	#
-	if (%tests_to_run or %tests_to_skip) {
+    #
+    # If tests_to_run or tests_to_skip were specified in the
+    # environment or command line, check them to see whether to
+    # run the test.
+    #
+    if (%tests_to_run or %tests_to_skip) {
 
-	    # Look for any of the specs [test_file_name:](test_number|test_name|*)
-	    my $wildcard_name = join(":", $self->{name}, "*");
-	    my $full_name = join(":", $self->{name}, $test->{name});
-	    my $full_number = join(":", $self->{name}, $x);
-	    my @all_specs = ($x, $test->{name}, $full_name, $full_number, $wildcard_name);
+        # Look for any of the specs [test_file_name:](test_number|test_name|*)
+        my $wildcard_name = join(":", $self->{name}, "*");
+        my $full_name = join(":", $self->{name}, $test->{name});
+        my $full_number = join(":", $self->{name}, $x);
+        my @all_specs = ($x, $test->{name}, $full_name, $full_number, $wildcard_name);
 
-	    # If our test isn't mentioned in %tests_to_run or is
-	    # mentioned in %tests_to_skip, skip it.
-	    #
-	    if ((%tests_to_run and !(grep { $tests_to_run{$_} } @all_specs))
-		or (%tests_to_skip and (grep { $tests_to_skip{$_} } @all_specs))) {
+        # If our test isn't mentioned in %tests_to_run or is
+        # mentioned in %tests_to_skip, skip it.
+        #
+        if ((%tests_to_run and !(grep { $tests_to_run{$_} } @all_specs))
+        or (%tests_to_skip and (grep { $tests_to_skip{$_} } @all_specs))) {
 
-		# Use presence of PERL_DL_NONLAZY to decide if we are
-		# running inside "make test", and if so, actually
-		# print the appropriate skip response to comply with the
-		# Test::Harness standard. If the user is running the
-		# test by hand, this would just be clutter.
-		#
-		# Checking PERL_DL_NONLAZY is a hack but I don't
-		# know of a better detection method.
-		#
-		$self->_skip if ($ENV{PERL_DL_NONLAZY});
-		$x++;
-		next;
-	    }
-	}
-	$Test->diag( "Running $test->{name} (#$x): $test->{description}\n" ) if $VERBOSE;
-	$self->_make_component unless $test->{skip_component};
-	$self->_run_test;
-	$x++;
+        # Use presence of PERL_DL_NONLAZY to decide if we are
+        # running inside "make test", and if so, actually
+        # print the appropriate skip response to comply with the
+        # Test::Harness standard. If the user is running the
+        # test by hand, this would just be clutter.
+        #
+        # Checking PERL_DL_NONLAZY is a hack but I don't
+        # know of a better detection method.
+        #
+        $self->_skip if ($ENV{PERL_DL_NONLAZY});
+        $x++;
+        next;
+        }
+    }
+    $Test->diag( "Running $test->{name} (#$x): $test->{description}\n" ) if $VERBOSE;
+    $self->_make_component unless $test->{skip_component};
+    $self->_run_test;
+    $x++;
     }
 }
 
@@ -474,21 +474,21 @@ sub _make_main_interp
     return $test->{interp} if $test->{interp};
 
     my %interp_params = ( exists $test->{interp_params} ?
-			  %{ $test->{interp_params} } :
-			  () );
+              %{ $test->{interp_params} } :
+              () );
 
     if ($DEBUG && %interp_params)
     {
-	$Test->diag( "Interp params:\n" );
-	while ( my ($k, $v) = each %interp_params)
-	{
-	    $Test->diag( "  $k => $v\n" );
-	}
+    $Test->diag( "Interp params:\n" );
+    while ( my ($k, $v) = each %interp_params)
+    {
+        $Test->diag( "  $k => $v\n" );
+    }
     }
 
     return $self->_make_interp ( comp_root => $self->comp_root,
-				 data_dir  => $self->data_dir,
-				 %interp_params );
+                 data_dir  => $self->data_dir,
+                 %interp_params );
 }
 
 sub _make_interp
@@ -508,11 +508,11 @@ sub _run_test
     $interp->out_method( sub { for (@_) { $self->{buffer} .= $_ if defined $_ } } );
 
     eval {
-	# Run pre_code if test has it - pass in interp
-	if ($test->{pre_code}) {
-	    $test->{pre_code}->($interp);
-	}
-	$self->_execute($interp);
+    # Run pre_code if test has it - pass in interp
+    if ($test->{pre_code}) {
+        $test->{pre_code}->($interp);
+    }
+    $self->_execute($interp);
     };
 
     return $self->check_result($@);
@@ -538,45 +538,45 @@ sub check_result {
 
     if ($error)
     {
-	if ( $test->{expect_error} )
-	{
-	    if ( $@ =~ /$test->{expect_error}/ )
-	    {
-		return $self->_success
-	    }
-	    else
-	    {
-		if ($VERBOSE)
-		{
-		    $Test->diag( "Got error:\n$error\n...but expected something matching:\n$test->{expect_error}\n" );
-		}
-		return $self->_fail;
-	    }
-	}
-	else
-	{
-	    $Test->diag( "Unexpected error running $test->{name}:\n$error" ) if $VERBOSE;
-	    return $self->_fail;
-	}
+    if ( $test->{expect_error} )
+    {
+        if ( $@ =~ /$test->{expect_error}/ )
+        {
+        return $self->_success
+        }
+        else
+        {
+        if ($VERBOSE)
+        {
+            $Test->diag( "Got error:\n$error\n...but expected something matching:\n$test->{expect_error}\n" );
+        }
+        return $self->_fail;
+        }
+    }
+    else
+    {
+        $Test->diag( "Unexpected error running $test->{name}:\n$error" ) if $VERBOSE;
+        return $self->_fail;
+    }
 
     }
     elsif ( $test->{expect_error} )
     {
-	$Test->diag( "Expected an error matching '$test->{expect_error}' but no error occurred - got successful output:\n$self->{buffer}\n" ) if $VERBOSE;
-	return $self->_fail;
+    $Test->diag( "Expected an error matching '$test->{expect_error}' but no error occurred - got successful output:\n$self->{buffer}\n" ) if $VERBOSE;
+    return $self->_fail;
     }
 
     if ($self->{create})
     {
-	$Test->diag( "Results for $test->{name}:\n$self->{buffer}\n" );
-	return;
+    $Test->diag( "Results for $test->{name}:\n$self->{buffer}\n" );
+    return;
     }
 
     my $success =
-	( $test->{skip_expect} ?
-	  1 :
-	  $self->check_output( actual => $self->{buffer}, expect => $test->{expect} )
-	);
+    ( $test->{skip_expect} ?
+      1 :
+      $self->check_output( actual => $self->{buffer}, expect => $test->{expect} )
+    );
 
     $success ? $self->_success : $self->_fail;
 }
@@ -589,18 +589,18 @@ sub check_output
 
     # Allow a regex for $p{expect}
     if (ref $p{expect}) {
-	$same = ($p{actual} =~ /$p{expect}/);
+    $same = ($p{actual} =~ /$p{expect}/);
 
     } else {
-	# Whitespace at end can vary.  (Or rather, it is varying in the tests, and
-	# should be made not to vary, but I don't have time to fix it yet.)
+    # Whitespace at end can vary.  (Or rather, it is varying in the tests, and
+    # should be made not to vary, but I don't have time to fix it yet.)
 
-	for ($p{actual}, $p{expect}) {  s/\s+$//  }
-	$same = ($p{actual} eq $p{expect});
+    for ($p{actual}, $p{expect}) {  s/\s+$//  }
+    $same = ($p{actual} eq $p{expect});
     }
 
     if (!$same and $VERBOSE) {
-	$Test->diag( "Got ...\n-----\n$p{actual}\n-----\n   ... but expected ...\n-----\n$p{expect}\n-----\n" );
+    $Test->diag( "Got ...\n-----\n$p{actual}\n-----\n   ... but expected ...\n-----\n$p{expect}\n-----\n" );
     }
     return $same;
 }
@@ -639,18 +639,18 @@ sub rm_tree {
     my ($path, $debug, $silent) = @_;
     $path =~ s#/$##;
     if (-d $path) {
-	local *DIR;
-	opendir DIR, $path or warn "Can't open $path: $!";
-	while (defined(my $file = readdir DIR)) {
-	    next if $file eq '.' or $file eq '..';
-	    rm_tree("$path/$file");
-	}
-	closedir DIR;
-	rmdir $path;
+    local *DIR;
+    opendir DIR, $path or warn "Can't open $path: $!";
+    while (defined(my $file = readdir DIR)) {
+        next if $file eq '.' or $file eq '..';
+        rm_tree("$path/$file");
+    }
+    closedir DIR;
+    rmdir $path;
     } elsif (-f $path) {
-	unlink $path;
+    unlink $path;
     } else {
-	$Test->diag( "Can't find $path to remove" )
+    $Test->diag( "Can't find $path to remove" )
             unless $silent;
     }
 }
@@ -934,8 +934,8 @@ that overrides the _make_interp method to use your subclass:
         my ($self, %interp_params) = @_;
         
         return HTML::Mason::Interp->new
-	    ( lexer_class => HTML::Mason::MyLexer,
-	      %interp_params );
+        ( lexer_class => HTML::Mason::MyLexer,
+          %interp_params );
     }
 
 =head1 SEE ALSO

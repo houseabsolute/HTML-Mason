@@ -16,11 +16,11 @@ use Params::Validate qw( :all );
 use HTML::Mason::MethodMaker
     ( read_write => [ qw( comp_class
                           in_package
-			  postamble
-			  preamble
-			  use_strict
+              postamble
+              preamble
+              use_strict
                         )
-		    ],
+            ],
     );
 
 my %valid_params =
@@ -41,8 +41,8 @@ sub compiled_component
 
     $self->{current_comp} = $self;
     my $class = join "\n", ( $self->_header,
-			     $self->_body
-			   );
+                 $self->_body
+               );
     $self->{current_comp} = undef;
 
     return $class;
@@ -57,8 +57,8 @@ sub _header
     my $base = 'HTML::Mason::ComponentClass';
 
     return ( "package $class;\n",
-	     "use base qw( $base );\n",
-	   );
+         "use base qw( $base );\n",
+       );
 }
 
 sub _class_name
@@ -77,10 +77,10 @@ sub _body
     my $self = shift;
 
     return ( $self->_init_method,
-	     $self->_body_method,
-	     $self->_subcomponents,
-	     $self->_methods,
-	   );
+         $self->_body_method,
+         $self->_subcomponents,
+         $self->_methods,
+       );
 }
 
 sub _init_method
@@ -102,7 +102,7 @@ sub _init
     $shared
 }
 EOF
-	   );
+       );
 }
 
 sub _body_method
@@ -112,15 +112,15 @@ sub _body_method
     my @args;
     if ( @{ $self->{current_comp}{args} } )
     {
-	@args = ( <<'EOF',
+    @args = ( <<'EOF',
     if (@_args % 2 == 0) { %ARGS = @_args } else { die "Odd number of parameters passed to component expecting name/value pairs" }
 EOF
-		  $self->_arg_declarations,
-		);
+          $self->_arg_declarations,
+        );
     }
     else
     {
-	@args = ( "    { local \$^W; \%ARGS = \@_args unless (\@_args % 2); }" );
+    @args = ( "    { local \$^W; \%ARGS = \@_args unless (\@_args % 2); }" );
     }
 
     return ( <<"EOF",
@@ -130,13 +130,13 @@ sub _body
     my \%ARGS;
     my \@_args = \@{ \$self->{args} }, \@_;
 EOF
-	     @args,
-	     $self->_blocks('filter'),
-	     $self->_blocks('init'),
-	     $self->{current_comp}{body},
-	     $self->_blocks('cleanup'),
-	     '}',
-	   );
+         @args,
+         $self->_blocks('filter'),
+         $self->_blocks('init'),
+         $self->{current_comp}{body},
+         $self->_blocks('cleanup'),
+         '}',
+       );
 }
 
 sub _arg_declarations
@@ -146,35 +146,35 @@ sub _arg_declarations
     my @args;
     foreach ( @{ $self->{current_comp}{args} } )
     {
-	my $default_val = ( defined $_->{default} ?
-			    $_->{default} :
-			    qq|die "no value sent for required parameter '$_->{name}'"|,
-			  );
-	# allow for comments after default declaration
-	$default_val .= "\n" if defined $_->{default} && $_->{default} =~ /\#/;
+    my $default_val = ( defined $_->{default} ?
+                $_->{default} :
+                qq|die "no value sent for required parameter '$_->{name}'"|,
+              );
+    # allow for comments after default declaration
+    $default_val .= "\n" if defined $_->{default} && $_->{default} =~ /\#/;
 
-	if ( $_->{type} eq '$' )
-	{
-	    push @args,
-		( "    my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
+    if ( $_->{type} eq '$' )
+    {
+        push @args,
+        ( "    my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
                   "                                \$ARGS{'$_->{name}'} );" );
-	}
-	# Array
-	elsif ( $_->{type} eq '@' )
-	{
-	    push @args, ( "    my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
-			  "                                UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'}}  : ( \$ARGS{'$_->{name}'} ) );",
-			);
-	}
-	# Hash
-	elsif ( $_->{type} eq "\%" )
-	{
-	    push @args, ( "    my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
-			  "                                UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'} } : ",
-			  "                                UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'HASH' ) ? \%{ \$ARGS{'$_->{name}'} } :",
-			  qq|        die "single value sent for hash parameter '$_->{type}$_->{name}'");|,
-			);
-	}
+    }
+    # Array
+    elsif ( $_->{type} eq '@' )
+    {
+        push @args, ( "    my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
+              "                                UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'}}  : ( \$ARGS{'$_->{name}'} ) );",
+            );
+    }
+    # Hash
+    elsif ( $_->{type} eq "\%" )
+    {
+        push @args, ( "    my $_->{type}$_->{name} = ( !exists \$ARGS{'$_->{name}'} ? $default_val :",
+              "                                UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'ARRAY' ) ? \@{ \$ARGS{'$_->{name}'} } : ",
+              "                                UNIVERSAL::isa( \$ARGS{'$_->{name}'}, 'HASH' ) ? \%{ \$ARGS{'$_->{name}'} } :",
+              qq|        die "single value sent for hash parameter '$_->{type}$_->{name}'");|,
+            );
+    }
     }
 
     return @args;
@@ -189,8 +189,8 @@ sub _subcomponents
     my @subcomp;
     while ( my ($name, $data) = each %{ $self->{current_comp}{subcomponents} } )
     {
-	push @subcomp,
-	    <<"EOF";
+    push @subcomp,
+        <<"EOF";
 sub $name
 {
     die "$name can't be called from outside $class class"
@@ -213,8 +213,8 @@ sub _methods
     my @methods;
     while ( my ($name, $data) = each %{ $self->{current_comp}{methods} } )
     {
-	push @methods,
-	    <<"EOF";
+    push @methods,
+        <<"EOF";
 sub $name
 {
     my \$self = shift;

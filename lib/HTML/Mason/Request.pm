@@ -43,18 +43,18 @@ use Class::Container;
 use base qw(Class::Container);
 
 # Stack frame constants
-use constant STACK_COMP      	=> 0;
-use constant STACK_ARGS      	=> 1;
-use constant STACK_BUFFER    	=> 2;
-use constant STACK_MODS      	=> 3;
-use constant STACK_PATH      	=> 4;
-use constant STACK_DEPTH     	=> 5;
-use constant STACK_BASE_COMP 	=> 6;
+use constant STACK_COMP         => 0;
+use constant STACK_ARGS         => 1;
+use constant STACK_BUFFER       => 2;
+use constant STACK_MODS         => 3;
+use constant STACK_PATH         => 4;
+use constant STACK_DEPTH        => 5;
+use constant STACK_BASE_COMP    => 6;
 use constant STACK_IN_CALL_SELF => 7;
 
 # HTML::Mason::Exceptions always exports rethrow_exception() and isa_mason_exception()
 use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error
-					 top_level_not_found_error error)] );
+                                         top_level_not_found_error error)] );
 
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
@@ -62,17 +62,17 @@ Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ 
 BEGIN
 {
     __PACKAGE__->valid_params
-	(
-	 args =>
+        (
+         args =>
          { type => ARRAYREF, default => [],
            descr => "Array of arguments to initial component",
            public => 0 },
 
-	 autoflush =>
+         autoflush =>
          { parse => 'boolean', default => 0, type => SCALAR,
            descr => "Whether output should be buffered or sent immediately" },
 
-	 comp =>
+         comp =>
          { type => SCALAR | OBJECT, optional => 0,
            descr => "Initial component, either an absolute path or a component object",
            public => 0 },
@@ -82,57 +82,57 @@ BEGIN
            regex => qr/^(?:1\.0|1\.1)$/,
            descr => "Data cache API to use: 1.0 or 1.1" },
 
-	 data_cache_defaults =>
+         data_cache_defaults =>
          { parse => 'hash_list', type => HASHREF|UNDEF, optional => 1,
            descr => "A hash of default parameters for Cache::Cache" },
 
-	 declined_comps =>
+         declined_comps =>
          { type => HASHREF, optional => 1,
            descr => "Hash of components that have been declined in previous parent requests",
            public => 0 },
 
-	 dhandler_name =>
+         dhandler_name =>
          { parse => 'string', default => 'dhandler', type => SCALAR,
            descr => "The filename to use for Mason's 'dhandler' capability" },
 
-	 interp =>
+         interp =>
          { isa => 'HTML::Mason::Interp',
            descr => "An interpreter for Mason control functions",
            public => 0 },
 
-	 error_format =>
+         error_format =>
          { parse => 'string', type => SCALAR, default => 'text',
            callbacks => { "HTML::Mason::Exception->can( method )'" =>
                           sub { HTML::Mason::Exception->can("as_$_[0]"); } },
            descr => "How error conditions are returned to the caller (brief, text, line or html)" },
 
-	 error_mode =>
+         error_mode =>
          { parse => 'string', type => SCALAR, default => 'fatal',
            regex => qr/^(?:output|fatal)$/,
            descr => "How error conditions are manifest (output or fatal)" },
 
-	 max_recurse =>
+         max_recurse =>
          { parse => 'string', default => 32, type => SCALAR,
            descr => "The maximum recursion depth for component, inheritance, and request stack" },
 
-	 out_method =>
+         out_method =>
          { parse => 'code' ,type => CODEREF|SCALARREF,
            default => sub { print STDOUT $_[0] },
            descr => "A subroutine or scalar reference through which all output will pass" },
 
          # Only used when creating subrequests
-	 parent_request =>
+         parent_request =>
          { isa => __PACKAGE__,
            default => undef,
            public  => 0,
          },
 
- 	 plugins =>
+         plugins =>
          { parse => 'arrayref', default => [], type => ARRAYREF,
- 	   descr => 'List of plugin classes or objects to run hooks around components and requests' },
+           descr => 'List of plugin classes or objects to run hooks around components and requests' },
 
          # Only used when creating subrequests
-	 request_depth =>
+         request_depth =>
          { type => SCALAR,
            default => 1,
            public  => 0,
@@ -143,27 +143,27 @@ BEGIN
 
 my @read_write_params;
 BEGIN { @read_write_params = qw(
-				autoflush
-				data_cache_api
-				data_cache_defaults
-				dhandler_name
-				error_format
-				error_mode
-				max_recurse
-				out_method
-				); }
+                                autoflush
+                                data_cache_api
+                                data_cache_defaults
+                                dhandler_name
+                                error_format
+                                error_mode
+                                max_recurse
+                                out_method
+                                ); }
 
 use HTML::Mason::MethodMaker
     ( read_only => [ qw(
-			count
-			dhandler_arg
-			initialized
-			interp
-			parent_request
-			plugin_instances
-			request_depth
-			request_comp
-			) ],
+                        count
+                        dhandler_arg
+                        initialized
+                        interp
+                        parent_request
+                        plugin_instances
+                        request_depth
+                        request_comp
+                        ) ],
 
       read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
                       @read_write_params ]
@@ -179,28 +179,28 @@ sub new
     # These are mandatory values for all requests.
     #
     %$self = (%$self,
-	      dhandler_arg   => undef,
-	      execd 	     => 0,
-	      initialized    => 0,
-	      stack 	     => [],
-	      top_stack      => undef,
-	      wrapper_chain  => undef,
-	      wrapper_index  => undef,
-	      notes 	     => {},
-	      );
+              dhandler_arg   => undef,
+              execd          => 0,
+              initialized    => 0,
+              stack          => [],
+              top_stack      => undef,
+              wrapper_chain  => undef,
+              wrapper_index  => undef,
+              notes          => {},
+              );
 
     $self->{request_comp} = delete($self->{comp});
     $self->{request_args} = delete($self->{args});
     if (UNIVERSAL::isa($self->{request_args}, 'HASH')) {
-	$self->{request_args} = [%{$self->{request_args}}];
+        $self->{request_args} = [%{$self->{request_args}}];
     }
     $self->{count} = ++$self->{interp}{request_count};
     if (ref($self->{out_method}) eq 'SCALAR') {
-	my $bufref = $self->{out_method};
-	$self->{out_method} = sub { $$bufref .= $_[0] };
+        my $bufref = $self->{out_method};
+        $self->{out_method} = sub { $$bufref .= $_[0] };
     }
     $self->{use_internal_component_caches} =
-	$self->{interp}->use_internal_component_caches;
+        $self->{interp}->use_internal_component_caches;
     $self->_initialize;
 
     return $self;
@@ -222,109 +222,109 @@ sub _initialize {
     local $SIG{'__DIE__'} = \&rethrow_exception;
 
     eval {
-	# Check the static_source touch file, if it exists, before the
-	# first component is loaded.
-	#
-	$self->interp->check_static_source_touch_file();
+        # Check the static_source touch file, if it exists, before the
+        # first component is loaded.
+        #
+        $self->interp->check_static_source_touch_file();
 
-	# request_comp can be an absolute path or component object.  If a path,
-	# load into object.
-	my $request_comp = $self->{request_comp};
-	my ($path);
-	if (!ref($request_comp)) {
-	    $request_comp =~ s{/+}{/}g;
-	    $self->{top_path} = $path = $request_comp;
+        # request_comp can be an absolute path or component object.  If a path,
+        # load into object.
+        my $request_comp = $self->{request_comp};
+        my ($path);
+        if (!ref($request_comp)) {
+            $request_comp =~ s{/+}{/}g;
+            $self->{top_path} = $path = $request_comp;
 
-	    my $retry_count = 0;
-	    search: {
-		$request_comp = $self->interp->load($path);
+            my $retry_count = 0;
+            search: {
+                $request_comp = $self->interp->load($path);
 
-		last search unless $self->use_dhandlers;
+                last search unless $self->use_dhandlers;
 
-		# If path was not found, check for dhandler.
-		unless ($request_comp) {
-		    if ( $request_comp = $interp->find_comp_upwards($path, $self->dhandler_name) ) {
-			my $parent_path = $request_comp->dir_path;
-			($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
-		    }
-		}
+                # If path was not found, check for dhandler.
+                unless ($request_comp) {
+                    if ( $request_comp = $interp->find_comp_upwards($path, $self->dhandler_name) ) {
+                        my $parent_path = $request_comp->dir_path;
+                        ($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
+                    }
+                }
 
-		# If the component was declined previously in this
-		# request, look for the next dhandler up the
-		# tree. 
-		if ($request_comp and $self->{declined_comps}->{$request_comp->comp_id}) {
-		    $path = $request_comp->dir_path;
-		    if ($request_comp->name eq $self->dhandler_name) {
-			if ($path eq '/') {
-			    undef $request_comp;
-			    last search;  # End search if /dhandler declined
-			} else {
-			    $path =~ s:/[^\/]+$::;
-			    $path ||= '/';
-			}
-		    }
-		    if ($retry_count++ > $self->max_recurse) {
-			error "could not find dhandler after " . $self->max_recurse . " tries (infinite loop bug?)";
-		    }
-		    redo search;
-		}
-	    }
+                # If the component was declined previously in this
+                # request, look for the next dhandler up the
+                # tree. 
+                if ($request_comp and $self->{declined_comps}->{$request_comp->comp_id}) {
+                    $path = $request_comp->dir_path;
+                    if ($request_comp->name eq $self->dhandler_name) {
+                        if ($path eq '/') {
+                            undef $request_comp;
+                            last search;  # End search if /dhandler declined
+                        } else {
+                            $path =~ s:/[^\/]+$::;
+                            $path ||= '/';
+                        }
+                    }
+                    if ($retry_count++ > $self->max_recurse) {
+                        error "could not find dhandler after " . $self->max_recurse . " tries (infinite loop bug?)";
+                    }
+                    redo search;
+                }
+            }
 
-	    unless ($self->{request_comp} = $request_comp) {
-		top_level_not_found_error "could not find component for initial path '$self->{top_path}' " .
-		    "(component roots are: " .
-	            join(", ", map { "'" . $_->[1] . "'" } $self->{interp}->comp_root_array) .
-	            ")";
-	    }
+            unless ($self->{request_comp} = $request_comp) {
+                top_level_not_found_error "could not find component for initial path '$self->{top_path}' " .
+                    "(component roots are: " .
+                    join(", ", map { "'" . $_->[1] . "'" } $self->{interp}->comp_root_array) .
+                    ")";
+            }
 
-	} elsif ( ! UNIVERSAL::isa( $request_comp, 'HTML::Mason::Component' ) ) {
-	    param_error "comp ($request_comp) must be a component path or a component object";
-	}
+        } elsif ( ! UNIVERSAL::isa( $request_comp, 'HTML::Mason::Component' ) ) {
+            param_error "comp ($request_comp) must be a component path or a component object";
+        }
 
- 	# Construct a plugin instance for each plugin class in each request.
-	#
-	$self->{has_plugins} = 0;
+        # Construct a plugin instance for each plugin class in each request.
+        #
+        $self->{has_plugins} = 0;
         $self->{plugin_instances} = [];
- 	foreach my $plugin (@{ delete $self->{plugins} }) {
-	    $self->{has_plugins} = 1;
- 	    my $plugin_instance = $plugin;
- 	    unless (ref $plugin) {
+        foreach my $plugin (@{ delete $self->{plugins} }) {
+            $self->{has_plugins} = 1;
+            my $plugin_instance = $plugin;
+            unless (ref $plugin) {
 
-		# Load information about each plugin class once per
-		# process.  Right now the only information we need is
-		# whether there is a new() method.
-		#
-		unless ($plugin_loaded{$plugin}) {
-		    # Load plugin package if it isn't already loaded.
-		    #
-		    {
+                # Load information about each plugin class once per
+                # process.  Right now the only information we need is
+                # whether there is a new() method.
+                #
+                unless ($plugin_loaded{$plugin}) {
+                    # Load plugin package if it isn't already loaded.
+                    #
+                    {
                         no strict 'refs';
                         unless (defined(%{$plugin . "::"})) {
                             eval "use $plugin;";
                             die $@ if $@;
                         }
                     }
-		    $plugin_loaded{$plugin} = 1;
-		}
- 	        $plugin_instance = $plugin->new();
- 	    }
- 	    push @{$self->{plugin_instances}}, $plugin_instance;
- 	}
-	$self->{plugin_instances_reverse} = [reverse(@{$self->{plugin_instances}})];
+                    $plugin_loaded{$plugin} = 1;
+                }
+                $plugin_instance = $plugin->new();
+            }
+            push @{$self->{plugin_instances}}, $plugin_instance;
+        }
+        $self->{plugin_instances_reverse} = [reverse(@{$self->{plugin_instances}})];
 
-	# Check for autoflush and !enable_autoflush
-	#
-	if ($self->{autoflush} && !$self->interp->compiler->enable_autoflush) {
-	    die "Cannot use autoflush unless enable_autoflush is set";
-	}
+        # Check for autoflush and !enable_autoflush
+        #
+        if ($self->{autoflush} && !$self->interp->compiler->enable_autoflush) {
+            die "Cannot use autoflush unless enable_autoflush is set";
+        }
 
     };
 
     my $err = $@;
     if ($err and !$self->_aborted_or_declined($err)) {
-	$self->_handle_error($err);
+        $self->_handle_error($err);
     } else {
-	$self->{initialized} = 1;
+        $self->{initialized} = 1;
     }
 }
 
@@ -381,13 +381,13 @@ sub exec {
     # Cheap way to prevent users from executing the same request twice.
     #
     if ($self->{execd}++) {
-	error "Can only call exec() once for a given request object. Did you want to use a subrequest?";
+        error "Can only call exec() once for a given request object. Did you want to use a subrequest?";
     }
 
     # Check for infinite subrequest loop.
     #
     error "subrequest depth > " . $self->max_recurse . " (infinite subrequest loop?)"
-	if $self->request_depth > $self->max_recurse;
+        if $self->request_depth > $self->max_recurse;
 
     #
     # $m is a dynamically scoped global containing this
@@ -411,79 +411,79 @@ sub exec {
     $self->{request_buffer} = '';
 
     eval {
-	# Build wrapper chain and index.
-	my $request_comp = $self->request_comp;
-	my $first_comp;
-	{
-	    my @wrapper_chain = ($request_comp);
+        # Build wrapper chain and index.
+        my $request_comp = $self->request_comp;
+        my $first_comp;
+        {
+            my @wrapper_chain = ($request_comp);
 
-	    for (my $parent = $request_comp->parent; $parent; $parent = $parent->parent) {
-		unshift(@wrapper_chain,$parent);
-		error "inheritance chain length > " . $self->max_recurse . " (infinite inheritance loop?)"
-		    if (@wrapper_chain > $self->max_recurse);
-	    }
+            for (my $parent = $request_comp->parent; $parent; $parent = $parent->parent) {
+                unshift(@wrapper_chain,$parent);
+                error "inheritance chain length > " . $self->max_recurse . " (infinite inheritance loop?)"
+                    if (@wrapper_chain > $self->max_recurse);
+            }
 
-	    $first_comp = $wrapper_chain[0];
-	    $self->{wrapper_chain} = [@wrapper_chain];
-	    $self->{wrapper_index} = { map
+            $first_comp = $wrapper_chain[0];
+            $self->{wrapper_chain} = [@wrapper_chain];
+            $self->{wrapper_index} = { map
                                        { $wrapper_chain[$_]->comp_id => $_ }
                                        (0..$#wrapper_chain)
                                      };
-	}
+        }
 
-	# Get original request_args array reference to avoid copying.
+        # Get original request_args array reference to avoid copying.
         my $request_args = $self->{request_args};
-	{
-	    local *SELECTED;
-	    tie *SELECTED, 'Tie::Handle::Mason';
+        {
+            local *SELECTED;
+            tie *SELECTED, 'Tie::Handle::Mason';
 
-	    my $old = select SELECTED;
-	    my $mods = {base_comp => $request_comp, store => \($self->{request_buffer})};
+            my $old = select SELECTED;
+            my $mods = {base_comp => $request_comp, store => \($self->{request_buffer})};
 
-	    if ($self->{has_plugins}) {
-		my $context = bless
-		    [$self, $request_args],
-		    'HTML::Mason::Plugin::Context::StartRequest';
-		eval {
-		    foreach my $plugin_instance (@{$self->plugin_instances}) {
-			$plugin_instance->start_request_hook( $context );
-		    }
-		};
-		if ($@) {
-		    select $old;
-		    rethrow_exception $@;
-		}
-	    }
+            if ($self->{has_plugins}) {
+                my $context = bless
+                    [$self, $request_args],
+                    'HTML::Mason::Plugin::Context::StartRequest';
+                eval {
+                    foreach my $plugin_instance (@{$self->plugin_instances}) {
+                        $plugin_instance->start_request_hook( $context );
+                    }
+                };
+                if ($@) {
+                    select $old;
+                    rethrow_exception $@;
+                }
+            }
 
-	    if ($wantarray) {
-		@result = eval {$self->comp($mods, $first_comp, @$request_args)};
-	    } elsif (defined($wantarray)) {
-		$result[0] = eval {$self->comp($mods, $first_comp, @$request_args)};
-	    } else {
-		eval {$self->comp($mods, $first_comp, @$request_args)};
-	    }
+            if ($wantarray) {
+                @result = eval {$self->comp($mods, $first_comp, @$request_args)};
+            } elsif (defined($wantarray)) {
+                $result[0] = eval {$self->comp($mods, $first_comp, @$request_args)};
+            } else {
+                eval {$self->comp($mods, $first_comp, @$request_args)};
+            }
  
- 	    my $error = $@;
+            my $error = $@;
 
-	    if ($self->{has_plugins}) {
-		# plugins called in reverse order when exiting.
-		my $context = bless
-		    [$self, $request_args, \$self->{request_buffer}, $wantarray, \@result, \$error],
-		    'HTML::Mason::Plugin::Context::EndRequest';
-		eval {
-		    foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {
-			$plugin_instance->end_request_hook( $context );
-		    }
-		};
-		if ($@) {
-		    # plugin errors take precedence over component errors
-		    $error = $@;
-		}
-	    }
-	    
-	    select $old;
-	    rethrow_exception $error;
-	}
+            if ($self->{has_plugins}) {
+                # plugins called in reverse order when exiting.
+                my $context = bless
+                    [$self, $request_args, \$self->{request_buffer}, $wantarray, \@result, \$error],
+                    'HTML::Mason::Plugin::Context::EndRequest';
+                eval {
+                    foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {
+                        $plugin_instance->end_request_hook( $context );
+                    }
+                };
+                if ($@) {
+                    # plugin errors take precedence over component errors
+                    $error = $@;
+                }
+            }
+            
+            select $old;
+            rethrow_exception $error;
+        }
     };
 
     # Purge code cache if necessary.
@@ -492,15 +492,15 @@ sub exec {
     # Handle errors.
     my $err = $@;
     if ($err and !$self->_aborted_or_declined($err)) {
-	$self->_handle_error($err);
-	return;
+        $self->_handle_error($err);
+        return;
     }
 
     # If there's anything in the output buffer, send it to out_method.
     # Otherwise skip out_method call to avoid triggering side effects
     # (e.g. HTTP header sending).
     if (length($self->{request_buffer}) > 0) {
-	$self->out_method->($self->{request_buffer});
+        $self->out_method->($self->{request_buffer});
     }
 
     # Return aborted value or result.
@@ -522,14 +522,14 @@ sub _handle_error
 
     # Set error format for when error is stringified.
     if (UNIVERSAL::can($err, 'format')) {
-	$err->format($self->error_format);
+        $err->format($self->error_format);
     }
 
     # In fatal mode, die with error. In display mode, output stringified error.
     if ($self->error_mode eq 'fatal') {
-	rethrow_exception $err;
+        rethrow_exception $err;
     } else {
-	UNIVERSAL::isa( $self->out_method, 'CODE' ) ? $self->out_method->("$err") : ( ${ $self->out_method } = "$err" );
+        UNIVERSAL::isa( $self->out_method, 'CODE' ) ? $self->out_method->("$err") : ( ${ $self->out_method } = "$err" );
     }
 }
 
@@ -550,16 +550,16 @@ sub make_subrequest
     # create it if it's missing, though - it's required, but for
     # consistency we let exceptions be thrown later.
     $params{comp} = absolute_comp_path($params{comp}, $self->current_comp->dir_path)
-	if exists $params{comp} && !ref($params{comp});
+        if exists $params{comp} && !ref($params{comp});
 
     # Give subrequest the same values as parent request for read/write params
     my %defaults = map { ($_, $self->$_()) } $self->_properties;
 
     unless ( $params{out_method} )
     {
-	$defaults{out_method} = sub {
-	    $self->print($_[0]);
-	};
+        $defaults{out_method} = sub {
+            $self->print($_[0]);
+        };
     }
 
     # Make subrequest, and set parent_request and request_depth appropriately.
@@ -625,13 +625,13 @@ sub cache
     # If using 1.0x cache API, save off options for end of routine.
     my %old_cache_options;
     if ($self->data_cache_api eq '1.0') {
-	%old_cache_options = %options;
-	%options = ();
+        %old_cache_options = %options;
+        %options = ();
     }
 
     # Combine defaults with options passed in here.
     if ($self->data_cache_defaults) {
-	%options = (%{$self->data_cache_defaults}, %options);
+        %options = (%{$self->data_cache_defaults}, %options);
     }
     $options{namespace}   ||= compress_path($self->current_comp->comp_id);
     $options{cache_root}  ||= $self->interp->cache_dir;
@@ -640,9 +640,9 @@ sub cache
     # specification if necessary.
     my $cache_class = $self->interp->cache_dir ? 'Cache::FileCache' : 'Cache::MemoryCache';
     if ($options{cache_class}) {
-	$cache_class = $options{cache_class};
-	$cache_class = "Cache::$cache_class" unless $cache_class =~ /::/;
-	delete($options{cache_class});
+        $cache_class = $options{cache_class};
+        $cache_class = "Cache::$cache_class" unless $cache_class =~ /::/;
+        delete($options{cache_class});
     }
 
     # Now prefix cache class with "HTML::Mason::". This will be a
@@ -650,22 +650,22 @@ sub cache
     # HTML::Mason::Cache::BaseCache and the chosen cache class.
     my $mason_cache_class = "HTML::Mason::$cache_class";
     unless (pkg_loaded($mason_cache_class)) {
-	load_pkg('Cache::Cache', '$m->cache requires the Cache::Cache module, available from CPAN.');
-	load_pkg($cache_class, 'Fix your Cache::Cache installation or choose another cache class.');
+        load_pkg('Cache::Cache', '$m->cache requires the Cache::Cache module, available from CPAN.');
+        load_pkg($cache_class, 'Fix your Cache::Cache installation or choose another cache class.');
         # need to break up mention of VERSION var or else CPAN/EU::MM can choke when running 'r'
-	eval sprintf('package %s; use base qw(HTML::Mason::Cache::BaseCache %s); use vars qw($' . 'VERSION); $' . 'VERSION = 1.0;',
-		     $mason_cache_class, $cache_class);
-	error "Error constructing mason cache class $mason_cache_class: $@" if $@;
+        eval sprintf('package %s; use base qw(HTML::Mason::Cache::BaseCache %s); use vars qw($' . 'VERSION); $' . 'VERSION = 1.0;',
+                     $mason_cache_class, $cache_class);
+        error "Error constructing mason cache class $mason_cache_class: $@" if $@;
     }
 
     my $cache = $mason_cache_class->new (\%options)
-	or error "could not create cache object";
+        or error "could not create cache object";
 
     # Implement 1.0x cache API or just return cache object.
     if ($self->data_cache_api eq '1.0') {
-	return $self->_cache_1_x($cache, %old_cache_options);
+        return $self->_cache_1_x($cache, %old_cache_options);
     } else {
-	return $cache;
+        return $cache;
     }
 }
 
@@ -682,72 +682,72 @@ sub _cache_1_x
     my $key = $options{key} || 'main';
     
     if ($action eq 'retrieve') {
-	
-	# Validate parameters.
-	if (my @invalids = grep(!/^(expire_if|action|key|busy_lock|keep_in_memory|tie_class)$/, keys(%options))) {
-	    param_error "cache: invalid parameter '$invalids[0]' for action '$action'\n";
-	}
+        
+        # Validate parameters.
+        if (my @invalids = grep(!/^(expire_if|action|key|busy_lock|keep_in_memory|tie_class)$/, keys(%options))) {
+            param_error "cache: invalid parameter '$invalids[0]' for action '$action'\n";
+        }
 
-	# Handle expire_if.
-	if (my $sub = $options{expire_if}) {
-	    if (my $obj = $cache->get_object($key)) {
-		if ($sub->($obj->get_created_at)) {
-		    $cache->expire($key);
-		}
-	    }
-	}
+        # Handle expire_if.
+        if (my $sub = $options{expire_if}) {
+            if (my $obj = $cache->get_object($key)) {
+                if ($sub->($obj->get_created_at)) {
+                    $cache->expire($key);
+                }
+            }
+        }
 
-	# Return the value or undef, handling busy_lock.
-	if (my $result = $cache->get($key, ($options{busy_lock} ? (busy_lock=>$options{busy_lock}) : ()))) {
-	    return $result;
-	} else {
-	    return undef;
-	}
+        # Return the value or undef, handling busy_lock.
+        if (my $result = $cache->get($key, ($options{busy_lock} ? (busy_lock=>$options{busy_lock}) : ()))) {
+            return $result;
+        } else {
+            return undef;
+        }
 
     } elsif ($action eq 'store') {
 
-	# Validate parameters	
-	if (my @invalids = grep(!/^(expire_(at|next|in)|action|key|value|keep_in_memory|tie_class)$/, keys(%options))) {
-	    param_error "cache: invalid parameter '$invalids[0]' for action '$action'\n";
-	}
-	param_error "cache: no store value provided" unless exists($options{value});
+        # Validate parameters   
+        if (my @invalids = grep(!/^(expire_(at|next|in)|action|key|value|keep_in_memory|tie_class)$/, keys(%options))) {
+            param_error "cache: invalid parameter '$invalids[0]' for action '$action'\n";
+        }
+        param_error "cache: no store value provided" unless exists($options{value});
 
-	# Determine $expires_in if expire flag given. For the "next"
-	# options, we're jumping through hoops to find the *top* of
-	# the next hour or day.
-	#
-	my $expires_in;
-	my $time = time;
-	if (exists($options{expire_at})) {
-	    param_error "cache: invalid expire_at value '$options{expire_at}' - must be a numeric time value\n" if $options{expire_at} !~ /^[0-9]+$/;
-	    $expires_in = $options{expire_at} - $time;
-	} elsif (exists($options{expire_next})) {
+        # Determine $expires_in if expire flag given. For the "next"
+        # options, we're jumping through hoops to find the *top* of
+        # the next hour or day.
+        #
+        my $expires_in;
+        my $time = time;
+        if (exists($options{expire_at})) {
+            param_error "cache: invalid expire_at value '$options{expire_at}' - must be a numeric time value\n" if $options{expire_at} !~ /^[0-9]+$/;
+            $expires_in = $options{expire_at} - $time;
+        } elsif (exists($options{expire_next})) {
             my $term = $options{expire_next};
             my ($sec, $min, $hour) = localtime($time);
             if ($term eq 'hour') {
-		$expires_in = 60*(59-$min)+(60-$sec);
+                $expires_in = 60*(59-$min)+(60-$sec);
             } elsif ($term eq 'day') {
-		$expires_in = 3600*(23-$hour)+60*(59-$min)+(60-$sec);
+                $expires_in = 3600*(23-$hour)+60*(59-$min)+(60-$sec);
             } else {
                 param_error "cache: invalid expire_next value '$term' - must be 'hour' or 'day'\n";
             }
-	} elsif (exists($options{expire_in})) {
-	    $expires_in = $options{expire_in};
-	}
+        } elsif (exists($options{expire_in})) {
+            $expires_in = $options{expire_in};
+        }
 
-	# Set and return the value.
-	my $value = $options{value};
-	$cache->set($key, $value, $expires_in);
-	return $value;
+        # Set and return the value.
+        my $value = $options{value};
+        $cache->set($key, $value, $expires_in);
+        return $value;
 
     } elsif ($action eq 'expire') {
-	my @keys = (ref($key) eq 'ARRAY') ? @$key : ($key);
-	foreach my $key (@keys) {
-	    $cache->expire($key);
-	}
+        my @keys = (ref($key) eq 'ARRAY') ? @$key : ($key);
+        foreach my $key (@keys) {
+            $cache->expire($key);
+        }
 
     } elsif ($action eq 'keys') {
-	return $cache->get_keys;
+        return $cache->get_keys;
     }
 }
 
@@ -759,24 +759,24 @@ sub cache_self {
     my (%store_options, %retrieve_options);
     my ($expires_in, $key, $cache);
     if ($self->data_cache_api eq '1.0') {
-	foreach (qw(key expire_if busy_lock)) {
-	    $retrieve_options{$_} = $options{$_} if (exists($options{$_}));
-	}
-	foreach (qw(key expire_at expire_next expire_in)) {
-	    $store_options{$_} = $options{$_} if (exists($options{$_}));
-	}
+        foreach (qw(key expire_if busy_lock)) {
+            $retrieve_options{$_} = $options{$_} if (exists($options{$_}));
+        }
+        foreach (qw(key expire_at expire_next expire_in)) {
+            $store_options{$_} = $options{$_} if (exists($options{$_}));
+        }
     } else {
-	#
-	# key, expires_in/expire_in, expire_if and busy_lock go into
-	# the set and get methods as appropriate. All other options
-	# are passed into $self->cache.
-	#
-	foreach (qw(expire_if busy_lock)) {
-	    $retrieve_options{$_} = delete($options{$_}) if (exists($options{$_}));
-	}
-	$expires_in = delete $options{expires_in} || delete $options{expire_in} || 'never';
-	$key = delete $options{key} || '__mason_cache_self__';
-	$cache = $self->cache(%options);
+        #
+        # key, expires_in/expire_in, expire_if and busy_lock go into
+        # the set and get methods as appropriate. All other options
+        # are passed into $self->cache.
+        #
+        foreach (qw(expire_if busy_lock)) {
+            $retrieve_options{$_} = delete($options{$_}) if (exists($options{$_}));
+        }
+        $expires_in = delete $options{expires_in} || delete $options{expire_in} || 'never';
+        $key = delete $options{key} || '__mason_cache_self__';
+        $cache = $self->cache(%options);
     }
 
     my ($output, @retval, $error);
@@ -793,11 +793,11 @@ sub cache_self {
     } else {
         $self->call_self( \$output, \@retval, \$error, 'CACHE_SELF' );
 
-	# If user aborted or declined, store in cache and print output
-	# before repropagating.
-	#
-	rethrow_exception $error
-	    unless ($self->_aborted_or_declined($error));
+        # If user aborted or declined, store in cache and print output
+        # before repropagating.
+        #
+        rethrow_exception $error
+            unless ($self->_aborted_or_declined($error));
 
         my $value = [$output, \@retval];
         if ($self->data_cache_api eq '1.0') {
@@ -840,10 +840,10 @@ sub call_self
 
     # Determine wantarray based on retval reference
     my $wantarray =
-	( defined $retval ?
-	  ( UNIVERSAL::isa( $retval, 'ARRAY' ) ? 1 : 0 ) :
-	  undef
-	  );
+        ( defined $retval ?
+          ( UNIVERSAL::isa( $retval, 'ARRAY' ) ? 1 : 0 ) :
+          undef
+          );
 
     # If output or retval references were left undefined, just point
     # them to a dummy variable.
@@ -862,20 +862,20 @@ sub call_self
     my $args = $top_stack->[STACK_ARGS];
     my @result;
     eval {
-	if ($wantarray) {
-	    @$retval = $comp->run(@$args);
-	} elsif (defined $wantarray) {
-	    $$retval = $comp->run(@$args);
-	} else {
-	    $comp->run(@$args);
-	}
+        if ($wantarray) {
+            @$retval = $comp->run(@$args);
+        } elsif (defined $wantarray) {
+            $$retval = $comp->run(@$args);
+        } else {
+            $comp->run(@$args);
+        }
     };
     if ($@) {
-	if ($error) {
-	    $$error = $@;
-	} else {
-	    die $@;
-	}
+        if ($error) {
+            $$error = $@;
+        } else {
+            die $@;
+        }
     }
 
     # Return 1, indicating that this invocation of call_self is done.
@@ -887,8 +887,8 @@ sub call_dynamic {
     my ($m, $key, @args) = @_;
     my $comp = ($m->current_comp->is_subcomp) ? $m->current_comp->owner : $m->current_comp;
     if (!defined($comp->dynamic_subs_request) or $comp->dynamic_subs_request ne $m) {
-	$comp->dynamic_subs_init;
-	$comp->dynamic_subs_request($m);
+        $comp->dynamic_subs_init;
+        $comp->dynamic_subs_request($m);
     }
 
     return $comp->run_dynamic_sub($key, @args);
@@ -897,7 +897,7 @@ sub call_dynamic {
 sub call_next {
     my ($self,@extra_args) = @_;
     my $comp = $self->fetch_next
-	or error "call_next: no next component to invoke";
+        or error "call_next: no next component to invoke";
     return $self->comp($comp, @{$self->current_args}, @extra_args);
 }
 
@@ -914,12 +914,12 @@ sub callers
 {
     my ($self, $levels_back) = @_;
     if (defined($levels_back)) {
-	my $frame = $self->stack_frame($levels_back);
-	return unless defined $frame;
-	return $frame->[STACK_COMP];
+        my $frame = $self->stack_frame($levels_back);
+        return unless defined $frame;
+        return $frame->[STACK_COMP];
     } else {
-	my $depth = $self->depth;
-	return map($_->[STACK_COMP], $self->stack_frames);
+        my $depth = $self->depth;
+        return map($_->[STACK_COMP], $self->stack_frames);
     }
 }
 
@@ -953,9 +953,9 @@ sub decline
 
     $self->clear_buffer;
     my $subreq = $self->make_subrequest
-	(comp => $self->{top_path},
-	 args => $self->{request_args},
-	 declined_comps => {$self->request_comp->comp_id, 1, %{$self->{declined_comps}}});
+        (comp => $self->{top_path},
+         args => $self->{request_args},
+         declined_comps => {$self->request_comp->comp_id, 1, %{$self->{declined_comps}}});
     my $retval = $subreq->exec;
     HTML::Mason::Exception::Decline->throw( error => 'Request->decline was called', declined_value => $retval );
 }
@@ -989,30 +989,30 @@ sub fetch_comp
     $current_comp ||= $self->{top_stack}->[STACK_COMP];
 
     if ($self->{use_internal_component_caches}) {
-	my $fetch_comp_cache = $current_comp->{fetch_comp_cache};
-	unless (defined($fetch_comp_cache->{$path})) {
+        my $fetch_comp_cache = $current_comp->{fetch_comp_cache};
+        unless (defined($fetch_comp_cache->{$path})) {
 
-	    # Cache the component objects associated with
-	    # uncanonicalized paths like ../foo/bar.html.  SELF and
-	    # REQUEST are dynamic and cannot be cached. Weaken the
-	    # references in this cache so that we don't hang on to the
-	    # coponent if it disappears from the main code cache.
-	    #
-	    # See Interp::_initialize for the definition of
-	    # use_internal_component_caches and the conditions under
-	    # which we can create this cache safely.
-	    #
-	    if ($path =~ /^(?:SELF|REQUEST)/) {
-		return $self->_fetch_comp($path, $current_comp, $error);
-	    } else {
-		$fetch_comp_cache->{$path} =
-		    $self->_fetch_comp($path, $current_comp, $error);
-		Scalar::Util::weaken($fetch_comp_cache->{$path}) if can_weaken;
-	    }
-	}
-	return $fetch_comp_cache->{$path};
+            # Cache the component objects associated with
+            # uncanonicalized paths like ../foo/bar.html.  SELF and
+            # REQUEST are dynamic and cannot be cached. Weaken the
+            # references in this cache so that we don't hang on to the
+            # coponent if it disappears from the main code cache.
+            #
+            # See Interp::_initialize for the definition of
+            # use_internal_component_caches and the conditions under
+            # which we can create this cache safely.
+            #
+            if ($path =~ /^(?:SELF|REQUEST)/) {
+                return $self->_fetch_comp($path, $current_comp, $error);
+            } else {
+                $fetch_comp_cache->{$path} =
+                    $self->_fetch_comp($path, $current_comp, $error);
+                Scalar::Util::weaken($fetch_comp_cache->{$path}) if can_weaken;
+            }
+        }
+        return $fetch_comp_cache->{$path};
     } else {
-	return $self->_fetch_comp($path, $current_comp, $error);
+        return $self->_fetch_comp($path, $current_comp, $error);
     }
 }
 
@@ -1024,12 +1024,12 @@ sub _fetch_comp
     # Handle paths SELF, PARENT, and REQUEST
     #
     if ($path eq 'SELF') {
-	return $self->base_comp;
+        return $self->base_comp;
     }
     if ($path eq 'PARENT') {
-	my $c = $current_comp->parent;
-	$$error = "PARENT designator used from component with no parent" if !$c && defined($error);
-	return $c;
+        my $c = $current_comp->parent;
+        $$error = "PARENT designator used from component with no parent" if !$c && defined($error);
+        return $c;
     }
     if ($path eq 'REQUEST') {
         return $self->request_comp;
@@ -1039,19 +1039,19 @@ sub _fetch_comp
     # Handle paths of the form comp_path:method_name
     #
     if (index($path,':') != -1) {
-	my $method_comp;
-	my ($owner_path,$method_name) = split(':',$path,2);
-	if (my $owner_comp = $self->fetch_comp($owner_path, $current_comp, $error)) {
-	    if ($owner_comp->_locate_inherited('methods',$method_name,\$method_comp)) {
-		return $method_comp;
-	    } else {
-		$$error = "no such method '$method_name' for component " . $owner_comp->title if defined($error);
-	    }
-	} else {
-	    $$error ||= "could not find component for path '$owner_path'\n" if defined($error);
-	}
+        my $method_comp;
+        my ($owner_path,$method_name) = split(':',$path,2);
+        if (my $owner_comp = $self->fetch_comp($owner_path, $current_comp, $error)) {
+            if ($owner_comp->_locate_inherited('methods',$method_name,\$method_comp)) {
+                return $method_comp;
+            } else {
+                $$error = "no such method '$method_name' for component " . $owner_comp->title if defined($error);
+            }
+        } else {
+            $$error ||= "could not find component for path '$owner_path'\n" if defined($error);
+        }
 
-	return $method_comp;
+        return $method_comp;
     }
 
     #
@@ -1059,15 +1059,15 @@ sub _fetch_comp
     # current component first.
     #
     if ($path !~ /\//) {
-	# Check my subcomponents.
-	if (my $subcomp = $current_comp->subcomps($path)) {
-	    return $subcomp;
-	}
-	# If I am a subcomponent, also check my owner's subcomponents.
-	# This won't work when we go to multiply embedded subcomponents...
-	if ($current_comp->is_subcomp and my $subcomp = $current_comp->owner->subcomps($path)) {
-	    return $subcomp;
-	}
+        # Check my subcomponents.
+        if (my $subcomp = $current_comp->subcomps($path)) {
+            return $subcomp;
+        }
+        # If I am a subcomponent, also check my owner's subcomponents.
+        # This won't work when we go to multiply embedded subcomponents...
+        if ($current_comp->is_subcomp and my $subcomp = $current_comp->owner->subcomps($path)) {
+            return $subcomp;
+        }
     }
 
     #
@@ -1088,11 +1088,11 @@ sub _fetch_next_helper {
     my ($self) = @_;
     my $index = $self->{wrapper_index}->{$self->current_comp->comp_id};
     unless (defined($index)) {
-	my @callers = $self->callers;
-	shift(@callers);
-	while (my $comp = shift(@callers) and !defined($index)) {
-	    $index = $self->{wrapper_index}->{$comp->comp_id};
-	}
+        my @callers = $self->callers;
+        shift(@callers);
+        while (my $comp = shift(@callers) and !defined($index)) {
+            $index = $self->{wrapper_index}->{$comp->comp_id};
+        }
     }
     return $index;
 }
@@ -1104,7 +1104,7 @@ sub fetch_next {
     my ($self) = @_;
     my $index = $self->_fetch_next_helper;
     error "fetch_next: cannot find next component in chain"
-	unless defined($index);
+        unless defined($index);
     return $self->{wrapper_chain}->[$index+1];
 }
 
@@ -1115,7 +1115,7 @@ sub fetch_next_all {
     my ($self) = @_;
     my $index = $self->_fetch_next_helper;
     error "fetch_next_all: cannot find next component in chain"
-	unless defined($index);
+        unless defined($index);
     my @wc = @{$self->{wrapper_chain}};
     return @wc[($index+1)..$#wc];
 }
@@ -1131,12 +1131,12 @@ sub file
               $self->current_comp->owner :
               $self->current_comp );
 
-	if ($context_comp->is_file_based) {
-	    my $source_dir = $context_comp->source_dir;
-	    $file = File::Spec->catfile( $source_dir, $file );
-	} else {
-	    $file = File::Spec->catfile( File::Spec->rootdir, $file );
-	}
+        if ($context_comp->is_file_based) {
+            my $source_dir = $context_comp->source_dir;
+            $file = File::Spec->catfile( $source_dir, $file );
+        } else {
+            $file = File::Spec->catfile( File::Spec->rootdir, $file );
+        }
     }
     my $content = read_file($file,1);
     return $content;
@@ -1147,10 +1147,10 @@ sub print
     my $self = shift;
 
     my $bufref = defined($self->{top_stack}) ?
-	$self->{top_stack}->[STACK_BUFFER] :
-	    \($self->{request_buffer});
+        $self->{top_stack}->[STACK_BUFFER] :
+            \($self->{request_buffer});
     foreach my $text (@_) {
-	$$bufref .= $text if defined($text);
+        $$bufref .= $text if defined($text);
     }
     $self->flush_buffer if $self->{autoflush};
 }
@@ -1175,12 +1175,12 @@ sub comp {
     my $path;
     my $comp = shift;
     if (!ref($comp)) {
-	die "comp called without component - must pass a path or component object"
-	    unless defined($comp);
-	$path = $comp;
-	my $error;
-	$comp = $self->fetch_comp($path, undef, \$error)
-	    or error($error || "could not find component for path '$path'\n");
+        die "comp called without component - must pass a path or component object"
+            unless defined($comp);
+        $path = $comp;
+        my $error;
+        $comp = $self->fetch_comp($path, undef, \$error)
+            or error($error || "could not find component for path '$path'\n");
     }
     
     # Increment depth and check for maximum recursion. Depth starts at 1.
@@ -1198,27 +1198,27 @@ sub comp {
 
     # Add new stack frame and point dynamically scoped $self->{top_stack} at it.
     local $self->{top_stack} = $self->{stack}->[$depth-1] =
-	[
-	 $comp,          # STACK_COMP
-	 \@_,            # STACK_ARGS
-	 $stack_buffer,  # STACK_BUFFER
-	 \%mods,         # STACK_MODS
-	 $path,          # STACK_PATH
-	 $depth,         # STACK_DEPTH
-	 undef,          # STACK_BASE_COMP
-	 undef,          # STACK_IN_CALL_SELF
-	 ];
+        [
+         $comp,          # STACK_COMP
+         \@_,            # STACK_ARGS
+         $stack_buffer,  # STACK_BUFFER
+         \%mods,         # STACK_MODS
+         $path,          # STACK_PATH
+         $depth,         # STACK_DEPTH
+         undef,          # STACK_BASE_COMP
+         undef,          # STACK_IN_CALL_SELF
+         ];
 
     # Run start_component hooks for each plugin.
     #
     if ($self->{has_plugins}) {
-	my $context = bless
-	    [$self, $comp, \@_],
-	    'HTML::Mason::Plugin::Context::StartComponent';
-	
-	foreach my $plugin_instance (@{$self->{plugin_instances}}) {
-	    $plugin_instance->start_component_hook( $context );
-	}
+        my $context = bless
+            [$self, $comp, \@_],
+            'HTML::Mason::Plugin::Context::StartComponent';
+        
+        foreach my $plugin_instance (@{$self->{plugin_instances}}) {
+            $plugin_instance->start_component_hook( $context );
+        }
     }
 
     # Finally, call the component.
@@ -1227,13 +1227,13 @@ sub comp {
     my @result;
     
     eval {
-	if ($wantarray) {
-	    @result = $comp->run(@_);
-	} elsif (defined $wantarray) {
-	    $result[0] = $comp->run(@_);
-	} else {
-	    $comp->run(@_);
-	}
+        if ($wantarray) {
+            @result = $comp->run(@_);
+        } elsif (defined $wantarray) {
+            $result[0] = $comp->run(@_);
+        } else {
+            $comp->run(@_);
+        }
     };
     my $error = $@;
 
@@ -1241,26 +1241,26 @@ sub comp {
     # (e.g. in case a plugin prints something).
     #
     if ($comp->{has_filter}) {
-	# We have to check $comp->filter because abort or error may
-	# occur before filter gets defined in component. In such cases
-	# there should be no output, but should look into this more.
-	#
-	if (defined($comp->filter)) {
-	    $$top_buffer .= $comp->filter->($filter_buffer);
-	}
-	$self->{top_stack}->[STACK_BUFFER] = $top_buffer;
+        # We have to check $comp->filter because abort or error may
+        # occur before filter gets defined in component. In such cases
+        # there should be no output, but should look into this more.
+        #
+        if (defined($comp->filter)) {
+            $$top_buffer .= $comp->filter->($filter_buffer);
+        }
+        $self->{top_stack}->[STACK_BUFFER] = $top_buffer;
     }
 
     # Run end_component hooks for each plugin, in reverse order.
     #
     if ($self->{has_plugins}) {
-	my $context = bless
-	    [$self, $comp, \@_, $wantarray, \@result, \$error],
-	    'HTML::Mason::Plugin::Context::EndComponent';
-	
-	foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {
-	    $plugin_instance->end_component_hook( $context );
-	}
+        my $context = bless
+            [$self, $comp, \@_, $wantarray, \@result, \$error],
+            'HTML::Mason::Plugin::Context::EndComponent';
+        
+        foreach my $plugin_instance (@{$self->{plugin_instances_reverse}}) {
+            $plugin_instance->end_component_hook( $context );
+        }
     }
 
     # Repropagate error if one occurred, otherwise return result.
@@ -1319,8 +1319,8 @@ sub clear_buffer
     my $self = shift;
 
     foreach my $frame (@{$self->{stack}}) {
-	my $bufref = $frame->[STACK_BUFFER];
-	$$bufref = '';
+        my $bufref = $frame->[STACK_BUFFER];
+        $$bufref = '';
     }
 }
 
@@ -1336,9 +1336,9 @@ sub request_args
 {
     my ($self) = @_;
     if (wantarray) {
-	return @{$self->{request_args}};
+        return @{$self->{request_args}};
     } else {
-	return { @{$self->{request_args}} };
+        return { @{$self->{request_args}} };
     }
 }
 
@@ -1377,9 +1377,9 @@ sub stack_frame {
     my $depth = $self->{top_stack}->[STACK_DEPTH];
     my $index;
     if ($levels < 0) {
-	$index = (-1 * $levels) - 1;
+        $index = (-1 * $levels) - 1;
     } else {
-	$index = $depth-1 - $levels;
+        $index = $depth-1 - $levels;
     }
     return if $index < 0 or $index >= $depth;
     return $self->{stack}->[$index];
@@ -1402,7 +1402,7 @@ sub current_args { return $_[0]->{top_stack}->[STACK_ARGS] }
 sub base_comp {
     my ($self) = @_;
     unless (defined($self->{top_stack}->[STACK_BASE_COMP])) {
-	return $self->compute_base_comp_for_frame($self->{top_stack}->[STACK_DEPTH] - 1);
+        return $self->compute_base_comp_for_frame($self->{top_stack}->[STACK_DEPTH] - 1);
     }
     return $self->{top_stack}->[STACK_BASE_COMP];
 }
@@ -1416,24 +1416,24 @@ sub compute_base_comp_for_frame {
     my $frame = $self->{stack}->[$frame_num];
 
     unless (defined($frame->[STACK_BASE_COMP])) {
-	my $mods = $frame->[STACK_MODS];
-	my $path = $frame->[STACK_PATH];
-	my $comp = $frame->[STACK_COMP];
-	
-	my $base_comp;
-	if (exists($mods->{base_comp})) {
-	    $base_comp = $mods->{base_comp};
-	} elsif (!$path ||
-		 $path =~ m/^(?:SELF|PARENT|REQUEST)(?:\:..*)?$/ ||
-		 ($comp->is_subcomp && !$comp->is_method)) {
-	    $base_comp = $self->compute_base_comp_for_frame($frame_num-1);
-	} elsif ($path =~ m/(.*):/) {
-	    my $calling_comp = $self->{stack}->[$frame_num-1]->[STACK_COMP];
-	    $base_comp = $self->fetch_comp($1, $calling_comp);
-	} else {
-	    $base_comp = $comp;
-	}
-	$frame->[STACK_BASE_COMP] = $base_comp;
+        my $mods = $frame->[STACK_MODS];
+        my $path = $frame->[STACK_PATH];
+        my $comp = $frame->[STACK_COMP];
+        
+        my $base_comp;
+        if (exists($mods->{base_comp})) {
+            $base_comp = $mods->{base_comp};
+        } elsif (!$path ||
+                 $path =~ m/^(?:SELF|PARENT|REQUEST)(?:\:..*)?$/ ||
+                 ($comp->is_subcomp && !$comp->is_method)) {
+            $base_comp = $self->compute_base_comp_for_frame($frame_num-1);
+        } elsif ($path =~ m/(.*):/) {
+            my $calling_comp = $self->{stack}->[$frame_num-1]->[STACK_COMP];
+            $base_comp = $self->fetch_comp($1, $calling_comp);
+        } else {
+            $base_comp = $comp;
+        }
+        $frame->[STACK_BASE_COMP] = $base_comp;
     }
     return $frame->[STACK_BASE_COMP];
 }

@@ -15,33 +15,33 @@ sub get
     die "must specify key" unless defined($key);
 
     foreach my $param (keys(%params)) {
-	unless ($param =~ /^(busy_lock|expire_if)$/) {
-	    die "unknown param '$param'";
-	}
+    unless ($param =~ /^(busy_lock|expire_if)$/) {
+        die "unknown param '$param'";
+    }
     }
 
     $self->_conditionally_auto_purge_on_get();
 
     if (my $sub = $params{expire_if}) {
-	$self->expire_if($key, $sub);
+    $self->expire_if($key, $sub);
     }
 
     my $object = $self->get_object($key) or
-	return undef;
+    return undef;
 
     if (Cache::BaseCache::Object_Has_Expired($object))
     {
-	if ($params{busy_lock}) {
-	    # If busy_lock value provided, set a new "temporary"
-	    # expiration time that many seconds forward, and return
-	    # undef so that this process will start recomputing.
-	    my $busy_lock_time = Cache::BaseCache::Canonicalize_Expiration_Time($params{busy_lock});
-	    $object->set_expires_at(time + $busy_lock_time);
-	    $self->set_object($key, $object);
-	} else {
-	    $self->remove($key);
-	}
-	return undef;
+    if ($params{busy_lock}) {
+        # If busy_lock value provided, set a new "temporary"
+        # expiration time that many seconds forward, and return
+        # undef so that this process will start recomputing.
+        my $busy_lock_time = Cache::BaseCache::Canonicalize_Expiration_Time($params{busy_lock});
+        $object->set_expires_at(time + $busy_lock_time);
+        $self->set_object($key, $object);
+    } else {
+        $self->remove($key);
+    }
+    return undef;
     }
 
     return $object->get_data( );
@@ -52,8 +52,8 @@ sub expire
     my ($self, $key) = @_;
 
     if (my $obj = $self->get_object($key)) {
-	$obj->set_expires_at(time-1);
-	$self->set_object($key, $obj);
+    $obj->set_expires_at(time-1);
+    $self->set_object($key, $obj);
     }
 }
 
@@ -63,13 +63,13 @@ sub expire_if
     die "must specify subroutine" unless defined($sub) and ref($sub) eq 'CODE';
 
     if (my $obj = $self->get_object($key)) {
-	my $retval = $sub->($obj);
-	if ($retval) {
-	    $self->expire($key);
-	}
-	return $retval;
+    my $retval = $sub->($obj);
+    if ($retval) {
+        $self->expire($key);
+    }
+    return $retval;
     } else {
-	return 1;
+    return 1;
     }
 }
 

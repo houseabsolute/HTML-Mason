@@ -8,7 +8,7 @@ my $test_data = Module::Build->current->notes('test_data');
 
 unless ($test_data->{is_maintainer} &&
         $test_data->{apache_dir} &&
-	-e "$test_data->{apache_dir}/CGIHandler.cgi")
+    -e "$test_data->{apache_dir}/CGIHandler.cgi")
 {
     print "1..0\n";
     exit;
@@ -50,38 +50,38 @@ sub write_test_comps
 Basic test.
 2 + 2 = <% 2 + 2 %>.
 EOF
-	      );
+          );
 
     write_comp( 'cgi_foo_param', <<'EOF',
 CGI foo param is <% $r->query->param('foo') %>
 EOF
-	      );
+          );
 
     write_comp( 'print', <<'EOF',
 This is first.
 % print "This is second.\n";
 This is third.
 EOF
-	      );
+          );
 
     write_comp( 'redirect', <<'EOF',
 <%init>
 $m->redirect('/comps/basic');
 </%init>
 EOF
-	      );
+          );
 
     write_comp( 'params', <<'EOF',
 % foreach (sort keys %ARGS) {
 <% $_ %>: <% ref $ARGS{$_} ? join ', ', sort @{ $ARGS{$_} }, 'array' : $ARGS{$_} %>
 % }
 EOF
-	      );
+          );
 
     write_comp( 'error_as_html', <<'EOF',
 % my $x = 
 EOF
-	      );
+          );
 
 }
 
@@ -90,18 +90,18 @@ sub run_tests
     start_httpd('CGIHandler');
 
     {
-	my $path = '/comps/basic';
-	my $response = Apache::test->fetch($path);
-	ok $response->content, <<'EOF';
+    my $path = '/comps/basic';
+    my $response = Apache::test->fetch($path);
+    ok $response->content, <<'EOF';
 Basic test.
 2 + 2 = 4.
 EOF
     }
 
     {
-	my $path = '/comps/print';
-	my $response = Apache::test->fetch($path);
-	ok $response->content, <<'EOF';
+    my $path = '/comps/print';
+    my $response = Apache::test->fetch($path);
+    ok $response->content, <<'EOF';
 This is first.
 This is second.
 This is third.
@@ -109,9 +109,9 @@ EOF
     }
 
     {
-	my $path = '/comps/print/autoflush';
-	my $response = Apache::test->fetch($path);
-	ok $response->content, <<'EOF';
+    my $path = '/comps/print/autoflush';
+    my $response = Apache::test->fetch($path);
+    ok $response->content, <<'EOF';
 This is first.
 This is second.
 This is third.
@@ -119,9 +119,9 @@ EOF
     }
 
     {
-	my $path = '/comps/print/handle_comp';
-	my $response = Apache::test->fetch($path);
-	ok $response->content, <<'EOF';
+    my $path = '/comps/print/handle_comp';
+    my $response = Apache::test->fetch($path);
+    ok $response->content, <<'EOF';
 This is first.
 This is second.
 This is third.
@@ -129,9 +129,9 @@ EOF
     }
 
     {
-	my $path = '/comps/print/handle_cgi_object';
-	my $response = Apache::test->fetch($path);
-	ok $response->content, <<'EOF';
+    my $path = '/comps/print/handle_cgi_object';
+    my $response = Apache::test->fetch($path);
+    ok $response->content, <<'EOF';
 This is first.
 This is second.
 This is third.
@@ -139,17 +139,17 @@ EOF
     }
 
     {
-	my $path = '/comps/cgi_foo_param/handle_cgi_object';
-	my $response = Apache::test->fetch($path);
-	ok $response->content, <<'EOF';
+    my $path = '/comps/cgi_foo_param/handle_cgi_object';
+    my $response = Apache::test->fetch($path);
+    ok $response->content, <<'EOF';
 CGI foo param is bar
 EOF
     }
 
     {
-	my $path = '/comps/redirect';
-	my $response = Apache::test->fetch($path);
-	ok $response->content, <<'EOF';
+    my $path = '/comps/redirect';
+    my $response = Apache::test->fetch($path);
+    ok $response->content, <<'EOF';
 Basic test.
 2 + 2 = 4.
 EOF

@@ -18,11 +18,11 @@ sub new {
     my $class = shift;
     my %p = @_;
     return bless {
-		  query           => $p{cgi} || CGI->new,
-		  headers_out     => HTML::Mason::FakeTable->new,
-		  err_headers_out => HTML::Mason::FakeTable->new,
-		  pnotes          => {},
-		 }, $class;
+          query           => $p{cgi} || CGI->new,
+          headers_out     => HTML::Mason::FakeTable->new,
+          err_headers_out => HTML::Mason::FakeTable->new,
+          pnotes          => {},
+         }, $class;
 }
 
 # CGI request are _always_ main, and there is never a previous or a next

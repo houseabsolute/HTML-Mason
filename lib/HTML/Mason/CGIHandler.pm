@@ -37,7 +37,7 @@ __PACKAGE__->contained_objects
     (
      interp => 'HTML::Mason::Interp',
      cgi_request => { class   => 'HTML::Mason::FakeApache', # $r
-		      delayed => 1 },
+              delayed => 1 },
     );
 
 
@@ -46,10 +46,10 @@ sub new {
 
     my %p = @_;
     my $self = $package->SUPER::new(comp_root => $ENV{DOCUMENT_ROOT},
-				    request_class => 'HTML::Mason::Request::CGI',
-				    error_mode => 'output',
-				    error_format => 'html',
-				    %p);
+                    request_class => 'HTML::Mason::Request::CGI',
+                    error_mode => 'output',
+                    error_format => 'html',
+                    %p);
 
     $self->interp->out_method(\$self->{output})
         unless exists $p{out_method};
@@ -71,8 +71,8 @@ sub handle_comp {
 sub handle_cgi_object {
     my ($self, $cgi) = (shift, shift);
     $self->_handler( { comp => $cgi->path_info,
-		       cgi       => $cgi },
-		     @_);
+               cgi       => $cgi },
+             @_);
 }
 
 sub _handler {
@@ -95,11 +95,11 @@ sub _handler {
     }
 
     if (@_) {
-	# This is a secret feature, and should stay secret (or go away) because it's just a hack for the test suite.
-	$_[0] .= $r->http_header . $self->{output};
+    # This is a secret feature, and should stay secret (or go away) because it's just a hack for the test suite.
+    $_[0] .= $r->http_header . $self->{output};
     } else {
         $r->send_http_header;
-	print $self->{output};
+    print $self->{output};
     }
 }
 
