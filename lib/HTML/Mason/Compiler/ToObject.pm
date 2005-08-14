@@ -326,8 +326,10 @@ sub _body
                       $self->_blocks('cleanup'),
                       $self->postamble,
 
-                      # don't return values implicitly
-                      "return;\n",
+                      # semi before return will help catch syntax
+                      # errors in component body - don't return values
+                      # explicitly
+                      ";return;\n",
                     );
 }
 
