@@ -507,6 +507,8 @@ sub _run_test
     my $interp = $self->_make_main_interp;
     $interp->out_method( sub { for (@_) { $self->{buffer} .= $_ if defined $_ } } );
 
+    my $warnings = '';
+    local $SIG{__WARN__} = sub { $warnings .= $_ for @_ };
     eval {
         # Run pre_code if test has it - pass in interp
         if ($test->{pre_code}) {
@@ -515,7 +517,7 @@ sub _run_test
         $self->_execute($interp);
     };
 
-    return $self->check_result($@);
+    return $self->check_result($@, $warnings);
 }
 
 sub _execute
@@ -529,7 +531,7 @@ sub _execute
 }
 
 sub check_result {
-    my ($self, $error) = @_;
+    my ($self, $error, $warnings) = @_;
     my $test = $self->{current_test};
 
     local $HTML::Mason::Tests::TODO = $self->{current_test}{todo}
@@ -577,6 +579,9 @@ sub check_result {
           1 :
           $self->check_output( actual => $self->{buffer}, expect => $test->{expect} )
         );
+
+    $Test->diag( "Got warnings: $warnings" ) if $warnings;
+    $success = 0 if $test->{no_warnings} && $warnings;
 
     $success ? $self->_success : $self->_fail;
 }
@@ -825,6 +830,11 @@ RUN MODES">.
 
 A regex containing that will be matched against the error returned
 from the component execution.
+
+=item * no_warnings
+
+If true, this means that the test expects to run without generating
+any warnings.  If warnings are generated, the test fails.
 
 =item * skip_expect
 
