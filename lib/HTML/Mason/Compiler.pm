@@ -498,7 +498,9 @@ sub substitution
     if ($self->enable_autoflush) {
         $code = "\$m->print( $text );\n";
     } else {
-        $code = "for ($text) { \$\$_outbuf .= \$_ }\n";
+        # only output defined bits, which is what $m->print does
+        # internally as well
+        $code = "for ( grep { defined } $text ) { \$\$_outbuf .= \$_ }\n";
     }
 
     eval { $self->postprocess_perl->(\$code) } if $self->postprocess_perl;
