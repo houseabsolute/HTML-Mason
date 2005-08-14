@@ -542,7 +542,7 @@ sub check_result {
     {
         if ( $test->{expect_error} )
         {
-            if ( $@ =~ /$test->{expect_error}/ )
+            if ( $error =~ /$test->{expect_error}/ )
             {
                 return $self->_success
             }
@@ -579,6 +579,15 @@ sub check_result {
           1 :
           $self->check_output( actual => $self->{buffer}, expect => $test->{expect} )
         );
+
+    if ( $test->{expect_warnings} )
+    {
+        unless ( $warnings =~ /$test->{expect_warnings}/ )
+        {
+            $Test->diag( "Got warnings:\n$warnings\n...but expected something matching:\n$test->{expect_warnings}\n" );
+            $success = 0;
+        }
+    }
 
     $Test->diag( "Got warnings: $warnings" ) if $warnings;
     $success = 0 if $test->{no_warnings} && $warnings;
@@ -828,13 +837,18 @@ RUN MODES">.
 
 =item * expect_error
 
-A regex containing that will be matched against the error returned
-from the component execution.
+A regex that will be matched against the error returned from the
+component execution.
 
 =item * no_warnings
 
 If true, this means that the test expects to run without generating
 any warnings.  If warnings are generated, the test fails.
+
+=item * expect_warnings
+
+A regex that will be matched against any warnings output when running
+the component.
 
 =item * skip_expect
 
