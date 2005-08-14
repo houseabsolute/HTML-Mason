@@ -1146,12 +1146,14 @@ sub print
 {
     my $self = shift;
 
-    my $bufref = defined($self->{top_stack}) ?
-        $self->{top_stack}->[STACK_BUFFER] :
-            \($self->{request_buffer});
-    foreach my $text (@_) {
-        $$bufref .= $text if defined($text);
-    }
+    my $bufref =
+        ( defined $self->{top_stack}
+          ? $self->{top_stack}->[STACK_BUFFER]
+          : \$self->{request_buffer}
+        );
+
+    $$bufref .= $_ for grep { defined } @_;
+
     $self->flush_buffer if $self->{autoflush};
 }
 
