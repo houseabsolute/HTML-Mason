@@ -738,16 +738,16 @@ override arguments passed in the URL.
 Here is an autohandler that adds a common header and footer to each
 page underneath its directory:
 
-    <HTML>
-    <HEAD><TITLE>McHuffy Incorporated</TITLE></HEAD>
-    <BODY BGCOLOR="salmon">
+    <html>
+    <head><title>McHuffy Incorporated</title></head>
+    <body style="background-color: pink">
 
     % $m->call_next;
 
-    <HR>
+    <hr />
     Copyright 1999 McHuffy Inc.
-    </BODY>
-    </HTML>
+    </body>
+    </html>
 
 Same idea, using components for the header/footer:
 
@@ -978,11 +978,12 @@ HTML without getting distracted or discouraged by Perl code. For example:
     <head><title><% $headline %></title></head>
     <body>
     <h2><% $headline %></h2>
-    By <% $author %>, <% $date %><p>
+    <p>By <% $author %>, <% $date %></p>
 
     <% $body %>
 
-    </body></html>
+    </body>
+    </html>
 
     <%init>
     # Fetch article from database
@@ -1136,9 +1137,8 @@ In the following example, we create a ".link" subcomponent to produce a
 standardized hyperlink:
 
     <%def .link>
-    <font size="4" face="Verdana,Arial,Helvetica">
     <a href="http://www.<% $site %>.com"><% $label %></a>
-    </font><br>
+
     <%args>
     $site
     $label=>ucfirst($site)
@@ -1147,9 +1147,9 @@ standardized hyperlink:
 
     Visit these sites:
     <ul>
-    <li><& .link, site=>'yahoo' &><br>
-    <li><& .link, site=>'cmp', label=>'CMP Media' &><br>
-    <li><& .link, site=>'excite' &>
+     <li><& .link, site=>'yahoo' &></li>
+     <li><& .link, site=>'cmp', label=>'CMP Media' &></li>
+     <li><& .link, site=>'excite' &></li>
     </ul>
 
 =head2 <%method I<name>>
@@ -2064,7 +2064,7 @@ in a single request.
 
     <%method lefttoc>
     <i><% $full_name %></i>
-    (<a href="logout.html">Log out</a>)<br>
+    (<a href="logout.html">Log out</a>)<br />
     ...
     </%method>
 
@@ -2099,13 +2099,13 @@ number of standard methods and attributes for each page:
     <head>
     <title><& SELF:title &></title>
     </head>
-    <body bgcolor="<% $self->attr('bgcolor') %>">
+    <body style="<% $self->attr('body_style') %>">
     <& SELF:header &>
-    <table><tr><td>
 
+    <div id="main">
     % $m->call_next;
+    </div>
 
-    </td></tr></table>
     <& SELF:footer &>
     </body>
 
@@ -2115,7 +2115,7 @@ number of standard methods and attributes for each page:
     </%init>
 
     <%attr>
-    bgcolor => 'white'
+    body_style => 'standard'
     </%attr>
 
     <%method title>
@@ -2123,7 +2123,7 @@ number of standard methods and attributes for each page:
     </%method>
 
     <%method header>
-    <h2><& SELF:title &></h2><p>
+    <h2><& SELF:title &></h2>
     </%method>
 
     <%method footer>
@@ -2135,7 +2135,7 @@ F</products/autohandler> overrides some attributes and methods for the
 F</products> section of the site.
 
     <%attr>
-    bgcolor => 'beige'
+    body_style => 'plain'
     </%attr>
     <%method title>
     McGuffey Inc.: Products
