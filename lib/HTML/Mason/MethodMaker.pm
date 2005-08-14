@@ -37,8 +37,7 @@ sub import
             if (ref $rw)
             {
                 my ($name, $spec) = @$rw;
-                no strict 'refs';
-                *{"$caller\::$name"} =
+                my $sub =
                     sub { if (@_ > 1)
                           {
                               my $s = shift;
@@ -48,17 +47,20 @@ sub import
                           }
                           return $_[0]->{$name};
                         };
+                no strict 'refs';
+                *{"$caller\::$name"} = $sub
             }
             else
             {
-                no strict 'refs';
-                *{"$caller\::$rw"} =
+                my $sub =
                     sub { if (@_ > 1)
                           {
                               $_[0]->{$rw} = $_[1];
                           }
                           return $_[0]->{$rw};
                         };
+                no strict 'refs';
+                *{"$caller\::$rw"} = $sub;
             }
         }
     }
@@ -72,8 +74,7 @@ sub import
                 if (ref $rwc)
                 {
                     my ($name, $spec) = @$rwc;
-                    no strict 'refs';
-                    *{"$caller\::$name"} =
+                    my $sub =
                         sub { my $s = shift;
                               my %new;
                               if (@_)
@@ -84,17 +85,21 @@ sub import
                               my %args = $s->delayed_object_params( $object,
                                                                     %new );
                               return $args{$rwc};
-                          };
+                            };
+                    no strict 'refs';
+                    *{"$caller\::$name"} = $sub;
                 }
                 else
                 {
+                    my $sub =
+                        sub { my $s = shift;
+                              my %new = @_ ? ( $rwc => $_[0] ) : ();
+                              my %args = $s->delayed_object_params( $object,
+                                                                    %new );
+                              return $args{$rwc};
+                            };
                     no strict 'refs';
-                    *{"$caller\::$rwc"} = sub { my $s = shift;
-                                                my %new = @_ ? ( $rwc => $_[0] ) : ();
-                                                my %args = $s->delayed_object_params( $object,
-                                                                                      %new );
-                                                return $args{$rwc};
-                                            };
+                    *{"$caller\::$rwc"} = $sub;
                 }
             }
         }
