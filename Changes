@@ -14,6 +14,16 @@ startup and the associated Interp object created any files or
 directories, Mason would crash when attempting to chown those
 files/dirs to the uid/gid that Apache will use after forking.
 
+- The compiler was adding an extra block around a component's
+body, which meant that variables declared in the body (in perl lines
+or blocks) were not seen in the cleanup section.
+
+- The compiler was also adding "no warnings 'uninitialized'" in this
+block, which could hide various errors.
+
+- Hopefully fix $VERSION in ApacheHandler so PAUSE will not be
+confused and think we have regressed.
+
 
 1.30  August 11, 2005
 
