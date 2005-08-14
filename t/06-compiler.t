@@ -1060,6 +1060,63 @@ EOF
 
 #------------------------------------------------------------
 
+        $group->add_test( name => 'no_warnings',
+                          description => 'Make sure no warnings are generated for trying to output undef',
+                          component => <<'EOF',
+% my $x;
+x is <% $x %>
+EOF
+                          expect => <<'EOF',
+x is 
+EOF
+                        );
+
+#------------------------------------------------------------
+
+        $group->add_test( name => 'no_warnings_without_autoflush',
+                          description => 'Make sure no warnings are generated for trying to output undef when enable_autoflush is off',
+                          interp_params => { enable_autoflush => 0 },
+                          component => <<'EOF',
+% my $x;
+x is <% $x %>
+EOF
+                          expect => <<'EOF',
+x is 
+EOF
+                          no_warnings => 1,
+                        );
+
+#------------------------------------------------------------
+
+        $group->add_test( name => 'warnings',
+                          description => 'Make sure that warnings _are_ generated for other bad use of uninit',
+                          component => <<'EOF',
+% my $x;
+x is <% $x + 2 %>
+EOF
+                          expect => <<'EOF',
+x is 2
+EOF
+                          expect_warnings => qr/Use of uninitialized value in addition/,
+                        );
+
+#------------------------------------------------------------
+
+        $group->add_test( name => 'warnings_without_autoflush',
+                          description => 'Make sure that warnings _are_ generated for other bad use of uninit when enable_autoflush is off',
+                          interp_params => { enable_autoflush => 0 },
+                          component => <<'EOF',
+% my $x;
+x is <% $x + 2 %>
+EOF
+                          expect => <<'EOF',
+x is 2
+EOF
+                          expect_warnings => qr/Use of uninitialized value in addition/,
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
