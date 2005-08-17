@@ -529,7 +529,22 @@ sub _handle_error
     if ($self->error_mode eq 'fatal') {
         rethrow_exception $err;
     } else {
-        UNIVERSAL::isa( $self->out_method, 'CODE' ) ? $self->out_method->("$err") : ( ${ $self->out_method } = "$err" );
+        if ( UNIVERSAL::isa( $self->out_method, 'CODE' ) ) {
+            # This may not be set if an error occurred in
+            # _initialize(), for example with a compilation error.
+            # But the output method may rely on being able to get at
+            # the request object.  This is a nasty code smell but
+            # fixing it properly is probably out of scope.
+            #
+            # Previously this method could only be called from exec().
+            #
+            # Without this one of the tests in 16-live_cgi.t was
+            # failing.
+            local $HTML::Mason::Commands::m ||= $self;
+            $self->out_method->("$err");
+        } else {
+            ${ $self->out_method } = "$err";
+        }
     }
 }
 

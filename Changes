@@ -24,6 +24,10 @@ block, which could hide various errors.
 - Hopefully fix $VERSION in ApacheHandler so PAUSE will not be
 confused and think we have regressed.
 
+- Fix several regressions in the CGIHandler and FakeApache modules.
+Some changes from the stable branch were never merged into the trunk
+before 1.30.  Reported by Jesse Vincent.
+
 
 1.30  August 11, 2005
 

@@ -160,8 +160,14 @@ sub http_header {
 }
 
 sub send_http_header {
-    print shift->http_header;
+    my $self = shift;
+
+    print STDOUT $self->http_header;
+
+    $self->{http_header_sent} = 1;
 }
+
+sub http_header_sent { shift->{http_header_sent} }
 
 # How do we know this under CGI?
 # sub get_basic_auth_pw {}
@@ -260,14 +266,14 @@ sub no_cache {
 }
 
 sub print {
-    shift->query->print(@_);
+    print @_;
 }
 
 sub send_fd {
     my ($self, $fd) = @_;
     local $_;
-    my $p = $self->query->can('print');
-    $p->($_) while defined ($_ = <$fd>);
+
+    print STDOUT while defined ($_ = <$fd>);
 }
 
 # Should this perhaps throw an exception?
