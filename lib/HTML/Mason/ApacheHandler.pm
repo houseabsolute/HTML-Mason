@@ -27,7 +27,7 @@ BEGIN
         require mod_perl;
     }
 
-    my $mpver = ($mod_perl2::VERSION || $mod_perl::VERSION || 0);
+    my $mpver = (mod_perl2->VERSION || mod_perl->VERSION || 0);
 
     # This is the version that introduced PerlAddVar
     if ($mpver && $mpver < 1.24)
