@@ -29,6 +29,12 @@ block, which could hide various errors.
 - Hopefully fix $VERSION in ApacheHandler so PAUSE will not be
 confused and think we have regressed.
 
+- Turned off some prompts during the module's installation.  These
+were intended to help new users configure Apache to run Mason
+components, but they're probably a bit confusing.  Will return in a
+future release as a separate script that can be run from the command
+line.
+
 
 1.30  August 11, 2005
 
