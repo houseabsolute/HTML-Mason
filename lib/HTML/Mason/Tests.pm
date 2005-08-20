@@ -589,7 +589,7 @@ sub check_result {
         }
     }
 
-    $Test->diag( "Got warnings: $warnings" ) if $warnings && $VERBOSE;
+    $Test->diag( "Got warnings: $warnings" ) if $warnings && ( ! $test->{expect_warnings} || $VERBOSE );
     $success = 0 if $test->{no_warnings} && $warnings;
 
     $success ? $self->_success : $self->_fail;
