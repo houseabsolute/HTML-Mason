@@ -89,8 +89,6 @@ sub _handler {
         my $sent_headers = 0;
 
         my $out_method = sub {
-            use Devel::StackTrace; warn Devel::StackTrace->new unless defined HTML::Mason::Request->instance;
-
             # Send headers if they have not been sent by us or by user.
             # We use instance here because if we store $request we get a
             # circular reference and a big memory leak.
@@ -129,7 +127,6 @@ sub _handler {
         my $retval = isa_mason_exception($err, 'Abort')   ? $err->aborted_value  :
                      isa_mason_exception($err, 'Decline') ? $err->declined_value :
                      rethrow_exception $err;
-
 
         # Unlike under mod_perl, we cannot simply return a 301 or 302
         # status and let Apache send headers, we need to explicitly
@@ -204,7 +201,6 @@ sub exec
     # On a success code, send headers if they have not been sent and
     # if we are the top-level request. Since the out_method sends
     # headers, this will typically only apply after $m->abort.
-    # On an error code, leave it to Apache to send the headers.
     if (!$self->is_subrequest
         and $self->auto_send_headers
         and !$r->http_header_sent
