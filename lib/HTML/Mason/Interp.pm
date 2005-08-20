@@ -1338,7 +1338,8 @@ destroyed.
 =for html <a name="item_load"></a>
 
 Returns the component object corresponding to an absolute component
-C<path>, or undef if none exists.
+C<path>, or undef if none exists. Dies with an error if the component
+fails to load because of a syntax error.
 
 =item make_component (comp_source => ... )
 
