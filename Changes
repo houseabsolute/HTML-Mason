@@ -5,28 +5,29 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
-1.31
+1.31  August 20, 2005
 
 [ BUG FIXES ]
+
+- Fix several regressions in the CGIHandler and FakeApache modules.
+Some changes from the stable branch were never merged into the trunk
+before 1.30.  Reported by Jesse Vincent.  Task id #589.
 
 - Under Apache2, if an ApacheHandler object was created during server
 startup and the associated Interp object created any files or
 directories, Mason would crash when attempting to chown those
-files/dirs to the uid/gid that Apache will use after forking.
+files/dirs to the uid/gid that Apache will use after forking.  Task
+#586.
 
 - The compiler was adding an extra block around a component's
 body, which meant that variables declared in the body (in perl lines
-or blocks) were not seen in the cleanup section.
+or blocks) were not seen in the cleanup section.  Task id #587.
 
 - The compiler was also adding "no warnings 'uninitialized'" in this
 block, which could hide various errors.
 
 - Hopefully fix $VERSION in ApacheHandler so PAUSE will not be
 confused and think we have regressed.
-
-- Fix several regressions in the CGIHandler and FakeApache modules.
-Some changes from the stable branch were never merged into the trunk
-before 1.30.  Reported by Jesse Vincent.
 
 
 1.30  August 11, 2005
