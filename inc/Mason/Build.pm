@@ -25,7 +25,12 @@ sub create_build_script
     {
         $self->_apache_test_config;
 
-        $self->_assisted_install_config;
+        # This is generating confusing prompts for everyone on
+        # install, which just doesn't seem like a good thing.  This
+        # should probably be turned back into an external script that
+        # users can run if they want.
+
+        #$self->_assisted_install_config;
     }
 
     $self->add_to_cleanup('mason_tests');
@@ -88,7 +93,7 @@ sub _apache_test_config
 
 sub _is_maintainer
 {
-    return $ENV{MASON_MAINTAINER} if exists $ENV{MASON_MAINTAINER};
+    return $ENV{MASON_MAINTAINER} if $ENV{MASON_MAINTAINER};
 
     return -d 'CVS' ? 1 : 0;
 }
