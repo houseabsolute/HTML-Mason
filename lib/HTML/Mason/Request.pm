@@ -1167,7 +1167,10 @@ sub print
           : \$self->{request_buffer}
         );
 
-    $$bufref .= $_ for grep { defined } @_;
+    # use 'if defined' for maximum efficiency; grep creates a list.
+    for ( @_ ) {
+        $$bufref .= $_ if defined;
+    }
 
     $self->flush_buffer if $self->{autoflush};
 }
