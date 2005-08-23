@@ -24,6 +24,9 @@ PreCalculatedFile\.pm$
 (^|/)CVS(/|$)
 \.cvsignore$
 
+# SVN cruft
+^\.svn
+
 # MakeMaker cruft
 ^Makefile$
 ^blib
