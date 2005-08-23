@@ -51,7 +51,7 @@ sub new {
                                     error_format => 'html',
                                     %p);
 
-    $self->{custom_out_method} = $p{out_method} ? 1 : 0;
+    $self->{has_custom_out_method} = $p{out_method} ? 1 : 0;
 
     $self->interp->compiler->add_allowed_globals('$r');
     
