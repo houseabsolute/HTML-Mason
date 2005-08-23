@@ -95,7 +95,7 @@ sub _is_maintainer
 {
     return $ENV{MASON_MAINTAINER} if $ENV{MASON_MAINTAINER};
 
-    return -d 'CVS' ? 1 : 0;
+    return -d '.svn' ? 1 : 0;
 }
 
 sub _cleanup_apache_test_files
