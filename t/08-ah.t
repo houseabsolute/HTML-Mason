@@ -24,7 +24,7 @@ unless ( $test_data->{is_maintainer} && $mpver )
 
 use File::Spec;
 use HTML::Mason::Tests;
-use Test;
+use Test::More;
 
 use lib 'lib', File::Spec->catdir('t', 'lib');
 
@@ -41,10 +41,10 @@ local $ENV{PORT} = $test_data->{port};
 kill_httpd(1);
 test_load_apache();
 
-my $tests = 21; # multi conf & taint tests
-$tests += 63 if my $have_libapreq = have_module($apreq_module);
-$tests += 42 if my $have_cgi      = have_module('CGI');
-$tests += 16 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
+my $tests = 23; # multi conf & taint tests
+$tests += 69 if my $have_libapreq = have_module($apreq_module);
+$tests += 46 if my $have_cgi      = have_module('CGI');
+$tests += 18 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
 $tests++ if $have_cgi;
 
 # XXX - this never works because Apache::Filter cannot load outside of
@@ -58,15 +58,15 @@ print STDERR "\n";
 
 write_test_comps();
 
-if ($have_libapreq) {        # 63 tests
+if ($have_libapreq) {        # 69 tests
     cleanup_data_dir();
-    apache_request_tests(1); # 24 tests
+    apache_request_tests(1); # 26 tests
 
     cleanup_data_dir();
-    apache_request_tests(0); # 23 tests
+    apache_request_tests(0); # 24 tests
 
     cleanup_data_dir();
-    no_config_tests();       # 16 tests
+    no_config_tests();       # 18 tests
 
     if ($have_filter) {
         cleanup_data_dir();
@@ -76,18 +76,18 @@ if ($have_libapreq) {        # 63 tests
 
 if ($have_tmp) {
     cleanup_data_dir();
-    single_level_serverroot_tests();  # 16 tests
+    single_level_serverroot_tests();  # 18 tests
 }
 
 cleanup_data_dir();
-taint_tests();           # 16 tests
+taint_tests();           # 18 tests
 
-if ($have_cgi) {             # 42 tests (+ 1?)
+if ($have_cgi) {             # 46 tests
     cleanup_data_dir();
-    cgi_tests(1);            # 24 tests
+    cgi_tests(1);            # 26 tests
 
     cleanup_data_dir();
-    cgi_tests(0);            # 19 tests
+    cgi_tests(0);            # 21 tests
 }
 
 cleanup_data_dir();
@@ -545,6 +545,8 @@ Status code: 0
 EOF
                                                   );
     ok($success);
+    unlike( $response->content, qr{HTTP/1\.1},
+            'the response for a good component should not contain headers in the body' );
 
     $path = '/comps/headers';
     $path = "/ah=0$path" if $with_handler;
@@ -626,16 +628,16 @@ EOF
     # error_mode is html so we get lots of stuff
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
-    ok( $actual, qr{error.*Mine heart is pierced}s,
-        "Error should have said 'Mine heart is pierced'" );
+    like( $actual, qr{error.*Mine heart is pierced}s,
+          "Error should have said 'Mine heart is pierced'" );
 
     if ($with_handler)
     {
         # error_mode is fatal so we just get a 500
         $response = Apache::test->fetch( "/ah=3/comps/die" );
         $actual = filter_response($response, $with_handler);
-        ok( $actual, qr{500 Internal Server Error},
-            "die should have generated 500 error" );
+        like( $actual, qr{500 Internal Server Error},
+              "die should have generated 500 error" );
     }
 
     $path = '/comps/params?qs1=foo&qs2=bar&foo=A&foo=B';
@@ -847,8 +849,10 @@ EOF
     $response = Apache::test->fetch($path);
     $actual = filter_response($response, $with_handler);
 
-    ok( $actual, qr{<b>error:</b>.*Error during compilation}s,
-        "bad code should cause an HTML error message" );
+    like( $actual, qr{<b>error:</b>.*Error during compilation}s,
+          "bad code should cause an HTML error message" );
+    unlike( $response->content, qr{HTTP/1\.1},
+            'the response for a compilation error should not contain headers in the body' );
 
     my $expected_class = $with_handler ? 'My::Interp' : 'HTML::Mason::Interp';
 
@@ -905,13 +909,13 @@ EOF
 
     $response = Apache::test->fetch('/comps/multiconf2/dhandler_test');
     $actual = filter_response($response, 0);
-    ok( $actual, qr{404 not found}i,
-        "Attempt to request a non-existent component should not work with incorrect dhandler_name" );
+    like( $actual, qr{404 not found}i,
+          "Attempt to request a non-existent component should not work with incorrect dhandler_name" );
 
     $response = Apache::test->fetch('/perl-status');
     $actual = filter_response($response, 0);
-    ok( $actual, qr{<a href="/perl-status\?mason0001">HTML::Mason status</a>},
-        "Apache::Status");
+    like( $actual, qr{<a href="/perl-status\?mason0001">HTML::Mason status</a>},
+          "Apache::Status");
 
     kill_httpd(1);
 }
