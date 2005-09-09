@@ -196,6 +196,13 @@ sub _handle_error
     } else {
         if ( $self->error_format eq 'html' ) {
             $self->apache_req->content_type('text/html');
+            # We need to explicitly send the headers here under mp1,
+            # because otherwise the default out_method will check
+            # http_header_sent(), which will return true because there
+            # is a content_type.  This means that headers will _never_
+            # be sent properly unless we do it here.
+            $self->apache_req->send_http_header
+                unless APACHE2;
         }
         $self->SUPER::_handle_error($err);
     }

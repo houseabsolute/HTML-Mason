@@ -5,7 +5,16 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
-1.1301  August 23, 2005
+1.32
+
+[ BUG FIXES ]
+
+- Under mod_perl 1.x with error_mode set to output, the headers were
+sent after the content when a compilation error occurred.  Reported by
+Gareth Kirwan.  Task id #592.
+
+
+1.3101  August 23, 2005
 
 [ BUG FIXES ]
 
