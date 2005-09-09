@@ -877,7 +877,7 @@ sub prepare_request
         $retval = OK if $retval == 200;
         unless ($retval) {
             unless (APACHE2) {
-                unless ($r->headers_out->{"Content-type"}) { 
+                unless (http_header_sent($r)) {
                     $r->send_http_header();
                 }
             }
