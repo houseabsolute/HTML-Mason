@@ -841,8 +841,7 @@ sub ACTION_params_pod
     my @params = $self->_find_params;
     my $pod = $self->_run_params_comp(@params);
 
-    my $fh = HTML::Mason::Tools::make_fh();
-    open $fh, ">$params_pod"
+    open my $fh, ">$params_pod"
         or die "Cannot write to $params_pod";
     print $fh $pod
         or die "Cannot write to $params_pod";

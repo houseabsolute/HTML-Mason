@@ -8,7 +8,7 @@ use strict;
 use warnings;
 
 use Params::Validate qw(SCALAR validate);
-use HTML::Mason::Tools qw(make_fh taint_is_on);
+use HTML::Mason::Tools qw(taint_is_on);
 
 use HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
@@ -108,8 +108,7 @@ sub compile_to_file
 
     ($file) = $file =~ /^(.*)/s if taint_is_on;  # Untaint blindly
 
-    my $fh = make_fh();
-    open $fh, "> $file"
+    open my $fh, "> $file"
         or system_error "Couldn't create object file $file: $!";
 
     $self->compile( comp_source => $source->comp_source_ref,

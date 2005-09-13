@@ -22,7 +22,7 @@ require Exporter;
 use vars qw(@ISA @EXPORT_OK);
 
 @ISA = qw(Exporter);
-@EXPORT_OK = qw(can_weaken read_file read_file_ref url_escape paths_eq compress_path mason_canonpath make_fh taint_is_on load_pkg pkg_loaded absolute_comp_path checksum);
+@EXPORT_OK = qw(can_weaken read_file read_file_ref url_escape paths_eq compress_path mason_canonpath taint_is_on load_pkg pkg_loaded absolute_comp_path checksum);
 
 # Is weaken available? Even under 5.6+, it might not be available on systems w/o a compiler.
 #
@@ -75,8 +75,7 @@ sub _get_reading_handle {
     my ($file,$binmode) = @_;
     error "read_file: '$file' does not exist" unless -e $file;
     error "read_file: '$file' is a directory" if (-d _);
-    my $fh = make_fh();
-    open $fh, "< $file"
+    open my $fh, "< $file"
         or system_error "read_file: could not open file '$file' for reading: $!";
     binmode $fh if $binmode;
     return $fh;
@@ -219,12 +218,6 @@ sub _taint_is_on
     }
 }
 
-sub make_fh
-{
-    return undef if $] >= 5.6;  # Let filehandles autovivify
-    return do { local *FH; *FH; };  # double *FH avoids a warning
-}
-
 sub coerce_to_array
 {
     my ($val, $name) = @_;
@@ -349,11 +342,6 @@ If the module is loaded successfully, this function returns true.
 =item taint_is_on
 
 Returns a boolean value indicating whether taint mode is on or not.
-
-=item make_fh
-
-This function returns something suitable to be passed to the first
-argument of an C<open> function call.
 
 =item coerce_to_array
 

@@ -17,7 +17,7 @@ use HTML::Mason;
 use HTML::Mason::Escapes;
 use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
-use HTML::Mason::Tools qw(make_fh read_file taint_is_on load_pkg);
+use HTML::Mason::Tools qw(read_file taint_is_on load_pkg);
 
 use HTML::Mason::Exceptions( abbr => [qw(param_error system_error wrong_compiler_error compilation_error error)] );
 
@@ -300,8 +300,7 @@ sub _make_object_dir
     my $object_dir = $self->object_dir;
     $self->_make_data_subdir($object_dir);
     my $object_create_marker_file = $self->object_create_marker_file;
-    my $fh = make_fh();
-    open($fh, ">$object_create_marker_file")
+    open my $fh, ">$object_create_marker_file"
         or system_error "Could not create '$object_create_marker_file': $!";
 }
 

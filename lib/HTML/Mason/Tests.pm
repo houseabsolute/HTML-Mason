@@ -10,7 +10,6 @@ use File::Spec;
 
 use HTML::Mason;
 use HTML::Mason::Compiler::ToObject;
-use HTML::Mason::Tools qw(make_fh);
 
 use Getopt::Long;
 
@@ -394,8 +393,7 @@ sub write_comp
     $Test->diag( "Making component $path at $real_file\n" )
         if $DEBUG;
 
-    my $fh = make_fh();
-    open $fh, ">$real_file"
+    open my $fh, ">$real_file"
         or die "Unable to write to '$real_file': $!";
     print $fh $component
         or die "Unable to write to '$real_file': $!";
