@@ -300,8 +300,11 @@ sub _make_object_dir
     my $object_dir = $self->object_dir;
     $self->_make_data_subdir($object_dir);
     my $object_create_marker_file = $self->object_create_marker_file;
-    open my $fh, ">$object_create_marker_file"
-        or system_error "Could not create '$object_create_marker_file': $!";
+    unless (-f $object_create_marker_file) {
+        open my $fh, ">$object_create_marker_file"
+            or system_error "Could not create '$object_create_marker_file': $!";
+        $self->push_files_written($object_create_marker_file);
+    }
 }
 
 sub _make_cache_dir
