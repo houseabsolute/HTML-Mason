@@ -881,7 +881,7 @@ sub prepare_request
         my $retval = ( isa_mason_exception($err, 'Abort')   ? $err->aborted_value  :
                        isa_mason_exception($err, 'Decline') ? $err->declined_value :
                        rethrow_exception $err );
-        $retval = OK if $retval == 200;
+        $retval = OK if defined $retval && $retval == 200;
         unless ($retval) {
             unless (APACHE2) {
                 unless (http_header_sent($r)) {
