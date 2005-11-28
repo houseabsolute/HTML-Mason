@@ -37,6 +37,7 @@ sub url_escape
 {
     return unless defined ${ $_[0] };
 
+    use bytes;
     ${ $_[0] } =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
 }
 

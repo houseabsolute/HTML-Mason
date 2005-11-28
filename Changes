@@ -13,6 +13,9 @@ available at http://www.masonhq.com/code/history.html.
 sent after the content when a compilation error occurred.  Reported by
 Gareth Kirwan.  Task id #592.
 
+- URI-escape utf8 characters the same way that CGI::escape and
+URI::Escape::uri_escape_utf8 do.  Patch by Denis Shaposhnikov.
+
 
 1.3101  August 23, 2005
 
