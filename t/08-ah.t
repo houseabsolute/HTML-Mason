@@ -14,7 +14,7 @@ my $mpver;
     no warnings 'once';
     $mpver = ($mod_perl2::VERSION || $mod_perl::VERSION);
 }
-my $apreq_module = $mpver >= 2 ? 'Apache2::Request' : 'Apache::Request';
+my $apreq_module = $mpver && $mpver >= 2 ? 'Apache2::Request' : 'Apache::Request';
 
 unless ( $test_data->{is_maintainer} && $mpver )
 {
