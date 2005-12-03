@@ -16,6 +16,11 @@ Gareth Kirwan.  Task id #592.
 - URI-escape utf8 characters the same way that CGI::escape and
 URI::Escape::uri_escape_utf8 do.  Patch by Denis Shaposhnikov.
 
+- On startup Mason creates a file named ".__obj_create_marker" in the
+object directory.  Under mod_perl, Mason was not chmod'ing the file
+when Apache was started as root. This led to permission errors in
+environments where the Interp is created anew every request.
+
 
 1.3101  August 23, 2005
 
