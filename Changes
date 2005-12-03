@@ -22,6 +22,10 @@ when Apache was started as root. This led to permission errors in
 environments where the Interp is created anew every request.  Task id
 #593.
 
+- Treat the return value of component execution as a string in
+ApacheHandler.  This prevent warnings about comparing the empty string
+to a number when a component return "".  Reported by Benjamin Franz.
+
 
 1.3101  August 23, 2005
 
