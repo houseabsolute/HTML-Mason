@@ -26,6 +26,9 @@ environments where the Interp is created anew every request.  Task id
 ApacheHandler.  This prevent warnings about comparing the empty string
 to a number when a component return "".  Reported by Benjamin Franz.
 
+- Setting a MasonPlugins Apache parameter caused a fatal error.  Patch
+by David Jack Olrik.
+
 
 1.3101  August 23, 2005
 
