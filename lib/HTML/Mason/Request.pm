@@ -128,7 +128,7 @@ BEGIN
          },
 
          plugins =>
-         { parse => 'arrayref', default => [], type => ARRAYREF,
+         { parse => 'list', default => [], type => ARRAYREF,
            descr => 'List of plugin classes or objects to run hooks around components and requests' },
 
          # Only used when creating subrequests
