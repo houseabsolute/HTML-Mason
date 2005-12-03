@@ -19,7 +19,8 @@ URI::Escape::uri_escape_utf8 do.  Patch by Denis Shaposhnikov.
 - On startup Mason creates a file named ".__obj_create_marker" in the
 object directory.  Under mod_perl, Mason was not chmod'ing the file
 when Apache was started as root. This led to permission errors in
-environments where the Interp is created anew every request.
+environments where the Interp is created anew every request.  Task id
+#593.
 
 
 1.3101  August 23, 2005
