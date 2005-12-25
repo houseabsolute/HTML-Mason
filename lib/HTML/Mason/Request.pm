@@ -929,12 +929,12 @@ sub callers
 {
     my ($self, $levels_back) = @_;
     if (defined($levels_back)) {
-        my $frame = $self->stack_frame($levels_back);
+        my $frame = $self->_stack_frame($levels_back);
         return unless defined $frame;
         return $frame->[STACK_COMP];
     } else {
         my $depth = $self->depth;
-        return map($_->[STACK_COMP], $self->stack_frames);
+        return map($_->[STACK_COMP], $self->_stack_frames);
     }
 }
 
@@ -946,7 +946,7 @@ sub caller_args
     my ($self, $levels_back) = @_;
     param_error "caller_args expects stack level as argument" unless defined $levels_back;
 
-    my $frame = $self->stack_frame($levels_back);
+    my $frame = $self->_stack_frame($levels_back);
     return unless $frame;
     my $args = $frame->[STACK_ARGS];
     return wantarray ? @$args : { @$args };
@@ -1390,7 +1390,7 @@ sub debug_hook
 # Return the stack frame $levels down from the top of the stack.
 # If $levels is negative, count from the bottom of the stack.
 # 
-sub stack_frame {
+sub _stack_frame {
     my ($self, $levels) = @_;
     my $depth = $self->{top_stack}->[STACK_DEPTH];
     my $index;
@@ -1405,7 +1405,7 @@ sub stack_frame {
 
 # Return all stack frames, in order from the top of the stack to the
 # initial frame.
-sub stack_frames {
+sub _stack_frames {
     my ($self) = @_;
     my $depth = $self->{top_stack}->[STACK_DEPTH];
     return reverse map { $self->{stack}->[$_] } (0..$depth-1);
