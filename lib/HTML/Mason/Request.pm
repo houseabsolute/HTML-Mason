@@ -981,11 +981,9 @@ sub decline
 #
 sub depth
 {
-    my ($self) = @_;
-
     # direct access for speed because this method is called on every
     # call to $m->comp
-    return $self->{top_stack}->[STACK_DEPTH];
+    return $_[0]->{top_stack}->[STACK_DEPTH];
 }
 
 #
