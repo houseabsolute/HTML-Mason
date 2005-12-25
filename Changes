@@ -29,6 +29,10 @@ to a number when a component return "".  Reported by Benjamin Franz.
 - Setting a MasonPlugins Apache parameter caused a fatal error.  Patch
 by David Jack Olrik.
 
+- Calling base_comp() on the Request object inside a plugin's
+start_request_hook method caused an infinite recursion in Mason.
+Reported by Jesse Vincent.
+
 
 1.3101  August 23, 2005
 
