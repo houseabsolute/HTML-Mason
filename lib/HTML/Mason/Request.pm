@@ -1180,7 +1180,6 @@ sub print
 #
 sub comp {
     my $self = shift;
-    my $top_stack = $self->{top_stack};
 
     # Get modifiers: optional hash reference passed in as first argument.
     # Merge multiple hash references to simplify user and internal usage.
@@ -1203,6 +1202,7 @@ sub comp {
     
     # Increment depth and check for maximum recursion. Depth starts at 1.
     #
+    my $top_stack = $self->{top_stack};
     my $depth = defined($top_stack) ? $top_stack->[STACK_DEPTH] + 1 : 1;
     error ($depth-1 . " levels deep in component stack (infinite recursive call?)\n")
         if ($depth > $self->{max_recurse});
