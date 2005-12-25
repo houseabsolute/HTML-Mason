@@ -108,6 +108,10 @@ subrequests by checking C<is_subrequest> on I<request>. e.g.
        }
    }
 
+Currently, this hook is called before any information about the
+requested component is available, so you cannot call methods like
+C<base_comp()> or C<request_args()> on the Request object.
+
 =item end_request_hook
 
 C<end_request_hook> is called before the Mason request
