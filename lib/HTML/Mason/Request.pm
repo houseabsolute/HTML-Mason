@@ -1420,8 +1420,7 @@ sub current_args { return $_[0]->{top_stack}->[STACK_ARGS] }
 sub base_comp {
     my ($self) = @_;
 
-    error "Cannot determine base_comp for this request yet (did you call this from a plugin's start_request hook?)"
-        unless $self->{top_stack};
+    return unless $self->{top_stack};
 
     unless ( defined $self->{top_stack}->[STACK_BASE_COMP] ) {
         $self->_compute_base_comp_for_frame($self->{top_stack}->[STACK_DEPTH] - 1);
@@ -1723,8 +1722,7 @@ to a temporary variable.
 
 =for html <a name="item_base_comp"></a>
 
-Returns the current base component for method and attributes.
-This is the component referred to by SELF:.
+Returns the current base component.
 
 Here are the rules that determine base_comp as you move from
 component to component.
@@ -1732,7 +1730,7 @@ component to component.
 =over
 
 =item * At the beginning of a request, the base component is
-initialized to the requested component (C<< $m->request_comp >>).
+initialized to the requested component (C<< $m->request_comp() >>).
 
 =item * When you call a regular component via a path, the base
 component changes to the called component.
@@ -1753,6 +1751,11 @@ the base component changes to the method's owner.
 =back
 
 =back
+
+This may return nothing if the base component is not yet known, for
+example inside a plugin's C<start_request_hook()> method, where we
+have created a request but it does not yet know anything about the
+component being called.
 
 =item cache (cache_class=>'...', [cache_options])
 
