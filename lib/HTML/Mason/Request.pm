@@ -53,7 +53,7 @@ use constant STACK_BASE_COMP    => 6;
 use constant STACK_IN_CALL_SELF => 7;
 
 # HTML::Mason::Exceptions always exports rethrow_exception() and isa_mason_exception()
-use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error
+use HTML::Mason::Exceptions( abbr => [qw(error param_error syntax_error
                                          top_level_not_found_error error)] );
 
 use Params::Validate qw(:all);
@@ -1421,8 +1421,12 @@ sub current_args { return $_[0]->{top_stack}->[STACK_ARGS] }
 
 sub base_comp {
     my ($self) = @_;
-    unless (defined($self->{top_stack}->[STACK_BASE_COMP])) {
-        return $self->_compute_base_comp_for_frame($self->{top_stack}->[STACK_DEPTH] - 1);
+
+    error "Cannot determine base_comp for this request yet (did you call this from a plugin's start_request hook?)"
+        unless $self->{top_stack};
+
+    unless ( defined $self->{top_stack}->[STACK_BASE_COMP] ) {
+        $self->_compute_base_comp_for_frame($self->{top_stack}->[STACK_DEPTH] - 1);
     }
     return $self->{top_stack}->[STACK_BASE_COMP];
 }
