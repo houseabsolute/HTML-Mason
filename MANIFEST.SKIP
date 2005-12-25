@@ -45,3 +45,4 @@ samples/cd-me.*
 
 ^pod2htm[di]\.\w+$
 
+^t/data
