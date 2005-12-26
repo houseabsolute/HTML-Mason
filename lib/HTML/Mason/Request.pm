@@ -217,7 +217,6 @@ my %plugin_loaded;
 
 sub _initialize {
     my ($self) = @_;
-    my $interp = $self->interp;
 
     local $SIG{'__DIE__'} = \&rethrow_exception;
 
@@ -243,7 +242,7 @@ sub _initialize {
 
                 # If path was not found, check for dhandler.
                 unless ($request_comp) {
-                    if ( $request_comp = $interp->find_comp_upwards($path, $self->dhandler_name) ) {
+                    if ( $request_comp = $self->interp->find_comp_upwards($path, $self->dhandler_name) ) {
                         my $parent_path = $request_comp->dir_path;
                         ($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
                     }
@@ -369,7 +368,6 @@ sub alter_superclass
 
 sub exec {
     my ($self) = @_;
-    my $interp = $self->interp;
 
     # If the request failed to initialize, the error has already been handled
     # at the bottom of _initialize(); just return.
@@ -487,7 +485,7 @@ sub exec {
     };
 
     # Purge code cache if necessary.
-    $interp->purge_code_cache;
+    $self->interp->purge_code_cache;
 
     # Handle errors.
     my $err = $@;
