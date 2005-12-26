@@ -15,7 +15,7 @@ $VERSION = 1.69;
 
 
 # PerlAddVar was introduced in mod_perl-1.24
-# Support for 1.99 <= modperl < 2.00 was removed due to API changes
+# Support for modperl2 < 1.999022 was removed due to API changes
 BEGIN
 {
     if ( $ENV{MOD_PERL} && $ENV{MOD_PERL} =~ /1\.99|2\.0/ )
