@@ -1001,32 +1001,32 @@ sub fetch_comp
     return undef unless defined($path);
     $current_comp ||= $self->{top_stack}->[STACK_COMP];
 
-    if ($self->{use_internal_component_caches}) {
-        my $fetch_comp_cache = $current_comp->{fetch_comp_cache};
-        unless (defined($fetch_comp_cache->{$path})) {
+    return $self->_fetch_comp($path, $current_comp, $error)
+        unless $self->{use_internal_component_caches};
 
-            # Cache the component objects associated with
-            # uncanonicalized paths like ../foo/bar.html.  SELF and
-            # REQUEST are dynamic and cannot be cached. Weaken the
-            # references in this cache so that we don't hang on to the
-            # coponent if it disappears from the main code cache.
-            #
-            # See Interp::_initialize for the definition of
-            # use_internal_component_caches and the conditions under
-            # which we can create this cache safely.
-            #
-            if ($path =~ /^(?:SELF|REQUEST)/) {
-                return $self->_fetch_comp($path, $current_comp, $error);
-            } else {
-                $fetch_comp_cache->{$path} =
-                    $self->_fetch_comp($path, $current_comp, $error);
-                Scalar::Util::weaken($fetch_comp_cache->{$path}) if can_weaken;
-            }
+    my $fetch_comp_cache = $current_comp->{fetch_comp_cache};
+    unless (defined($fetch_comp_cache->{$path})) {
+
+        # Cache the component objects associated with
+        # uncanonicalized paths like ../foo/bar.html.  SELF and
+        # REQUEST are dynamic and cannot be cached. Weaken the
+        # references in this cache so that we don't hang on to the
+        # coponent if it disappears from the main code cache.
+        #
+        # See Interp::_initialize for the definition of
+        # use_internal_component_caches and the conditions under
+        # which we can create this cache safely.
+        #
+        if ($path =~ /^(?:SELF|REQUEST)/) {
+            return $self->_fetch_comp($path, $current_comp, $error);
+        } else {
+            $fetch_comp_cache->{$path} =
+                $self->_fetch_comp($path, $current_comp, $error);
+            Scalar::Util::weaken($fetch_comp_cache->{$path}) if can_weaken;
         }
-        return $fetch_comp_cache->{$path};
-    } else {
-        return $self->_fetch_comp($path, $current_comp, $error);
     }
+
+    return $fetch_comp_cache->{$path};
 }
 
 sub _fetch_comp
