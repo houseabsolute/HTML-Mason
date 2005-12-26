@@ -164,60 +164,17 @@ sub _initialize
     $self->{files_written} = [];
     $self->{static_source_touch_file_lastmod} = 0;
 
-    #
-    # Process initial comp_root setting.
-    #
     $self->_assign_comp_root($self->{comp_root});
-
-    #
-    # Check that data_dir is absolute.
-    #
-    if ($self->{data_dir}) {
-        $self->{data_dir} = File::Spec->canonpath( $self->{data_dir} );
-        param_error "data_dir '$self->{data_dir}' must be an absolute directory"
-            unless File::Spec->file_name_is_absolute( $self->{data_dir} );
-    }
-
-    #
-    # Create data subdirectories if necessary. mkpath will die on error.
-    #
-    if ($self->data_dir) {
-        $self->_make_object_dir;
-        $self->_make_cache_dir;
-    } else {
-        $self->{use_object_files} = 0;
-    }
-
-    #
-    # Add the escape flags (including defaults)
-    #
-    foreach ( [ h => \&HTML::Mason::Escapes::html_entities_escape ],
-              [ u => \&HTML::Mason::Escapes::url_escape ],
-            )
-    {
-        $self->set_escape(@$_);
-    }
-
-    if ( my $e = delete $self->{escape_flags} )
-    {
-        while ( my ($flag, $code) = each %$e )
-        {
-            $self->set_escape( $flag => $code );
-        }
-    }
+    $self->_check_data_dir();
+    $self->_create_data_subdirs();
+    $self->_initialize_escapes();
 
     #
     # Create preallocated buffer for requests.
     #
     $self->{preallocated_output_buffer} = ' ' x $self->buffer_preallocate_size;
 
-    #
-    # Check for unlimited code cache, or compute code_cache parameters.
-    #
-    $self->{unlimited_code_cache} = ($self->{code_cache_max_size} eq 'unlimited');
-    unless ($self->{unlimited_code_cache}) {
-        $self->{code_cache_min_size} = $self->{code_cache_max_size} * 0.75;
-    }
+    $self->_set_code_cache_attributes();
 
     #
     # If static_source=1, unlimited_code_cache=1, and
@@ -243,28 +200,88 @@ sub _initialize
          $self->{unlimited_code_cache} &&
          !$self->{dynamic_comp_root});
 
+    $self->_preload_components();
+}
+
+sub _check_data_dir
+{
+    my $self = shift;
+
+    return unless $self->{data_dir};
+
+    $self->{data_dir} = File::Spec->canonpath( $self->{data_dir} );
+    param_error "data_dir '$self->{data_dir}' must be an absolute directory"
+        unless File::Spec->file_name_is_absolute( $self->{data_dir} );
+}
+
+sub _create_data_subdirs
+{
+    my $self = shift;
+
+    if ($self->data_dir) {
+        $self->_make_object_dir;
+        $self->_make_cache_dir;
+    } else {
+        $self->{use_object_files} = 0;
+    }
+}
+
+sub _initialize_escapes
+{
+    my $self = shift;
+
     #
-    # Preloads
+    # Add the escape flags (including defaults)
     #
-    if ($self->preloads) {
-        foreach my $pattern (@{$self->preloads}) {
-            error "preload pattern '$pattern' must be an absolute path"
-                unless File::Spec->file_name_is_absolute($pattern);
-            my %path_hash;
-            foreach my $pair ($self->comp_root_array) {
-                my $root = $pair->[1];
-                foreach my $path ($self->resolver->glob_path($pattern, $root)) {
-                    $path_hash{$path}++;
-                }
+    foreach ( [ h => \&HTML::Mason::Escapes::html_entities_escape ],
+              [ u => \&HTML::Mason::Escapes::url_escape ],
+            )
+    {
+        $self->set_escape(@$_);
+    }
+
+    if ( my $e = delete $self->{escape_flags} )
+    {
+        while ( my ($flag, $code) = each %$e )
+        {
+            $self->set_escape( $flag => $code );
+        }
+    }
+}
+
+sub _set_code_cache_attributes
+{
+    my $self = shift;
+
+    $self->{unlimited_code_cache} = ($self->{code_cache_max_size} eq 'unlimited');
+    unless ($self->{unlimited_code_cache}) {
+        $self->{code_cache_min_size} = $self->{code_cache_max_size} * 0.75;
+    }
+}
+
+sub _preload_components
+{
+    my $self = shift;
+
+    return unless $self->preloads;
+
+    foreach my $pattern (@{$self->preloads}) {
+        error "preload pattern '$pattern' must be an absolute path"
+            unless File::Spec->file_name_is_absolute($pattern);
+        my %path_hash;
+        foreach my $pair ($self->comp_root_array) {
+            my $root = $pair->[1];
+            foreach my $path ($self->resolver->glob_path($pattern, $root)) {
+                $path_hash{$path}++;
             }
-            my @paths = keys(%path_hash);
-            warn "Didn't find any components for preload pattern '$pattern'"
-                unless @paths;
-            foreach (@paths)
-            {
-                $self->load($_)
-                    or error "Cannot load component $_, found via pattern $pattern";
-            }
+        }
+        my @paths = keys(%path_hash);
+        warn "Didn't find any components for preload pattern '$pattern'"
+            unless @paths;
+        foreach (@paths)
+        {
+            $self->load($_)
+                or error "Cannot load component $_, found via pattern $pattern";
         }
     }
 }
