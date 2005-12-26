@@ -863,10 +863,6 @@ sub use_autohandlers
 # This is used in things like Apache::Status reports.  Currently shows:
 # -- Interp properties
 # -- loaded (cached) components
-#
-# Note that Apache::Status has an extremely narrow URL API, and I
-# think the only way to pass info to another request is through
-# PATH_INFO.  That's why the expiration stuff is awkward.
 sub status_as_html {
     my ($self, %p) = @_;
 
