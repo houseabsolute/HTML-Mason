@@ -1097,7 +1097,7 @@ EOF
                           expect => <<'EOF',
 x is 2
 EOF
-                          expect_warnings => qr/Use of uninitialized value in addition/,
+                          expect_warnings => qr/Use of uninitialized value.+in addition/,
                         );
 
 #------------------------------------------------------------
@@ -1112,7 +1112,7 @@ EOF
                           expect => <<'EOF',
 x is 2
 EOF
-                          expect_warnings => qr/Use of uninitialized value in addition/,
+                          expect_warnings => qr/Use of uninitialized value.+in addition/,
                         );
 
 #------------------------------------------------------------
