@@ -553,7 +553,7 @@ sub remove_object_files
     my $object_dir = $self->object_dir;
     if (-d $object_dir) {
         my $temp_dir = File::Temp::tempdir(DIR => $self->data_dir);
-        rename($object_dir, $temp_dir)
+        rename($object_dir, File::Spec->catdir( $temp_dir, 'target' ) )
             or die "could not rename '$object_dir' to '$temp_dir': $@";
         $self->_make_object_dir();
         rmtree($temp_dir);

@@ -5,6 +5,14 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.33
+
+[ BUG FIXES ]
+
+- On Win32, a test failed when Mason tried to use rename to move a dir
+into an existing dir. Patch by Shane McCarron. Task id #594.
+
+
 1.32  January 3, 2005
 
 [ BUG FIXES ]
