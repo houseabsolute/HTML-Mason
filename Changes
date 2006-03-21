@@ -12,6 +12,12 @@ available at http://www.masonhq.com/code/history.html.
 - On Win32, a test failed when Mason tried to use rename to move a dir
 into an existing dir. Patch by Shane McCarron. Task id #594.
 
+- Trying to load HTML::Mason::ApacheHandler outside of mod_perl caused
+an error "like Undefined subroutine &Apache::perl_hook called at
+/usr/local/share/perl/5.8.7/HTML/Mason/ApacheHandler.pm line
+257". While it will never _run_ outside of mod_perl, it should at
+least load.
+
 
 1.32  January 3, 2005
 
