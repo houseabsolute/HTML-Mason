@@ -258,7 +258,7 @@ BEGIN {
     }
 }
 
-unless ( APACHE2 )
+if ( $ENV{MOD_PERL} && ! APACHE2 )
 {
     # No modern distro/OS packages a mod_perl without all of this
     # stuff turned on, does it?
