@@ -798,12 +798,6 @@ sub ACTION_docs
     $self->SUPER::ACTION_docs(@_);
 }
 
-# trick ApacheHandler into not dying
-sub Apache::perl_hook { 1 }
-sub Apache::server { 0 }
-
-use strict;
-
 sub ACTION_params_pod
 {
     my $self = shift;
