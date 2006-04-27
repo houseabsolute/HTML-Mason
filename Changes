@@ -18,6 +18,9 @@ an error "like Undefined subroutine &Apache::perl_hook called at
 257". While it will never _run_ outside of mod_perl, it should at
 least load.
 
+- The example code in the HTML::Mason::Resolver::Null code was
+just wrong. Fixed by John Siracusa.
+
 
 1.32  January 3, 2005
 
