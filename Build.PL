@@ -17,16 +17,14 @@ my %prereq = ( 'Cache::Cache'     => 1.00,
                'Scalar::Util'     => 1.01,
              );
 
-eval { require mod_perl };
-my $has_mod_perl_1 = $@ ? 0 : 1;
-
+my $has_mod_perl_1 = eval { require mod_perl } || 0;
 if ($has_mod_perl_1)
 {
     $prereq{mod_perl} = 1.24;
 }
 
-eval { require mod_perl2 };
-my $has_mod_perl_2 = $@ ? 0 : 1;
+
+my $has_mod_perl_2 = eval { require mod_perl2 } || 0;
 my $has_only_mp2 = ! $has_mod_perl_1 && $has_mod_perl_2;
 
 # XXX - this really isn't right since we really want to know which
