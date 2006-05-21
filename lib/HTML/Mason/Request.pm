@@ -1317,6 +1317,7 @@ sub content {
     my $save_frame = $self->{top_stack};
     { local $self->{top_stack} = $self->{stack}->[$self->{top_stack}->[STACK_DEPTH]-2];
       local $self->{top_stack}->[STACK_BUFFER] = \$buffer;
+      local $self->{top_stack}->[STACK_BUFFER_IS_FLUSHABLE] = 0;
       $content->(); }
     $self->{top_stack} = $save_frame;
 
