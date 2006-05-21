@@ -1157,6 +1157,8 @@ sub print
 {
     my $self = shift;
 
+    # $self->{top_stack} is always defined _except_ in the case of a
+    # call to print inside a start-/end-request plugin.
     my $bufref =
         ( defined $self->{top_stack}
           ? $self->{top_stack}->[STACK_BUFFER]
