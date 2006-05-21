@@ -522,7 +522,7 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'clear_filter',
+    $group->add_test( name => 'clear_buffer',
                       description => 'Test $m->clear_buffer in a normal component',
                       component => <<'EOF',
 one
