@@ -9,8 +9,13 @@ available at http://www.masonhq.com/code/history.html.
 
 [ BUG FIXES ]
 
+- If $m->flush_buffer() was called when there was a filter somewhere
+in the component chain, the flush did nothing. Task id #596. Reported
+by Shane McCarron.
+
 - On Win32, a test failed when Mason tried to use rename to move a dir
-into an existing dir. Patch by Shane McCarron. Task id #594.
+into an existing dir. Patch by Shane McCarron. Task id #594 and RT
+#17828.
 
 - Trying to load HTML::Mason::ApacheHandler outside of mod_perl caused
 an error "like Undefined subroutine &Apache::perl_hook called at
@@ -1052,7 +1057,7 @@ way as constructor parameters.
 - The component requested and the arguments it was passed are now
 properties of the Request object.
 
-1.05  April 30, 2001
+1.05  April 30, 2002
 
 - Fixed improper handling of parameters for non-GET/POST
 request. (submitted by Radu Greab)

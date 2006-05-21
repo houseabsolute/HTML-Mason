@@ -1344,8 +1344,26 @@ sub flush_buffer
 {
     my $self = shift;
 
-    $self->out_method->($self->{request_buffer});
-    $self->{request_buffer} = '';
+    if ( $self->{top_stack}->[STACK_BUFFER] )
+    {
+        my $comp = $self->{top_stack}->[STACK_COMP];
+        if ( $comp->has_filter()
+             && defined $comp->filter() )
+        {
+            $self->out_method->
+                ( $comp->filter->( ${ $self->{top_stack}->[STACK_BUFFER] } ) );
+        }
+        else
+        {
+            $self->out_method->( ${ $self->{top_stack}->[STACK_BUFFER] } );
+        }
+        ${$self->{top_stack}->[STACK_BUFFER]} = '';
+    }
+    else
+    {
+        $self->out_method->($self->{request_buffer});
+        $self->{request_buffer} = '';
+    }
 }
 
 sub request_args
