@@ -51,6 +51,7 @@ use constant STACK_PATH         => 4;
 use constant STACK_DEPTH        => 5;
 use constant STACK_BASE_COMP    => 6;
 use constant STACK_IN_CALL_SELF => 7;
+use constant STACK_BUFFER_IS_FLUSHABLE => 8;
 
 # HTML::Mason::Exceptions always exports rethrow_exception() and isa_mason_exception()
 use HTML::Mason::Exceptions( abbr => [qw(error param_error syntax_error
@@ -1213,18 +1214,20 @@ sub comp {
     my $filter_buffer = '';
     my $top_buffer = defined($mods{store}) ? $mods{store} : $top_stack->[STACK_BUFFER];
     my $stack_buffer = $comp->{has_filter} ? \$filter_buffer : $top_buffer;
+    my $flushable = exists $mods{flushable} ? $mods{flushable} : 1;
 
     # Add new stack frame and point dynamically scoped $self->{top_stack} at it.
     local $self->{top_stack} = $self->{stack}->[$depth-1] =
         [
-         $comp,          # STACK_COMP
-         \@_,            # STACK_ARGS
-         $stack_buffer,  # STACK_BUFFER
-         \%mods,         # STACK_MODS
-         $path,          # STACK_PATH
-         $depth,         # STACK_DEPTH
-         undef,          # STACK_BASE_COMP
-         undef,          # STACK_IN_CALL_SELF
+         $comp,           # STACK_COMP
+         \@_,             # STACK_ARGS
+         $stack_buffer,   # STACK_BUFFER
+         \%mods,          # STACK_MODS
+         $path,           # STACK_PATH
+         $depth,          # STACK_DEPTH
+         undef,           # STACK_BASE_COMP
+         undef,           # STACK_IN_CALL_SELF
+         $flushable       # STACK_BUFFER_IS_FLUSHABLE
          ];
 
     # Run start_component hooks for each plugin.
@@ -1293,7 +1296,7 @@ sub comp {
 sub scomp {
     my $self = shift;
     my $buf;
-    $self->comp({store=>\$buf},@_);
+    $self->comp({store => \$buf, flushable => 0},@_);
     return $buf;
 }
 
@@ -1346,7 +1349,12 @@ sub flush_buffer
 {
     my $self = shift;
 
-    if ( $self->{top_stack}->[STACK_BUFFER] )
+    $self->out_method->($self->{request_buffer})
+        if length $self->{request_buffer};
+    $self->{request_buffer} = '';
+
+    if ( $self->{top_stack}->[STACK_BUFFER_IS_FLUSHABLE]
+         && $self->{top_stack}->[STACK_BUFFER] )
     {
         my $comp = $self->{top_stack}->[STACK_COMP];
         if ( $comp->has_filter()
@@ -1360,11 +1368,6 @@ sub flush_buffer
             $self->out_method->( ${ $self->{top_stack}->[STACK_BUFFER] } );
         }
         ${$self->{top_stack}->[STACK_BUFFER]} = '';
-    }
-    else
-    {
-        $self->out_method->($self->{request_buffer});
-        $self->{request_buffer} = '';
     }
 }
 
