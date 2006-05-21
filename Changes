@@ -13,6 +13,9 @@ available at http://www.masonhq.com/code/history.html.
 in the component chain, the flush did nothing. Task id #596. Reported
 by Shane McCarron.
 
+- Added several tests for $m->flush_buffer() and $m->clear_buffer(),
+which will hopefully avoid more bugs in this part of the code.
+
 - On Win32, a test failed when Mason tried to use rename to move a dir
 into an existing dir. Patch by Shane McCarron. Task id #594 and RT
 #17828.
