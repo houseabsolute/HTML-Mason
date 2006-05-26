@@ -67,7 +67,7 @@ Hello, <% $var %>!
 EOF
 
   my $buffer;
-  my $request = $interp->make_request( out_method => \$buffer, comp -> $comp );
+  my $request = $interp->make_request( out_method => \$buffer, comp => $comp );
   $request->exec;
 
   print $buffer;
