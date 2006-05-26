@@ -18,11 +18,6 @@ sub get_source {
     return;
 }
 
-# Returns everything get_info() returns, plus the component source in a 'comp_source' entry.
-sub resolve {
-    return;
-}
-
 sub comp_class {
     return 'HTML::Mason::Component';
 }
