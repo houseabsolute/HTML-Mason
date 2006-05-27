@@ -1,4 +1,4 @@
-Revision history for HTML::Mason.
+evision history for HTML::Mason.
 
 An HTML version of this file, complete with links to documentation, is
 available at http://www.masonhq.com/code/history.html.
@@ -25,6 +25,8 @@ an error "like Undefined subroutine &Apache::perl_hook called at
 /usr/local/share/perl/5.8.7/HTML/Mason/ApacheHandler.pm line
 257". While it will never _run_ outside of mod_perl, it should at
 least load.
+
+- Fixed test in 14a-fake_apache.t that failed with CGI.pm >= 3.16.
 
 - The example code in the HTML::Mason::Resolver::Null code was
 just wrong. Fixed by John Siracusa.
