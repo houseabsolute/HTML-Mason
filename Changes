@@ -31,6 +31,9 @@ least load.
 - The example code in the HTML::Mason::Resolver::Null code was
 just wrong. Fixed by John Siracusa.
 
+- Fixed a test failure in 06-compile.t when using bleadperl. RT
+#17118.
+
 
 1.32  January 3, 2005
 
