@@ -4,11 +4,12 @@ use strict;
 
 use Module::Build;
 
-my $test_data = Module::Build->current->notes('test_data');
+my $test_data = eval { Module::Build->current->notes('test_data') };
 
-unless ($test_data->{is_maintainer} &&
-        $test_data->{apache_dir} &&
-        -e "$test_data->{apache_dir}/CGIHandler.cgi")
+unless ( $test_data
+         && $test_data->{is_maintainer}
+         && $test_data->{apache_dir}
+         && -e "$test_data->{apache_dir}/CGIHandler.cgi" )
 {
     print "1..0\n";
     exit;

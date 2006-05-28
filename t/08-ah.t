@@ -4,7 +4,7 @@ use strict;
 
 use Module::Build;
 
-my $test_data = Module::Build->current->notes('test_data');
+my $test_data = eval { Module::Build->current->notes('test_data') };
 
 # Skip test if no mod_perl
 eval { require mod_perl2 };
@@ -16,7 +16,10 @@ my $mpver;
 }
 my $apreq_module = $mpver && $mpver >= 2 ? 'Apache2::Request' : 'Apache::Request';
 
-unless ( $test_data->{is_maintainer} && $mpver )
+unless ( $test_data
+         && $test_data->{is_maintainer}
+         && $test_data->{apache_dir}
+         && $mpver )
 {
     print "1..0\n";
     exit;
