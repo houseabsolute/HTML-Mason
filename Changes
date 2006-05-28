@@ -5,6 +5,16 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.3x
+
+[ BUG FIXES ]
+
+- The 08-ah.t and 16-live-cgi.t test files could fail with an error
+like "Failed to re-load 'Mason::Build'" when Mason was being installed
+via the CPANPLUS shell (and maybe other cases). Reported by David
+Wheeler.
+
+
 1.33  May 28, 2006
 
 [ BUG FIXES ]
