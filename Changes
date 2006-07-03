@@ -9,6 +9,9 @@ available at http://www.masonhq.com/code/history.html.
 
 [ BUG FIXES ]
 
+- Using $m->call_next from a helper component should reset base_comp
+to the request_comp.  Reported by Mark Elrod.
+
 - The 08-ah.t and 16-live-cgi.t test files could fail with an error
 like "Failed to re-load 'Mason::Build'" when Mason was being installed
 via the CPANPLUS shell (and maybe other cases). Reported by David

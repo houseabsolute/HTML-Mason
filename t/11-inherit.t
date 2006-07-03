@@ -134,6 +134,7 @@ a23=>'a23 from level 3'
 a123=>'a123 from level 3'
 </%attr>
 
+<& { base_comp => $m->base_comp }, '../variants' &>
 <& ../report_parent &>
 
 <%flags>
@@ -164,6 +165,26 @@ a123: a123 from level 3
 
 
 
+
+
+
+Methods (called from /inherit/subdir/bypass)
+m1: m1 from level 1
+m2: does not exist
+m3: m3 from level 3
+m12: m12 from level 1
+m13: m13 from level 3
+m23: m23 from level 3
+m123: m123 from level 3
+
+Attributes (referenced from /inherit/subdir/bypass)
+a1: a1 from level 1
+a2: does not exist
+a3: a3 from level 3
+a12: a12 from level 1
+a13: a13 from level 3
+a23: a23 from level 3
+a123: a123 from level 3
 
 
 My name is /inherit/subdir/bypass and my parent is /inherit/autohandler.
@@ -254,6 +275,7 @@ a23=>'a23 from level 3'
 a123=>'a123 from level 3'
 </%attr>
 
+<& { base_comp => $m->base_comp }, '../variants' &>
 <& ../report_parent &>
 EOF
                       expect => <<'EOF',
@@ -303,6 +325,26 @@ a123: a123 from level 3
 
 
 
+
+
+
+Methods (called from /inherit/subdir/normal)
+m1: m1 from level 1
+m2: m2 from level 2
+m3: m3 from level 3
+m12: m12 from level 2
+m13: m13 from level 3
+m23: m23 from level 3
+m123: m123 from level 3
+
+Attributes (referenced from /inherit/subdir/normal)
+a1: a1 from level 1
+a2: a2 from level 2
+a3: a3 from level 3
+a12: a12 from level 2
+a13: a13 from level 3
+a23: a23 from level 3
+a123: a123 from level 3
 
 
 My name is /inherit/subdir/normal and my parent is /inherit/subdir/autohandler.
