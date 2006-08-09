@@ -17,6 +17,11 @@ like "Failed to re-load 'Mason::Build'" when Mason was being installed
 via the CPANPLUS shell (and maybe other cases). Reported by David
 Wheeler.
 
+[ ENHANCEMENTS ]
+
+- Added support for get_server_port() in FakeApache. Patch from Dieter
+Piercey.
+
 
 1.33  May 28, 2006
 
