@@ -65,6 +65,10 @@ sub protocol { $ENV{SERVER_PROTOCOL} || 'HTTP/1.0' }
 
 sub hostname { $_[0]->{query}->server_name }
 
+# CGI says "use this when using virtual hosts".  It falls back to
+# CGI->server_port.
+sub get_server_port { $_[0]->{query}->virtual_port }
+
 # Fake it by just giving the current time.
 sub request_time { time }
 
@@ -283,7 +287,7 @@ sub send_fd {
 # Do something with ErrorDocument?
 # sub custom_response {}
 
-# I think we'ev made this essentially the same thing.
+# I think we've made this essentially the same thing.
 BEGIN {
     local $^W;
     *send_cgi_header = \&send_http_header;
