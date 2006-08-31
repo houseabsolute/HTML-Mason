@@ -17,6 +17,9 @@ like "Failed to re-load 'Mason::Build'" when Mason was being installed
 via the CPANPLUS shell (and maybe other cases). Reported by David
 Wheeler.
 
+- Fixed a bug where $m->clear_buffer inside a component called from a
+comp_with_content did not clear all buffers.
+
 [ ENHANCEMENTS ]
 
 - Added support for get_server_port() in FakeApache. Patch from Dieter

@@ -52,6 +52,7 @@ use constant STACK_DEPTH        => 5;
 use constant STACK_BASE_COMP    => 6;
 use constant STACK_IN_CALL_SELF => 7;
 use constant STACK_BUFFER_IS_FLUSHABLE => 8;
+use constant STACK_HIDDEN_BUFFER => 9;
 
 # HTML::Mason::Exceptions always exports rethrow_exception() and isa_mason_exception()
 use HTML::Mason::Exceptions( abbr => [qw(error param_error syntax_error
@@ -1315,9 +1316,10 @@ sub content {
     #
     my $buffer;
     my $save_frame = $self->{top_stack};
-    { local $self->{top_stack} = $self->{stack}->[$self->{top_stack}->[STACK_DEPTH]-2];
+    { local $self->{top_stack} = $self->_stack_frame(1);
       local $self->{top_stack}->[STACK_BUFFER] = \$buffer;
       local $self->{top_stack}->[STACK_BUFFER_IS_FLUSHABLE] = 0;
+      local $self->{top_stack}->[STACK_HIDDEN_BUFFER] = $save_frame->[STACK_BUFFER];
       $content->(); }
     $self->{top_stack} = $save_frame;
 
@@ -1343,6 +1345,8 @@ sub clear_buffer
     foreach my $frame (@{$self->{stack}}) {
         my $bufref = $frame->[STACK_BUFFER];
         $$bufref = '';
+        $bufref = $frame->[STACK_HIDDEN_BUFFER];
+        $$bufref = '' if $bufref;
     }
 }
 
