@@ -23,6 +23,12 @@ use HTML::Mason::Exceptions (abbr => ['param_error']);
 sub get_info {
     my ($self, $path, $comp_root_key, $comp_root_path) = @_;
 
+    # Note that canonpath has the property of not collapsing a series
+    # of /../../ dirs in an unsafe way. This means that if the
+    # component path is /../../../../etc/passwd, we're still safe. I
+    # don't know if this was intentional, but it's certainly a good
+    # thing, and something we want to preserve if the code ever
+    # changes.
     my $srcfile = File::Spec->canonpath( File::Spec->catfile( $comp_root_path, $path ) );
     return unless -f $srcfile;
     my $modified = (stat _)[9];
