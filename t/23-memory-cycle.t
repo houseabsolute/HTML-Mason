@@ -93,19 +93,22 @@ EOF
 }
 
 # See http://marc.theaimsgroup.com/?l=mason&m=111769803701028&w=2 for
-# details.
+# details. It actually has nothing to do with %ARGS, it's seems that
+# anything referred to inside nested comp-with-content calls never
+# gets destroyed.
 TWO_COMP_WITH_CONTENT_CALLS:
 {
     my $dir = tempdir( CLEANUP => 1 );
 
     make_comp( $dir, 'comp1', <<'EOF' );
 <%init>
-$ARGS{object} = Object->new();
+my $object = Object->new();
 </%init>
 
 <&| .sub &>
+%# <% $object %> - with this here the object doesn't leak!
 <&| .sub &>
-<% $ARGS{object} %>
+<% $object %>
 </&>
 </&>
 
