@@ -127,6 +127,10 @@ EOF
     $Destroyed = 0;
     $interp->exec('/comp1');
 
+    # See
+    # http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2006-10/msg00189.html
+    # for further details.
+    local $TODO = 'This seems to be a bug in Perl, not Mason.';
     is( $Destroyed, 1, 'object was destroyed - 2 layers of comp-with-content' );
 }
 
