@@ -17,8 +17,9 @@ BEGIN
     }
 }
 
-plan tests => 7;
+plan tests => 8;
 
+SIMPLE_OBJECTS:
 {
     my $interp = HTML::Mason::Interp->new( out_method => sub {} );
     memory_cycle_ok( $interp, 'Interp before making a request' );
@@ -29,6 +30,8 @@ plan tests => 7;
 }
 
 our $Destroyed = 0;
+
+COMP_ON_DISK:
 {
     my $dir = tempdir( CLEANUP => 1 );
 
@@ -63,6 +66,9 @@ EOF
     is( $Destroyed, 2, 'object passed into make_request was destroyed' );
 }
 
+# See http://marc.theaimsgroup.com/?l=mason&m=115883578111647&w=2 for
+# details.
+OBJECTS_CREATED_IN_COMP:
 {
     my $dir = tempdir( CLEANUP => 1 );
 
@@ -84,6 +90,41 @@ EOF
 
     like( $output, qr/Destroyed: 1/,
           'one object was destroyed in comp1' );
+}
+
+# See http://marc.theaimsgroup.com/?l=mason&m=111769803701028&w=2 for
+# details.
+TWO_COMP_WITH_CONTENT_CALLS:
+{
+    my $dir = tempdir( CLEANUP => 1 );
+
+    make_comp( $dir, 'comp1', <<'EOF' );
+<%init>
+$ARGS{object} = Object->new();
+</%init>
+
+<&| .sub &>
+<&| .sub &>
+<% $ARGS{object} %>
+</&>
+</&>
+
+else
+
+<%def .sub>
+<% $m->content() %>
+</%def>
+EOF
+
+    my $output = '';
+    my $interp = HTML::Mason::Interp->new( out_method => sub {},
+                                           comp_root  => $dir,
+                                         );
+
+    $Destroyed = 0;
+    $interp->exec('/comp1');
+
+    is( $Destroyed, 1, 'object was destroyed - 2 layers of comp-with-content' );
 }
 
 sub make_comp
