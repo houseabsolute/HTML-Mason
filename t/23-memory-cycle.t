@@ -17,7 +17,7 @@ BEGIN
     }
 }
 
-plan tests => 6;
+plan tests => 7;
 
 {
     my $interp = HTML::Mason::Interp->new( out_method => sub {} );
