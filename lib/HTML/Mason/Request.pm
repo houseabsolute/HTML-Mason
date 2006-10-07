@@ -1291,7 +1291,6 @@ sub comp {
     pop @{ $self->{stack} };
 
     # Repropagate error if one occurred, otherwise return result.
-    # 
     rethrow_exception $error if $error;
     return $wantarray ? @result : $result[0];
 }
