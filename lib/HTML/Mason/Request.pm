@@ -1285,6 +1285,11 @@ sub comp {
         }
     }
 
+    # This is very important in order to avoid memory leaks, since we
+    # stick the arguments on the stack. If we don't pop the stack,
+    # they don't get cleaned up until the component exits.
+    pop @{ $self->{stack} };
+
     # Repropagate error if one occurred, otherwise return result.
     # 
     rethrow_exception $error if $error;
