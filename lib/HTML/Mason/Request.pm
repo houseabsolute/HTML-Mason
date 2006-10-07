@@ -1320,11 +1320,13 @@ sub content {
     #
     my $buffer;
     my $save_frame = $self->{top_stack};
-    { local $self->{top_stack} = $self->_stack_frame(1);
-      local $self->{top_stack}->[STACK_BUFFER] = \$buffer;
-      local $self->{top_stack}->[STACK_BUFFER_IS_FLUSHABLE] = 0;
-      local $self->{top_stack}->[STACK_HIDDEN_BUFFER] = $save_frame->[STACK_BUFFER];
-      $content->(); }
+    {
+        local $self->{top_stack} = $self->_stack_frame(1);
+        local $self->{top_stack}->[STACK_BUFFER] = \$buffer;
+        local $self->{top_stack}->[STACK_BUFFER_IS_FLUSHABLE] = 0;
+        local $self->{top_stack}->[STACK_HIDDEN_BUFFER] = $save_frame->[STACK_BUFFER];
+        $content->();
+    }
     $self->{top_stack} = $save_frame;
 
     # Return the output from the content routine.
