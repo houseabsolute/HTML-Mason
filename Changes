@@ -5,9 +5,13 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
-1.3x
+1.34
 
 [ BUG FIXES ]
+
+- Fixed a serious memory leak bug where an object referenced in
+arguments to another component was never destroyed. Reported by
+Dominic Mitchell.
 
 - Using $m->call_next from a helper component should reset base_comp
 to the request_comp.  Reported by Mark Elrod.
