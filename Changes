@@ -9,6 +9,9 @@ available at http://www.masonhq.com/code/history.html.
 
 [ BUG FIXES ]
 
+- Apache::Request and mod_perl{1,2} will no longer show up as prereqs
+in META.yml. Request by Jesse Vincent.
+
 - Fixed a serious memory leak bug where an object referenced in
 arguments to another component was never destroyed. Reported by
 Dominic Mitchell.
