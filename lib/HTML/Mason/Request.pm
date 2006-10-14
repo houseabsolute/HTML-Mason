@@ -933,7 +933,6 @@ sub callers
         return unless defined $frame;
         return $frame->[STACK_COMP];
     } else {
-        my $depth = $self->depth;
         return map($_->[STACK_COMP], $self->_stack_frames);
     }
 }
