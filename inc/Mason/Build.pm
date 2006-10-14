@@ -3,7 +3,7 @@ package Mason::Build;
 
 use strict;
 
-use Module::Build 0.20;
+use Module::Build 0.26;
 
 use base 'Module::Build';
 
