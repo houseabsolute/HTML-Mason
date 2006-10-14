@@ -43,15 +43,14 @@ unless ( grep { /--dist/ } @ARGV )
 }
 
 my $build = Mason::Build->new
-  (
-   module_name => 'HTML::Mason',
-   requires    => \%prereq,
-   build_requires => {
-		      'Test'          => 0,
-		      'Test::Builder' => 0,
-		     },
-   license     => 'perl',
-   create_makefile_pl => 'passthrough',
+  ( module_name => 'HTML::Mason',
+    requires    => \%prereq,
+    build_requires => { 'Module::Build' => 0,
+                        'Test'          => 0,
+                        'Test::Builder' => 0,
+                      },
+    license     => 'perl',
+    create_makefile_pl => 'passthrough',
   );
 
 $build->create_build_script;
