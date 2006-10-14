@@ -5,6 +5,17 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.35
+
+[ BUG FIXES ]
+
+- When Mason tried to load a package required for a feature (like
+Cache::Cache for $m->cache) and this failed, the error message would
+say something like "Can't locate Cache::Cache". However, the real
+error could be that Cache::Cache was present, but a module required by
+Cache::Cache was not. Now we report the real missing module.
+
+
 1.34  Oct 14, 2006
 
 [ BUG FIXES ]
