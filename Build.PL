@@ -16,7 +16,10 @@ my %prereq = ( 'Cache::Cache'     => 1.00,
                'Params::Validate' => 0.70,
                'Scalar::Util'     => 1.01,
              );
-unless ( grep { /--dist/ } @ARGV )
+
+my $is_dist = grep { /dist=1/ } @ARGV;
+
+unless ($is_dist)
 {
     my $has_mod_perl_1 = eval { require mod_perl } || 0;
     if ($has_mod_perl_1)
@@ -51,6 +54,7 @@ my $build = Mason::Build->new
                       },
     license     => 'perl',
     create_makefile_pl => 'passthrough',
+    is_dist     => $is_dist,
   );
 
 $build->create_build_script;

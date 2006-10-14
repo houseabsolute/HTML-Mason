@@ -21,7 +21,7 @@ sub create_build_script
 
     $self->_check_for_old_mason;
 
-    unless ( exists $self->{args}{noprompts} )
+    unless ( $self->args->{noprompts} || $self->args->{dist} )
     {
         $self->_apache_test_config;
 
