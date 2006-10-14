@@ -5,12 +5,15 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
-1.34
+1.34  Oct 14, 2006
 
 [ BUG FIXES ]
 
+- List Module::Build as a build prereq in the Build.PL, so it shows up
+in META.yml. Reported by Colin Henein. RT #22097.
+
 - Apache::Request and mod_perl{1,2} will no longer show up as prereqs
-in META.yml. Request by Jesse Vincent.
+in META.yml. Requested by Jesse Vincent.
 
 - Fixed a serious memory leak bug where an object referenced in
 arguments to another component was never destroyed. Reported by
