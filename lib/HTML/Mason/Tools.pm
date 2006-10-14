@@ -177,10 +177,10 @@ sub load_pkg {
     eval "use $pkg";
 
     if ($@) {
-        if ($@ =~ /^Can\'t locate .* in \@INC/) {
+        if ($@ =~ /^Can\'t locate (.*) in \@INC/) {
             if (defined($nf_error)) {
                 error sprintf("Can't locate %s in \@INC. %s\n(\@INC contains: %s)",
-                              $pkg, $nf_error, join(" ", @INC));
+                              $1, $nf_error, join(" ", @INC));
             } else {
                 undef $@;
                 return 0;
