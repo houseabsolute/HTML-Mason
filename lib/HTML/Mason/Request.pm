@@ -48,11 +48,10 @@ use constant STACK_ARGS         => 1;
 use constant STACK_BUFFER       => 2;
 use constant STACK_MODS         => 3;
 use constant STACK_PATH         => 4;
-use constant STACK_DEPTH        => 5;
-use constant STACK_BASE_COMP    => 6;
-use constant STACK_IN_CALL_SELF => 7;
-use constant STACK_BUFFER_IS_FLUSHABLE => 8;
-use constant STACK_HIDDEN_BUFFER => 9;
+use constant STACK_BASE_COMP    => 5;
+use constant STACK_IN_CALL_SELF => 6;
+use constant STACK_BUFFER_IS_FLUSHABLE => 7;
+use constant STACK_HIDDEN_BUFFER => 8;
 
 # HTML::Mason::Exceptions always exports rethrow_exception() and isa_mason_exception()
 use HTML::Mason::Exceptions( abbr => [qw(error param_error syntax_error
@@ -933,6 +932,7 @@ sub callers
         return unless defined $frame;
         return $frame->[STACK_COMP];
     } else {
+        my $depth = $self->depth;
         return map($_->[STACK_COMP], $self->_stack_frames);
     }
 }
@@ -980,9 +980,7 @@ sub decline
 #
 sub depth
 {
-    # direct access for speed because this method is called on every
-    # call to $m->comp
-    return $_[0]->{top_stack}->[STACK_DEPTH];
+    return scalar @{ $_[0]->{stack} };
 }
 
 #
@@ -1200,35 +1198,33 @@ sub comp {
         $comp = $self->fetch_comp($path, undef, \$error)
             or error($error || "could not find component for path '$path'\n");
     }
-    
+
     # Increment depth and check for maximum recursion. Depth starts at 1.
     #
-    my $top_stack = $self->{top_stack};
-    my $depth = defined($top_stack) ? $top_stack->[STACK_DEPTH] + 1 : 1;
-    error ($depth-1 . " levels deep in component stack (infinite recursive call?)\n")
-        if ($depth > $self->{max_recurse});
+    my $depth = $self->depth;
+    error "$depth levels deep in component stack (infinite recursive call?)\n"
+        if $depth >= $self->{max_recurse};
 
     # Keep the same output buffer unless store modifier was passed. If we have
     # a filter, put the filter buffer on the stack instead of the regular buffer.
     #
     my $filter_buffer = '';
-    my $top_buffer = defined($mods{store}) ? $mods{store} : $top_stack->[STACK_BUFFER];
+    my $top_buffer = defined($mods{store}) ? $mods{store} : $self->{top_stack}->[STACK_BUFFER];
     my $stack_buffer = $comp->{has_filter} ? \$filter_buffer : $top_buffer;
     my $flushable = exists $mods{flushable} ? $mods{flushable} : 1;
 
     # Add new stack frame and point dynamically scoped $self->{top_stack} at it.
-    local $self->{top_stack} = $self->{stack}->[$depth-1] =
-        [
-         $comp,           # STACK_COMP
-         \@_,             # STACK_ARGS
-         $stack_buffer,   # STACK_BUFFER
-         \%mods,          # STACK_MODS
-         $path,           # STACK_PATH
-         $depth,          # STACK_DEPTH
-         undef,           # STACK_BASE_COMP
-         undef,           # STACK_IN_CALL_SELF
-         $flushable       # STACK_BUFFER_IS_FLUSHABLE
-         ];
+    push @{ $self->{stack} },
+        [ $comp,           # STACK_COMP
+          \@_,             # STACK_ARGS
+          $stack_buffer,   # STACK_BUFFER
+          \%mods,          # STACK_MODS
+          $path,           # STACK_PATH
+          undef,           # STACK_BASE_COMP
+          undef,           # STACK_IN_CALL_SELF
+          $flushable,      # STACK_BUFFER_IS_FLUSHABLE
+        ];
+    local $self->{top_stack} = $self->{stack}->[-1];
 
     # Run start_component hooks for each plugin.
     #
@@ -1236,7 +1232,7 @@ sub comp {
         my $context = bless
             [$self, $comp, \@_],
             'HTML::Mason::Plugin::Context::StartComponent';
-        
+
         foreach my $plugin_instance (@{$self->{plugin_instances}}) {
             $plugin_instance->start_component_hook( $context );
         }
@@ -1317,16 +1313,21 @@ sub content {
     # Run the content routine with the previous stack frame active and
     # with output going to a new buffer.
     #
+    my $err;
     my $buffer;
-    my $save_frame = $self->{top_stack};
+    my $save_frame = pop @{ $self->{stack} };
     {
-        local $self->{top_stack} = $self->_stack_frame(1);
+        local $self->{top_stack} = $self->{stack}[-1];
         local $self->{top_stack}->[STACK_BUFFER] = \$buffer;
         local $self->{top_stack}->[STACK_BUFFER_IS_FLUSHABLE] = 0;
         local $self->{top_stack}->[STACK_HIDDEN_BUFFER] = $save_frame->[STACK_BUFFER];
-        $content->();
+        eval { $content->(); };
+        $err = $@;
     }
-    $self->{top_stack} = $save_frame;
+
+    push @{ $self->{stack} }, $save_frame;
+
+    rethrow_exception $err;
 
     # Return the output from the content routine.
     #
@@ -1423,7 +1424,7 @@ sub debug_hook
 # 
 sub _stack_frame {
     my ($self, $levels) = @_;
-    my $depth = $self->{top_stack}->[STACK_DEPTH];
+    my $depth = $self->depth();
     my $index;
     if ($levels < 0) {
         $index = (-1 * $levels) - 1;
@@ -1438,7 +1439,8 @@ sub _stack_frame {
 # initial frame.
 sub _stack_frames {
     my ($self) = @_;
-    my $depth = $self->{top_stack}->[STACK_DEPTH];
+
+    my $depth = $self->depth;
     return reverse map { $self->{stack}->[$_] } (0..$depth-1);
 }
 
@@ -1454,7 +1456,7 @@ sub base_comp {
     return unless $self->{top_stack};
 
     unless ( defined $self->{top_stack}->[STACK_BASE_COMP] ) {
-        $self->_compute_base_comp_for_frame($self->{top_stack}->[STACK_DEPTH] - 1);
+        $self->_compute_base_comp_for_frame( $self->depth - 1 );
     }
     return $self->{top_stack}->[STACK_BASE_COMP];
 }
