@@ -181,8 +181,6 @@ return if $m->cache_self( expires_in => '1s' );
 EOF
                         );
 
-#------------------------------------------------------------
-
     $group->add_test( name => 'cache_self_expires_in',
                       description => 'test that $m->cache_self respects expires_in parameter',
                       component => <<'EOF',
