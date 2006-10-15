@@ -726,11 +726,6 @@ EOF
 EOF
                        );
 
-
-
-
-#------------------------------------------------------------
-
     # It is possible to accidentally call 'next' from a component and
     # jump out to the last loop or block in a previous component.
     # While this cannot be supported behavior (since necessary cleanup
