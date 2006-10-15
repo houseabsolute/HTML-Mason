@@ -711,7 +711,6 @@ EOF
     $group->add_support( path => '/support/subdir/longjump_test2',
                          component => <<'EOF',
 This is longjump_test2
-
 % no warnings 'uninitialized'; next;
 EOF
                        );

@@ -1244,12 +1244,17 @@ sub comp {
     my @result;
     
     eval {
-        if ($wantarray) {
-            @result = $comp->run(@_);
-        } elsif (defined $wantarray) {
-            $result[0] = $comp->run(@_);
-        } else {
-            $comp->run(@_);
+        # By putting an empty block here, we protect against stack
+        # corruption when a component calls next or last outside of a
+        # loop. See 05-request.t #28 for a test.
+        {
+            if ($wantarray) {
+                @result = $comp->run(@_);
+            } elsif (defined $wantarray) {
+                $result[0] = $comp->run(@_);
+            } else {
+                $comp->run(@_);
+            }
         }
     };
     my $error = $@;
