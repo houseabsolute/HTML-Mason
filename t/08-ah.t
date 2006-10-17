@@ -152,11 +152,6 @@ I am underscore.
 EOF
               );
 
-    write_comp( 'dhandler/dhandler', <<'EOF',
-I am the dhandler.
-EOF
-              );
-
     write_comp( 'die', <<'EOF',
 % die 'Mine heart is pierced';
 EOF
