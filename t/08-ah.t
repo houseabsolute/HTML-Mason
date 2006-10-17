@@ -45,7 +45,7 @@ kill_httpd(1);
 test_load_apache();
 
 my $tests = 23; # multi conf & taint tests
-$tests += 69 if my $have_libapreq = have_module($apreq_module);
+$tests += 70 if my $have_libapreq = have_module($apreq_module);
 $tests += 46 if my $have_cgi      = have_module('CGI');
 $tests += 18 if my $have_tmp      = (-d '/tmp' and -w '/tmp');
 $tests++ if $have_cgi;
@@ -66,7 +66,7 @@ if ($have_libapreq) {        # 69 tests
     apache_request_tests(1); # 26 tests
 
     cleanup_data_dir();
-    apache_request_tests(0); # 24 tests
+    apache_request_tests(0); # 25 tests
 
     cleanup_data_dir();
     no_config_tests();       # 18 tests
@@ -205,6 +205,12 @@ EOF
 
     write_comp( 'decline_dirs', <<'EOF',
 decline_dirs is <% $m->ah->decline_dirs %>
+EOF
+              );
+
+    write_comp( 'with_dhandler/dhandler', <<'EOF',
+% $r->content_type('text/html');
+with a dhandler
 EOF
               );
 
@@ -493,6 +499,17 @@ Status code: 0
 EOF
                                                                 );
         ok($success);
+
+        $response = Apache::test->fetch('/comps/with_dhandler/');
+        $actual = filter_response($response, $with_handler);
+        $success = HTML::Mason::Tests->tests_class->check_output( actual => $actual,
+                                                                  expect => <<"EOF",
+X-Mason-Test: Initial value
+with a dhandler
+Status code: 0
+EOF
+                                                                );
+        ok( $success, 'request for dir with dhandler' );
     }
 
     kill_httpd(1);
