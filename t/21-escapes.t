@@ -2,9 +2,19 @@
 
 use strict;
 
-use Test::More tests => 3;
+use Test::More;
+
+BEGIN
+{
+    unless ( eval { require HTML::Entities; 1 } )
+    {
+        plan skip_all => 'These tests require HTML::Entities to run.';
+    }
+}
 
 use HTML::Mason::Escapes;
+
+plan tests => 3;
 
 my $html = qq|<>"& \x{2202}|;
 HTML::Mason::Escapes::basic_html_escape( \$html );
