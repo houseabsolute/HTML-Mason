@@ -5,6 +5,15 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.36
+
+[ BUG FIXES ]
+
+- Under mod_perl 2, if decline_dirs was false and a directory was
+  requested, you got a "Use of uninitialized value" warning from
+  ApacheHandler in your logs. Reported by Ogden Nefix.
+
+
 1.35  Oct 17, 2006
 
 [ BUG FIXES ]
