@@ -219,3 +219,4 @@ request object, and all mc_ commands have been incorporated into $m
 methods. The utility bin/convert0.8.pl converts existing components to
 use the new syntax. See Commands.pod for a manual conversion guide and
 a list of rare conversion problems.
+
