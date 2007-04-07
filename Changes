@@ -13,6 +13,12 @@ available at http://www.masonhq.com/code/history.html.
   requested, you got a "Use of uninitialized value" warning from
   ApacheHandler in your logs. Reported by Ogden Nefix.
 
+[ ENHANCEMENTS ]
+
+- Added a new Compiler::ToObject parameter,
+  named_component_subs. Turning this on makes it possible to profile
+  components.
+
 
 1.35  Oct 17, 2006
 

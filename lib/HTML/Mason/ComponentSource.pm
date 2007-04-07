@@ -75,7 +75,9 @@ sub object_code
 
     return $p{compiler}->compile( comp_source => $self->comp_source,
 				  name => $self->friendly_name,
-				  comp_class => $self->comp_class );
+                                  comp_path => $self->comp_path,
+				  comp_class => $self->comp_class,
+                                );
 }
 
 1;

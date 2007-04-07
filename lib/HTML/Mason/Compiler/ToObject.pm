@@ -7,7 +7,7 @@ package HTML::Mason::Compiler::ToObject;
 use strict;
 use warnings;
 
-use Params::Validate qw(SCALAR validate);
+use Params::Validate qw(BOOLEAN SCALAR validate);
 use HTML::Mason::Tools qw(taint_is_on);
 
 use HTML::Mason::Compiler;
@@ -50,6 +50,10 @@ BEGIN
          { parse => 'string', type => SCALAR, default => 'auto',
            regex => qr/^(?:always|auto|never)$/,
            descr => "Whether or not to create the %ARGS hash" },
+
+         named_component_subs =>
+         { parse => 'boolean', type => BOOLEAN, default => 0,
+           descr => "Whether to use named subroutines for component code" },
         );
 }
 
@@ -58,6 +62,7 @@ use HTML::Mason::MethodMaker
                     qw( comp_class
                         define_args_hash
                         in_package
+                        named_component_subs
                         postamble
                         preamble
                         subcomp_class
@@ -114,6 +119,7 @@ sub compile_to_file
     $self->compile( comp_source => $source->comp_source_ref,
                     name => $source->friendly_name,
                     comp_class => $source->comp_class,
+                    comp_path => $source->comp_path,
                     fh => $fh );
 
     close $fh 
@@ -152,6 +158,9 @@ sub compiled_component
     $self->_output_chunk($p{fh}, \$obj_text, $header);
 
     my $params = $self->_component_params;
+
+    $self->_output_named_subs( $p{fh}, \$obj_text, $params )
+        if $self->named_component_subs;
 
     $params->{load_time} = time;
 
@@ -196,6 +205,58 @@ sub compiled_component
                         );
 
     return \$obj_text;
+}
+
+sub _output_named_subs
+{
+    my $self = shift;
+    my $fh = shift;
+    my $obj_text_ref = shift;
+
+    $self->_output_chunk
+        ( $fh, $obj_text_ref,
+          sprintf( "sub %s {\n%s\n}\n\n",
+                   $self->_sub_name,
+                   $self->_body ),
+        );
+
+    while ( my ( $name, $params ) =
+            each %{ $self->{current_compile}{compiled_def} } )
+    {
+        $self->_output_chunk
+            ( $fh, $obj_text_ref,
+              sprintf( "sub %s {\n%s\n}\n\n",
+                       $self->_sub_name( 'def', $name ),
+                       $params->{body} ),
+            );
+    }
+
+    while ( my ( $name, $params ) =
+            each %{ $self->{current_compile}{compiled_method} } )
+    {
+        $self->_output_chunk
+            ( $fh, $obj_text_ref,
+              sprintf( "sub %s {\n%s\n}\n\n",
+                       $self->_sub_name( 'method', $name ),
+                       $params->{body} ),
+            );
+    }
+}
+
+sub _sub_name
+{
+    my $self = shift;
+
+    return join '_', $self->_escape_sub_name_part( $self->{comp_path}, @_ );
+}
+
+sub _escape_sub_name_part
+{
+    my $self = shift;
+
+    return map { my $part = $_;
+                 $part =~ s/([^\w_])/'_' . sprintf( '%x', ord $1 )/ge;
+                 $part; } @_;
 }
 
 sub _compile_subcomponents
@@ -279,7 +340,8 @@ sub _constructor
     my ($self, $class, $params) = @_;
 
     return ("${class}->new(\n",
-            map( {("'$_' => ", $params->{$_}, ",\n")} sort keys %$params ),
+            map( {("'$_' => ", $params->{$_}, ",\n")}
+                 sort grep { $_ ne 'body' } keys %$params ),
             "\n)\n",
            );
 }
@@ -288,8 +350,22 @@ sub _component_params
 {
     my $self = shift;
 
-    my %params = ( code => join ( '', "sub {\n", $self->_body, "}" ),
-                 );
+    my %params;
+
+    if ( $self->named_component_subs )
+    {
+        $params{code} =
+            '\\&' .
+            $self->_sub_name
+                ( grep { defined }
+                  @{ $self->{current_compile}{in_named_block} }
+                  { 'type', 'name' } );
+        $params{body} = $self->_body;
+    }
+    else
+    {
+        $params{code} = join '', "sub {\n", $self->_body, "}";
+    }
 
     $params{flags} = join '', "{\n", $self->_flags, "\n}"
         if keys %{ $self->{current_compile}{flags} };
@@ -558,7 +634,11 @@ HTML::Mason::Compiler::ToObject - A Compiler subclass that generates Mason objec
 
   my $compiler = HTML::Mason::Compiler::ToObject->new;
 
-  my $object_code = $compiler->compile( comp_source => $source, name => $comp_name );
+  my $object_code =
+      $compiler->compile( comp_source => $source,
+                          name        => $comp_name,
+                          comp_path   => $comp_path,
+                        );
 
 =head1 DESCRIPTION
 
@@ -603,6 +683,12 @@ C<$m> in postamble code.
 
 True or false, default is true. Indicates whether or not a given
 component should C<use strict>.
+
+=item named_component_subs
+
+When compiling a component, use uniquely named subroutines for the a
+component's body, subcomponents, and methods. Doing this allows you to
+effectively profile code that calls Mason subroutines.
 
 =item define_args_hash
 

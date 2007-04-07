@@ -190,6 +190,7 @@ sub compile
     my $self = shift;
     my %p = validate( @_, { comp_source => { type => SCALAR|SCALARREF },
                             name => { type => SCALAR },
+                            comp_path => { type => SCALAR },
                             fh => { type => HANDLE, optional => 1 },
                           } );
     my $src = ref($p{comp_source}) ? $p{comp_source} : \$p{comp_source};
@@ -202,6 +203,8 @@ sub compile
 
     # So we're re-entrant in subcomps
     local $self->{paused_compiles} = [];
+
+    local $self->{comp_path} = $p{comp_path};
 
     # Preprocess the source.  The preprocessor routine is handed a
     # reference to the entire source.
