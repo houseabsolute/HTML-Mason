@@ -92,10 +92,12 @@ my $comp2 = HTML::Mason::ComponentSource->new
 ok $comp2;
 ok is_tainted($comp2->comp_source);
 
+my $file = File::Spec->catfile( $data_dir, 'taint_write_test' );
 # Make sure we can write tainted data to disk
 eval { $interp->compiler->compile_to_file
-           ( file => File::Spec->catfile( $data_dir, 'taint_write_test' ),
+           ( file => $file,
              source => $comp2,
+             comp_path => $file,
            ); };
 ok $@, '', "Unable to write a tainted object to disk";
 
