@@ -100,7 +100,7 @@ eval { $interp->compiler->compile_to_file
              source => $comp2,
              comp_path => $file,
            ); };
-ok $@, '', "Unable to write a tainted object to disk";
+ok $@, '', "Can write a tainted object to disk";
 
 
 my $cwd = getcwd(); # tainted
