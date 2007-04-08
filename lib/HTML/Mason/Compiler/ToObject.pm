@@ -52,7 +52,7 @@ BEGIN
            descr => "Whether or not to create the %ARGS hash" },
 
          named_component_subs =>
-         { parse => 'boolean', type => BOOLEAN, default => 0,
+         { parse => 'boolean', type => BOOLEAN, default => 1,
            descr => "Whether to use named subroutines for component code" },
         );
 }
@@ -159,9 +159,6 @@ sub compiled_component
 
     my $params = $self->_component_params;
 
-    $self->_output_named_subs( $p{fh}, \$obj_text, $params )
-        if $self->named_component_subs;
-
     $params->{load_time} = time;
 
     $params->{subcomps} = '\%_def' if %{ $c->{def} };
@@ -185,14 +182,32 @@ sub compiled_component
         $subs{main} = $params->{code};
         $params->{code} = "sub {\nHTML::Mason::Request->instance->call_dynamic( 'main', \@_ )\n}";
 
+        my $named_subs = '';
+        my %named_subs = $self->_named_subs_hash;
+        while ( my ( $name, $body ) = each %named_subs )
+        {
+            $named_subs .= '*' . $name . " = sub {\n" . $body . "\n};\n\n";
+        }
+
         $params->{dynamic_subs_init} =
             join '', ( "sub {\n",
                        $self->_set_request,
                        $self->_blocks('shared'),
+                       $named_subs,
                        "return {\n",
                        map( "'$_' => $subs{$_},\n", sort keys %subs ),
                        "\n}\n}"
                      );
+    }
+    else
+    {
+        my %named_subs = $self->_named_subs_hash;
+        while ( my ( $name, $body ) = each %named_subs )
+        {
+            $self->_output_chunk( $p{fh}, \$obj_text,
+                                  "sub $name {\n" . $body . "\n}\n"
+                                );
+        }
     }
 
     $self->_output_chunk($p{fh}, \$obj_text, $self->_subcomponents_footer);
@@ -207,40 +222,28 @@ sub compiled_component
     return \$obj_text;
 }
 
-sub _output_named_subs
+sub _named_subs_hash
 {
     my $self = shift;
-    my $fh = shift;
-    my $obj_text_ref = shift;
 
-    $self->_output_chunk
-        ( $fh, $obj_text_ref,
-          sprintf( "sub %s {\n%s\n}\n\n",
-                   $self->_sub_name,
-                   $self->_body ),
-        );
+    return unless $self->named_component_subs;
+
+    my %subs;
+    $subs{ $self->_sub_name } = $self->_body;
 
     while ( my ( $name, $params ) =
             each %{ $self->{current_compile}{compiled_def} } )
     {
-        $self->_output_chunk
-            ( $fh, $obj_text_ref,
-              sprintf( "sub %s {\n%s\n}\n\n",
-                       $self->_sub_name( 'def', $name ),
-                       $params->{body} ),
-            );
+        $subs{ $self->_sub_name( 'def', $name ) } = $params->{body};
     }
 
     while ( my ( $name, $params ) =
             each %{ $self->{current_compile}{compiled_method} } )
     {
-        $self->_output_chunk
-            ( $fh, $obj_text_ref,
-              sprintf( "sub %s {\n%s\n}\n\n",
-                       $self->_sub_name( 'method', $name ),
-                       $params->{body} ),
-            );
+        $subs{ $self->_sub_name( 'method', $name ) } = $params->{body};
     }
+
+    return %subs;
 }
 
 sub _sub_name

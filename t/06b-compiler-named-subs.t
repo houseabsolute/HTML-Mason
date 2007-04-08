@@ -63,5 +63,29 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'shared',
+                      description => 'Make sure that named_component_subs_works with shared block',
+                      interp_params => { named_component_subs => 1 },
+                      component => <<'EOF',
+<%shared>
+my $x = 42;
+</%shared>
+
+1: x is <% $x %>
+<& SELF:method &>
+<%method method>
+2: x is <% $x %>
+</%method>
+EOF
+                      expect => <<'EOF',
+
+1: x is 42
+
+2: x is 42
+EOF
+                    );
+
+#------------------------------------------------------------
+
     return $group;
 }
