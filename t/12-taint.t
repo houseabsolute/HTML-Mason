@@ -57,10 +57,11 @@ if ($alarm_works)
     my $alarm;
     $SIG{ALRM} = sub { $alarm = 1; die "alarm"; };
 
-    my $comp = read_file( File::Spec->catfile( File::Spec->curdir, 't', 'taint.comp' ) );
+    my $source = read_file( File::Spec->catfile( File::Spec->curdir, 't', 'taint.comp' ) );
+    my $comp;
     eval { alarm 5;
            local $^W;
-           $comp = $compiler->compile( comp_source => $comp, name => 't/taint.comp' );
+           $comp = $compiler->compile( comp_source => $source, name => 't/taint.comp' );
        };
 
     my $error = ( $alarm ? "entered endless while loop" :
