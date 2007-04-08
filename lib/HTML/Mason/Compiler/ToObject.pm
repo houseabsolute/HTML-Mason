@@ -52,7 +52,7 @@ BEGIN
            descr => "Whether or not to create the %ARGS hash" },
 
          named_component_subs =>
-         { parse => 'boolean', type => BOOLEAN, default => 1,
+         { parse => 'boolean', type => BOOLEAN, default => 0,
            descr => "Whether to use named subroutines for component code" },
         );
 }
