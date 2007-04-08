@@ -91,6 +91,7 @@ $data_dir = File::Spec->catdir( getcwd(), 'mason_tests', 'data' );
 # This source is tainted, as is anything with return val from getcwd()
 my $comp2 = HTML::Mason::ComponentSource->new
     ( friendly_name => 't/taint.comp',
+      comp_path => '/t/taint.comp',
       source_callback => sub {
           read_file( File::Spec->catfile( File::Spec->curdir, 't', 'taint.comp' ) );
       },
@@ -102,7 +103,6 @@ ok is_tainted($comp2->comp_source);
 eval { $interp->compiler->compile_to_file
            ( file => File::Spec->catfile( $data_dir, 'taint_write_test' ),
              source => $comp2,
-             comp_path => '/taint_write_test',
            ); };
 ok $@, '', "Can write a tainted object to disk";
 
