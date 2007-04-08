@@ -61,7 +61,12 @@ if ($alarm_works)
     my $comp;
     eval { alarm 5;
            local $^W;
-           $comp = $compiler->compile( comp_source => $source, name => 't/taint.comp' );
+           $comp =
+               $compiler->compile
+                   ( comp_source => $source,
+                     name => 't/taint.comp',
+                     comp_path => '/taint.comp',
+                   );
        };
 
     my $error = ( $alarm ? "entered endless while loop" :
@@ -93,12 +98,11 @@ my $comp2 = HTML::Mason::ComponentSource->new
 ok $comp2;
 ok is_tainted($comp2->comp_source);
 
-my $file = File::Spec->catfile( $data_dir, 'taint_write_test' );
 # Make sure we can write tainted data to disk
 eval { $interp->compiler->compile_to_file
-           ( file => $file,
+           ( file => File::Spec->catfile( $data_dir, 'taint_write_test' ),
              source => $comp2,
-             comp_path => $file,
+             comp_path => '/taint_write_test',
            ); };
 ok $@, '', "Can write a tainted object to disk";
 
