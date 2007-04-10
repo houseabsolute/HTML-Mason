@@ -11,7 +11,8 @@ package HTML::Mason::Escapes;
 use strict;
 use warnings;
 
-use HTML::Mason::Tools qw(load_pkg);
+use HTML::Entities ();
+
 
 my %html_escape = ('&' => '&amp;', '>'=>'&gt;', '<'=>'&lt;', '"'=>'&quot;');
 my $html_escape = qr/([&<>"])/;
@@ -26,9 +27,6 @@ sub basic_html_escape
 sub html_entities_escape
 {
     return unless defined ${ $_[0] };
-
-    load_pkg( 'HTML::Entities',
-              'HTML escaping requires the HTML::Entities module, available from CPAN.');
 
     HTML::Entities::encode_entities( ${ $_[0] } );
 }

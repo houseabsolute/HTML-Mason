@@ -175,19 +175,16 @@ EOF
 
 #------------------------------------------------------------
 
-    if ( load_pkg('HTML::Entities') )
-    {
-        $group->add_test( name => 'check_error_format',
-                          description => 'Make sure setting error_format => "html" works',
-                          interp_params => { error_format => 'html',
-                                             error_mode => 'output',
-                                           },
-                          component => <<'EOF',
+    $group->add_test( name => 'check_error_format',
+                      description => 'Make sure setting error_format => "html" works',
+                      interp_params => { error_format => 'html',
+                                         error_mode => 'output',
+                                       },
+                      component => <<'EOF',
 % die("Horrible death");
 EOF
-                          expect => qr{^\s+<html>.*Horrible death}is,
-                        );
-    }
+                      expect => qr{^\s+<html>.*Horrible death}is,
+                    );
 
 #------------------------------------------------------------
 
@@ -197,7 +194,7 @@ EOF
 % $m->subexec("/does/not/exist");
 EOF
                       expect_error => qr{could not find component for initial path}is,
-                      );
+                    );
 
 #------------------------------------------------------------
 

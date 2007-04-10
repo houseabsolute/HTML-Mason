@@ -13,6 +13,10 @@ available at http://www.masonhq.com/code/history.html.
   requested, you got a "Use of uninitialized value" warning from
   ApacheHandler in your logs. Reported by Ogden Nefix.
 
+- HTML::Entities is now a prereq. Not requiring it made for various
+  weird gyrations in the tests that didn't seem to work all the time,
+  causing various failures.
+
 [ ENHANCEMENTS ]
 
 - Added a new Compiler::ToObject parameter,

@@ -315,8 +315,6 @@ sub as_html
     my $out;
     my $interp = HTML::Mason::Interp->new(out_method => \$out);
 
-    # Can't use |h escape in here because if we fail to load
-    # HTML::Entities we end up in an endless loop.
     my $comp = $interp->make_component(comp_source => <<'EOF');
 
 <%args>
