@@ -112,6 +112,10 @@ BEGIN
            regex => qr/^(?:output|fatal)$/,
            descr => "How error conditions are manifest (output or fatal)" },
 
+         errors_are_exceptions =>
+         { parse => 'boolean', type => BOOLEAN, default => 1,
+           descr => "Whether errors thrown by components should always be upgraded to exception objects" },
+
          max_recurse =>
          { parse => 'string', default => 32, type => SCALAR,
            descr => "The maximum recursion depth for component, inheritance, and request stack" },
@@ -150,6 +154,7 @@ BEGIN { @read_write_params = qw(
                                 dhandler_name
                                 error_format
                                 error_mode
+                                errors_are_exceptions
                                 max_recurse
                                 out_method
                                 ); }
@@ -219,7 +224,8 @@ my %plugin_loaded;
 sub _initialize {
     my ($self) = @_;
 
-    local $SIG{'__DIE__'} = \&rethrow_exception;
+    local $SIG{'__DIE__'} = \&rethrow_exception
+        if $self->errors_are_exceptions;
 
     eval {
         # Check the static_source touch file, if it exists, before the
@@ -375,7 +381,8 @@ sub exec {
     return unless $self->initialized();
 
     # All errors returned from this routine will be in exception form.
-    local $SIG{'__DIE__'} = \&rethrow_exception;
+    local $SIG{'__DIE__'} = \&rethrow_exception
+        if $self->errors_are_exceptions;
 
     # Cheap way to prevent users from executing the same request twice.
     #
@@ -1666,6 +1673,17 @@ The default under L<Apache|HTML::Mason::ApacheHandler> and
 L<CGI|HTML::Mason::CGIHandler> is I<output>, causing the error to be
 displayed in the browser.  The default for standalone mode is
 I<fatal>.
+
+=item errors_are_exceptions
+
+Indicates whether or not to turn non-exception object errors in
+components into exceptions by use of a C<$SIG{__DIE__}>
+handler. Turning exceptions into objects can be expensive, since this
+will cause the generation of a stack trace for each error. If you are
+using strings or unblessed references as exceptions in your code, you
+may want to turn this off as a performance boost.
+
+The default value for this option is true.
 
 =item max_recurse
 

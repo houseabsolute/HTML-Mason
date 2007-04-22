@@ -349,6 +349,30 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'exception_are_exceptions_false',
+                      description => 'Test error-handling with exception_are_exceptions set to false',
+                      interp_params => { errors_are_exceptions => 0 },
+                      component => <<'EOF',
+% die 'a string error';
+EOF
+                      expect_error => qr/a string error/,
+                    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'exception_are_exceptions_false_fatal_mode',
+                      description => 'Test error-handling with exception_are_exceptions set to false and error_mode set to fatal',
+                      interp_params => { errors_are_exceptions => 0,
+                                         error_mode => 'fatal',
+                                       },
+                      component => <<'EOF',
+% die 'a string error';
+EOF
+                      expect_error => qr/a string error/,
+                    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
