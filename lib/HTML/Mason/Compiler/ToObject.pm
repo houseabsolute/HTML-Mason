@@ -691,7 +691,8 @@ component should C<use strict>.
 
 When compiling a component, use uniquely named subroutines for the a
 component's body, subcomponents, and methods. Doing this allows you to
-effectively profile code that calls Mason subroutines.
+effectively profile Mason components. Without this, all components
+simply show up as __ANON__ or something similar in the profiler.
 
 =item define_args_hash
 
