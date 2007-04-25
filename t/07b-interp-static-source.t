@@ -48,7 +48,7 @@ sub make_tests
                       component => <<'EOF',
 <& support/change_component1 &>\
 <%perl>
-sleep(1);  # Make sure timestamp changes
+sleep(2);  # Make sure timestamp changes
 write_component($m->fetch_comp('support/change_component1'), "I have changed!\n");
 </%perl>
 <& support/change_component1 &>
