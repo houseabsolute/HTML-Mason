@@ -153,8 +153,7 @@ value, if any, is discarded.
 
 The C<< <%perl> >> tag, like all block tags in Mason, is
 case-insensitive. It may appear anywhere in the text, and may span any
-number of lines. C<< <%perl> >> blocks cannot be nested inside one
-another.
+number of lines.
 
 =back
 
