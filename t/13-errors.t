@@ -349,9 +349,9 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'errors_are_exceptions_false',
-                      description => 'Test error-handling with errors_are_exceptions set to false',
-                      interp_params => { errors_are_exceptions => 0 },
+    $group->add_test( name => 'component_error_handler_false',
+                      description => 'Test error-handling with component_error_handler set to false',
+                      interp_params => { component_error_handler => 0 },
                       component => <<'EOF',
 % die 'a string error';
 EOF
@@ -360,9 +360,9 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'errors_are_exceptions_no_upgrade',
-                      description => 'Test that errors do not become object with errors_are_exceptions set to false',
-                      interp_params => { errors_are_exceptions => 0 },
+    $group->add_test( name => 'component_error_Handler_no_upgrade',
+                      description => 'Test that errors do not become object with component_error_handler set to false',
+                      interp_params => { component_error_handler => 0 },
                       component => <<'EOF',
 % eval { die 'a string error' };
 exception: <% ref $@ ? ref $@ : 'not a ref' %>
@@ -374,15 +374,26 @@ EOF
 
 #------------------------------------------------------------
 
-    $group->add_test( name => 'errors_are_exceptions_false_fatal_mode',
-                      description => 'Test error-handling with errors_are_exceptions set to false and error_mode set to fatal',
-                      interp_params => { errors_are_exceptions => 0,
+    $group->add_test( name => 'component_error_handler_false_fatal_mode',
+                      description => 'Test error-handling with component_error_handler set to false and error_mode set to fatal',
+                      interp_params => { component_error_handler => 0,
                                          error_mode => 'fatal',
                                        },
                       component => <<'EOF',
 % die 'a string error';
 EOF
                       expect_error => qr/a string error/,
+                    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'component_error_handler_uc_message',
+                      description => 'Test error-handling with component_error_handler set to a subroutine that upper-cases all text',
+                      interp_params => { component_error_handler => sub { die map { uc } @_ } },
+                      component => <<'EOF',
+% die 'a string error';
+EOF
+                      expect_error => qr/A STRING ERROR/,
                     );
 
 #------------------------------------------------------------

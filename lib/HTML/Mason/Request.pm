@@ -112,9 +112,9 @@ BEGIN
            regex => qr/^(?:output|fatal)$/,
            descr => "How error conditions are manifest (output or fatal)" },
 
-         errors_are_exceptions =>
-         { parse => 'boolean', type => BOOLEAN, default => 1,
-           descr => "Whether errors thrown by components should always be upgraded to exception objects" },
+         component_error_handler =>
+         { parse => 'code', type => CODEREF|SCALAR, default => \&rethrow_exception,
+           descr => "A subroutine reference called on component compilation or runtime errors" },
 
          max_recurse =>
          { parse => 'string', default => 32, type => SCALAR,
@@ -149,12 +149,12 @@ BEGIN
 my @read_write_params;
 BEGIN { @read_write_params = qw(
                                 autoflush
+                                component_error_handler
                                 data_cache_api
                                 data_cache_defaults
                                 dhandler_name
                                 error_format
                                 error_mode
-                                errors_are_exceptions
                                 max_recurse
                                 out_method
                                 ); }
@@ -224,8 +224,8 @@ my %plugin_loaded;
 sub _initialize {
     my ($self) = @_;
 
-    local $SIG{'__DIE__'} = \&rethrow_exception
-        if $self->errors_are_exceptions;
+    local $SIG{'__DIE__'} = $self->component_error_handler
+        if $self->component_error_handler;
 
     eval {
         # Check the static_source touch file, if it exists, before the
@@ -380,9 +380,8 @@ sub exec {
     # at the bottom of _initialize(); just return.
     return unless $self->initialized();
 
-    # All errors returned from this routine will be in exception form.
-    local $SIG{'__DIE__'} = \&rethrow_exception
-        if $self->errors_are_exceptions;
+    local $SIG{'__DIE__'} = $self->component_error_handler
+        if $self->component_error_handler;
 
     # Cheap way to prevent users from executing the same request twice.
     #
@@ -1674,16 +1673,18 @@ L<CGI|HTML::Mason::CGIHandler> is I<output>, causing the error to be
 displayed in the browser.  The default for standalone mode is
 I<fatal>.
 
-=item errors_are_exceptions
+=item component_error_handler
 
-Indicates whether or not to turn non-exception object errors in
-components into exceptions by use of a C<$SIG{__DIE__}>
-handler. Turning exceptions into objects can be expensive, since this
-will cause the generation of a stack trace for each error. If you are
-using strings or unblessed references as exceptions in your code, you
-may want to turn this off as a performance boost.
+A code reference used to handle errors thrown during component
+compilation or runtime. By default, this is a subroutine that turns
+non-exception object errors in components into exceptions. If this
+parameter is set to a false value, these errors are simply rethrown
+as-is.
 
-The default value for this option is true.
+Turning exceptions into objects can be expensive, since this will
+cause the generation of a stack trace for each error. If you are using
+strings or unblessed references as exceptions in your code, you may
+want to turn this off as a performance boost.
 
 =item max_recurse
 
