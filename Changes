@@ -17,6 +17,9 @@ available at http://www.masonhq.com/code/history.html.
   weird gyrations in the tests that didn't seem to work all the time,
   causing various failures.
 
+- Request::CGIHandler->exec() now returns the return value from
+  executing the component, just like a normal Request.
+
 [ ENHANCEMENTS ]
 
 - Added a new Compiler::ToObject parameter,
