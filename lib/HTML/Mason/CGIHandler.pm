@@ -207,6 +207,8 @@ sub exec
         and (!$retval or $retval==200)) {
         $r->send_http_header();
     }
+
+    return $retval;
 }
 
 sub redirect {
