@@ -18,7 +18,8 @@ available at http://www.masonhq.com/code/history.html.
   causing various failures.
 
 - Request::CGIHandler->exec() now returns the return value from
-  executing the component, just like a normal Request.
+  executing the component, just like a normal Request. Reported by
+  Adrian Irving-Beer.
 
 [ ENHANCEMENTS ]
 
