@@ -27,10 +27,11 @@ available at http://www.masonhq.com/code/history.html.
   named_component_subs. Turning this on makes it possible to profile
   components.
 
-- Added a new Request parameter, errors_are_exceptions. When this is
-  set to false, errors thrown by components are never upgraded to
-  exception objects, which can be a performance boost in some code
-  bases.
+- Added a new Request parameter, component_error_handler. This can be
+  set to change how component compilation and runtime errors are
+  handled. It can also be set to false to just let errors go
+  unhandled, which could speed up apps that throw a lot of non-object
+  exceptions.
 
 
 1.35  Oct 17, 2006
