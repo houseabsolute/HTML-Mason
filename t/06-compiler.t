@@ -1105,6 +1105,30 @@ EOF
 
 #------------------------------------------------------------
 
+        $group->add_test( name => 'unbalanced_content_block_error',
+                          description => 'Detect and report unbalanced </&> tags',
+                          interp_params => { enable_autoflush => 0 },
+                          component => <<'EOF',
+</&>
+EOF
+                          expect_error => qr/content ending tag but no beginning tag/
+                        );
+
+#------------------------------------------------------------
+
+        $group->add_test( name => 'unbalanced_content_block_subcomp_error',
+                          description => 'Detect and report unbalanced </&> tags in subcomponents',
+                          interp_params => { enable_autoflush => 0 },
+                          component => <<'EOF',
+<%def test>
+</&>
+</%def>
+EOF
+                          expect_error => qr/content ending tag but no beginning tag/
+                        );
+
+#------------------------------------------------------------
+
     return $group;
 }
 

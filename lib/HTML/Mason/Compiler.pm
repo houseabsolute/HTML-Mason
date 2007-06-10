@@ -225,7 +225,6 @@ sub start_component
     my $c = $self->{current_compile};
 
     $c->{in_main} = 1;
-    $c->{comp_with_content_stack} = [];
 
     $c->{in_block} = undef;
 
@@ -249,6 +248,8 @@ sub _init_comp_data
     $data->{flags} = {};
     $data->{attr} = {};
 
+    $data->{comp_with_content_stack} = [];
+
     foreach ( qw( cleanup filter init once shared ) )
     {
         $data->{blocks}{$_} = [];
@@ -261,7 +262,7 @@ sub end_component
     my $c = $self->{current_compile};
 
     $self->lexer->throw_syntax_error("Not enough component-with-content ending tags found")
-        if $c->{comp_with_content_stack} && @{ $c->{comp_with_content_stack} };
+        if @{ $c->{comp_with_content_stack} };
 }
 
 sub start_block

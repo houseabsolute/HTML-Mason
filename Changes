@@ -9,13 +9,18 @@ available at http://www.masonhq.com/code/history.html.
 
 [ BUG FIXES ]
 
+- If a component with content call ending tag appeared inside a
+  subcomp or method without an opening tag, then the compiler dies
+  with a Perl error, rather than reporting the error
+  usefully. Reported by Rich Williams.
+
 - Under mod_perl 2, if decline_dirs was false and a directory was
   requested, you got a "Use of uninitialized value" warning from
   ApacheHandler in your logs. Reported by Ogden Nefix.
 
 - HTML::Entities is now a prereq. Not requiring it made for various
   weird gyrations in the tests that didn't seem to work all the time,
-  causing various failures.
+  causing various failures. Fixes RT #24827.
 
 - Request::CGIHandler->exec() now returns the return value from
   executing the component, just like a normal Request. Reported by
