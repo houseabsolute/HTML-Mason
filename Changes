@@ -137,7 +137,7 @@ environments where the Interp is created anew every request.  Task id
 
 - Treat the return value of component execution as a string in
 ApacheHandler.  This prevent warnings about comparing the empty string
-to a number when a component return "".  Reported by Benjamin Franz.
+to a number when a component returns "".  Reported by Benjamin Franz.
 
 - Setting a MasonPlugins Apache parameter caused a fatal error.  Patch
 by David Jack Olrik.
