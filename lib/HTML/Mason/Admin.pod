@@ -315,7 +315,7 @@ handle a request for F</foo/bar/>.
 If you would like Mason to handle directory requests, set
 P<decline_dirs> to 0.  The dhandler that catches a directory request
 is responsible for setting a reasonable content type via
-C<< $r->content_type() >>
+C<< $r->content_type() >>.
 
 =head2 Configuring Virtual Sites
 
