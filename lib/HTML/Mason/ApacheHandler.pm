@@ -172,12 +172,14 @@ sub exec
     # if we are the top-level request. Since the out_method sends
     # headers, this will typically only apply after $m->abort.
     # On an error code, leave it to Apache to send the headers.
-    if (!$self->is_subrequest
-        and !APACHE2
-        and $self->auto_send_headers
-        and !HTML::Mason::ApacheHandler::http_header_sent($r)
-        and (!$retval or $retval eq HTTP_OK)) {
+    if (    !$self->is_subrequest
+         and !APACHE2
+         and $self->auto_send_headers
+         and !$r->notes('mason-sent-headers')
+         and ( !$retval or $retval eq HTTP_OK ) ) {
+
         $r->send_http_header();
+        $r->notes( 'mason-sent-headers' => 1 );
     }
 
     # mod_perl 1 treats HTTP_OK and OK the same, but mod_perl-2 does not.
@@ -197,13 +199,11 @@ sub _handle_error
     } else {
         if ( $self->error_format eq 'html' ) {
             $self->apache_req->content_type('text/html');
-            # We need to explicitly send the headers here under mp1,
-            # because otherwise the default out_method will check
-            # http_header_sent(), which will return true because there
-            # is a content_type.  This means that headers will _never_
-            # be sent properly unless we do it here.
-            $self->apache_req->send_http_header
-                unless APACHE2;
+
+            unless (APACHE2) {
+                $self->apache_req->send_http_header;
+                $self->apache_req->notes( 'mason-sent-headers' => 1 );
+            }
         }
         $self->SUPER::_handle_error($err);
     }
@@ -886,8 +886,9 @@ sub prepare_request
         $retval = OK if defined $retval && $retval eq HTTP_OK;
         unless ($retval) {
             unless (APACHE2) {
-                unless (http_header_sent($r)) {
+                unless ($r->notes('mason-sent-headers')) {
                     $r->send_http_header();
+                    $r->notes( 'mason-sent-headers' => 1 );
                 }
             }
         }
@@ -950,9 +951,6 @@ sub _request_fs_type
     #
     my $is_dir = -d $r->filename;
 
-    if ($is_dir && !$self->decline_dirs) {
-        $r->content_type('');
-    }
     return $is_dir ? 'dir' : -f _ ? 'file' : 'other';
 }
 
@@ -1005,11 +1003,6 @@ sub _mod_perl_args
     return \%args;
 }
 
-#
-# Determines whether the http header has been sent.
-#
-sub http_header_sent { shift->headers_out->{"Content-type"} }
-
 sub _set_mason_req_out_method
 {
     my ($self, $m, $r) = @_;
@@ -1038,8 +1031,9 @@ sub _set_mason_req_out_method
             # We use instance here because if we store $m we get a
             # circular reference and a big memory leak.
             if (!$sent_headers and HTML::Mason::Request->instance->auto_send_headers) {
-                unless (http_header_sent($r)) {
+                unless ($r->notes('mason-sent-headers')) {
                     $r->send_http_header();
+                    $r->notes( 'mason-sent-headers' => 1 );
                 }
                 $sent_headers = 1;
             }

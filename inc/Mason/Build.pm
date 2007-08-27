@@ -348,6 +348,32 @@ $filter_handler
 EOF
     } # matches 'if ( load_pkg('Apache::Filter') )'
 
+    $include .= <<"EOF";
+
+<IfDefine set_content_type>
+  <Perl>
+  use HTML::Mason::ApacheHandler;
+
+  sub ContentTypeTest::handler
+  {
+      my \$r = shift;
+
+      my \$ah =
+          HTML::Mason::ApacheHandler->new( comp_root => '$conf{comp_root}',
+                                           data_dir  => '$conf{data_dir}',
+                                           decline_dirs => 0,
+                                         );
+
+      \$r->content_type('text/html; charset=i-made-this-up');
+      return \$ah->handle_request(\$r);
+  }
+  </Perl>
+
+  SetHandler  perl-script
+  PerlHandler ContentTypeTest
+</IfDefine>
+EOF
+
     {
         local $^W;
         Apache::test->write_httpd_conf
@@ -406,7 +432,10 @@ sub make_request {
       || \$self->delayed_object_params('request', 'apache_req')
       || \$self->delayed_object_params('request', 'cgi_request');
     \$r->content_type( 'text/fooml' );
-    \$r->send_http_header unless \$mod_perl2::VERSION >= 2.00;
+    unless ( \$mod_perl2::VERSION >= 2.00 ) {
+        \$r->send_http_header();
+        \$r->notes( 'mason-sent-headers' => 1 );
+    }
     HTML::Mason::Exception::Abort->throw(error => 'foo', aborted_value => 200);
 }
 
