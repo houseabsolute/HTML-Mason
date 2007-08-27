@@ -5,6 +5,19 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.37
+
+[ BUG FIXES ]
+
+- Mason could send the HTTP headers twice under mod_perl 1.x when
+  making a request for a directory path that was handled by a
+  dhandler. Reported by David Beaudet.
+
+- If you set the Content-Type header in a handler sub before passing
+  control to Mason via ApacheHandler, this value was overwritten if
+  the request was for a directory path.
+
+
 1.36  Jun 10, 2007
 
 [ BUG FIXES ]
