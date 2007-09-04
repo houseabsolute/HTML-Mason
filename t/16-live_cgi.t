@@ -2,20 +2,43 @@
 
 use strict;
 
+use File::Spec;
+use lib 'blib', File::Spec->catdir('t', 'lib');
+
+use Apache::test qw(skip_test have_httpd have_module);
 use Module::Build;
+use HTML::Mason::Tests;
+use Test::More;
+
+use vars qw($VERBOSE $DEBUG);
 
 my $test_data = eval { Module::Build->current->notes('test_data') };
 
-unless ( $test_data
-         && $test_data->{is_maintainer}
-         && $test_data->{apache_dir}
-         && -e "$test_data->{apache_dir}/CGIHandler.cgi" )
+my $cgi_handler;
+if ( $test_data
+     && exists $test_data->{apache_dir}
+     && $test_data->{apache_dir}
+     && -d $test_data->{apache_dir} )
 {
-    print "1..0\n";
-    exit;
+    $cgi_handler = File::Spec->catfile( $test_data->{apache_dir},
+                                        'CGIHandler.cgi'
+                                      );
+}
+else
+{
+    plan skip_all => '$test_data->{apache_dir} is not a directory';
 }
 
-use vars qw($VERBOSE $DEBUG);
+unless ( $test_data->{is_maintainer}
+         && -e $cgi_handler )
+{
+    plan skip_all =>
+        '$test_data->{is_maintainer} is not true or '
+        . 'no CGIHandler.cgi within $test_data->{apache_dir}';
+}
+
+plan skip_all => 'have_httpd evaluates false.'
+    unless have_httpd();
 
 BEGIN
 {
@@ -23,16 +46,7 @@ BEGIN
     $DEBUG = $ENV{MASON_DEBUG};
 }
 
-use File::Spec;
-use HTML::Mason::Tests;
-use Test;
-
-use lib 'lib', File::Spec->catdir('t', 'lib');
-
 require File::Spec->catfile( 't', 'live_server_lib.pl' );
-
-use Apache::test qw(skip_test have_httpd have_module);
-skip_test unless have_httpd;
 
 # needed for Apache::test->fetch to work
 local $ENV{PORT} = $test_data->{port};
@@ -40,7 +54,7 @@ local $ENV{PORT} = $test_data->{port};
 kill_httpd(1);
 test_load_apache();
 
-plan(tests => 13);
+plan tests => 13;
 
 write_test_comps();
 run_tests();

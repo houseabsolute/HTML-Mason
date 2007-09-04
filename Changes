@@ -17,6 +17,12 @@ available at http://www.masonhq.com/code/history.html.
   control to Mason via ApacheHandler, this value was overwritten if
   the request was for a directory path.
 
+[ ENHANCEMENTS ]
+
+- Make t/08-ah.t and t/16-live-cgi.t more verbose about why they are
+  skipping tests when they do so. Based on a patch from
+  C.J. Adams-Collier.
+
 
 1.36  Jun 10, 2007
 

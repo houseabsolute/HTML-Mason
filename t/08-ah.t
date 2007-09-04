@@ -2,7 +2,10 @@
 
 use strict;
 
+use File::Spec;
+use HTML::Mason::Tests;
 use Module::Build;
+use Test::More;
 
 my $test_data = eval { Module::Build->current->notes('test_data') };
 
@@ -18,23 +21,23 @@ my $apreq_module = $mpver && $mpver >= 2 ? 'Apache2::Request' : 'Apache::Request
 
 unless ( $test_data
          && $test_data->{is_maintainer}
+         && exists $test_data->{apache_dir}
          && $test_data->{apache_dir}
-         && $mpver )
+         && -d $test_data->{apache_dir} )
 {
-    print "1..0\n";
-    exit;
+    plan skip_all =>
+        '$test_data->{is_maintainer} is not true or '
+        . '$test_data->{apache_dir} is not a directory';
 }
-
-use File::Spec;
-use HTML::Mason::Tests;
-use Test::More;
 
 use lib 'lib', File::Spec->catdir('t', 'lib');
 
 require File::Spec->catfile( 't', 'live_server_lib.pl' );
 
 use Apache::test qw(skip_test have_httpd have_module);
-skip_test unless have_httpd;
+
+plan skip_all => 'have_httpd evaluates false.'
+    unless have_httpd();
 
 local $| = 1;
 
