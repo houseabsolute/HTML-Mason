@@ -1,6 +1,6 @@
 use strict;
 
-use 5.005;
+use 5.006;
 
 use lib 'inc';
 
