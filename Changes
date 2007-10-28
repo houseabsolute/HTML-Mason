@@ -5,6 +5,16 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.38
+
+[ BUG FIXES ]
+
+- (Hopefully) fixed a problem where the cpan shell thought that Mason
+  needed mod_perl1 as a prereq when it was trying to require a newish
+  version of mod_perl2.
+
+
+
 1.37  Sep 6, 2007
 
 [ BUG FIXES ]
