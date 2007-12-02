@@ -93,9 +93,7 @@ sub _handler {
             # We use instance here because if we store $request we get a
             # circular reference and a big memory leak.
             if (!$sent_headers and HTML::Mason::Request->instance->auto_send_headers) {
-                unless ($r->http_header_sent) {
-                    $r->send_http_header();
-                }
+                $r->send_http_header();
                 $sent_headers = 1;
             }
 

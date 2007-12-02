@@ -166,6 +166,8 @@ sub http_header {
 sub send_http_header {
     my $self = shift;
 
+    return if $self->http_header_sent;
+
     print STDOUT $self->http_header;
 
     $self->{http_header_sent} = 1;

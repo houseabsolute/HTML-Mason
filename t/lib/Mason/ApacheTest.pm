@@ -1094,6 +1094,12 @@ dhandler
 dhandler_arg = dir/extra/stuff
 EOF
              },
+             { path => '/comps/explicitly_send_header',
+               unfiltered_response => 1,
+               expect => <<'EOF',
+Sending headers in this comp.
+EOF
+             },
            );
 
     ## CGIHandler.pm does not do this the same as ApacheHandler.pm
