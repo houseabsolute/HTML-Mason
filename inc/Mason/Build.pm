@@ -1311,11 +1311,6 @@ sub ACTION_test
 
     my $conf = $self->notes('apache_test_conf');
 
-    $self->notes( test_data => { apache_dir => $conf->{apache_dir},
-                                 port       => $conf->{port},
-                                 is_maintainer => $self->_is_maintainer,
-                               } );
-
     $self->SUPER::ACTION_test;
 }
 
