@@ -570,6 +570,9 @@ sub _write_CGIHandler
     print F <<"EOF";
 $Config{startperl}
 
+use strict;
+use warnings;
+
 $libs
 
 use HTML::Mason::CGIHandler;
