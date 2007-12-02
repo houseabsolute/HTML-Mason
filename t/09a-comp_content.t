@@ -540,6 +540,31 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'multiline_open_close',
+                      description => 'Tests multiline opening and closing blocks for component with content call tags',
+                      component => <<'EOF',
+<&|
+Wrap
+&>\
+Hello\
+</&
+Wrap
+>\
+<%def Wrap>\
+[Wrap start]
+<% $m->content %>
+[Wrap end]\
+</%def>
+EOF
+                      expect => <<'EOF',
+[Wrap start]
+Hello
+[Wrap end]
+EOF
+                    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
