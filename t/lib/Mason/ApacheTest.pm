@@ -361,6 +361,38 @@ $r->send_http_header();
 </%perl>
 EOF
               );
+
+    _write_comp( 'cgi_foo_param', <<'EOF',
+CGI foo param is <% $r->query->param('foo') %>
+EOF
+              );
+
+    _write_comp( 'abort_with_ok', <<'EOF',
+All is well
+% $m->abort(200);
+Will not be seen
+EOF
+              );
+
+    _write_comp( 'abort_with_not_ok', <<'EOF',
+All is well
+% $m->abort(500);
+Will not be seen
+EOF
+              );
+
+    _write_comp( 'cgi_dh/dhandler', <<'EOF' );
+dhandler
+dhandler_arg = <% $m->dhandler_arg %>
+EOF
+
+    _write_comp( 'cgi_dh/file', <<'EOF' );
+file
+dhandler_arg = <% $m->dhandler_arg %>
+path_info = <% $ENV{PATH_INFO} %>
+EOF
+
+    _write_comp( 'cgi_dh/dir/file', '' );
 }
 
 sub _write_comp
@@ -957,6 +989,125 @@ EOF
            );
 }
 
+sub _cgi_handler_tests
+{
+    shift;
+    my %p = @_;
+
+    return ( { path => '/comps/basic',
+               unfiltered_response => 1,
+               expect => <<'EOF',
+Basic test.
+2 + 2 = 4.
+uri = /basic.
+method = GET.
+EOF
+             },
+             { path => '/comps/print',
+               unfiltered_response => 1,
+               expect => <<'EOF',
+This is first.
+This is second.
+This is third.
+EOF
+             },
+             { path => '/comps/print/autoflush',
+               unfiltered_response => 1,
+               expect => <<'EOF',
+This is first.
+This is second.
+This is third.
+EOF
+             },
+             { path => '/comps/print/handle_comp',
+               unfiltered_response => 1,
+               expect => <<'EOF',
+This is first.
+This is second.
+This is third.
+EOF
+             },
+             { path => '/comps/print/handle_cgi_object',
+               unfiltered_response => 1,
+               expect => <<'EOF',
+This is first.
+This is second.
+This is third.
+EOF
+             },
+             { path => '/comps/cgi_foo_param/handle_cgi_object',
+               unfiltered_response => 1,
+               expect => <<'EOF',
+CGI foo param is bar
+EOF
+             },
+             { path => '/comps/redirect',
+               unfiltered_response => 1,
+               expect => <<'EOF',
+Basic test.
+2 + 2 = 4.
+uri = /basic.
+method = GET.
+EOF
+             },
+             { path => '/comps/params?qs1=foo&qs2=bar&mixed=A',
+               post => { post1 => 'a',
+                         post2 => 'b',
+                         mixed => 'B',
+                       },
+               unfiltered_response => 1,
+               expect => <<'EOF',
+mixed: A, B, array
+post1: a
+post2: b
+qs1: foo
+qs2: bar
+EOF
+             },
+             { path => '/comps/error_as_html',
+               regex => qr{<b>error:</b>.*Error during compilation}s,
+             },
+             { path => '/comps/abort_with_ok',
+               unfiltered_response => 1,
+               expect => <<'EOF',
+All is well
+EOF
+             },
+             # XXX - does this test make any sense?
+             { path => '/comps/abort_with_not_ok',
+               unfiltered_response => 1,
+               expect => <<'EOF',
+All is well
+EOF
+             },
+             { path => '/comps/foo/will_decline',
+               # Having decline generate an error like this is bad,
+               # but there's not much else we can do without rewriting
+               # more of CGIHandler, which isn't a good idea for
+               # stable, methinks.
+               regex => qr{could not find component for initial path}is,
+             },
+             { path => '/comps/cgi_dh/dir/extra/stuff',
+               unfiltered_response => 1,
+               expect => <<'EOF',
+dhandler
+dhandler_arg = dir/extra/stuff
+EOF
+             },
+           );
+
+    ## CGIHandler.pm does not do this the same as ApacheHandler.pm
+    ## but we do not want to rewrite CGIHandler in stable
+    #
+    #       my $path = '/comps/cgi_dh/file/extra/stuff';
+    #        my $response = Apache::test->fetch($path);
+    #        expect => <<'EOF',
+    #file
+    #dhandler_arg = 
+    #path_info = /extra/stuff
+    #EOF
+}
+
 sub _run_test
 {
     my $p    = shift;
@@ -987,9 +1138,12 @@ sub _run_test
 
     my $response = Apache::test->fetch( \%fetch_p );
 
-    my $filtered = _filter_response( $response, $p, $test );
+    my $output =
+          $test->{unfiltered_response}
+        ? $response->content()
+        : _filter_response( $response, $p, $test );
 
-    _check_output( $filtered, $test );
+    _check_output( $output, $test );
 
     if ( $test->{extra} )
     {
