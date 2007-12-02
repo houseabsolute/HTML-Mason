@@ -56,6 +56,7 @@ my $build = Mason::Build->new
     license     => 'perl',
     create_makefile_pl => 'passthrough',
     is_dist     => $is_dist,
+    recursive_test_files => 1,
   );
 
 $build->create_build_script;
