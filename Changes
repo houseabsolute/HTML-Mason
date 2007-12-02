@@ -13,6 +13,13 @@ available at http://www.masonhq.com/code/history.html.
   needed mod_perl1 as a prereq when it was trying to require a newish
   version of mod_perl2.
 
+- If you called $r->send_http_header() explicitly in a component under
+  mod_perl 1.x, headers would end up getting sent again once the
+  component finished executing. Reported by Brett Gardner.
+
+- Component call with content end tags could not span multiple
+  lines. Fixing this makes it consistent with the opening tag. Patch
+  by Alex Robinson.
 
 
 1.37  Sep 6, 2007
