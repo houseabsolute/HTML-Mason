@@ -179,7 +179,6 @@ sub exec
          and ( !$retval or $retval eq HTTP_OK ) ) {
 
         $r->send_http_header();
-        $r->notes( 'mason-sent-headers' => 1 );
     }
 
     # mod_perl 1 treats HTTP_OK and OK the same, but mod_perl-2 does not.
@@ -202,7 +201,6 @@ sub _handle_error
 
             unless (APACHE2) {
                 $self->apache_req->send_http_header;
-                $self->apache_req->notes( 'mason-sent-headers' => 1 );
             }
         }
         $self->SUPER::_handle_error($err);
@@ -889,7 +887,6 @@ sub prepare_request
             unless (APACHE2) {
                 unless ($r->notes('mason-sent-headers')) {
                     $r->send_http_header();
-                    $r->notes( 'mason-sent-headers' => 1 );
                 }
             }
         }
@@ -1034,7 +1031,6 @@ sub _set_mason_req_out_method
             if (!$sent_headers and HTML::Mason::Request->instance->auto_send_headers) {
                 unless ($r->notes('mason-sent-headers')) {
                     $r->send_http_header();
-                    $r->notes( 'mason-sent-headers' => 1 );
                 }
                 $sent_headers = 1;
             }
