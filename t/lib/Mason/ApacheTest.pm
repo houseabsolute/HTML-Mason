@@ -357,7 +357,7 @@ EOF
     _write_comp( 'explicitly_send_header', <<'EOF',
 Sending headers in this comp.
 <%perl>
-$r->send_http_header();
+$r->send_http_header() if $r->can('send_http_header');
 </%perl>
 EOF
               );
