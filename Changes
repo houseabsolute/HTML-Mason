@@ -21,6 +21,9 @@ available at http://www.masonhq.com/code/history.html.
   lines. Fixing this makes it consistent with the opening tag. Patch
   by Alex Robinson.
 
+- Includes a possible fix for a test failure in 10-cache.t. This
+  failure is a problem in the test code, not the Mason core code.
+
 
 1.37  Sep 6, 2007
 
