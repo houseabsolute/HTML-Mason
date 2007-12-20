@@ -207,7 +207,7 @@ x is <% $x %>
 $x
 </%args>
 <%init>
-return if $m->cache_self( expire_in => '1s' );
+return if $m->cache_self( expire_in => '2s' );
 </%init>
 EOF
                         );
