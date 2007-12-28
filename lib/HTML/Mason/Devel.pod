@@ -180,7 +180,7 @@ o HTML list formed from array
 
     <ul>
     % foreach $item (@list) {
-    <li><% $item %>
+    <li><% $item %></li>
     % }
     </ul>
 
@@ -190,6 +190,7 @@ o HTML list formed from hash
     % while (my ($key,$value) = each(%ENV)) {
     <li>
     <b><% $key %></b>: <% $value %>
+    </li>
     % }
     </ul>
 
@@ -442,7 +443,7 @@ Here is a simple example using the second method:
     % my $var;
     <ol>
     <&| list_items , list => \@items, var => \$var &>
-    <li> <% $var %>
+    <li> <% $var %></li>
     </&>
     </ol>
 
@@ -465,7 +466,7 @@ component will allow the list_items component to be nested.
 
     <ol>
     <&| list_items, list => \@items &>
-    <li> <% $var %>
+    <li> <% $var %></li>
     </&>
     </ol>
 
@@ -490,7 +491,7 @@ global, and is automatically local-ized by the foreach statement:
 
     <ol>
     <&| list_items, list => \@items &>
-    <li> <% $_ %>
+    <li> <% $_ %> </li>
     </&>
     </ol>
 
