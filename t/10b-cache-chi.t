@@ -577,6 +577,36 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'data_cache_defaults',
+                      description => 'modifying data_cache_defaults',
+                      interp_params => { data_cache_api => 'chi', data_cache_defaults => { driver => 'Memory' } },
+                      component => <<'EOF',
+Using driver <% ref($m->cache) %>
+
+% for (my $i=0; $i<3; $i++) {
+<& support/cache_test &>
+% }
+EOF
+                      expect => <<'EOF',
+Using driver CHI::Driver::Memory
+
+Hello Dolly.
+This was not cached.
+
+
+Hello Dolly.
+This was cached.
+
+
+Hello Dolly.
+This was cached.
+
+
+EOF
+                    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
