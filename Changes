@@ -5,6 +5,14 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.39  Jan 26, 2008
+
+[ ENHANCEMENTS ]
+
+- CHI may now be used as the backend for $m->cache as an updated alternative to
+  Cache::Cache.  Among other things, this facilitates easy use of Cache::FastMmap and
+  memcached for data caching. Cache::Cache is still the default for now.
+
 1.38  Dec 20, 2007
 
 [ BUG FIXES ]
