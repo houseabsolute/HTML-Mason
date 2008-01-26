@@ -1624,11 +1624,17 @@ The C<$m-E<gt>cache> API to use:
 
 =over
 
-=item '1.1', the default, indicates a L<Cache::Cache|Cache::Cache> based API.
+=item *
 
-=item 'chi' indicates a L<CHI|CHI> based API.
+'1.1', the default, indicates a L<Cache::Cache|Cache::Cache> based API.
 
-=item '1.0' indicates the custom cache API used in Mason 1.0x and earlier. This compatibility layer is provided as a convenience for users upgrading from older versions of Mason, but will not be supported indefinitely.
+=item *
+
+'chi' indicates a L<CHI|CHI> based API.
+
+=item *
+
+'1.0' indicates the custom cache API used in Mason 1.0x and earlier. This compatibility layer is provided as a convenience for users upgrading from older versions of Mason, but will not be supported indefinitely.
 
 =back
 
@@ -1639,10 +1645,10 @@ For example, to use Cache::Cache's C<MemoryCache> implementation by default:
 
     data_cache_defaults => {cache_class => 'MemoryCache'}
 
-To use the CHI C<FastMmap> implementation by default:
+To use the CHI C<FastMmap> driver by default:
 
     data_cache_api      => 'CHI',
-    data_cache_defaults => {driver => 'FastMMap'},
+    data_cache_defaults => {driver => 'FastMmap'},
 
 These settings are overriden by options given to particular
 C<$m-E<gt>cache> calls.
@@ -1840,6 +1846,8 @@ example inside a plugin's C<start_request_hook()> method, where we
 have created a request but it does not yet know anything about the
 component being called.
 
+=item cache
+
 =for html <a name="item_cache"></a>
 
 C<$m-E<gt>cache> returns a new L<cache object|HTML::Mason::Cache::BaseCache> with a
@@ -1869,10 +1877,10 @@ I<chi_root_class> specifies the factory class that will be called
 to create cache objects. The default is 'CHI'.
 
 I<driver> specifies the driver to use, for example C<Memory> or C<FastMmap>.  The default
-is C<File> in most cases, or C<Memory> if the interpreter has no data directory
+is C<File> in most cases, or C<Memory> if the interpreter has no data directory.
 
 Beyond that, I<cache_options> may include any valid options to the new() method of the
-driver. e.g. for the C<File> drier, valid options include C<expires_in> and C<depth>.
+driver. e.g. for the C<File> driver, valid options include C<expires_in> and C<depth>.
 
 =back
 
