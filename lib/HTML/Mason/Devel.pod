@@ -1516,12 +1516,13 @@ under special circumstances, one component does not access another
 component's cache. Each cached value may be set to expire at a certain
 time.
 
-Data caching is implemented on top of one of two external caching APIs:
-L<Cache::Cache|Cache::Cache> or its newer sibling L<CHI|CHI>. You control which one Mason
-uses with the P<data_cache_api> parameter. Currently C<Cache::Cache> is the default, but
-C<CHI> will take over when it gets a little more stable.  The APIs are very
-similar for Mason users, so that most of the information below applies to both; any
-differences are noted.
+Data caching is implemented on top of one of two external caching
+APIs: L<Cache::Cache|Cache::Cache> or its newer sibling
+L<CHI|CHI>. You control which one Mason uses with the
+P<data_cache_api> parameter. Currently C<Cache::Cache> is the default,
+but we will switch to C<CHI> once it is more mature.  The APIs are
+very similar for Mason users, so that most of the information below
+applies to both; any differences are noted.
 
 =head2 Basic Usage
 
@@ -1617,12 +1618,12 @@ Should the 30 seconds expire before the first process is done, a second
 process will start computing the new value while setting the expiration
 time yet another 30 seconds in the future, and so on.
 
-The disadvantage of this solution is that multiple writes to the cache will be performed
-for each C<set()>.
+The disadvantage of this solution is that multiple writes to the cache
+will be performed for each C<set()>.
 
-Another solution, available only if you are using C<CHI>, is L<expires_variance>
-which will create a time window during which expiration may occur. See the C<CHI>
-documentation for details.
+Another solution, available only if you are using C<CHI>, is
+L<expires_variance> which will create a variable time window during
+which expiration may occur. See the C<CHI> documentation for details.
 
 =head2 Caching All Output
 
@@ -1682,13 +1683,14 @@ components with the P<data_cache_defaults> parameter.
 =head2 Choosing a Cache Subclass - with CHI
 
 The L<CHI> API is implemented by a variety of drivers, for example
-L<CHI::Driver::File|CHI::Driver::File>, L<CHI::Driver::FastMmap|CHI::Driver::FastMmap>,
-and L<CHI::Driver::Memcached|CHI::Driver::Memcached>.
+L<CHI::Driver::File|CHI::Driver::File>,
+L<CHI::Driver::FastMmap|CHI::Driver::FastMmap>, and
+L<CHI::Driver::Memcached|CHI::Driver::Memcached>.
 
-C<CHI::Driver::File> is the default, but you can override
-this with the I<driver> keyword. The value must be the name of a
-C<CHI::Driver> subclass; the prefix "CHI::Driver::" need not be included.
-For example:
+C<CHI::Driver::File> is the default, but you can override this with
+the I<driver> keyword. The value must be the name of a C<CHI::Driver>
+subclass; the prefix "CHI::Driver::" need not be included.  For
+example:
 
     my $cache = $m->cache(driver => 'Memcached', servers => [ ... ]);
     my $result = $cache->get('key');

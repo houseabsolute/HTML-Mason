@@ -1634,14 +1634,18 @@ The C<$m-E<gt>cache> API to use:
 
 =item *
 
-'1.0' indicates the custom cache API used in Mason 1.0x and earlier. This compatibility layer is provided as a convenience for users upgrading from older versions of Mason, but will not be supported indefinitely.
+'1.0' indicates the custom cache API used in Mason 1.0x and
+earlier. This compatibility layer is provided as a convenience for
+users upgrading from older versions of Mason, but will not be
+supported indefinitely.
 
 =back
 
 =item data_cache_defaults
 
-A hash reference of default options to use for the C<$m-E<gt>cache> command.
-For example, to use Cache::Cache's C<MemoryCache> implementation by default:
+A hash reference of default options to use for the C<$m-E<gt>cache>
+command.  For example, to use Cache::Cache's C<MemoryCache>
+implementation by default:
 
     data_cache_defaults => {cache_class => 'MemoryCache'}
 
@@ -1675,7 +1679,8 @@ I<text> - a multi-line text format
 
 =item *
 
-I<line> - a single-line text format, with different pieces of information separated by tabs (useful for log files)
+I<line> - a single-line text format, with different pieces of
+information separated by tabs (useful for log files)
 
 =item *
 
@@ -1873,14 +1878,16 @@ information about the object returend from C<$m-E<gt>cache>.
 
 =item If data_cache_api = CHI
 
-I<chi_root_class> specifies the factory class that will be called
-to create cache objects. The default is 'CHI'.
+I<chi_root_class> specifies the factory class that will be called to
+create cache objects. The default is 'CHI'.
 
-I<driver> specifies the driver to use, for example C<Memory> or C<FastMmap>.  The default
-is C<File> in most cases, or C<Memory> if the interpreter has no data directory.
+I<driver> specifies the driver to use, for example C<Memory> or
+C<FastMmap>.  The default is C<File> in most cases, or C<Memory> if
+the interpreter has no data directory.
 
-Beyond that, I<cache_options> may include any valid options to the new() method of the
-driver. e.g. for the C<File> driver, valid options include C<expires_in> and C<depth>.
+Beyond that, I<cache_options> may include any valid options to the
+new() method of the driver. e.g. for the C<File> driver, valid options
+include C<expires_in> and C<depth>.
 
 =back
 
@@ -2163,9 +2170,10 @@ request and interpreter.
 
 =for html <a name="item_current_args"></a>
 
-Returns the arguments passed to the current component. When called in scalar context, a
-hash reference is returned.  When called in list context, a list of arguments (which may
-be assigned to a hash) is returned.
+Returns the arguments passed to the current component. When called in
+scalar context, a hash reference is returned.  When called in list
+context, a list of arguments (which may be assigned to a hash) is
+returned.
 
 =item current_comp
 
