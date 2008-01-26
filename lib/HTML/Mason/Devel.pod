@@ -1516,16 +1516,16 @@ under special circumstances, one component does not access another
 component's cache. Each cached value may be set to expire at a certain
 time.
 
-Data caching is implemented on top of DeWitt Clinton's C<Cache::Cache>
-package. Mason implements its own extended subclass of Dewitt's module
-called L<HTML::Mason::Cache::BaseCache|HTML::Mason::Cache::BaseCache>.
-See that module's documentation for a companion API reference to this
-section.
+Data caching is implemented on top of one of two external caching APIs:
+L<Cache::Cache|Cache::Cache> or its newer sibling L<CHI|CHI>. You control which one Mason
+uses with the P<data_cache_api> parameter. Currently C<Cache::Cache> is the default, but
+C<CHI> will take over when it gets a little more stable.  The APIs are very
+similar for Mason users, so that most of the information below applies to both; any
+differences are noted.
 
 =head2 Basic Usage
 
-The C<< $m->cache >> method returns an
-L<object|HTML::Mason::Cache::BaseCache> representing the cache for
+The C<< $m->cache >> method returns a cache object representing the cache for
 this component. Here's the typical usage of C<< $m->cache >>:
 
     my $result = $m->cache->get('key');
@@ -1582,7 +1582,7 @@ above, we expire the item whenever a certain file changes.
 Finally, you can expire a cache item from an external script; see
 L<Accessing a Cache Externally|"Accessing a Cache Externally"> below.
 
-=head2 Avoiding Concurrent Recomputation with Busy Locks
+=head2 Avoiding Concurrent Recomputation
 
 The code shown in "Basic Usage" above,
 
@@ -1603,7 +1603,7 @@ This sequence continues until the first process finishes and stores
 the new value.  On average, the value will be recomputed and written
 to the cache 15 times!
 
-Mason offers a solution with the I<busy_lock> flag:
+One solution is the I<busy_lock> flag:
 
    my $result = $m->cache->get('key', busy_lock=>'30 sec');
 
@@ -1616,6 +1616,13 @@ seconds.
 Should the 30 seconds expire before the first process is done, a second
 process will start computing the new value while setting the expiration
 time yet another 30 seconds in the future, and so on.
+
+The disadvantage of this solution is that multiple writes to the cache will be performed
+for each C<set()>.
+
+Another solution, available only if you are using C<CHI>, is L<expires_variance>
+which will create a time window during which expiration may occur. See the C<CHI>
+documentation for details.
 
 =head2 Caching All Output
 
@@ -1640,23 +1647,21 @@ manual.
 
 =head2 Cache Object
 
-C<< $m->cache->get_object >> returns the C<Cache::Object> associated
-with a particular key. You can use this to retrieve useful
-meta-data:
+C<< $m->cache->get_object >> returns a L<Cache::Object|Cache::Object> or
+L<CHI::CacheObject|CHI::CacheObject> associated with a particular key. You can use this to
+retrieve useful meta-data:
 
     my $co = $m->cache->get_object('name1');
     $co->get_created_at();    # when was object stored in cache
-    $co->get_accessed_at();   # when was object last accessed
     $co->get_expires_at();    # when does object expire
 
-=head2 Choosing a Cache Subclass
+=head2 Choosing a Cache Subclass - with Cache::Cache
 
-The cache API is implemented by a variety of backend subclasses. For
+The L<Cache::Cache> API is implemented by a variety of backend subclasses. For
 example, C<FileCache> implements the interface with a set of
 directories and files, C<MemoryCache> implements the interface in
 process memory, and C<SharedMemoryCache> implements the interface in
-shared memory. See the C<Cache::Cache> package for a full list of
-backend subclasses.
+shared memory.
 
 By default C<< $m->cache >> uses C<FileCache>, but you can override
 this with the I<cache_class> keyword. The value must be the name of a
@@ -1665,6 +1670,29 @@ For example:
 
     my $result = $m->cache(cache_class => 'MemoryCache')->get('key');
     $m->cache(cache_class => 'MemoryCache')->set(key => $result);
+
+You can even specify different subclasses for different keys in the
+same component. Just make sure the correct value is passed to all
+calls to C<< $m->cache >>; Mason does not remember which subclass you
+have used for a given component or key.
+
+The administrator can set the default cache subclass used by all
+components with the P<data_cache_defaults> parameter.
+
+=head2 Choosing a Cache Subclass - with CHI
+
+The L<CHI> API is implemented by a variety of drivers, for example
+L<CHI::Driver::File|CHI::Driver::File>, L<CHI::Driver::FastMmap|CHI::Driver::FastMmap>,
+and L<CHI::Driver::Memcached|CHI::Driver::Memcached>.
+
+C<CHI::Driver::File> is the default, but you can override
+this with the I<driver> keyword. The value must be the name of a
+C<CHI::Driver> subclass; the prefix "CHI::Driver::" need not be included.
+For example:
+
+    my $cache = $m->cache(driver => 'Memcached', servers => [ ... ]);
+    my $result = $cache->get('key');
+    $cache->set(key => $result);
 
 You can even specify different subclasses for different keys in the
 same component. Just make sure the correct value is passed to all
@@ -1683,10 +1711,10 @@ external Perl script), you'll need have the following information:
 
 =item *
 
-the namespace associated with the component. The function
+the namespace associated with the component. For C<Cache::Cache>, the function
 C<HTML::Mason::Utils::data_cache_namespace>,
 given a component id (usually just the component path), returns the
-namespace.
+namespace. For C<CHI>, the component id/path itself is the namespace.
 
 =item *
 
@@ -1698,13 +1726,20 @@ the cache_root, for file-based caches only. Defaults to the
 Given this information you can get a handle on the component's cache.
 For example, the following code removes a cache item for component
 F</foo/bar>, assuming the data directory is F</usr/local/www/mason>
-and the cache subclass is C<FileCache>:
+and you are using the default file backend:
 
     use HTML::Mason::Utils qw(data_cache_namespace);
 
+    # With Cache::Cache
     my $cache = new Cache::FileCache
         ( { namespace => data_cache_namespace("/foo/bar"),
             cache_root => "/usr/local/www/mason/cache" } );
+
+    # With CHI
+    my $cache = CHI->new
+        ( driver => 'File',
+          namespace => "/foo/bar",
+          cache_root => "/usr/local/www/mason/cache" );
 
     # Remove one key
     $cache->remove('key1');

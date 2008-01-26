@@ -36,6 +36,7 @@ use strict;
 use warnings;
 
 use File::Spec;
+use HTML::Mason::Cache::BaseCache;
 use HTML::Mason::Plugin::Context;
 use HTML::Mason::Tools qw(can_weaken read_file compress_path load_pkg pkg_loaded absolute_comp_path);
 use HTML::Mason::Utils;
@@ -80,12 +81,12 @@ BEGIN
 
          data_cache_api =>
          { parse => 'string', default => '1.1', type => SCALAR,
-           regex => qr/^(?:1\.0|1\.1)$/,
-           descr => "Data cache API to use: 1.0 or 1.1" },
+           regex => qr/^(?:1\.0|1\.1|chi)$/,
+           descr => "Data cache API to use: 1.0, 1.1, or chi" },
 
          data_cache_defaults =>
          { parse => 'hash_list', type => HASHREF|UNDEF, optional => 1,
-           descr => "A hash of default parameters for Cache::Cache" },
+           descr => "A hash of default parameters for Cache::Cache or CHI" },
 
          declined_comps =>
          { type => HASHREF, optional => 1,
@@ -653,8 +654,20 @@ sub cache
     if ($self->data_cache_defaults) {
         %options = (%{$self->data_cache_defaults}, %options);
     }
-    $options{namespace}   ||= compress_path($self->current_comp->comp_id);
-    $options{cache_root}  ||= $self->interp->cache_dir;
+
+    # If using the CHI API, just create and return a CHI handle. Namespace will be escaped by CHI.
+    if ($self->data_cache_api eq 'chi') {
+        my $chi_root_class = delete($options{chi_root_class}) || 'CHI';
+        load_pkg($chi_root_class);
+        if (!exists($options{namespace})) {
+            $options{namespace} = $self->current_comp->comp_id;
+        }
+        $options{root_dir} ||= $self->interp->cache_dir;
+        return $chi_root_class->new(%options);
+    }
+
+    $options{cache_root} ||= $self->interp->cache_dir;
+    $options{namespace}  ||= compress_path($self->current_comp->comp_id);
 
     # Determine cache_class, adding 'Cache::' in front of user's
     # specification if necessary.
@@ -1604,19 +1617,29 @@ as well.
 
 =item data_cache_api
 
-The C<$m-E<gt>cache> API to use. '1.1', the default, indicates the newer
-API L<documented in this manual|HTML::Mason::Request/item_cache>.
-'1.0' indicates the old API documented in 1.0x and earlier. This
-compatibility layer is provided as a convenience for users upgrading
-from older versions of Mason, but will not be supported indefinitely.
+The C<$m-E<gt>cache> API to use:
+
+=over
+
+=item '1.1', the default, indicates a L<Cache::Cache|Cache::Cache> based API.
+
+=item 'chi' indicates a L<CHI|CHI> based API.
+
+=item '1.0' indicates the custom cache API used in Mason 1.0x and earlier. This compatibility layer is provided as a convenience for users upgrading from older versions of Mason, but will not be supported indefinitely.
+
+=back
 
 =item data_cache_defaults
 
-A hash reference of default options to use for the C<$m-E<gt>cache>
-command. For example, to use the C<MemoryCache> implementation
-by default,
+A hash reference of default options to use for the C<$m-E<gt>cache> command.
+For example, to use Cache::Cache's C<MemoryCache> implementation by default:
 
     data_cache_defaults => {cache_class => 'MemoryCache'}
+
+To use the CHI C<FastMmap> implementation by default:
+
+    data_cache_api      => 'CHI',
+    data_cache_defaults => {driver => 'FastMMap'},
 
 These settings are overriden by options given to particular
 C<$m-E<gt>cache> calls.
@@ -1814,13 +1837,15 @@ example inside a plugin's C<start_request_hook()> method, where we
 have created a request but it does not yet know anything about the
 component being called.
 
-=item cache (cache_class=>'...', [cache_options])
-
 =for html <a name="item_cache"></a>
 
-C<$m-E<gt>cache> returns a new L<cache
-object|HTML::Mason::Cache::BaseCache> with a namespace specific to
-this component.
+C<$m-E<gt>cache> returns a new L<cache object|HTML::Mason::Cache::BaseCache> with a
+namespace specific to this component. The parameters to and return value from
+C<$m-E<gt>cache> differ depending on which L<data_cache_api> you are using.
+
+=over
+
+=item If data_cache_api = 1.1 (default)
 
 I<cache_class> specifies the class of cache object to create. It
 defaults to C<FileCache> in most cases, or C<MemoryCache> if the
@@ -1828,17 +1853,25 @@ interpreter has no data directory, and must be a backend subclass of
 C<Cache::Cache>. The prefix "Cache::" need not be included.  See the
 C<Cache::Cache> package for a full list of backend subclasses.
  
-I<cache_options> may include any valid options to the new() method of
-the cache class. e.g. for C<FileCache>, valid options include
-default_expires_in and cache_depth.
+Beyond that, I<cache_options> may include any valid options to the new() method of the
+cache class. e.g. for C<FileCache>, valid options include C<default_expires_in> and
+C<cache_depth>.
 
-See DEVEL<data caching> for a caching tutorial and examples. See the
-L<HTML::Mason::Cache::BaseCache|HTML::Mason::Cache::BaseCache>
-documentation for a method reference.
+See L<HTML::Mason::Cache::BaseCache|HTML::Mason::Cache::BaseCache> for
+information about the object returend from C<$m-E<gt>cache>.
 
-Note: users upgrading from 1.0x and earlier can continue to use the
-old C<$m-E<gt>cache> API by setting P<data_cache_api> to '1.0'.  This
-support will be removed at a later date.
+=item If data_cache_api = CHI
+
+I<chi_root_class> specifies the factory class that will be called
+to create cache objects. The default is 'CHI'.
+
+I<driver> specifies the driver to use, for example C<Memory> or C<FastMmap>.
+The default is C<File>.
+
+Beyond that, I<cache_options> may include any valid options to the new() method of the
+driver. e.g. for the C<File> drier, valid options include C<expires_in> and C<depth>.
+
+=back
 
 =item cache_self ([expires_in => '...'], [key => '...'], [get_options], [cache_options])
 
@@ -2114,6 +2147,14 @@ because it will not try to evaluate the content.
 
 Returns the number of this request, which is unique for a given
 request and interpreter.
+
+=item current_args
+
+=for html <a name="item_current_args"></a>
+
+Returns the arguments passed to the current component. When called in scalar context, a
+hash reference is returned.  When called in list context, a list of arguments (which may
+be assigned to a hash) is returned.
 
 =item current_comp
 
