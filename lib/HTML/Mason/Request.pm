@@ -662,6 +662,9 @@ sub cache
         if (!exists($options{namespace})) {
             $options{namespace} = $self->current_comp->comp_id;
         }
+        if (!exists($options{driver})) {
+            $options{driver} = $self->interp->cache_dir ? 'File' : 'Memory';
+        }
         $options{root_dir} ||= $self->interp->cache_dir;
         return $chi_root_class->new(%options);
     }
@@ -1865,8 +1868,8 @@ information about the object returend from C<$m-E<gt>cache>.
 I<chi_root_class> specifies the factory class that will be called
 to create cache objects. The default is 'CHI'.
 
-I<driver> specifies the driver to use, for example C<Memory> or C<FastMmap>.
-The default is C<File>.
+I<driver> specifies the driver to use, for example C<Memory> or C<FastMmap>.  The default
+is C<File> in most cases, or C<Memory> if the interpreter has no data directory
 
 Beyond that, I<cache_options> may include any valid options to the new() method of the
 driver. e.g. for the C<File> drier, valid options include C<expires_in> and C<depth>.

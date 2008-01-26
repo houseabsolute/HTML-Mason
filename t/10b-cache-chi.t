@@ -21,7 +21,7 @@ if ($@)
     exit;
 }
 
-my %chi_interp_params = (interp_params => { data_cache_api => 'chi', data_cache_defaults => { driver => 'File' } });
+my %chi_interp_params = (interp_params => { data_cache_api => 'chi' });
 
 my $tests = make_tests();
 $tests->run;
