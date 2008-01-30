@@ -1622,7 +1622,7 @@ The disadvantage of this solution is that multiple writes to the cache
 will be performed for each C<set()>.
 
 Another solution, available only if you are using C<CHI>, is
-L<expires_variance> which will create a variable time window during
+C<expires_variance> which will create a variable time window during
 which expiration may occur. See the C<CHI> documentation for details.
 
 =head2 Caching All Output

@@ -1630,7 +1630,7 @@ The C<$m-E<gt>cache> API to use:
 
 =item *
 
-'chi' indicates a L<CHI|CHI> based API.
+'chi' indicates a C<CHI> based API.
 
 =item *
 
