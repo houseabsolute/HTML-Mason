@@ -1626,7 +1626,7 @@ The C<$m-E<gt>cache> API to use:
 
 =item *
 
-'1.1', the default, indicates a L<Cache::Cache|Cache::Cache> based API.
+'1.1', the default, indicates a C<Cache::Cache> based API.
 
 =item *
 

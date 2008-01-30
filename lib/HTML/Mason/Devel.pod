@@ -1517,12 +1517,12 @@ component's cache. Each cached value may be set to expire at a certain
 time.
 
 Data caching is implemented on top of one of two external caching
-APIs: L<Cache::Cache|Cache::Cache> or its newer sibling
-L<CHI|CHI>. You control which one Mason uses with the
-P<data_cache_api> parameter. Currently C<Cache::Cache> is the default,
-but we will switch to C<CHI> once it is more mature.  The APIs are
-very similar for Mason users, so that most of the information below
-applies to both; any differences are noted.
+APIs: C<Cache::Cache> or its newer sibling C<CHI>. You control which
+one Mason uses with the P<data_cache_api> parameter. Currently
+C<Cache::Cache> is the default, but we will switch to C<CHI> once it
+is more mature.  The APIs are very similar for Mason users, so that
+most of the information below applies to both; any differences are
+noted.
 
 =head2 Basic Usage
 
@@ -1648,9 +1648,9 @@ manual.
 
 =head2 Cache Object
 
-C<< $m->cache->get_object >> returns a L<Cache::Object|Cache::Object> or
-L<CHI::CacheObject|CHI::CacheObject> associated with a particular key. You can use this to
-retrieve useful meta-data:
+C<< $m->cache->get_object >> returns a C<Cache::Object> or
+C<CHI::CacheObject> associated with a particular key. You can use this
+to retrieve useful meta-data:
 
     my $co = $m->cache->get_object('name1');
     $co->get_created_at();    # when was object stored in cache
@@ -1658,7 +1658,7 @@ retrieve useful meta-data:
 
 =head2 Choosing a Cache Subclass - with Cache::Cache
 
-The L<Cache::Cache> API is implemented by a variety of backend subclasses. For
+The C<Cache::Cache> API is implemented by a variety of backend subclasses. For
 example, C<FileCache> implements the interface with a set of
 directories and files, C<MemoryCache> implements the interface in
 process memory, and C<SharedMemoryCache> implements the interface in
@@ -1682,10 +1682,9 @@ components with the P<data_cache_defaults> parameter.
 
 =head2 Choosing a Cache Subclass - with CHI
 
-The L<CHI> API is implemented by a variety of drivers, for example
-L<CHI::Driver::File|CHI::Driver::File>,
-L<CHI::Driver::FastMmap|CHI::Driver::FastMmap>, and
-L<CHI::Driver::Memcached|CHI::Driver::Memcached>.
+The C<CHI> API is implemented by a variety of drivers, for example
+C<CHI::Driver::File>, C<CHI::Driver::FastMmap>, and
+C<CHI::Driver::Memcached>.
 
 C<CHI::Driver::File> is the default, but you can override this with
 the I<driver> keyword. The value must be the name of a C<CHI::Driver>
