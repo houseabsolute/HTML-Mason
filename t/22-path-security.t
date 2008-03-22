@@ -8,7 +8,7 @@ BEGIN
 {
     unless ( -f '/etc/passwd' )
     {
-        plan skip_all => 'This trest requires that /etc/passwd exist.';
+        plan skip_all => 'This test requires that /etc/passwd exist.';
     }
 }
 
