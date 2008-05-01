@@ -458,7 +458,11 @@ sub NEXTKEY {
 
 sub cgi_headers {
     my $self = shift;
-    map { $_ => $self->{$_}[1] } keys %$self;
+    map { _map_header_key_to_cgi_key($_) => $self->{$_}[1] } keys %$self;
+}
+
+sub _map_header_key_to_cgi_key {
+    return $_[0] eq '-set-cookie' ? '-cookies' : $_[0];
 }
 
 1;

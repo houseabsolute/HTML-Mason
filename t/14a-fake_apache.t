@@ -1,7 +1,7 @@
 #!perl -w
 
 use strict;
-use Test::More tests => 92;
+use Test::More tests => 96;
 use CGI qw(-no_debug);
 
 BEGIN { use_ok('HTML::Mason::CGIHandler') }
@@ -118,6 +118,10 @@ ok( $h->unset('annoyance-level'), 'Unset annoyance level' );
 is( $r->header_out('Annoyance-Level'), undef, "Check annoyance level again" );
 is( $h->{'annoyance-level'}, undef, "Check the hash directly again" );
 
+# Add some cookies
+ok( $r->headers_out()->add('Set-Cookie' => 'AF_SID=6e8834d8787ee57a; path=/'), "Set cookie" );
+ok( $r->headers_out()->add('Set-Cookie' => 'uniq_id=5608074; path=/; expires=Tue, 26-Aug-2008 21:27:03 GMT'), "Set cookie" );
+
 # Now check err_headers_out.
 my $url = 'http://example.com/';
 ok( my $e = $r->err_headers_out, "Get error headers out" );
@@ -179,10 +183,14 @@ is( $r->subprocess_env('content_length'), 42, "Check content_length env again" )
 
 # Now see what CGI.pm does with the headers out.
 ok( my $headers = $r->http_header, "Get http headers" );
-like($headers, qr/Status: 302 (?:Moved|Found)/i, "Check status" );
-like($headers, qr|Location: $url|i, "Check location" );
-like($headers, qr|Content-Type: text/xml(?:; charset=ISO-8859-1)?|i,
-     "Check content type" );
+like( $headers, qr/Status: 302 (?:Moved|Found)/i, "Check status" );
+like( $headers, qr|Location: $url|i, "Check location" );
+like( $headers, qr|Content-Type: text/xml(?:; charset=ISO-8859-1)?|i,
+      "Check content type" );
+like( $headers, qr|Set-Cookie: AF_SID=6e8834d8787ee57a; path=/|i,
+      'Check first cookie');
+like( $headers, qr|Set-Cookie: uniq_id=5608074; path=/; expires=Tue, 26-Aug-2008 21:27:03 GMT|i,
+      'Check second cookie' );
 
 is( $r->uri, '/login/welcome.html/index.html', 'test uri method' );
 is( $r->path_info, '/index.html', 'test path_info method' );

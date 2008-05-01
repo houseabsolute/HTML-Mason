@@ -5,6 +5,14 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.40
+
+[ BUG FIXES ]
+
+- Attempting to set multiple cookies when running under CGIHandler
+  failed. Patch by Andrej Czapszys. RT #33710.
+
+
 1.39  Jan 30, 2008
 
 [ ENHANCEMENTS ]
