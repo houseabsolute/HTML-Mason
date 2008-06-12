@@ -724,12 +724,14 @@ and as such has a very limited public API.
 
 =over
 
-=item compile (comp_source => $source, name => $name, comp_class = $comp_class)
+=item compile(...)
 
 This method will take component source and return the compiled object
-code for that source.  The C<comp_source> and C<name> parameters are
-optional.  The C<comp_class> can be used to change the component class
-for this one comonent.
+code for that source. See L<HTML::Mason::Compiler/compile(...)> for
+details on this method.
+
+This subclass also accepts a C<comp_class> parameter, allowing you to
+override the class into which the component is compiled.
 
 =back
 

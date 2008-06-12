@@ -816,9 +816,33 @@ a Compiler subclass needs to implement.
 
 =over 4
 
-=item compile(comp_source => <string>, name => <string>, comp_class => <string>)
+=item compile(...)
 
-The "comp_class" parameter may be ignored by the compiler.
+This method has several parameters:
+
+=over 8
+
+=item * comp_source (required)
+
+Either a scalar or reference to a scalar containing the component source.
+
+=item * name (required)
+
+The name of the component. This should be the filename of the
+component if it is file-based, or some other clear identifier of the
+component source.
+
+=item * comp_path (required)
+
+This should be the component's path.
+
+=item * fh (optional)
+
+If this is given then the output of the compiler will be sent directly
+to this handle, rather than being buffered in memory. This is an
+optimization to avoid memory usage.
+
+=back
 
 =item object_id
 
