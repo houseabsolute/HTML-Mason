@@ -701,16 +701,14 @@ can let in directory requests as well; see ADMIN<allowing directory
 requests>.
 
 A component or dhandler that does not want to handle a particular
-request may defer control to the next dhandler by calling C<<
-$m->decline >>.
+request may defer control to the next dhandler by calling C<< $m->decline >>.
 
 When using dhandlers under mod_perl, you may find that sometimes
 Apache will not set a content type for a response.  This usually
 happens when a dhandler handles a request for a non-existent file or
 directory.  You can add a C<< <Location> >> or C<< <LocationMatch> >>
 block containing a C<SetType> directive to your Apache config file, or
-you can just set the content type dynamically by calling C<<
-$r->content_type >>.
+you can just set the content type dynamically by calling C<< $r->content_type >>.
 
 The administrator can customize the file name used for dhandlers with
 the P<dhandler_name> parameter.
@@ -771,13 +769,10 @@ C<< $m->fetch_next >>. This is useful for calling the component manually,
 e.g. if you want to suppress some original arguments or if you want to
 use C<< $m->scomp >> to store and process the output.
 
-What happens if more than one autohandler applies to a page? Prior to
-version 0.85, only the most specific autohandler would execute.  In
-0.85 and beyond each autohandler gets a chance to run.  The top-most
-autohandler runs first; each C<< $m->call_next >> transfers control to the
-next autohandler and finally to the originally called component. This
-allows you, for example, to combine general site-wide templates and
-more specific section-based templates.
+If more than one autohandler applies to a page, each autohandler gets a chance to run.
+The top-most autohandler runs first; each C<< $m->call_next >> transfers control to the
+next autohandler and finally to the originally called component. This allows you, for
+example, to combine general site-wide templates and more specific section-based templates.
 
 Autohandlers can be made even more powerful in conjunction with
 Mason's object-oriented style features: methods, attributes, and
@@ -1007,7 +1002,7 @@ This section contains cleanup code that executes just before the
 component exits. For example: closing a database connection or closing
 a file handle.
 
-A << <%cleanup> >> block is equivalent to a C<< <%perl> >> block at
+A C<< <%cleanup> >> block is equivalent to a C<< <%perl> >> block at
 the end of the component. This means it will NOT execute if the
 component explicitly returns, or if an abort or error occurs in that
 component or one of its children. Because of this limitation, and
@@ -1053,7 +1048,7 @@ section:
     ...
     </%init>
 
-In addition, using C<$m> or <$r> in this section will not work in a
+In addition, using C<$m> or C<$r> in this section will not work in a
 preloaded component, because neither of those variable exist when a
 component is preloaded.
 
@@ -1517,7 +1512,7 @@ component's cache. Each cached value may be set to expire at a certain
 time.
 
 Data caching is implemented on top of one of two external caching
-APIs: C<Cache::Cache> or its newer sibling C<CHI>. You control which
+APIs: L<Cache::Cache|Cache::Cache> or its newer sibling L<CHI|CHI>. You control which
 one Mason uses with the P<data_cache_api> parameter. Currently
 C<Cache::Cache> is the default, but we will switch to C<CHI> once it
 is more mature.  The APIs are very similar for Mason users, so that
