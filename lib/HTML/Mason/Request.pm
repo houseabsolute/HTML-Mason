@@ -374,7 +374,7 @@ sub alter_superclass
 
     {
         no strict 'refs';
-        @{"$class\::ISA"} = @{ $isa_ref };
+        @{ $class . '::ISA' } = @{ $isa_ref };
     }
 
     $class->valid_params( %{ $class->valid_params } );
