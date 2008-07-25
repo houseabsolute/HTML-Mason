@@ -351,7 +351,8 @@ sub alter_superclass
     my $isa_ref;
     {
         no strict 'refs';
-        $isa_ref = \@{"$class\::ISA"};
+        my @isa = @{ $class . '::ISA' };
+        $isa_ref = \@isa;
     }
 
     # handles multiple inheritance properly and preserve
@@ -365,13 +366,18 @@ sub alter_superclass
             if ( $old_super ne $new_super )
             {
                 $isa_ref->[$x] = $new_super;
-
-                $class->valid_params( %{ $class->valid_params } );
             }
 
             last;
         }
     }
+
+    {
+        no strict 'refs';
+        @{"$class\::ISA"} = @{ $isa_ref };
+    }
+
+    $class->valid_params( %{ $class->valid_params } );
 }
 
 sub exec {

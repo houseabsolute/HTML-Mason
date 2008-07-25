@@ -12,6 +12,9 @@ available at http://www.masonhq.com/code/history.html.
 - Attempting to set multiple cookies when running under CGIHandler
   failed. Patch by Andrej Czapszys. RT #33710.
 
+- The Request->alter_superclass() method could cause a segfault
+  (sometimes) with perl 5.10.0. Reported and patched by Jesse Vincent.
+
 
 1.39  Jan 30, 2008
 
