@@ -1512,7 +1512,7 @@ component's cache. Each cached value may be set to expire at a certain
 time.
 
 Data caching is implemented on top of one of two external caching
-APIs: L<Cache::Cache|Cache::Cache> or its newer sibling L<CHI|CHI>. You control which
+APIs: C<Cache::Cache> or its newer sibling C<CHI>. You control which
 one Mason uses with the P<data_cache_api> parameter. Currently
 C<Cache::Cache> is the default, but we will switch to C<CHI> once it
 is more mature.  The APIs are very similar for Mason users, so that
