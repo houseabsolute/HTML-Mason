@@ -435,7 +435,7 @@ create a new component dynamically.
 
 Similarly, there is no C<execute> or C<call> method, because calling a
 component requires a request. All of the interfaces for calling a
-component (<& &>, C<$m->comp>, C<$interp-E<gt>exec>)
+component (C<< <& &> >>, C<< $m->comp >>, C<< $interp->exec >>)
 which normally take a component path will also take a component
 object.
 
