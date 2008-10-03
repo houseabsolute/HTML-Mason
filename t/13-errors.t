@@ -2,10 +2,13 @@
 
 use strict;
 
+use Cwd qw(realpath);
+use File::Basename;
 use File::Spec;
 use HTML::Mason::Tests;
 use HTML::Mason::Tools qw(load_pkg);
 
+my $root_dir = realpath(dirname(dirname($0)));
 my $tests = make_tests();
 $tests->run;
 
@@ -394,6 +397,19 @@ EOF
 % die 'a string error';
 EOF
                       expect_error => qr/A STRING ERROR/,
+                    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'require_bad_module_in_once',
+                      description => 'Require a module with an error in a once block',
+                      component => <<'EOF',
+<%once>
+require "t/lib/BadModule.pm";
+</%once>
+hi!
+EOF
+                      expect_error => qr/syntax error/,
                     );
 
 #------------------------------------------------------------
