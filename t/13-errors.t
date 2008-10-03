@@ -401,6 +401,19 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'use_bad_module',
+                      description => 'Use a module with an error',
+                      component => <<'EOF',
+<%init>
+use lib qw(t/lib); use BadModule;
+</%init>
+hi!
+EOF
+                      expect_error => qr/syntax error/,
+                    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'require_bad_module_in_once',
                       description => 'Require a module with an error in a once block',
                       component => <<'EOF',
