@@ -430,6 +430,9 @@ sub load {
         # a non-component object, try regenerating the object file
         # once before giving up and reporting an error. This can be
         # handy in the rare case of an empty or corrupted object file.
+        # (But add an exception for "Compilation failed in require" errors, since
+        # the bad module will be added to %INC and the error will not occur
+        # the second time - RT #39803).
         #
         if ($objfilemod < $srcmod) {
             $self->compiler->compile_to_file( file => $objfile, source => $source);
@@ -437,8 +440,10 @@ sub load {
         $comp = eval { $self->eval_object_code( object_file => $objfile ) };
 
         if (!UNIVERSAL::isa($comp, 'HTML::Mason::Component')) {
-            $self->compiler->compile_to_file( file => $objfile, source => $source);
-            $comp = eval { $self->eval_object_code( object_file => $objfile ) };
+            if (!defined($@) || $@ !~ /failed in require/) {
+                $self->compiler->compile_to_file( file => $objfile, source => $source);
+                $comp = eval { $self->eval_object_code( object_file => $objfile ) };
+            }
 
             if (!UNIVERSAL::isa($comp, 'HTML::Mason::Component')) {
                 my $error = $@ ? $@ : "Could not get HTML::Mason::Component object from object file '$objfile'";
