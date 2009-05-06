@@ -10,7 +10,7 @@ available at http://www.masonhq.com/code/history.html.
 [ BUG FIXES ]
 
 - This is a one-fix release to get this module working with the latest
-  version of Exception::Class.
+  version of Exception::Class (1.27).
 
 
 1.40  Jul 24, 2008
