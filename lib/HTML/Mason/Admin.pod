@@ -794,7 +794,7 @@ The object file pathname is formed from three parts:
 
 =over
 
-=item * the compiler L<object_id|HTML::Mason::Compiler/item_object_id> -
+=item * the compiler L<object_id|HTML::Mason::Compiler/object_id> -
 this prevents different versions of Mason or compilers from using the same
 object file, such as after an upgrade
 
