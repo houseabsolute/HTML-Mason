@@ -110,7 +110,7 @@ sub isa_mason_exception
 
     $name = $name ? "HTML::Mason::Exception::$name" : "HTML::Mason::Exception";
     no strict 'refs';
-    die "no such exception class $name" unless defined(${"${name}::VERSION"});
+    die "no such exception class $name" unless $name->isa('HTML::Mason::Exception');
 
     return UNIVERSAL::isa($err, $name);
 }
