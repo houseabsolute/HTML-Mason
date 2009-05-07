@@ -56,7 +56,7 @@ __END__
 
 =head1 NAME
 
-HTML::Mason::Utils - Publically available functions useful outside of Mason
+HTML::Mason::Utils - Publicly available functions useful outside of Mason
 
 =head1 DESCRIPTION
 
