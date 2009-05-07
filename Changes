@@ -5,6 +5,13 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.42
+
+[ BUG FIXES ]
+
+- Fix 10b-cache-chi.t to work with latest version of CHI - expire_if and ref of cache
+  changed
+
 1.41  May 5, 2009
 
 [ BUG FIXES ]
