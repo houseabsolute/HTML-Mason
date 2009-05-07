@@ -409,22 +409,26 @@ EOF
 
 #------------------------------------------------------------
 
+# Note: expire_if works differently with CHI than with previous Mason caching.
+# CHI does not actually expire the value (which would entail an extra write),
+# it just returns false from get(). This was different in earlier verisons of CHI,
+# so we don't test for $value3 as we do in the comprable 10-cache.t test.
+
     $group->add_test( name => 'expire_if',
                       description => 'test expire_if',
                       %chi_interp_params,
                       component => <<'EOF',
-<% join(', ', $value1 || 'undef', $value2 || 'undef', $value3 || 'undef') %>
+<% join(', ', $value1 || 'undef', $value2 || 'undef' ) %>
 <%init>
 my $time = time;
 my $cache = $m->cache;
 $cache->set('main', 'gardenia');
 my $value1 = $cache->get('main', expire_if=>sub { $_[0]->get_created_at <= $time-1 });
 my $value2 = $cache->get('main', expire_if=>sub { $_[0]->get_created_at >= $time });
-my $value3 = $cache->get('main');
 </%init>
 EOF
                       expect => <<'EOF',
-gardenia, undef, undef
+gardenia, undef
 EOF
                     );
 
@@ -579,16 +583,16 @@ EOF
 
     $group->add_test( name => 'data_cache_defaults',
                       description => 'modifying data_cache_defaults',
-                      interp_params => { data_cache_api => 'chi', data_cache_defaults => { driver => 'Memory' } },
+                      interp_params => { data_cache_api => 'chi', data_cache_defaults => { driver => 'Memory', global => 1 } },
                       component => <<'EOF',
-Using driver <% ref($m->cache) %>
+Using driver '<% $m->cache->short_driver_name %>'
 
 % for (my $i=0; $i<3; $i++) {
 <& support/cache_test &>
 % }
 EOF
                       expect => <<'EOF',
-Using driver CHI::Driver::Memory
+Using driver 'Memory'
 
 Hello Dolly.
 This was not cached.
