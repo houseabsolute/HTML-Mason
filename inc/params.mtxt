@@ -56,7 +56,7 @@ than the Apache configuration file. For example,
 
 =item *
 
-In an L<custom wrapper-based configuraiton|HTML::Mason::Admin/ADVANCED
+In an L<custom wrapper-based configuration|HTML::Mason::Admin/ADVANCED
 CONFIGURATION>, you can pass most of these parameters to the
 L<ApacheHandler|HTML::Mason::ApacheHandler> constructor.
 
