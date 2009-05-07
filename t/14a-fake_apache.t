@@ -1,7 +1,7 @@
 #!perl -w
 
 use strict;
-use Test::More tests => 96;
+use Test::More tests => 97;
 use CGI qw(-no_debug);
 
 BEGIN { use_ok('HTML::Mason::CGIHandler') }
@@ -194,5 +194,14 @@ like( $headers, qr|Set-Cookie: uniq_id=5608074; path=/; expires=Tue, 26-Aug-2008
 
 is( $r->uri, '/login/welcome.html/index.html', 'test uri method' );
 is( $r->path_info, '/index.html', 'test path_info method' );
+
+SKIP:
+{
+    skip 'This test requires Test::Output', 1
+        unless eval { require Test::Output; Test::Output->import; 1};
+
+    stdout_is( sub { $r->print('Foo bar') }, 'Foo bar',
+               'print does not include the object itself' );
+}
 
 __END__

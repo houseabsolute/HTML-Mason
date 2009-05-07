@@ -272,6 +272,7 @@ sub no_cache {
 }
 
 sub print {
+    shift;
     print @_;
 }
 
