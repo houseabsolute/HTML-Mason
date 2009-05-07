@@ -14,10 +14,10 @@ if ($@)
 }
 
 # Skip if CHI not present.
-eval { require CHI };
+eval "use CHI 0.21";
 if ($@)
 {
-    print "1..0 # Skipped: CHI is not installed\n";
+    print "1..0 # Skipped: CHI 0.21+ is not installed\n";
     exit;
 }
 
