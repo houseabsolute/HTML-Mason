@@ -13,6 +13,7 @@ my %prereq = ( 'Cache::Cache'     => 1.00,
                'CGI'              => 2.46,
                'Exception::Class' => 1.15,
                'File::Spec'       => 0.8,
+               'HTML::Entities'   => 0,
                'Params::Validate' => 0.70,
                'Scalar::Util'     => 1.01,
              );
@@ -48,8 +49,7 @@ unless ($is_dist)
 my $build = Mason::Build->new
   ( module_name => 'HTML::Mason',
     requires    => \%prereq,
-    build_requires => { 'HTML::Entities' => 0,
-                        'Module::Build'  => 0.26,
+    build_requires => { 'Module::Build'  => 0.26,
                         'Test'           => 0,
                         'Test::Builder'  => 0,
                       },
