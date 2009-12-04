@@ -57,6 +57,7 @@ my $build = Mason::Build->new
     create_makefile_pl => 'passthrough',
     is_dist     => $is_dist,
     recursive_test_files => 1,
+    dynamic_config => 1,
   );
 
 $build->create_build_script;
