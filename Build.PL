@@ -17,6 +17,7 @@ my %prereq = ( 'Cache::Cache'     => 1.00,
                'Log::Any'         => 0.07,
                'Params::Validate' => 0.70,
                'Scalar::Util'     => 1.01,
+               'Test::Deep'       => 0,
              );
 
 my $is_dist = grep { /dist=1/ } @ARGV;
