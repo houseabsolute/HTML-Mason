@@ -935,5 +935,54 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'flush_and_store',
+                      description => q{Test that $m->flush_buffer is ignored in a store'd component},
+                      interp_params => { autoflush => 1 },
+                      component => <<'EOF',
+<%def .world>\
+World\
+</%def>
+
+% my $world;
+% $m->comp( { store => \$world }, '.world');
+Hello, <% $world %>!
+
+% $world = $m->scomp('.world');
+Hello, <% $world %>!
+EOF
+                      expect => <<'EOF',
+
+Hello, World!
+
+Hello, World!
+EOF
+                    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'flush_and_scomp_recursive',
+                      description => 'Test that $m->flush_buffer is ignored in a recursive scomp() call',
+                      interp_params => { autoflush => 1 },
+                      component => <<'EOF',
+<%def .orld>\
+orld\
+</%def>
+
+<%def .world>\
+W<& .orld &>\
+</%def>
+
+% my $world = $m->scomp('.world');
+Hello, <% $world %>!
+EOF
+                      expect => <<'EOF',
+
+
+Hello, World!
+EOF
+                    );
+
+#------------------------------------------------------------
+
     return $group;
 }

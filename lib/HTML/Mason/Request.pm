@@ -450,7 +450,7 @@ sub exec {
             tie *SELECTED, 'Tie::Handle::Mason';
 
             my $old = select SELECTED;
-            my $mods = {base_comp => $request_comp, store => \($self->{request_buffer})};
+            my $mods = {base_comp => $request_comp, store => \($self->{request_buffer}), flushable => 1};
 
             if ($self->{has_plugins}) {
                 my $context = bless
@@ -1239,7 +1239,7 @@ sub comp {
     my $filter_buffer = '';
     my $top_buffer = defined($mods{store}) ? $mods{store} : $self->{top_stack}->[STACK_BUFFER];
     my $stack_buffer = $comp->{has_filter} ? \$filter_buffer : $top_buffer;
-    my $flushable = exists $mods{flushable} ? $mods{flushable} : 1;
+    my $flushable = exists $mods{flushable} ? $mods{flushable} : ($self->{top_stack}->[STACK_BUFFER_IS_FLUSHABLE] && ! defined($mods{store})) ;
 
     # Add new stack frame and point dynamically scoped $self->{top_stack} at it.
     push @{ $self->{stack} },
@@ -1329,7 +1329,7 @@ sub comp {
 sub scomp {
     my $self = shift;
     my $buf;
-    $self->comp({store => \$buf, flushable => 0},@_);
+    $self->comp({store => \$buf},@_);
     return $buf;
 }
 
