@@ -835,9 +835,6 @@ sub _do_or_eval
     my ($self, $p) = @_;
 
     if ($p->{object_file}) {
-        # Prevents errors under taint mode, and since we are loading via a
-        # real path, we don't care about @INC.
-        local @INC = ();
         return do $p->{object_file};
     } else {
         # If in taint mode, untaint the object text
