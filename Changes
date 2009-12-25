@@ -5,7 +5,7 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
-1.43
+1.43 Dec 25, 2009
 
 [ BUG FIXES ]
 
@@ -13,6 +13,12 @@ available at http://www.masonhq.com/code/history.html.
   referred to errors by their source file line number was broken. This could
   cause test failures if the package was downloaded into a path with spaces by
   CPAN. Reported by Shawn Moore. RT #53072.
+
+- HTML::Entities is no longer an optional dependency. This fixes some issues
+  with packaged versions of Mason. Reported by Jens Rehsack. RT #48890.
+
+- $m->flush_buffer is now ignored when inside $m->scomp or $m->content. Patch
+  by Frédéric Brière, with extra tests from Ruslan Zakirov. RT #38924.
 
 
 1.42 May 7, 2009
