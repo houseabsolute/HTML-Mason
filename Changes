@@ -5,6 +5,16 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.43
+
+[ BUG FIXES ]
+
+- If a component was located in a patch with spaces, the feature which
+  referred to errors by their source file line number was broken. This could
+  cause test failures if the package was downloaded into a path with spaces by
+  CPAN. Reported by Shawn Moore. RT #53072.
+
+
 1.42 May 7, 2009
 
 [ BUG FIXES ]
