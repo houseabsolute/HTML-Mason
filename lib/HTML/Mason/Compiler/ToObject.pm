@@ -517,8 +517,11 @@ EOF
             $coerce = $arg_in_array;
         }
 
-        push @assign, "#line $_->{line} $_->{file}\n"
-            if defined $_->{line} && defined $_->{file} && $self->use_source_line_numbers;
+        if ( defined $_->{line} && defined $_->{file} && $self->use_source_line_numbers )
+        {
+            my $file = $self->_escape_filename( $_->{file} );
+            push @assign, qq{#line $_->{line} "$file"\n};
+        }
 
         if ( defined $_->{default} )
         {

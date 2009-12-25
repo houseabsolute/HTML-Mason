@@ -295,11 +295,11 @@ sub raw_block
     return $self->$method(%p) if $self->can($method);
 
     my $comment = '';
-    if ( $self->lexer->line_number )
+    if ( $self->lexer->line_number && $self->use_source_line_numbers )
     {
         my $line = $self->lexer->line_number;
-        my $file = $self->lexer->name;
-        $comment = "#line $line $file\n" if $self->use_source_line_numbers;
+        my $file = $self->_escape_filename( $self->lexer->name );
+        $comment = qq{#line $line "$file"\n};
     }
 
     push @{ $self->{current_compile}{blocks}{ $p{block_type} } }, "$comment$p{block}";
@@ -628,14 +628,25 @@ sub _add_body_code
     # can break certain constructs like qw() list that spans multiple
     # perl-lines.
     if ( $self->lexer->line_number &&
-         $self->{current_compile}{last_body_code_type} ne 'perl_line' )
+         $self->{current_compile}{last_body_code_type} ne 'perl_line' &&
+         $self->use_source_line_numbers )
     {
         my $line = $self->lexer->line_number;
-        my $file = $self->lexer->name;
-        $self->{current_compile}{body} .= "#line $line $file\n" if $self->use_source_line_numbers;
+        my $file = $self->_escape_filename( $self->lexer->name );
+        $self->{current_compile}{body} .= qq{#line $line "$file"\n};
     }
 
     $self->{current_compile}{body} .= $_ foreach @_;
+}
+
+sub _escape_filename
+{
+    my $self = shift;
+    my $file = shift;
+
+    $file =~ s/\"//g;
+
+    return $file;
 }
 
 sub dump
