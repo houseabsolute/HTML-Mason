@@ -8,13 +8,13 @@ use Mason::Build;
 
 use File::Spec;
 
-my %prereq = ( 'Cache::Cache'     => 1.00,
+my %prereq = ( 
                'Class::Container' => 0.07,
                'CGI'              => 2.46,
                'Exception::Class' => 1.15,
                'File::Spec'       => 0.8,
                'HTML::Entities'   => 0,
-               'Log::Any'         => 0.07,
+               'Log::Any'         => 0.08,
                'Params::Validate' => 0.70,
                'Scalar::Util'     => 1.01,
                'Test::Deep'       => 0,
