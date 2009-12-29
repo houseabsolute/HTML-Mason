@@ -5,6 +5,15 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.44 Dec 25, 2009
+
+[ ENHANCEMENTS ]
+
+- Use Log::Any to log various events, such as the start and
+  end of each request and each component call.
+
+- Add $m->log, allowing easy logging to a component-specific namespace.
+
 1.43 Dec 25, 2009
 
 [ BUG FIXES ]
