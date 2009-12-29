@@ -373,6 +373,18 @@ sub create_time {
     return $self->load_time(@_);
 }
 
+# Create logger on demand - generally called from $m->log
+sub logger {
+    my ($self) = @_;
+
+    if (!$self->{logger}) {
+        my $log_category = "HTML::Mason::Component" . $self->path();
+        $log_category =~ s/\//::/g;
+        $self->{logger} = Log::Any->get_logger(category => $log_category);
+    }
+    return $self->{logger};
+}
+
 1;
 
 __END__
