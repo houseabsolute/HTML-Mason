@@ -40,7 +40,6 @@ use HTML::Mason::Cache::BaseCache;
 use HTML::Mason::Plugin::Context;
 use HTML::Mason::Tools qw(can_weaken read_file compress_path load_pkg pkg_loaded absolute_comp_path);
 use HTML::Mason::Utils;
-use Log::Any qw($log);
 use Class::Container;
 use base qw(Class::Container);
 
@@ -81,13 +80,13 @@ BEGIN
            public => 0 },
 
          data_cache_api =>
-         { parse => 'string', default => 'chi', type => SCALAR,
+         { parse => 'string', default => '1.1', type => SCALAR,
            regex => qr/^(?:1\.0|1\.1|chi)$/,
            descr => "Data cache API to use: 1.0, 1.1, or chi" },
 
          data_cache_defaults =>
          { parse => 'hash_list', type => HASHREF|UNDEF, optional => 1,
-           descr => "A hash of default parameters for CHI or Cache::Cache" },
+           descr => "A hash of default parameters for Cache::Cache or CHI" },
 
          declined_comps =>
          { type => HASHREF, optional => 1,
@@ -242,8 +241,6 @@ sub _initialize {
         if (!ref($request_comp)) {
             $request_comp =~ s{/+}{/}g;
             $self->{top_path} = $path = $request_comp;
-            $log->debugf("top path is '%s'", $self->{top_path})
-                if $log->is_debug;
 
             my $retry_count = 0;
             search: {
@@ -256,8 +253,6 @@ sub _initialize {
                     if ( $request_comp = $self->interp->find_comp_upwards($path, $self->dhandler_name) ) {
                         my $parent_path = $request_comp->dir_path;
                         ($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
-                        $log->debug("found dhandler '%s', dhandler_arg '%s'", $parent_path, $self->{dhandler_arg})
-                            if $log->is_debug;
                     }
                 }
 
@@ -427,9 +422,6 @@ sub exec {
     $self->{request_buffer} = $self->interp->preallocated_output_buffer;
     $self->{request_buffer} = '';
 
-    $log->debugf("starting request for '%s'", $self->request_comp->title)
-        if $log->is_debug;
-
     eval {
         # Build wrapper chain and index.
         my $request_comp = $self->request_comp;
@@ -505,9 +497,6 @@ sub exec {
             rethrow_exception $error;
         }
     };
-
-    $log->debugf("finishing request for '%s'", $self->request_comp->title)
-        if $log->is_debug;
 
     # Purge code cache if necessary.
     $self->interp->purge_code_cache;
@@ -679,9 +668,8 @@ sub cache
         if (!exists($options{namespace})) {
             $options{namespace} = $self->current_comp->comp_id;
         }
-        if (!exists($options{driver}) && !exists($options{driver_class})) {
+        if (!exists($options{driver})) {
             $options{driver} = $self->interp->cache_dir ? 'File' : 'Memory';
-            $options{global} = 1 if $options{driver} eq 'Memory';
         }
         $options{root_dir} ||= $self->interp->cache_dir;
         return $chi_root_class->new(%options);
@@ -1219,7 +1207,6 @@ sub print
 #
 sub comp {
     my $self = shift;
-    my $log_is_debug = $log->is_debug;
 
     # Get modifiers: optional hash reference passed in as first argument.
     # Merge multiple hash references to simplify user and internal usage.
@@ -1245,11 +1232,6 @@ sub comp {
     my $depth = $self->depth;
     error "$depth levels deep in component stack (infinite recursive call?)\n"
         if $depth >= $self->{max_recurse};
-
-    # Log start of component call.
-    #
-    $log->debugf("entering component '%s' [depth %d]", $comp->title(), $depth)
-        if $log_is_debug;
 
     # Keep the same output buffer unless store modifier was passed. If we have
     # a filter, put the filter buffer on the stack instead of the regular buffer.
@@ -1335,11 +1317,6 @@ sub comp {
     # stick the arguments on the stack. If we don't pop the stack,
     # they don't get cleaned up until the component exits.
     pop @{ $self->{stack} };
-
-    # Log end of component call.
-    #
-    $log->debug(sprintf("exiting component '%s' [depth %d]", $comp->title(), $depth))
-        if $log_is_debug;
 
     # Repropagate error if one occurred, otherwise return result.
     rethrow_exception $error if $error;
@@ -1550,12 +1527,6 @@ sub _compute_base_comp_for_frame {
     return $frame->[STACK_BASE_COMP];
 }
 
-sub log
-{
-    my ($self) = @_;
-    return $self->current_comp->logger();
-}
-
 package Tie::Handle::Mason;
 
 sub TIEHANDLE
@@ -1661,11 +1632,11 @@ The C<$m-E<gt>cache> API to use:
 
 =item *
 
-'chi', the default, indicates a C<CHI> based API.
+'1.1', the default, indicates a C<Cache::Cache> based API.
 
 =item *
 
-'1.1' indicates a C<Cache::Cache> based API.
+'chi' indicates a C<CHI> based API.
 
 =item *
 
@@ -1679,14 +1650,15 @@ supported indefinitely.
 =item data_cache_defaults
 
 A hash reference of default options to use for the C<$m-E<gt>cache>
-command.  For example, to use the CHI C<FastMmap> driver by default:
+command.  For example, to use Cache::Cache's C<MemoryCache>
+implementation by default:
+
+    data_cache_defaults => {cache_class => 'MemoryCache'}
+
+To use the CHI C<FastMmap> driver by default:
 
     data_cache_api      => 'CHI',
     data_cache_defaults => {driver => 'FastMmap'},
-
-To use Cache::Cache's C<MemoryCache> implementation by default:
-
-    data_cache_defaults => {cache_class => 'MemoryCache'}
 
 These settings are overriden by options given to particular
 C<$m-E<gt>cache> calls.
@@ -1895,20 +1867,7 @@ C<$m-E<gt>cache> differ depending on which L<data_cache_api> you are using.
 
 =over
 
-=item If data_cache_api = CHI (default)
-
-I<chi_root_class> specifies the factory class that will be called to
-create cache objects. The default is 'CHI'.
-
-I<driver> specifies the driver to use, for example C<Memory> or
-C<FastMmap>.  The default is C<File> in most cases, or C<Memory> if
-the interpreter has no data directory.
-
-Beyond that, I<cache_options> may include any valid options to the
-new() method of the driver. e.g. for the C<File> driver, valid options
-include C<expires_in> and C<depth>.
-
-=item If data_cache_api = 1.1
+=item If data_cache_api = 1.1 (default)
 
 I<cache_class> specifies the class of cache object to create. It
 defaults to C<FileCache> in most cases, or C<MemoryCache> if the
@@ -1922,6 +1881,19 @@ C<cache_depth>.
 
 See L<HTML::Mason::Cache::BaseCache|HTML::Mason::Cache::BaseCache> for
 information about the object returend from C<$m-E<gt>cache>.
+
+=item If data_cache_api = CHI
+
+I<chi_root_class> specifies the factory class that will be called to
+create cache objects. The default is 'CHI'.
+
+I<driver> specifies the driver to use, for example C<Memory> or
+C<FastMmap>.  The default is C<File> in most cases, or C<Memory> if
+the interpreter has no data directory.
+
+Beyond that, I<cache_options> may include any valid options to the
+new() method of the driver. e.g. for the C<File> driver, valid options
+include C<expires_in> and C<depth>.
 
 =back
 
@@ -2340,14 +2312,6 @@ optional.  It may be specified as an absolute path or as a path
 relative to the current component.
 
 See DEVEL<subrequests> for more information about subrequests.
-
-=item log
-
-=for html <a name="item_log"></a>
-
-Returns a L<Log::Any|Log::Any> logger with a log category specific to the
-current component.  The category for a component "/foo/bar" would be
-"HTML::Mason::Component::foo::bar".
 
 =item notes (key, value)
 
