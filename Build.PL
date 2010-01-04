@@ -8,7 +8,7 @@ use Mason::Build;
 
 use File::Spec;
 
-my %prereq = ( 
+my %prereq = ( 'Cache::Cache'     => 1.00,
                'Class::Container' => 0.07,
                'CGI'              => 2.46,
                'Exception::Class' => 1.15,
