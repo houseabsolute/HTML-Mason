@@ -47,3 +47,5 @@ samples/cd-me.*
 
 ^t/data
 ^MYMETA.yml$
+
+^notes
