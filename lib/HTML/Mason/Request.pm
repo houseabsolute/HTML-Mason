@@ -2346,7 +2346,7 @@ See DEVEL<subrequests> for more information about subrequests.
 
 =for html <a name="item_log"></a>
 
-Returns a L<Log::Any|Log::Any> logger with a log category specific to the
+Returns a C<Log::Any> logger with a log category specific to the
 current component.  The category for a component "/foo/bar" would be
 "HTML::Mason::Component::foo::bar".
 

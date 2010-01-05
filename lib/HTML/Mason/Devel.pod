@@ -1928,16 +1928,16 @@ the P<use_source_line_numbers> parameter.
 
 =head1 LOGGING
 
-Mason uses L<Log::Any|Log::Any> to log various events, such as the start and
+Mason uses C<Log::Any> to log various events, such as the start and
 end of each request and each component call. You can also log to
-L<Log::Any|Log::Any> from a component with the
-L<log|HTML::Mason::Request/log> method. e.g.
+C<Log::Any> from a component with the
+C<$m-E<gt>log> method. e.g.
 
     $m->log->error("Something bad happened!");
     $m->log->debugf("Arguments for '%s' were '%s'", $func, \%args)
         if $m->log->is_debug;
 
-See L<Log::Any::Adapter|Log::Any::Adapter> for how to direct these logs to
+See C<Log::Any::Adapter> for how to direct these logs to
 an output of your choice.
 
 =head1 OBJECT-ORIENTED TECHNIQUES
