@@ -14,6 +14,8 @@ available at http://www.masonhq.com/code/history.html.
 
 - Add $m->log, allowing easy logging to a component-specific namespace.
 
+- Fix use of CHI when no data directory is specified.
+
 1.43 Dec 25, 2009
 
 [ BUG FIXES ]
