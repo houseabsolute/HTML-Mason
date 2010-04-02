@@ -311,7 +311,7 @@ sub _initialize {
                     #
                     {
                         no strict 'refs';
-                        unless (defined(%{$plugin . "::"})) {
+                        unless (keys %{$plugin . "::"}) {
                             eval "use $plugin;";
                             die $@ if $@;
                         }
