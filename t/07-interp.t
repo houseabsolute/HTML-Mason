@@ -808,7 +808,7 @@ EOF
 
 #------------------------------------------------------------
 
-    if ( load_pkg('Switch') )
+    if ( $] < 5.012 && load_pkg('Switch') )
     {
         $group->add_test( name => 'source_filter',
                           description => 'make sure source filters work',
