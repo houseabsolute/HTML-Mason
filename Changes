@@ -5,6 +5,14 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.45
+
+[ BUG FIXES ]
+
+- Silenced some new warnings that appeared when using Mason with Perl
+  5.12.0+. Reported by Jesse Vincent.
+
+
 1.44 Jan 4, 2010
 
 [ ENHANCEMENTS ]
