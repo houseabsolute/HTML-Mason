@@ -649,6 +649,7 @@ sub set_global
 
     my $varname = sprintf("%s::%s",$self->compiler->in_package,$name);
     no strict 'refs';
+    no warnings 'once';
     if ($prefix eq '$') {
         $$varname = $values[0];
     } elsif ($prefix eq '@') {
