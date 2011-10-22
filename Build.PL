@@ -56,7 +56,7 @@ my $build = Mason::Build->new
                         'Test::Builder'  => 0,
                       },
     license     => 'perl',
-    create_makefile_pl => 'passthrough',
+    create_makefile_pl => 'small',
     is_dist     => $is_dist,
     recursive_test_files => 1,
     dynamic_config => 1,
