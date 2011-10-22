@@ -911,7 +911,8 @@ sub _apache_request_object
     my $new_r = APACHE2 ? $_[0] : HTML::Mason::Apache::Request->new( $_[0] );
 
     my $r_sub;
-    if ( lc $_[0]->dir_config('Filter') eq 'on' )
+    my $filter = $_[0]->dir_config('Filter');
+    if ( defined $filter && lc $filter eq 'on' )
     {
         die "To use Apache::Filter with Mason you must have at least version 1.021 of Apache::Filter\n"
             unless Apache::Filter->VERSION >= 1.021;
