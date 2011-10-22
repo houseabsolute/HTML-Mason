@@ -88,7 +88,7 @@ sub make_tests
                                   $interp->comp_root([map { [$_, $group->comp_root . "/interp-mcr/$_"] } @$keys]);
                                   if ($params{remove}) {
                                       foreach my $comp (qw(foo bar)) {
-                                          unlink("mason_tests/comps/interp-mcr/$params{remove}/interp-mcr/$static_source/$comp");
+                                          unlink("mason_tests/$$/comps/interp-mcr/$params{remove}/interp-mcr/$static_source/$comp");
                                       }
                                   }
                               },

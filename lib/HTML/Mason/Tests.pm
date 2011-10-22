@@ -296,12 +296,12 @@ sub base_path
 
     if (ref $proto)
     {
-        $proto->{base_path} ||= File::Spec->catdir( cwd(), 'mason_tests' );
+        $proto->{base_path} ||= File::Spec->catdir( cwd(), 'mason_tests', $$ );
         return $proto->{base_path};
     }
     else
     {
-        return File::Spec->catdir( cwd(), 'mason_tests' );
+        return File::Spec->catdir( cwd(), 'mason_tests', $$ );
     }
 }
 

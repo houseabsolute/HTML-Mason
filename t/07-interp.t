@@ -787,7 +787,7 @@ EOF
                       component => <<'EOF',
 % my $buffer;
 % my $interp = HTML::Mason::Tests->tests_class->_make_interp( out_method => \$buffer );
-% $interp->exec( '/mason_tests/comps/interp/no_comp_root_helper' );
+% $interp->exec( "/mason_tests/$$/comps/interp/no_comp_root_helper" );
 <% $buffer %>
 EOF
                       expect => <<'EOF',
