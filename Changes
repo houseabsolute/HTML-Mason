@@ -5,11 +5,19 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.47 Oct 21, 2011
+
+[ BUG FIXES ]
+
+- Silenced an uninitalized value warning from ApacheHandler with newer
+  versions of Perl. RT #61900.
+
+
 1.46 Aug 1, 2011
 
  [ DOCS ]
 
- - Mention Mason 2 in documentation
+- Mention Mason 2 in documentation
 
 1.45 Apr 3, 2010
 
