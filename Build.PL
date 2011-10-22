@@ -51,6 +51,7 @@ unless ($is_dist)
 my $build = Mason::Build->new
   ( module_name => 'HTML::Mason',
     requires    => \%prereq,
+    configure_requires => { 'Module::Build'  => 0.26 },
     build_requires => { 'Module::Build'  => 0.26,
                         'Test'           => 0,
                         'Test::Builder'  => 0,
