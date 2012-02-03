@@ -5,6 +5,15 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.48 Feb 3, 2012
+
+[ BUG FIXES ]
+
+- Calling a subcomponent from inside an anonymous component (created via
+  $interp->make_component) caused an uninitialized value warning. Reported by
+  Javier Amor Garcia.
+
+
 1.47 Oct 21, 2011
 
 [ BUG FIXES ]
