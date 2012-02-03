@@ -31,7 +31,9 @@ sub assign_runtime_properties {
     $self->SUPER::assign_runtime_properties($interp, $source);
     $self->{comp_id} = sprintf("[%s '%s' of %s]", $self->{is_method} ? 'method' : 'subcomponent',
                                $self->name, $self->owner->comp_id);
-    $self->{path} = $self->owner->path . ":" . $self->name;
+    my $owner_path = $self->owner->path;
+    $owner_path = q{} unless defined $owner_path;
+    $self->{path} =  $owner_path . ":" . $self->name;
 }
 
 sub cache_file { return $_[0]->owner->cache_file }
