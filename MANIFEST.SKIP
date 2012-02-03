@@ -49,3 +49,4 @@ samples/cd-me.*
 ^MYMETA.yml$
 
 ^notes
+^MYMETA\.json$
