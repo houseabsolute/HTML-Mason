@@ -1037,7 +1037,7 @@ sub _set_mason_req_out_method
             }
 
             # Call $r->print (using the real Apache method, not our
-            # overriden method).
+            # overridden method).
             $r->$final_output_method( grep {defined} @_ );
             $r->rflush;
         };

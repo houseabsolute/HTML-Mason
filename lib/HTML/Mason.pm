@@ -49,7 +49,7 @@ component per file. So-called "top-level" components represent entire
 web-pages, while smaller components typically return HTML snippets for
 embedding in top-level components. This object-like architecture
 greatly simplifies site maintenance: change a shared component, and
-you instantly changed all dependant pages that refer to it across a
+you instantly changed all dependent pages that refer to it across a
 site (or across many virtual sites).
 
 Mason's component syntax lets designers separate a web page into

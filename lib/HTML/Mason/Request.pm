@@ -1680,7 +1680,7 @@ To use the CHI C<FastMmap> driver by default:
     data_cache_api      => 'CHI',
     data_cache_defaults => {driver => 'FastMmap'},
 
-These settings are overriden by options given to particular
+These settings are overridden by options given to particular
 C<$m-E<gt>cache> calls.
 
 =item dhandler_name

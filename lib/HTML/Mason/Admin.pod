@@ -707,7 +707,7 @@ documentation for C<Cache::Cache> as well as for relevant subclasses
 =item Cache files
 
 By default, C<Cache::FileCache> is the subclass used for data caching,
-although this may be overriden by the developer. C<Cache::FileCache>
+although this may be overridden by the developer. C<Cache::FileCache>
 creates a separate subdirectory for every component that uses caching,
 and one file some number of levels underneath that subdirectory for
 each cached item.  The root of the cache tree is
