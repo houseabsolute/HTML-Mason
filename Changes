@@ -5,6 +5,12 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.49 Feb 27, 2012
+
+[ DOCS ]
+
+- Fixed misspellings in docs. RT #74676. Reported by Salvatore Bonaccorso.
+
 1.48 Feb 3, 2012
 
 [ BUG FIXES ]
