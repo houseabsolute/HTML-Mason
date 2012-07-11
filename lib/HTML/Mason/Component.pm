@@ -618,7 +618,7 @@ Returns the entire path of this component, relative to the component root.
 
 =item scall_method (name, args...)
 
-Like L<item_call_method|call_method>, but returns the method output as
+Like C<call_method>, but returns the method output as
 a string instead of printing it. (Think sprintf versus printf.) The
 method's return value, if any, is discarded.
 

@@ -2075,7 +2075,7 @@ component being called.
 
 C<$m-E<gt>cache> returns a new L<cache object|HTML::Mason::Cache::BaseCache> with a
 namespace specific to this component. The parameters to and return value from
-C<$m-E<gt>cache> differ depending on which L<data_cache_api> you are using.
+C<$m-E<gt>cache> differ depending on which C<data_cache_api> you are using.
 
 =over
 
