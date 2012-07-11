@@ -10,28 +10,32 @@ use File::Spec;
 use HTML::Mason::Exceptions( abbr => [qw(param_error)] );
 use HTML::Mason::Tools qw(absolute_comp_path can_weaken);
 use Params::Validate qw(:all);
-Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
+Params::Validate::validation_options( on_fail => sub { param_error join '', @_ }
+);
 
 use HTML::Mason::Exceptions( abbr => ['error'] );
-use HTML::Mason::MethodMaker
-    ( read_only => [ qw( code
-                         comp_id
-                         compiler_id
-                         declared_args
-                         inherit_path
-                         inherit_start_path
-                         has_filter
-                         load_time
-                       ) ],
+use HTML::Mason::MethodMaker (
+    read_only => [
+        qw( code
+          comp_id
+          compiler_id
+          declared_args
+          inherit_path
+          inherit_start_path
+          has_filter
+          load_time
+          )
+    ],
 
-      read_write => [ [ dynamic_subs_request => { isa => 'HTML::Mason::Request' } ],
-                      [ mfu_count => { type => SCALAR } ],
-                      [ filter => { type => CODEREF } ],
-                    ]
-      );
+    read_write => [
+        [ dynamic_subs_request => { isa  => 'HTML::Mason::Request' } ],
+        [ mfu_count            => { type => SCALAR } ],
+        [ filter               => { type => CODEREF } ],
+    ]
+);
 
 # for reference later
-# 
+#
 # __PACKAGE__->valid_params
 #     (
 #      attr               => {type => HASHREF, default => {}, public => 0},
@@ -47,63 +51,69 @@ use HTML::Mason::MethodMaker
 #      compiler_id        => {type => SCALAR,  optional => 1, public => 0},
 #      subcomps           => {type => HASHREF, default => {}, public => 0},
 #     );
-# 
+#
 
-my %defaults = ( attr              => {},
-                 declared_args     => {},
-                 dynamic_subs_init => sub {},
-                 flags             => {},
-                 methods           => {},
-                 mfu_count         => 0,
-                 subcomps          => {},
-               );
-sub new
-{
+my %defaults = (
+    attr              => {},
+    declared_args     => {},
+    dynamic_subs_init => sub { },
+    flags             => {},
+    methods           => {},
+    mfu_count         => 0,
+    subcomps          => {},
+);
+
+sub new {
     my $class = shift;
     my $self = bless { %defaults, @_ }, $class;
 
     # Initialize subcomponent and method properties: owner, name, and
     # is_method flag.
-    while (my ($name,$c) = each(%{$self->{subcomps}})) {
-        $c->assign_subcomponent_properties($self,$name,0);
-        Scalar::Util::weaken($c->{owner}) if can_weaken;
+    while ( my ( $name, $c ) = each( %{ $self->{subcomps} } ) ) {
+        $c->assign_subcomponent_properties( $self, $name, 0 );
+        Scalar::Util::weaken( $c->{owner} ) if can_weaken;
     }
-    while (my ($name,$c) = each(%{$self->{methods}})) {
-        $c->assign_subcomponent_properties($self,$name,1);
-        Scalar::Util::weaken($c->{owner}) if can_weaken;
+    while ( my ( $name, $c ) = each( %{ $self->{methods} } ) ) {
+        $c->assign_subcomponent_properties( $self, $name, 1 );
+        Scalar::Util::weaken( $c->{owner} ) if can_weaken;
     }
 
     return $self;
 }
 
 my $comp_count = 0;
+
 sub assign_runtime_properties {
-    my ($self, $interp, $source) = @_;
+    my ( $self, $interp, $source ) = @_;
     $self->interp($interp);
-    $self->{comp_id} = defined $source->comp_id ? $source->comp_id : "[anon ". ++$comp_count . "]";
+    $self->{comp_id} =
+      defined $source->comp_id
+      ? $source->comp_id
+      : "[anon " . ++$comp_count . "]";
 
     $self->{path} = $source->comp_path;
 
     $self->_determine_inheritance;
 
-    foreach my $c (values(%{$self->{subcomps}}), values(%{$self->{methods}})) {
-        $c->assign_runtime_properties($interp, $source);
+    foreach my $c ( values( %{ $self->{subcomps} } ),
+        values( %{ $self->{methods} } ) )
+    {
+        $c->assign_runtime_properties( $interp, $source );
     }
 
     # Cache of uncanonicalized call paths appearing in the
     # component. Used in $m->fetch_comp.
     #
-    if ($interp->use_internal_component_caches) {
+    if ( $interp->use_internal_component_caches ) {
         $self->{fetch_comp_cache} = {};
     }
 }
 
-sub flush_internal_caches
-{
+sub flush_internal_caches {
     my ($self) = @_;
 
     $self->{fetch_comp_cache} = {};
-    delete($self->{parent_cache});
+    delete( $self->{parent_cache} );
 }
 
 sub _determine_inheritance {
@@ -112,16 +122,20 @@ sub _determine_inheritance {
     my $interp = $self->interp;
 
     # Assign inheritance properties
-    if (exists($self->{flags}->{inherit})) {
-        if (defined($self->{flags}->{inherit})) {
-            $self->{inherit_path} = absolute_comp_path($self->{flags}->{inherit}, $self->dir_path);
+    if ( exists( $self->{flags}->{inherit} ) ) {
+        if ( defined( $self->{flags}->{inherit} ) ) {
+            $self->{inherit_path} =
+              absolute_comp_path( $self->{flags}->{inherit}, $self->dir_path );
         }
-    } elsif ( $interp->use_autohandlers ) {
-        if ($self->name eq $interp->autohandler_name) {
-            unless ($self->dir_path eq '/') {
-                ($self->{inherit_start_path}) = $self->dir_path =~ m,^(.*/)?.*,s
+    }
+    elsif ( $interp->use_autohandlers ) {
+        if ( $self->name eq $interp->autohandler_name ) {
+            unless ( $self->dir_path eq '/' ) {
+                ( $self->{inherit_start_path} ) =
+                  $self->dir_path =~ m,^(.*/)?.*,s;
             }
-        } else {
+        }
+        else {
             $self->{inherit_start_path} = $self->dir_path;
         }
     }
@@ -139,26 +153,28 @@ sub dynamic_subs_init {
     my $self = shift;
 
     error "cannot call a method or subcomponent from a <%shared> block"
-        if $self->{in_dynamic_subs_init};
+      if $self->{in_dynamic_subs_init};
 
     local $self->{in_dynamic_subs_init} = 1;
 
     $self->{dynamic_subs_hash} = $self->{dynamic_subs_init}->();
     error "could not process <%shared> section (does it contain a return()?)"
-        unless ref($self->{dynamic_subs_hash}) eq 'HASH';
+      unless ref( $self->{dynamic_subs_hash} ) eq 'HASH';
 }
 
 sub run_dynamic_sub {
-    my ($self, $key, @args) = @_;
+    my ( $self, $key, @args ) = @_;
 
-    error "call_dynamic: assert error - could not find code for key $key in component " . $self->title
-        unless exists $self->{dynamic_subs_hash}->{$key};
+    error
+      "call_dynamic: assert error - could not find code for key $key in component "
+      . $self->title
+      unless exists $self->{dynamic_subs_hash}->{$key};
 
     return $self->{dynamic_subs_hash}->{$key}->(@args);
 }
 
 # Legacy, left in for pre-0.8 obj files
-sub assign_subcomponent_properties {}
+sub assign_subcomponent_properties { }
 
 #
 # By default components are not persistent.
@@ -180,19 +196,20 @@ sub is_file_based { 0 }
 #
 # Basic defaults for component designators: title, path, name, dir_path
 #
-sub title { return $_[0]->{comp_id} }
-sub name { return $_[0]->{comp_id} }
-sub path { return undef }
+sub title    { return $_[0]->{comp_id} }
+sub name     { return $_[0]->{comp_id} }
+sub path     { return undef }
 sub dir_path { return undef }
 
 #
 # Get all subcomps or particular subcomp by name
 #
 sub subcomps {
-    my ($self,$key) = @_;
-    if (defined($key)) {
+    my ( $self, $key ) = @_;
+    if ( defined($key) ) {
         return $self->{subcomps}->{$key};
-    } else {
+    }
+    else {
         return $self->{subcomps};
     }
 }
@@ -201,10 +218,11 @@ sub subcomps {
 # Get all methods or particular method by name
 #
 sub methods {
-    my ($self,$key) = @_;
-    if (defined($key)) {
+    my ( $self, $key ) = @_;
+    if ( defined($key) ) {
         return $self->{methods}->{$key};
-    } else {
+    }
+    else {
         return $self->{methods};
     }
 }
@@ -218,21 +236,23 @@ sub attributes { $_[0]->{attr} }
 # Get attribute by name
 #
 sub attr {
-    my ($self,$name) = @_;
+    my ( $self, $name ) = @_;
     my $value;
-    if ($self->_locate_inherited('attr',$name,\$value)) {
+    if ( $self->_locate_inherited( 'attr', $name, \$value ) ) {
         return $value;
-    } else {
+    }
+    else {
         error "no attribute '$name' for component " . $self->title;
     }
 }
 
 sub attr_if_exists {
-    my ($self,$name) = @_;
+    my ( $self, $name ) = @_;
     my $value;
-    if ($self->_locate_inherited('attr',$name,\$value)) {
+    if ( $self->_locate_inherited( 'attr', $name, \$value ) ) {
         return $value;
-    } else {
+    }
+    else {
         return undef;
     }
 }
@@ -241,19 +261,21 @@ sub attr_if_exists {
 # Determine if particular attribute exists
 #
 sub attr_exists {
-    my ($self,$name) = @_;
-    return $self->_locate_inherited('attr',$name);
+    my ( $self, $name ) = @_;
+    return $self->_locate_inherited( 'attr', $name );
 }
 
 #
 # Call method by name
 #
 sub call_method {
-    my ($self,$name,@args) = @_;
+    my ( $self, $name, @args ) = @_;
     my $method;
-    if ($self->_locate_inherited('methods',$name,\$method)) {
-        HTML::Mason::Request->instance->comp({base_comp=>$self},$method,@args);
-    } else {
+    if ( $self->_locate_inherited( 'methods', $name, \$method ) ) {
+        HTML::Mason::Request->instance->comp( { base_comp => $self },
+            $method, @args );
+    }
+    else {
         error "no method '$name' for component " . $self->title;
     }
 }
@@ -262,11 +284,13 @@ sub call_method {
 # Like call method, but return component output.
 #
 sub scall_method {
-    my ($self,$name,@args) = @_;
+    my ( $self, $name, @args ) = @_;
     my $method;
-    if ($self->_locate_inherited('methods',$name,\$method)) {
-        HTML::Mason::Request->instance->scomp({base_comp=>$self},$method,@args);
-    } else {
+    if ( $self->_locate_inherited( 'methods', $name, \$method ) ) {
+        HTML::Mason::Request->instance->scomp( { base_comp => $self },
+            $method, @args );
+    }
+    else {
         error "no method '$name' for component " . $self->title;
     }
 }
@@ -275,23 +299,23 @@ sub scall_method {
 # Determine if particular method exists
 #
 sub method_exists {
-    my ($self,$name) = @_;
-    return $self->_locate_inherited('methods',$name);
+    my ( $self, $name ) = @_;
+    return $self->_locate_inherited( 'methods', $name );
 }
 
 #
 # Locate a component slot element following inheritance path
 #
 sub _locate_inherited {
-    my ($self,$field,$key,$ref) = @_;
+    my ( $self, $field, $key, $ref ) = @_;
     my $count = 0;
-    for (my $comp = $self; $comp; $comp = $comp->parent) {
-        if (exists($comp->{$field}->{$key})) {
+    for ( my $comp = $self ; $comp ; $comp = $comp->parent ) {
+        if ( exists( $comp->{$field}->{$key} ) ) {
             $$ref = $comp->{$field}->{$key} if $ref;
             return 1;
         }
         error "inheritance chain length > 32 (infinite inheritance loop?)"
-            if ++$count > 32;
+          if ++$count > 32;
     }
     return 0;
 }
@@ -300,15 +324,15 @@ sub _locate_inherited {
 # Get particular flag by name
 #
 sub flag {
-    my ($self,$name) = @_;
-    my %flag_defaults =
-        (
-         );
-    if (exists($self->{flags}->{$name})) {
+    my ( $self, $name ) = @_;
+    my %flag_defaults = ();
+    if ( exists( $self->{flags}->{$name} ) ) {
         return $self->{flags}->{$name};
-    } elsif (exists($flag_defaults{$name})) {
+    }
+    elsif ( exists( $flag_defaults{$name} ) ) {
         return $flag_defaults{$name};
-    } else {
+    }
+    else {
         error "invalid flag: $name";
     }
 }
@@ -321,22 +345,29 @@ sub parent {
 
     # Return cached value for parent, if any (may be undef)
     #
-    return $self->{parent_cache} if exists($self->{parent_cache});
+    return $self->{parent_cache} if exists( $self->{parent_cache} );
 
     my $interp = $self->interp;
     my $parent;
-    if ($self->inherit_path) {
-        $parent = $interp->load($self->inherit_path)
-            or error(sprintf("cannot find inherit path '%s' for component '%s'",
-                             $self->inherit_path, $self->title));
-    } elsif ($self->inherit_start_path) {
-        $parent = $interp->find_comp_upwards($self->inherit_start_path, $interp->autohandler_name);
+    if ( $self->inherit_path ) {
+        $parent = $interp->load( $self->inherit_path )
+          or error(
+            sprintf(
+                "cannot find inherit path '%s' for component '%s'",
+                $self->inherit_path, $self->title
+            )
+          );
+    }
+    elsif ( $self->inherit_start_path ) {
+        $parent =
+          $interp->find_comp_upwards( $self->inherit_start_path,
+            $interp->autohandler_name );
     }
 
     # Can only cache parent value if interp->{use_internal_component_caches} is on -
     # see definition in Interp::_initialize.
     #
-    if ($interp->use_internal_component_caches) {
+    if ( $interp->use_internal_component_caches ) {
         $self->{parent_cache} = $parent;
     }
 
@@ -352,8 +383,10 @@ sub interp {
         $self->{interp} = $_[0];
 
         Scalar::Util::weaken( $self->{interp} ) if can_weaken;
-    } elsif ( ! defined $self->{interp} ) {
-        die "The Interp object that this object contains has gone out of scope.\n";
+    }
+    elsif ( !defined $self->{interp} ) {
+        die
+          "The Interp object that this object contains has gone out of scope.\n";
     }
 
     return $self->{interp};
@@ -377,10 +410,10 @@ sub create_time {
 sub logger {
     my ($self) = @_;
 
-    if (!$self->{logger}) {
+    if ( !$self->{logger} ) {
         my $log_category = "HTML::Mason::Component" . $self->path();
         $log_category =~ s/\//::/g;
-        $self->{logger} = Log::Any->get_logger(category => $log_category);
+        $self->{logger} = Log::Any->get_logger( category => $log_category );
     }
     return $self->{logger};
 }

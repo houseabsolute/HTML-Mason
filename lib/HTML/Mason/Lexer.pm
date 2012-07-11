@@ -12,7 +12,8 @@ use HTML::Mason::Exceptions( abbr => [qw(param_error syntax_error error)] );
 use HTML::Mason::Tools qw( taint_is_on );
 
 use Params::Validate qw(:all);
-Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
+Params::Validate::validation_options( on_fail => sub { param_error join '', @_ }
+);
 
 use Class::Container;
 use base qw(Class::Container);
@@ -23,26 +24,25 @@ use base qw(Class::Container);
 # contents of a subcomponent/method.  Theoretically, adding a block is
 # as simple as adding an entry to this hash, and possibly a new
 # contents lexing methods.
-my %blocks = ( args    => 'variable_list_block',
-               attr    => 'key_val_block',
-               flags   => 'key_val_block',
-               cleanup => 'raw_block',
-               doc     => 'doc_block',
-               filter  => 'raw_block',
-               init    => 'raw_block',
-               once    => 'raw_block',
-               perl    => 'raw_block',
-               shared  => 'raw_block',
-               text    => 'text_block',
-             );
+my %blocks = (
+    args    => 'variable_list_block',
+    attr    => 'key_val_block',
+    flags   => 'key_val_block',
+    cleanup => 'raw_block',
+    doc     => 'doc_block',
+    filter  => 'raw_block',
+    init    => 'raw_block',
+    once    => 'raw_block',
+    perl    => 'raw_block',
+    shared  => 'raw_block',
+    text    => 'text_block',
+);
 
-sub block_names
-{
+sub block_names {
     return keys %blocks;
 }
 
-sub block_body_method
-{
+sub block_body_method {
     return $blocks{ $_[1] };
 }
 
@@ -52,30 +52,31 @@ sub block_body_method
     my $re = join '|', __PACKAGE__->block_names;
     $blocks_re = qr/$re/i;
 
-    sub blocks_regex
-    {
+    sub blocks_regex {
         return $blocks_re;
     }
 }
 
-sub lex
-{
+sub lex {
     my $self = shift;
-    my %p = validate(@_,
-                     {comp_source => SCALAR|SCALARREF,
-                      name => SCALAR,
-                      compiler => {isa => 'HTML::Mason::Compiler'}}
-                    );
+    my %p    = validate(
+        @_,
+        {
+            comp_source => SCALAR | SCALARREF,
+            name        => SCALAR,
+            compiler    => { isa => 'HTML::Mason::Compiler' }
+        }
+    );
 
     # Note - we could improve memory usage here if we didn't make a
     # copy of the scalarref, but that will take some more work to get
     # it working
-    $p{comp_source} = ${$p{comp_source}} if ref $p{comp_source};
+    $p{comp_source} = ${ $p{comp_source} } if ref $p{comp_source};
 
     # Holds information about the current lex.  Make it local() so
     # we're fully re-entrant.
     local $self->{current} = \%p;
-    my $current = $self->{current}; # For convenience
+    my $current = $self->{current};    # For convenience
 
     # Clean up Mac and DOS line endings
     $current->{comp_source} =~ s/\r\n?/\n/g;
@@ -90,32 +91,27 @@ sub lex
     # We need to untaint the component or else the regexes will fail
     # to a Perl bug.  The delete is important because we need to
     # create an entirely new scalar, not just modify the existing one.
-    ($current->{comp_source}) = (delete $current->{comp_source}) =~ /(.*)/s
-        if taint_is_on;
+    ( $current->{comp_source} ) = ( delete $current->{comp_source} ) =~ /(.*)/s
+      if taint_is_on;
 
-    eval
-    {
+    eval {
         $current->{compiler}->start_component;
         $self->start;
     };
     my $err = $@;
+
     # Always call end_component, but throw the first error
-    eval
-    {
-        $current->{compiler}->end_component;
-    };
+    eval { $current->{compiler}->end_component; };
     $err ||= $@;
 
     rethrow_exception $err;
 }
 
-sub start
-{
+sub start {
     my $self = shift;
 
     my $end;
-    while (1)
-    {
+    while (1) {
         last if $end = $self->match_end;
 
         $self->match_block && next;
@@ -134,8 +130,8 @@ sub start
 
         $self->match_text && next;
 
-        if ( ( $self->{current}{in_def} || $self->{current}{in_method} ) &&
-             $self->{current}{comp_source} =~ /\G\z/ )
+        if ( ( $self->{current}{in_def} || $self->{current}{in_method} )
+            && $self->{current}{comp_source} =~ /\G\z/ )
         {
             my $type = $self->{current}{in_def} ? 'def' : 'method';
             $self->throw_syntax_error("Missing closing </%$type> tag");
@@ -144,47 +140,46 @@ sub start
         last if $self->{current}{comp_source} =~ /\G\z/;
 
         # We should never get here - if we do, we're in an infinite loop.
-        $self->throw_syntax_error("Infinite parsing loop encountered - Lexer bug?");
+        $self->throw_syntax_error(
+            "Infinite parsing loop encountered - Lexer bug?");
     }
 
-    if ( $self->{current}{in_def} || $self->{current}{in_method} )
-    {
+    if ( $self->{current}{in_def} || $self->{current}{in_method} ) {
         my $type = $self->{current}{in_def} ? 'def' : 'method';
-        unless ( $end =~ m,</%\Q$type\E>\n?,i )
-        {
+        unless ( $end =~ m,</%\Q$type\E>\n?,i ) {
             my $block_name = $self->{current}{"in_$type"};
-            $self->throw_syntax_error("No </%$type> tag for <%$type $block_name> block");
+            $self->throw_syntax_error(
+                "No </%$type> tag for <%$type $block_name> block");
         }
     }
 }
 
-sub match_block
-{
+sub match_block {
     my $self = shift;
 
     my $blocks_re = $self->blocks_regex;
 
-    if ( $self->{current}{comp_source} =~ /\G<%($blocks_re)>/igcs )
-    {
+    if ( $self->{current}{comp_source} =~ /\G<%($blocks_re)>/igcs ) {
         my $type = lc $1;
         $self->{current}{compiler}->start_block( block_type => $type );
 
         my $method = $self->block_body_method($type);
-        $self->$method( {block_type => $type} );
+        $self->$method( { block_type => $type } );
 
         return 1;
     }
 }
 
-sub generic_block
-{
-    my ($self, $method, $p) = @_;
+sub generic_block {
+    my ( $self, $method, $p ) = @_;
 
     $p->{allow_text} = 1;
-    my ($block, $nl) = $self->match_block_end( $p );
+    my ( $block, $nl ) = $self->match_block_end($p);
 
-    $self->{current}{compiler}->$method( block_type => $p->{block_type},
-                                         block => $block );
+    $self->{current}{compiler}->$method(
+        block_type => $p->{block_type},
+        block      => $block
+    );
 
     $self->{current}{lines} += $block =~ tr/\n//;
     $self->{current}{lines}++ if $nl;
@@ -192,30 +187,27 @@ sub generic_block
     $self->{current}{compiler}->end_block( block_type => $p->{block_type} );
 }
 
-sub text_block
-{
+sub text_block {
     my $self = shift;
-    $self->generic_block('text_block', @_);
+    $self->generic_block( 'text_block', @_ );
 }
 
-sub raw_block
-{
+sub raw_block {
     my $self = shift;
-    $self->generic_block('raw_block', @_);
+    $self->generic_block( 'raw_block', @_ );
 }
 
-sub doc_block
-{
+sub doc_block {
     my $self = shift;
-    $self->generic_block('doc_block', @_);
+    $self->generic_block( 'doc_block', @_ );
 }
 
-sub variable_list_block
-{
-    my ($self, $p) = @_;
+sub variable_list_block {
+    my ( $self, $p ) = @_;
 
     my $ending = qr/ \n | <\/%\Q$p->{block_type}\E> /ix;
-    while ( $self->{current}{comp_source} =~ m,
+    while (
+        $self->{current}{comp_source} =~ m,
                        \G               # last pos matched
                        (?:
                         [ \t]*
@@ -249,36 +241,36 @@ sub variable_list_block
                        (\n |          # newline or
                           (?= <\/%\Q$p->{block_type}\E> ) )   # end of block (don't consume it)
                       ,ixgc
-          )
+      )
     {
-        if ( defined $1 && defined $2 && length $1 && length $2 )
-        {
-            $self->{current}{compiler}->variable_declaration( block_type => $p->{block_type},
-                                                              type => $1,
-                                                              name => $2,
-                                                              default => $3,
-                                                            );
+        if ( defined $1 && defined $2 && length $1 && length $2 ) {
+            $self->{current}{compiler}->variable_declaration(
+                block_type => $p->{block_type},
+                type       => $1,
+                name       => $2,
+                default    => $3,
+            );
         }
 
         $self->{current}{lines}++ if $4;
     }
 
     $p->{allow_text} = 0;
-    my $nl = $self->match_block_end( $p );
+    my $nl = $self->match_block_end($p);
     $self->{current}{lines}++ if $nl;
 
     $self->{current}{compiler}->end_block( block_type => $p->{block_type} );
 }
 
-sub key_val_block
-{
-    my ($self, $p) = @_;
+sub key_val_block {
+    my ( $self, $p ) = @_;
 
     my $ending = qr, (?: \n |           # newline or
                          (?= </%\Q$p->{block_type}\E> ) )   # end of block (don't consume it)
                    ,ix;
 
-    while ( $self->{current}{comp_source} =~ /
+    while (
+        $self->{current}{comp_source} =~ /
                       \G
                       [ \t]*
                       ([\w_]+)          # identifier
@@ -296,55 +288,57 @@ sub key_val_block
                       |
                       \G[ \t]+?
                       $ending
-                     /xgc )
+                     /xgc
+      )
     {
-        if ( defined $1 && defined $2 && length $1 && length $2 )
-        {
-            $self->{current}{compiler}->key_value_pair( block_type => $p->{block_type},
-                                                        key => $1,
-                                                        value => $2
-                                                      );
+        if ( defined $1 && defined $2 && length $1 && length $2 ) {
+            $self->{current}{compiler}->key_value_pair(
+                block_type => $p->{block_type},
+                key        => $1,
+                value      => $2
+            );
         }
 
         $self->{current}{lines}++;
     }
 
     $p->{allow_text} = 0;
-    my $nl = $self->match_block_end( $p );
+    my $nl = $self->match_block_end($p);
     $self->{current}{lines}++ if $nl;
 
     $self->{current}{compiler}->end_block( block_type => $p->{block_type} );
 }
 
-sub match_block_end
-{
-    my ($self, $p) = @_;
+sub match_block_end {
+    my ( $self, $p ) = @_;
 
-    my $re = $p->{allow_text} ? qr,\G(.*?)</%\Q$p->{block_type}\E>(\n?),is
-                              : qr,\G\s*</%\Q$p->{block_type}\E>(\n?),is;
-    if ( $self->{current}{comp_source} =~ /$re/gc )
-    {
-        return $p->{allow_text} ? ($1, $2) : $1;
+    my $re =
+      $p->{allow_text}
+      ? qr,\G(.*?)</%\Q$p->{block_type}\E>(\n?),is
+      : qr,\G\s*</%\Q$p->{block_type}\E>(\n?),is;
+    if ( $self->{current}{comp_source} =~ /$re/gc ) {
+        return $p->{allow_text} ? ( $1, $2 ) : $1;
     }
-    else
-    {
+    else {
         $self->throw_syntax_error("Invalid <%$p->{block_type}> section line");
     }
 }
 
-sub match_named_block
-{
-    my ($self, $p) = @_;
+sub match_named_block {
+    my ( $self, $p ) = @_;
 
-    if ( $self->{current}{comp_source} =~ /\G<%(def|method)(?:\s+([^\n]+?))?\s*>/igcs )
+    if ( $self->{current}{comp_source} =~
+        /\G<%(def|method)(?:\s+([^\n]+?))?\s*>/igcs )
     {
-        my ($type, $name) = (lc $1, $2);
+        my ( $type, $name ) = ( lc $1, $2 );
 
         $self->throw_syntax_error("$type block without a name")
-            unless defined $name && length $name;
+          unless defined $name && length $name;
 
-        $self->{current}{compiler}->start_named_block( block_type => $type,
-                                                       name => $name );
+        $self->{current}{compiler}->start_named_block(
+            block_type => $type,
+            name       => $name
+        );
 
         # This will cause ->start to return once it hits the
         # appropriate ending tag.
@@ -364,17 +358,17 @@ sub match_named_block
 my $flag = qr/[[:alpha:]_]\w*/;
 sub escape_flag_regex { $flag }
 
-sub match_substitute
-{
+sub match_substitute {
+
     # This routine relies on there *not* to be an opening <%foo> tag
     # present, so match_block() must happen first.
-    
+
     my $self = shift;
 
     return 0 unless $self->{current}{comp_source} =~ /\G<%/gcs;
 
-    if ( $self->{current}{comp_source} =~
-         m{
+    if (
+        $self->{current}{comp_source} =~ m{
            \G
            (.+?)                # Substitution body ($1)
            (
@@ -389,83 +383,73 @@ sub match_substitute
             \s*
            )?
            %>                   # Closing tag
-          }xcigs )
+          }xcigs
+      )
     {
-        $self->{current}{lines} += tr/\n// foreach grep defined, ($1, $2);
+        $self->{current}{lines} += tr/\n// foreach grep defined, ( $1, $2 );
 
-        $self->{current}{compiler}->substitution( substitution => $1,
-                                                  escape => $3 );
+        $self->{current}{compiler}->substitution(
+            substitution => $1,
+            escape       => $3
+        );
         return 1;
     }
-    else
-    {
+    else {
         $self->throw_syntax_error("'<%' without matching '%>'");
     }
 }
 
-sub match_comp_call
-{
+sub match_comp_call {
     my $self = shift;
 
-    if ( $self->{current}{comp_source} =~ /\G<&(?!\|)/gcs )
-    {
-        if ( $self->{current}{comp_source} =~ /\G(.*?)&>/gcs )
-        {
+    if ( $self->{current}{comp_source} =~ /\G<&(?!\|)/gcs ) {
+        if ( $self->{current}{comp_source} =~ /\G(.*?)&>/gcs ) {
             my $call = $1;
             $self->{current}{compiler}->component_call( call => $call );
             $self->{current}{lines} += $call =~ tr/\n//;
 
             return 1;
         }
-        else
-        {
+        else {
             $self->throw_syntax_error("'<&' without matching '&>'");
         }
     }
 }
 
-
-sub match_comp_content_call
-{
+sub match_comp_content_call {
     my $self = shift;
 
-    if ( $self->{current}{comp_source} =~ /\G<&\|/gcs )
-    {
-        if ( $self->{current}{comp_source} =~ /\G(.*?)&>/gcs )
-        {
+    if ( $self->{current}{comp_source} =~ /\G<&\|/gcs ) {
+        if ( $self->{current}{comp_source} =~ /\G(.*?)&>/gcs ) {
             my $call = $1;
             $self->{current}{compiler}->component_content_call( call => $call );
             $self->{current}{lines} += $call =~ tr/\n//;
 
             return 1;
         }
-        else
-        {
+        else {
             $self->throw_syntax_error("'<&|' without matching '&>'");
         }
     }
 }
 
-sub match_comp_content_call_end
-{
+sub match_comp_content_call_end {
     my $self = shift;
 
-    if ( $self->{current}{comp_source} =~ m,\G</&(.*?)>,gcs )
-    {
+    if ( $self->{current}{comp_source} =~ m,\G</&(.*?)>,gcs ) {
         my $call = $1 || '';
-        $self->{current}{compiler}->component_content_call_end( call_end => $call );
+        $self->{current}{compiler}
+          ->component_content_call_end( call_end => $call );
         $self->{current}{lines} += $call =~ tr/\n//;
 
         return 1;
     }
 }
 
-sub match_perl_line
-{
+sub match_perl_line {
     my $self = shift;
 
-    if ( $self->{current}{comp_source} =~ /\G(?<=^)%([^\n]*)(?:\n|\z)/gcm )
-    {
+    if ( $self->{current}{comp_source} =~ /\G(?<=^)%([^\n]*)(?:\n|\z)/gcm ) {
         $self->{current}{compiler}->perl_line( line => $1 );
         $self->{current}{lines}++;
 
@@ -473,16 +457,16 @@ sub match_perl_line
     }
 }
 
-sub match_text
-{
+sub match_text {
     my $self = shift;
-    my $c = $self->{current};
+    my $c    = $self->{current};
 
     # Most of these terminator patterns actually belong to the next
     # lexeme in the source, so we use a lookahead if we don't want to
     # consume them.  We use a lookbehind when we want to consume
     # something in the matched text, like the newline before a '%'.
-    if ( $c->{comp_source} =~ m{
+    if (
+        $c->{comp_source} =~ m{
                                 \G
                                 (.*?)         # anything, followed by:
                                 (
@@ -495,31 +479,31 @@ sub match_text
                                  |
                                  \z           # end of string
                                 )
-                               }xcgs )
+                               }xcgs
+      )
     {
         # Note: to save memory, it might be preferable to break very
         # large $1 strings into several pieces and pass the pieces to
         # compiler->text().  In my testing, this was quite a bit
         # slower, though.  -Ken 2002-09-19
         $c->{compiler}->text( text => $1 ) if length $1;
+
         # Not checking definedness seems to cause extra lines to be
         # counted with Perl 5.00503.  I'm not sure why - dave
-        $c->{lines} += tr/\n// foreach grep defined, ($1, $2);
+        $c->{lines} += tr/\n// foreach grep defined, ( $1, $2 );
 
         return 1;
     }
-    
+
     return 0;
 }
 
-sub match_end
-{
+sub match_end {
     my $self = shift;
 
     # $self->{current}{ending} is a qr// 'string'.  No need to escape.  It will
     # also include the needed \G marker
-    if ( $self->{current}{comp_source} =~ /($self->{current}{ending})/gcs )
-    {
+    if ( $self->{current}{comp_source} =~ /($self->{current}{ending})/gcs ) {
         $self->{current}{lines} += $1 =~ tr/\n//;
         return defined $1 && length $1 ? $1 : 1;
     }
@@ -529,45 +513,51 @@ sub match_end
 # goes from current pos, skips a newline if its the next character,
 # and then goes to the next newline.  Alternately, the caller can
 # provide a starting position.
-sub _next_line
-{
+sub _next_line {
     my $self = shift;
-    my $pos = shift;
+    my $pos  = shift;
 
-    $pos = ( defined $pos ?
-             $pos :
-             ( substr( $self->{current}{comp_source}, pos($self->{current}{comp_source}), 1 ) eq "\n" ?
-               pos($self->{current}{comp_source}) + 1 :
-               pos($self->{current}{comp_source}) ) );
+    $pos = (
+        defined $pos ? $pos
+        : (
+            substr(
+                $self->{current}{comp_source},
+                pos( $self->{current}{comp_source} ),
+                1
+              ) eq "\n" ? pos( $self->{current}{comp_source} ) + 1
+            : pos( $self->{current}{comp_source} )
+        )
+    );
 
-    my $to_eol = ( index( $self->{current}{comp_source}, "\n", $pos ) != -1 ?
-                   ( index( $self->{current}{comp_source}, "\n" , $pos ) ) - $pos :
-                   length $self->{current}{comp_source} );
+    my $to_eol = (
+        index( $self->{current}{comp_source}, "\n", $pos ) != -1
+        ? ( index( $self->{current}{comp_source}, "\n", $pos ) ) - $pos
+        : length $self->{current}{comp_source}
+    );
     return substr( $self->{current}{comp_source}, $pos, $to_eol );
 }
 
-sub line_number
-{
+sub line_number {
     my $self = shift;
 
     return $self->{current}{lines};
 }
 
-sub name
-{
+sub name {
     my $self = shift;
 
     return $self->{current}{name};
 }
 
-sub throw_syntax_error
-{
-    my ($self, $error) = @_;
+sub throw_syntax_error {
+    my ( $self, $error ) = @_;
 
-    HTML::Mason::Exception::Syntax->throw( error => $error,
-                                           comp_name => $self->name,
-                                           source_line => $self->_next_line,
-                                           line_number => $self->line_number );
+    HTML::Mason::Exception::Syntax->throw(
+        error       => $error,
+        comp_name   => $self->name,
+        source_line => $self->_next_line,
+        line_number => $self->line_number
+    );
 }
 
 1;

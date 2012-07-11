@@ -12,13 +12,15 @@ my $comp_root = File::Spec->catdir( getcwd(), 'mason_tests', 'comps' );
 my $data_dir = File::Spec->catdir( getcwd(), 'mason_tests', 'data' );
 ($data_dir) = $data_dir =~ /(.*)/;
 
-my $tests = HTML::Mason::Tests->tests_class->new( name => 'print',
-                                                  description => 'printing to standard output' );
+my $tests = HTML::Mason::Tests->tests_class->new(
+    name        => 'print',
+    description => 'printing to standard output'
+);
 
-my $interp = HTML::Mason::Tests->tests_class->_make_interp
-    ( comp_root => $comp_root,
-      data_dir => $data_dir
-      );
+my $interp = HTML::Mason::Tests->tests_class->_make_interp(
+    comp_root => $comp_root,
+    data_dir  => $data_dir
+);
 
 {
     my $source = <<'EOF';
@@ -28,7 +30,7 @@ EOF
 
     my $comp = $interp->make_component( comp_source => $source );
 
-    my $req = $interp->make_request(comp=>$comp);
+    my $req = $interp->make_request( comp => $comp );
 
     $req->exec();
 }
@@ -42,7 +44,7 @@ EOF
 
     my $comp = $interp->make_component( comp_source => $source );
 
-    my $req = $interp->make_request( comp=>$comp, autoflush => 1 );
+    my $req = $interp->make_request( comp => $comp, autoflush => 1 );
 
     $req->exec();
 }
@@ -58,7 +60,7 @@ EOF
 
     my $comp = $interp->make_component( comp_source => $source );
 
-    my $req = $interp->make_request( comp=>$comp );
+    my $req = $interp->make_request( comp => $comp );
 
     $req->exec();
 }

@@ -7,16 +7,17 @@ use HTML::Mason::Tests;
 my $tests = make_tests();
 $tests->run;
 
-sub make_tests
-{
-    my $group = HTML::Mason::Tests->tests_class->new( name => 'inherit',
-                                                      description => 'Test inheritance' );
+sub make_tests {
+    my $group = HTML::Mason::Tests->tests_class->new(
+        name        => 'inherit',
+        description => 'Test inheritance'
+    );
 
+    #------------------------------------------------------------
 
-#------------------------------------------------------------
-
-    $group->add_support( path => 'autohandler',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => 'autohandler',
+        component => <<'EOF',
 <%method m1>m1 from level 1</%method>
 <%method m12>m12 from level 1</%method>
 <%method m13>m13 from level 1</%method>
@@ -34,23 +35,23 @@ a123=>'a123 from level 1'
 % $m->call_next;
 
 EOF
-                       );
+    );
 
+    #------------------------------------------------------------
 
-#------------------------------------------------------------
-
-    $group->add_support( path => 'report_parent',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => 'report_parent',
+        component => <<'EOF',
 % my $comp = $m->callers(1);
 My name is <% $comp->path %> and <% $comp->parent ? "my parent is ".$comp->parent->path : "I have no parent" %>.
 EOF
-                       );
+    );
 
+    #------------------------------------------------------------
 
-#------------------------------------------------------------
-
-    $group->add_support( path => 'variants',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => 'variants',
+        component => <<'EOF',
 % my @variants = qw(1 2 3 12 13 23 123);
 
 Methods (called from <% $m->callers(1)->title %>)
@@ -75,23 +76,25 @@ a<% $v %>: does not exist
 my $self = $m->base_comp;
 </%init>
 EOF
-                       );
+    );
 
+    #------------------------------------------------------------
 
-#------------------------------------------------------------
-
-    $group->add_support( path => 'subdir/call_next_helper',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => 'subdir/call_next_helper',
+        component => <<'EOF',
 <%init>
 # Making sure we can call_next from a helper component
 $m->call_next;
 </%init>
 EOF
-                       );
-#------------------------------------------------------------
+    );
 
-    $group->add_support( path => 'subdir/autohandler',
-                         component => <<'EOF',
+    #------------------------------------------------------------
+
+    $group->add_support(
+        path      => 'subdir/autohandler',
+        component => <<'EOF',
 <%method m2>m2 from level 2</%method>
 <%method m12>m12 from level 2</%method>
 <%method m23>m23 from level 2</%method>
@@ -112,16 +115,16 @@ a123=>'a123 from level 2'
 my $self = $m->base_comp;
 </%init>
 EOF
-                       );
+    );
 
+    #------------------------------------------------------------
 
-#------------------------------------------------------------
-
-    $group->add_test( name => 'bypass',
-                      description => 'test inheritance that skips one autohandler',
-                      path => 'subdir/bypass',
-                      call_path => 'subdir/bypass',
-                      component => <<'EOF',
+    $group->add_test(
+        name        => 'bypass',
+        description => 'test inheritance that skips one autohandler',
+        path        => 'subdir/bypass',
+        call_path   => 'subdir/bypass',
+        component   => <<'EOF',
 <%method m3>m3 from level 3</%method>
 <%method m13>m13 from level 3</%method>
 <%method m23>m23 from level 3</%method>
@@ -141,7 +144,7 @@ a123=>'a123 from level 3'
 inherit=>'../autohandler'
 </%flags>
 EOF
-                      expect => <<'EOF',
+        expect => <<'EOF',
 
 
 
@@ -193,16 +196,16 @@ My name is /inherit/subdir/bypass and my parent is /inherit/autohandler.
 
 
 EOF
-                    );
+    );
 
+    #------------------------------------------------------------
 
-#------------------------------------------------------------
-
-    $group->add_test( name => 'ignore',
-                      description => 'turning off inheritance',
-                      path => 'subdir/ignore',
-                      call_path => 'subdir/ignore',
-                      component => <<'EOF',
+    $group->add_test(
+        name        => 'ignore',
+        description => 'turning off inheritance',
+        path        => 'subdir/ignore',
+        call_path   => 'subdir/ignore',
+        component   => <<'EOF',
 <%method m3>m3 from level 3</%method>
 <%method m13>m13 from level 3</%method>
 <%method m23>m23 from level 3</%method>
@@ -225,7 +228,7 @@ a123=>'a123 from level 3'
 inherit=>undef
 </%flags>
 EOF
-                      expect => <<'EOF',
+        expect => <<'EOF',
 
 
 
@@ -253,16 +256,16 @@ My name is /inherit/subdir/ignore and I have no parent.
 
 
 EOF
-                    );
+    );
 
+    #------------------------------------------------------------
 
-#------------------------------------------------------------
-
-    $group->add_test( name => 'normal',
-                      description => 'normal inheritance path',
-                      path => 'subdir/normal',
-                      call_path => 'subdir/normal',
-                      component => <<'EOF',
+    $group->add_test(
+        name        => 'normal',
+        description => 'normal inheritance path',
+        path        => 'subdir/normal',
+        call_path   => 'subdir/normal',
+        component   => <<'EOF',
 <%method m3>m3 from level 3</%method>
 <%method m13>m13 from level 3</%method>
 <%method m23>m23 from level 3</%method>
@@ -278,7 +281,7 @@ a123=>'a123 from level 3'
 <& { base_comp => $m->base_comp }, '../variants' &>
 <& ../report_parent &>
 EOF
-                      expect => <<'EOF',
+        expect => <<'EOF',
 
 
 
@@ -354,12 +357,13 @@ My name is /inherit/subdir/normal and my parent is /inherit/subdir/autohandler.
 
 
 EOF
-                    );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_support( path => '/base/autohandler',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => '/base/autohandler',
+        component => <<'EOF',
 <%flags>
 inherit => undef
 </%flags>
@@ -383,12 +387,13 @@ base_comp is <% $m->base_comp->name %>
 </%def>
 % $m->call_next;
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_support( path => '/util/autohandler',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => '/util/autohandler',
+        component => <<'EOF',
 <%flags>
 inherit => undef
 </%flags>
@@ -408,12 +413,13 @@ attribute A is <% $m->base_comp->attr('a') %>
 </%method>
 % $m->call_next;
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_support( path => '/util/util',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => '/util/util',
+        component => <<'EOF',
 <%method x>
 This is method X in UTIL
 </%method>
@@ -425,15 +431,16 @@ attribute A is <% $m->base_comp->attr('a') %>
 <& SELF:x &>
 <& PARENT:x &>
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_test(   name => 'base_comp',
-                        path => '/base/base',
-                        call_path => '/base/base',
-                        description => 'base_comp test',
-                        component => <<'EOF',
+    $group->add_test(
+        name        => 'base_comp',
+        path        => '/base/base',
+        call_path   => '/base/base',
+        description => 'base_comp test',
+        component   => <<'EOF',
 <%method x>
 This is method X in BASE
 </%method>
@@ -446,7 +453,7 @@ attribute A is <% $m->base_comp->attr('a') %>
 <& ../util/util &>
 <& PARENT:x &>
 EOF
-                      expect => <<'EOF',
+        expect => <<'EOF',
 This is BASE
 attribute A is base
 
@@ -478,15 +485,16 @@ base_comp is base
 This is method Y in base autohandler
 base_comp is base
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_test(   name => 'base_comp_method',
-                        path => '/base/meth',
-                        call_path => '/base/meth',
-                        description => 'base_comp method inheritance test',
-                        component => <<'EOF',
+    $group->add_test(
+        name        => 'base_comp_method',
+        path        => '/base/meth',
+        call_path   => '/base/meth',
+        description => 'base_comp method inheritance test',
+        component   => <<'EOF',
 <%method x>
 This is method X in METH
 </%method>
@@ -498,7 +506,7 @@ attribute A is <% $m->base_comp->attr('a') %>
 <& SELF:x &>
 <& ../util/util:exec &>
 EOF
-                      expect => <<'EOF',
+        expect => <<'EOF',
 This is METH
 attribute A is meth
 
@@ -511,12 +519,13 @@ attribute A is util
 
 This is method X in UTIL
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_support( path => '/base2/autohandler',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => '/base2/autohandler',
+        component => <<'EOF',
 <%flags>
 inherit => undef
 </%flags>
@@ -524,43 +533,46 @@ This is autohandler A
 <& sub/sibling &>
 % $m->call_next;
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_support( path => '/base2/sub/autohandler',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => '/base2/sub/autohandler',
+        component => <<'EOF',
 This is autohandler B
 <& SELF:m &>
 % $m->call_next;
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_support( path => '/base2/sub/sibling',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => '/base2/sub/sibling',
+        component => <<'EOF',
 This is SIBLING
 <& PARENT &>
 <%method m>
 This is method M in SIBLING
 </%method>
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_test(   name => 'double_parent',
-                        path => '/base2/sub/child',
-                        call_path => '/base2/sub/child',
-                        description => 'test that parent does not confuse children',
-                        component => <<'EOF',
+    $group->add_test(
+        name        => 'double_parent',
+        path        => '/base2/sub/child',
+        call_path   => '/base2/sub/child',
+        description => 'test that parent does not confuse children',
+        component   => <<'EOF',
 This is CHILD
 <%method m>
 This is method M in CHILD
 </%method>
 EOF
-                      expect => <<'EOF',
+        expect => <<'EOF',
 This is autohandler A
 This is SIBLING
 This is autohandler B
@@ -579,15 +591,16 @@ This is CHILD
 
 
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_test(   name => 'subcomponent',
-                        path => '/base2/subcomp',
-                        call_path => '/base2/subcomp',
-                        description => 'test subcomponents',
-                        component => <<'EOF',
+    $group->add_test(
+        name        => 'subcomponent',
+        path        => '/base2/subcomp',
+        call_path   => '/base2/subcomp',
+        description => 'test subcomponents',
+        component   => <<'EOF',
 <%flags>
 inherit => undef
 </%flags>
@@ -601,7 +614,7 @@ This is method X
 This is the component
 <& .sub &>
 EOF
-                      expect => <<'EOF',
+        expect => <<'EOF',
 This is the component
 
 This is a subcomponent
@@ -609,12 +622,13 @@ This is a subcomponent
 This is method X
 
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_support( path => '/base3/autohandler',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => '/base3/autohandler',
+        component => <<'EOF',
 <%flags>
 inherit => undef
 </%flags>
@@ -626,9 +640,9 @@ This is X in base autohandler
 % $m->call_next;
 </%def>
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
     # Remarks: this used to work in older versions of Mason.  It's not
     # *quite* surprising that it fails, because the call to <& .foo &>
@@ -642,11 +656,12 @@ EOF
     #
     #   -Ken
 
-    $group->add_test(   name => 'call_next_in_def',
-                        path => '/base3/call_next_in_def',
-                        call_path => '/base3/call_next_in_def',
-                        description => 'Test call_next() inside a subcomponent',
-                        component => <<'EOF',
+    $group->add_test(
+        name        => 'call_next_in_def',
+        path        => '/base3/call_next_in_def',
+        call_path   => '/base3/call_next_in_def',
+        description => 'Test call_next() inside a subcomponent',
+        component   => <<'EOF',
 <%method x>
 This is method X in BASE
 </%method>
@@ -654,19 +669,20 @@ This is BASE
 base_comp is <% $m->base_comp->name %>
 <& SELF:x &>
 EOF
-                      expect => <<'EOF',
+        expect => <<'EOF',
 
 This is BASE
 base_comp is call_next_in_def
 
 This is method X in BASE
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_support( path => '/subcompbase/parent',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => '/subcompbase/parent',
+        component => <<'EOF',
 <& _foo &>
 
 <%def _foo>
@@ -681,15 +697,16 @@ This is parent's bar.
 inherit => undef
 </%flags>
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_test(   name => 'subcomponent_inheritance',
-                        path => '/subcompbase/child',
-                        call_path => '/subcompbase/child',
-                        description => 'test base_comp with subcomponents',
-                        component => <<'EOF',
+    $group->add_test(
+        name        => 'subcomponent_inheritance',
+        path        => '/subcompbase/child',
+        call_path   => '/subcompbase/child',
+        description => 'test base_comp with subcomponents',
+        component   => <<'EOF',
 <%flags>
 inherit => 'parent'
 </%flags>
@@ -698,17 +715,18 @@ inherit => 'parent'
 This is child's bar.
 </%method>
 EOF
-                      expect => <<'EOF',
+        expect => <<'EOF',
 
 
 This is child's bar.
 EOF
-                       );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
-    $group->add_support( path => '/request_test/autohandler',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => '/request_test/autohandler',
+        component => <<'EOF',
 <& SELF:x &>\
 <& REQUEST:x &>\
 next\
@@ -720,10 +738,11 @@ x in autohandler
 inherit => undef
 </%flags>
 EOF
-                       );
+    );
 
-    $group->add_support( path => '/request_test/other_comp',
-                         component => <<'EOF',
+    $group->add_support(
+        path      => '/request_test/other_comp',
+        component => <<'EOF',
 <& REQUEST:x &>\
 <& SELF:x &>\
 <%method x>x in other comp
@@ -732,19 +751,20 @@ EOF
 inherit => undef
 </%flags>
 EOF
-                       );
+    );
 
-    $group->add_test( name => 'request_tests',
-                      path => '/request_test/request_test',
-                      call_path => '/request_test/request_test',
-                      description => 'Test that REQUEST: works',
-                      component => <<'EOF',
+    $group->add_test(
+        name        => 'request_tests',
+        path        => '/request_test/request_test',
+        call_path   => '/request_test/request_test',
+        description => 'Test that REQUEST: works',
+        component   => <<'EOF',
 <& PARENT:x &>\
 <& other_comp &>\
 <%method x>x in requested comp
 </%method>
 EOF
-                      expect => <<'EOF',
+        expect => <<'EOF',
 x in requested comp
 x in requested comp
 next
@@ -752,9 +772,9 @@ x in autohandler
 x in requested comp
 x in other comp
 EOF
-                    );
+    );
 
-#------------------------------------------------------------
+    #------------------------------------------------------------
 
     return $group;
 }

@@ -6,21 +6,19 @@
 
 #
 # ** Proposed virtual subclass for handler classes (e.g. ApacheHandler). Not in use yet.
-# 
+#
 
 package HTML::Mason::Handler;
 
 use strict;
 use warnings;
 
-use HTML::Mason::Exceptions ( abbr => [ qw( virtual_error ) ] );
+use HTML::Mason::Exceptions ( abbr => [qw( virtual_error )] );
 
 use Class::Container;
 use base qw(Class::Container);
 
-
-sub handle_request
-{
+sub handle_request {
     my $self = shift;
 
     my $req = $self->prepare_request(@_);
@@ -28,16 +26,15 @@ sub handle_request
     return ref $req ? $req->exec() : $req;
 }
 
-sub prepare_request
-{
-    virtual_error "The prepare_request method must be overridden in a handler subclass.";
+sub prepare_request {
+    virtual_error
+      "The prepare_request method must be overridden in a handler subclass.";
 }
 
-sub request_args
-{
-    virtual_error "The request_args method must be overridden in a handler subclass.";
+sub request_args {
+    virtual_error
+      "The request_args method must be overridden in a handler subclass.";
 }
-
 
 1;
 

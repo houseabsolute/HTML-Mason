@@ -2,7 +2,6 @@ package LoadTest;
 
 use Does::Not::Exist;
 
-sub new {}
-
+sub new { }
 
 1;

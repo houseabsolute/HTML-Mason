@@ -13,32 +13,28 @@ use warnings;
 
 use HTML::Entities ();
 
-
-my %html_escape = ('&' => '&amp;', '>'=>'&gt;', '<'=>'&lt;', '"'=>'&quot;');
+my %html_escape =
+  ( '&' => '&amp;', '>' => '&gt;', '<' => '&lt;', '"' => '&quot;' );
 my $html_escape = qr/([&<>"])/;
 
-sub basic_html_escape
-{
+sub basic_html_escape {
     return unless defined ${ $_[0] };
 
     ${ $_[0] } =~ s/$html_escape/$html_escape{$1}/mg;
 }
 
-sub html_entities_escape
-{
+sub html_entities_escape {
     return unless defined ${ $_[0] };
 
     HTML::Entities::encode_entities( ${ $_[0] } );
 }
 
-sub url_escape
-{
+sub url_escape {
     return unless defined ${ $_[0] };
 
     use bytes;
     ${ $_[0] } =~ s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
 }
-
 
 1;
 

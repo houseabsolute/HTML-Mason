@@ -7,11 +7,13 @@ use warnings;
 package HTML::Mason::Plugin::Context::StartRequest;
 use base qw(HTML::Mason::Plugin::Context);
 
-sub request   { $_[0]->[0] }
-sub args      {
+sub request { $_[0]->[0] }
+
+sub args {
     if (wantarray) {
-        return @{$_[0]->[1]};
-    } else {
+        return @{ $_[0]->[1] };
+    }
+    else {
         return $_[0]->[1];
     }
 }
@@ -21,11 +23,13 @@ sub args      {
 package HTML::Mason::Plugin::Context::EndRequest;
 use base qw(HTML::Mason::Plugin::Context);
 
-sub request   { $_[0]->[0] }
-sub args      {
+sub request { $_[0]->[0] }
+
+sub args {
     if (wantarray) {
-        return @{$_[0]->[1]};
-    } else {
+        return @{ $_[0]->[1] };
+    }
+    else {
         return $_[0]->[1];
     }
 }
@@ -39,9 +43,9 @@ sub error     { $_[0]->[5] }
 package HTML::Mason::Plugin::Context::StartComponent;
 use base qw(HTML::Mason::Plugin::Context);
 
-sub request   { $_[0]->[0] }
-sub comp      { $_[0]->[1] }
-sub args      { $_[0]->[2] }
+sub request { $_[0]->[0] }
+sub comp    { $_[0]->[1] }
+sub args    { $_[0]->[2] }
 
 #------------------------------------------------------------
 

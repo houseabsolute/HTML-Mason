@@ -17,18 +17,16 @@ require Exporter;
 
 use vars qw(@ISA @EXPORT_OK);
 
-@ISA = qw(Exporter);
+@ISA       = qw(Exporter);
 @EXPORT_OK = qw(data_cache_namespace cgi_request_args);
 
-sub data_cache_namespace
-{
+sub data_cache_namespace {
     my ($comp_id) = @_;
     return compress_path($comp_id);
 }
 
-sub cgi_request_args
-{
-    my ($q, $method) = @_;
+sub cgi_request_args {
+    my ( $q, $method ) = @_;
 
     my %args;
 
@@ -37,8 +35,8 @@ sub cgi_request_args
     # parameter named 'keywords' with a value of () (empty array).
     # This is apparently a feature related to <ISINDEX> queries or
     # something (see the CGI.pm) docs.  It makes my head hurt. - dave
-    my @methods =
-        $method ne 'POST' || ! $ENV{QUERY_STRING} ? ( 'param' ) : ( 'param', 'url_param' );
+    my @methods = $method ne 'POST'
+      || !$ENV{QUERY_STRING} ? ('param') : ( 'param', 'url_param' );
 
     foreach my $key ( map { $q->$_() } @methods ) {
         next if exists $args{$key};
@@ -48,7 +46,6 @@ sub cgi_request_args
 
     return wantarray ? %args : \%args;
 }
-
 
 1;
 

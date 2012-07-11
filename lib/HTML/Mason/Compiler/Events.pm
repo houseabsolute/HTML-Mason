@@ -10,8 +10,7 @@ use warnings;
 require HTML::Mason::Compiler;
 use base qw( HTML::Mason::Compiler );
 
-sub new
-{
+sub new {
     my $proto = shift;
     my $class = ref $proto || $proto;
 
@@ -24,15 +23,13 @@ sub new
     return $self;
 }
 
-sub start_component
-{
+sub start_component {
     my $self = shift;
 
     print "starting component\n";
 }
 
-sub end_component
-{
+sub end_component {
     my $self = shift;
 
     print "ending component\n";
@@ -40,233 +37,201 @@ sub end_component
 
 sub compiled_component { '' }
 
-sub text
-{
+sub text {
     my $self = shift;
-    my %p = @_;
+    my %p    = @_;
 
     print "TEXT\n$p{text}\n";
 }
 
-sub start_args
-{
+sub start_args {
     my $self = shift;
 
     print "ARGS\n";
 }
 
-sub end_args
-{
+sub end_args {
     my $self = shift;
 
     print "/ARGS\n";
 }
 
-sub start_cleanup
-{
+sub start_cleanup {
     my $self = shift;
 
     print "CLEANUP\n";
 }
 
-sub end_cleanup
-{
+sub end_cleanup {
     my $self = shift;
 
     print "/CLEANUP\n";
 }
 
-sub start_doc
-{
+sub start_doc {
     my $self = shift;
 
     print "DOC\n";
 }
 
-sub end_doc
-{
+sub end_doc {
     my $self = shift;
 
     print "/DOC\n";
 }
 
-sub start_filter
-{
+sub start_filter {
     my $self = shift;
 
     print "FILTER\n";
 }
 
-sub end_filter
-{
+sub end_filter {
     my $self = shift;
 
     print "/FILTER\n";
 }
 
-sub start_init
-{
+sub start_init {
     my $self = shift;
 
     print "INIT\n";
 }
 
-sub end_init
-{
+sub end_init {
     my $self = shift;
 
     print "/INIT\n";
 }
 
-sub start_once
-{
+sub start_once {
     my $self = shift;
 
     print "ONCE\n";
 }
 
-sub end_once
-{
+sub end_once {
     my $self = shift;
 
     print "/ONCE\n";
 }
 
-sub start_perl
-{
+sub start_perl {
     my $self = shift;
 
     print "PERL\n";
 }
 
-sub end_perl
-{
+sub end_perl {
     my $self = shift;
 
     print "/PERL\n";
 }
 
-sub start_shared
-{
+sub start_shared {
     my $self = shift;
 
     print "SHARED\n";
 }
 
-sub end_shared
-{
+sub end_shared {
     my $self = shift;
 
     print "/SHARED\n";
 }
 
-sub start_text
-{
+sub start_text {
     my $self = shift;
 
     print "TEXT\n";
 }
 
-sub end_text
-{
+sub end_text {
     my $self = shift;
 
     print "/TEXT\n";
 }
 
-sub raw_block
-{
+sub raw_block {
     my $self = shift;
-    my %p = @_;
+    my %p    = @_;
 
     print "  $p{text}\n";
 }
 
-sub variable_declaration
-{
+sub variable_declaration {
     my $self = shift;
-    my %p = @_;
+    my %p    = @_;
 
     $p{default} = '<undef>' unless defined $p{default};
     print "  $p{type} : $p{name} : $p{default}\n";
 }
 
-sub key_value_pair
-{
+sub key_value_pair {
     my $self = shift;
-    my %p = @_;
+    my %p    = @_;
 
     print "  $p{key} => $p{value}\n";
 }
 
-sub start_def
-{
+sub start_def {
     my $self = shift;
-    my %p = @_;
+    my %p    = @_;
 
     print "DEF: $p{name}\n";
 }
 
-sub end_def
-{
+sub end_def {
     my $self = shift;
 
     print "/DEF\n";
 }
 
-sub start_method
-{
+sub start_method {
     my $self = shift;
-    my %p = @_;
+    my %p    = @_;
 
     print "METHOD: $p{name}\n";
 }
 
-sub end_method
-{
+sub end_method {
     my $self = shift;
 
     print "/METHOD\n";
 }
 
-sub substitution
-{
+sub substitution {
     my $self = shift;
-    my %p = @_;
+    my %p    = @_;
 
     print "SUB: $p{substitution}";
     print " | $p{escape}" if $p{escape};
     print "\n";
 }
 
-sub component_call
-{
+sub component_call {
     my $self = shift;
-    my %p = @_;
+    my %p    = @_;
 
     print "CALL: $p{call}\n";
 }
 
-sub component_content_call
-{
+sub component_content_call {
     my $self = shift;
-    my %p = @_;
+    my %p    = @_;
 
     print "CALL WITH CONTENT: $p{call}\n";
 }
 
-sub component_content_call_end
-{
+sub component_content_call_end {
     print "/CALL WITH CONTENT\n";
 }
 
-sub perl_line
-{
+sub perl_line {
     my $self = shift;
-    my %p = @_;
+    my %p    = @_;
 
     print "PLINE: $p{line}\n";
 }
-
 
 1;

@@ -11,17 +11,14 @@ use warnings;
 
 use base 'Apache::Request';
 
-
-sub new
-{
+sub new {
     my $class = shift;
     my $r     = Apache::Request->instance(shift);
 
     return bless { r => $r }, $class;
 }
 
-sub send_http_header
-{
+sub send_http_header {
     my $self = shift;
 
     return if $self->notes('sent_http_header');
@@ -30,6 +27,5 @@ sub send_http_header
 
     $self->notes( 'sent_http_header' => 1 );
 }
-
 
 1;

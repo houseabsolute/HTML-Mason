@@ -10,7 +10,8 @@ use File::Basename;
 use File::Spec;
 use HTML::Mason::Exceptions( abbr => [qw(param_error error)] );
 use Params::Validate qw(:all);
-Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
+Params::Validate::validation_options( on_fail => sub { param_error join '', @_ }
+);
 
 # for reference later
 #
@@ -30,54 +31,54 @@ Params::Validate::validation_options( on_fail => sub { param_error join '', @_  
 #     );
 # }
 
-use HTML::Mason::MethodMaker
-    ( read_only => [ qw( comp_id
-                         friendly_name
-                         last_modified
-                         comp_path
-                         comp_class
-                         extra
-                        ) ],
-      );
+use HTML::Mason::MethodMaker (
+    read_only => [
+        qw( comp_id
+          friendly_name
+          last_modified
+          comp_path
+          comp_class
+          extra
+          )
+    ],
+);
 
 my %defaults = ( comp_class => 'HTML::Mason::Component' );
 
-sub new
-{
+sub new {
     my $class = shift;
 
-    return bless { %defaults, @_ }, $class
+    return bless { %defaults, @_ }, $class;
 }
 
-sub comp_source_ref
-{
+sub comp_source_ref {
     my $self = shift;
 
     my $source = eval { $self->{source_callback}->() };
 
     rethrow_exception $@;
 
-    unless ( defined $source )
-    {
-	error "source callback returned no source for $self->{friendly_name} component";
+    unless ( defined $source ) {
+        error
+          "source callback returned no source for $self->{friendly_name} component";
     }
 
     my $sourceref = ref($source) ? $source : \$source;
     return $sourceref;
 }
 
-sub comp_source { ${shift()->comp_source_ref} }
+sub comp_source { ${ shift()->comp_source_ref } }
 
-sub object_code
-{
+sub object_code {
     my $self = shift;
     my %p = validate( @_, { compiler => { isa => 'HTML::Mason::Compiler' } } );
 
-    return $p{compiler}->compile( comp_source => $self->comp_source,
-				  name => $self->friendly_name,
-                                  comp_path => $self->comp_path,
-				  comp_class => $self->comp_class,
-                                );
+    return $p{compiler}->compile(
+        comp_source => $self->comp_source,
+        name        => $self->friendly_name,
+        comp_path   => $self->comp_path,
+        comp_class  => $self->comp_class,
+    );
 }
 
 1;

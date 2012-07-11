@@ -5,25 +5,29 @@ use warnings;
 
 sub new {
     my $class = shift;
-    bless { @_ }, $class;
+    bless {@_}, $class;
 }
 
 sub start_request_hook {
+
     # my ($self, $context) = @_;
     # $context has: request, args
 }
 
 sub end_request_hook {
+
     # my ($self, $context) = @_;
     # $context has: request, args, output, wantarray, result, error
 }
 
 sub start_component_hook {
+
     # my ($self, $context) = @_;
     # $context has: request, comp, args
 }
 
 sub end_component_hook {
+
     # my ($self, $context) = @_;
     # $context has: request, comp, args, wantarray, result, error
 }

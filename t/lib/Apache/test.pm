@@ -8,30 +8,32 @@ use FileHandle ();
 *import = \&Exporter::import;
 
 @EXPORT = qw(test fetch simple_fetch have_module skip_test
-             $USE_THREAD $USE_SFIO $PERL_DIR WIN32 grab run_test); 
+  $USE_THREAD $USE_SFIO $PERL_DIR WIN32 grab run_test);
 @EXPORT_OK = qw(have_httpd);
 
-BEGIN { 
-    if(not $ENV{MOD_PERL}) {
-        eval { require "net/config.pl"; }; #for 'make test'
+BEGIN {
+    if ( not $ENV{MOD_PERL} ) {
+        eval { require "net/config.pl"; };    #for 'make test'
         $PERL_DIR = $net::perldir;
-    } 
+    }
     if ($net::httpserver) {
-        # Validate that the OS knows the name of the server in $net::httpserver     
+
+        # Validate that the OS knows the name of the server in $net::httpserver
         # if 'localhost' is not defined, the tests wouldn't pass
-        (my $hostname) = ($net::httpserver =~ /(.*?):/);
-        warn qq{\n*** [Crucial] You must define "$hostname" (e.g. in /etc/hosts) in order for 'make test' to pass\n}  
-        unless gethostbyname $hostname;
+        ( my $hostname ) = ( $net::httpserver =~ /(.*?):/ );
+        warn
+          qq{\n*** [Crucial] You must define "$hostname" (e.g. in /etc/hosts) in order for 'make test' to pass\n}
+          unless gethostbyname $hostname;
     }
 }
 
 $PERL_DIR = $ENV{PERL_DIR} if exists $ENV{PERL_DIR};
 
-$USE_THREAD = ($Config{extensions} =~ /Thread/) || $Config{usethreads};
-$USE_SFIO = (($Config{'usesfio'} || '') eq 'true');
+$USE_THREAD = ( $Config{extensions} =~ /Thread/ ) || $Config{usethreads};
+$USE_SFIO = ( ( $Config{'usesfio'} || '' ) eq 'true' );
 
-my $Is_Win32 = ($^O eq "MSWin32");
-sub WIN32 () { $Is_Win32 };
+my $Is_Win32 = ( $^O eq "MSWin32" );
+sub WIN32 () { $Is_Win32 }
 
 my $UA;
 
@@ -40,24 +42,25 @@ eval {
     $UA = LWP::UserAgent->new;
 };
 
-unless (defined &Apache::bootstrap) {
-    *Apache::bootstrap = sub {};
-    *Apache::Constants::bootstrap = sub {};
+unless ( defined &Apache::bootstrap ) {
+    *Apache::bootstrap            = sub { };
+    *Apache::Constants::bootstrap = sub { };
 }
 
 sub write_httpd_conf {
-    my $pkg = shift;
-    my %args = (conf_file => 't/httpd.conf', @_);
-    my $DIR = `pwd`; chomp $DIR;
+    my $pkg  = shift;
+    my %args = ( conf_file => 't/httpd.conf', @_ );
+    my $DIR  = `pwd`;
+    chomp $DIR;
 
     # Apache2 tweaks
-    my $Port = 'Port';
-    my $AccessConfig = 'AccessConfig /dev/null';
+    my $Port           = 'Port';
+    my $AccessConfig   = 'AccessConfig /dev/null';
     my $ResourceConfig = 'ResourceConfig /dev/null';
     my $ScoreBoardFile = 'ScoreBoardFile /dev/null';
-    if ($args{version} =~ m/^2\./) {
-        $Port = 'Listen';
-        $AccessConfig = '';
+    if ( $args{version} =~ m/^2\./ ) {
+        $Port           = 'Listen';
+        $AccessConfig   = '';
         $ResourceConfig = '';
         $ScoreBoardFile = '';
     }
@@ -92,16 +95,19 @@ EOF
 }
 
 sub _ask {
+
     # Just a function for asking the user questions
-    my ($prompt, $default, $mustfind, $canskip) = @_;
+    my ( $prompt, $default, $mustfind, $canskip ) = @_;
 
     my $skip = defined $canskip ? " ('$canskip' to skip)" : '';
     my $response;
     do {
         print "$prompt [$default]$skip: ";
-        chomp($response = <STDIN>);
+        chomp( $response = <STDIN> );
         $response ||= $default;
-    } until (!$mustfind || ($response eq $canskip) || (-e $response || !print("$response not found\n")));
+      } until ( !$mustfind
+          || ( $response eq $canskip )
+          || ( -e $response || !print("$response not found\n") ) );
 
     return $response;
 }
@@ -109,27 +115,31 @@ sub _ask {
 sub get_test_params {
     my $pkg = shift;
 
-    print("\nFor testing purposes, please give the full path to an httpd\n",
-          "with mod_perl enabled.  The path defaults to \$ENV{APACHE}, if present.");
-    
+    print(
+        "\nFor testing purposes, please give the full path to an httpd\n",
+        "with mod_perl enabled.  The path defaults to \$ENV{APACHE}, if present."
+    );
+
     my %conf;
-    
+
     my $httpd = $pkg->_find_mod_perl_httpd(1);
 
     my $found;
-    do
-    {
-        $httpd = _ask("\n", $httpd, 1, '!');
-        if ($httpd eq '!') {
+    do {
+        $httpd = _ask( "\n", $httpd, 1, '!' );
+        if ( $httpd eq '!' ) {
             print "Skipping.\n";
             return;
         }
 
-        if ($pkg->_httpd_has_mod_perl($httpd)) {
+        if ( $pkg->_httpd_has_mod_perl($httpd) ) {
             $found = 1;
-        } else {
-            warn("$httpd does not appear to have been compiled with\n",
-                 "mod_perl as a static or dynamic module\n");
+        }
+        else {
+            warn(
+                "$httpd does not appear to have been compiled with\n",
+                "mod_perl as a static or dynamic module\n"
+            );
             $httpd = $pkg->_find_mod_perl_httpd(0);
         }
     } until ($found);
@@ -137,29 +147,37 @@ sub get_test_params {
     $conf{httpd} = $httpd;
 
     # Default: search for dynamic dependencies if mod_so is present, don't bother otherwise.
-    my $default = (`t/httpd -l` =~ /mod_so\.c/ ? 'y' : 'n');
-    if (lc _ask("Search existing config file for dynamic module dependencies?", $default) eq 'y') {
+    my $default = ( `t/httpd -l` =~ /mod_so\.c/ ? 'y' : 'n' );
+    if (
+        lc _ask( "Search existing config file for dynamic module dependencies?",
+            $default ) eq 'y'
+      )
+    {
         my %compiled = $pkg->get_compilation_params('t/httpd');
 
         $conf{version} = $compiled{SERVER_VERSION};
-        $conf{config_file} = _ask("  Config file", $compiled{SERVER_CONFIG_FILE}, 1);
-        $conf{modules} = $pkg->_read_existing_conf($conf{config_file});
+        $conf{config_file} =
+          _ask( "  Config file", $compiled{SERVER_CONFIG_FILE}, 1 );
+        $conf{modules} = $pkg->_read_existing_conf( $conf{config_file} );
     }
 
     # Get default user (apache doesn't like to run as root, special-case it)
-    my $defuser = ($< && getpwuid $<) || 'nobody';
-    $conf{user} = _ask("User to run tests under", $defuser);
+    my $defuser = ( $< && getpwuid $< ) || 'nobody';
+    $conf{user} = _ask( "User to run tests under", $defuser );
 
-    my $defgroup = ($defuser eq 'nobody' ? 'nobody' : getgrgid((getpwnam $conf{user})[3]));
-    $conf{group} = _ask("Group to run tests under", $defgroup);
+    my $defgroup =
+      ( $defuser eq 'nobody'
+        ? 'nobody'
+        : getgrgid( ( getpwnam $conf{user} )[3] ) );
+    $conf{group} = _ask( "Group to run tests under", $defgroup );
 
-    $conf{port} = _ask("Port to run tests under", 8228);
+    $conf{port} = _ask( "Port to run tests under", 8228 );
 
     return %conf;
 }
 
 sub get_compilation_params {
-    my ($self, $httpd) = @_;
+    my ( $self, $httpd ) = @_;
 
     my %compiled;
     for (`$httpd -V`) {
@@ -171,34 +189,36 @@ sub get_compilation_params {
         }
     }
     $compiled{SERVER_CONFIG_FILE} =~ s,^,$compiled{HTTPD_ROOT}/,
-        unless $compiled{SERVER_CONFIG_FILE} =~ m,^/,;
+      unless $compiled{SERVER_CONFIG_FILE} =~ m,^/,;
 
     return %compiled;
 }
 
 sub _read_existing_conf {
+
     # Returns some "(Add|Load)Module" config lines, generated from the
     # existing config file and a few must-have modules.
-    my ($self, $server_conf, $default_root, $is_include) = @_;
+    my ( $self, $server_conf, $default_root, $is_include ) = @_;
 
     open SERVER_CONF, $server_conf or die "Couldn't open $server_conf: $!";
-    my @lines = grep {!m/^\s*\#/} <SERVER_CONF>;
+    my @lines = grep { !m/^\s*\#/ } <SERVER_CONF>;
     close SERVER_CONF;
 
-    my ($server_root) = (map /^\s*ServerRoot\s*(\S+)/, @lines);
+    my ($server_root) = ( map /^\s*ServerRoot\s*(\S+)/, @lines );
     $server_root =~ s/^"//;
     $server_root =~ s/"$//;
 
     $server_root ||= $default_root;
 
     my @includes;
-    foreach my $include (grep /^\s*Include\s+\S+/, @lines) {
+    foreach my $include ( grep /^\s*Include\s+\S+/, @lines ) {
         my ($file) = $include =~ /^\s*Include\s+(\S+)/;
         $file =~ s/^"//;
         $file =~ s/"//;
-        $file =~ s!^([^/])!$server_root/$1!;  # absolute path
+        $file =~ s!^([^/])!$server_root/$1!;    # absolute path
 
-        if ($file =~ m/\*/) {
+        if ( $file =~ m/\*/ ) {
+
             # expand wildcard includes (used in Fedora Core 1 default config)
             my @add = glob $file;
             unless ($Apache::test::quiet) {
@@ -206,7 +226,8 @@ sub _read_existing_conf {
                 warn "ADDED INC $_\n" for @add;
             }
             push @includes, @add;
-        } else {
+        }
+        else {
             push @includes, $file;
             warn "ADDED INC $file\n" unless $Apache::test::quiet;
         }
@@ -221,36 +242,44 @@ sub _read_existing_conf {
 
     # Follow each include recursively to find needed modules
     foreach my $include (@includes) {
-        push @modules, $self->_read_existing_conf($include, $server_root, 1);
+        push @modules, $self->_read_existing_conf( $include, $server_root, 1 );
     }
+
     # The last bits only need to be done once.
     return @modules if $is_include;
 
     my $static_mods = $self->static_modules('t/httpd');
-    
+
     my @load;
+
     # Have to make sure that dir, autoindex and perl are loaded.
     foreach my $module (qw(dir autoindex perl)) {
-       unless ($static_mods->{"mod_$module"} or grep /$module/i, @modules) {
-           warn "Will attempt to load mod_$module dynamically.\n" unless $Apache::test::quiet;
+        unless ( $static_mods->{"mod_$module"} or grep /$module/i, @modules ) {
+            warn "Will attempt to load mod_$module dynamically.\n"
+              unless $Apache::test::quiet;
             push @load, $module;
         }
     }
 
     # Directories where apache DSOs live.
-    my @module_dirs = map {m,(/\S*)/,} @modules;
-    
+    my @module_dirs = map { m,(/\S*)/, } @modules;
+
     # Finally compute the directives to load modules that need to be loaded.
- MODULE:
+  MODULE:
     foreach my $module (@load) {
         foreach my $module_dir (@module_dirs) {
-           foreach my $filename ("mod_$module.so", "lib$module.so", "ApacheModule\u$module.dll") {
-               if (-e "$module_dir/$filename") {
-                   push @modules, "LoadModule ${module}_module $module_dir/$filename\n"; next MODULE;
-               }
+            foreach my $filename ( "mod_$module.so", "lib$module.so",
+                "ApacheModule\u$module.dll" )
+            {
+                if ( -e "$module_dir/$filename" ) {
+                    push @modules,
+                      "LoadModule ${module}_module $module_dir/$filename\n";
+                    next MODULE;
+                }
             }
         }
-       warn "Warning: couldn't find anything to load for 'mod_$module'.\n" unless $Apache::test::quiet;
+        warn "Warning: couldn't find anything to load for 'mod_$module'.\n"
+          unless $Apache::test::quiet;
     }
 
     unless ($Apache::test::quiet) {
@@ -262,49 +291,50 @@ sub _read_existing_conf {
 }
 
 sub static_modules {
+
     # Returns a hashref whose keys are each of the modules compiled
     # statically into the given httpd binary.
-    my ($self, $httpd) = @_;
+    my ( $self, $httpd ) = @_;
 
     my @l = `$httpd -l`;
-    return {map {lc($_) => 1} map /(\S+)\.c/, @l};
+    return { map { lc($_) => 1 } map /(\S+)\.c/, @l };
 }
 
 sub _find_mod_perl_httpd {
-    my ($self, $respect_env) = @_;
+    my ( $self, $respect_env ) = @_;
 
     return $ENV{'APACHE'} if $ENV{'APACHE'} && $respect_env;
 
     local $Apache::test::quiet = 1;
-    foreach ( '/usr/local/apache/bin/httpd',
-              '/usr/local/apache_mp/bin/httpd',
-              '/usr/local/apache2/bin/httpd',
-              '/opt/apache/bin/httpd',
-              '/usr/sbin/apache-perl',
-              '/usr/sbin/apache',
-              '/usr/sbin/apache2',
-              '/usr/sbin/httpd',
-              $self->_which('httpd'),
-              $self->_which('apache'),
-            ) {
+    foreach (
+        '/usr/local/apache/bin/httpd',  '/usr/local/apache_mp/bin/httpd',
+        '/usr/local/apache2/bin/httpd', '/opt/apache/bin/httpd',
+        '/usr/sbin/apache-perl',        '/usr/sbin/apache',
+        '/usr/sbin/apache2',            '/usr/sbin/httpd',
+        $self->_which('httpd'),         $self->_which('apache'),
+      )
+    {
         return $_ if -x $_ && $self->_httpd_has_mod_perl($_);
     }
 }
 
 sub _httpd_has_mod_perl {
-    my ($self, $httpd) = @_;
+    my ( $self, $httpd ) = @_;
 
     return 1 if `$httpd -l` =~ /mod_perl\.c/;
 
     my %compiled = $self->get_compilation_params($httpd);
 
-    if ($compiled{SERVER_VERSION} =~ m/^2\./) {
-        warn("Apache $compiled{SERVER_VERSION} detected. Report problems to mason-users\@lists.sourceforge.net\n") unless $Apache::test::quiet;
+    if ( $compiled{SERVER_VERSION} =~ m/^2\./ ) {
+        warn(
+            "Apache $compiled{SERVER_VERSION} detected. Report problems to mason-users\@lists.sourceforge.net\n"
+        ) unless $Apache::test::quiet;
     }
 
-    if ($compiled{SERVER_CONFIG_FILE}) {
+    if ( $compiled{SERVER_CONFIG_FILE} ) {
         local $Apache::test::quiet = 1;
-        my @lines = $self->_read_existing_conf($compiled{SERVER_CONFIG_FILE},$compiled{HTTPD_ROOT});
+        my @lines = $self->_read_existing_conf( $compiled{SERVER_CONFIG_FILE},
+            $compiled{HTTPD_ROOT} );
         return 1 if grep { /mod_perl/ } grep /^\s*(Add|Load)Module/, @lines;
     }
 
@@ -312,13 +342,13 @@ sub _httpd_has_mod_perl {
 }
 
 sub _which {
-    return grep {-x $_} map { "$_/$_[1]" } split /:/, $ENV{PATH};
+    return grep { -x $_ } map { "$_/$_[1]" } split /:/, $ENV{PATH};
 }
 
-sub test { 
-    shift() if UNIVERSAL::isa($_[0], __PACKAGE__);
+sub test {
+    shift() if UNIVERSAL::isa( $_[0], __PACKAGE__ );
     my $s = $_[1] ? "ok $_[0]\n" : "not ok $_[0]\n";
-    if($ENV{MOD_PERL}) {
+    if ( $ENV{MOD_PERL} ) {
         Apache->request->print($s);
     }
     else {
@@ -327,76 +357,80 @@ sub test {
 }
 
 sub fetch {
+
     # Old code calls fetch() as a function, new code as a method
     my $want_response;
-    $want_response = shift() if UNIVERSAL::isa($_[0], __PACKAGE__);
-    my ($ua, $url) = (@_ == 1 ? ($UA, shift()) : @_);
-    my $request = ref $url ? $url : {uri=>$url};
+    $want_response = shift() if UNIVERSAL::isa( $_[0], __PACKAGE__ );
+    my ( $ua, $url ) = ( @_ == 1 ? ( $UA, shift() ) : @_ );
+    my $request = ref $url ? $url : { uri => $url };
 
     # Set some defaults
-    $ENV{PORT} ||= 8529;  # For mod_perl's own tests
+    $ENV{PORT} ||= 8529;            # For mod_perl's own tests
     $request->{method} ||= 'GET';
     $request->{content} = '' unless exists $request->{content};
-    $request->{uri} = "http://localhost:$ENV{PORT}$request->{uri}"    
-        unless $request->{uri} =~ /^http/;
+    $request->{uri} = "http://localhost:$ENV{PORT}$request->{uri}"
+      unless $request->{uri} =~ /^http/;
     $request->{headers}{Content_Type} = 'application/x-www-form-urlencoded'
-        if (!$request->{headers} and $request->{method} eq 'POST');  # Is this necessary?
+      if ( !$request->{headers} and $request->{method} eq 'POST' )
+      ;                             # Is this necessary?
 
     # Create & send the request
-    $request->{headers} = new HTTP::Headers(%{$request->{headers}||{}});
-    my $req = new HTTP::Request(@{$request}{'method','uri','headers','content'});
+    $request->{headers} = new HTTP::Headers( %{ $request->{headers} || {} } );
+    my $req =
+      new HTTP::Request( @{$request}{ 'method', 'uri', 'headers', 'content' } );
     my $response = $ua->request($req);
 
     return $want_response ? $response : $response->content;
 }
 
 sub simple_fetch {
-    my $ua = LWP::UserAgent->new;
+    my $ua  = LWP::UserAgent->new;
     my $url = URI::URL->new("http://$net::httpserver");
-    my($path,$q) = split /\?/, shift; 
+    my ( $path, $q ) = split /\?/, shift;
     $url->path($path);
     $url->query($q) if $q;
-    my $request = new HTTP::Request('GET', $url);
-    my $response = $ua->request($request, undef, undef);   
+    my $request = new HTTP::Request( 'GET', $url );
+    my $response = $ua->request( $request, undef, undef );
     $response->is_success;
 }
 
 sub have_module {
     my $mod = shift;
-    my $v = shift;
-    eval {# surpress "can't boostrap" warnings
-        local $SIG{__WARN__} = sub {};
-        if ($mod_perl2::VERSION >= 2.00) {
+    my $v   = shift;
+    eval {    # surpress "can't boostrap" warnings
+        local $SIG{__WARN__} = sub { };
+        if ( $mod_perl2::VERSION >= 2.00 ) {
+
             # use Apache2 is no longer needed
-        } else {
+        }
+        else {
             require Apache;
         }
     };
 
     eval "require $mod";
-    if($v and not $@) {
-        eval { 
-            local $SIG{__WARN__} = sub {};
+    if ( $v and not $@ ) {
+        eval {
+            local $SIG{__WARN__} = sub { };
             $mod->UNIVERSAL::VERSION($v);
         };
-        if($@) {
+        if ($@) {
             warn $@;
             return 0;
         }
     }
-    if($@ && ($@ =~ /Can.t locate/)) {
+    if ( $@ && ( $@ =~ /Can.t locate/ ) ) {
         return 0;
     }
-    elsif($@ && ($@ =~ /Can.t find loadable object for module/)) {
+    elsif ( $@ && ( $@ =~ /Can.t find loadable object for module/ ) ) {
         return 0;
     }
-    elsif($@) {
+    elsif ($@) {
         warn "$@\n";
     }
 
-
     print "module $mod is installed\n" unless $ENV{MOD_PERL};
-    
+
     return 1;
 }
 
@@ -411,12 +445,13 @@ sub have_httpd {
 
 sub run {
     require Test::Harness;
-    my $self = shift;
-    my $args = shift || {};
+    my $self  = shift;
+    my $args  = shift || {};
     my @tests = ();
 
     # First we check if we already are within the "t" directory
-    if (-d "t") {
+    if ( -d "t" ) {
+
         # try to move into test directory
         chdir "t" or die "Can't chdir: $!";
 
@@ -427,25 +462,26 @@ sub run {
     }
 
     # Pick up the library files from the ../blib directory
-    unshift(@INC, "../blib/lib", "../blib/arch");
+    unshift( @INC, "../blib/lib", "../blib/arch" );
+
     #print "@INC\n";
 
     $Test::Harness::verbose = shift(@ARGV)
-        if $ARGV[0] =~ /^\d+$/ || $ARGV[0] eq "-v";
+      if $ARGV[0] =~ /^\d+$/ || $ARGV[0] eq "-v";
 
     $Test::Harness::verbose ||= $args->{verbose};
 
     if (@ARGV) {
         for (@ARGV) {
-            if (-d $_) {
-                push(@tests, <$_/*.t>);
-            } 
+            if ( -d $_ ) {
+                push( @tests, <$_/*.t> );
+            }
             else {
                 $_ .= ".t" unless /\.t$/;
-                push(@tests, $_);
+                push( @tests, $_ );
             }
         }
-    } 
+    }
     else {
         push @tests, <*.t>, map { <$_/*.t> } @{ $args->{tdirs} || [] };
     }
@@ -454,8 +490,9 @@ sub run {
 }
 
 sub MM_test {
+
     # Writes the test section for the Makefile
-    shift();  # Don't need package name
+    shift();    # Don't need package name
     my %conf = @_;
 
     my $section = <<EOF;
@@ -495,40 +532,42 @@ EOF
 
 sub grab {
     require IO::Socket;
-    my(@args) = @_;
+    my (@args) = @_;
     @args = @ARGV unless @args;
 
-    unless (@args > 0) { 
+    unless ( @args > 0 ) {
         die "usage: grab host:port path";
     }
 
-    my($host, $port) = split ":", shift @args;
+    my ( $host, $port ) = split ":", shift @args;
     $port ||= 80;
     my $url = shift @args || "/";
 
-    my $remote = IO::Socket::INET->new(Proto     => "tcp",
-                                       PeerAddr  => $host,
-                                       PeerPort  => $port,
-                                       );
+    my $remote = IO::Socket::INET->new(
+        Proto    => "tcp",
+        PeerAddr => $host,
+        PeerPort => $port,
+    );
     unless ($remote) {
-        die "cannot connect to http daemon on $host"; 
+        die "cannot connect to http daemon on $host";
     }
     $remote->autoflush(1);
     print $remote "GET $url HTTP/1.0\n\n";
-    my $response_line = 0;
+    my $response_line     = 0;
     my $header_terminator = 0;
-    my @msg = ();
+    my @msg               = ();
 
-    while ( <$remote> ) {
+    while (<$remote>) {
+
         #e.g. HTTP/1.1 200 OK
-        if(m:^(HTTP/\d+\.\d+)[ \t]+(\d+)[ \t]*([^\012]*):i) {
+        if (m:^(HTTP/\d+\.\d+)[ \t]+(\d+)[ \t]*([^\012]*):i) {
             push @msg, $_;
             $response_line = 1;
         }
-        elsif(/^([a-zA-Z0-9_\-]+)\s*:\s*(.*)/) {
+        elsif (/^([a-zA-Z0-9_\-]+)\s*:\s*(.*)/) {
             push @msg, $_;
         }
-        elsif(/^\015?\012$/) {
+        elsif (/^\015?\012$/) {
             $header_terminator = 1;
             push @msg, $_;
         }
@@ -538,12 +577,12 @@ sub grab {
     close $remote;
 
     print "~" x 40, "\n", "Diagnostics:\n";
-    if ($response_line and $header_terminator) {
+    if ( $response_line and $header_terminator ) {
         print " HTTP response is valid:\n";
     }
     else {
         print "     GET -> http://$host:$port$url\n";
-        print " >>> No response line\n" unless $response_line;
+        print " >>> No response line\n"     unless $response_line;
         print " >>> No header terminator\n" unless $header_terminator;
         print " *** HTTP response is malformed\n";
     }
@@ -551,15 +590,16 @@ sub grab {
 }
 
 sub run_test {
-    my($test, $verbose) = @_; 
+    my ( $test, $verbose ) = @_;
     my $cmd = "$^X -w $test|";
-    my $fh = FileHandle->new;
+    my $fh  = FileHandle->new;
     $fh->open($cmd) or print "can't run $test. $!\n";
-    my($ok,$next,$max,$files,$totok,$totmax);
+    my ( $ok, $next, $max, $files, $totok, $totmax );
     $ok = $next = $max = 0;
     my @failed = ();
     while (<$fh>) {
-        if( $verbose ){
+
+        if ($verbose) {
             print ">>> $_";
         }
         if (/^1\.\.([0-9]+)/) {
@@ -568,9 +608,9 @@ sub run_test {
             $files++;
             $next = 1;
         }
-        elsif ($max && /^(not\s+)?ok\b/) {
+        elsif ( $max && /^(not\s+)?ok\b/ ) {
             my $this = $next;
-            if (/^not ok\s*(\d*)/){
+            if (/^not ok\s*(\d*)/) {
                 $this = $1 if $1 > 0;
                 push @failed, $this;
             }
@@ -579,21 +619,24 @@ sub run_test {
                 $ok++;
                 $totok++;
             }
-            if ($this > $next) {
+            if ( $this > $next ) {
+
                 # warn "Test output counter mismatch [test $this]\n";
                 # no need to warn probably
-                push @failed, $next..$this-1;
+                push @failed, $next .. $this - 1;
             }
-            elsif ($this < $next) {
+            elsif ( $this < $next ) {
+
                 #we have seen more "ok" lines than the number suggests
-                warn "Confused test output: test $this answered after test ", $next-1, "\n";
+                warn "Confused test output: test $this answered after test ",
+                  $next - 1, "\n";
                 $next = $this;
             }
             $next = $this + 1;
         }
     }
-    $fh->close; # must close to reap child resource values
-    return($max, \@failed);
+    $fh->close;    # must close to reap child resource values
+    return ( $max, \@failed );
 }
 
 1;
