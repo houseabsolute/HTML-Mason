@@ -5,6 +5,15 @@ available at http://www.masonhq.com/code/history.html.
 
 ** denotes an incompatible change
 
+1.50 Jul 11, 2012
+
+[ DISTRIBUTION ]
+
+- Switch to Dist::Zilla
+- Remove special build processing such as creation of HTML docs and POD tag abbrevations
+- Perltidy files
+- Move live Apache tests to author-only
+
 1.49 Feb 27, 2012
 
 [ DOCS ]
