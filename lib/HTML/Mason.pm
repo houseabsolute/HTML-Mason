@@ -135,7 +135,7 @@ running mod_perl.
 
 The <Location> section routes all requests to the Mason handler, which
 is a simple way to try out Mason. A more refined setup is discussed
-in ADMIN<Controlling Access via Filename Extension>.
+in L<Controlling Access via Filename Extension|HTML::Mason::Admin/Controlling Access via Filename Extension>.
 
 Once you have added the configuration directives, restart the
 server. First, go to a standard URL on your site to make sure you
@@ -173,7 +173,7 @@ mod_perl, since that is the most common configuration.  If you would
 like to run Mason via a CGI script, refer to the
 L<HTML::Mason::CGIHandler|HTML::Mason::CGIHandler> documentation.
 If you are using Mason from a standalone program, refer to
-ADMIN<Using Mason from a Standalone Script>.
+L<Using Mason from a Standalone Script|HTML::Mason::Admin/Using Mason from a Standalone Script>.
 
 There is also a book about Mason, I<Embedding Perl in HTML with
 Mason>, by Dave Rolsky and Ken Williams, published by O'Reilly and

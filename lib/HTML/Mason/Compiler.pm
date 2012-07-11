@@ -770,7 +770,7 @@ valid flags are
     u - escape for URL (':' => '%3A', etc.)
 
 The developer can override default escape flags on a per-expression
-basis; see DEVEL<escaping expressions>.
+basis; see L<escaping expressions|HTML::Mason::Devel/escaping expressions>.
 
 If you want to set I<multiple> flags as the default, this should be
 given as a reference to an array of flags.
@@ -778,14 +778,14 @@ given as a reference to an array of flags.
 =item enable_autoflush
 
 True or false, default is true. Indicates whether components are
-compiled with support for P<autoflush>. The component can be compiled
+compiled with support for L<autoflush|HTML::Mason::Params/autoflush>. The component can be compiled
 to a more efficient form if it does not have to check for autoflush
 mode, so you should set this to 0 if you can.
 
 =item lexer
 
 The Lexer object to associate with this Compiler. By default a new
-object of class P<lexer_class> will be created.
+object of class L<lexer_class|HTML::Mason::Params/lexer_class> will be created.
 
 =item lexer_class
 
@@ -798,7 +798,7 @@ it's magic.  The sub is called with a single parameter, a scalar reference
 to the script.  The sub is expected to process the script in-place.   This is
 one way to extend the HTML::Mason syntax with new tags, etc., although a much
 more flexible way is to subclass the Lexer or Compiler class. See also
-P<postprocess_text> and P<postprocess_perl>.
+L<postprocess_text|HTML::Mason::Params/postprocess_text> and L<postprocess_perl|HTML::Mason::Params/postprocess_perl>.
 
 =item postprocess_text
 
@@ -807,7 +807,7 @@ compiled component, just before it is assembled into its final
 subroutine form.  The sub is called with a single parameter, a scalar
 reference to the text portion of the component.  The sub is expected
 to process the string in-place. See also
-P<preprocess> and P<postprocess_perl>.
+L<preprocess|HTML::Mason::Params/preprocess> and L<postprocess_perl|HTML::Mason::Params/postprocess_perl>.
 
 =item postprocess_perl
 
@@ -816,7 +816,7 @@ compiled component, just before it is assembled into its final
 subroutine form.  The sub is called with a single parameter, a scalar
 reference to the Perl portion of the component.  The sub is expected
 to process the string in-place. See also
-P<preprocess> and P<postprocess_text>.
+L<preprocess|HTML::Mason::Params/preprocess> and L<postprocess_text|HTML::Mason::Params/postprocess_text>.
 
 =item use_source_line_numbers
 

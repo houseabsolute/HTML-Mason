@@ -63,7 +63,7 @@ HTML::Mason::Plugin - Plugin Base class for Mason
 =head1 DESCRIPTION
 
 Use a Mason plugin to have actions occur at the beginning or end of
-requests or components. Plugins are activated by passing P<plugins> in
+requests or components. Plugins are activated by passing L<plugins|HTML::Mason::Params/plugins> in
 the interpreter or request object. Each plugin in the list can be
 specified as a class name (in which case the plugin object is created
 once for each request) or as an actual object of the plugin class.

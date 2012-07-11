@@ -202,7 +202,7 @@ of parameters, and their associated types.
 
 =head2 Component Root
 
-The component root (P<comp_root>) marks the top of your component
+The component root (L<comp_root|HTML::Mason::Params/comp_root>) marks the top of your component
 hierarchy.  When running Mason with the ApacheHandler or CGIHandler
 modules, this defaults to your document root.
 
@@ -235,7 +235,7 @@ component roots, and they appear in the C<title()> of a component.
 
 =head2 Data Directory
 
-The data directory (P<data_dir>) is a writable directory that Mason
+The data directory (L<data_dir|HTML::Mason::Params/data_dir>) is a writable directory that Mason
 uses for various features and optimizations. By default, it is a
 directory called "mason" under your Apache server root.  Because Mason
 will not use a I<default> data directory under a top-level directory,
@@ -313,7 +313,7 @@ directory: F</foo/bar/dhandler> does not get a chance to
 handle a request for F</foo/bar/>.
 
 If you would like Mason to handle directory requests, set
-P<decline_dirs> to 0.  The dhandler that catches a directory request
+L<decline_dirs|HTML::Mason::Params/decline_dirs> to 0.  The dhandler that catches a directory request
 is responsible for setting a reasonable content type via
 C<< $r->content_type() >>.
 
@@ -678,7 +678,7 @@ user session information, the server root for forming absolute URLs.
 Because Mason by default parses components in C<strict> mode, you'll
 need to declare a global if you don't want to access it with an
 explicit package name. The easiest way to declare a global is with
-the P<allow_globals> parameter.
+the L<allow_globals|HTML::Mason::Params/allow_globals> parameter.
 
 Since all components run in the same package, you'll be able to set
 the global in one component and access it in all the others.
@@ -711,7 +711,7 @@ although this may be overridden by the developer. C<Cache::FileCache>
 creates a separate subdirectory for every component that uses caching,
 and one file some number of levels underneath that subdirectory for
 each cached item.  The root of the cache tree is
-P<data_dir>/C<cache>. The name of the cache subdirectory for a component
+L<data_dir|HTML::Mason::Params/data_dir>/C<cache>. The name of the cache subdirectory for a component
 is determined by the function C<HTML::Mason::Utils::data_cache_namespace>.
 
 =item Default constructor options
@@ -721,7 +721,7 @@ constructor the C<namespace>, and C<cache_root> options, along with
 any other options given in the C<< $m->cache >> method.
 
 You may specify other default constructor options with the
-P<data_cache_defaults> parameter. For example,
+L<data_cache_defaults|HTML::Mason::Params/data_cache_defaults> parameter. For example,
 
     PerlSetVar  MasonDataCacheDefaults  "cache_class => SizeAwareFileCache"
     PerlAddVar  MasonDataCacheDefaults  "cache_depth => 2"
@@ -742,14 +742,14 @@ implements the cache API but never stores data.
 
 This section explains Mason's various performance enhancements and how
 to administer them. One of the best ways to maximize performance on
-your production server is run in P<static_source> mode; see the third
+your production server is run in L<static_source|HTML::Mason::Params/static_source> mode; see the third
 subsection below.
 
 =head2 Code Cache
 
 When Mason loads a component, it places it in a memory cache. By
 default, the cache has no limit, but you can specify a maximum number
-of components to cache with the P<code_cache_max_size> parameter. In
+of components to cache with the L<code_cache_max_size|HTML::Mason::Params/code_cache_max_size> parameter. In
 this case, Mason will free up space as needed by discarding
 components. The discard algorithm is least frequently used (LFU), with
 a periodic decay to gradually eliminate old frequency information. In
@@ -762,7 +762,7 @@ for cache policy. The max size is now specified purely in number of
 components.
 
 Mason can use certain optimizations with an unlimited cache,
-especially in conjunction with P<static_source>, so don't limit the
+especially in conjunction with L<static_source|HTML::Mason::Params/static_source>, so don't limit the
 cache unless experience shows that your servers are growing too
 large. Many dynamic sites can be served comfortably with all
 components in memory.
@@ -775,7 +775,7 @@ and can be discarded like any others.
 Naturally, a cache entry is invalidated if the corresponding component
 source file changes.
 
-To turn off code caching completely, set P<code_cache_max_size> to 0.
+To turn off code caching completely, set L<code_cache_max_size|HTML::Mason::Params/code_cache_max_size> to 0.
 
 =head2 Object Files
 
@@ -785,7 +785,7 @@ are conceivable in the future, but even those will not survive between
 web server restarts.
 
 As a secondary, longer-term cache mechanism, Mason stores a compiled
-form of each component in an object file under P<data_dir>/obj. Any
+form of each component in an object file under L<data_dir|HTML::Mason::Params/data_dir>/obj. Any
 server process can eval the object file and save time on parsing the
 component source file.  The object file is recreated whenever the
 source file changes.
@@ -800,7 +800,7 @@ object file, such as after an upgrade
 
 =item * the component path
 
-=item * P<object_file_extension>, by default ".obj"
+=item * L<object_file_extension|HTML::Mason::Params/object_file_extension>, by default ".obj"
 
 =back
 
@@ -812,20 +812,20 @@ for pre-1.10 Mason, in which error line numbers were based on the
 object file rather than the source file.
 
 If for some reason you don't want Mason to create object files, set
-P<use_object_files> to 0.
+L<use_object_files|HTML::Mason::Params/use_object_files> to 0.
 
 =head2 Static Source Mode
 
-In P<static_source> mode, Mason assumes that the component hierarchy
+In L<static_source|HTML::Mason::Params/static_source> mode, Mason assumes that the component hierarchy
 is unchanging and thus does not check source timestamps when using an
 in-memory cached component or object file. This significantly reduces
 filesystem stats and other overhead. We've seen speedups by a factor
 of two or three as a result of this mode, though of course YMMV.
 
-When in P<static_source> mode, you must remove object files and call
+When in L<static_source|HTML::Mason::Params/static_source> mode, you must remove object files and call
 $interp->flush_code_cache in order for the server to recognize
 component changes. The easiest way to arrange this is to point
-P<static_source_touch_file> to a file that can be touched whenever
+L<static_source_touch_file|HTML::Mason::Params/static_source_touch_file> to a file that can be touched whenever
 components change.
 
 We highly recommend running in this mode in production if you can
@@ -835,12 +835,12 @@ this off so that components are reloaded automatically.
 
 =head2 Disabling Autoflush
 
-To support the dynamic P<autoflush> feature, Mason has to check for
+To support the dynamic L<autoflush|HTML::Mason::Params/autoflush> feature, Mason has to check for
 autoflush mode after printing every piece of text.  If you can commit
-to not using autoflush, setting P<enable_autoflush> to 0 will allow
+to not using autoflush, setting L<enable_autoflush|HTML::Mason::Params/enable_autoflush> to 0 will allow
 Mason to compile components more efficiently. Consider whether a few
 well-placed C<< $m->flush_buffer >> calls would be just as good as
-P<autoflush>.
+L<autoflush|HTML::Mason::Params/autoflush>.
 
 =head2 Write a handler subroutine
 
@@ -852,7 +852,7 @@ and letting Mason create its own ApacheHandler objects internally.
 =head2 Preloading Components
 
 You can tell Mason to preload a set of components in the parent
-process, rather than loading them on demand, using the P<preloads>
+process, rather than loading them on demand, using the L<preloads|HTML::Mason::Params/preloads>
 parameter.  Each child server will start with those components loaded
 in the memory cache. The trade-offs are:
 
@@ -877,7 +877,7 @@ to reload it from scratch.)
 
 =head2 Preallocating the Output Buffer
 
-You can set P<buffer_preallocate_size> to set the size of the
+You can set L<buffer_preallocate_size|HTML::Mason::Params/buffer_preallocate_size> to set the size of the
 preallocated output buffer for each request. This can reduce the
 number of reallocations Perl performs as components output text.
 
@@ -901,12 +901,12 @@ message go to the error logs.
 The first behavior is ideal for development, where you want immediate
 feedback on the error.  The second behavior is usually desired for
 production so that users are not exposed to messy error messages.  You
-choose the behavior by setting P<error_mode> to "output" or "fatal"
+choose the behavior by setting L<error_mode|HTML::Mason::Params/error_mode> to "output" or "fatal"
 respectively.
 
-Error formatting is controlled by the P<error_format> parameter.  When
+Error formatting is controlled by the L<error_format|HTML::Mason::Params/error_format> parameter.  When
 showing errors in the browser, Mason defaults to the "html" format.
-When the P<error_mode> is set to "fatal", the default format is
+When the L<error_mode|HTML::Mason::Params/error_mode> is set to "fatal", the default format is
 "line", which puts the entire error message on one line in a format
 suitable for web server error logs.  Mason also offers other formats,
 which are covered in the L<Request class|HTML::Mason::Request>
@@ -914,7 +914,7 @@ documentation.
 
 Finally, you can use Apache's C<ErrorDocument> directive to specify a
 custom error handler for 500 errors.  In this case, you'd set the
-P<error_mode> to "fatal".  The URL specified by the C<ErrorDocument>
+L<error_mode|HTML::Mason::Params/error_mode> to "fatal".  The URL specified by the C<ErrorDocument>
 directive could point to a Mason component.
 
 =head2 Exceptions Under the Hood
@@ -1023,7 +1023,7 @@ to an RT installation, so that the error is logged in a bug tracking
 system.  Finally, it displays a less technical error message to the
 user.
 
-For this to work properly, you must set P<error_mode> to "fatal", so
+For this to work properly, you must set L<error_mode|HTML::Mason::Params/error_mode> to "fatal", so
 that Mason doesn't just display its own HTML error page.
 
 =head1 RUNNING OUTSIDE OF MOD_PERL

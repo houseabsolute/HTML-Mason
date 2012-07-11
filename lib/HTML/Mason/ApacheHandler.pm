@@ -1177,13 +1177,13 @@ F<httpd.conf> or F<handler.pl> file, as this will save some memory.
 
 True or false, default is true. Indicates whether Mason should decline
 directory requests, leaving Apache to serve up a directory index or a
-C<FORBIDDEN> error as appropriate. See ADMIN<allowing directory requests>
+C<FORBIDDEN> error as appropriate. See L<allowing directory requests|HTML::Mason::Admin/allowing directory requests>
 for more information about handling directories with Mason.
 
 =item interp
 
 The interpreter object to associate with this compiler. By default a
-new object of the specified P<interp_class> will be created.
+new object of the specified L<interp_class|HTML::Mason::Params/interp_class> will be created.
 
 =item interp_class
 
@@ -1253,7 +1253,7 @@ backwards compatibility from when this method was responsible for
 turning a plain Apache object into an Apache::Request object.
 
 The third item may be a CGI.pm object or C<undef>, depending on the
-value of the P<args_method> parameter.
+value of the L<args_method|HTML::Mason::Params/args_method> parameter.
 
 =back
 

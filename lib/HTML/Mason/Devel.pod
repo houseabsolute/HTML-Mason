@@ -26,8 +26,7 @@ site, that is what I<most> people want to do with Mason, and is thus
 the focus of this manual.
 
 If you are planning to use Mason outside of the web, this manual will
-still be useful, of course.  Also make sure to read ADMIN<running
-outside of mod_perl>.
+still be useful, of course.  Also make sure to read L<running outside of mod_perl|HTML::Mason::Admin/running outside of mod_perl>.
 
 =head1 HOW TO USE THIS MANUAL
 
@@ -297,7 +296,7 @@ To call one component from another, use the <& &> tag:
 =item comp_path:
 
 The component path. With a leading '/', the path is relative to the
-component root (P<comp_root>). Otherwise, it is relative to the
+component root (L<comp_root|HTML::Mason::Params/comp_root>). Otherwise, it is relative to the
 location of the calling component.
 
 =item name => value pairs:
@@ -584,8 +583,8 @@ methods normally associated with one.
 
 To create a subrequest you simply use the C<< $m->make_subrequest >>
 method.  This method can take any parameters belonging to
-L<HTML::Mason::Request|HTML::Mason::Request>, such as P<autoflush> or
-P<out_method>.  Once you have a new request object you simply call its
+L<HTML::Mason::Request|HTML::Mason::Request>, such as L<autoflush|HTML::Mason::Params/autoflush> or
+L<out_method|HTML::Mason::Params/out_method>.  Once you have a new request object you simply call its
 C<exec> method to execute it, which takes exactly the same parameters
 as the C<comp> method.
 
@@ -602,7 +601,7 @@ Here are some examples:
   </%perl>
 
 If you want to capture the subrequest's output in a scalar, you can
-simply pass an P<out_method> parameter to C<< $m->make_subrequest >>:
+simply pass an L<out_method|HTML::Mason::Params/out_method> parameter to C<< $m->make_subrequest >>:
 
   <%perl>
    my $buffer;
@@ -624,7 +623,7 @@ attributes.
 By default, output from a subrequest appears inline in the calling
 component, at the point where it is executed.  If you wish to do
 something else, you will need to explicitly override the subrequest's
-P<out_method> parameter.
+L<out_method|HTML::Mason::Params/out_method> parameter.
 
 Mason Request objects are only designed to handle a single call to
 C<exec>.  If you wish to make multiple subrequests, you must create
@@ -697,8 +696,7 @@ By default dhandlers do not get a chance to handle requests to a
 directory itself (e.g. F</newsfeeds>). These are automatically
 deferred to Apache, which generates an index page or a FORBIDDEN
 error.  Often this is desirable, but if necessary the administrator
-can let in directory requests as well; see ADMIN<allowing directory
-requests>.
+can let in directory requests as well; see L<allowing directory requests|HTML::Mason::Admin/allowing directory requests>.
 
 A component or dhandler that does not want to handle a particular
 request may defer control to the next dhandler by calling C<< $m->decline >>.
@@ -711,7 +709,7 @@ block containing a C<SetType> directive to your Apache config file, or
 you can just set the content type dynamically by calling C<< $r->content_type >>.
 
 The administrator can customize the file name used for dhandlers with
-the P<dhandler_name> parameter.
+the L<dhandler_name|HTML::Mason::Params/dhandler_name> parameter.
 
 =head2 autohandlers
 
@@ -781,7 +779,7 @@ separate section, L<Object-Oriented Techniques|"Object-Oriented
 Techniques">.
 
 The administrator can customize the file name used for autohandlers
-with the P<autohandler_name> parameter.
+with the L<autohandler_name|HTML::Mason::Params/autohandler_name> parameter.
 
 =head2 dhandlers vs. autohandlers
 
@@ -1394,8 +1392,8 @@ I<not> be used for this substitution.
 =back
 
 The administrator may specify a set of default escape flags via the
-P<default_escape_flags> parameter. For example, if the administrator
-sets P<default_escape_flags> to C<['h']>, then all <% %> expressions
+L<default_escape_flags|HTML::Mason::Params/default_escape_flags> parameter. For example, if the administrator
+sets L<default_escape_flags|HTML::Mason::Params/default_escape_flags> to C<['h']>, then all <% %> expressions
 will automatically be HTML-escaped.  In this case you would use the
 C<n> flag to turn off HTML-escaping for a specific expression:
 
@@ -1421,7 +1419,7 @@ Besides the default escapes mentioned above, it is possible for the
 user to define their own escapes or to override the built-in 'h' and
 'u' escapes.
 
-This is done via the Interp object's P<escape_flags> parameter or
+This is done via the Interp object's L<escape_flags|HTML::Mason::Params/escape_flags> parameter or
 L<set_escape()|HTML::Mason::Interp/item_set_escape> method.  Escape
 names may be any number of characters as long as it matches the regex
 C</^[\w-]+$/>.  The one exception is that you cannot override the 'n'
@@ -1514,7 +1512,7 @@ time.
 Data caching is implemented on top of one of two external caching APIs:
 C<Cache::Cache>, which is stable but has not changed in years, or C<CHI>,
 which has picked up where C<Cache::Cache> has left off and is actively
-maintained. You control which one Mason uses with the P<data_cache_api>
+maintained. You control which one Mason uses with the L<data_cache_api|HTML::Mason::Params/data_cache_api>
 parameter.  C<Cache::Cache> is the default for backward compatibility
 reasons, but we recommend C<CHI> for anyone doing serious caching.  The APIs
 are very similar for Mason users, so that most of the information below
@@ -1674,7 +1672,7 @@ calls to C<< $m->cache >>; Mason does not remember which subclass you
 have used for a given component or key.
 
 The administrator can set the default cache subclass used by all
-components with the P<data_cache_defaults> parameter.
+components with the L<data_cache_defaults|HTML::Mason::Params/data_cache_defaults> parameter.
 
 =head2 Choosing a Cache Subclass - with CHI
 
@@ -1697,7 +1695,7 @@ calls to C<< $m->cache >>; Mason does not remember which subclass you
 have used for a given component or key.
 
 The administrator can set the default cache subclass used by all
-components with the P<data_cache_defaults> parameter.
+components with the L<data_cache_defaults|HTML::Mason::Params/data_cache_defaults> parameter.
 
 =head2 Accessing a Cache Externally
 
@@ -1749,7 +1747,7 @@ and you are using the default file backend:
 For users upgrading from 1.0x and earlier, any existing $m-E<gt>cache
 code will be incompatible with the new API. However, if you wish to
 continue using the 1.0x cache API for a while, you (or your
-administrator) can set P<data_cache_api> to '1.0'. All of the
+administrator) can set L<data_cache_api|HTML::Mason::Params/data_cache_api> to '1.0'. All of the
 $m-E<gt>cache options with the exception of C<tie_class> should be
 supported.
 
@@ -1766,7 +1764,7 @@ Mason automatically sends HTTP headers via C<< $r->send_http_header >>
 but it will not send headers if they've already been sent manually.
 
 To determine the exact header behavior on your system, you need to
-know whether your server's default is to have P<autoflush> on or off.
+know whether your server's default is to have L<autoflush|HTML::Mason::Params/autoflush> on or off.
 Your administrator should have this information.  If your administrator
 doesn't know then it is probably off, the default.
 
@@ -1798,7 +1796,7 @@ this code will only work as long as F</shared/get_user_cookie> doesn't
 output anything (given its functional nature, it shouldn't).
 
 The administrator can turn off automatic header sending via the
-P<auto_send_headers> parameter. You can also turn it off on
+L<auto_send_headers|HTML::Mason::Params/auto_send_headers> parameter. You can also turn it off on
 individual pages with
 
     $m->auto_send_headers(0);
@@ -1924,7 +1922,7 @@ Mason normally inserts '#line' directives into compiled components so
 that line numbers are reported relative to the source file. Depending
 on your task, this can be a help or a hindrance when using the
 debugger.  The administrator can turn off '#line' directives with
-the P<use_source_line_numbers> parameter.
+the L<use_source_line_numbers|HTML::Mason::Params/use_source_line_numbers> parameter.
 
 =head1 LOGGING
 

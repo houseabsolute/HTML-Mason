@@ -578,8 +578,7 @@ sub exec {
             if ( $self->{has_plugins} ) {
 
                 # plugins called in reverse order when exiting.
-                my $context = bless
-                  [
+                my $context = bless [
                     $self,                    $request_args,
                     \$self->{request_buffer}, $wantarray,
                     \@result,                 \$error
@@ -1831,7 +1830,7 @@ buffer (C<$m-E<gt>flush_buffer>) after every string is output. Turn on
 autoflush if you need to send partial output to the client, for
 example in a progress meter.
 
-As of Mason 1.3, autoflush will only work if P<enable_autoflush> has
+As of Mason 1.3, autoflush will only work if L<enable_autoflush|HTML::Mason::Params/enable_autoflush> has
 been set.  Components can be compiled more efficiently if they don't
 have to check for autoflush. Before using autoflush you might consider
 whether a few manual C<$m-E<gt>flush_buffer> calls would work nearly
@@ -2175,10 +2174,10 @@ If a component has a C<< <%filter> >> block, then the I<filtered>
 output is cached.
 
 Note: users upgrading from 1.0x and earlier can continue to use the
-old C<$m-E<gt>cache_self> API by setting P<data_cache_api> to '1.0'.
+old C<$m-E<gt>cache_self> API by setting L<data_cache_api|HTML::Mason::Params/data_cache_api> to '1.0'.
 This support will be removed at a later date.
 
-See the DEVEL<DATA CACHING> section for more details on how to
+See the L<DATA CACHING|HTML::Mason::Devel/DATA CACHING> section for more details on how to
 exercise finer control over caching.
 
 =item caller_args
@@ -2234,7 +2233,7 @@ from an autohandler. With no arguments, the original arguments are
 passed to the component.  Any arguments specified here serve to
 augment and override (in case of conflict) the original
 arguments. Works like C<$m-E<gt>comp> in terms of return value and
-scalar/list context.  See DEVEL<autohandlers> for examples.
+scalar/list context.  See L<autohandlers|HTML::Mason::Devel/autohandlers> for examples.
 
 =item call_self (output, return, error, tag)
 
@@ -2461,14 +2460,14 @@ undef if no such component exists.
 
 Returns the next component in the content wrapping chain, or undef if
 there is no next component. Usually called from an autohandler.  See
-DEVEL<autohandlers> for usage and examples.
+L<autohandlers|HTML::Mason::Devel/autohandlers> for usage and examples.
 
 =item fetch_next_all
 
 =for html <a name="item_fetch_next_all"></a>
 
 Returns a list of the remaining components in the content wrapping
-chain. Usually called from an autohandler.  See DEVEL<autohandlers>
+chain. Usually called from an autohandler.  See L<autohandlers|HTML::Mason::Devel/autohandlers>
 for usage and examples.
 
 =item file (filename)
@@ -2517,14 +2516,14 @@ Returns the Interp object associated with this request.
 =for html <a name="item_make_subrequest"></a>
 
 This method creates a new Request object which inherits its parent's
-settable properties, such as P<autoflush> and P<out_method>.  These
+settable properties, such as L<autoflush|HTML::Mason::Params/autoflush> and L<out_method|HTML::Mason::Params/out_method>.  These
 values may be overridden by passing parameters to this method.
 
 The C<comp> parameter is required, while all other parameters are
 optional.  It may be specified as an absolute path or as a path
 relative to the current component.
 
-See DEVEL<subrequests> for more information about subrequests.
+See L<subrequests|HTML::Mason::Devel/subrequests> for more information about subrequests.
 
 =item log
 
@@ -2656,7 +2655,7 @@ automatically send HTTP headers before sending content back to the
 client. If you set to false, you should call C<$r-E<gt>send_http_header>
 manually.
 
-See DEVEL<sending HTTP headers> for more details about the automatic
+See L<sending HTTP headers|HTML::Mason::Devel/sending HTTP headers> for more details about the automatic
 header feature.
 
 NOTE: This parameter has no effect under mod_perl-2, since calling
@@ -2696,7 +2695,7 @@ ApacheHandler or CGIHandler modules.
 
 Returns the CGI object used to parse any CGI parameters submitted to
 the component, assuming that you have not changed the default value of
-the ApacheHandler P<args_method> parameter.  If you are using the
+the ApacheHandler L<args_method|HTML::Mason::Params/args_method> parameter.  If you are using the
 'mod_perl' args method, then calling this method is a fatal error.
 See the L<ApacheHandler|HTML::Mason::ApacheHandler> and
 L<CGIHandler|HTML::Mason::CGIHandler> documentation for more details.

@@ -29,9 +29,11 @@ sub source_dir {
 sub title {
     my ($self) = @_;
     return $self->path
-      . ( $self->{source_root_key}
+      . (
+        $self->{source_root_key}
         ? " [" . lc( $self->{source_root_key} ) . "]"
-        : "" );
+        : ""
+      );
 
     #return $self->path . ($self->{source_root_key} ? " [$self->{source_root_key}]" : "");
 }

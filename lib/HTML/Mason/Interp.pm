@@ -1211,7 +1211,7 @@ translated into
 
   [ [ MAIN => path ] ]
 
-If you have turned on P<dynamic_comp_root>, you may modify the
+If you have turned on L<dynamic_comp_root|HTML::Mason::Params/dynamic_comp_root>, you may modify the
 component root(s) of an interpreter between requests by calling
 C<$interp-E<gt>comp_root> with a value. However, the path associated
 with any given key may not change between requests. For example,
@@ -1238,7 +1238,7 @@ invalid if the associated paths were to change.
 =item compiler
 
 The Compiler object to associate with this Interpreter.  By default a
-new object of class P<compiler_class> will be created.
+new object of class L<compiler_class|HTML::Mason::Params/compiler_class> will be created.
 
 =item compiler_class
 
@@ -1264,7 +1264,7 @@ C<MemoryCache> instead of C<FileCache>.
 
 =item dynamic_comp_root
 
-True or false, defaults to false. Indicates whether the P<comp_root>
+True or false, defaults to false. Indicates whether the L<comp_root|HTML::Mason::Params/comp_root>
 can be modified on this interpreter between requests. Mason can
 perform a few optimizations with a fixed component root, so you
 should only set this to true if you actually need it.
@@ -1304,7 +1304,7 @@ when the interpreter initializes. e.g.
 
 Default is the empty list.  For maximum performance, this should only
 be used for components that are frequently viewed and rarely updated.
-See ADMIN<preloading components> for further details.
+See L<preloading components|HTML::Mason::Admin/preloading components> for further details.
 
 As mentioned in the developer's manual, a component's C<< <%once> >>
 section is executed when it is loaded.  For preloaded components, this
@@ -1320,7 +1320,7 @@ L<HTML::Mason::Request|HTML::Mason::Request>.
 =item resolver
 
 The Resolver object to associate with this Compiler. By default a new
-object of class P<resolver_class> will be created.
+object of class L<resolver_class|HTML::Mason::Params/resolver_class> will be created.
 
 =item resolver_class
 
@@ -1340,7 +1340,7 @@ it will not check component source files to determine if the memory
 cache or object file has expired.  This can save many file stats per
 request. However, in order to get Mason to recognize a component
 source change, you must flush the memory cache and remove object files.
-See P<static_source_touch_file> for one easy way to arrange this.
+See L<static_source_touch_file|HTML::Mason::Params/static_source_touch_file> for one easy way to arrange this.
 
 We recommend turning this mode on in your production sites if
 possible, if performance is of any concern.
@@ -1352,7 +1352,7 @@ of every request. When the file timestamp changes, Mason will (1) clear
 its in-memory component cache, and (2) remove object files if
 they have not already been deleted by another process.
 
-This provides a convenient way to implement P<static_source> mode.
+This provides a convenient way to implement L<static_source|HTML::Mason::Params/static_source> mode.
 All you need to do is make sure that a single file gets touched
 whenever components change. For Mason's part, checking a single
 file at the beginning of a request is much cheaper than checking
@@ -1523,16 +1523,16 @@ in the case of a list or hash.  For example:
 
 The global is set in the package that components run in: usually
 C<HTML::Mason::Commands>, although this can be overridden via the
-P<in_package> parameter.
+L<in_package|HTML::Mason::Params/in_package> parameter.
 The lines above, for example, are equivalent to:
 
     $HTML::Mason::Commands::dbh = DBI->connect(...);
     %HTML::Mason::Commands::session = %s;
 
-assuming that P<in_package> has not been changed.
+assuming that L<in_package|HTML::Mason::Params/in_package> has not been changed.
 
 Any global that you set should also be registered with the
-P<allow_globals> parameter; otherwise you'll get warnings from
+L<allow_globals|HTML::Mason::Params/allow_globals> parameter; otherwise you'll get warnings from
 C<strict>.
 
 =back

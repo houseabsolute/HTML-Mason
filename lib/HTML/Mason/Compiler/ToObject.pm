@@ -687,13 +687,13 @@ historical reasons, this defaults to C<HTML::Mason::Commands>.
 
 Text given for this parameter is placed at the beginning of each
 component, but after the execution of any C<< <%once> >> block. See
-also P<postamble>. The request will be available as C<$m> in preamble
+also L<postamble|HTML::Mason::Params/postamble>. The request will be available as C<$m> in preamble
 code.
 
 =item postamble
 
 Text given for this parameter is placed at the end of each
-component. See also P<preamble>.  The request will be available as
+component. See also L<preamble|HTML::Mason::Params/preamble>.  The request will be available as
 C<$m> in postamble code.
 
 =item use_strict

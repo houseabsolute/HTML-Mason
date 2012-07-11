@@ -259,7 +259,7 @@ fly.
 
 For example, if you're subclassed the Interp object, you can still let
 the ApacheHandler object create the Interp object for you, as long as
-you give it the appropriate P<interp_class> parameter.  This is
+you give it the appropriate L<interp_class|HTML::Mason::Params/interp_class> parameter.  This is
 important because Mason may internally set up certain defaults for
 contained objects.  For example, the ApacheHandler, by default, will
 tell the Interp object to use the
