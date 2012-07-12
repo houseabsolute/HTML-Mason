@@ -7,9 +7,9 @@ Revision history for HTML::Mason.
 [ DISTRIBUTION ]
 
 - Switch to Dist::Zilla
-- Remove special build processing such as creation of HTML docs and POD tag abbrevations
-- Perltidy files
+- Eliminate HTML docs from distribution, these are available on the web
 - Move live Apache tests to author-only
+- Perltidy files
 
 1.49 Feb 27, 2012
 
