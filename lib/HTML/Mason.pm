@@ -31,6 +31,21 @@ Mason - High-performance, dynamic web site authoring system
         PerlHandler HTML::Mason::ApacheHandler
     </Location>
 
+=head1 WAIT - HAVE YOU SEEN MASON 2?
+
+Version 1 of Mason (this distribution) -- has been around since 1998, is in
+wide use, and is very stable. However it has not changed much in years and
+is no longer actively developed.
+
+Version 2 of Mason -- L<Mason|Mason> -- was released in February of 2011.
+It is being very actively developed and has a much more modern
+architecture. If you are just starting out, we recommend you give Mason 2 a
+try.
+
+For a summary of differences between Mason 1 and 2 see
+
+    http://www.openswartz.com/2011/02/21/announcing-mason-2/
+
 =head1 DESCRIPTION
 
 Mason is a tool for building, serving and managing large web
@@ -86,21 +101,6 @@ Beyond this trivial example, components can also embed serious chunks
 of Perl code (say, to pull records from a database). They can also
 call other components, cache results for later reuse, and perform all
 the tricks you expect from a regular Perl program.
-
-=head1 MASON 1 (HTML::MASON) VERSUS MASON 2 (MASON)
-
-Version 1 of Mason -- L<HTML::Mason|HTML::Mason> -- has been around since
-1998, is in wide use, and is very stable. However it has not changed much in
-years and is no longer actively developed.
-
-Version 2 of Mason -- L<Mason|Mason> -- was released in February of 2011.
-It is being very actively developed and has a much more modern
-architecture. If you are just starting out, we recommend you give Mason 2 a
-try.
-
-For a summary of differences between Mason 1 and 2 see
-
-    http://www.openswartz.com/2011/02/21/announcing-mason-2/
 
 =head1 INSTALLATION
 
@@ -181,5 +181,24 @@ Mason>, by Dave Rolsky and Ken Williams, published by O'Reilly and
 Associates.  The book's website is at http://www.masonbook.com/.  This
 book goes into detail on a number of topics, and includes a chapter of
 recipes as well as a sample Mason-based website.
+
+=head1 GETTING HELP AND SOURCES
+
+Questions and feedback are welcome, and should be directed to the Mason
+mailing list. You must be subscribed to post.
+
+    https://lists.sourceforge.net/lists/listinfo/mason-users
+
+You can also visit us at C<#mason> on L<irc://irc.perl.org/#mason>.
+
+Bugs and feature requests will be tracked at RT:
+
+    http://rt.cpan.org/NoAuth/Bugs.html?Dist=HTML-Mason
+    bug-html-mason@rt.cpan.org
+
+The latest source code can be browsed and fetched at:
+
+    http://github.com/jonswar/perl-html-mason/tree/master
+    git clone git://github.com/jonswar/perl-html-mason.git
 
 =cut
