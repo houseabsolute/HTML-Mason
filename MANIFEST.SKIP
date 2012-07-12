@@ -5,7 +5,9 @@
 ^git
 ^htdocs
 ^lib/Pod
+^mason_tests
 ^release
+^samples/cd-me
 ^tidyall.ini
 ^tmp
 ^weaver.ini
