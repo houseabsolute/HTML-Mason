@@ -9,14 +9,15 @@ use warnings;
 
 use Params::Validate qw(validate_pos);
 
-sub import {
+sub import
+{
     my $caller = caller;
-    shift;    # don't need class name
+    shift; # don't need class name
     my %p = @_;
 
-    if ( $p{read_only} ) {
-        foreach
-          my $ro ( ref $p{read_only} ? @{ $p{read_only} } : $p{read_only} )
+    if ($p{read_only})
+    {
+        foreach my $ro ( ref $p{read_only} ? @{ $p{read_only} } : $p{read_only} )
         {
             no strict 'refs';
             *{"$caller\::$ro"} = sub { return $_[0]->{$ro} };
@@ -29,62 +30,74 @@ sub import {
     # value, and optimizing this common case actually does achieve
     # something.
     #
-    if ( $p{read_write} ) {
-        foreach
-          my $rw ( ref $p{read_write} ? @{ $p{read_write} } : $p{read_write} )
+    if ($p{read_write})
+    {
+        foreach my $rw ( ref $p{read_write} ? @{ $p{read_write} } : $p{read_write} )
         {
-            if ( ref $rw ) {
-                my ( $name, $spec ) = @$rw;
-                my $sub = sub {
-                    if ( @_ > 1 ) {
-                        my $s = shift;
-                        validate_pos( @_, $spec );
-                        $s->{$name} = shift;
-                        return $s->{$name};
-                    }
-                    return $_[0]->{$name};
-                };
+            if (ref $rw)
+            {
+                my ($name, $spec) = @$rw;
+                my $sub =
+                    sub { if (@_ > 1)
+                          {
+                              my $s = shift;
+                              validate_pos(@_, $spec);
+                              $s->{$name} = shift;
+                              return $s->{$name};
+                          }
+                          return $_[0]->{$name};
+                        };
                 no strict 'refs';
-                *{"$caller\::$name"} = $sub;
+                *{"$caller\::$name"} = $sub
             }
-            else {
-                my $sub = sub {
-                    if ( @_ > 1 ) {
-                        $_[0]->{$rw} = $_[1];
-                    }
-                    return $_[0]->{$rw};
-                };
+            else
+            {
+                my $sub =
+                    sub { if (@_ > 1)
+                          {
+                              $_[0]->{$rw} = $_[1];
+                          }
+                          return $_[0]->{$rw};
+                        };
                 no strict 'refs';
                 *{"$caller\::$rw"} = $sub;
             }
         }
     }
 
-    if ( $p{read_write_contained} ) {
-        foreach my $object ( keys %{ $p{read_write_contained} } ) {
-            foreach my $rwc ( @{ $p{read_write_contained}{$object} } ) {
-                if ( ref $rwc ) {
-                    my ( $name, $spec ) = @$rwc;
-                    my $sub = sub {
-                        my $s = shift;
-                        my %new;
-                        if (@_) {
-                            validate_pos( @_, $spec );
-                            %new = ( $name => $_[0] );
-                        }
-                        my %args = $s->delayed_object_params( $object, %new );
-                        return $args{$rwc};
-                    };
+    if ($p{read_write_contained})
+    {
+        foreach my $object (keys %{ $p{read_write_contained} })
+        {
+            foreach my $rwc (@{ $p{read_write_contained}{$object} })
+            {
+                if (ref $rwc)
+                {
+                    my ($name, $spec) = @$rwc;
+                    my $sub =
+                        sub { my $s = shift;
+                              my %new;
+                              if (@_)
+                              {
+                                  validate_pos(@_, $spec);
+                                  %new = ( $name => $_[0] );
+                              }
+                              my %args = $s->delayed_object_params( $object,
+                                                                    %new );
+                              return $args{$rwc};
+                            };
                     no strict 'refs';
                     *{"$caller\::$name"} = $sub;
                 }
-                else {
-                    my $sub = sub {
-                        my $s    = shift;
-                        my %new  = @_ ? ( $rwc => $_[0] ) : ();
-                        my %args = $s->delayed_object_params( $object, %new );
-                        return $args{$rwc};
-                    };
+                else
+                {
+                    my $sub =
+                        sub { my $s = shift;
+                              my %new = @_ ? ( $rwc => $_[0] ) : ();
+                              my %args = $s->delayed_object_params( $object,
+                                                                    %new );
+                              return $args{$rwc};
+                            };
                     no strict 'refs';
                     *{"$caller\::$rwc"} = $sub;
                 }
@@ -155,5 +168,9 @@ The value of the 'read_write_contained' parameter should be a hash
 reference.  The keys are the internal name of the contained object,
 such as "request" or "compiler".  The values for the keys are the same
 as the parameters given for 'read_write' accessors.
+
+=head1 SEE ALSO
+
+L<HTML::Mason|HTML::Mason>
 
 =cut

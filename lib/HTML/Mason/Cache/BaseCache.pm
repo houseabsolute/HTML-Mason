@@ -9,69 +9,70 @@ use warnings;
 #
 # Override to handle busy_lock and expire_if.
 #
-sub get {
-    my ( $self, $key, %params ) = @_;
+sub get
+{
+    my ($self, $key, %params) = @_;
     die "must specify key" unless defined($key);
 
-    foreach my $param ( keys(%params) ) {
-        unless ( $param =~ /^(busy_lock|expire_if)$/ ) {
+    foreach my $param (keys(%params)) {
+        unless ($param =~ /^(busy_lock|expire_if)$/) {
             die "unknown param '$param'";
         }
     }
 
     $self->_conditionally_auto_purge_on_get();
 
-    if ( my $sub = $params{expire_if} ) {
-        $self->expire_if( $key, $sub );
+    if (my $sub = $params{expire_if}) {
+        $self->expire_if($key, $sub);
     }
 
-    my $object = $self->get_object($key)
-      or return undef;
+    my $object = $self->get_object($key) or
+        return undef;
 
-    if ( Cache::BaseCache::Object_Has_Expired($object) ) {
-        if ( $params{busy_lock} ) {
-
+    if (Cache::BaseCache::Object_Has_Expired($object))
+    {
+        if ($params{busy_lock}) {
             # If busy_lock value provided, set a new "temporary"
             # expiration time that many seconds forward, and return
             # undef so that this process will start recomputing.
-            my $busy_lock_time = Cache::BaseCache::Canonicalize_Expiration_Time(
-                $params{busy_lock} );
-            $object->set_expires_at( time + $busy_lock_time );
-            $self->set_object( $key, $object );
-        }
-        else {
+            my $busy_lock_time = Cache::BaseCache::Canonicalize_Expiration_Time($params{busy_lock});
+            $object->set_expires_at(time + $busy_lock_time);
+            $self->set_object($key, $object);
+        } else {
             $self->remove($key);
         }
         return undef;
     }
 
-    return $object->get_data();
+    return $object->get_data( );
 }
 
-sub expire {
-    my ( $self, $key ) = @_;
+sub expire
+{
+    my ($self, $key) = @_;
 
-    if ( my $obj = $self->get_object($key) ) {
-        $obj->set_expires_at( time - 1 );
-        $self->set_object( $key, $obj );
+    if (my $obj = $self->get_object($key)) {
+        $obj->set_expires_at(time-1);
+        $self->set_object($key, $obj);
     }
 }
 
-sub expire_if {
-    my ( $self, $key, $sub ) = @_;
+sub expire_if
+{
+    my ($self, $key, $sub) = @_;
     die "must specify subroutine" unless defined($sub) and ref($sub) eq 'CODE';
 
-    if ( my $obj = $self->get_object($key) ) {
+    if (my $obj = $self->get_object($key)) {
         my $retval = $sub->($obj);
         if ($retval) {
             $self->expire($key);
         }
         return $retval;
-    }
-    else {
+    } else {
         return 1;
     }
 }
+
 
 1;
 

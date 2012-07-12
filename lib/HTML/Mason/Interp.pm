@@ -19,211 +19,152 @@ use HTML::Mason::Request;
 use HTML::Mason::Resolver::File;
 use HTML::Mason::Tools qw(read_file taint_is_on load_pkg);
 
-use HTML::Mason::Exceptions(
-    abbr => [
-        qw(param_error system_error wrong_compiler_error compilation_error error)
-    ]
-);
+use HTML::Mason::Exceptions( abbr => [qw(param_error system_error wrong_compiler_error compilation_error error)] );
 
 use Params::Validate qw(:all);
-Params::Validate::validation_options( on_fail => sub { param_error join '', @_ }
-);
+Params::Validate::validation_options( on_fail => sub { param_error join '', @_  } );
 
 use Class::Container;
 use base qw(Class::Container);
 
-BEGIN {
+BEGIN
+{
     # Fields that can be set in new method, with defaults
-    __PACKAGE__->valid_params(
-        autohandler_name => {
-            parse   => 'string',
-            default => 'autohandler',
-            type    => SCALAR,
-            descr => "The filename to use for Mason's 'autohandler' capability"
-        },
+    __PACKAGE__->valid_params
+        (
+         autohandler_name =>
+         { parse => 'string',  default => 'autohandler', type => SCALAR,
+           descr => "The filename to use for Mason's 'autohandler' capability" },
 
-        buffer_preallocate_size => {
-            parse   => 'string',
-            default => 0,
-            type    => SCALAR,
-            descr   => "Number of bytes to preallocate in request buffer"
-        },
+         buffer_preallocate_size =>
+         { parse => 'string', default => 0, type => SCALAR,
+           descr => "Number of bytes to preallocate in request buffer" },
+         
+         code_cache_max_size =>
+         { parse => 'string',  default => 'unlimited', type => SCALAR,
+           descr => "The maximum number of components in the code cache" },
 
-        code_cache_max_size => {
-            parse   => 'string',
-            default => 'unlimited',
-            type    => SCALAR,
-            descr   => "The maximum number of components in the code cache"
-        },
+         comp_root =>
+         { parse => 'list',
+           type => SCALAR|ARRAYREF,
+           default => File::Spec->rel2abs( Cwd::cwd ),
+           descr => "A string or array of arrays indicating the search path for component calls" },
 
-        comp_root => {
-            parse   => 'list',
-            type    => SCALAR | ARRAYREF,
-            default => File::Spec->rel2abs(Cwd::cwd),
-            descr =>
-              "A string or array of arrays indicating the search path for component calls"
-        },
+         compiler =>
+         { isa => 'HTML::Mason::Compiler',
+           descr => "A Compiler object for compiling components" },
 
-        compiler => {
-            isa   => 'HTML::Mason::Compiler',
-            descr => "A Compiler object for compiling components"
-        },
+         data_dir =>
+         { parse => 'string', optional => 1, type => SCALAR,
+           descr => "A directory for storing cache files and other state information" },
 
-        data_dir => {
-            parse    => 'string',
-            optional => 1,
-            type     => SCALAR,
-            descr =>
-              "A directory for storing cache files and other state information"
-        },
+         dynamic_comp_root =>
+         { parse => 'boolean', default => 0, type => BOOLEAN,
+           descr => "Indicates whether the comp_root may be changed between requests" },
 
-        dynamic_comp_root => {
-            parse   => 'boolean',
-            default => 0,
-            type    => BOOLEAN,
-            descr =>
-              "Indicates whether the comp_root may be changed between requests"
-        },
+         escape_flags =>
+         { parse => 'hash_list', optional => 1, type => HASHREF,
+           descr => "A list of escape flags to set (as if calling the set_escape() method" },
 
-        escape_flags => {
-            parse    => 'hash_list',
-            optional => 1,
-            type     => HASHREF,
-            descr =>
-              "A list of escape flags to set (as if calling the set_escape() method"
-        },
+         object_file_extension =>
+         { parse => 'string',  type => SCALAR, default => '.obj',
+           descr => "Extension to add to the end of object files" },
 
-        object_file_extension => {
-            parse   => 'string',
-            type    => SCALAR,
-            default => '.obj',
-            descr   => "Extension to add to the end of object files"
-        },
+         # OBJECT cause qr// returns an object
+         ignore_warnings_expr =>
+         { parse => 'string',  type => SCALAR|OBJECT, default => qr/Subroutine .* redefined/i,
+           descr => "A regular expression describing Perl warning messages to ignore" },
 
-        # OBJECT cause qr// returns an object
-        ignore_warnings_expr => {
-            parse   => 'string',
-            type    => SCALAR | OBJECT,
-            default => qr/Subroutine .* redefined/i,
-            descr =>
-              "A regular expression describing Perl warning messages to ignore"
-        },
+         preloads =>
+         { parse => 'list', optional => 1, type => ARRAYREF,
+           descr => "A list of components to load immediately when creating the Interpreter" },
 
-        preloads => {
-            parse    => 'list',
-            optional => 1,
-            type     => ARRAYREF,
-            descr =>
-              "A list of components to load immediately when creating the Interpreter"
-        },
+         resolver =>
+         { isa => 'HTML::Mason::Resolver',
+           descr => "A Resolver object for fetching components from storage" },
 
-        resolver => {
-            isa   => 'HTML::Mason::Resolver',
-            descr => "A Resolver object for fetching components from storage"
-        },
+         static_source =>
+         { parse => 'boolean', default => 0, type => BOOLEAN,
+           descr => "When true, we only compile source files once" },
 
-        static_source => {
-            parse   => 'boolean',
-            default => 0,
-            type    => BOOLEAN,
-            descr   => "When true, we only compile source files once"
-        },
+         static_source_touch_file =>
+         { parse => 'string', optional => 1, type => SCALAR, 
+           descr => "A file that, when touched, causes Mason to clear its component caches" },
 
-        static_source_touch_file => {
-            parse    => 'string',
-            optional => 1,
-            type     => SCALAR,
-            descr =>
-              "A file that, when touched, causes Mason to clear its component caches"
-        },
+         use_object_files =>
+         { parse => 'boolean', default => 1, type => BOOLEAN,
+           descr => "Whether to cache component objects on disk" },
+        );
 
-        use_object_files => {
-            parse   => 'boolean',
-            default => 1,
-            type    => BOOLEAN,
-            descr   => "Whether to cache component objects on disk"
-        },
-    );
-
-    __PACKAGE__->contained_objects(
-        resolver => {
-            class => 'HTML::Mason::Resolver::File',
-            descr =>
-              "This class is expected to return component information based on a component path"
-        },
-        compiler => {
-            class => 'HTML::Mason::Compiler::ToObject',
-            descr =>
-              "This class is used to translate component source into code"
-        },
-        request => {
-            class   => 'HTML::Mason::Request',
-            delayed => 1,
-            descr =>
-              "Objects returned by make_request are members of this class"
-        },
-    );
+    __PACKAGE__->contained_objects
+        (
+         resolver => { class => 'HTML::Mason::Resolver::File',
+                       descr => "This class is expected to return component information based on a component path" },
+         compiler => { class => 'HTML::Mason::Compiler::ToObject',
+                       descr => "This class is used to translate component source into code" },
+         request  => { class => 'HTML::Mason::Request',
+                       delayed => 1,
+                       descr => "Objects returned by make_request are members of this class" },
+        );
 }
 
-use HTML::Mason::MethodMaker (
-    read_only => [
-        qw( autohandler_name
-          buffer_preallocate_size
-          code_cache
-          code_cache_min_size
-          code_cache_max_size
-          compiler
-          data_dir
-          dynamic_comp_root
-          object_file_extension
-          preallocated_output_buffer
-          preloads
-          resolver
-          source_cache
-          static_source
-          static_source_touch_file
-          use_internal_component_caches
-          use_object_files
-          )
-    ],
+use HTML::Mason::MethodMaker
+    ( read_only => [ qw( autohandler_name
+                         buffer_preallocate_size
+                         code_cache
+                         code_cache_min_size
+                         code_cache_max_size
+                         compiler
+                         data_dir
+                         dynamic_comp_root
+                         object_file_extension
+                         preallocated_output_buffer
+                         preloads
+                         resolver
+                         source_cache
+                         static_source
+                         static_source_touch_file
+                         use_internal_component_caches
+                         use_object_files
+                        ) ],
 
-    read_write => [
-        map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
-          qw( ignore_warnings_expr
-          )
-    ],
+      read_write => [ map { [ $_ => __PACKAGE__->validation_spec->{$_} ] }
+                      qw( ignore_warnings_expr
+                         )
+                    ],
 
-    read_write_contained => {
-        request => [
-            [ autoflush           => { type => BOOLEAN } ],
-            [ data_cache_api      => { type => SCALAR } ],
-            [ data_cache_defaults => { type => HASHREF } ],
-            [ dhandler_name       => { type => SCALAR } ],
-            [ error_format        => { type => SCALAR } ],
-            [ error_mode          => { type => SCALAR } ],
-            [ max_recurse         => { type => SCALAR } ],
-            [ out_method          => { type => SCALARREF | CODEREF } ],
-            [ plugins             => { type => ARRAYREF } ],
-        ]
-    },
-);
+      read_write_contained => { request =>
+                                [ [ autoflush => { type => BOOLEAN } ],
+                                  [ data_cache_api => { type => SCALAR } ],
+                                  [ data_cache_defaults => { type => HASHREF } ],
+                                  [ dhandler_name => { type => SCALAR } ],
+                                  [ error_format => { type => SCALAR } ],
+                                  [ error_mode => { type => SCALAR } ],
+                                  [ max_recurse => { type => SCALAR } ],
+                                  [ out_method => { type => SCALARREF | CODEREF } ],
+                                  [ plugins => { type => ARRAYREF } ],
+                                ]
+                              },
+      );
 
-sub new {
+sub new
+{
     my $class = shift;
-    my $self  = $class->SUPER::new(@_);
+    my $self = $class->SUPER::new(@_);
 
     $self->_initialize;
     return $self;
 }
 
-sub _initialize {
+sub _initialize
+{
     my ($self) = shift;
-    $self->{code_cache}                       = {};
-    $self->{source_cache}                     = {};
-    $self->{files_written}                    = [];
+    $self->{code_cache} = {};
+    $self->{source_cache} = {};
+    $self->{files_written} = [];
     $self->{static_source_touch_file_lastmod} = 0;
 
-    $self->_assign_comp_root( $self->{comp_root} );
+    $self->_assign_comp_root($self->{comp_root});
     $self->_check_data_dir();
     $self->_create_data_subdirs();
     $self->_initialize_escapes();
@@ -255,87 +196,92 @@ sub _initialize {
     # different requests.
     #
     $self->{use_internal_component_caches} =
-      (      $self->{static_source}
-          && $self->{unlimited_code_cache}
-          && !$self->{dynamic_comp_root} );
+        ($self->{static_source} &&
+         $self->{unlimited_code_cache} &&
+         !$self->{dynamic_comp_root});
 
     $self->_preload_components();
 }
 
-sub _check_data_dir {
+sub _check_data_dir
+{
     my $self = shift;
 
     return unless $self->{data_dir};
 
     $self->{data_dir} = File::Spec->canonpath( $self->{data_dir} );
     param_error "data_dir '$self->{data_dir}' must be an absolute directory"
-      unless File::Spec->file_name_is_absolute( $self->{data_dir} );
+        unless File::Spec->file_name_is_absolute( $self->{data_dir} );
 }
 
-sub _create_data_subdirs {
+sub _create_data_subdirs
+{
     my $self = shift;
 
-    if ( $self->data_dir ) {
+    if ($self->data_dir) {
         $self->_make_object_dir;
         $self->_make_cache_dir;
-    }
-    else {
+    } else {
         $self->{use_object_files} = 0;
     }
 }
 
-sub _initialize_escapes {
+sub _initialize_escapes
+{
     my $self = shift;
 
     #
     # Add the escape flags (including defaults)
     #
-    foreach (
-        [ h => \&HTML::Mason::Escapes::html_entities_escape ],
-        [ u => \&HTML::Mason::Escapes::url_escape ],
-      )
+    foreach ( [ h => \&HTML::Mason::Escapes::html_entities_escape ],
+              [ u => \&HTML::Mason::Escapes::url_escape ],
+            )
     {
         $self->set_escape(@$_);
     }
 
-    if ( my $e = delete $self->{escape_flags} ) {
-        while ( my ( $flag, $code ) = each %$e ) {
+    if ( my $e = delete $self->{escape_flags} )
+    {
+        while ( my ($flag, $code) = each %$e )
+        {
             $self->set_escape( $flag => $code );
         }
     }
 }
 
-sub _set_code_cache_attributes {
+sub _set_code_cache_attributes
+{
     my $self = shift;
 
-    $self->{unlimited_code_cache} =
-      ( $self->{code_cache_max_size} eq 'unlimited' );
-    unless ( $self->{unlimited_code_cache} ) {
+    $self->{unlimited_code_cache} = ($self->{code_cache_max_size} eq 'unlimited');
+    unless ($self->{unlimited_code_cache}) {
         $self->{code_cache_min_size} = $self->{code_cache_max_size} * 0.75;
     }
 }
 
-sub _preload_components {
+sub _preload_components
+{
     my $self = shift;
 
     return unless $self->preloads;
 
-    foreach my $pattern ( @{ $self->preloads } ) {
+    foreach my $pattern (@{$self->preloads}) {
         error "preload pattern '$pattern' must be an absolute path"
-          unless File::Spec->file_name_is_absolute($pattern);
+            unless File::Spec->file_name_is_absolute($pattern);
         my %path_hash;
-        foreach my $pair ( $self->comp_root_array ) {
+        foreach my $pair ($self->comp_root_array) {
             my $root = $pair->[1];
-            foreach my $path ( $self->resolver->glob_path( $pattern, $root ) ) {
+            foreach my $path ($self->resolver->glob_path($pattern, $root)) {
                 $path_hash{$path}++;
             }
         }
         my @paths = keys(%path_hash);
         warn "Didn't find any components for preload pattern '$pattern'"
-          unless @paths;
-        foreach (@paths) {
+            unless @paths;
+        foreach (@paths)
+        {
             $self->load($_)
-              or error "Cannot load component $_, found via pattern $pattern";
+                or error "Cannot load component $_, found via pattern $pattern";
         }
     }
 }
@@ -343,56 +289,43 @@ sub _preload_components {
 #
 # Functions for retrieving and creating data subdirectories.
 #
-sub object_dir {
-    my $self = shift;
-    return $self->data_dir ? File::Spec->catdir( $self->data_dir, 'obj' ) : '';
-}
+sub object_dir { my $self = shift; return $self->data_dir ? File::Spec->catdir( $self->data_dir, 'obj' ) : ''; }
+sub object_create_marker_file { my $self = shift; return $self->object_dir ? File::Spec->catfile($self->object_dir, '.__obj_create_marker') : ''; }
+sub cache_dir  { my $self = shift; return $self->data_dir ? File::Spec->catdir( $self->data_dir, 'cache' ) : ''; }
 
-sub object_create_marker_file {
-    my $self = shift;
-    return $self->object_dir
-      ? File::Spec->catfile( $self->object_dir, '.__obj_create_marker' )
-      : '';
-}
+sub _make_data_subdir
+{
+    my ($self, $dir) = @_;
 
-sub cache_dir {
-    my $self = shift;
-    return $self->data_dir
-      ? File::Spec->catdir( $self->data_dir, 'cache' )
-      : '';
-}
-
-sub _make_data_subdir {
-    my ( $self, $dir ) = @_;
-
-    unless ( -d $dir ) {
+    unless (-d $dir) {
         my @newdirs = eval { mkpath( $dir, 0, 0775 ) };
         if ($@) {
-            my $user     = getpwuid($<);
-            my $group    = getgrgid($();
+            my $user  = getpwuid($<);
+            my $group = getgrgid($();
             my $data_dir = $self->data_dir;
-            error
-              "Cannot create directory '$dir' ($@) for user '$user', group '$group'. "
-              . "Perhaps you need to create or set permissions on your data_dir ('$data_dir'). ";
+            error "Cannot create directory '$dir' ($@) for user '$user', group '$group'. " .
+                "Perhaps you need to create or set permissions on your data_dir ('$data_dir'). ";
         }
         $self->push_files_written(@newdirs);
     }
 }
 
-sub _make_object_dir {
+sub _make_object_dir
+{
     my ($self) = @_;
 
     my $object_dir = $self->object_dir;
     $self->_make_data_subdir($object_dir);
     my $object_create_marker_file = $self->object_create_marker_file;
-    unless ( -f $object_create_marker_file ) {
+    unless (-f $object_create_marker_file) {
         open my $fh, ">$object_create_marker_file"
-          or system_error "Could not create '$object_create_marker_file': $!";
+            or system_error "Could not create '$object_create_marker_file': $!";
         $self->push_files_written($object_create_marker_file);
     }
 }
 
-sub _make_cache_dir {
+sub _make_cache_dir
+{
     my ($self) = @_;
 
     my $cache_dir = $self->cache_dir;
@@ -406,7 +339,7 @@ sub _make_cache_dir {
 sub exec {
     my $self = shift;
     my $comp = shift;
-    $self->make_request( comp => $comp, args => \@_ )->exec;
+    $self->make_request(comp=>$comp, args=>\@_)->exec;
 }
 
 sub make_request {
@@ -416,7 +349,7 @@ sub make_request {
 }
 
 sub comp_exists {
-    my ( $self, $path ) = @_;
+    my ($self, $path) = @_;
     return $self->resolve_comp_path_to_source($path);
 }
 
@@ -426,17 +359,16 @@ sub comp_exists {
 # component was not found.
 #
 sub load {
-    my ( $self, $path ) = @_;
-    my ( $maxfilemod, $objfile, $objfilemod );
+    my ($self, $path) = @_;
+    my ($maxfilemod, $objfile, $objfilemod);
     my $code_cache = $self->{code_cache};
-    my $resolver   = $self->{resolver};
+    my $resolver = $self->{resolver};
 
     #
     # Path must be absolute.
     #
-    unless ( substr( $path, 0, 1 ) eq '/' ) {
-        error
-          "Component path given to Interp->load must be absolute (was given $path)";
+    unless (substr($path, 0, 1) eq '/') {
+        error "Component path given to Interp->load must be absolute (was given $path)";
     }
 
     #
@@ -461,31 +393,26 @@ sub load {
     # the cached comp.  Always use the cached comp in static_source
     # mode.
     #
-    if (
-        exists $code_cache->{$comp_id}
-        && (   $self->static_source
-            || $code_cache->{$comp_id}->{lastmod} >= $srcmod )
-      )
-    {
+    if ( exists $code_cache->{$comp_id} &&
+         ( $self->static_source || $code_cache->{$comp_id}->{lastmod} >= $srcmod )
+       ) {
         return $code_cache->{$comp_id}->{comp};
     }
 
-    if ( $self->{use_object_files} ) {
+    if ($self->{use_object_files}) {
         $objfile = $self->comp_id_to_objfile($comp_id);
 
         my @stat = stat $objfile;
-        if ( @stat && !-f _ ) {
+        if ( @stat && ! -f _ ) {
             error "The object file '$objfile' exists but it is not a file!";
         }
 
-        if ( $self->static_source ) {
-
+        if ($self->static_source) {
             # No entry in the code cache so if the object file exists,
             # we will use it, otherwise we must create it.  These
             # values make that happen.
             $objfilemod = @stat ? $srcmod : 0;
-        }
-        else {
+        } else {
             # If the object file exists, get its modification time.
             # Otherwise (it doesn't exist or it is a directory) we
             # must create it.
@@ -507,34 +434,23 @@ sub load {
         # the bad module will be added to %INC and the error will not occur
         # the second time - RT #39803).
         #
-        if ( $objfilemod < $srcmod ) {
-            $self->compiler->compile_to_file(
-                file   => $objfile,
-                source => $source
-            );
+        if ($objfilemod < $srcmod) {
+            $self->compiler->compile_to_file( file => $objfile, source => $source);
         }
         $comp = eval { $self->eval_object_code( object_file => $objfile ) };
 
-        if ( !UNIVERSAL::isa( $comp, 'HTML::Mason::Component' ) ) {
-            if ( !defined($@) || $@ !~ /failed in require/ ) {
-                $self->compiler->compile_to_file(
-                    file   => $objfile,
-                    source => $source
-                );
-                $comp =
-                  eval { $self->eval_object_code( object_file => $objfile ) };
+        if (!UNIVERSAL::isa($comp, 'HTML::Mason::Component')) {
+            if (!defined($@) || $@ !~ /failed in require/) {
+                $self->compiler->compile_to_file( file => $objfile, source => $source);
+                $comp = eval { $self->eval_object_code( object_file => $objfile ) };
             }
 
-            if ( !UNIVERSAL::isa( $comp, 'HTML::Mason::Component' ) ) {
-                my $error =
-                    $@
-                  ? $@
-                  : "Could not get HTML::Mason::Component object from object file '$objfile'";
+            if (!UNIVERSAL::isa($comp, 'HTML::Mason::Component')) {
+                my $error = $@ ? $@ : "Could not get HTML::Mason::Component object from object file '$objfile'";
                 $self->_compilation_error( $source->friendly_name, $error );
             }
         }
-    }
-    else {
+    } else {
         #
         # Not using object files. Load component directly into memory.
         #
@@ -542,7 +458,7 @@ sub load {
         $comp = eval { $self->eval_object_code( object_code => $object_code ) };
         $self->_compilation_error( $source->friendly_name, $@ ) if $@;
     }
-    $comp->assign_runtime_properties( $self, $source );
+    $comp->assign_runtime_properties($self, $source);
 
     #
     # Delete any stale cached version of this component, then
@@ -555,7 +471,7 @@ sub load {
 }
 
 sub delete_from_code_cache {
-    my ( $self, $comp_id ) = @_;
+    my ($self, $comp_id) = @_;
     return unless defined $self->{code_cache}{$comp_id}{comp};
 
     delete $self->{code_cache}{$comp_id};
@@ -563,13 +479,13 @@ sub delete_from_code_cache {
 }
 
 sub comp_id_to_objfile {
-    my ( $self, $comp_id ) = @_;
+    my ($self, $comp_id) = @_;
 
-    return File::Spec->catfile(
-        $self->object_dir,
-        $self->compiler->object_id,
-        ( split /\//, $comp_id ),
-    ) . $self->object_file_extension;
+    return File::Spec->catfile
+               ( $self->object_dir,
+                 $self->compiler->object_id,
+                 ( split /\//, $comp_id ),
+               ) . $self->object_file_extension;
 }
 
 #
@@ -579,13 +495,13 @@ sub flush_code_cache {
     my $self = shift;
 
     # Necessary for preventing memory leaks
-    if ( $self->use_internal_component_caches ) {
-        foreach my $entry ( values %{ $self->{code_cache} } ) {
+    if ($self->use_internal_component_caches) {
+        foreach my $entry (values %{$self->{code_cache}}) {
             my $comp = $entry->{comp};
             $comp->flush_internal_caches;
         }
     }
-    $self->{code_cache}   = {};
+    $self->{code_cache} = {};
     $self->{source_cache} = {};
 }
 
@@ -597,19 +513,19 @@ sub purge_code_cache {
     my ($self) = @_;
 
     return if $self->{unlimited_code_cache};
-    my $current_size = scalar( keys( %{ $self->{code_cache} } ) );
-    if ( $current_size > $self->code_cache_max_size ) {
-        my $code_cache   = $self->{code_cache};
-        my $min_size     = $self->code_cache_min_size;
+    my $current_size = scalar(keys(%{$self->{code_cache}}));
+    if ($current_size > $self->code_cache_max_size) {
+        my $code_cache = $self->{code_cache};
+        my $min_size = $self->code_cache_min_size;
         my $decay_factor = 0.75;
 
         my @elems;
-        while ( my ( $path, $href ) = each( %{$code_cache} ) ) {
-            push( @elems, [ $path, $href->{comp}->mfu_count, $href->{comp} ] );
+        while (my ($path,$href) = each(%{$code_cache})) {
+            push(@elems,[$path,$href->{comp}->mfu_count,$href->{comp}]);
         }
         @elems = sort { $a->[1] <=> $b->[1] } @elems;
-        while ( ( $current_size > $min_size ) and @elems ) {
-            $self->delete_from_code_cache( shift(@elems)->[0] );
+        while (($current_size > $min_size) and @elems) {
+            $self->delete_from_code_cache(shift(@elems)->[0]);
             $current_size--;
         }
 
@@ -635,18 +551,18 @@ sub purge_code_cache {
 # that it doesn't affect a request's response time, but difficult to
 # do this in an environment-generic way.
 #
-sub remove_object_files {
+sub remove_object_files
+{
     my $self = shift;
 
     my $object_dir = $self->object_dir;
-    if ( -d $object_dir ) {
-        my $temp_dir = File::Temp::tempdir( DIR => $self->data_dir );
-        rename( $object_dir, File::Spec->catdir( $temp_dir, 'target' ) )
-          or die "could not rename '$object_dir' to '$temp_dir': $@";
+    if (-d $object_dir) {
+        my $temp_dir = File::Temp::tempdir(DIR => $self->data_dir);
+        rename($object_dir, File::Spec->catdir( $temp_dir, 'target' ) )
+            or die "could not rename '$object_dir' to '$temp_dir': $@";
         $self->_make_object_dir();
         rmtree($temp_dir);
-    }
-    else {
+    } else {
         $self->_make_object_dir();
     }
 }
@@ -656,26 +572,24 @@ sub remove_object_files {
 # changed since we last checked. If it has, clear the code cache and
 # object files if appropriate.
 #
-sub check_static_source_touch_file {
+sub check_static_source_touch_file
+{
     my $self = shift;
 
-    if ( my $touch_file = $self->static_source_touch_file ) {
+    if (my $touch_file = $self->static_source_touch_file) {
         return unless -f $touch_file;
-        my $touch_file_lastmod = ( stat($touch_file) )[9];
-        if ( $touch_file_lastmod > $self->{static_source_touch_file_lastmod} ) {
+        my $touch_file_lastmod = (stat($touch_file))[9];
+        if ($touch_file_lastmod > $self->{static_source_touch_file_lastmod}) {
 
             # File has been touched since we last checked.  First,
             # clear the object file directory if the last mod of
             # its ._object_create_marker is earlier than the touch file,
             # or if the marker doesn't exist.
             #
-            if ( $self->use_object_files ) {
-                my $object_create_marker_file =
-                  $self->object_create_marker_file;
-                if ( !-e $object_create_marker_file
-                    || ( stat($object_create_marker_file) )[9] <
-                    $touch_file_lastmod )
-                {
+            if ($self->use_object_files) {
+                my $object_create_marker_file = $self->object_create_marker_file;
+                if (!-e $object_create_marker_file ||
+                    (stat($object_create_marker_file))[9] < $touch_file_lastmod) {
                     $self->remove_object_files;
                 }
             }
@@ -698,92 +612,82 @@ sub check_static_source_touch_file {
 sub make_component {
     my $self = shift;
 
-    my %p = validate(
-        @_,
-        {
-            comp_source => { type => SCALAR, optional => 1 },
-            comp_file   => { type => SCALAR, optional => 1 },
-            name        => { type => SCALAR, optional => 1 }
-        }
-    );
+    my %p = validate(@_, { comp_source => { type => SCALAR, optional => 1 },
+                           comp_file   => { type => SCALAR, optional => 1 },
+                           name        => { type => SCALAR, optional => 1 } });
 
-    $p{comp_source} = read_file( delete $p{comp_file} ) if exists $p{comp_file};
-    param_error
-      "Must specify either 'comp_source' or 'comp_file' parameter to 'make_component()'"
-      unless defined $p{comp_source};
+    $p{comp_source} = read_file(delete $p{comp_file}) if exists $p{comp_file};
+    param_error "Must specify either 'comp_source' or 'comp_file' parameter to 'make_component()'"
+        unless defined $p{comp_source};
 
     $p{name} ||= '<anonymous component>';
 
-    my $source = HTML::Mason::ComponentSource->new(
-        friendly_name   => $p{name},
-        comp_path       => $p{name},
-        comp_id         => undef,
-        last_modified   => time,
-        comp_class      => 'HTML::Mason::Component',
-        source_callback => sub { $p{comp_source} },
-    );
+    my $source = HTML::Mason::ComponentSource->new( friendly_name => $p{name},
+                                                    comp_path => $p{name},
+                                                    comp_id => undef,
+                                                    last_modified => time,
+                                                    comp_class => 'HTML::Mason::Component',
+                                                    source_callback => sub { $p{comp_source} },
+                                                  );
 
-    my $object_code = $source->object_code( compiler => $self->compiler );
+    my $object_code = $source->object_code( compiler => $self->compiler);
 
     my $comp = eval { $self->eval_object_code( object_code => $object_code ) };
     $self->_compilation_error( $p{name}, $@ ) if $@;
 
-    $comp->assign_runtime_properties( $self, $source );
+    $comp->assign_runtime_properties($self, $source);
 
     return $comp;
 }
 
-sub set_global {
-    my ( $self, $decl, @values ) = @_;
-    param_error
-      "Interp->set_global: expects a variable name and one or more values"
-      unless @values;
-    my ( $prefix, $name ) =
-      ( $decl =~ s/^([\$@%])// ) ? ( $1, $decl ) : ( '$', $decl );
+sub set_global
+{
+    my ($self, $decl, @values) = @_;
+    param_error "Interp->set_global: expects a variable name and one or more values"
+        unless @values;
+    my ($prefix, $name) = ($decl =~ s/^([\$@%])//) ? ($1, $decl) : ('$', $decl);
 
-    my $varname = sprintf( "%s::%s", $self->compiler->in_package, $name );
+    my $varname = sprintf("%s::%s",$self->compiler->in_package,$name);
     no strict 'refs';
     no warnings 'once';
-    if ( $prefix eq '$' ) {
+    if ($prefix eq '$') {
         $$varname = $values[0];
-    }
-    elsif ( $prefix eq '@' ) {
+    } elsif ($prefix eq '@') {
         @$varname = @values;
-    }
-    else {
+    } else {
         %$varname = @values;
     }
 }
 
-sub comp_root {
+sub comp_root
+{
     my $self = shift;
-
-    if ( my $new_comp_root = shift ) {
-        die
-          "cannot assign new comp_root unless dynamic_comp_root parameter is set"
+    
+    if (my $new_comp_root = shift) {
+        die "cannot assign new comp_root unless dynamic_comp_root parameter is set"
           unless $self->dynamic_comp_root;
         $self->_assign_comp_root($new_comp_root);
     }
-    if ( @{ $self->{comp_root} } == 1 and $self->{comp_root}[0][0] eq 'MAIN' ) {
+    if (@{$self->{comp_root}} == 1 and $self->{comp_root}[0][0] eq 'MAIN') {
         return $self->{comp_root}[0][1];
-    }
-    else {
+    } else {
         return $self->{comp_root};
     }
 }
 
-sub comp_root_array {
+sub comp_root_array
+{
     return @{ $_[0]->{comp_root} };
 }
 
-sub _assign_comp_root {
-    my ( $self, $new_comp_root ) = @_;
+sub _assign_comp_root
+{
+    my ($self, $new_comp_root) = @_;
 
     # Force into lol format.
-    if ( !ref($new_comp_root) ) {
-        $new_comp_root = [ [ MAIN => $new_comp_root ] ];
-    }
-    elsif ( ref($new_comp_root) ne 'ARRAY' ) {
+    if (!ref($new_comp_root)) {
+        $new_comp_root = [[ MAIN => $new_comp_root ]];
+    } elsif (ref($new_comp_root) ne 'ARRAY') {
         die "Component root $new_comp_root must be a scalar or array reference";
     }
 
@@ -791,87 +695,86 @@ sub _assign_comp_root {
     # conflict with old pairs.
     my $comp_root_key_map = $self->{comp_root_key_map} ||= {};
     foreach my $pair (@$new_comp_root) {
-        param_error
-          "Multiple-path component root must consist of a list of two-element lists"
+        param_error "Multiple-path component root must consist of a list of two-element lists"
           if ref($pair) ne 'ARRAY';
         param_error "Component root key '$pair->[0]' cannot contain slash"
           if $pair->[0] =~ /\//;
         $pair->[1] = File::Spec->canonpath( $pair->[1] );
         param_error "comp_root path '$pair->[1]' is not an absolute directory"
           unless File::Spec->file_name_is_absolute( $pair->[1] );
-
-        my ( $key, $path ) = @$pair;
-        if ( my $orig_path = $comp_root_key_map->{$key} ) {
-            if ( $path ne $orig_path ) {
-                die
-                  "comp_root key '$key' was originally associated with '$path', cannot change to '$orig_path'";
+            
+        my ($key, $path) = @$pair;
+        if (my $orig_path = $comp_root_key_map->{$key}) {
+            if ($path ne $orig_path) {
+                die "comp_root key '$key' was originally associated with '$path', cannot change to '$orig_path'";
             }
-        }
-        else {
+        } else {
             $comp_root_key_map->{$key} = $path;
         }
     }
     $self->{comp_root} = $new_comp_root;
 }
 
-sub resolve_comp_path_to_source {
-    my ( $self, $path ) = @_;
-
+sub resolve_comp_path_to_source
+{
+    my ($self, $path) = @_;
+    
     my $source;
-    if ( $self->{static_source} ) {
-
+    if ($self->{static_source}) {
         # Maintain a separate source_cache for each component root,
         # because the set of active component roots can change
         # from request to request.
         #
         my $source_cache = $self->{source_cache};
-        foreach my $pair ( @{ $self->{comp_root} } ) {
-            my $source_cache_for_root = $source_cache->{ $pair->[0] } ||= {};
-            unless ( exists( $source_cache_for_root->{$path} ) ) {
-                $source_cache_for_root->{$path} =
-                  $self->{resolver}->get_info( $path, @$pair );
+        foreach my $pair (@{$self->{comp_root}}) {
+            my $source_cache_for_root = $source_cache->{$pair->[0]} ||= {};
+            unless (exists($source_cache_for_root->{$path})) {
+                $source_cache_for_root->{$path}
+                  = $self->{resolver}->get_info($path, @$pair);
             }
             last if $source = $source_cache_for_root->{$path};
         }
-    }
-    else {
+    } else {
         my $resolver = $self->{resolver};
-        foreach my $pair ( $self->comp_root_array ) {
-            last if $source = $resolver->get_info( $path, @$pair );
+        foreach my $pair ($self->comp_root_array) {
+            last if $source = $resolver->get_info($path, @$pair);
         }
     }
     return $source;
 }
 
-sub files_written {
+sub files_written
+{
     my $self = shift;
-    return @{ $self->{files_written} };
+    return @{$self->{files_written}};
 }
 
 #
 # Push onto list of written files.
 #
-sub push_files_written {
+sub push_files_written
+{
     my $self = shift;
     my $fref = $self->{'files_written'};
-    push( @$fref, @_ );
+    push(@$fref,@_);
 }
 
 #
 # Look for component <$name> starting in <$startpath> and moving upwards
 # to the root. Return component object or undef.
 #
-sub find_comp_upwards {
-    my ( $self, $startpath, $name ) = @_;
+sub find_comp_upwards
+{
+    my ($self, $startpath, $name) = @_;
     $startpath =~ s{/+$}{};
 
     # Don't use File::Spec here, this is a URL path.
     do {
-        my $comp = $self->load("$startpath/$name");
-        return $comp if $comp;
+      my $comp = $self->load("$startpath/$name");
+      return $comp if $comp;
     } while $startpath =~ s{/+[^/]*$}{};
 
-    return;    # Nothing found
+    return;  # Nothing found
 }
 
 ###################################################################
@@ -889,30 +792,29 @@ sub find_comp_upwards {
 #
 # I think this belongs in the resolver (or comp loader) - Dave
 #
-sub eval_object_code {
-    my ( $self, %p ) = @_;
+sub eval_object_code
+{
+    my ($self, %p) = @_;
 
     #
     # Evaluate object file or text with warnings on, unless
     # ignore_warnings_expr is '.'.
     #
     my $ignore_expr = $self->ignore_warnings_expr;
-    my ( $comp, $err );
+    my ($comp, $err);
     my $warnstr = '';
 
     {
         local $^W = $ignore_expr eq '.' ? 0 : 1;
-        local $SIG{__WARN__} = (
-            $ignore_expr
-            ? (
-                $ignore_expr eq '.'
-                ? sub { }
-                : sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ }
-              )
-            : sub { $warnstr .= $_[0] }
-        );
-
-        $comp = $self->_do_or_eval( \%p );
+        local $SIG{__WARN__} =
+            ( $ignore_expr ?
+              ( $ignore_expr eq '.' ?
+                sub { } :
+                sub { $warnstr .= $_[0] if $_[0] !~ /$ignore_expr/ }
+              ) :
+              sub { $warnstr .= $_[0] } );
+        
+        $comp = $self->_do_or_eval(\%p);
     }
 
     $err = $warnstr . $@;
@@ -921,51 +823,46 @@ sub eval_object_code {
     # Return component or error
     #
     if ($err) {
-
         # attempt to stem very long eval errors
         $err =~ s/has too many errors\..+/has too many errors./s;
         compilation_error $err;
-    }
-    else {
+    } else {
         return $comp;
     }
 }
 
-sub _do_or_eval {
-    my ( $self, $p ) = @_;
+sub _do_or_eval
+{
+    my ($self, $p) = @_;
 
-    if ( $p->{object_file} ) {
+    if ($p->{object_file}) {
         return do $p->{object_file};
-    }
-    else {
+    } else {
         # If in taint mode, untaint the object text
-        ( ${ $p->{object_code} } ) = ${ $p->{object_code} } =~ /^(.*)/s
-          if taint_is_on;
+        (${$p->{object_code}}) = ${$p->{object_code}} =~ /^(.*)/s if taint_is_on;
 
-        return eval ${ $p->{object_code} };
+        return eval ${$p->{object_code}};
     }
 }
 
 sub _compilation_error {
-    my ( $self, $filename, $err ) = @_;
+    my ($self, $filename, $err) = @_;
 
-    HTML::Mason::Exception::Compilation->throw(
-        error    => $err,
-        filename => $filename
-    );
+    HTML::Mason::Exception::Compilation->throw(error=>$err, filename=>$filename);
 }
+
 
 sub object_file {
-    my ( $self, $comp ) = @_;
-    return $comp->persistent
-      ? $self->comp_id_to_objfile( $comp->comp_id )
-      : undef;
+    my ($self, $comp) = @_;
+    return $comp->persistent ?
+        $self->comp_id_to_objfile($comp->comp_id) :
+        undef;
 }
 
-sub use_autohandlers {
+sub use_autohandlers
+{
     my $self = shift;
-    return defined $self->{autohandler_name}
-      and length $self->{autohandler_name};
+    return defined $self->{autohandler_name} and length $self->{autohandler_name};
 }
 
 # Generate HTML that describes Interp's current status.
@@ -973,7 +870,7 @@ sub use_autohandlers {
 # -- Interp properties
 # -- loaded (cached) components
 sub status_as_html {
-    my ( $self, %p ) = @_;
+    my ($self, %p) = @_;
 
     # Should I be scared about this?  =)
 
@@ -1051,45 +948,46 @@ foreach my $property (sort keys %$interp) {
 </%args>
 EOF
 
-    my $comp = $self->make_component( comp_source => $comp_source );
+    my $comp = $self->make_component(comp_source => $comp_source);
     my $out;
 
-    my $args = [ interp => $self, valid => $self->validation_spec ];
-    $self->make_request(
-        comp       => $comp,
-        args       => $args,
-        out_method => \$out,
-        %p
-    )->exec;
+    my $args = [interp => $self, valid => $self->validation_spec];
+    $self->make_request(comp=>$comp, args=>$args, out_method=>\$out, %p)->exec;
 
     return $out;
 }
 
-sub set_escape {
+sub set_escape
+{
     my $self = shift;
-    my %p    = @_;
+    my %p = @_;
 
-    while ( my ( $name, $sub ) = each %p ) {
+    while ( my ($name, $sub) = each %p )
+    {
         my $flag_regex = $self->compiler->lexer->escape_flag_regex;
 
         param_error "Invalid escape name ($name)"
-          if $name !~ /^$flag_regex$/ || $name =~ /^n$/;
+            if $name !~ /^$flag_regex$/ || $name =~ /^n$/;
 
         my $coderef;
-        if ( ref $sub ) {
+        if ( ref $sub )
+        {
             $coderef = $sub;
         }
-        else {
-            if ( $sub =~ /^\w+$/ ) {
+        else
+        {
+            if ( $sub =~ /^\w+$/ )
+            {
                 no strict 'refs';
-                unless ( defined &{"HTML::Mason::Escapes::$sub"} ) {
-                    param_error
-                      "Invalid escape: $sub (no matching subroutine in HTML::Mason::Escapes";
+                unless ( defined &{"HTML::Mason::Escapes::$sub"} )
+                {
+                    param_error "Invalid escape: $sub (no matching subroutine in HTML::Mason::Escapes";
                 }
 
                 $coderef = \&{"HTML::Mason::Escapes::$sub"};
             }
-            else {
+            else
+            {
                 $coderef = eval $sub;
                 param_error "Invalid escape: $sub ($@)" if $@;
             }
@@ -1099,21 +997,24 @@ sub set_escape {
     }
 }
 
-sub remove_escape {
+sub remove_escape
+{
     my $self = shift;
 
     delete $self->{escapes}{ shift() };
 }
 
-sub apply_escapes {
+sub apply_escapes
+{
     my $self = shift;
     my $text = shift;
 
-    foreach my $flag (@_) {
+    foreach my $flag (@_)
+    {
         param_error "Invalid escape flag: $flag"
-          unless exists $self->{escapes}{$flag};
+            unless exists $self->{escapes}{$flag};
 
-        $self->{escapes}{$flag}->( \$text );
+        $self->{escapes}{$flag}->(\$text);
     }
 
     return $text;
@@ -1304,7 +1205,7 @@ when the interpreter initializes. e.g.
 
 Default is the empty list.  For maximum performance, this should only
 be used for components that are frequently viewed and rarely updated.
-See L<preloading components|HTML::Mason::Admin/preloading components> for further details.
+See the L<preloading components|HTML::Mason::Admin/preloading components> section of the administrator's manual for further details.
 
 As mentioned in the developer's manual, a component's C<< <%once> >>
 section is executed when it is loaded.  For preloaded components, this
@@ -1536,5 +1437,11 @@ L<allow_globals|HTML::Mason::Params/allow_globals> parameter; otherwise you'll g
 C<strict>.
 
 =back
+
+=head1 SEE ALSO
+
+L<HTML::Mason|HTML::Mason>,
+L<HTML::Mason::Admin|HTML::Mason::Admin>,
+L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>
 
 =cut

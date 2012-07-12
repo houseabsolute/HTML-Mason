@@ -6,20 +6,19 @@ use HTML::Mason::Tests;
 my $tests = make_tests();
 $tests->run;
 
-sub make_tests {
-    my $group = HTML::Mason::Tests->tests_class->new(
-        name        => 'component',
-        description => 'Component object functionality'
-    );
+sub make_tests
+{
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'component',
+                                                      description => 'Component object functionality' );
 
-    #------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'comp_obj',
-        path        => 'comp_obj_test/comp_obj',
-        call_path   => 'comp_obj_test/comp_obj',
-        description => 'Tests several component object methods',
-        component   => <<'EOF',
+#------------------------------------------------------------
+
+    $group->add_test( name => 'comp_obj',
+                      path => 'comp_obj_test/comp_obj',
+                      call_path => 'comp_obj_test/comp_obj',
+                      description => 'Tests several component object methods',
+                      component => <<'EOF',
 <%def .subcomp>
 % my $adj = 'happy';
 I am a <% $adj %> subcomp.
@@ -66,7 +65,7 @@ Anonymous component:
 @animals=>('lions','tigers')
 </%args>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 
 
 
@@ -145,14 +144,14 @@ My title is [anon something].
 
 My comp_id is [anon something].
 EOF
-    );
+                     );
 
-    #------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'context',
-        description => 'Tests list/scalar context propogation in comp calls',
-        component   => <<'EOF',
+#------------------------------------------------------------
+
+    $group->add_test( name => 'context',
+                      description => 'Tests list/scalar context propogation in comp calls',
+                      component => <<'EOF',
 Context checking:
 
 List:\
@@ -170,7 +169,7 @@ Scalar:\
 % $m->print( wantarray ? 'array' : 'scalar' );
 </%def>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 Context checking:
 
 List:
@@ -183,14 +182,14 @@ Scalar:
 scalar
 
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'scomp',
-        description => 'Test scomp Request method',
-        component   => <<'EOF',
+#------------------------------------------------------------
+
+    $group->add_test( name => 'scomp',
+                      description => 'Test scomp Request method',
+                      component => <<'EOF',
 
 % my $text = $m->scomp('.subcomp', 1,2,3);
 -----
@@ -200,7 +199,7 @@ EOF
  Hello, you say <% join '', @_ %>.
 </%def>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 
 -----
 
@@ -208,30 +207,29 @@ EOF
 
 
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'mfu_count',
-        description => 'Test mfu_count component method',
-        component   => <<'EOF',
+#------------------------------------------------------------
+
+    $group->add_test( name => 'mfu_count',
+                      description => 'Test mfu_count component method',
+                      component => <<'EOF',
 <% $m->current_comp->mfu_count %>
 % $m->current_comp->mfu_count(75);
 <% $m->current_comp->mfu_count %>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 1
 75
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'store',
-        description => 'Test store parameter to component call',
-        component   => <<'EOF',
+    $group->add_test( name => 'store',
+                      description => 'Test store parameter to component call',
+                      component => <<'EOF',
 
 % my $buffy;
 % my $rtn;
@@ -245,7 +243,7 @@ returned <% $rtn %>
 % return 'foo';
 </%def>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 
 -----
 
@@ -254,33 +252,30 @@ EOF
 returned foo
 
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'flush_clear',
-        description => 'Flush then clear',
-        component   => <<'EOF',
+    $group->add_test( name => 'flush_clear',
+                      description => 'Flush then clear',
+                      component => <<'EOF',
 Foo
 % $m->flush_buffer;
 Bar
 % $m->clear_buffer;
 Baz
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 Foo
 Baz
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name => 'flush_clear_scomp',
-        description =>
-          'Flush then clear inside scomp - flush only affects top buffer',
-        component => <<'EOF',
+    $group->add_test( name => 'flush_clear_scomp',
+                      description => 'Flush then clear inside scomp - flush only affects top buffer',
+                      component => <<'EOF',
 <%method s>
 Foo
 % $m->flush_buffer;
@@ -295,7 +290,7 @@ This is scomp-ed output:
 ----------
 This is me again
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 This is me
 ----------
 This is scomp-ed output:
@@ -304,32 +299,30 @@ Baz
 ----------
 This is me again
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'attr_if_exists',
-        description => 'Test attr_if_exists method',
-        component   => <<'EOF',
+    $group->add_test( name => 'attr_if_exists',
+                      description => 'Test attr_if_exists method',
+                      component => <<'EOF',
 have it: <% $m->base_comp->attr_if_exists('have_it') %>
 don't have it: <% defined($m->base_comp->attr_if_exists('don\'t have_it')) ? 'defined' : 'undefined' %>
 <%attr>
 have_it => 1
 </%attr>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 have it: 1
 don't have it: undefined
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'methods',
-        description => 'Test methods method',
-        component   => <<'EOF',
+    $group->add_test( name => 'methods',
+                      description => 'Test methods method',
+                      component => <<'EOF',
 % my $comp = $m->request_comp;
 % my $methods = $comp->methods;
 % foreach my $name ( sort keys %$methods ) {
@@ -345,21 +338,20 @@ x
 y
 </%method>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 x
 y
 has x
 has y
 does not have z
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'subcomps',
-        description => 'Test subcomps method',
-        component   => <<'EOF',
+    $group->add_test( name => 'subcomps',
+                      description => 'Test subcomps method',
+                      component => <<'EOF',
 % my $comp = $m->request_comp;
 % my $subcomps = $comp->subcomps;
 % foreach my $name ( sort keys %$subcomps ) {
@@ -375,21 +367,20 @@ x
 y
 </%def>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 x
 y
 has x
 has y
 does not have z
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'attributes',
-        description => 'Test attributes method',
-        component   => <<'EOF',
+    $group->add_test( name => 'attributes',
+                      description => 'Test attributes method',
+                      component => <<'EOF',
 % my $comp = $m->request_comp;
 % my $attrs = $comp->attributes;
 % foreach my $name ( sort keys %$attrs ) {
@@ -400,17 +391,16 @@ x => 1
 y => 2
 </%attr>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 x
 y
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_support(
-        path      => 'args_copying_helper',
-        component => <<'EOF',
+    $group->add_support( path => 'args_copying_helper',
+                         component => <<'EOF',
 <%init>
 $_[1] = 4;
 $b = 5;
@@ -422,15 +412,13 @@ $a
 $b
 </%args>
 EOF
-    );
+                       );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name => 'component_args_copying',
-        description =>
-          'Test that @_ contains aliases, <%args> and %ARGS contain copies after comp',
-        component => <<'EOF',
+    $group->add_test( name => 'component_args_copying',
+                      description => 'Test that @_ contains aliases, <%args> and %ARGS contain copies after comp',
+                      component => <<'EOF',
 $a is <% $a %>
 $b is <% $b %>
 $c is <% $c %>
@@ -442,21 +430,19 @@ my $c = 3;
 $m->comp('args_copying_helper', a=>$a, b=>$b, c=>$c);
 </%init>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 
 $a is 4
 $b is 2
 $c is 3
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name => 'subrequest_args_copying',
-        description =>
-          'Test that @_ contains aliases, <%args> and %ARGS contain copies after subrequest',
-        component => <<'EOF',
+    $group->add_test( name => 'subrequest_args_copying',
+                      description => 'Test that @_ contains aliases, <%args> and %ARGS contain copies after subrequest',
+                      component => <<'EOF',
 $a is <% $a %>
 $b is <% $b %>
 $c is <% $c %>
@@ -468,29 +454,27 @@ my $c = 3;
 $m->subexec('/component/args_copying_helper', a=>$a, b=>$b, c=>$c);
 </%init>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 
 $a is 4
 $b is 2
 $c is 3
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name => 'modification_read_only_arg',
-        description =>
-          'Test that read-only argument cannot be modified through @_',
-        component => <<'EOF',
+    $group->add_test( name => 'modification_read_only_arg',
+                      description => 'Test that read-only argument cannot be modified through @_',
+                      component => <<'EOF',
 <%init>;
 $m->comp('args_copying_helper', a=>1, b=>2, c=>3);
 </%init>
 EOF
-        expect_error => 'Modification of a read-only value',
-    );
+                      expect_error => 'Modification of a read-only value',
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
     return $group;
 }

@@ -1,14 +1,16 @@
 package HTML::Mason;
-
 # Copyright (c) 1998-2005 by Jonathan Swartz. All rights reserved.
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
 use 5.006;
 
+$HTML::Mason::VERSION = '1.49';
+
 use HTML::Mason::Interp;
 
-sub version {
+sub version
+{
     return $HTML::Mason::VERSION;
 }
 
@@ -28,20 +30,6 @@ Mason - High-performance, dynamic web site authoring system
         SetHandler perl-script
         PerlHandler HTML::Mason::ApacheHandler
     </Location>
-
-=head1 STOP - HAVE YOU CHECKED OUT MASON 2?
-
-Version 1 of Mason (which you are looking at now) has been around since
-1998, is in wide use, and is very stable. However it has not changed much in
-years and is no longer actively developed.
-
-Version 2 of Mason -- L<Mason|Mason> -- was released in February of 2011.
-It is being very actively developed and has a much more modern architecture.
-If you are just starting out, we recommend you go directly to Mason 2.
-
-For a summary of differences between Mason 1 and 2 see
-
-    http://www.openswartz.com/2011/02/21/announcing-mason-2/
 
 =head1 DESCRIPTION
 
@@ -99,6 +87,21 @@ of Perl code (say, to pull records from a database). They can also
 call other components, cache results for later reuse, and perform all
 the tricks you expect from a regular Perl program.
 
+=head1 MASON 1 (HTML::MASON) VERSUS MASON 2 (MASON)
+
+Version 1 of Mason -- L<HTML::Mason|HTML::Mason> -- has been around since
+1998, is in wide use, and is very stable. However it has not changed much in
+years and is no longer actively developed.
+
+Version 2 of Mason -- L<Mason|Mason> -- was released in February of 2011.
+It is being very actively developed and has a much more modern
+architecture. If you are just starting out, we recommend you give Mason 2 a
+try.
+
+For a summary of differences between Mason 1 and 2 see
+
+    http://www.openswartz.com/2011/02/21/announcing-mason-2/
+
 =head1 INSTALLATION
 
 Mason has been tested under Linux, FreeBSD, Solaris, HPUX, and
@@ -108,8 +111,6 @@ modules.
 
 Mason has a standard MakeMaker-driven installation. See the README
 file for details.
-
-=for readme stop
 
 =head1 CONFIGURING MASON
 
@@ -135,7 +136,7 @@ running mod_perl.
 
 The <Location> section routes all requests to the Mason handler, which
 is a simple way to try out Mason. A more refined setup is discussed
-in L<Controlling Access via Filename Extension|HTML::Mason::Admin/Controlling Access via Filename Extension>.
+in the L<Controlling Access via Filename Extension|HTML::Mason::Admin/Controlling Access via Filename Extension> section of the administrator's manual.
 
 Once you have added the configuration directives, restart the
 server. First, go to a standard URL on your site to make sure you
@@ -173,7 +174,7 @@ mod_perl, since that is the most common configuration.  If you would
 like to run Mason via a CGI script, refer to the
 L<HTML::Mason::CGIHandler|HTML::Mason::CGIHandler> documentation.
 If you are using Mason from a standalone program, refer to
-L<Using Mason from a Standalone Script|HTML::Mason::Admin/Using Mason from a Standalone Script>.
+the L<Using Mason from a Standalone Script|HTML::Mason::Admin/Using Mason from a Standalone Script> section of the administrator's manual.
 
 There is also a book about Mason, I<Embedding Perl in HTML with
 Mason>, by Dave Rolsky and Ken Williams, published by O'Reilly and
@@ -181,7 +182,22 @@ Associates.  The book's website is at http://www.masonbook.com/.  This
 book goes into detail on a number of topics, and includes a chapter of
 recipes as well as a sample Mason-based website.
 
-Finally, don't forget to check out L<Mason 2|Mason> to see it will serve
-your needs!
+=head1 AUTHORS
+
+Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams <ken@mathforum.org>, John Williams <williams@tni.com>
+
+=head1 COPYRIGHT
+
+Copyright (c) 1998-2005 Jonathan Swartz.  All rights reserved.  This
+program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+The full text of the license can be found in the LICENSE file included
+with this module.
+
+=head1 SEE ALSO
+
+L<HTML::Mason::Devel|HTML::Mason::Devel>,
+L<HTML::Mason::Admin|HTML::Mason::Admin>
 
 =cut

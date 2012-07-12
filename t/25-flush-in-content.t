@@ -43,7 +43,7 @@ EOF
     $group->add_test(
         name => 'flush-in-deep-content',
         description =>
-          'make sure flush does not flush when we are in $m->content()',
+            'make sure flush does not flush when we are in $m->content()',
         component => <<'EOF',
 <&| widget &><&| widget &><& block &></&></&>
 EOF

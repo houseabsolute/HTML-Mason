@@ -13,40 +13,38 @@ use vars qw(@ISA);
 
 @ISA = qw(HTML::Mason::Component);
 
-use HTML::Mason::MethodMaker (
-    read_only => [qw( comp_id is_method name owner path )] );
+use HTML::Mason::MethodMaker ( read_only => [ qw( comp_id is_method name owner path ) ] );
 
 #
 # Assign parent, name, and is_method flag when owner component is created.
 #
 sub assign_subcomponent_properties {
     my $self = shift;
-    ( $self->{owner}, $self->{name}, $self->{is_method} ) = @_;
+    ($self->{owner}, $self->{name}, $self->{is_method}) = @_;
 }
 
 #
 # Override path that would be set by parent's version of method.
 #
 sub assign_runtime_properties {
-    my ( $self, $interp, $source ) = @_;
-    $self->SUPER::assign_runtime_properties( $interp, $source );
-    $self->{comp_id} = sprintf( "[%s '%s' of %s]",
-        $self->{is_method} ? 'method' : 'subcomponent',
-        $self->name, $self->owner->comp_id );
+    my ($self, $interp, $source) = @_;
+    $self->SUPER::assign_runtime_properties($interp, $source);
+    $self->{comp_id} = sprintf("[%s '%s' of %s]", $self->{is_method} ? 'method' : 'subcomponent',
+                               $self->name, $self->owner->comp_id);
     my $owner_path = $self->owner->path;
     $owner_path = q{} unless defined $owner_path;
-    $self->{path} = $owner_path . ":" . $self->name;
+    $self->{path} =  $owner_path . ":" . $self->name;
 }
 
-sub cache_file  { return $_[0]->owner->cache_file }
-sub load_time   { return $_[0]->owner->load_time }
+sub cache_file { return $_[0]->owner->cache_file }
+sub load_time { return $_[0]->owner->load_time }
 sub compiler_id { return $_[0]->owner->compilation_params }
-sub dir_path    { return $_[0]->owner->dir_path }
-sub is_subcomp  { 1 }
+sub dir_path { return $_[0]->owner->dir_path }
+sub is_subcomp { 1 }
 sub object_file { return $_[0]->owner->object_file }
-sub parent      { return $_[0]->owner->parent }
-sub persistent  { return $_[0]->owner->persistent }
-sub title       { return $_[0]->owner->title . ":" . $_[0]->name }
+sub parent { return $_[0]->owner->parent }
+sub persistent { return $_[0]->owner->persistent }
+sub title { return $_[0]->owner->title . ":" . $_[0]->name }
 
 1;
 
@@ -84,5 +82,9 @@ Returns the component object within which this subcomponent or method
 was defined.
 
 =back
+
+=head1 SEE ALSO
+
+L<HTML::Mason::Component|HTML::Mason::Component>
 
 =cut

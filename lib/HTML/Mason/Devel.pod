@@ -26,7 +26,9 @@ site, that is what I<most> people want to do with Mason, and is thus
 the focus of this manual.
 
 If you are planning to use Mason outside of the web, this manual will
-still be useful, of course.  Also make sure to read L<running outside of mod_perl|HTML::Mason::Admin/running outside of mod_perl>.
+still be useful, of course.  Also make sure to read the L<running
+outside of mod_perl|HTML::Mason::Admin/running
+outside of mod_perl> section of the administrator's manual.
 
 =head1 HOW TO USE THIS MANUAL
 
@@ -696,7 +698,9 @@ By default dhandlers do not get a chance to handle requests to a
 directory itself (e.g. F</newsfeeds>). These are automatically
 deferred to Apache, which generates an index page or a FORBIDDEN
 error.  Often this is desirable, but if necessary the administrator
-can let in directory requests as well; see L<allowing directory requests|HTML::Mason::Admin/allowing directory requests>.
+can let in directory requests as well; see the L<allowing directory
+requests|HTML::Mason::Admin/allowing directory
+requests> section of the administrator's manual.
 
 A component or dhandler that does not want to handle a particular
 request may defer control to the next dhandler by calling C<< $m->decline >>.
@@ -2227,5 +2231,15 @@ initialize the object from %ARGS:
 Modules which work as source filters, such as C<Switch.pm>, will only
 work when you are using object files.  This is because of how source
 filters are implemented, and cannot be changed by the Mason authors.
+
+=head1 AUTHORS
+
+Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams <ken@mathforum.org>
+
+=head1 SEE ALSO
+
+L<HTML::Mason|HTML::Mason>,
+L<HTML::Mason::Admin|HTML::Mason::Admin>,
+L<HTML::Mason::Request|HTML::Mason::Request>
 
 =cut

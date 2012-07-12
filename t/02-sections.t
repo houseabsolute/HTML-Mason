@@ -6,29 +6,27 @@ use HTML::Mason::Tests;
 my $tests = make_tests();
 $tests->run;
 
-sub make_tests {
-    my $group = HTML::Mason::Tests->tests_class->new(
-        name        => 'sections',
-        description => 'Tests various <%foo></%foo> sections'
-    );
+sub make_tests
+{
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'sections',
+                                                      description => 'Tests various <%foo></%foo> sections' );
 
-    #------------------------------------------------------------
 
-    $group->add_support(
-        path      => '/support/args_test',
-        component => <<'EOF',
+#------------------------------------------------------------
+
+    $group->add_support( path => '/support/args_test',
+                         component => <<'EOF',
 <% $message %>\
 <%args>
 $message
 </%args>
 EOF
-    );
+                       );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_support(
-        path      => '/support/perl_args_test',
-        component => <<'EOF',
+    $group->add_support( path => '/support/perl_args_test',
+                         component => <<'EOF',
 a: <% $a %>
 b: <% join(",",@b) %>
 c: <% join(",",map("$_=$c{$_}",sort(keys(%c)))) %>
@@ -45,14 +43,14 @@ $d=>5    # another comment
 %f=>(joe=>1,bob=>2)
 </%args>
 EOF
-    );
+                       );
 
-    #------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'args',
-        description => 'tests <%args> block',
-        component   => <<'EOF',
+#------------------------------------------------------------
+
+    $group->add_test( name => 'args',
+                      description => 'tests <%args> block',
+                      component => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -64,7 +62,7 @@ args Test
 </BODY>
 </HTML>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -76,14 +74,14 @@ Hello World!
 </BODY>
 </HTML>
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'attr',
-        description => 'tests <%attr> block',
-        component   => <<'EOF',
+#------------------------------------------------------------
+
+    $group->add_test( name => 'attr',
+                      description => 'tests <%attr> block',
+                      component => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -103,7 +101,7 @@ bar => [1, 3]
 baz => { a => 1, b => 2 }
 </%attr>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -118,14 +116,14 @@ a
 </BODY>
 </HTML>
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'def',
-        description => 'tests <%def> block',
-        component   => <<'EOF',
+#------------------------------------------------------------
+
+    $group->add_test( name => 'def',
+                      description => 'tests <%def> block',
+                      component => <<'EOF',
 <%def intro>
 % my $comp = $m->current_comp;
 Hello!<br>
@@ -146,7 +144,7 @@ $label=>ucfirst($site)
 </%args>
 </%def>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 
 
 Hello!<br>
@@ -165,14 +163,13 @@ I was created by /sections/def.<br>
 
 --> <a href="http://www.excite.com">Excite</a>
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'doc',
-        description => 'tests <%doc> section',
-        component   => <<'EOF',
+    $group->add_test( name => 'doc',
+                      description => 'tests <%doc> section',
+                      component => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -190,7 +187,7 @@ This is an HTML::Mason documentation section.
 Right?
 </%doc>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -203,14 +200,13 @@ Hello World!
 </HTML>
 
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'filter',
-        description => 'tests <%filter> section',
-        component   => <<'EOF',
+    $group->add_test( name => 'filter',
+                      description => 'tests <%filter> section',
+                      component => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -226,7 +222,7 @@ filter Test
 s/\!dlorW olleH/Hello World!/;
 </%filter>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -239,14 +235,13 @@ Hello World!
 </HTML>
 
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'flags',
-        description => 'tests <%flags> section',
-        component   => <<'EOF',
+    $group->add_test( name => 'flags',
+                      description => 'tests <%flags> section',
+                      component => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -261,7 +256,7 @@ foo
 inherit=>undef   # an inherit flag
 </%flags>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -273,14 +268,13 @@ foo
 </BODY>
 </HTML>
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'init',
-        description => 'tests <%init> section',
-        component   => <<'EOF',
+    $group->add_test( name => 'init',
+                      description => 'tests <%init> section',
+                      component => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -296,7 +290,7 @@ init Test
 my $message = "Hello World!";
 </%init>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -309,14 +303,13 @@ Hello World!
 </HTML>
 
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'method',
-        description => 'tests <%method> section',
-        component   => <<'EOF',
+    $group->add_test( name => 'method',
+                      description => 'tests <%method> section',
+                      component => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -340,7 +333,7 @@ $y
 The second method. Arguments are <% join(",",@_) %>.
 </%method>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -356,14 +349,13 @@ THE SECOND METHOD. ARGUMENTS ARE A,B,C.
 </BODY>
 </HTML>
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'once',
-        description => 'tests <%once> block',
-        component   => <<'EOF',
+    $group->add_test( name => 'once',
+                      description => 'tests <%once> block',
+                      component => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -383,7 +375,7 @@ my $message = "Hello World";
 $message .= "!";
 </%INIT>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -397,15 +389,13 @@ Hello World!
 
 
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name => 'perl',
-        description =>
-          'test <%perl> sections and makes sure block names are case-insensitive',
-        component => <<'EOF',
+    $group->add_test( name => 'perl',
+                      description => 'test <%perl> sections and makes sure block names are case-insensitive',
+                      component => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -427,7 +417,7 @@ $message = "How are you?";
 </BODY>
 </HTML>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 <HTML>
 <HEAD>
 <TITLE>
@@ -440,9 +430,9 @@ How are you?
 </BODY>
 </HTML>
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
 =pod
 
@@ -467,29 +457,26 @@ EOF
 
 =cut
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
     # Carp in 5.6.0 is broken so just skip it
-    unless ( $] == 5.006 ) {
-        $group->add_test(
-            name => 'omitted_args',
-            description =>
-              'tests error message when expect args are not passed',
-            component =>
-              '<& support/perl_args_test, b=>[17,82,16], c=>{britain=>3, spain=>1} &>',
-            expect_error => qr{no value sent for required parameter 'a'},
-        );
+    unless ($] == 5.006)
+    {
+        $group->add_test( name => 'omitted_args',
+                          description => 'tests error message when expect args are not passed',
+                          component => '<& support/perl_args_test, b=>[17,82,16], c=>{britain=>3, spain=>1} &>',
+                          expect_error => qr{no value sent for required parameter 'a'},
+                        );
     }
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'overridden_args',
-        description => 'tests overriding of default args values',
-        component   => <<'EOF',
+    $group->add_test( name => 'overridden_args',
+                      description => 'tests overriding of default args values',
+                      component => <<'EOF',
 <& support/perl_args_test, a=>'fargo', b=>[17,82,16], c=>{britain=>3, spain=>1}, d=>103, e=>['a','b','c'], f=>{ralph=>15, sue=>37} &>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 a: fargo
 b: 17,82,16
 c: britain=3,spain=1
@@ -499,9 +486,9 @@ f: ralph=15,sue=37
 
 
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
 =pod
 
@@ -577,12 +564,11 @@ EOF
 
 =cut
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'shared',
-        description => 'tests <%shared> section',
-        component   => <<'EOF',
+    $group->add_test( name => 'shared',
+                      description => 'tests <%shared> section',
+                      component => <<'EOF',
 <%def .main>
 Hello <% $name %>.
 
@@ -610,7 +596,7 @@ This is the baz subcomponent, <% $name %>.
 my $name = 'Joe';
 </%shared>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 
 
 
@@ -638,14 +624,13 @@ This is the baz subcomponent, Mary.
 
 
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'text',
-        description => 'tests <%text> section',
-        component   => <<'EOF',
+    $group->add_test( name => 'text',
+                      description => 'tests <%text> section',
+                      component => <<'EOF',
 <%text>
 %
 <%once>
@@ -654,7 +639,7 @@ EOF
 <%args>
 </%text>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 
 %
 <%once>
@@ -662,14 +647,13 @@ EOF
 <%doc>
 <%args>
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
-    $group->add_test(
-        name        => 'multiple',
-        description => 'tests repeated blocks of the same type',
-        component   => <<'EOF',
+    $group->add_test( name => 'multiple',
+                      description => 'tests repeated blocks of the same type',
+                      component => <<'EOF',
 <%attr>
 name=>'Joe'
 </%attr>
@@ -693,15 +677,15 @@ my $var2 = "Bar!";
 color=>'Blue'
 </%attr>
 EOF
-        expect => <<'EOF',
+                      expect => <<'EOF',
 VAR1 = FOO?
 VAR2 = BAR?
 NAME = JOE
 COLOR = BLUE
 EOF
-    );
+                    );
 
-    #------------------------------------------------------------
+#------------------------------------------------------------
 
     return $group;
 }

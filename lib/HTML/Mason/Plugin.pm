@@ -5,29 +5,25 @@ use warnings;
 
 sub new {
     my $class = shift;
-    bless {@_}, $class;
+    bless { @_ }, $class;
 }
 
 sub start_request_hook {
-
     # my ($self, $context) = @_;
     # $context has: request, args
 }
 
 sub end_request_hook {
-
     # my ($self, $context) = @_;
     # $context has: request, args, output, wantarray, result, error
 }
 
 sub start_component_hook {
-
     # my ($self, $context) = @_;
     # $context has: request, comp, args
 }
 
 sub end_component_hook {
-
     # my ($self, $context) = @_;
     # $context has: request, comp, args, wantarray, result, error
 }
@@ -175,5 +171,13 @@ because output from multiple components combine into a single buffer.
 
 Do not keep an unweakened reference to a request or component object
 in your plugin object, or you will create a nasty circular reference.
+
+=head1 AUTHORS
+
+Doug Treder, Jonathan Swartz, Dave Rolsky
+
+=head1 SEE ALSO
+
+L<HTML::Mason::Interp|HTML::Mason::Interp>, L<HTML::Mason::Request|HTML::Mason::Request>
 
 =cut

@@ -6,20 +6,20 @@ use HTML::Mason::Tests;
 my $tests = make_tests();
 $tests->run;
 
-sub make_tests {
-    my $group = HTML::Mason::Tests->tests_class->new(
-        name        => 'stack_corruption',
-        description => 'tests for stack corruption',
-    );
+sub make_tests
+{
+    my $group = HTML::Mason::Tests->tests_class->new( name => 'stack_corruption',
+                                                      description => 'tests for stack corruption',
+                                                    );
+
 
     # The key to this test is that it first calls a component that in
     # turn has a comp-with-content call. That comp-with-content call
     # then calls $m->content (this is important).
     #
     # After that, _further_ component calls reveal stack corruption.
-    $group->add_support(
-        path      => '/support/comp',
-        component => <<'EOF',
+    $group->add_support( path => '/support/comp',
+                         component => <<'EOF',
 <&| .subcomp1 &>
 <& .subcomp2 &>
 </&>
@@ -32,19 +32,17 @@ sub make_tests {
 content
 </%def>
 EOF
-    );
+                       );
 
-    $group->add_support(
-        path      => '/support/comp2',
-        component => <<'EOF',
+    $group->add_support( path => '/support/comp2',
+                         component => <<'EOF',
 
 EOF
-    );
+                       );
 
-    $group->add_test(
-        name        => 'stack_corruption',
-        description => 'test for stack corruption with comp-with-content call',
-        component   => <<'EOF',
+    $group->add_test( name => 'stack_corruption',
+                      description => 'test for stack corruption with comp-with-content call',
+                      component => <<'EOF',
 <& support/comp &>
 
 <& support/comp2 &>
@@ -58,8 +56,8 @@ Stack at this point:
 % }
 </%def>
 EOF
-        expect => qr{/stack_corruption/stack_corruption:.callers\n(?!undef)},
-    );
+                      expect => qr{/stack_corruption/stack_corruption:.callers\n(?!undef)},
+                    );
 
     return $group;
 }

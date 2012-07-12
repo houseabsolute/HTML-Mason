@@ -7,11 +7,10 @@ package HTML::Mason::Resolver;
 use strict;
 use warnings;
 
-use HTML::Mason::Exceptions( abbr => [ 'param_error', 'virtual_error' ] );
+use HTML::Mason::Exceptions( abbr => ['param_error', 'virtual_error'] );
 
 use Params::Validate qw(:all);
-Params::Validate::validation_options( on_fail => sub { param_error join '', @_ }
-);
+Params::Validate::validation_options( on_fail => sub { param_error join '', @_ } );
 
 use HTML::Mason::ComponentSource;
 
@@ -27,13 +26,13 @@ sub glob_path {
     shift->_virtual;
 }
 
-sub _virtual {
+sub _virtual
+{
     my $self = shift;
 
-    my $sub = ( caller(1) )[3];
+    my $sub = (caller(1))[3];
     $sub =~ s/.*::(.*?)$/$1/;
-    virtual_error "$sub is a virtual method and must be overridden in "
-      . ref($self);
+    virtual_error "$sub is a virtual method and must be overridden in " . ref($self);
 }
 
 1;
@@ -121,5 +120,9 @@ if your resolver subclass will never be used in conjunction with
 L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>.
 
 =back
+
+=head1 SEE ALSO
+
+L<HTML::Mason|HTML::Mason>
 
 =cut

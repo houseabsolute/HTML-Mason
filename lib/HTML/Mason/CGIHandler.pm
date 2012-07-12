@@ -14,34 +14,47 @@ use HTML::Mason::FakeApache;
 use Class::Container;
 use base qw(Class::Container);
 
-use HTML::Mason::MethodMaker ( read_write => [qw( interp )] );
+use HTML::Mason::MethodMaker
+    ( read_write => [ qw( interp ) ] );
 
-__PACKAGE__->valid_params( interp => { isa => 'HTML::Mason::Interp' }, );
+use vars qw($VERSION);
 
-__PACKAGE__->contained_objects(
-    interp      => 'HTML::Mason::Interp',
-    cgi_request => {
-        class   => 'HTML::Mason::FakeApache',    # $r
-        delayed => 1
-    },
-);
+# Why do we have a version?  I'm glad you asked.  See, dummy me
+# stupidly referenced it in the Subclassing docs _and_ the book.  It's
+# needed in order to dynamically have a request subclass change its
+# parent properly to work with CGIHandler or ApacheHandler.  It
+# doesn't really matter what the version is, as long as it's a true
+# value.  - dave
+$VERSION = '1.00';
+
+
+__PACKAGE__->valid_params
+    (
+     interp => { isa => 'HTML::Mason::Interp' },
+    );
+
+__PACKAGE__->contained_objects
+    (
+     interp => 'HTML::Mason::Interp',
+     cgi_request => { class   => 'HTML::Mason::FakeApache', # $r
+                      delayed => 1 },
+    );
+
 
 sub new {
     my $package = shift;
 
-    my %p    = @_;
-    my $self = $package->SUPER::new(
-        comp_root     => $ENV{DOCUMENT_ROOT},
-        request_class => 'HTML::Mason::Request::CGI',
-        error_mode    => 'output',
-        error_format  => 'html',
-        %p
-    );
+    my %p = @_;
+    my $self = $package->SUPER::new(comp_root => $ENV{DOCUMENT_ROOT},
+                                    request_class => 'HTML::Mason::Request::CGI',
+                                    error_mode => 'output',
+                                    error_format => 'html',
+                                    %p);
 
     $self->{has_custom_out_method} = $p{out_method} ? 1 : 0;
 
     $self->interp->compiler->add_allowed_globals('$r');
-
+    
     return $self;
 }
 
@@ -51,43 +64,35 @@ sub handle_request {
 }
 
 sub handle_comp {
-    my ( $self, $comp ) = ( shift, shift );
+    my ($self, $comp) = (shift, shift);
     $self->_handler( { comp => $comp }, @_ );
 }
 
 sub handle_cgi_object {
-    my ( $self, $cgi ) = ( shift, shift );
-    $self->_handler(
-        {
-            comp => $cgi->path_info,
-            cgi  => $cgi
-        },
-        @_
-    );
+    my ($self, $cgi) = (shift, shift);
+    $self->_handler( { comp => $cgi->path_info,
+                       cgi       => $cgi },
+                     @_);
 }
 
 sub _handler {
-    my ( $self, $p ) = ( shift, shift );
+    my ($self, $p) = (shift, shift);
 
-    my $r = $self->create_delayed_object( 'cgi_request', cgi => $p->{cgi} );
-    $self->interp->set_global( '$r', $r );
+    my $r = $self->create_delayed_object('cgi_request', cgi => $p->{cgi});
+    $self->interp->set_global('$r', $r);
 
     # hack for testing
     if (@_) {
         $self->{output} = '';
         $self->interp->out_method( \$self->{output} );
-    }
-    elsif ( !$self->{has_custom_out_method} ) {
+    } elsif (! $self->{has_custom_out_method}) {
         my $sent_headers = 0;
 
         my $out_method = sub {
-
             # Send headers if they have not been sent by us or by user.
             # We use instance here because if we store $request we get a
             # circular reference and a big memory leak.
-            if ( !$sent_headers
-                and HTML::Mason::Request->instance->auto_send_headers )
-            {
+            if (!$sent_headers and HTML::Mason::Request->instance->auto_send_headers) {
                 $r->send_http_header();
                 $sent_headers = 1;
             }
@@ -97,44 +102,39 @@ sub _handler {
             # sent and what the $r->method is.  That would require
             # additions to the Request interface, though.
 
-            print STDOUT grep { defined } @_;
+            print STDOUT grep {defined} @_;
         };
 
         $self->interp->out_method($out_method);
     }
 
-    $self->interp->delayed_object_params( 'request', cgi_request => $r );
+    $self->interp->delayed_object_params('request', cgi_request => $r);
 
     my %args = $self->request_args($r);
 
     my @result;
     if (wantarray) {
-        @result = eval { $self->interp->exec( $p->{comp}, %args ) };
-    }
-    elsif ( defined wantarray ) {
-        $result[0] = eval { $self->interp->exec( $p->{comp}, %args ) };
-    }
-    else {
-        eval { $self->interp->exec( $p->{comp}, %args ) };
+        @result = eval { $self->interp->exec($p->{comp}, %args) };
+    } elsif ( defined wantarray ) {
+        $result[0] = eval { $self->interp->exec($p->{comp}, %args) };
+    } else {
+        eval { $self->interp->exec($p->{comp}, %args) };
     }
 
-    if ( my $err = $@ ) {
-        my $retval =
-            isa_mason_exception( $err, 'Abort' ) ? $err->aborted_value
-          : isa_mason_exception( $err, 'Decline' ) ? $err->declined_value
-          :                                          rethrow_exception $err;
+    if (my $err = $@) {
+        my $retval = isa_mason_exception($err, 'Abort')   ? $err->aborted_value  :
+                     isa_mason_exception($err, 'Decline') ? $err->declined_value :
+                     rethrow_exception $err;
 
         # Unlike under mod_perl, we cannot simply return a 301 or 302
         # status and let Apache send headers, we need to explicitly
         # send this header ourself.
-        $r->send_http_header
-          if $retval && grep { $retval eq $_ } ( 200, 301, 302 );
+        $r->send_http_header if $retval && grep { $retval eq $_ } ( 200, 301, 302 );
 
         return $retval;
     }
 
     if (@_) {
-
         # This is a secret feature, and should stay secret (or go
         # away) because it's just a hack for the test suite.
         $_[0] .= $r->http_header . $self->{output};
@@ -145,14 +145,14 @@ sub _handler {
 
 # This is broken out in order to make subclassing easier.
 sub request_args {
-    my ( $self, $r ) = @_;
+    my ($self, $r) = @_;
 
     return $r->params;
 }
 
+
 ###########################################################
 package HTML::Mason::Request::CGI;
-
 # Subclass for HTML::Mason::Request object $m
 
 use HTML::Mason::Exceptions;
@@ -160,24 +160,18 @@ use HTML::Mason::Request;
 use base qw(HTML::Mason::Request);
 
 use Params::Validate qw(BOOLEAN);
-Params::Validate::validation_options(
-    on_fail => sub { param_error( join '', @_ ) } );
+Params::Validate::validation_options( on_fail => sub { param_error( join '', @_ ) } );
 
-__PACKAGE__->valid_params(
-    cgi_request => { isa => 'HTML::Mason::FakeApache' },
+__PACKAGE__->valid_params
+    ( cgi_request => { isa => 'HTML::Mason::FakeApache' },
 
-    auto_send_headers => {
-        parse   => 'boolean',
-        type    => BOOLEAN,
-        default => 1,
-        descr   => "Whether HTTP headers should be auto-generated"
-    },
-);
+      auto_send_headers => { parse => 'boolean', type => BOOLEAN, default => 1,
+                             descr => "Whether HTTP headers should be auto-generated" },
+    );
 
-use HTML::Mason::MethodMaker (
-    read_only  => ['cgi_request'],
-    read_write => ['auto_send_headers']
-);
+use HTML::Mason::MethodMaker
+    ( read_only  => [ 'cgi_request' ],
+      read_write => [ 'auto_send_headers' ] );
 
 sub cgi_object {
     my $self = shift;
@@ -187,28 +181,28 @@ sub cgi_object {
 #
 # Override this method to send HTTP headers if necessary.
 #
-sub exec {
+sub exec
+{
     my $self = shift;
-    my $r    = $self->cgi_request;
+    my $r = $self->cgi_request;
     my $retval;
 
     eval { $retval = $self->SUPER::exec(@_) };
 
-    if ( my $err = $@ ) {
-        $retval =
-            isa_mason_exception( $err, 'Abort' ) ? $err->aborted_value
-          : isa_mason_exception( $err, 'Decline' ) ? $err->declined_value
-          :                                          rethrow_exception $err;
+    if (my $err = $@)
+    {
+	$retval = isa_mason_exception($err, 'Abort')   ? $err->aborted_value  :
+                  isa_mason_exception($err, 'Decline') ? $err->declined_value :
+                  rethrow_exception $err;
     }
 
     # On a success code, send headers if they have not been sent and
     # if we are the top-level request. Since the out_method sends
     # headers, this will typically only apply after $m->abort.
-    if (   !$self->is_subrequest
+    if (!$self->is_subrequest
         and $self->auto_send_headers
         and !$r->http_header_sent
-        and ( !$retval or $retval == 200 ) )
-    {
+        and (!$retval or $retval==200)) {
         $r->send_http_header();
     }
 
@@ -216,14 +210,14 @@ sub exec {
 }
 
 sub redirect {
-    my $self   = shift;
-    my $url    = shift;
+    my $self = shift;
+    my $url = shift;
     my $status = shift || 302;
 
     $self->clear_buffer;
 
     $self->{cgi_request}->header_out( Location => $url );
-    $self->{cgi_request}->header_out( Status   => $status );
+    $self->{cgi_request}->header_out( Status => $status );
 
     $self->abort;
 }
@@ -282,7 +276,7 @@ about the particular details of invoking Mason on each request.
 If you want to use Mason components from I<within> a regular CGI
 script (or any other Perl program, for that matter), then you don't
 need this module.  You can simply follow the directions in
-L<Using Mason from a standalone script|HTML::Mason::Admin/Using Mason from a standalone script>.
+the L<Using Mason from a standalone script|HTML::Mason::Admin/Using Mason from a standalone script> section of the administrator's manual.
 
 This module also provides an C<$r> request object for use inside
 components, similar to the Apache request object under
@@ -325,7 +319,7 @@ as a templating language but not an application server.
 C<handle_component()> will create a CGI query object, parse the query
 parameters, and send the HTTP header and component output to STDOUT.
 If you want to handle those parts yourself, see
-L<Using Mason from a standalone script|HTML::Mason::Admin/Using Mason from a standalone script>.
+the L<Using Mason from a standalone script|HTML::Mason::Admin/Using Mason from a standalone script> section of the administrator's manual.
 
 =item * handle_cgi_object()
 
@@ -602,5 +596,11 @@ Takes a single key argument and deletes that key from the table, so that none
 of its values will be in the table any longer.
 
 =back
+
+=head1 SEE ALSO
+
+L<HTML::Mason|HTML::Mason>,
+L<HTML::Mason::Admin|HTML::Mason::Admin>,
+L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>
 
 =cut
