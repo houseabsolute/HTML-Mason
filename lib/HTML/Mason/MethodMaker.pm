@@ -156,8 +156,4 @@ reference.  The keys are the internal name of the contained object,
 such as "request" or "compiler".  The values for the keys are the same
 as the parameters given for 'read_write' accessors.
 
-=head1 SEE ALSO
-
-L<HTML::Mason|HTML::Mason>
-
 =cut

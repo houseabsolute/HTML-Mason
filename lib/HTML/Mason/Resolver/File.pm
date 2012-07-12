@@ -116,8 +116,4 @@ HTML::Mason::Resolver::File - Component path resolver for file-based components
 This HTML::Mason::Resolver subclass is used when components are stored
 on the filesystem, which is the norm for most Mason-based applications.
 
-=head1 SEE ALSO
-
-L<HTML::Mason|HTML::Mason>
-
 =cut

@@ -29,7 +29,7 @@ Mason - High-performance, dynamic web site authoring system
         PerlHandler HTML::Mason::ApacheHandler
     </Location>
 
-=head1 STOP - HAVE YOU SEEN MASON 2?
+=head1 STOP - HAVE YOU CHECKED OUT MASON 2?
 
 Version 1 of Mason (which you are looking at now) has been around since
 1998, is in wide use, and is very stable. However it has not changed much in
@@ -180,5 +180,8 @@ Mason>, by Dave Rolsky and Ken Williams, published by O'Reilly and
 Associates.  The book's website is at http://www.masonbook.com/.  This
 book goes into detail on a number of topics, and includes a chapter of
 recipes as well as a sample Mason-based website.
+
+Finally, don't forget to check out L<Mason 2|Mason> to see it will serve
+your needs!
 
 =cut

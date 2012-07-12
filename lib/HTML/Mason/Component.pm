@@ -668,10 +668,4 @@ Returns the directory of the source filename for this component.
 
 =back
 
-=head1 SEE ALSO
-
-L<HTML::Mason|HTML::Mason>,
-L<HTML::Mason::Devel|HTML::Mason::Devel>,
-L<HTML::Mason::Request|HTML::Mason::Request>
-
 =cut

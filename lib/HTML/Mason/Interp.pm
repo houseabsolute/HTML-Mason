@@ -1537,10 +1537,4 @@ C<strict>.
 
 =back
 
-=head1 SEE ALSO
-
-L<HTML::Mason|HTML::Mason>,
-L<HTML::Mason::Admin|HTML::Mason::Admin>,
-L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>
-
 =cut

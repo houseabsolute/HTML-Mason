@@ -968,8 +968,4 @@ that overrides the _make_interp method to use your subclass:
               %interp_params );
     }
 
-=head1 SEE ALSO
-
-L<HTML::Mason|HTML::Mason>
-
 =cut

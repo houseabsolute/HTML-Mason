@@ -1124,16 +1124,4 @@ sending to standard output:
 
     # Do something with $outbuf
 
-=head1 AUTHORS
-
-Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams <ken@mathforum.org>
-
-=head1 SEE ALSO
-
-L<HTML::Mason|HTML::Mason>,
-L<HTML::Mason::Interp|HTML::Mason::Interp>,
-L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>,
-L<HTML::Mason::Lexer|HTML::Mason::Lexer>,
-L<HTML::Mason::Compiler|HTML::Mason::Compiler>
-
 =cut
