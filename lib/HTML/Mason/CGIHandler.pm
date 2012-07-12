@@ -16,16 +16,6 @@ use base qw(Class::Container);
 
 use HTML::Mason::MethodMaker ( read_write => [qw( interp )] );
 
-use vars qw($VERSION);
-
-# Why do we have a version?  I'm glad you asked.  See, dummy me
-# stupidly referenced it in the Subclassing docs _and_ the book.  It's
-# needed in order to dynamically have a request subclass change its
-# parent properly to work with CGIHandler or ApacheHandler.  It
-# doesn't really matter what the version is, as long as it's a true
-# value.  - dave
-$VERSION = '1.00';
-
 __PACKAGE__->valid_params( interp => { isa => 'HTML::Mason::Interp' }, );
 
 __PACKAGE__->contained_objects(
