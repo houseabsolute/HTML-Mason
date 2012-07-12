@@ -1,17 +1,15 @@
-# Stuff we're not ready to release
-ToClass.pm$
-Events.pm$
-PreCalculatedFile\.pm$
-
-# Apache::Test for Module::Build
-^inc/Apache/TestMB\.pm
-
-# Stuff we create during the build process
-^t/.*handler.*\.pl
-^t/.*\.cgi
-^t/httpd.*
-^t/mason
-^t/error_log$
+^\.git
+^data
+^dist.ini
+^docs
+^git
+^htdocs
+^lib/Pod
+^release
+^tidyall.ini
+^tmp
+^weaver.ini
+^TODO
 
 # Backup files, etc.
 ~$
@@ -20,35 +18,8 @@ PreCalculatedFile\.pm$
 \.bak$
 \.tar\.gz$
 
-# CVS cruft
-(^|/)CVS(/|$)
-\.cvsignore$
-
-# SVN cruft
-^\.svn
-
 # MakeMaker cruft
 ^Makefile$
+^Makefile.old$
 ^blib
-
-# Module::Build [en]cruft[ed jewels]
-^Build$
-^_build
-
-samples/cd-me.*
-
-^benchmarks
-
-^htpods
-
-^HTML-Mason-
-
-^pod2htm[di]\.\w+$
-
-^t/data
-^MYMETA.yml$
-
-^notes
-^MYMETA\.json$
-
-^release
+^MANIFEST.SKIP$
