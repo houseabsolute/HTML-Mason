@@ -1224,10 +1224,4 @@ value of the L<args_method|HTML::Mason::Params/args_method> parameter.
 
 =back
 
-=head1 SEE ALSO
-
-L<HTML::Mason|HTML::Mason>,
-L<HTML::Mason::Admin|HTML::Mason::Admin>,
-L<HTML::Mason::Interp|HTML::Mason::Interp>
-
 =cut

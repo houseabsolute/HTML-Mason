@@ -83,8 +83,4 @@ was defined.
 
 =back
 
-=head1 SEE ALSO
-
-L<HTML::Mason::Component|HTML::Mason::Component>
-
 =cut

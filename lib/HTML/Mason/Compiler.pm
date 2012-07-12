@@ -983,11 +983,3 @@ because the compiler object_id is only computed once on creation
 and would not reflect any changes to Lexer parameters.
 
 =cut
-
-=head1 SEE ALSO
-
-L<HTML::Mason|HTML::Mason>,
-L<HTML::Mason::Admin|HTML::Mason::Admin>,
-L<HTML::Mason::Interp|HTML::Mason::Interp>
-
-=cut

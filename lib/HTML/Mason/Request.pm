@@ -2532,14 +2532,4 @@ exceptions, like this:
 
 =back
 
-=head1 AUTHORS
-
-Jonathan Swartz <swartz@pobox.com>, Dave Rolsky <autarch@urth.org>, Ken Williams <ken@mathforum.org>
-
-=head1 SEE ALSO
-
-L<HTML::Mason|HTML::Mason>,
-L<HTML::Mason::Devel|HTML::Mason::Devel>,
-L<HTML::Mason::Component|HTML::Mason::Component>
-
 =cut

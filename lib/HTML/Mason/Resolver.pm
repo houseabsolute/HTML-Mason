@@ -121,8 +121,4 @@ L<HTML::Mason::ApacheHandler|HTML::Mason::ApacheHandler>.
 
 =back
 
-=head1 SEE ALSO
-
-L<HTML::Mason|HTML::Mason>
-
 =cut

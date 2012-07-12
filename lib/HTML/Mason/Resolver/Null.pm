@@ -67,8 +67,4 @@ EOF
 
   print $buffer;
 
-=head1 SEE ALSO
-
-L<HTML::Mason|HTML::Mason>
-
 =cut
