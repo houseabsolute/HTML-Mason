@@ -9,7 +9,6 @@ Revision history for HTML::Mason.
     - Switch to Dist::Zilla
     - Eliminate HTML docs from distribution, available on web
     - Move live Apache tests to author-only
-    - Perltidy files
 
 1.49 Feb 27, 2012
 
