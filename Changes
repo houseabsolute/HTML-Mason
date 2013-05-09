@@ -4,6 +4,14 @@ Revision history for HTML::Mason.
 
 1.51 Jul 11, 2012
 
+    [ DISTRIBUTION ]
+
+    - Fix hardcoded version
+
+    [DOCS]
+
+    - Add HTML::Mason::FAQ, from old masonhq.com website
+
 1.50 Jul 11, 2012
 
     [ DISTRIBUTION ]
