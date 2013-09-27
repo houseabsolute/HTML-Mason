@@ -343,7 +343,7 @@ sub _initialize {
 sub use_dhandlers
 {
     my $self = shift;
-    return defined $self->{dhandler_name} and length $self->{dhandler_name};
+    return (defined $self->{dhandler_name} and length $self->{dhandler_name});
 }
 
 sub alter_superclass

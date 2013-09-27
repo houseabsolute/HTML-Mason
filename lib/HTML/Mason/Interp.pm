@@ -862,7 +862,7 @@ sub object_file {
 sub use_autohandlers
 {
     my $self = shift;
-    return defined $self->{autohandler_name} and length $self->{autohandler_name};
+    return (defined $self->{autohandler_name} and length $self->{autohandler_name});
 }
 
 # Generate HTML that describes Interp's current status.
