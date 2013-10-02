@@ -1,9 +1,9 @@
-#!/usr/bin/perl -w
 #
 # Test 1.0 cache API compatibility layer.
 #
 
 use strict;
+use warnings;
 
 use HTML::Mason::Tests;
 

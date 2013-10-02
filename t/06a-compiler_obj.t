@@ -1,6 +1,6 @@
-#!/usr/bin/perl -w
-
 use strict;
+use warnings;
+
 use HTML::Mason;
 use Test;
 plan tests => 4;

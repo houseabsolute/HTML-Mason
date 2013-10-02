@@ -1,6 +1,6 @@
-#!/usr/bin/perl -w
-
 use strict;
+use warnings;
+
 use HTML::Mason::Tests;
 
 package HTML::Mason::Plugin::TestBeforeAndAfterRequest;

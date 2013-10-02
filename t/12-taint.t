@@ -1,6 +1,6 @@
-#!/usr/bin/perl -wT
-
+#!/usr/bin/perl -T
 use strict;
+use warnings;
 
 BEGIN {
   # See 'perlrun' and 'perlsec' man pages
