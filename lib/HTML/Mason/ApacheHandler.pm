@@ -1017,8 +1017,12 @@ sub _set_mason_req_out_method
 
         # mod_perl-2 does not need to call $r->send_http_headers
         $out_method = sub {
-            $r->$final_output_method( grep { defined } @_ );
-            $r->rflush;
+            eval {
+                $r->$final_output_method( grep { defined } @_ );
+                $r->rflush;
+            };
+            my $err = $@;
+            die $err if $err and $err !~ /Software caused connection abort/;
         };
 
     } else {
