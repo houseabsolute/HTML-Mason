@@ -1459,3 +1459,22 @@ may be more appropriate for in-depth debugging sessions.
 
 True or false, default is true. Indicates whether or not a given
 component should C<use strict>.
+
+=head2 use_warnings
+
+=over 4
+
+=item * Perl name:           use_warnings
+
+=item * Apache name:         MasonUseWarnings
+
+=item * Type in httpd.conf:  boolean
+
+=item * Default:             1
+
+=item * Belongs to:          C<HTML::Mason::Compiler::ToObject>
+
+=back
+
+True or false, default is false. Indicates whether or not a given
+component should C<use warnings>.

@@ -1133,6 +1133,36 @@ EOF
 
 #------------------------------------------------------------
 
+        $group->add_test( name => 'warnings_do_not_need_explicit_enabling_on_use_warnings',
+                          interp_params => { use_warnings => 1 },
+                          description => "Make sure that warnings _are_ generated on use_warnings for other bad use of uninit",
+                          component => <<'EOF',
+% my $x;
+use_warnings is <% $x + 2 %>
+EOF
+                          expect => <<'EOF',
+use_warnings is 2
+EOF
+                          expect_warnings => qr/Use of uninitialized value.+in addition/,
+                        );
+
+#------------------------------------------------------------
+
+        $group->add_test( name => 'warnings_do_not_need_explicit_enabling_without_autoflush_on_use_warnings',
+                          description => "Make sure that warnings _are_ generated on use_warnings for other bad use of uninit when enable_autoflush is off",
+                          interp_params => { enable_autoflush => 0, use_warnings => 1 },
+                          component => <<'EOF',
+% my $x;
+use_warnings is <% $x + 2 %>
+EOF
+                          expect => <<'EOF',
+use_warnings is 2
+EOF
+                          expect_warnings => qr/Use of uninitialized value.+in addition/,
+                        );
+
+#------------------------------------------------------------
+
         $group->add_test( name => 'unbalanced_content_block_error',
                           description => 'Detect and report unbalanced </&> tags',
                           interp_params => { enable_autoflush => 0 },
