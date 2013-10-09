@@ -6,11 +6,24 @@ Revision history for HTML::Mason.
 
     [ BUG FIXES ]
 
-    - Ignore 'Software caused connection abort' errors. RT #49031. Reported
+    - Ignore 'Software caused connection abort' errors. RT #49031. Submitted
       by Morten Bjoernsvik.
 
-    - Sort hash keys to deal with Perl 5.18+ hash randomization. Reported by
-      Zefram.
+    - Sort hash keys to deal with Perl 5.18+ hash randomization. RT
+      #88708. Submitted by Zefram.
+
+    - Fix 'and' precedence with explicit parens. RT #87050. Submitted by
+      Alex Vandiver.
+
+    - Escape each part of substitution, not their
+      concatenation. github.com/jonswar/perl-HTML-Mason/pull/1. Submitted
+      by Ricardo Signes.
+
+    [ ENHANCEMENTS ]
+
+    - Add use_warnings flag, similar to
+      use_strict. github.com/jonswar/perl-HTML-Mason/pull/4. Submitted by
+      Aevar Bjarmason.
 
 1.51  May 8, 2013
 
