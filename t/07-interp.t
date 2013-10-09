@@ -46,13 +46,13 @@ EOF
 
     $group->add_test( name => 'no autohandlers',
                       description => 'tests turning off autohandlers by setting name to ""',
-                      call_path => '/autohandler_test/subdir/hello',
+                      call_path => '/autohandler_test/subdir/off',
                       interp_params => { autohandler_name => '' },
                       component => <<'EOF',
-Hello World!
+Hello World!  Autohandlers are <% $m->interp->use_autohandlers ? 'on' : 'off' %>
 EOF
                       expect => <<'EOF',
-Hello World!
+Hello World!  Autohandlers are off
 EOF
                     );
 
@@ -464,6 +464,19 @@ EOF
                       expect_error => qr{could not find component},
                     );
 
+#------------------------------------------------------------
+
+    $group->add_test( name => 'no dhandlers',
+                      description => 'tests turning off dhandlers by setting name to ""',
+                      call_path => 'dhandler_test/exists',
+                      interp_params => { dhandler_name => '' },
+                      component => <<'EOF',
+Hello World!  dhandlers are <% $m->use_dhandlers ? 'on' : 'off' %>
+EOF
+                      expect => <<'EOF',
+Hello World!  dhandlers are off
+EOF
+                    );
 
 #------------------------------------------------------------
 
