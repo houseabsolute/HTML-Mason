@@ -441,7 +441,7 @@ invalid if the associated paths were to change.
 =back
 
 The class to use when creating a compiler. Defaults to
-L<HTML::Mason::Compiler|HTML::Mason::Compiler>.
+L<HTML::Mason::Compiler::ToObject|HTML::Mason::Compiler::ToObject>.
 
 
 =head2 component_error_handler
