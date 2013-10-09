@@ -1129,6 +1129,21 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'non_stringifying_escape',
+                      description => 'stringify after escapes, not before',
+                      component => <<'EOF',
+% $m->interp->set_escape( blort => sub { ${$_[0]} = ${$_[0]}->[0] if ref ${$_[0]} } );
+Works for <% 'strings' | blort %>
+Works for <% ['refs']  | blort %>
+EOF
+                      expect => <<'EOF',
+Works for strings
+Works for refs
+EOF
+                    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
