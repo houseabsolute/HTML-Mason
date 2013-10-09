@@ -1,7 +1,8 @@
-#!/usr/bin/perl -w
+use strict;
+use warnings;
+
 use HTML::Mason::Tests;
 use HTML::Mason::Tools qw(can_weaken);
-use strict;
 
 BEGIN
 {

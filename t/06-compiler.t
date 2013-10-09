@@ -1,6 +1,5 @@
-#!/usr/bin/perl -w
-
 use strict;
+use warnings;
 
 use Config;
 use HTML::Mason::Tests;
@@ -1076,9 +1075,37 @@ EOF
 
 #------------------------------------------------------------
 
-        $group->add_test( name => 'warnings',
-                          description => 'Make sure that warnings _are_ generated for other bad use of uninit',
+        $group->add_test( name => 'no warnings',
+                          description => "Make sure that warnings _aren't_ generated for other bad use of uninit",
                           component => <<'EOF',
+% my $x;
+x is <% $x + 2 %>
+EOF
+                          expect => <<'EOF',
+x is 2
+EOF
+                        );
+
+#------------------------------------------------------------
+
+        $group->add_test( name => 'warnings_without_autoflush',
+                          description => "Make sure that warnings _aren't_ generated for other bad use of uninit when enable_autoflush is off",
+                          interp_params => { enable_autoflush => 0 },
+                          component => <<'EOF',
+% my $x;
+x is <% $x + 2 %>
+EOF
+                          expect => <<'EOF',
+x is 2
+EOF
+                        );
+
+#------------------------------------------------------------
+
+        $group->add_test( name => 'warnings_need_explicit_enabling',
+                          description => "Make sure that warnings _are_ generated for other bad use of uninit",
+                          component => <<'EOF',
+% use warnings;
 % my $x;
 x is <% $x + 2 %>
 EOF
@@ -1090,10 +1117,11 @@ EOF
 
 #------------------------------------------------------------
 
-        $group->add_test( name => 'warnings_without_autoflush',
-                          description => 'Make sure that warnings _are_ generated for other bad use of uninit when enable_autoflush is off',
+        $group->add_test( name => 'warnings_need_explicit_enabling_without_autoflush',
+                          description => "Make sure that warnings _are_ generated for other bad use of uninit when enable_autoflush is off",
                           interp_params => { enable_autoflush => 0 },
                           component => <<'EOF',
+% use warnings;
 % my $x;
 x is <% $x + 2 %>
 EOF

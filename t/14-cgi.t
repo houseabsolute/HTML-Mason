@@ -1,6 +1,6 @@
-#!/usr/bin/perl -w
-
 use strict;
+use warnings;
+
 use HTML::Mason::CGIHandler;
 use CGI qw(-no_debug);  # Prevent "(offline mode: enter name=value pairs on standard input)"
 

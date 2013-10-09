@@ -1,6 +1,6 @@
-#!perl -w
-
 use strict;
+use warnings;
+
 use Test::More tests => 97;
 use CGI qw(-no_debug);
 
