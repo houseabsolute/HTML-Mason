@@ -4,6 +4,14 @@ Revision history for HTML::Mason.
 
 1.52  May 8, 2013
 
+    [ BUG FIXES ]
+
+    - Ignore 'Software caused connection abort' errors. RT #49031. Reported
+      by Morten Bjoernsvik.
+
+    - Sort hash keys to deal with Perl 5.18+ hash randomization. Reported by
+      Zefram.
+
 1.51  May 8, 2013
 
     [ DISTRIBUTION ]
