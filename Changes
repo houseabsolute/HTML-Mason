@@ -4,6 +4,10 @@ Revision history for HTML::Mason.
 
 1.53  Oct 9, 2013
 
+    [ DISTRIBUTION ]
+
+    - Attempt to fix corrupted tar
+
 1.52  Oct 9, 2013
 
     [ BUG FIXES ]
