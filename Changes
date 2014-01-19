@@ -2,7 +2,11 @@ Revision history for HTML::Mason.
 
 ** denotes an incompatible change
 
-1.54  Jan 18, 2014
+1.54  Jan 19, 2014
+
+    [ DISTRIBUTION ]
+
+    - Remake with gnutar
 
 1.53  Jan 18, 2014
 
