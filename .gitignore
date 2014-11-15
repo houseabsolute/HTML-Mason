@@ -1,7 +1,8 @@
+/.build
 /.tidyall.d
+/HTML-Mason-*
+/TODO
 /htdocs
 /mason_tests
 /release
 /tmp
-/TODO
-
