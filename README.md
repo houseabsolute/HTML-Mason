@@ -1,6 +1,6 @@
 # VERSION
 
-version 1.54
+version 1.55
 
 # SYNOPSIS
 
@@ -73,10 +73,9 @@ Version 1 of Mason (this distribution) -- has been around since 1998, is in
 wide use, and is very stable. However it has not changed much in years and
 is no longer actively developed.
 
-Version 2 of Mason -- [Mason](https://metacpan.org/pod/Mason) -- was released in February of 2011.
-It is being very actively developed and has a much more modern
-architecture. If you are just starting out, we recommend you give Mason 2 a
-try.
+Version 2 of Mason -- [Mason](https://metacpan.org/pod/Mason) -- was released in February of 2011. It is more
+actively developed and has a much more modern architecture. If you are just
+starting out, we recommend you give Mason 2 a try.
 
 For a summary of differences between Mason 1 and 2 see
 
@@ -176,11 +175,6 @@ Bugs and feature requests will be tracked at RT:
     http://rt.cpan.org/NoAuth/Bugs.html?Dist=HTML-Mason
     bug-html-mason@rt.cpan.org
 
-The latest source code can be browsed and fetched at:
-
-    http://github.com/jonswar/perl-html-mason/tree/master
-    git clone git://github.com/jonswar/perl-html-mason.git
-
 # AUTHORS
 
 - Jonathan Swartz <swartz@pobox.com>
@@ -191,15 +185,10 @@ The latest source code can be browsed and fetched at:
 
 - Ævar Arnfjörð Bjarmason <avarab@gmail.com>
 - Alex Vandiver <alex@chmrr.net>
-- autarch <autarch@878abba1-507e-414f-af30-0bba99d2f2a9>
-- jswartz <jswartz@878abba1-507e-414f-af30-0bba99d2f2a9>
-- kwilliams <kwilliams@878abba1-507e-414f-af30-0bba99d2f2a9>
-- modus <modus@878abba1-507e-414f-af30-0bba99d2f2a9>
-- (no author) <(no author)@878abba1-507e-414f-af30-0bba99d2f2a9>
+- John Williams <jwilliams@cpan.org>
+- Kevin Falcone <falcone@bestpractical.com>
+- Patrick Kane <modus-cpan@pr.es.to>
 - Ricardo Signes <rjbs@cpan.org>
-- sharkey3 <sharkey3@878abba1-507e-414f-af30-0bba99d2f2a9>
-- sharkey <sharkey@878abba1-507e-414f-af30-0bba99d2f2a9>
-- swartz <swartz@878abba1-507e-414f-af30-0bba99d2f2a9>
 
 # COPYRIGHT AND LICENSE
 

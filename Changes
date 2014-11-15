@@ -4,6 +4,8 @@ Revision history for HTML::Mason.
 
 {{$NEXT}}
 
+1.55     2014-11-14
+
     [ BUG FIXES ]
 
     - Shut up warnings from recent versions of CGI.pm. Patch by Kevin
