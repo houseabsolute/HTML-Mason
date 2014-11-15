@@ -1,3 +1,5 @@
+package HTML::Mason::FakeApache;
+
 use strict;
 use warnings;
 
@@ -7,7 +9,6 @@ use warnings;
 # the CPAN indexer doesn't pick it up, which would be ugly.
 BEGIN { eval "package Apache" }
 
-package HTML::Mason::FakeApache;
 @HTML::Mason::FakeApache::ISA = qw(Apache);
 # Analogous to Apache request object $r (but not an actual Apache subclass)
 # In the future we'll probably want to switch this to Apache::Fake or similar
@@ -314,6 +315,7 @@ sub params {
 
 ###########################################################
 package HTML::Mason::FakeTable;
+
 # Analogous to Apache::Table.
 use strict;
 use warnings;
@@ -368,6 +370,7 @@ sub do {
 
 ###########################################################
 package HTML::Mason::FakeTableHash;
+
 # Used by HTML::Mason::FakeTable.
 use strict;
 use warnings;

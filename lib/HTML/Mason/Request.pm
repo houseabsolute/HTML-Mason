@@ -1900,7 +1900,7 @@ cache class. e.g. for C<FileCache>, valid options include C<default_expires_in> 
 C<cache_depth>.
 
 See L<HTML::Mason::Cache::BaseCache|HTML::Mason::Cache::BaseCache> for
-information about the object returend from C<$m-E<gt>cache>.
+information about the object returned from C<$m-E<gt>cache>.
 
 =item If data_cache_api = CHI
 
@@ -2097,7 +2097,7 @@ Note that we ignore both the original and the final return value.
     }
     ...
 
-Here is a piece of code that traps all errors occuring anywhere in a
+Here is a piece of code that traps all errors occurring anywhere in a
 component or its children, e.g. for the purpose of handling
 application-specific exceptions. This is difficult to do with a manual
 C<eval> because it would have to span multiple code sections and the

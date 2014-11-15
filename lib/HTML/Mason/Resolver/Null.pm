@@ -50,7 +50,7 @@ of them do anything.
 This means that if you use this method things like C<< $interp->exec >>
 will simply not work at all.
 
-However, if you just want to make a component with an interepreter and
+However, if you just want to make a component with an interpreter and
 execute that component it can be useful.  For example:
 
   my $interp = HTML::Mason::Interp->new( resolver_class => 'HTML::Mason::Resolver::Null',

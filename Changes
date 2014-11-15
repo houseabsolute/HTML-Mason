@@ -666,7 +666,7 @@ Revision history for HTML::Mason.
     - ** The semantics of @_ for components now match Perl subroutines: @_
       contains aliases to the caller's arguments, instead of copies.  For
       example, if a component updates $_[0], the corresponding argument is
-      updated (or an error occurs if it is not updatable). The only users
+      updated (or an error occurs if it is not updateable). The only users
       that will notice this are those that update elements of @_ in
       components and do not expect those changes to affect the caller. If
       you have any doubts, grep your component tree for '\$_\[' and look for
@@ -962,7 +962,7 @@ Revision history for HTML::Mason.
     - Unreadable component source files caused the confusing error message
       "source callback returned no source".  This will now throw a much more
       helpful exception.
-    - Errors occuring in subrequests would cause error output to be mixed
+    - Errors occurring in subrequests would cause error output to be mixed
       with regular output when the error_mode was "output" (the default with
       ApacheHandler and CGIHandler).  Errors in subrequests should now look
       the same as errors in the top request.
@@ -1035,7 +1035,7 @@ Revision history for HTML::Mason.
 
     [ BUG FIXES ]
 
-    - Fixed a compilation error in HTML::Mason::Tools that was occuring
+    - Fixed a compilation error in HTML::Mason::Tools that was occurring
       with Perl 5.00503.
     - Made sure that <%method> and <%def> tags are treated
       case-insensitively.

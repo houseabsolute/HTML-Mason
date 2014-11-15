@@ -1176,7 +1176,7 @@ example:
 
 =head1 OTHER METHODS
 
-The ApacheHandler object has a few other publically accessible methods
+The ApacheHandler object has a few other publicly accessible methods
 that may be of interest to end users.
 
 =over 4

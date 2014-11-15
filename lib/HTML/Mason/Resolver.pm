@@ -64,7 +64,7 @@ This class is used by most of the Mason object's to manage constructor
 parameters and has-a relationships with other objects.
 
 See the documentation on this class for details on how to declare what
-paremeters are valid for your subclass's constructor.
+parameters are valid for your subclass's constructor.
 
 HTML::Mason::Resolver is a subclass of Class::Container so you
 do not need to subclass it yourself.

@@ -259,7 +259,7 @@ in strange and mysterious ways.
 =head2 Component Objects
 
 Mason provides an object API for components, allowing you to query a
-component's various asociated files, arguments, etc. For a description
+component's various associated files, arguments, etc. For a description
 of all methods see
 B<L<HTML::Mason::Component|HTML::Mason::Component>>.  Typically you
 get a handle on a component object from request methods like C<<
@@ -591,7 +591,7 @@ C<exec> method to execute it, which takes exactly the same parameters
 as the C<comp> method.
 
 Since subrequests inherit their parent request's parameters, output
-from a component called via a subrequest goes to the same desintation
+from a component called via a subrequest goes to the same destination
 as output from components called during the parent request.  Of course,
 you can change this.
 
@@ -940,7 +940,7 @@ In Mason 1.21 and beyond, this unnecessary copying was eliminated and
 @_ now contains I<aliases> to the caller's arguments, just as with
 regular Perl subroutines. For example, if a component updates $_[0],
 the corresponding argument is updated (or an error occurs if it is not
-updatable).
+updateable).
 
 Most users won't notice this change because C<< <%args> >> variables
 and the C<%ARGS> hash always contain copies of arguments.
@@ -1317,7 +1317,7 @@ Anything between these two lines
    % }
 
 will be skipped by Mason, including component calls.  While we don't
-recomend this for comments per se, it is a useful notation for
+recommend this for comments per se, it is a useful notation for
 "commenting out" code that you don't want to run.
 
 =head2 HTML/XML/... comments

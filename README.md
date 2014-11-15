@@ -1,28 +1,8 @@
-package HTML::Mason;
-# Copyright (c) 1998-2005 by Jonathan Swartz. All rights reserved.
-# This program is free software; you can redistribute it and/or modify it
-# under the same terms as Perl itself.
+# VERSION
 
-use 5.006;
+version 1.54
 
-use HTML::Mason::Interp;
-
-sub version
-{
-    return $HTML::Mason::VERSION;
-}
-
-1;
-
-# ABSTRACT: High-performance, dynamic web site authoring system
-
-__END__
-
-=pod
-
-=encoding UTF-8
-
-=head1 SYNOPSIS
+# SYNOPSIS
 
     PerlModule HTML::Mason::ApacheHandler
 
@@ -31,22 +11,7 @@ __END__
         PerlHandler HTML::Mason::ApacheHandler
     </Location>
 
-=head1 WAIT - HAVE YOU SEEN MASON 2?
-
-Version 1 of Mason (this distribution) -- has been around since 1998, is in
-wide use, and is very stable. However it has not changed much in years and
-is no longer actively developed.
-
-Version 2 of Mason -- L<Mason|Mason> -- was released in February of 2011.
-It is being very actively developed and has a much more modern
-architecture. If you are just starting out, we recommend you give Mason 2 a
-try.
-
-For a summary of differences between Mason 1 and 2 see
-
-    http://www.openswartz.com/2011/02/21/announcing-mason-2/
-
-=head1 DESCRIPTION
+# DESCRIPTION
 
 Mason is a tool for building, serving and managing large web
 sites. Its features make it an ideal backend for high load sites
@@ -93,8 +58,8 @@ The output of this component is:
 
 In this component you see a mix of standard HTML and Mason
 elements. The bare '%' prefixing the first line tells Mason that this
-is a line of Perl code. One line below, the embedded S<E<lt>%
-... %E<gt>> tag gets replaced with the return value of its contents,
+is a line of Perl code. One line below, the embedded <%
+...&nbsp;%> tag gets replaced with the return value of its contents,
 evaluated as a Perl expression.
 
 Beyond this trivial example, components can also embed serious chunks
@@ -102,22 +67,37 @@ of Perl code (say, to pull records from a database). They can also
 call other components, cache results for later reuse, and perform all
 the tricks you expect from a regular Perl program.
 
-=head1 INSTALLATION
+# WAIT - HAVE YOU SEEN MASON 2?
+
+Version 1 of Mason (this distribution) -- has been around since 1998, is in
+wide use, and is very stable. However it has not changed much in years and
+is no longer actively developed.
+
+Version 2 of Mason -- [Mason](https://metacpan.org/pod/Mason) -- was released in February of 2011.
+It is being very actively developed and has a much more modern
+architecture. If you are just starting out, we recommend you give Mason 2 a
+try.
+
+For a summary of differences between Mason 1 and 2 see
+
+    http://www.openswartz.com/2011/02/21/announcing-mason-2/
+
+# INSTALLATION
 
 Mason has been tested under Linux, FreeBSD, Solaris, HPUX, and
 Win32. As an all-Perl solution, it should work on any machine that has
-working versions of Perl 5.00503+, mod_perl, and the required CPAN
+working versions of Perl 5.00503+, mod\_perl, and the required CPAN
 modules.
 
 Mason has a standard MakeMaker-driven installation. See the README
 file for details.
 
-=head1 CONFIGURING MASON
+# CONFIGURING MASON
 
 This section assumes that you are able to install and configure a
-mod_perl server. Relevant documentation is available at
+mod\_perl server. Relevant documentation is available at
 http://www.apache.org (Apache) and http://perl.apache.org
-(mod_perl). The mod_perl mailing list, archive, and guide are also
+(mod\_perl). The mod\_perl mailing list, archive, and guide are also
 great resources.
 
 The simplest configuration of Mason requires a few lines in your
@@ -132,11 +112,11 @@ httpd.conf:
 
 The PerlModule directive simply ensures that the Mason code is loaded
 in the parent process before forking, which can save some memory when
-running mod_perl.
+running mod\_perl.
 
 The <Location> section routes all requests to the Mason handler, which
 is a simple way to try out Mason. A more refined setup is discussed
-in the L<Controlling Access via Filename Extension|HTML::Mason::Admin/Controlling Access via Filename Extension> section of the administrator's manual.
+in the [Controlling Access via Filename Extension](https://metacpan.org/pod/HTML::Mason::Admin#Controlling-Access-via-Filename-Extension) section of the administrator's manual.
 
 Once you have added the configuration directives, restart the
 server. First, go to a standard URL on your site to make sure you
@@ -153,43 +133,43 @@ in terms of the true filesystem path.
 Next, try adding the tag <% 2+2 %> at the top of some HTML file. If you
 reload this page and see a "4", Mason is working!
 
-=head1 DOCUMENTATION ROADMAP
+# DOCUMENTATION ROADMAP
 
 Once Mason is on its feet, the next step is to write a component or
-two. The L<Mason Developer's Manual|HTML::Mason::Devel> is a
+two. The [Mason Developer's Manual](https://metacpan.org/pod/HTML::Mason::Devel) is a
 complete tutorial for writing, using, and debugging components. A
 reference companion to the Developer's Manual is the Request API
-documentation, L<HTML::Mason::Request|HTML::Mason::Request>.
+documentation, [HTML::Mason::Request](https://metacpan.org/pod/HTML::Mason::Request).
 
 Whoever is responsible for setting up and tuning Mason should read the
-L<Administrator's Manual|HTML::Mason::Admin>, though developers
+[Administrator's Manual](https://metacpan.org/pod/HTML::Mason::Admin), though developers
 will also benefit from reading it as well. This document covers more
 advanced configuration scenarios and performance optimization. The
 reference companion to the Administrator's manual is the
-L<Parameters Reference|HTML::Mason::Params>, which describes all the
+[Parameters Reference](https://metacpan.org/pod/HTML::Mason::Params), which describes all the
 parameters you can use to configure Mason.
 
 Most of this documentation assumes that you're running Mason on top of
-mod_perl, since that is the most common configuration.  If you would
+mod\_perl, since that is the most common configuration.  If you would
 like to run Mason via a CGI script, refer to the
-L<HTML::Mason::CGIHandler|HTML::Mason::CGIHandler> documentation.
+[HTML::Mason::CGIHandler](https://metacpan.org/pod/HTML::Mason::CGIHandler) documentation.
 If you are using Mason from a standalone program, refer to
-the L<Using Mason from a Standalone Script|HTML::Mason::Admin/Using Mason from a Standalone Script> section of the administrator's manual.
+the [Using Mason from a Standalone Script](https://metacpan.org/pod/HTML::Mason::Admin#Using-Mason-from-a-Standalone-Script) section of the administrator's manual.
 
-There is also a book about Mason, I<Embedding Perl in HTML with
-Mason>, by Dave Rolsky and Ken Williams, published by O'Reilly and
+There is also a book about Mason, _Embedding Perl in HTML with
+Mason_, by Dave Rolsky and Ken Williams, published by O'Reilly and
 Associates.  The book's website is at http://www.masonbook.com/.  This
 book goes into detail on a number of topics, and includes a chapter of
 recipes as well as a sample Mason-based website.
 
-=head1 GETTING HELP AND SOURCES
+# GETTING HELP AND SOURCES
 
 Questions and feedback are welcome, and should be directed to the Mason
 mailing list. You must be subscribed to post.
 
     https://lists.sourceforge.net/lists/listinfo/mason-users
 
-You can also visit us at C<#mason> on L<irc://irc.perl.org/#mason>.
+You can also visit us at `#mason` on [irc://irc.perl.org/#mason](irc://irc.perl.org/#mason).
 
 Bugs and feature requests will be tracked at RT:
 
@@ -201,4 +181,29 @@ The latest source code can be browsed and fetched at:
     http://github.com/jonswar/perl-html-mason/tree/master
     git clone git://github.com/jonswar/perl-html-mason.git
 
-=cut
+# AUTHORS
+
+- Jonathan Swartz <swartz@pobox.com>
+- Dave Rolsky <autarch@urth.org>
+- Ken Williams <ken@mathforum.org>
+
+# CONTRIBUTORS
+
+- Ævar Arnfjörð Bjarmason <avarab@gmail.com>
+- Alex Vandiver <alex@chmrr.net>
+- autarch <autarch@878abba1-507e-414f-af30-0bba99d2f2a9>
+- jswartz <jswartz@878abba1-507e-414f-af30-0bba99d2f2a9>
+- kwilliams <kwilliams@878abba1-507e-414f-af30-0bba99d2f2a9>
+- modus <modus@878abba1-507e-414f-af30-0bba99d2f2a9>
+- (no author) <(no author)@878abba1-507e-414f-af30-0bba99d2f2a9>
+- Ricardo Signes <rjbs@cpan.org>
+- sharkey3 <sharkey3@878abba1-507e-414f-af30-0bba99d2f2a9>
+- sharkey <sharkey@878abba1-507e-414f-af30-0bba99d2f2a9>
+- swartz <swartz@878abba1-507e-414f-af30-0bba99d2f2a9>
+
+# COPYRIGHT AND LICENSE
+
+This software is copyright (c) 1998 - 2014 by Jonathan Swartz.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
