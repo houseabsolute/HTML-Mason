@@ -1,6 +1,6 @@
 # VERSION
 
-version 1.55
+version 1.56
 
 # SYNOPSIS
 

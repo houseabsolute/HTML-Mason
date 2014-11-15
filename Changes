@@ -4,6 +4,8 @@ Revision history for HTML::Mason.
 
 {{$NEXT}}
 
+1.56     2014-11-14
+
     [ BUG FIXES ]
 
     - Fix a packaging issue with the last release that prevent PAUSE from
