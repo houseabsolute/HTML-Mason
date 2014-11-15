@@ -37,10 +37,9 @@ Version 1 of Mason (this distribution) -- has been around since 1998, is in
 wide use, and is very stable. However it has not changed much in years and
 is no longer actively developed.
 
-Version 2 of Mason -- L<Mason|Mason> -- was released in February of 2011.
-It is being very actively developed and has a much more modern
-architecture. If you are just starting out, we recommend you give Mason 2 a
-try.
+Version 2 of Mason -- L<Mason> -- was released in February of 2011. It is more
+actively developed and has a much more modern architecture. If you are just
+starting out, we recommend you give Mason 2 a try.
 
 For a summary of differences between Mason 1 and 2 see
 
