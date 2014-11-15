@@ -29,7 +29,7 @@ use CGI qw(-no_debug);  # Prevent "(offline mode: enter name=value pairs on stan
              %interp_params,
             );
         
-        eval { $self->_execute($interp) };
+        eval { local $CGI::LIST_CONTEXT_WARN = 0; $self->_execute($interp) };
         
         return $self->check_result($@);
     }
