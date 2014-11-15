@@ -195,9 +195,4 @@ Bugs and feature requests will be tracked at RT:
     http://rt.cpan.org/NoAuth/Bugs.html?Dist=HTML-Mason
     bug-html-mason@rt.cpan.org
 
-The latest source code can be browsed and fetched at:
-
-    http://github.com/jonswar/perl-html-mason/tree/master
-    git clone git://github.com/jonswar/perl-html-mason.git
-
 =cut
