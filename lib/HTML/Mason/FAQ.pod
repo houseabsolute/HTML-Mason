@@ -16,8 +16,6 @@ Usually this situation arises when a top-level component makes a run-time decisi
 
 Autohandlers and dhandlers are only triggered for the top-level component of a request. In 1.1, you can use an Apache internal redirect or a Mason subrequest ($m->subexec) to solve the problem.
 
-In 1.0x, your best bet is to use an Apache internal redirect, but see bug http://www.masonhq.com/resources/todo/access.html?id=292.
-
 =head2 I added a simple autohandler to a directory and now my pages don't appear.
 
 Make sure to include a call to $m->call_next somewhere in the autohandler.
@@ -35,8 +33,6 @@ Consider a site with the following components:
 and suppose a request comes in for /products/index.html. /dhandler will handle the request but will still inherit from /autohandler.
 
 This is not always the desired behavior, but there is no easy way to change it. If you want /products/* requests to use /products/autohandler, you'll need to create /products/dhandler as well.
-
-See http://www.masonhq.com/resources/todo/view.html?id=520
 
 =head2 Can I change the value of an attribute dynamically, based on the request?
 
@@ -72,7 +68,7 @@ Mason will try each autohandler path in turn, e.g.
    /foo/autohandler
    /autohandler
 
-For each path, it will search all of the component roots, and only run the *first* autohandler found. Some of the autohandlers might come from one root and some from another.  However, there is no way that multiple autohandlers would be run for the same path (/foo/autohandler, for example.) There is also no way for /foo/autohandler in root 1 to explicitly call /foo/autohandler in root 2 - see the final question in http://www.masonhq.com/?FAQ:Components about multiple component roots.
+For each path, it will search all of the component roots, and only run the *first* autohandler found. Some of the autohandlers might come from one root and some from another.  However, there is no way that multiple autohandlers would be run for the same path (/foo/autohandler, for example.) There is also no way for /foo/autohandler in root 1 to explicitly call /foo/autohandler in root 2.
 
 People sometimes ask for this behavior to be changed. We feel it's a bad idea because multiple component roots, right now, are very clean in both behavior and implementation. Trying to run multiple autohandlers for the same path would require a complex set of precedence rules that would almost certainly lead to unpredictable behavior. (Think about multiple versions of multiple autohandlers at different directory levels, and trying to predict which order they'd run in.)
 
@@ -165,8 +161,6 @@ Technically you can just say "use module-name" at the beginning of a component. 
 
 A more efficient method is to put the use line in the handler.pl or use the PerlModule directive. If you want components to be able to refer to symbols exported by the module, you need to use the module inside the HTML::Mason::Commands package. See the "External modules" section of the Administrator's Guide:
 
-      http://www.masonhq.com/docs/manual/Admin.html#external_modules
-
 =head2 Can I define subroutines in components?
 
 Defining a named subroutine in a <%perl> or <%init> section does not work reliably because such a definition would end up residing inside another subroutine, and Perl doesn't like that.
@@ -206,8 +200,6 @@ Often people expect the working directory to be the directory of the current com
 =head2 How do I exit from all components including the ones that called me?
 
 Use $m->abort, documented in the Request manual:
-
-      http://www.masonhq.com/docs/manual/Request.html#item_abort
 
 =head2 Why does my output have extra newlines/whitespace and how can I get rid of it?
 
@@ -256,7 +248,7 @@ To emit binary data without the risk of inserting extra whitespace, surround you
        $m->abort;
       </%init>
 
-At some point Mason will probably offer a "reasonable" whitespace removal feature, controlled by parameter. See http://www.masonhq.com/resources/todo/view.html?id=459
+At some point Mason will probably offer a "reasonable" whitespace removal feature, controlled by parameter.
 
 =head2 I'm trying to generate an image or other binary file, but it seems to be getting corrup
 
@@ -319,8 +311,6 @@ Another way to block out code is with a <%doc> tag or a <%# %> comment, although
 
 Use $m->scomp, documented in the Request manual:
 
-http://www.masonhq.com/docs/manual/Request.html#item_scomp
-
 =head2 Can I use globals in components?
 
 All HTML::Mason components run in the same package (HTML::Mason::Commands), so if you set a global variable in one you'll be able to read it in all the others. The only problem is that Mason by default parses components with strict mode on, so you'll get a warning about the global (and Mason considers all such warnings fatal). To avoid errors, simply declare your globals via the MasonAllowGlobals parameter.
@@ -335,10 +325,6 @@ If you have a handler.pl file, you can also declare global variables in the hand
 
 or use the Parser allow_globals parameter.
 
-See the section on globals in the Administrator's Guide for more details:
-
-      http://www.masonhq.com/docs/manual/Admin.html#global_variables
-
 Alternatively you can turn off strict entirely by passing:
 
       use_strict => 0
@@ -347,9 +333,7 @@ when you create the Parser object. Then you can use all the globals you want. Do
 
 =head2 How do I share variables between components?
 
-First, you can pass variables from one component to another. See
-
-        http://www.masonhq.com/docs/manual/Devel.html#passing_parameters.
+First, you can pass variables from one component to another.
 
 Second, you can use globals. All components run in the same package (HTML::Mason::Commands as of this writing), so globals in this package are visible to all components. See the previous question.
 
@@ -369,13 +353,9 @@ This should no longer happen with Mason 1.10+. For those users still using older
 
 Since your server is most likely in batch mode, all Mason output gets buffered til the end of the request. print and $r->print circumvent the buffer and thus come out before other Mason output.
 
-Solution: don't use print or $r->print. Use $m->out if you must output inside a Perl section. See the section on output mode in the Administrator's Guide:
+Solution: don't use print or $r->print. Use $m->out if you must output inside a Perl section. See the section on output mode in the Administrator's Guide.
 
-      http://www.masonhq.com/docs/manual/1.05/Admin.html#out_mode
-
-and the section on $m->out in the Request manual:
-
-      http://www.masonhq.com/docs/manual/1.05/Request.html#item_out_string
+and the section on $m->out in the Request manual.
 
 =head2 Why doesn't my <%cleanup> code run every time the component runs?
 
@@ -452,10 +432,7 @@ Alternatively, [http://search.cpan.org/dist/MasonX-Request-ExtendedCompRoot Maso
 
 It is impossible to write a truly generic standalone script to syntax check components, because components rely on certain globals and modules to be present in their environment. Mason may report compile errors from such a script even though they would not occur in your normal web environment.
 
-The best you can do is write a standalone script (http://www.masonhq.com/docs/manual/Admin.html#using_mason_from_a_standalone_sc) that mimics your web environment as much as possible - in particular, declaring the same globals and loading the same modules. Instead of actually executing components, your script need only load them with $interp->load(). This method will throw a fatal error if a component fails to load.
-See this contribution: http://www.masonhq.com/?Compile
-
-
+The best you can do is write a standalone script that mimics your web environment as much as possible - in particular, declaring the same globals and loading the same modules. Instead of actually executing components, your script need only load them with $interp->load(). This method will throw a fatal error if a component fails to load.
 
 =head1 HTTP AND HTML
 
@@ -513,9 +490,7 @@ To print HTML constructs returned by CGI functions, just enclose them in <%%>, e
 
 =head2 How do I modify the outgoing HTTP headers?
 
-Use the usual Apache.pm functions, such as $r->header_out. See the "Sending HTTP Headers" section in the Component Developer's Guide:
-
-      http://www.masonhq.com/docs/manual/Devel.html#sending_http_headers
+Use the usual Apache.pm functions, such as $r->header_out. See the "Sending HTTP Headers" section in the Component Developer's Guide.
 
 =head2 How do I do an external redirect?
 
@@ -682,11 +657,11 @@ Because Mason consists of only Perl code, it should work anywhere Perl runs (inc
 
 =head2 Can I run Mason outside a web server?
 
-Yes, in fact Mason can be useful for generating a set of web pages offline, as a general templating tool, or even as a code generator for another language. See the "Standalone Mode" section of the Interpreter manual at http://www.masonhq.com/docs/manual/Admin.html#running_outside_of_mod_perl
+Yes, in fact Mason can be useful for generating a set of web pages offline, as a general templating tool, or even as a code generator for another language. See the "Standalone Mode" section of the Interpreter manual.
 
 =head2 Can I run Mason via CGI?
 
-Yes. See "Using Mason from a CGI script" in the Interpreter manual at http://www.masonhq.com/docs/manual/Admin.html#running_outside_of_mod_perl
+Yes. See "Using Mason from a CGI script" in the Interpreter manual.
 
 The examples in the docs requires that you have Mason 1.10+ installed.
 
@@ -720,7 +695,7 @@ Recent versions of Mason use that, or a variant of it.
 
 =head2 What does the error "Can't locate Apache/Request.pm in @INC" m
 
-You are using the default !ApacheHandler args_method ('mod_perl'), which requires that you have installed the Apache::Request package (libapreq). See http://www.masonhq.com/docs/manual/Params.html#args_method.
+You are using the default !ApacheHandler args_method ('mod_perl'), which requires that you have installed the Apache::Request package (libapreq).
 
 You can either install libapreq, or change args_method to 'CGI'. The latter is a bit slower and uses more memory.
 
@@ -784,7 +759,7 @@ For more details see "Server Stopping and Restarting" in the mod_perl guide.
 
 Unlike many templating systems, Mason comes with no obvious filenaming standards. While this flexibility was initially considered an advantage, in retrospect it has led to the proliferation of a million different component extensions (.m, .mc, .mhtml, .mcomp, ...) and has made it more difficult for users to share components and configuration.
 
-The Mason team now recommends a filenaming scheme with extensions like .html, .txt, .pl for top-level components, and .mhtml, .mtxt, .mpl for internal (non-top-level) components. See http://www.masonhq.com/docs/manual/Admin.html#controlling_access_via_filename_#controlling_access_via_filename_ for justification and configuration examples.
+The Mason team now recommends a filenaming scheme with extensions like .html, .txt, .pl for top-level components, and .mhtml, .mtxt, .mpl for internal (non-top-level) components.
 
 Whatever naming scheme you choose should ideally accomplish three things:
 
@@ -798,7 +773,7 @@ Whatever naming scheme you choose should ideally accomplish three things:
 
 If you put images in the same directories as components, you need to make sure that the images don't get handled through HTML::Mason. The reason is that HTML::Mason will try to parse the images and may inadvertently find HTML::Mason syntax (e.g. "<%"). Most images will probably pass through successfully but a few will cause HTML::Mason errors.
 
-The simplest remedy is to have HTML::Mason decline image and other non-HTML requests, thus letting Apache serve them in the normal way. See http://masonhq.com/docs/manual/Admin.html#controlling_access_via_filename_.
+The simplest remedy is to have HTML::Mason decline image and other non-HTML requests, thus letting Apache serve them in the normal way.
 
 Another solution is to put all images in a separate directory; it is then easier to tell Apache to serve them in the normal way. See the next question.
 
@@ -875,9 +850,7 @@ Use mod_perl's $r->content_type function to set the appropriate MIME type. This 
 =head2 How do I bring in external modules?
 
 
-Use the PerlModule directive in your httpd.conf, or if you have a startup.pl file, put the 'use module' in there. If you want components to be able to refer to symbols exported by the module, however, you'll need to use the module inside the HTML::Mason::Commands package. See the "External modules" section of the Administrator's Guide:
-
-    http://www.masonhq.com/docs/manual/Admin.html#external_modules
+Use the PerlModule directive in your httpd.conf, or if you have a startup.pl file, put the 'use module' in there. If you want components to be able to refer to symbols exported by the module, however, you'll need to use the module inside the HTML::Mason::Commands package. See the "External modules" section of the Administrator's Guide.
 
 =head2 How do I adjust Perl's INC path so it can find my modules?
 
@@ -1042,11 +1015,11 @@ Are you using a handler.pl file created before version 1.10?  Please see the han
 
 You are explicitly creating an Interp object in your handler.pl and then passing that to ApacheHandler->new. 
 
-Instead, simply pass all of your Interp parameters to ApacheHandler->new directly. The parameters will end up going where they belong. See the upgrade guide - http://masonhq.com/docs/upgrading.html - for more details.
+Instead, simply pass all of your Interp parameters to ApacheHandler->new directly. The parameters will end up going where they belong.
 
 =head2 When I start Apache (or try to use Mason) I get an error like this: "The Parser module is no longer a part of HTML::Mason.  Please see the Lexer and Compiler modules, its replacements."
 
-The Parser module is no longer used. See the upgrade guide -- http://masonhq.com/docs/upgrading.html -- for more details.
+The Parser module is no longer used.
 
 =head2 I get an error like: "The following parameters were passed in the call to HTML::Mason::Container::new but were not listed in the validation options: error_format error_mode request_class resolver_class" when using ApacheHandler
 
@@ -1073,10 +1046,6 @@ The "perl_' prefix for Mason tags, like <%perl_args>, is no longer supported. Re
 
 =head1 WHERE TO FIND INFORMATION
 
-=head2 Does HTML::Mason have an official web site?
-
-Yes, at http://www.masonhq.com.
-
 =head2 Where do I obtain HTML::Mason?
 
 HTML::Mason is available from CPAN (the Comprehensive Perl Archive Network). Details about CPAN are available at http://www.perl.com/. See the [FAQ:Installation] section of this document for tips on obtaining and installing Mason.
@@ -1084,7 +1053,3 @@ HTML::Mason is available from CPAN (the Comprehensive Perl Archive Network). Det
 =head2 Where can I ask questions about HTML::Mason?
 
 See ContactUs and MailingLists.
-
-=head2 I think I've found a bug in Mason, what should I do?
-
-Check the known bugs page at http://masonhq.com/resources/bugs.html to see if it's already been reported; simplify the example as much as possible to make sure it's really Mason (i.e. try doing the same thing with just mod_perl and see if it still happens); finally, send a report to the user's list.
