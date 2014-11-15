@@ -2,6 +2,13 @@ Revision history for HTML::Mason.
 
 ** denotes an incompatible change
 
+{{$NEXT}}
+
+    [ BUG FIXES ]
+
+    - Shut up warnings from recent versions of CGI.pm. Patch by Kevin
+      Falcone. GitHub PR #1.
+
 1.54  Jan 19, 2014
 
     [ DISTRIBUTION ]
