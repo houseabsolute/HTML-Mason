@@ -1,4 +1,4 @@
-package Pod::Weaver::Section::SeeAlsoMason;
+package inc::Pod::Weaver::Section::SeeAlsoMason;
 use Moose;
 with 'Pod::Weaver::Role::Section';
 
@@ -8,6 +8,8 @@ use Moose::Autobox;
 
 sub weave_section {
     my ( $self, $document, $input ) = @_;
+
+    return if $input->{filename} =~ m{\QHTML/Mason.pm};
 
     my $idc = $input->{pod_document}->children;
     for ( my $i = 0 ; $i < $idc->length ; $i++ ) {
