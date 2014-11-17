@@ -8,7 +8,7 @@ Revision history for HTML::Mason.
 
     [ BUG FIXES ]
 
-    - Fix a packaging issue with the last release that prevent PAUSE from
+    - Fix a packaging issue with the last release that prevented PAUSE from
       indexing some modules in the tarball.
 
 1.55     2014-11-14
