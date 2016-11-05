@@ -77,9 +77,9 @@ Version 2 of Mason -- [Mason](https://metacpan.org/pod/Mason) -- was released in
 actively developed and has a much more modern architecture. If you are just
 starting out, we recommend you give Mason 2 a try.
 
-For a summary of differences between Mason 1 and 2 see
+For a summary of differences between Mason 1 and 2 see:
 
-    http://www.openswartz.com/2011/02/21/announcing-mason-2/
+* [Announcing Mason 2](http://www.openswartz.com/2011/02/21/announcing-mason-2/)
 
 # INSTALLATION
 
