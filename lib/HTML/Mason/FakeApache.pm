@@ -1,5 +1,5 @@
 package HTML::Mason::FakeApache;
-
+$HTML::Mason::FakeApache::VERSION = '1.56';
 use strict;
 use warnings;
 

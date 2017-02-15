@@ -1,5 +1,5 @@
 package HTML::Mason::Plugin;
-
+$HTML::Mason::Plugin::VERSION = '1.56';
 use strict;
 use warnings;
 

@@ -1,5 +1,5 @@
 package HTML::Mason::CGIHandler;
-
+$HTML::Mason::CGIHandler::VERSION = '1.56';
 use strict;
 use warnings;
 

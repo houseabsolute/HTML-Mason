@@ -3,7 +3,7 @@
 # under the same terms as Perl itself.
 
 package HTML::Mason::Lexer;
-
+$HTML::Mason::Lexer::VERSION = '1.56';
 use strict;
 use warnings;
 
@@ -391,8 +391,6 @@ sub match_substitute
            %>                   # Closing tag
           }xcigs )
     {
-        $self->{current}{lines} += tr/\n// foreach grep defined, ($1, $2);
-
         $self->{current}{compiler}->substitution( substitution => $1,
                                                   escape => $3 );
         return 1;

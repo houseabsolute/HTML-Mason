@@ -488,6 +488,20 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'line_nums_multi-line_substitution_block',
+                      description => 'be sure line numbers aren\'t inflated by block size',
+                      component => <<'EOF',
+<% do {
+
+die "I'm at #3";
+
+} %>
+EOF
+                      expect_error => qr/at #3 .* line 3/,
+                    );
+
+#------------------------------------------------------------
+
     $group->add_test( name => 'attr_block_zero',
                       description => 'test proper handling of zero in <%attr> block values',
                       component => <<'EOF',

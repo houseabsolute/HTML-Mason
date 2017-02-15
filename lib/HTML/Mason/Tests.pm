@@ -1,5 +1,5 @@
 package HTML::Mason::Tests;
-
+$HTML::Mason::Tests::VERSION = '1.56';
 use strict;
 use warnings;
 
