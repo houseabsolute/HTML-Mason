@@ -3,7 +3,7 @@
 # under the same terms as Perl itself.
 
 package HTML::Mason::MethodMaker;
-
+$HTML::Mason::MethodMaker::VERSION = '1.56';
 use strict;
 use warnings;
 

@@ -2,7 +2,7 @@ package HTML::Mason;
 # Copyright (c) 1998-2005 by Jonathan Swartz. All rights reserved.
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
-
+$HTML::Mason::VERSION = '1.56';
 use 5.006;
 
 use HTML::Mason::Interp;

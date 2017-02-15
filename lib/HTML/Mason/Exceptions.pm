@@ -1,5 +1,5 @@
 package HTML::Mason::Exceptions;
-
+$HTML::Mason::Exceptions::VERSION = '1.56';
 use strict;
 use warnings;
 

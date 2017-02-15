@@ -977,7 +977,7 @@ The class to use when creating a lexer. Defaults to L<HTML::Mason::Lexer|HTML::M
 =back
 
 The maximum recursion depth for the component stack, for the request
-stack, and for the inheritance stack. An error is signalled if the
+stack, and for the inheritance stack. An error is signaled if the
 maximum is exceeded.  Default is 32.
 
 

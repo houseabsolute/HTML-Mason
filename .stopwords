@@ -1,6 +1,10 @@
+404s
+0x
+1x
 AUTOHANDLERS
 Adminstrator
 ApacheModPerl
+ApacheModPerl2
 ApacheReload
 Autohandlers
 Bekman
@@ -26,6 +30,7 @@ Kumar
 LFU
 LogLevel
 MSIE
+MD5
 MailingLists
 Mallah
 MasonAllowGlobals
@@ -97,8 +102,10 @@ Subcomponents
 Subrequests
 TIEHASH
 USR
+USR1
 UserDir
 Vivek
+Win32
 ala
 apachectl
 apachehandler

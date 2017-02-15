@@ -8,7 +8,7 @@
 #
 
 package HTML::Mason::Utils;
-
+$HTML::Mason::Utils::VERSION = '1.56';
 use HTML::Mason::Tools qw(compress_path);
 use strict;
 use warnings;
