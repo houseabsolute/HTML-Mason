@@ -4,6 +4,11 @@ Revision history for HTML::Mason.
 
 {{$NEXT}}
 
+    [ BUG FIXES ]
+
+    - Fix test failures under 5.26.0+ due to "." no longer being in @INC. PR
+      By Kent Fredric. GH #6. Fixed RT #121443.
+
 1.56     2014-11-14
 
     [ BUG FIXES ]
