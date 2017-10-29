@@ -4,6 +4,8 @@ Revision history for HTML::Mason.
 
 {{$NEXT}}
 
+1.57     2017-10-29
+
     [ BUG FIXES ]
 
     - Fix test failures under 5.26.0+ due to "." no longer being in @INC. PR
