@@ -36,6 +36,7 @@ on 'develop' => sub {
   requires "Perl::Critic" => "1.126";
   requires "Perl::Tidy" => "20160302";
   requires "Test::CPAN::Meta::JSON" => "0.16";
+  requires "Test::Memory::Cycle" => "0";
   requires "Test::Mojibake" => "0";
   requires "Test::More" => "0.88";
   requires "Test::NoTabs" => "0";

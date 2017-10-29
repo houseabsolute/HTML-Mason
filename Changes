@@ -4,6 +4,8 @@ Revision history for HTML::Mason.
 
 {{$NEXT}}
 
+1.58     2017-10-29
+
     - Redid the release because of some dzil issues. 1.57 might be a little
       wonky.
 
