@@ -943,6 +943,7 @@ sub call_dynamic {
     if (!defined($comp->dynamic_subs_request) or $comp->dynamic_subs_request ne $m) {
         $comp->dynamic_subs_init;
         $comp->dynamic_subs_request($m);
+        Scalar::Util::weaken( $comp->{dynamic_subs_request} ) if can_weaken;
     }
 
     return $comp->run_dynamic_sub($key, @args);
