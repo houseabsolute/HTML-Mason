@@ -31,6 +31,15 @@ __END__
         PerlHandler HTML::Mason::ApacheHandler
     </Location>
 
+=head1 MAINTENANCE HELP NEEDED
+
+I (Dave Rolsky) am no longer using HTML::Mason and I would love to find some
+co-maintainers to help. Specifically, I'd like people to review issues and
+PRs, create new PRs, and ultimately take on the task of uploading new releases
+to CPAN. If you're interested the best way to start is to fix one or more of
+the issues in the L<issue
+tracker|https://github.com/houseabsolute/HTML-Mason/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc>.
+
 =head1 WAIT - HAVE YOU SEEN MASON 2?
 
 Version 1 of Mason (this distribution) -- has been around since 1998, is in
