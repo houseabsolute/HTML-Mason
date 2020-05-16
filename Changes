@@ -4,6 +4,8 @@ Revision history for HTML::Mason.
 
 {{$NEXT}}
 
+1.59     2020-05-16
+
     - Moved issues to GH issues and added a note about lack of maintenance.
 
 
