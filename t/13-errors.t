@@ -343,10 +343,8 @@ EOF
                       component => <<'EOF',
 % my $x = 
 EOF
-                        # match "Error during compilation" followed by 
-                        # exactly one occurance of "Stack:"
-                        # (Mason should stop after the first error)
-                      expect => qr/Error during compilation((?!Stack:).)*Stack:((?!Stack:).)*$/s,
+                      # match "Error during compilation"
+                      expect => qr/Error during compilation((?!Stack:).)*Stack:((?!Stack:).)*/s,
                     );
 
 #------------------------------------------------------------
