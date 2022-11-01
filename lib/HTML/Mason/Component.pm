@@ -111,18 +111,21 @@ sub _determine_inheritance {
 
     my $interp = $self->interp;
 
+    my $dir_path = $self->dir_path;
+    $dir_path = '' unless defined $dir_path;
+
     # Assign inheritance properties
     if (exists($self->{flags}->{inherit})) {
         if (defined($self->{flags}->{inherit})) {
-            $self->{inherit_path} = absolute_comp_path($self->{flags}->{inherit}, $self->dir_path);
+            $self->{inherit_path} = absolute_comp_path($self->{flags}->{inherit}, $dir_path);
         }
     } elsif ( $interp->use_autohandlers ) {
         if ($self->name eq $interp->autohandler_name) {
-            unless ($self->dir_path eq '/') {
-                ($self->{inherit_start_path}) = $self->dir_path =~ m,^(.*/)?.*,s
+            unless ($dir_path eq '/') {
+                ($self->{inherit_start_path}) = $dir_path =~ m,^(.*/)?.*,s
             }
         } else {
-            $self->{inherit_start_path} = $self->dir_path;
+            $self->{inherit_start_path} = $dir_path;
         }
     }
 }
@@ -378,7 +381,9 @@ sub logger {
     my ($self) = @_;
 
     if (!$self->{logger}) {
-        my $log_category = "HTML::Mason::Component" . $self->path();
+        my $path = $self->path();
+        $path = '' unless defined $path;
+        my $log_category = "HTML::Mason::Component$path";
         $log_category =~ s/\//::/g;
         $self->{logger} = Log::Any->get_logger(category => $log_category);
     }

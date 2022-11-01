@@ -255,6 +255,7 @@ sub _initialize {
                 unless ($request_comp) {
                     if ( $request_comp = $self->interp->find_comp_upwards($path, $self->dhandler_name) ) {
                         my $parent_path = $request_comp->dir_path;
+                        $parent_path = '' unless defined $parent_path;
                         ($self->{dhandler_arg} = $self->{top_path}) =~ s{^$parent_path/?}{};
                         $log->debugf("found dhandler '%s', dhandler_arg '%s'", $parent_path, $self->{dhandler_arg})
                             if $log->is_debug;
@@ -266,6 +267,7 @@ sub _initialize {
                 # tree. 
                 if ($request_comp and $self->{declined_comps}->{$request_comp->comp_id}) {
                     $path = $request_comp->dir_path;
+                    $path = '' unless defined $path;
                     if ($request_comp->name eq $self->dhandler_name) {
                         if ($path eq '/') {
                             undef $request_comp;
@@ -587,7 +589,9 @@ sub make_subrequest
     # Coerce a string 'comp' parameter into an absolute path.  Don't
     # create it if it's missing, though - it's required, but for
     # consistency we let exceptions be thrown later.
-    $params{comp} = absolute_comp_path($params{comp}, $self->current_comp->dir_path)
+    my $dir_path = $self->current_comp->dir_path;
+    $dir_path = '' unless defined $dir_path;
+    $params{comp} = absolute_comp_path($params{comp}, $dir_path)
         if exists $params{comp} && !ref($params{comp});
 
     # Give subrequest the same values as parent request for read/write params
@@ -1123,7 +1127,9 @@ sub _fetch_comp
     #
     # Otherwise pass the canonicalized absolute path to interp->load.
     #
-    $path = absolute_comp_path($path, $current_comp->dir_path);
+    my $dir_path = $current_comp->dir_path;
+    $dir_path = '' unless defined $dir_path;
+    $path = absolute_comp_path($path, $dir_path);
     my $comp = $self->interp->load($path);
 
     return $comp;
