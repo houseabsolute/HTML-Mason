@@ -4,6 +4,10 @@ Revision history for HTML::Mason.
 
 {{$NEXT}}
 
+    - Fixed a test failure with Perl blead (5.37.x). Reported by Jim Keenan
+      and diagnosed by Yves Orton. GH #33.
+
+
 1.59     2020-05-16
 
     - Moved issues to GH issues and added a note about lack of maintenance.
