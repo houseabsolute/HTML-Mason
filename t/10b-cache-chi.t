@@ -296,7 +296,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'cache_self_error',
-                      description => 'test $m->cache_self with an error to make sure errors are propogated',
+                      description => 'test $m->cache_self with an error to make sure errors are propagated',
                       %chi_interp_params,
                       component => <<'EOF',
 <& support/cache_self_and_die, x => 1, key => 1 &>
@@ -359,7 +359,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'cache_self_filtered_scomp',
-                      description => 'test $m->cache_self with a filter block callled via $m->scomp',
+                      description => 'test $m->cache_self with a filter block called via $m->scomp',
                       %chi_interp_params,
                       component => <<'EOF',
 <% $m->scomp( 'support/cache_self_filtered', key => 2, x => 1 ) %>
@@ -410,8 +410,8 @@ EOF
 
 # Note: expire_if works differently with CHI than with previous Mason caching.
 # CHI does not actually expire the value (which would entail an extra write),
-# it just returns false from get(). This was different in earlier verisons of CHI,
-# so we don't test for $value3 as we do in the comprable 10-cache.t test.
+# it just returns false from get(). This was different in earlier versions of CHI,
+# so we don't test for $value3 as we do in the comparable 10-cache.t test.
 
     $group->add_test( name => 'expire_if',
                       description => 'test expire_if',

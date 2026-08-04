@@ -1048,7 +1048,7 @@ sub fetch_comp
         # uncanonicalized paths like ../foo/bar.html.  SELF and
         # REQUEST are dynamic and cannot be cached. Weaken the
         # references in this cache so that we don't hang on to the
-        # coponent if it disappears from the main code cache.
+        # component if it disappears from the main code cache.
         #
         # See Interp::_initialize for the definition of
         # use_internal_component_caches and the conditions under

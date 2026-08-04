@@ -323,7 +323,7 @@ C<path_info()> method.
 
 Given an C<HTML::Mason::FakeApache> object, this method is expected to
 return a hash containing the arguments to be passed to the component.
-It is a separate method in order to make it easily overrideable in a
+It is a separate method in order to make it easily overridable in a
 subclass.
 
 =item * interp()

@@ -1,0 +1,60 @@
+exclude = [
+    ".build/**/*",
+    "HTML-Mason-*/**/*",
+    "blib/**/*",
+    "t/00-*",
+    "t/author-*",
+    "t/release-*",
+    "t/zzz-*",
+    "xt/**/*",
+]
+
+# [commands.perlcritic], [commands.perltidy], [commands.podchecker], and
+# [commands.podtidy] are all deliberately absent. HTML::Mason is a 25-year-old
+# codebase that predates every one of them. Turning them on today means many
+# hundreds of perlcritic violations, 71 files reformatted by perltidy, and a
+# pile of pre-existing POD link errors. Cleaning that up is its own project,
+# separate from getting mise and CI wired up, so for now this repo only runs
+# the checks it can actually pass.
+#
+# Note that this repo also never had the perlcriticrc and perltidyrc that the
+# other dists have - anyone re-enabling those commands has to add them.
+
+[commands.omegasort-gitignore]
+type = "both"
+include = "**/.gitignore"
+cmd = ["omegasort", "--sort", "path", "--unique"]
+lint_flags = "--check"
+tidy_flags = "--in-place"
+ok_exit_codes = 0
+lint_failure_exit_codes = 1
+ignore-stderr = ["The .+ file is not sorted", "The .+ file is not unique"]
+
+[commands.omegasort-stopwords]
+type = "both"
+include = ".stopwords"
+cmd = ["omegasort", "--sort", "text", "--case-insensitive", "--unique"]
+lint_flags = "--check"
+tidy_flags = "--in-place"
+ok_exit_codes = 0
+lint_failure_exit_codes = 1
+ignore-stderr = ["The .+ file is not sorted", "The .+ file is not unique"]
+
+[commands.oxfmt]
+type = "both"
+include = ["**/*.yml", "**/*.toml"]
+cmd = ["oxfmt"]
+lint-flags = "--check"
+tidy-flags = "--write"
+ok-exit-codes = 0
+lint-failure-exit-codes = 1
+
+[commands.typos]
+type = "both"
+include = "**/*"
+exclude = [".stopwords"]
+cmd = "typos"
+tidy_flags = "--write-changes"
+invoke = "once"
+ok-exit-codes = 0
+lint-failure-exit-codes = 2

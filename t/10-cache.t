@@ -312,7 +312,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'cache_self_error',
-                      description => 'test $m->cache_self with an error to make sure errors are propogated',
+                      description => 'test $m->cache_self with an error to make sure errors are propagated',
                       component => <<'EOF',
 <& support/cache_self_and_die, x => 1, key => 1 &>
 EOF
@@ -372,7 +372,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'cache_self_filtered_scomp',
-                      description => 'test $m->cache_self with a filter block callled via $m->scomp',
+                      description => 'test $m->cache_self with a filter block called via $m->scomp',
                       component => <<'EOF',
 <% $m->scomp( 'support/cache_self_filtered', key => 2, x => 1 ) %>
 <% $m->scomp( 'support/cache_self_filtered', key => 2, x => 99 ) %>

@@ -36,7 +36,7 @@ __END__
 
 HTML::Mason::Plugin - Plugin Base class for Mason
 
-=head1 SYNOPIS
+=head1 SYNOPSIS
 
    package MasonX::Plugin::Timer;
    use base qw(HTML::Mason::Plugin);

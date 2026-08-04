@@ -236,7 +236,7 @@ sub get_file_context
         # Mark the important context lines.
         # We do this by going through the error lines and incrementing hash keys to
         # keep track of which lines we eventually need to print, and we color the
-        # line which the error actually occured on in red.
+        # line which the error actually occurred on in red.
         my (%marks, %red);
         my $delta = 4;
         foreach my $line_num (@$line_nums) {

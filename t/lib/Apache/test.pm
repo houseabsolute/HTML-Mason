@@ -364,7 +364,7 @@ sub simple_fetch {
 sub have_module {
     my $mod = shift;
     my $v = shift;
-    eval {# surpress "can't boostrap" warnings
+    eval {# suppress "can't bootstrap" warnings
         local $SIG{__WARN__} = sub {};
         if ($mod_perl2::VERSION >= 2.00) {
             # use Apache2 is no longer needed
@@ -777,7 +777,7 @@ older versions of this module.  In particular MM_test() has changed
 and probably isn't usable in the old ways, since some of its
 assumptions are gone.  But none of this was ever documented, and
 MM_test() doesn't seem to actually be used anywhere in the mod_perl
-disribution, so I don't feel so bad about it.
+distribution, so I don't feel so bad about it.
 
 =head1 AUTHOR
 

@@ -1,0 +1,19 @@
+# Proper names typos wants to "correct".
+[default.extend-words]
+Calle = "Calle"
+Signes = "Signes"
+Stubbs = "Stubbs"
+
+# "pn" is short for "pnotes" - the Apache request notes hash this test
+# exercises.
+[type.fake-apache-test]
+extend-glob = ["**/14a-fake_apache.t"]
+[type.fake-apache-test.extend-words]
+pn = "pn"
+
+# This file has an example component with German text in it, where "Worte" is
+# the actual German word, not a misspelling of "Wrote".
+[type.devel-pod]
+extend-glob = ["**/Devel.pod"]
+[type.devel-pod.extend-words]
+Worte = "Worte"

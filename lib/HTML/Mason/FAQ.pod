@@ -863,7 +863,7 @@ or this:
 
 =head2 How do I use Mason in conjunction with UserDir to support Mason in user's home directories?
 
-The idea is to create one ApacheHandler for each user, dynamically. You will need to use a handler.pl or other wrapper code (see "Writing a Wrapper" in the Adminstrator's Manual).
+The idea is to create one ApacheHandler for each user, dynamically. You will need to use a handler.pl or other wrapper code (see "Writing a Wrapper" in the Administrator's Manual).
 
 Outside your handler subroutine:
 

@@ -10,7 +10,7 @@ BEGIN { use_ok('HTML::Mason::CGIHandler') }
 ok( my $h = HTML::Mason::FakeTable->new, "Create new FakeTable" );
 
 # Test direct hash access.
-ok( $h->{Location} = 'foo', "Assing to Location" );
+ok( $h->{Location} = 'foo', "Assign to Location" );
 is( $h->{Location}, 'foo', "Location if 'foo'" );
 
 # Test case-insensitivity.

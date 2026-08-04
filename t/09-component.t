@@ -150,7 +150,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'context',
-                      description => 'Tests list/scalar context propogation in comp calls',
+                      description => 'Tests list/scalar context propagation in comp calls',
                       component => <<'EOF',
 Context checking:
 

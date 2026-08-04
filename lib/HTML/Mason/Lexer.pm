@@ -224,7 +224,7 @@ sub variable_list_block
                         [ \t]*
                         # if we have a default arg we'll suck up
                         # any comment it has as part of the default
-                        # otherwise explcitly search for a comment
+                        # otherwise explicitly search for a comment
                         (?:
                          (?:              # this entire entire piece is optional
                            =>

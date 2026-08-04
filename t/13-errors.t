@@ -162,7 +162,7 @@ EOF
 #------------------------------------------------------------
 
     $group->add_test( name => 'error_in_subrequest',
-                      description => 'Make sure that an error in a subrequest is propogated back to the main request',
+                      description => 'Make sure that an error in a subrequest is propagated back to the main request',
                       interp_params => { error_format => 'munged',
                                          error_mode => 'output',
                                        },
@@ -351,7 +351,7 @@ EOF
 % my $x = 
 EOF
                         # match "Error during compilation" followed by 
-                        # exactly one occurence of "Stack:"
+                        # exactly one occurrence of "Stack:"
                         # (Mason should stop after the first error)
                       expect => $expect,
                     );

@@ -112,7 +112,7 @@ Revision history for HTML::Mason.
 
     [ BUG FIXES ]
 
-    - Silenced an uninitalized value warning from ApacheHandler with newer
+    - Silenced an uninitialized value warning from ApacheHandler with newer
   versions of Perl. RT #61900.
 
 1.46 Aug 1, 2011
@@ -832,7 +832,7 @@ Revision history for HTML::Mason.
     - $m->file did not handle relative paths properly when called from a
       subcomponent or method.  Reported by Chris Hutchinson.
     - If $m->abort was called in the shared block of a component that had
-      a filter, then a fatal error occured.  Reported by Chris Pudney.
+      a filter, then a fatal error occurred.  Reported by Chris Pudney.
     - Mason was not cooperating with Apache::Filter, and attempts to
       filter Mason's output did not work.  Fixing this also requires
       Apache::Filter 1.021, if you are using Apache::Request to handling
@@ -1059,7 +1059,7 @@ Revision history for HTML::Mason.
       (reported by Chris Hutchinson)
     - CPAN thought that version 1.68 of HTML::Mason::ApacheHandler (part
       of the 1.05 release), was newer than version 1.242 (part of the 1.1201
-      release).  This is what we get for using CVS to set verson numbers.
+      release).  This is what we get for using CVS to set version numbers.
       This version number is now set by hand in order to make sure that this
       does not happen in the future.
 
@@ -1241,7 +1241,7 @@ Revision history for HTML::Mason.
       appropriately without user intervention.
     - ** Mason now uses Apache::Request as its default argument processing
       module.  You can explicitly use CGI.pm if you prefer.
-    - ** The ApacheHandler module no longers accepts parameters when
+    - ** The ApacheHandler module no longer accepts parameters when
       imported.  Instead, you specify this parameter via the ApacheHandler
       constructor.
     - ** The ApacheHandler module now requires a minimum of mod_perl 1.22.
@@ -1556,7 +1556,7 @@ Revision history for HTML::Mason.
 
     - Fixed multiple-<%perl>-section infinite loop bug introduced in 0.85.
     - (Re-)Fixed Apache hang on POST not-found bug.
-    - Added $m->scall_method, analagous to $m->scomp. (suggested by Michael Shulman)
+    - Added $m->scall_method, analogous to $m->scomp. (suggested by Michael Shulman)
     - When using mod_perl args method, $r is upgraded to Apache::Request object.
       (suggested by Matt Hoskins)
     - Documented attr, methods, and flags in Component.pod.
