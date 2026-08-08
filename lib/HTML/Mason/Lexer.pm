@@ -306,7 +306,9 @@ sub key_val_block
                                                       );
         }
 
-        $self->{current}{lines}++;
+        $self->{current}{lines}++ if $self->{current}{comp_source} =~ /\n\G/;
+        # OR
+        # $self->{current}{lines}++ if $& =~ /\n\Z/;
     }
 
     $p->{allow_text} = 0;
