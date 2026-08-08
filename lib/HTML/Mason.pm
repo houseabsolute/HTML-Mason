@@ -26,7 +26,7 @@ __END__
 
     PerlModule HTML::Mason::ApacheHandler
 
-    <Location />
+    <Location>
         SetHandler perl-script
         PerlHandler HTML::Mason::ApacheHandler
     </Location>
@@ -130,7 +130,7 @@ httpd.conf:
 
     PerlModule HTML::Mason::ApacheHandler
 
-    <Location />
+    <Location>
         SetHandler perl-script
         PerlHandler HTML::Mason::ApacheHandler
     </Location>
@@ -139,7 +139,7 @@ The PerlModule directive simply ensures that the Mason code is loaded
 in the parent process before forking, which can save some memory when
 running mod_perl.
 
-The <Location> section routes all requests to the Mason handler, which
+The C<< <Location> >> section routes all requests to the Mason handler, which
 is a simple way to try out Mason. A more refined setup is discussed
 in the L<Controlling Access via Filename Extension|HTML::Mason::Admin/Controlling Access via Filename Extension> section of the administrator's manual.
 
