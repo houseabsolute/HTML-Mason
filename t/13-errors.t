@@ -433,6 +433,34 @@ EOF
 
 #------------------------------------------------------------
 
+    $group->add_test( name => 'perl_block_after_percent_comment_line_numbers',
+                      description => '<%perl> after %# must get its own #line (not the %-line number)',
+                      component => <<'EOF',
+%# modeline
+<%doc>
+ignored
+</%doc>
+<%perl>
+die "MARKER_PERL_BLOCK";
+</%perl>
+EOF
+                      expect_error => qr/MARKER_PERL_BLOCK at .*perl_block_after_percent_comment_line_numbers line 6\b/,
+                    );
+
+#------------------------------------------------------------
+
+    $group->add_test( name => 'adjacent_percent_lines_line_numbers',
+                      description => 'Adjacent %-lines still share #line (die on third % line is source line 3)',
+                      component => <<'EOF',
+% my $a = 1;
+% my $b = 2;
+% die "MARKER_PERCENT_LINES";
+EOF
+                      expect_error => qr/MARKER_PERCENT_LINES at .*adjacent_percent_lines_line_numbers line 3\b/,
+                    );
+
+#------------------------------------------------------------
+
     return $group;
 }
 
