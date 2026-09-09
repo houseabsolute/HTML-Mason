@@ -315,6 +315,15 @@ sub perl_block
     my $self = shift;
     my %p = @_;
 
+    # A <%perl> block is not a continuation of %-lines.  _add_body_code
+    # skips #line when last_body_code_type is perl_line so that adjacent
+    # "%" lines (e.g. a qw() split across lines) keep aligned numbers.
+    # <%doc>/<%args> do not change that type, so "%#" then "<%perl>"
+    # reused the %-line #line and mis-reported die/caller locations.
+    if ( ( $self->{current_compile}{last_body_code_type} || '' ) eq 'perl_line' ) {
+        $self->{current_compile}{last_body_code_type} = '';
+    }
+
     $self->_add_body_code( $p{block} );
 
     $self->{current_compile}{last_body_code_type} = 'perl_block';
